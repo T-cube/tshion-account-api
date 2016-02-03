@@ -1,0 +1,32 @@
+{
+  "name": "tlifang-api",
+  "version": "0.1.0",
+  "description": "Fenzhen API server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./app/index.js",
+    "nodemon": "./node_modules/.bin/nodemon -i src ./app/index.js",
+    "compile": "./node_modules/.bin/babel src --out-dir app",
+    "watch": "./node_modules/.bin/babel src --out-dir app --watch"
+  },
+  "author": "alphakevin <get.so.smart@gmail.com> (http://github.com/alphakevin)",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.1.1",
+    "blueimp-md5": "^2.1.0",
+    "body-parser": "^1.14.2",
+    "express": "^4.13.4",
+    "mongodb": "^2.1.4",
+    "mongoose": "^4.3.6",
+    "oauth2-server": "^2.4.1",
+    "pmongo": "^1.0.0",
+    "socket.io": "^1.4.4",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.4.5",
+    "babel-preset-es2015": "^6.3.13",
+    "nodemon": "^1.8.1"
+  }
+}
