@@ -7,30 +7,30 @@
 ### company
 
 * [GET /company](#get-company)
-* [GET /company/:company_id](#get-company-id)
+* [GET /company/:company_id](#get-company-company_id)
 * [POST /company](#post-company)
-* [PATCH /company/:company_id](#patch-company-id)
-* [DELETE /company/:company_id](#post-company-id)
+* [PUT /company/:company_id](#put-company-company_id)
+* [DELETE /company/:company_id](#delete-company-company_id)
 
 ### member
 
-* [GET /company/:company_id/member](#get-company-id-member)
-* [GET /company/:company_id/member/:member_id](#get-company-id-member-member_id)
-* [DELETE /company/:company_id/member/:member_id](#get-company-id-member-member_id)
+* [GET /company/:company_id/member](#get-company-company_id-member)
+* [GET /company/:company_id/member/:member_id](#get-company-company_id-member-member_id)
+* [DELETE /company/:company_id/member/:member_id](#delete-company-company_id-member-member_id)
 
 ### structure
 
 #### structure node
 
-* [POST /company/:company_id/structure/:node_id](#post-company-id-structure-node_id)
-* [PUT /company/:company_id/structure/:node_id](#put-company-id-structure-node_id)
-* [DELETE /company/:company_id/structure/:node_id](#delete-company-id-structure-node_id)
+* [POST /company/:company_id/structure/:node_id](#post-company-company_id-structure-node_id)
+* [PUT /company/:company_id/structure/:node_id](#put-company-company_id-structure-node_id)
+* [DELETE /company/:company_id/structure/:node_id](#delete-company-company_id-structure-node_id)
 
 #### structure member
 
-* [POST /company/:company_id/structure/:node_id/member](#post-company-id-structure-node_id-member)
-* [PUT /company/:company_id/structure/:node_id/member/:member_id](#put-company-id-structure-node_id-member-member_id)
-* [DELETE /company/:company_id/structure/:node_id/member/:member_id](#delete-company-id-structure-node_id-member-member_id)
+* [POST /company/:company_id/structure/:node_id/member](#post-company-company_id-structure-node_id-member)
+* [PUT /company/:company_id/structure/:node_id/member/:member_id](#put-company-company_id-structure-node_id-member-member_id)
+* [DELETE /company/:company_id/structure/:node_id/member/:member_id](#delete-company-company_id-structure-node_id-member-member_id)
 
 ## Function List
 
