@@ -9,7 +9,7 @@ class Structure {
   }
 
   _findNodeById(node, node_id) {
-    if (node._id == node_id) {
+    if (node_id.equals(node._id)) {
       return node;
     }
     if (node.children) {
@@ -24,10 +24,12 @@ class Structure {
   }
 
   findNodeById(node_id) {
+    node_id = ObjectId(node_id);
     return this._findNodeById(this.root, node_id);
   }
 
   addNode(node, parent_id) {
+    parent_id = ObjectId(parent_id);
     let parent = this.findNodeById(parent_id);
     if (!parent) {
       return null;
@@ -42,11 +44,9 @@ class Structure {
     return node;
   }
 
-  updateNode(data) {
-    if (!data._id) {
-      return null;
-    }
-    let node = this.findNodeById(data._id);
+  updateNode(data, node_id) {
+    node_id = ObjectId(node_id);
+    let node = this.findNodeById(node_id);
     if (!node) {
       return null;
     }
@@ -58,7 +58,7 @@ class Structure {
     if (node.children) {
       for (let i in node.children) {
         let _node = node.children[i];
-        if (_node._id == node_id) {
+        if (node_id.equals(_node._id)) {
           node.children.splice(i, 1);
           return true;
         } else if (this._deleteNode(_node, node_id)) {
@@ -70,12 +70,14 @@ class Structure {
   }
 
   deleteNode(node_id) {
+    node_id = ObjectId(node_id);
     return this._deleteNode(this.root, node_id);
   }
 
   addMember(member, node_id) {
+    node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
-    if (!typeof node.members == 'array') {
+    if (typeof node.members !== 'array') {
       node.members = [];
     }
     node.members.push(member);
@@ -85,7 +87,7 @@ class Structure {
   _deleteMember(node, member_id, all = false) {
     if (!node || !node._id) return null;
     if (typeof node.members == 'array') {
-      let index = _.findIndex(node.members, {_id: member_id});
+      let index = _.findIndex(node.members, m => member_id.equals(m._id));
       if (index >= 0) {
         node.members.splice(index, 1);
         this._counter++;
@@ -99,6 +101,7 @@ class Structure {
   }
 
   deleteMemberAll(member_id) {
+    member_id = ObjectId(member_id);
     this._counter = 0;
     this._deleteMember(this.root, member_id, true);
     return this._counter;
@@ -108,6 +111,8 @@ class Structure {
     if (node_id === undefined) {
       return this.deleteMemberAll();
     }
+    member_id = ObjectId(member_id);
+    node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
     if (!node) {
       return false;
@@ -123,7 +128,7 @@ class Structure {
 
 Structure.nodeDefault = () => ({
   _id: ObjectId(),
-  name: '',
+  name: 'node',
   description: ''
 });
 

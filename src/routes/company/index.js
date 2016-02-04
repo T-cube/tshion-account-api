@@ -57,8 +57,7 @@ api.route('/:company_id')
     }).catch(next);
   })
 ;
+
 api.use('/:company_id/structure', require('./structure'));
 
-  // .use('/member', require('./member'))
-
-;
+api.use('/:company_id/member', require('./member'));

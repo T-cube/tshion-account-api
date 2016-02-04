@@ -9,8 +9,7 @@ let api = require('express').Router();
 module.exports = api;
 
 api.use((req, res, next) => {
-  let structure = req.structure;
-  req.structure = new Structure(structure);
+  req.structure = new Structure(req.company.structure);
   next();
 });
 
@@ -18,32 +17,41 @@ api.get('/', (req, res, next) => {
   res.json(req.structure.object());
 });
 
-function save(structure) {
+function save(req) {
   return db.company.update(
     {_id: req.company._id},
-    {$set: {structure: structure.object()}}
+    {$set: {structure: req.structure.object()}}
   );
 }
 
-api.post('/node', (req, res, next) => {
+api.post('/node/:parent_id', (req, res, next) => {
   let tree = req.structure;
+  let parent_id = req.params.parent_id;
   let data = req.body;
-  let parent_id = data.parent_id;
-  delete data[parent_id];
   let node = tree.addNode(data, parent_id);
   if (!node) {
     return next(new ApiError('parent_node_not_exists'));
   }
-  save(tree.object())
-  .then(doc => res.json(doc))
+  save(req)
+  .then(doc => res.json(node))
   .catch(next);
 });
 
 api.put('/node/:node_id', (req, res, next) => {
   let tree = req.structure;
+  let node_id = req.params.node_id;
   let data = req.body;
-  let node = tree.updateNode(data, parent_id);
-  save(tree.object())
+  let node = tree.updateNode(data, node_id);
+  save(req)
   .then(doc => res.json(doc))
   .catch(next);
-})
+});
+
+api.delete('/node/:node_id', (req, res, next) => {
+  let tree = req.structure;
+  let node_id = req.params.node_id;
+  let node = tree.deleteNode(data, node_id);
+  save(req)
+  .then(doc => res.json(doc))
+  .catch(next);
+});
