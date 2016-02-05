@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./app/index.js",
+    "startmon": "nodemon --exec babel-node -- app/index.js",
     "nodemon": "./node_modules/.bin/nodemon -i src ./app/index.js",
     "compile": "./node_modules/.bin/babel src --out-dir app",
     "watch": "./node_modules/.bin/babel src --out-dir app --watch"

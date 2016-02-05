@@ -14,6 +14,7 @@ api.use((req, res, next) => {
 });
 
 api.get('/', (req, res, next) => {
+  console.log('aaa');
   res.json(req.structure.object());
 });
 
@@ -24,11 +25,21 @@ function save(req) {
   );
 }
 
-api.post('/node/:parent_id', (req, res, next) => {
+api.get('/:node_id', (req, res, next) => {
   let tree = req.structure;
-  let parent_id = req.params.parent_id;
+  let node_id = req.params.node_id;
+  let node = tree.findNodeById(node_id);
+  if (!node) {
+    return next(new ApiError(404));
+  }
+  res.json(node);
+});
+
+api.post('/:node_id', (req, res, next) => {
+  let tree = req.structure;
+  let node_id = req.params.node_id;
   let data = req.body;
-  let node = tree.addNode(data, parent_id);
+  let node = tree.addNode(data, node_id);
   if (!node) {
     return next(new ApiError('parent_node_not_exists'));
   }
@@ -37,7 +48,7 @@ api.post('/node/:parent_id', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/node/:node_id', (req, res, next) => {
+api.put('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
@@ -47,11 +58,28 @@ api.put('/node/:node_id', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/node/:node_id', (req, res, next) => {
+api.delete('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let node = tree.deleteNode(data, node_id);
   save(req)
   .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.get('/:node_id/member', (req, res, next) => {
+  let tree = req.structure;
+  let node_id = req.params.node_id;
+  let members = tree.getMemberAll(node_id);
+  res.json(members);
+});
+
+api.post('/:node_id/member', (req, res, next) => {
+  let tree = req.structure;
+  let node_id = req.params.node_id;
+  let data = req.body;
+  let member = tree.addMember(data, node_id);
+  save(req)
+  .then(doc => res.json(member))
   .catch(next);
 });

@@ -74,6 +74,35 @@ class Structure {
     return this._deleteNode(this.root, node_id);
   }
 
+  _getMember(node_id, all, level = 0) {
+    let node = this.findNodeById(node_id);
+    let members = [];
+    if (!node.members) {
+      node.members = [];
+    }
+    let _members = _.map(node.members, m => _.extend({}, m, {
+      node_id: node._id,
+      level: level
+    }));
+    members = members.concat(_members);
+    if (all) {
+      _.each(node.children, _node => {
+        let _members = this._getMember(_node._id, all, level + 1);
+        members = members.concat(_members);
+      });
+    }
+    return members;
+  }
+
+  getMember(node_id, all = false) {
+    node_id = ObjectId(node_id);
+    return this._getMember(node_id, all);
+  }
+
+  getMemberAll(node_id) {
+    return this.getMember(node_id, true);
+  }
+
   addMember(member, node_id) {
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
