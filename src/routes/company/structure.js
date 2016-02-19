@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
@@ -61,10 +62,49 @@ api.put('/:node_id', (req, res, next) => {
 api.delete('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
-  let node = tree.deleteNode(data, node_id);
+  let node = tree.deleteNode(node_id);
   save(req)
   .then(doc => res.json(doc))
   .catch(next);
+});
+
+api.post('/:node_id/position', (req, res, next) => {
+  let tree = req.structure;
+  let data = req.body;
+  let node_id = req.params.node_id;
+  let node = tree.findNodeById(node_id);
+  node.positions = node.positions || [];
+  if (!_.contains(node.positions, data.name)) {
+    node.positions.push(data.name);
+    save(req)
+    .then(doc => res.json(doc))
+    .catch(next);
+  } else {
+    next(new ApiError(400));
+  }
+});
+
+api.get('/:node_id/position', (req, res, next) => {
+  let tree = req.structure;
+  let node_id = req.params.node_id;
+  let node = tree.findNodeById(node_id);
+  res.json(node.positions || []);
+});
+
+api.delete('/:node_id/position', (req, res, next) => {
+  let tree = req.structure;
+  let data = req.body;
+  let node_id = req.params.node_id;
+  let node = tree.findNodeById(node_id);
+  node.positions = node.positions || [];
+  node.positions = _.without(node.positions, data.name);
+  if (!_.contains(node.positions, data.name)) {
+    save(req)
+    .then(doc => res.json(doc))
+    .catch(next);
+  } else {
+    next(new ApiError(400));
+  }
 });
 
 api.get('/:node_id/member', (req, res, next) => {

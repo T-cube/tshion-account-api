@@ -26,6 +26,12 @@
 * [PUT /company/:company_id/structure/:node_id](#put-company-company_id-structure-node_id)
 * [DELETE /company/:company_id/structure/:node_id](#delete-company-company_id-structure-node_id)
 
+#### structure position
+
+* [POST /company/:company_id/structure/:node_id/position](#post-company-company_id-structure-node_id-position)
+* [PUT /company/:company_id/structure/:node_id/position](#put-company-company_id-structure-node_id-position)
+* [DELETE /company/:company_id/structure/:node_id/position](#delete-company-company_id-structure-node_id-position)
+
 #### structure member
 
 * [POST /company/:company_id/structure/:node_id/member](#post-company-company_id-structure-node_id-member)

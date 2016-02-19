@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 
 import { ApiError } from '../../lib/error';
 import Structure from '../../lib/structure';
+import constants from '../../lib/constants';
 
 /* company collection */
 let api = require('express').Router();
@@ -19,7 +20,10 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
+  // initial attributes
   data._id = ObjectId();
+  data.user_id = null;
+  data.status = constants.INVITE_STATUS_PENDING;
   db.company.update({
     _id: req.company._id,
   }, {
