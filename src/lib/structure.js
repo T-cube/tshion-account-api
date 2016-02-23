@@ -106,7 +106,7 @@ class Structure {
   addMember(member, node_id) {
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
-    if (typeof node.members !== 'array') {
+    if (!_.isArray(node.members)) {
       node.members = [];
     }
     node.members.push(member);
@@ -115,7 +115,7 @@ class Structure {
 
   _deleteMember(node, member_id, all = false) {
     if (!node || !node._id) return null;
-    if (typeof node.members == 'array') {
+    if (_.isArray(node.members)) {
       let index = _.findIndex(node.members, m => member_id.equals(m._id));
       if (index >= 0) {
         node.members.splice(index, 1);
@@ -148,6 +148,36 @@ class Structure {
     }
     this._deleteMember(node, member_id)
     return true;
+  }
+
+  addPosition(position, node_id) {
+    node_id = ObjectId(node_id);
+    let node = this.findNodeById(node_id);
+    if (!_.isArray(node.positions)) {
+      node.positions = [];
+    }
+    if (!_.contains(node.positions, position)) {
+      node.positions.push(position);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  deletePosition(position, node_id) {
+    node_id = ObjectId(node_id);
+    let node = this.findNodeById(node_id);
+    if (!_.isArray(node.positions)) {
+      node.positions = [];
+    }
+    let index = _.indexOf(node.positions, position);
+    if (index >= 0) {
+      node.positions.splice(index, 1);
+      node.members = _.reject(node.members, m => !_.contains(node.positions, m.title));
+      return true;
+    } else {
+      return false;
+    }
   }
 
   object() {

@@ -72,15 +72,12 @@ api.post('/:node_id/position', (req, res, next) => {
   let tree = req.structure;
   let data = req.body;
   let node_id = req.params.node_id;
-  let node = tree.findNodeById(node_id);
-  node.positions = node.positions || [];
-  if (!_.contains(node.positions, data.name)) {
-    node.positions.push(data.name);
+  if (tree.addPosition(data.name, node_id)) {
     save(req)
     .then(doc => res.json(doc))
     .catch(next);
   } else {
-    next(new ApiError(400));
+    next(new ApiError(400, 'duplicated position name'));
   }
 });
 
@@ -95,15 +92,12 @@ api.delete('/:node_id/position', (req, res, next) => {
   let tree = req.structure;
   let data = req.body;
   let node_id = req.params.node_id;
-  let node = tree.findNodeById(node_id);
-  node.positions = node.positions || [];
-  node.positions = _.without(node.positions, data.name);
-  if (!_.contains(node.positions, data.name)) {
+  if (tree.deletePosition(data.name, node_id)) {
     save(req)
     .then(doc => res.json(doc))
     .catch(next);
   } else {
-    next(new ApiError(400));
+    next(new ApiError(400, 'position not found'));
   }
 });
 
@@ -122,4 +116,17 @@ api.post('/:node_id/member', (req, res, next) => {
   save(req)
   .then(doc => res.json(member))
   .catch(next);
+});
+
+api.delete('/:node_id/member/:member_id', (req, res, next) => {
+  let tree = req.structure;
+  let node_id = req.params.node_id;
+  let member_id = req.params.member_id;
+  if (tree.deleteMember(member_id, node_id)) {
+    save(req)
+    .then(doc => res.json(doc))
+    .catch(next);
+  } else {
+    next(new ApiError(400, 'member not found'));
+  }
 });

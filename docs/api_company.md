@@ -266,8 +266,7 @@ ERROR
 INPUT
 ```javascript
 {
-  "_id": ObjectId
-  "is_manager": [true|false],
+  "_id": ObjectId,
   "title": String // job title
 }
 ```
