@@ -54,9 +54,13 @@ api.put('/:node_id', (req, res, next) => {
   let node_id = req.params.node_id;
   let data = req.body;
   let node = tree.updateNode(data, node_id);
-  save(req)
-  .then(doc => res.json(doc))
-  .catch(next);
+  if (node) {
+    save(req)
+    .then(doc => res.json(node))
+    .catch(next);
+  } else {
+    next(new ApiError(404));
+  }
 });
 
 api.delete('/:node_id', (req, res, next) => {

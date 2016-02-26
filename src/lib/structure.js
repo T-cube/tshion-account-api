@@ -1,11 +1,20 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+import { getUniqName } from './utils';
 
 class Structure {
 
   constructor(node) {
     this.root = node;
     this._counter = 0;
+  }
+
+  getNames(node, node_id) {
+    let children = node.children || [];
+    if (node_id) {
+      children = _.reject(node.children, _node => node_id.equals(_node._id) )
+    }
+    return _.pluck(children, 'name');
   }
 
   _findNodeById(node, node_id) {
@@ -28,6 +37,27 @@ class Structure {
     return this._findNodeById(this.root, node_id);
   }
 
+  _findParent(node, node_id) {
+    if (node.children) {
+      for (let k in node.children) {
+        let _node = node.children[k];
+        if (node_id.equals(_node._id)) {
+          return node;
+        }
+        let found = this._findParent(_node, node_id);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+
+  findParent(node_id) {
+    node_id = ObjectId(node_id);
+    return this._findParent(this.root, node_id);
+  }
+
   addNode(node, parent_id) {
     parent_id = ObjectId(parent_id);
     let parent = this.findNodeById(parent_id);
@@ -40,7 +70,9 @@ class Structure {
     if (!parent.children) {
       parent.children = [];
     }
+    node.name = getUniqName(this.getNames(parent), node.name);
     parent.children.push(node);
+    parent.children = _.sortBy(parent.children, 'name');
     return node;
   }
 
@@ -49,6 +81,11 @@ class Structure {
     let node = this.findNodeById(node_id);
     if (!node) {
       return null;
+    }
+    if (node !== this.root) {
+      let parent = this.findParent(node_id);
+      console.log(parent)
+      data.name = getUniqName(this.getNames(parent, node_id), data.name);
     }
     _.extend(node, data);
     return node;
