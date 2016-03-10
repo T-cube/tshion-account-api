@@ -19,7 +19,7 @@
 INPUT
 ```javascript
 {
-  "type": "[email|mobile}]"
+  "type": "[email|mobile]"
   "id": "id_string"    // 电子邮件或中国手机号码
 }
 ```
