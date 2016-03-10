@@ -4,15 +4,14 @@
 
 ## Table of Contents
 
-* [POST account/check](#post-account-check)
-* [POST account/send_email](#post-account-send_email)
-* [POST account/verify_email](#post-account-verify_email)
-* [POST account/verify_sms](#post-account-verify_sms)
-* [POST account/register](#post-account-register)
-* [GET account/info](#GET-account-info)
+* [POST /account/check](#post-account-check)
+* [POST /account/send_email](#post-account-send_email)
+* [POST /account/verify_email](#post-account-verify_email)
+* [POST /account/verify_sms](#post-account-verify_sms)
+* [POST /account/register](#post-account-register)
+* [GET /account/info](#GET-account-info)
 
 ## Function List
-
 
 ### POST account/check
 校验用户账号格式和存在
@@ -20,20 +19,19 @@
 INPUT
 ```javascript
 {
-  "id": "{email|mobile}"    // 电子邮件或中国手机号码
+  "type": "[email|mobile}]"
+  "id": "id_string"    // 电子邮件或中国手机号码
 }
 ```
 OUTPUT
 ```javascript
 {
-  "type": "[account/email|mobile]", // 字符串，"email" 或者 "mobile"
-  "id": "{id}"              // 提交的原始数据
+  "exists": true|false, // 是否存在
 }
 ```
 ERROR
 ```javascript
-"bad id format" //ID格式错误，无法识别
-"id exists"     //ID已存在
+"bad_id_format" //ID格式错误，无法识别
 ```
 
 ### POST account/send_email
@@ -119,20 +117,22 @@ ERROR
 INPUT
 ```javascript
 {
-  "type": "[account/email|mobile]"  //手机号码
-  "id": "{email|mobile}"    //手机号码
+  "type": "[email|mobile]"  //帐户类型
+  "id": "{string}"          //帐户名字
   "password": "{password}"  //密码
-  "code": "{code}"          //URL中的验证码
+  "code": "{code}"          //短信验证码（当type==mobile时）
 }
 ```
 OUTPUT
 ```javascript
-{}
+{
+  "success": [true|false]
+}
 ```
 ERROR
 ```javascript
-"unkown type"              //类型不为 email 或 mobile
-"bad verification code"    //验证码错误
+"unkown_type"              //类型不为 email 或 mobile
+"validation_failed"        //验证码错误
 ```
 
 ### GET account/info
