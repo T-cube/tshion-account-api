@@ -5,7 +5,7 @@ import { ApiError } from '../../lib/error';
 
 /* company collection */
 let api = require('express').Router();
-module.exports = api;
+export default api;
 
 api.route('/')
 

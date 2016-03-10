@@ -7,5 +7,8 @@ export function database() {
   return pmongo(config.db, [
    'user',
    'company',
+   'oauth_clients',
+   'oauth_accesstoken',
+   'oauth_refreshtoken',
  ]);
 }

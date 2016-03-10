@@ -9,6 +9,7 @@ import socketio from 'socket.io';
 
 import { database } from './lib/database';
 import apiRouter from './routes';
+import oauthModel from './lib/oauth-model.js';
 
 let app = express();
 let server = http.Server(app);
@@ -18,7 +19,7 @@ global.db = database();
 //oauth开始
 
 app.oauth = oauthserver({
-  model: require('./lib/oauthModel'),
+  model: oauthModel,
   grants: ['password','refresh_token'],
   debug: false,
   accessTokenLifetime: 1800,
@@ -27,7 +28,7 @@ app.oauth = oauthserver({
 
 app.use('/oauth',bodyParser.urlencoded({ extended: true }));
 app.all('/oauth/token', app.oauth.grant());
-//app.use('/api', app.oauth.authorise());
+app.use('/api/company', app.oauth.authorise());
 app.use(app.oauth.errorHandler());
 
 app.use('/', express.static('./public'));

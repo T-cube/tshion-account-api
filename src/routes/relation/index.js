@@ -5,9 +5,9 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import { ApiError } from '../../lib/error';
 
-var api = require('express').Router();
+let api = express.Router();
 
-module.exports = api;
+export default api;
 
 // prepare user data
 api.use('/', (req, res, next) => {

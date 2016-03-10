@@ -8,7 +8,10 @@
  */
 
 import util from 'util';
+import { ValidationError } from 'express-validation';
 // import DbError from '../models/db-error';
+
+//const VALIDATION_ERROR_MESSAGE = 'validation error';
 
 export function ApiError(code, error, description, err) {
   if (this.constructor !== ApiError) {
@@ -39,19 +42,19 @@ export function ApiError(code, error, description, err) {
         this.error = 'OK';
         break;
       case 400:
-        this.error = 'bad_request';
+        this.error = 'bad request';
         break;
       case 403:
-        this.error = 'not_authorized';
+        this.error = 'not authorized';
         break;
       case 404:
-        this.error = 'not_found';
+        this.error = 'not found';
         break;
       case 500:
-        this.error = 'server_error';
+        this.error = 'server error';
         break;
       default:
-        this.error = 'server_error';
+        this.error = 'server error';
     }
   }
   this.error_description = description || this.error;
@@ -76,8 +79,17 @@ export function apiErrorHandler(err, req, res, next) {
     }
     delete err.headers;
     res.status(err.code)
-    console.error(err.stack || err);
     res.send(err);
+    return;
+  } else if (err instanceof ValidationError) {
+    res.status(err.status);
+    let _err = {
+      code: err.status,
+      error: err.message,
+      error_description: err.errors
+    }
+    res.send(_err);
+    return;
   }
   next(err);
 }

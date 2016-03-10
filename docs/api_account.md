@@ -19,8 +19,8 @@
 INPUT
 ```javascript
 {
-  "type": "[email|mobile]"
-  "id": "id_string"    // 电子邮件或中国手机号码
+  "type": "[email|mobile]", // 账号类型
+  "id": "id_string"         // 账号ID字符串
 }
 ```
 OUTPUT
@@ -31,8 +31,32 @@ OUTPUT
 ```
 ERROR
 ```javascript
-"bad_id_format" //ID格式错误，无法识别
+"validation error" //校验错误
 ```
+
+### POST account/register
+用户注册
+
+INPUT
+```javascript
+{
+  "type": "[email|mobile]",     // 账号类型
+  "id": "id_string",            // 账号ID字符串
+  "code": "",                   // 当type="mobile"时需要的短信验证码
+  "password": "password_string" // 用户密码
+}
+```
+OUTPUT
+```javascript
+{
+  "exists": true|false, // 是否存在
+}
+```
+ERROR
+```javascript
+"validation error" //校验错误
+```
+
 
 ### POST account/send_email
 发送验证邮件 NOT READY
