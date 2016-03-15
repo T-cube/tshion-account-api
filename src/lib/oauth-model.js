@@ -75,5 +75,11 @@ export default {
     db.oauth_refreshtoken.findOne({refresh_token: refreshToken})
     .then(doc => callback(null, doc))
     .catch(e => callback(e));
+  },
+
+  revokeRefreshToken(refreshToken, callback) {
+    db.oauth_refreshtoken.remove({refresh_token: refreshToken})
+    .then(doc => callback(null, doc))
+    .catch(e => callback(e));
   }
 }

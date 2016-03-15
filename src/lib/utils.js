@@ -16,3 +16,11 @@ export function getUniqName(list, name, index) {
     return name;
   }
 }
+
+export function timestamp() {
+  return +new Date;
+}
+
+export function time() {
+  return new Date;
+}

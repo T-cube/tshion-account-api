@@ -21,4 +21,4 @@ _.each(routes, route => {
   api.use(path, module);
 });
 
-api.use(apiErrorHandler);
+// api.use(apiErrorHandler);

@@ -42,19 +42,19 @@ export function ApiError(code, error, description, err) {
         this.error = 'OK';
         break;
       case 400:
-        this.error = 'bad request';
+        this.error = 'bad_request';
         break;
       case 403:
-        this.error = 'not authorized';
+        this.error = 'not_authorized';
         break;
       case 404:
-        this.error = 'not found';
+        this.error = 'not_found';
         break;
       case 500:
-        this.error = 'server error';
+        this.error = 'server_error';
         break;
       default:
-        this.error = 'server error';
+        this.error = 'unknown_error';
     }
   }
   this.error_description = description || this.error;
