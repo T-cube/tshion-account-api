@@ -33,7 +33,8 @@ app.oauth = oauthserver({
 app.use('/oauth',bodyParser.urlencoded({ extended: true }));
 app.all('/oauth/token', app.oauth.grant());
 app.use('/oauth/revoke', oauthExtended.revokeToken);
-app.use('/api/company', app.oauth.authorise());
+//app.use('/api/company', app.oauth.authorise());
+app.use('/api/user', app.oauth.authorise());
 app.use(app.oauth.errorHandler());
 
 app.use('/', express.static('./public'));

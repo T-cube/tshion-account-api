@@ -4,14 +4,14 @@ import Joi from 'joi';
 export default {
   getAccessToken(bearerToken, callback) {
     console.log('in getAccessToken (bearerToken: ' + bearerToken + ')');
-    db.oauth_accesstoken.findOne({accesstoken: bearerToken})
+    db.oauth_accesstoken.findOne({access_token: bearerToken})
     .then(doc => callback(null, doc)).catch(e => callback(e));
   },
 
   getClient(clientId, clientSecret, callback) {
     console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
     if (clientSecret === null) {
-      return db.oauth_clients.findOne({clientId: clientId})
+      return db.oauth_clients.findOne({client_id: clientId})
       .then(doc => callback(null, doc)).catch(e => callback(e));
     }
     db.oauth_clients.findOne({client_id: clientId, client_secret: clientSecret})
