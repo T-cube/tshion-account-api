@@ -1,12 +1,14 @@
 # 服务器环境部署
-* #### 安装nodejs
-* #### 安装mongodb
-* #### 安装nginx
-* #### 工具安装
+
+## 目录
+* [用nvm安装nodejs](#用nvm安装nodejs)
+* 安装mongodb
+* 安装nginx
+* 工具安装
 
 
 ***
-### 用nvm安装nodejs
+## 用nvm安装nodejs
 1. [github地址]: https://github.com/creationix/nvm
 2. 在root用户下输入此命令：
     ```
@@ -42,7 +44,7 @@
     nvm alias default v5.9.0
     ```
 ***
-### 安装mongodb
+## 安装mongodb
 1. [参考官网]： https://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat/
 2. 修改yum的包管理系统:
   	```
@@ -57,7 +59,7 @@
     ```  
 4. 安装mongodb:
   	```
-    yum install -y mongodb-org
+    sudo yum install -y mongodb-org
     ```
 5. 配置mongodb:
     ```
@@ -84,32 +86,42 @@
      systemctl start mongod
     ```
 ***
-### nginx 安装与配置
+## nginx 安装与配置
 
-1. [参考官网]： https://www.nginx.com/resources/wiki/start/topics/tutorials/install/#
-2. 要添加NGINX yum软件库，创建一个名为 ```/etc/yum.repos.d/nginx.repo``` 文件，并粘贴如下配置
-    ```
-      [nginx]
-      name=nginx repo
-      baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
-      gpgcheck=0
-      enabled=1
-    ```
-3. 输入： ```yum install nginx``` 等待安装完毕
+1. [参考官网]： https://www.nginx.com/resources/wiki/start/topics/tutorials/install/
+2. 要添加 nginx yum 软件库，创建一个名为 `/etc/yum.repos.d/nginx.repo` 文件，并粘贴如下配置
+```
+[nginx]
+name=nginx repo
+baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
+gpgcheck=0
+enabled=1
+```
+3. 输入： ```sudo yum install nginx``` 等待安装完毕
 
 
-### 工具安装
-* ##### openssh 安装与设置
-  >   ```
-  yum install openssh
+## 工具安装
+* #### openssh 安装与设置
+   ```
+  sudo yum install openssh
   cd ~  //切换到 root 用户目录
-  mkdir .ssh // 新建.ssh目录
+  mkdir .ssh && cd .ssh/ // 新建.ssh目录
   touch authorized_keys // 在.ssh目录新建authorized_keys文件
   cat id_rsa.pub >> ~/.ssh/authorized_keys //把要登录机器的id_rsa.pub添加到 authorized_keys ；上天无痛苦只需这一步
   ```
-* ##### git、unzip、wget 安装
+* #### git、unzip、wget 安装
   ```
-  yum install  unzip //用于解压zip文件
-  yum install  wget  //用于下载网络文件
-  yum install git //等待安装完毕 你又多了个上天工具
+  sudo yum install -y unzip //用于解压zip文件
+  sudo yum install -y wget  //用于下载网络文件
+  sudo yum install -y git  //用于版本管理
+  ```
+* #### 系统安装好先安装个网络管理工具 net-tools
+  ```
+  sudo yum install -y net-tools
+  ```
+* #### 配置防火墙
+  ```
+  sudo iptables -I INPUT 5 -i enp3s0 -p tcp --dport 8000 -m state --state NEW,ESTABLISHED -j ACCEPT
+  sudo iptables -I INPUT 5 -i enp3s0 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+  sudo iptables -I INPUT 5 -i enp3s0 -p tcp --dport 3000 -m state --state NEW,ESTABLISHED -j ACCEPT
   ```
