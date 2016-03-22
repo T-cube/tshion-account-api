@@ -1,10 +1,14 @@
 # 服务器环境部署
 
+使用系统是 CentOS Linux release 7.2.1511 (Core)
+
+查看系统版本命令：`cat /etc/redhat-release`
+
 ## 目录
 * [常用工具安装与防火墙配置](#常用工具安装与防火墙配置)
 * [用nvm安装nodejs](#用nvm安装nodejs)
 * [安装mongodb](#安装mongodb)
-* [安装nginx](#安装 nginx )
+* [安装nginx](#安装nginx )
 
 
 ## 常用工具安装与防火墙配置
@@ -118,7 +122,7 @@ systemctl start mongod
 ```
 
 
-## 安装 nginx
+## 安装nginx
 
 参考官网：
 https://www.nginx.com/resources/wiki/start/topics/tutorials/install/
