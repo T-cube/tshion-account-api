@@ -13,11 +13,7 @@
 
 ### GET /project/:project_id/task
 
-获取全部公司
-
-INPUT
-
-`none`
+获取全部任务
 
 OUTPUT
 ```javascript
@@ -29,13 +25,10 @@ OUTPUT
   }
 ]
 ```
-ERROR
-
-`none`
 
 ### GET /project/:project_id/task/{:task_id}
 
-获取公司详情
+获取任务详情
 
 ```javascript
 {
@@ -74,7 +67,7 @@ ERROR
 
 ### GET /project/:project_id/task/{task_id}/comment
 
-任务评论
+获取任务评论
 
 ```javascript
 [{                  
@@ -91,7 +84,7 @@ ERROR
 
 ### GET /project/:project_id/task/{taks_id}/log
 
-任务日志
+获取任务日志
 
 ```javascript
 "log": [{
