@@ -61,10 +61,11 @@ Content-Type: application/json
 
 ### Common API
 
-* [/oauth/token](./docs/api_oauth.md) API 身份认证
-* [/account/*](./docs/api_account.md) 帐户操作
+* [/oauth/token](docs/api/oauth.md) API 身份认证
+* [/account/*](docs/api/account.md) 帐户操作
 
 ### RESTful API
 
-* [/users/*](./docs/api_users.md) 帐户操作
-* [/company/*](./docs/api_company.md) 公司操作
+* [/users/*](docs/api/users.md) 帐户操作
+* [/company/*](docs/api/company.md) 公司操作
+* [/*/task/*](docs/api/task.md) 任务操作
