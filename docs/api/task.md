@@ -4,10 +4,10 @@
 
 ## Table of Contents
 
-* [GET /project/:project_id/task](#get-project-project-id-task)
-* [GET /project/:project_id/task/:task_id](#get-project-project-id-task-task_id)
-* [GET /project/:project_id/task/:task_id/comment](#get-project-project-id-task-task_id-comment)
-* [GET /project/:project_id/task/:task_id/log](#get-project-project-id-task-task_id-log)
+* [GET /project/:project_id/task](#get-project-project_id-task)
+* [GET /project/:project_id/task/:task_id](#get-project-project_id-task-task_id)
+* [GET /project/:project_id/task/:task_id/comment](#get-project-project_id-task-task_id-comment)
+* [GET /project/:project_id/task/:task_id/log](#get-project-project_id-task-task_id-log)
 
 ## API function
 
