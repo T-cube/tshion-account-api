@@ -61,7 +61,7 @@ Content-Type: application/json
 
 ### Common API
 
-* [/oauth/token](oauth.md) API 身份认证
+* [/oauth](oauth.md) API 身份认证
 * [/account](account.md) 帐户操作
 
 ### RESTful API

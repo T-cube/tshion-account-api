@@ -1,4 +1,6 @@
-# API task
+# API Task
+
+[返回目录](index.md)
 
 任务(REST)
 挂载点：
@@ -18,7 +20,8 @@
 
 ### POST /task
 
-获取全部任务
+新建任务
+
 只能在挂载点 `/company/:company_id/project/:project_id/task` 访问
 
 INPUT
