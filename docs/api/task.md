@@ -20,7 +20,7 @@ OUTPUT
 [
   {
     "_id":"...",
-    "name":"...",
+    "title":"...",
     //...
   }
 ]
@@ -33,35 +33,38 @@ OUTPUT
 ```javascript
 {
   "_id": <object_id>,
-  "componay": <company_id>,
-  "project": <project_id>,
+  "company_id": <company_id>,
+  "project_id": <project_id>,
   "parent_id": <task_id>,        // 父任务
+  "status": <"PENDING", "PROCESSING", "COMPLETED"> //任务状态
   "title": "...",                // 任务标题
   "content": "...",              // 任务详情
   "creator": {
-    "user_id": <user_id>,
+    "_id": <user_id>,
     "name": "...",
     "avatar": "..."
   },                             // 创建人
   "owner": {
-    "user_id": <user_id>,
+    "_id": <user_id>,
     "name": "...",
     "avatar": "..."
   },                             // 执行人
   "follower": [{
-    "user_id": <user_id>,
+    "_id": <user_id>,
     "name": "...",
     "avatar": "..."
-  }, ...],  // 关注者
-  "time_create": <Date>,            // 创建时间
-  "time_up": <Date>,             // 更新时间
-  "start_date": <date>,          // 开始时间（optional）
-  "due_date": <date>,            // 截止时间（optional）
+  }, ...],                       // 关注者
+  "time_create": <Date>,         // 创建时间
+  "time_update": <Date>,         // 更新时间
+  "date_start": <date>,          // 开始时间（optional）
+  "date_due": <date>,            // 截止时间（optional）
   "priority": <0,1,2,3>,         // 优先级别
   "subtask": [<task_id>, ...],   // 子任务
   "tag": [{
-    "name": "...",
-  }, ...],       // 标签
+    "_id": <tag_id>,
+    "name": "tag name",
+    "color": "#ABCDEF"
+  }, ...],                       // 标签
 }
 ```
 
