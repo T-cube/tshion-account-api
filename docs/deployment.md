@@ -12,7 +12,28 @@
 * [安装nginx](#安装nginx )
 
 
-## 常用工具安装与防火墙配置
+## 系统初始化、常用工具安装与防火墙配置
+
+### 禁用 SELinux
+
+参见：https://www.centos.org/docs/5/html/5.1/Deployment_Guide/sec-sel-enable-disable.html
+
+查看 SELinux 状态
+```
+/usr/sbin/sestatus -v
+```
+修改配置文件
+```
+sudo vi /etc/selinux/config
+```
+```
+#SELINUX=enforcing
+SELINUX=disabled
+```
+重新启动以生效
+```
+sudo reboot
+```
 
 ### openssh 安装与设置
 
@@ -40,6 +61,23 @@ sudo yum install -y net-tools
 
 ### 配置防火墙
 
+因不熟悉CentOS中的firewalld，所以换为原始的iptables
+
+参见：https://www.digitalocean.com/community/tutorials/how-to-migrate-from-firewalld-to-iptables-on-centos-7
+
+```
+sudo systemctl disable firewalld
+sudo systemctl stop firewalld
+
+sudo yum install iptables-services
+sudo systemctl enable iptables
+sudo systemctl enable ip6tables
+
+sudo systemctl start iptables
+sudo systemctl start ip6tables
+```
+
+开放默认80端口，8000端口（主要用于测试），3000端口（API，生产环境部署使用nginx代理到80）
 ```
 sudo iptables -I INPUT 5 -i enp3s0 -p tcp --dport 8000 -m state --state NEW,ESTABLISHED -j ACCEPT
 sudo iptables -I INPUT 5 -i enp3s0 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
@@ -64,7 +102,7 @@ nvm --version && nvm list-remote
 ```
 安装相应版本：
 ```
- nvm install v5.9.0
+nvm install v5.9.0
 ```
 查看已安装版本
 ```
@@ -130,7 +168,7 @@ mongorestore -d dbname <dbdirectory>
 ```
 设置为开机启动：
 ```
-systemctl start mongod
+sudo systemctl start mongod
 ```
 
 ## 安装nginx
@@ -152,5 +190,5 @@ enabled=1
 ```
 
 ```
-sudo yum install nginx
+sudo yum install -y nginx
 ```
