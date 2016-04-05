@@ -192,3 +192,32 @@ enabled=1
 ```
 sudo yum install -y nginx
 ```
+
+## 启动服务
+
+### development
+
+开发环境启动API服务
+```
+cd tlf-api/
+npm install
+# 文件修改后自动编译
+npm run watch
+# 文件修改后自动重新启动
+npm run nodemon
+```
+
+### production
+
+生产环境启动API服务
+
+```
+# 安装 pm2
+sudo npm install -g pm2
+
+# 编译
+npm run compile
+
+# 运行
+pm2 start -n 'tlf-api' ./app/index.js
+```
