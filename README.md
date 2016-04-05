@@ -1,5 +1,7 @@
 # TLifang API
 
+本项目是 TLifang API 端实现，负责给TLiFang Web、Mobile APP、WeChat WebAPP 提供接口
+
 ## 文档目录
 
 1. [API文档](docs/api/index.md)
