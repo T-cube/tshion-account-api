@@ -193,9 +193,20 @@ enabled=1
 sudo yum install -y nginx
 ```
 
-## 启动服务
+## 代码部署及运行
 
-### development
+### 代码部署
+
+```
+# 初始化
+git clone https://git.coding.net/alphakevin/tlf-api.git
+# 更新
+git pull origin master
+```
+
+### 启动服务
+
+#### development
 
 开发环境启动API服务
 ```
@@ -207,17 +218,15 @@ npm run watch
 npm run nodemon
 ```
 
-### production
+#### production
 
 生产环境启动API服务
 
 ```
 # 安装 pm2
 sudo npm install -g pm2
-
 # 编译
 npm run compile
-
 # 运行
 pm2 start -n 'tlf-api' ./app/index.js
 ```
