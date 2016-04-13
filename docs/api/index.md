@@ -25,7 +25,7 @@ POST、PATCH 请求头请加入：
 Content-Type: application/json
 ```
 
-使用 Bearer 方式
+使用 Bearer token 进行身份验证
 
 ```http
 Authorization: Bearer {access_token}
