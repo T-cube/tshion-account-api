@@ -87,4 +87,4 @@ Example:
 | ---- | ----------- | ------- |
 | `auto` | 该字段为 mongodb 自动生成 | `_id: <ObjectId[auto]>` |
 | `optional` | 非必须项目 | `description: <String[optional]>` |
-| `link` | 表示关联字段 | `user_id: <ObjectId[link=user._id]>` |
+| `rel` | 表示关联字段 | `user_id: <ObjectId[rel=user._id]>` |

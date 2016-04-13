@@ -35,7 +35,7 @@ INPUT
     "parent_id": <task_id>,        // 父任务
     "status": <1,2>                //任务状态
     "title": "...",                // 任务标题
-    "content": "...",              // 任务详情
+    "description": "...",          // 任务详情
     "creator": <user_id>,          // 创建人
     "assignee": <user_id>,         // 执行人
     "followers": [<user_id>, ...], // 关注者

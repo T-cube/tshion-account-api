@@ -5,10 +5,12 @@ export { ObjectId } from 'mongodb';
 
 export function database() {
   return pmongo(config.db, [
-   'user',
-   'company',
-   'oauth_clients',
-   'oauth_accesstoken',
-   'oauth_refreshtoken',
- ]);
+    'oauth_clients',
+    'oauth_accesstoken',
+    'oauth_refreshtoken',
+    'user',
+    'company',
+    'project',
+    'task',
+  ]);
 }

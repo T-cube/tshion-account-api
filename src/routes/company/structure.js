@@ -7,7 +7,7 @@ import Structure from '../../lib/structure';
 
 /* company collection */
 let api = require('express').Router();
-module.exports = api;
+export default api;
 
 api.use((req, res, next) => {
   req.structure = new Structure(req.company.structure);

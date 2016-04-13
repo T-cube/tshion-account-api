@@ -8,7 +8,7 @@ import constants from '../../lib/constants';
 
 /* company collection */
 let api = require('express').Router();
-module.exports = api;
+export default api;
 
 api.use((req, res, next) => {
   next();

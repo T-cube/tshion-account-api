@@ -12,7 +12,13 @@ api.use(corsHandler);
 
 api.use(bodyParser.json());
 
-let routes = ['user','company','account','relation'];
+let routes = [
+  'account',
+  'company',
+  'relation',
+  'task',
+  'user',
+];
 
 _.each(routes, route => {
   let path = '/' + route;
