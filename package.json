@@ -20,6 +20,7 @@
     "body-parser": "^1.14.2",
     "express": "^4.13.4",
     "express-validation": "^0.4.5",
+    "joi": "^8.0.5",
     "mongodb": "^2.1.4",
     "mongoose": "^4.3.6",
     "oauth2-server": "^2.4.1",
