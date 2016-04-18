@@ -3,8 +3,8 @@
 [返回目录](index.md)
 
 任务(REST)
-挂载点：
 
+挂载点：
 * `/company/:company_id/project/:project_id/task`
 * `/task`
 
@@ -16,7 +16,7 @@
 * [GET /task/:task_id/comment](#get-task-task_id-comment)
 * [GET /task/:task_id/log](#get-task-task_id-log)
 
-## API function
+## 新建任务
 
 ### POST /task
 
@@ -30,9 +30,9 @@ INPUT
   {
     "_id":"...",
     "title":"...",
-    "company_id": <company_id>,
-    "project_id": <project_id>,
-    "parent_id": <task_id>,        // 父任务
+    //"company_id": <company_id>,
+    //"project_id": <project_id>,
+    //"parent_id": <task_id>,        // 父任务
     "status": <1,2>                //任务状态
     "title": "...",                // 任务标题
     "description": "...",          // 任务详情
@@ -49,6 +49,101 @@ INPUT
   }
 ]
 ```
+
+## 更新任务信息
+
+### PUT /task/:task_id/status
+
+更新任务状态
+
+```javascript
+{
+  status: <Enum:0,1,2,3>
+}
+```
+
+### PUT /task/:task_id/title
+
+更新任务标题
+
+INPUT
+```javascript
+{
+  title: <String>
+}
+```
+
+### PUT /task/:task_id/description
+
+更新任务详情
+
+INPUT
+```javascript
+{
+  title: <String>
+}
+```
+
+### PUT /task/:task_id/assignee
+
+更新任务执行人
+
+INPUT
+```javascript
+{
+  assignee: <ObjectId>
+}
+```
+
+### POST /task/:task_id/followers
+
+添加关注者
+
+INPUT
+```javascript
+{
+  _id: <ObjectId>
+}
+```
+
+### DELETE /task/:task_id/followers/:follower_id
+
+移除关注者
+
+### POST /task/:task_id/tag
+
+添加标签
+
+INPUT
+```javascript
+{
+  tag: <ObjectId>
+}
+```
+
+### PUT /task/:task_id/date_start
+
+更新开始时间
+
+INPUT
+```javascript
+{
+  date_start: <ObjectId>
+}
+```
+
+### PUT /task/:task_id/date_due
+
+更新截止时间
+
+INPUT
+```javascript
+{
+  date_due: <ObjectId>
+}
+```
+
+## 获取任务信息
 
 ### GET /task
 
@@ -68,7 +163,7 @@ OUTPUT
     "_id":"...",
     "title":"...",
     //...
-  } // 参考任务详情页面
+  } // 参考任务详情
 ]
 ```
 
@@ -158,6 +253,18 @@ OUTPUT
   "content": "",
   "time_add": <Date>,
 }, ...]
+```
+
+### POST /task/{task_id}/comment
+
+添加评论
+
+```javascript
+{
+  "user_id": <user_id>,
+  "content": <String>,
+  "time_add": <Date>
+}
 ```
 
 ### GET /task/{taks_id}/log
