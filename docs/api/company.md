@@ -142,10 +142,6 @@ OUTPUT
 }
 ```
 
-ERROR
-
-`none`
-
 ### PUT /company/:company_id/structure/:node_id
 
 修改部门
@@ -163,23 +159,9 @@ OUTPUT
 :nodeObject
 ```
 
-ERROR
-
-`none`
-
 ### DELETE /company/:company_id/structure/:node_id
 
 删除部门
-
-INPUT
-`none`
-
-OUTPUT
-`none`
-
-ERROR
-
-`none`
 
 ### POST /company/:company_id/structure/:node_id/member
 
@@ -192,14 +174,6 @@ INPUT
   "title": String // job title
 }
 ```
-
-OUTPUT
-
-`object`
-
-ERROR
-
-`none`
 
 ### PUT /company/:company_id/structure/:node_id/member/:member_id
 
@@ -214,25 +188,6 @@ INPUT
 }
 ```
 
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`
-
 ### DELETE /company/:company_id/structure/:node_id/member/:member_id
 
 移除部门成员
-
-INPUT
-`none`
-
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`

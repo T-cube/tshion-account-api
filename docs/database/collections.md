@@ -76,19 +76,19 @@
 ```javascript
 {
   _id: <ObjectId>,
-  company_id: <ObjectId>,         // 所属企业
-  logo: <URL>                     // 项目图标
-  is_archived: <Bool>             // 项目是否为归档
-  name: <String>,                 // 项目标题
-  description: <String>,          // 项目详情
-  owner: <ObjectId>,              // 项目所有者
+  company_id: <ObjectId>,           // 所属企业
+  logo: <URL>                       // 项目图标
+  is_archived: <Bool:false>         // 项目是否为归档
+  name: <String>,                   // 项目标题
+  description: <String>,            // 项目详情
+  owner: <ObjectId>,                // 项目所有者
   //admins: [<ObjectId>...],        // 管理员
   members: [{
     _id: <ObjectId>,
-    type: <String[Enum:1,2,3]>,   // 成员类型
-    title: <String>,              // 成员岗位
-  }...],                          // 项目成员列表
-  date_create: <Date>,            // 创建时间
+    type: <String[Enum:0,1,2,3,4]>, // 成员类型
+    title: <String>,                // 成员岗位
+  }...],                            // 项目成员列表
+  date_create: <Date>,              // 创建时间
 }
 ```
 
@@ -259,7 +259,7 @@
 }
 ```
 
-### annoucement
+### announcement
 
 公告
 
@@ -268,7 +268,14 @@
   _id: <ObjectId>,
   title: <String>,
   content: <String>,
-  creator: <ObjectId>,
+  from: {
+    creator: <ObjectId>,          // 创建人
+    department: <ObjectId>,       // 发起部门
+  },
+  to: {
+    member: [<ObjectId>...],      // 接收成员
+    department: [<ObjectId>...],  // 接收部门
+  },
   date_publish: <Date>,
   date_create: <Date>,
 }
