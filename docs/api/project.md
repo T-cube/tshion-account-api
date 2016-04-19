@@ -19,9 +19,7 @@ INPUT
 ```javascript
 {
   "name": "",
-  "description": "",
-  "logo": "path/to/logo.png",
-  //"owner": <user_id>,
+  "description": ""
 }
 ```
 
@@ -66,6 +64,36 @@ OUTPUT
   "time_update": <Date>,         // 更新时间
 }
 ```
+
+### POST /company/:company_id/project/:project_id/member
+
+添加成员
+
+INPUT
+```javascript
+{
+  "_id": <ObjectId>,
+  "type": <String[Enum:1,2,3]>,
+  "title": <String>,
+}
+```
+
+### GET /company/:company_id/project/:project_id/member
+
+获取成员列表
+
+OUTPUT
+```javascript
+[{
+  "_id": <ObjectId>,
+  "name": <String>,
+  "avatar": <String>,
+}...]
+```
+
+### DELETE /company/:company_id/project/:project_id/member/:member_id
+
+删除项目成员
 
 ### DELETE /company/:company_id/project/:project_id
 

@@ -56,7 +56,7 @@ Example:
 
 | Type | Description | Example |
 | ---- | ----------- | ------- |
-| `<Type[Enum=e1,e2,e3...]>` | 枚举类型 | `<Int[Enum=1,2,3]>` |
+| `<Type[Enum:e1,e2,e3...]>` | 枚举类型 | `<Int[Enum:1,2,3]>` |
 | `<String[/.../]>` | 带有正则的字符串 | `<String[/[\d]{11}/]>` |
 
 ### 自定义类型

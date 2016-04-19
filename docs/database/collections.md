@@ -19,7 +19,7 @@
   avatar: <URL>,
   name: <String>,
   description: <String>,
-  sex: <String[enum=M,F]>,
+  sex: <String[Enum:M,F]>,
   birthdate: <Date>,
   date_join: <Date>,
   address: <String>,
@@ -43,6 +43,7 @@
   _id: <ObjectId[auto]>,
   name: <String>,
   description: <String>,
+  logo: <URL>,
   owner: <ObjectId[link=user._id]>,
   members: [{
     _id: <ObjectId[link=user._id]>,
@@ -52,7 +53,7 @@
     joindate: <Date>,
     email: <String[email]>,
     address: <String>,
-    sex: <String[enum=M,F],
+    sex: <String[Enum:M,F]>,
   }...],
   structure: <Structure:> {
     _id: <ObjectId>,
@@ -81,11 +82,25 @@
   name: <String>,                 // 项目标题
   description: <String>,          // 项目详情
   owner: <ObjectId>,              // 项目所有者
-  admins: [<ObjectId>...],        // 管理员
-  members: [<ObjectId>...],       // 项目成员
+  //admins: [<ObjectId>...],        // 管理员
+  members: [{
+    _id: <ObjectId>,
+    type: <String[Enum:1,2,3]>,   // 成员类型
+    title: <String>,              // 成员岗位
+  }...],                          // 项目成员列表
   date_create: <Date>,            // 创建时间
 }
 ```
+
+关于成员类型 `status`：
+
+| Value | Title | Description |
+| ----- | ----- | ----------- |
+| 0     | 观察者 | 只可浏览、关注，无法修改项目内容 |
+| 1     | 普通成员 | 可操作任务、评论等常规任务 |
+| 2     | 管理员 | 可添加、移除成员 |
+| 3     | 所有者 | 除管理员权限外，可设置设置其他管理员，可移交项目 |
+| 4     | 监察者 | 与访客一致，但对其他成员不可见（此种类型待定） |
 
 ### discussion
 
@@ -133,6 +148,7 @@
 ```javascript
 {
   _id: <ObjectId>,
+  status: <Int:[Enum:0,1,2]>       // 任务状态(1)
   company_id: <ObjectId>,          // 关联公司
   project_id: <ObjectId>,          // 关联项目
   title: <String>,                 // 任务标题
@@ -149,6 +165,16 @@
   time_update: <Date>,             // 更新时间
 }
 ```
+
+(1)关于任务状态 `status`
+
+| Value | Title | Description |
+| ----- | ----- | ----------- |
+| 0 | 未开启 | 任务处于未开启状态，用于设置开始时间的任务 |
+| 1 | 正在进行 | 任务正在进行 |
+| 2 | 已完成 | 任务已完成√ |
+| 3 | 暂停 | 任务处于暂停状态 |
+| 3 | 已删除 | 任务位于垃圾篓 |
 
 ### task.comments
 

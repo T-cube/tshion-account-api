@@ -68,16 +68,11 @@ ERROR
 
 获取公司详情
 
-INPUT
-`none`
-
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`
+```javascript
+{
+  ...
+}
+```
 
 ### POST /company
 
@@ -91,15 +86,8 @@ INPUT
   //...
 }
 ```
-OUTPUT
 
-`none`
-
-ERROR
-
-`none`
-
-### PATCH /company/:company_id
+### PUT /company/:company_id
 
 修改公司信息
 
@@ -110,94 +98,26 @@ INPUT
   //...
 }
 ```
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`
 
 ### DELETE /company/:company_id
 
-删除公司信息
-
-INPUT
-
-`none`
-
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`
+删除公司
 
 ### GET /company/:company_id/member
 
 获取公司成员列表
 
-INPUT
-
-`none`
-
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`
-
 ### GET /company/:company_id/member/:member_id
 
 获取公司成员详情
-
-INPUT
-
-`none`
-
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`
 
 ### POST /company/:company_id/member/:member_id
 
 添加修改公司成员
 
-INPUT
-
-`none`
-
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`
-
-
 ### DELETE /company/:company_id/member/:member_id
 
 删除公司成员
-
-INPUT
-
-`none`
-
-OUTPUT
-
-`none`
-
-ERROR
-
-`none`
 
 ### POST /company/:company_id/structure/:node_id
 
