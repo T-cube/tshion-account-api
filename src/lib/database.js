@@ -12,5 +12,6 @@ export function database() {
     'company',
     'project',
     'task',
+    'announcement'
   ]);
 }

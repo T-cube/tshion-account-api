@@ -61,3 +61,4 @@ api.route('/:company_id')
 api.use('/:company_id/structure', require('./structure').default);
 api.use('/:company_id/member', require('./member').default);
 api.use('/:company_id/project', require('../project').default);
+api.use('/:company_id/announcement', require('./announcement').default);

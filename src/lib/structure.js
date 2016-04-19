@@ -42,7 +42,7 @@ class Structure {
       for (let k in node.children) {
         let _node = node.children[k];
         if (node_id.equals(_node._id)) {
-          return node;
+          return _node;
         }
         let found = this._findParent(_node, node_id);
         if (found) {
