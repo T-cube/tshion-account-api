@@ -45,6 +45,7 @@ OUTPUT
 ```javascript
 [{
   _id: <ObjectId>,
+  company_id: <ObjectId>,
   title: <String>,                // 标题
   //content: <String>,              // 内容
   from: {
@@ -67,6 +68,7 @@ OUTPUT
 ```javascript
 {
   _id: <ObjectId>,
+  company_id: <ObjectId>,
   title: <String>,                // 标题
   content: <String>,              // 内容
   from: {

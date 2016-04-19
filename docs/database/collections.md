@@ -234,6 +234,7 @@
 ```javascript
 {
   _id: <ObjectId>,
+  company_id: <ObjectId>,
   category_id: <ObjectId>,       // 文章分类
   creator: <ObjectId>,           // 作者
   title: <String>,               // 标题
@@ -266,6 +267,7 @@
 ```javascript
 {
   _id: <ObjectId>,
+  company_id: <ObjectId>,
   title: <String>,
   content: <String>,
   from: {
