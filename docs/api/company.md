@@ -52,17 +52,13 @@ INPUT
 
 OUTPUT
 ```javascript
-[
-  {
-    "_id":"...",
-    "name":"...",
-    //...
-  }
-]
+[{
+  _id: <ObjectId>,
+  name: <String>,
+  description:<String>,
+  logo: <URL>,
+}...]
 ```
-ERROR
-
-`none`
 
 ### GET /company/:company_id
 
@@ -70,7 +66,35 @@ ERROR
 
 ```javascript
 {
-  ...
+  _id: <ObjectId[auto]>,
+  name: <String>,
+  description: <String>,
+  logo: <URL>,
+  owner: <ObjectId[link=user._id]>,
+  members: [{
+    _id: <ObjectId[link=user._id]>,
+    name: <String>,
+    mobile: <String>,
+    birthdate: <Date>,
+    joindate: <Date>,
+    email: <String[email]>,
+    address: <String>,
+    sex: <String[Enum:M,F]>,
+  }...],
+  structure: <Structure:> {
+    _id: <ObjectId>,
+    name: <String>,
+    positions: [{
+      _id: <ObjectId>,
+      title: <String>,
+    }...],
+    members: [{
+      _id: <ObjectId[link=user._id]>,
+      position: <ObjectId>,
+    }...],
+    children: [<Structure>...],
+  },
+  projects: [<ObjectId>...],
 }
 ```
 
@@ -81,9 +105,8 @@ ERROR
 INPUT
 ```javascript
 {
-  "_id":"...",
-  "name":"...",
-  //...
+  name: <String>,
+  description: <String>,
 }
 ```
 
@@ -94,8 +117,19 @@ INPUT
 INPUT
 ```javascript
 {
-  "email":"...",
-  //...
+  name: <String>,
+  description: <String>,
+}
+```
+
+### PUT /company/:company_id/logo
+
+更新公司logo
+
+INPUT
+```javascript
+{
+  logo: <URL>,
 }
 ```
 
@@ -126,19 +160,15 @@ INPUT
 INPUT
 ```javascript
 {
-  "node": {
-    "name": String,
-    "description": String
-  }
-  "parent_id": :ObjectId
+  name: String,
+  description: String,
 }
 ```
 
 OUTPUT
 ```javascript
 {
-  "_id": :ObjectId,
-  ...
+  _id: <ObjectId>,
 }
 ```
 
@@ -149,14 +179,9 @@ OUTPUT
 INPUT
 ```javascript
 {
-  "name": String,
-  "description": String
+  name: String,
+  description: String
 }
-```
-
-OUTPUT
-```javascript
-:nodeObject
 ```
 
 ### DELETE /company/:company_id/structure/:node_id
@@ -170,8 +195,8 @@ OUTPUT
 INPUT
 ```javascript
 {
-  "_id": ObjectId,
-  "title": String // job title
+  _id: ObjectId,
+  title: String // job title
 }
 ```
 
@@ -182,9 +207,9 @@ INPUT
 INPUT
 ```javascript
 {
-  "_id": ObjectId
-  "is_manager": [true|false],
-  "title": String // job title
+  _id: <ObjectId>
+  is_manager: <Boolean>,
+  title: <String> // job title
 }
 ```
 

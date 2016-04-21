@@ -58,10 +58,13 @@
   structure: <Structure:> {
     _id: <ObjectId>,
     name: <String>,
-    positions: [<String>...],
+    positions: [{
+      _id: <ObjectId>,
+      title: <String>,
+    }...],
     members: [{
       _id: <ObjectId[link=user._id]>,
-      title:
+      position: <ObjectId>,
     }...],
     children: [<Structure>...],
   },
