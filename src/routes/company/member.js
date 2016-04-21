@@ -46,8 +46,7 @@ api.get('/:member_id', (req, res, next) => {
   let data = req.body;
   let member_id = ObjectId(req.params.member_id);
   let members = req.company.members || [];
-  let member = _.findWhere(members, m => member_id.equals(m._id));
-  console.log(member_id, member);
+  let member = _.find(members, m => member_id.equals(m._id));
   if (!member) {
     next(ApiError(404));
   }
