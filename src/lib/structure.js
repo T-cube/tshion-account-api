@@ -187,30 +187,36 @@ class Structure {
     return true;
   }
 
-  addPosition(position, node_id) {
+  addPosition(title, node_id) {
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
     if (!_.isArray(node.positions)) {
       node.positions = [];
     }
-    if (!_.contains(node.positions, position)) {
+    if (!_.findWhere(node.positions, {title: title})) {
+      let _id = ObjectId();
+      let position = {
+        _id: _id,
+        title: title,
+      };
       node.positions.push(position);
-      return true;
+      return position;
     } else {
       return false;
     }
   }
 
-  deletePosition(position, node_id) {
+  deletePosition(position_id, node_id) {
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
     if (!_.isArray(node.positions)) {
       node.positions = [];
+      return true;
     }
-    let index = _.indexOf(node.positions, position);
+    let index = _.findIndex(node.positions, pos => pos._id.equals(position_id));
     if (index >= 0) {
       node.positions.splice(index, 1);
-      node.members = _.reject(node.members, m => !_.contains(node.positions, m.title));
+      node.members = _.reject(node.members, m => m._id.equals(position_id));
       return true;
     } else {
       return false;

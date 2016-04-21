@@ -76,9 +76,11 @@ api.post('/:node_id/position', (req, res, next) => {
   let tree = req.structure;
   let data = req.body;
   let node_id = req.params.node_id;
-  if (tree.addPosition(data.name, node_id)) {
+  let position = tree.addPosition(data.title, node_id);
+  console.log(position);
+  if (position) {
     save(req)
-    .then(doc => res.json(doc))
+    .then(doc => res.json(position))
     .catch(next);
   } else {
     next(new ApiError(400, 'duplicated position name'));
@@ -92,13 +94,13 @@ api.get('/:node_id/position', (req, res, next) => {
   res.json(node.positions || []);
 });
 
-api.delete('/:node_id/position', (req, res, next) => {
+api.delete('/:node_id/position/:position_id', (req, res, next) => {
   let tree = req.structure;
-  let data = req.body;
   let node_id = req.params.node_id;
-  if (tree.deletePosition(data.name, node_id)) {
+  let position_id = req.params.position_id;
+  if (tree.deletePosition(position_id, node_id)) {
     save(req)
-    .then(doc => res.json(doc))
+    .then(doc => res.json({}))
     .catch(next);
   } else {
     next(new ApiError(400, 'position not found'));
