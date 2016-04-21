@@ -95,7 +95,7 @@
 }
 ```
 
-关于成员类型 `status`：
+关于成员类型 `members.type`：
 
 | Value | Title | Description |
 | ----- | ----- | ----------- |
