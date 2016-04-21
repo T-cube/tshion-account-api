@@ -5,8 +5,6 @@ import { ObjectId } from 'mongodb';
 import { ApiError } from '../../lib/error';
 import Structure from '../../lib/structure';
 import constants from '../../lib/constants';
-import { sanitizeValidateObject } from '../../lib/inspector';
-import { memberCreateSanitization, memberCreateValidation } from './schema';
 
 /* company collection */
 let api = require('express').Router();
@@ -22,12 +20,6 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-
-  let result = sanitizeValidateObject(memberCreateSanitization, memberCreateValidation, data);
-  if (!result.valid) {
-    return next(result.customerError);
-  }
-
   // initial attributes
   data._id = ObjectId();
   data.user_id = null;
@@ -46,7 +38,8 @@ api.get('/:member_id', (req, res, next) => {
   let data = req.body;
   let member_id = ObjectId(req.params.member_id);
   let members = req.company.members || [];
-  let member = _.find(members, m => member_id.equals(m._id));
+  let member = _.findWhere(members, m => member_id.equals(m._id));
+  console.log(member_id, member);
   if (!member) {
     next(ApiError(404));
   }
