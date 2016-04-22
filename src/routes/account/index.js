@@ -4,7 +4,7 @@ import validator from 'express-validation';
 import bcrypt from 'bcrypt';
 
 import validation from './validation';
-import { ApiError } from '../../lib/error';
+import { ApiError } from 'lib/error';
 
 let api = express.Router();
 export default api;

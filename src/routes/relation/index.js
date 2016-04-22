@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import { ApiError } from '../../lib/error';
+import { ApiError } from 'lib/error';
 
 let api = express.Router();
 

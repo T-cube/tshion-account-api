@@ -2,8 +2,8 @@ import _ from 'underscore';
 import express from 'express';
 import bodyParser from 'body-parser';
 
-import { apiErrorHandler } from '../lib/error';
-import corsHandler from '../lib/cors';
+import { apiErrorHandler } from 'lib/error';
+import corsHandler from 'lib/cors';
 
 let api = express.Router();
 export default api;

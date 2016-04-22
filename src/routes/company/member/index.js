@@ -2,9 +2,9 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import { ApiError } from '../../lib/error';
-import Structure from '../../lib/structure';
-import constants from '../../lib/constants';
+import { ApiError } from 'lib/error';
+import Structure from 'lib/structure';
+import constants from 'lib/constants';
 
 /* company collection */
 let api = require('express').Router();

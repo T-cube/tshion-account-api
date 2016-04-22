@@ -2,9 +2,9 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import { ApiError } from '../../lib/error';
-import { userId, userInfo } from '../../lib/utils';
-import { sanitizeValidateObject } from '../../lib/inspector';
+import { ApiError } from 'lib/error';
+import { userId, userInfo } from 'lib/utils';
+import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
 
 /* company collection */
@@ -48,7 +48,7 @@ api.route('/')
       },
       projects: [],
     });
-    console.log(data);
+    // console.log(data);
 
     db.company.insert(data)
     .then(docs => res.json(docs))
@@ -100,5 +100,5 @@ api.route('/:company_id')
 
 api.use('/:company_id/structure', require('./structure').default);
 api.use('/:company_id/member', require('./member').default);
-api.use('/:company_id/project', require('./project/index').default);
-api.use('/:company_id/announcement', require('./announcement/index').default);
+api.use('/:company_id/project', require('./project').default);
+api.use('/:company_id/announcement', require('./announcement').default);

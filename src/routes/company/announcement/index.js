@@ -2,9 +2,9 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import { ApiError } from '../../../lib/error';
-import { time } from '../../../lib/utils';
-import inspector from '../../../lib/inspector';
+import { ApiError } from 'lib/error';
+import { time } from 'lib/utils';
+import inspector from 'lib/inspector';
 import { sanitization, validation } from './schema';
 
 /* company collection */
@@ -46,15 +46,15 @@ api.post('/', (req, res, next) => {
 api.get('/:announcement_id', (req, res, next) => {
   let announcement_id = ObjectId(req.params.announcement_id);
   db.announcement.findOne({
-   company_id: req.company._id,
-   _id: announcement_id
- })
- .then(data => {
-   if (!data) {
-     return next(new ApiError(404));
-   }
-   res.json(data);
- })
+    company_id: req.company._id,
+    _id: announcement_id
+  })
+  .then(data => {
+    if (!data) {
+      return next(new ApiError(404));
+    }
+    res.json(data);
+  })
   .catch(next);
 });
 

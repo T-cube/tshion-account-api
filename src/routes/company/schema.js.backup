@@ -1,4 +1,4 @@
-import { getUserId } from '../../../lib/utils';
+import { getUserId } from 'lib/utils';
 
 export let companySanitization = {
 	type: "object",

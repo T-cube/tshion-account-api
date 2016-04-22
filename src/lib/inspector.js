@@ -22,6 +22,7 @@ let sanitizationCustom = {
     return [];
   },
 };
+
 let validationCustom = {
   objectId: function (schema, candidate) {
       if (!schema.$objectId) {

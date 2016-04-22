@@ -1,6 +1,6 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import { ApiError } from '../../lib/error';
+import { ApiError } from 'lib/error';
 
 /* company collection */
 let api = require('express').Router();

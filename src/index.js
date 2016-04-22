@@ -1,3 +1,6 @@
+// fix absolute path
+import './init';
+
 import pmongo from 'pmongo';
 import Promise from 'bluebird';
 
@@ -7,11 +10,11 @@ import http from 'http';
 import express from 'express';
 import socketio from 'socket.io';
 
-import { database } from './lib/database';
+import { database } from 'lib/database';
 import apiRouter from './routes';
-import oauthModel from './lib/oauth-model.js';
-import oauthExtended from './lib/oauth-extended.js';
-import { apiErrorHandler } from './lib/error';
+import oauthModel from 'lib/oauth-model.js';
+import oauthExtended from 'lib/oauth-extended.js';
+import { apiErrorHandler } from 'lib/error';
 
 let app = express();
 global.App = app;
