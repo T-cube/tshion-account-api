@@ -1,6 +1,6 @@
+import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import _ from 'underscore';
 
 import { ApiError } from '../../lib/error';
 import { userId, userInfo } from '../../lib/utils';
@@ -100,5 +100,5 @@ api.route('/:company_id')
 
 api.use('/:company_id/structure', require('./structure').default);
 api.use('/:company_id/member', require('./member').default);
-api.use('/:company_id/project', require('../project').default);
+api.use('/:company_id/project', require('../project/index').default);
 api.use('/:company_id/announcement', require('./announcement/index').default);

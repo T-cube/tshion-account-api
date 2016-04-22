@@ -12,15 +12,7 @@ export default api;
 api.post('/check', validator(validation.check), (req, res, next) => {
   let { type, id } = req.body;
   db.user.find({[type]: id}).count()
-  .then(count => {
-    if (count > 0) {
-      throw new ApiError(400, null, [{
-        field: 'id',
-        messages: ['user exists'],
-        types: ['custom validation'],
-      }]);
-    }
-  }).catch(next);
+  .then(count => res.json({ exists: count > 0 }));
 });
 
 api.post('/register', validator(validation.register), (req, res, next) => {

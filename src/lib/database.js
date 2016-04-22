@@ -12,6 +12,7 @@ export function database() {
     'company',
     'project',
     'task',
-    'announcement'
+    'announcement',
+    'project',
   ]);
 }
