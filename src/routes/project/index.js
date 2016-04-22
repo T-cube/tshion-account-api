@@ -21,6 +21,9 @@ api.get('/', (req, res, next) => {
   })
   .then(doc => res.json(doc))
   .catch(next);
+  // let projects = req.company.projects || [];
+  // db.project.find({_id:{$in: projects}})
+  // .then(list => res.json(list));
 });
 
 api.post('/', (req, res, next) => {
