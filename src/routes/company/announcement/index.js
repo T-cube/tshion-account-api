@@ -51,8 +51,7 @@ api.get('/:announcement_id', (req, res, next) => {
  })
  .then(data => {
    if (!data) {
-     next(new ApiError(404));
-     return;
+     return next(new ApiError(404));
    }
    res.json(data);
  })

@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import schemaInspector from 'schema-inspector';
 import { ObjectId } from 'mongodb';
 import { isEmail, userId } from './utils';
@@ -5,7 +6,7 @@ import { ApiError } from './error';
 
 let sanitizationCustom = {
   objectId: function (schema, post) {
-    if (!post || ObjectId.isValid(post)) {
+    if (!/^[A-Fa-f0-9]{24}$/.test(post) && ObjectId.isValid(post)) {
       this.report();
       return ObjectId(post);
     } else {
