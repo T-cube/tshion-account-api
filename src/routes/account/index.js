@@ -9,34 +9,39 @@ import { ApiError } from '../../lib/error';
 let api = express.Router();
 export default api;
 
+function userExistsError(type) {
+  return new ApiError(400, null, [{
+    field: type,
+    messages: ['user account exists'],
+    types: ['custom validation'],
+  }]);
+}
+
 api.post('/check', validator(validation.check), (req, res, next) => {
-  let { type, id } = req.body;
-  db.user.find({[type]: id}).count()
+  let { type } = req.body;
+  db.user.find({[type]: req.body[type]}).count()
   .then(count => {
     if (count > 0) {
-      throw new ApiError(400, null, [{
-        field: 'id',
-        messages: ['user exists'],
-        types: ['custom validation'],
-      }]);
+      throw userExistsError(type);
     }
+    res.json({});
   }).catch(next);
 });
 
 api.post('/register', validator(validation.register), (req, res, next) => {
-  let { type, id, password, code } = req.body;
+  let { type, password, code } = req.body;
+  let id = req.body[type];
   db.user.find({[type]: id}).count()
   .then(count => {
     console.log(bcrypt);
     if (count > 0) {
-      console.log('exists!');
-      throw new ApiError(400, 'account_exists');
+      throw userExistsError(type);
     }
     let salt = bcrypt.genSaltSync(10);
     let hash = bcrypt.hashSync(password, salt);
     let data = {
       [type]: id,
-      password: hash
+      password: hash,
     };
     db.user.insert(data)
     .then(res.json({[type]: id}));
