@@ -105,14 +105,15 @@ api.put('/:project_id', (req, res, next) => {
 });
 
 api.delete('/:project_id', (req, res, next) => {
+  let object_id = ObjectId(req.params.project_id);
   db.project.remove({
-    _id: ObjectId(req.params.project_id)
+    _id: object_id
   })
   .then(doc => {
     db.company.update({
       _id: req.company._id
     }, {
-      $pull: { projects: doc._id }
+      $pull: { projects: object_id }
     });
     res.json({});
   })
@@ -149,8 +150,7 @@ api.post('/:project_id/member', (req, res, next) => {
   })
   .then(count => {
     if (0 != count) {
-      console.log(count)
-      return next(new ApiError(400, null, 'member is exist'));
+      throw new ApiError(400, null, 'member is exist');
     }
     db.project.update({
       _id: project_id
@@ -166,19 +166,21 @@ api.post('/:project_id/member', (req, res, next) => {
 });
 
 api.delete('/:project_id/member/:member_id', (req, res, next) => {
+  let member_id = ObjectId(req.params.member_id);
+  let project_id = ObjectId(req.params.project_id);
   db.project.count({
-    _id: ObjectId(req.params.project_id),
-    'members._id': ObjectId(req.params.member_id)
+    _id: project_id,
+    'members._id': member_id
   })
   .then(count => {
     if (0 == count) {
       throw new ApiError(404);
     }
     db.project.update({
-      _id: ObjectId(req.params.project_id)
+      _id: project_id
     }, {
       $pull: {
-        members: { _id: ObjectId(req.params.member_id) }
+        members: { _id: member_id }
       }
     })
     .then(doc => res.json({}))
