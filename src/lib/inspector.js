@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import schemaInspector from 'schema-inspector';
 import { ObjectId } from 'mongodb';
 import { isEmail, userId } from './utils';
@@ -6,7 +5,7 @@ import { ApiError } from './error';
 
 let sanitizationCustom = {
   objectId: function (schema, post) {
-    if (!post || ObjectId.isValid(post)) {
+    if (!/^[A-Fa-f0-9]{24}$/.test(post) && ObjectId.isValid(post)) {
       this.report();
       return ObjectId(post);
     } else {
@@ -32,10 +31,10 @@ let validationCustom = {
       }
   },
   enum: function(schema, candidate) {
-    if (!_.isArray(schema.$enum) || !schema.$enum.length) {
+    if (_.isArray(schema.$enum) || schema.$enum.length) {
       return;
     }
-    if (-1 == schema.$enum.indexOf(candidate)) {
+    if (typeof candidate != 'string' || !schema.$enum.indexOf(candidate)) {
       this.report('invalid value: ' + candidate);
     }
   },

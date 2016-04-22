@@ -1,9 +1,10 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
 
 import { ApiError } from '../../../lib/error';
-import { userId } from '../../../lib/utils';
+import { userId, userInfo } from '../../../lib/utils';
 import { sanitizeObject, validateObject } from '../../../lib/inspector';
 import { projectSanitization, projectValidation, memberSanitization, memberValidation } from './schema';
 
@@ -48,12 +49,20 @@ api.post('/', (req, res, next) => {
 
   db.project.insert(data)
   .then(doc => {
-    db.company.update({
-      _id: req.company._id
-    }, {
-      $push: { projects: doc._id }
+    return Promise.all([
+      db.company.update({
+        _id: req.company._id
+      }, {
+        $push: { projects: doc._id }
+      }),
+      db.user.update({
+        _id: userId()
+      }, {
+        $push: { projects: doc._id }
+      }),
+    ]).then(() => {
+      res.json(doc);
     });
-    res.json(doc);
   })
   .catch(next);
 });
@@ -110,12 +119,18 @@ api.delete('/:project_id', (req, res, next) => {
     _id: object_id
   })
   .then(doc => {
-    db.company.update({
-      _id: req.company._id
-    }, {
-      $pull: { projects: object_id }
-    });
-    res.json({});
+    return Promise.all([
+      db.company.update({
+        _id: req.company._id
+      }, {
+        $pull: { projects: object_id }
+      }),
+      db.user.update({
+        _id: userId()
+      }, {
+        $pull: { projects: object_id }
+      }),
+    ]).then(() => res.json({}));
   })
   .catch(next);
 });
