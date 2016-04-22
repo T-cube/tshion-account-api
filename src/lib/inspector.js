@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import schemaInspector from 'schema-inspector';
 import { ObjectId } from 'mongodb';
 import { isEmail, userId } from './utils';
