@@ -24,15 +24,16 @@ api.route('/')
 
     let result = sanitizeValidateObject(companySanitization, companyValidation, data);
     if (!result.valid) {
-      return next(result.customerError);
+      return next(result.customError);
     }
+
     data.members = [userInfo()];
     data.owner = userId();
 
     let position_id = ObjectId();
     _.extend(data, {
-      owner: userId(),
-      members: [userInfo()],
+      owner: userId(), //TODO fix this
+      members: [userInfo()], //TODO fix this
       structure: {
         _id: ObjectId(),
         name: data.name,
@@ -41,7 +42,7 @@ api.route('/')
           title: '管理员',
         }],
         members: [{
-          _id: userId(),
+          _id: userId(), // TODO fix this
           title: position_id,
         }],
         children: [],
@@ -80,7 +81,7 @@ api.route('/:company_id')
     let data = req.body;
     let result = sanitizeValidateObject(companySanitization, companyValidation, data);
     if (!result.valid) {
-      return next(result.customerError);
+      return next(result.customError);
     }
     db.company.update(
       {_id: ObjectId(req.params.company_id)},

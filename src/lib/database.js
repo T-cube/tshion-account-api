@@ -1,10 +1,11 @@
 import pmongo from 'pmongo';
-import config from '../config';
+import config from 'config';
 
 export { ObjectId } from 'mongodb';
 
 export function database() {
-  return pmongo(config.db, [
+  let dbConfig = config.get('database');
+  return pmongo(dbConfig, [
     'oauth_clients',
     'oauth_accesstoken',
     'oauth_refreshtoken',
