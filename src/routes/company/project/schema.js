@@ -1,5 +1,4 @@
 import _ from 'underscore';
-import memberType from './member-type';
 
 export let projectSanitization = {
   name: { type: 'string' },

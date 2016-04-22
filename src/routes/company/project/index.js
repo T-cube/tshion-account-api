@@ -2,9 +2,9 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import { ApiError } from '../../lib/error';
-import { userId } from '../../lib/utils';
-import { sanitizeObject, validateObject } from '../../lib/inspector';
+import { ApiError } from '../../../lib/error';
+import { userId } from '../../../lib/utils';
+import { sanitizeObject, validateObject } from '../../../lib/inspector';
 import { projectSanitization, projectValidation, memberSanitization, memberValidation } from './schema';
 
 /* company collection */
