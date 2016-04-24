@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import { ApiError } from 'lib/error';
+import upload from 'lib/upload';
 import { userId, userInfo } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
@@ -11,51 +12,52 @@ import { companySanitization, companyValidation } from './schema';
 let api = require('express').Router();
 export default api;
 
-api.route('/')
+api.get('/', (req, res, next) => {
+  db.company.find({}, {name: 1, description: 1}).toArray()
+  .then(docs => res.json(docs))
+  .catch(next);
+});
 
-  .get((req, res, next) => {
-    db.company.find({}, {name: 1, description: 1}).toArray()
-    .then(docs => res.json(docs))
-    .catch(next);
-  })
+api.post('/', (req, res, next) => {
+  let data = req.body;
 
-  .post((req, res, next) => {
-    let data = req.body;
+  let result = sanitizeValidateObject(companySanitization, companyValidation, data);
+  if (!result.valid) {
+    return next(result.customError);
+  }
 
-    let result = sanitizeValidateObject(companySanitization, companyValidation, data);
-    if (!result.valid) {
-      return next(result.customError);
-    }
+  data.members = [userInfo()];
+  data.owner = userId();
 
-    data.members = [userInfo()];
-    data.owner = userId();
+  let position_id = ObjectId();
+  _.extend(data, {
+    owner: userId(), //TODO fix this
+    members: [userInfo()], //TODO fix this
+    structure: {
+      _id: ObjectId(),
+      name: data.name,
+      positions: [{
+        _id: position_id,
+        title: __('administrator'),
+      }],
+      members: [{
+        _id: userId(), // TODO fix this
+        title: position_id,
+      }],
+      children: [],
+    },
+    projects: [],
+  });
+  // console.log(data);
 
-    let position_id = ObjectId();
-    _.extend(data, {
-      owner: userId(), //TODO fix this
-      members: [userInfo()], //TODO fix this
-      structure: {
-        _id: ObjectId(),
-        name: data.name,
-        positions: [{
-          _id: position_id,
-          title: '管理员',
-        }],
-        members: [{
-          _id: userId(), // TODO fix this
-          title: position_id,
-        }],
-        children: [],
-      },
-      projects: [],
-    });
-    // console.log(data);
+  db.company.insert(data)
+  .then(docs => res.json(docs))
+  .catch(next);
+});
 
-    db.company.insert(data)
-    .then(docs => res.json(docs))
-    .catch(next);
-  })
-;
+api.post('/avatar', upload().single('avatar'), (req, res, next) => {
+  res.json({});
+})
 
 api.param('company_id', (req, res, next, id) => {
   let company_id = ObjectId(id);

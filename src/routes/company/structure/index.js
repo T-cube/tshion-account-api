@@ -3,7 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import { ApiError } from 'lib/error';
-import Structure from 'lib/structure';
+import Structure from 'models/structure';
 
 /* company collection */
 let api = require('express').Router();

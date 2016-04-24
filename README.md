@@ -15,6 +15,7 @@
 | `app`  | babel 编译后源代码，在编译后生成 |
 | `config`  | 配置文件，以`json5`格式存放 |
 | `docs` | API相关文档 |
+| `locale` | 多语言文件 |
 | `public` | 静态文件资源 |
 | `src`  | 源代码 |
 | `test` | 自动化测试脚本 |
