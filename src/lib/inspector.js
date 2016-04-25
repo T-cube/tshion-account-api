@@ -6,32 +6,30 @@ import { ApiError } from './error';
 
 let sanitizationCustom = {
   objectId: function (schema, post) {
-    if (!/^[A-Fa-f0-9]{24}$/.test(post) && ObjectId.isValid(post)) {
+    if (/^[A-Fa-f0-9]{24}$/.test(post)) {
       this.report();
       return ObjectId(post);
     } else {
       return post;
     }
   },
-  userId: function (schema, post) {
-    this.report();
-    return userId();
-  },
   emptyArray: function (schema, post) {
     this.report();
     return [];
   },
 };
+
 let validationCustom = {
   objectId: function (schema, candidate) {
-      if (!schema.$objectId) {
-        return;
-      }
-      if (!ObjectId.isValid(candidate)) {
-          this.report('invalid ObjectId: ' + candidate);
-      }
+    if (!schema.$objectId) {
+      return;
+    }
+    if (!ObjectId.isValid(candidate)) {
+      this.report('invalid ObjectId: ' + candidate);
+    }
   },
   enum: function(schema, candidate) {
+    console.log(schema, candidate);
     if (_.isArray(schema.$enum) || schema.$enum.length) {
       return;
     }
@@ -50,17 +48,17 @@ schemaInspector.Sanitization.extend(sanitizationCustom);
 
 export function sanitizeObject(schema, data) {
   schemaInspector.sanitize({
- 		type: 'object',
+    type: 'object',
     strict: true,
- 		properties: schema
+    properties: schema
   }, data);
 }
 
 export function validateObject(schema, data) {
   return schemaInspector.validate({
- 		type: 'object',
+    type: 'object',
     strict: true,
- 		properties: schema
+    properties: schema
   }, data);
 }
 
@@ -68,7 +66,7 @@ export function sanitizeValidateObject(sanitizationSchema, validationSchema, dat
   sanitizeObject(sanitizationSchema, data);
   let result = validateObject(validationSchema, data);
   if (!result.valid) {
-    result.customerError = new ApiError(400, null, result.error);
+    result.customError = new ApiError(400, null, result.error);
   }
   return result;
 }

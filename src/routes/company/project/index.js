@@ -3,10 +3,11 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
-import { ApiError } from '../../../lib/error';
-import { userId, userInfo } from '../../../lib/utils';
-import { sanitizeObject, validateObject } from '../../../lib/inspector';
+import { ApiError } from 'lib/error';
+import { userId, userInfo } from 'lib/utils';
+import { sanitizeObject, validateObject } from 'lib/inspector';
 import { projectSanitization, projectValidation, memberSanitization, memberValidation } from './schema';
+import C from 'lib/constants';
 
 /* company collection */
 let api = require('express').Router();
@@ -41,7 +42,7 @@ api.post('/', (req, res, next) => {
     owner: userId(),
     members: [{
       _id: userId(),
-      type: 3,
+      type: C.PROJECT_MEMBER_TYPE.OWNER,
       title: ''
     }],
     date_create: new Date(),

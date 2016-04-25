@@ -1,6 +1,6 @@
 import express from 'express'
 import pmongo from 'pmongo'
-import { ApiError } from '../../lib/error';
+import { ApiError } from 'lib/error';
 
 /* users collection */
 let api = express.Router();

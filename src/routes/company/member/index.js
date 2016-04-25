@@ -2,9 +2,11 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import { ApiError } from '../../lib/error';
-import Structure from '../../lib/structure';
-import constants from '../../lib/constants';
+import { ApiError } from 'lib/error';
+import Structure from 'lib/structure';
+import { sanitizeValidateObject } from 'lib/inspector';
+import { sanitization, validation } from './schema';
+import C from 'lib/constants';
 
 /* company collection */
 let api = require('express').Router();
@@ -21,9 +23,14 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   // initial attributes
+  let result = sanitizeValidateObject(sanitization, validation, data);
+  if (!result.valid) {
+    throw result.customError;
+  }
+
   data._id = ObjectId();
   data.user_id = null;
-  data.status = constants.INVITE_STATUS_PENDING;
+  data.status = C.INVITING_STATUS.PENDING;
   db.company.update({
     _id: req.company._id,
   }, {
