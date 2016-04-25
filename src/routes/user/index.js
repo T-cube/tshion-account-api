@@ -59,7 +59,7 @@ api.get('/project', (req, res, next) =>  {
     projects: 1
   }).then(userInfo => {
     if (!userInfo || typeof userInfo.projects != 'object' || !userInfo.projects.length) {
-      res.json([]);
+      return res.json([]);
     }
     let { company, type } = req.query;
     let condition = {
