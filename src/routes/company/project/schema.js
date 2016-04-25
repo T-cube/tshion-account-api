@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import { ENUMS } from 'lib/constants';
 
 export let projectSanitization = {
   name: { type: 'string' },
@@ -25,6 +26,6 @@ export let memberSanitization = {
 
 export let memberValidation = {
 	_id: { $objectId: 1 },
-  type: { $enum: [0, 1, 2, 3, 4] },
+  type: { $enum: ENUMS.PROJECT_MEMBER_TYPE },
 	title: { type: 'string' }
 }
