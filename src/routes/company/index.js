@@ -22,10 +22,7 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
 
-  let result = sanitizeValidateObject(companySanitization, companyValidation, data);
-  if (!result.valid) {
-    return next(result.customError);
-  }
+  sanitizeValidateObject(companySanitization, companyValidation, data);
 
   data.members = [req.user];
   data.owner = req.user._id;
@@ -78,10 +75,8 @@ api.route('/:company_id')
   .put((req, res, next) => {
 
     let data = req.body;
-    let result = sanitizeValidateObject(companySanitization, companyValidation, data);
-    if (!result.valid) {
-      return next(result.customError);
-    }
+    sanitizeValidateObject(companySanitization, companyValidation, data);
+    
     db.company.update(
       {_id: ObjectId(req.params.company_id)},
       {$set: data}

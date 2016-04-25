@@ -22,11 +22,7 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  // initial attributes
-  let result = sanitizeValidateObject(sanitization, validation, data);
-  if (!result.valid) {
-    throw result.customError;
-  }
+  sanitizeValidateObject(sanitization, validation, data);
 
   data._id = ObjectId();
   data.user_id = null;

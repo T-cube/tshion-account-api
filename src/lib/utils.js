@@ -47,5 +47,5 @@ export function userInfo() {
 };
 
 export function isEmail(email) {
-  return /\w+@\w+\.\w+/.test(email);
+  return /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/.test(email);
 }

@@ -59,7 +59,7 @@ export default {
   },
 
   saveRefreshToken(token, clientId, expires, user, callback) {
-    console.log('in saveRefreshToken (token: ' + token + ', clientId: ' + clientId +', userId: ' + user. id + ', expires: ' + expires + ')');
+    console.log('in saveRefreshToken (token: ' + token + ', clientId: ' + clientId +', userId: ' + user.id + ', expires: ' + expires + ')');
     let data = {
       refresh_token: token,
       client_id: clientId,

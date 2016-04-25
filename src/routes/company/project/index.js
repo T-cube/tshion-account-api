@@ -5,7 +5,7 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { userId, userInfo } from 'lib/utils';
-import { sanitizeObject, validateObject } from 'lib/inspector';
+import { sanitizeValidateObject } from 'lib/inspector';
 import { projectSanitization, projectValidation, memberSanitization, memberValidation } from './schema';
 import C from 'lib/constants';
 
@@ -30,11 +30,7 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  sanitizeObject(projectSanitization, data);
-  let result = validateObject(projectValidation, data);
-  if (!result.valid) {
-    return next(new ApiError(400, null, result.error))
-  }
+  sanitizeValidateObject(projectSanitization, projectValidation, data);
 
   _.extend(data, {
     company_id: req.company._id,
@@ -99,11 +95,7 @@ api.param('project_id', (req, res, next, id) => {
 
 api.put('/:project_id', (req, res, next) => {
   let data = req.body;
-  sanitizeObject(projectSanitization, data);
-  let result = validateObject(projectValidation, data);
-  if (!result.valid) {
-    return next(new ApiError(400, null, result.error))
-  }
+  sanitizeValidateObject(projectSanitization, projectValidation, data);
 
   db.project.update({
     _id: ObjectId(req.params.project_id)
@@ -154,11 +146,7 @@ api.post('/:project_id/member', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   let data = req.body;
 
-  sanitizeObject(memberSanitization, data);
-  let result = validateObject(memberValidation, data);
-  if (!result.valid) {
-    return next(new ApiError(400, null, result.error));
-  }
+  sanitizeValidateObject(memberSanitization, memberValidation, data);
 
   db.project.count({
     _id: project_id,
@@ -166,7 +154,7 @@ api.post('/:project_id/member', (req, res, next) => {
   })
   .then(count => {
     if (0 != count) {
-      throw new ApiError(400, null, 'member is exist');
+      throw new ApiError(400, null, 'member is exists');
     }
     db.project.update({
       _id: project_id

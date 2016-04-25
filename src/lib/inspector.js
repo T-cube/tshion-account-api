@@ -66,7 +66,7 @@ export function sanitizeValidateObject(sanitizationSchema, validationSchema, dat
   sanitizeObject(sanitizationSchema, data);
   let result = validateObject(validationSchema, data);
   if (!result.valid) {
-    result.customError = new ApiError(400, null, result.error);
+    throw new ApiError(400, null, result.error);
   }
   return result;
 }
