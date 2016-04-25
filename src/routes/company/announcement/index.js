@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 import { time, userId } from 'lib/utils';
 import inspector from 'lib/inspector';
-import Structure from 'models/Structure';
+import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
 
 /* company collection */
