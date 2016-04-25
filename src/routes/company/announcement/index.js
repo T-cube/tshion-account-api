@@ -41,16 +41,14 @@ api.post('/', (req, res, next) => {
   if (!structure.findNodeById(data.from.department)) {
     throw new ApiError(400, 'from department is not exists');
   }
-  data.to.department.forEach(function(i){
+  data.to.department.forEach(i => {
     if (!structure.findNodeById(i)) {
       throw new ApiError(400, 'to department: ' + i  + ' is not exists');
     }
   });
-  let memberIds = req.company.members.map(function(i){
-    return i._id;
-  });
-  data.to.member.forEach(function(i){
-    if (!memberIds.indexOf(i)) {
+  let memberIds = req.company.members.map(i => i._id);
+  data.to.member.forEach(i => {
+    if (-1 == memberIds.indexOf(i)) {
       throw new ApiError(400, 'to member: ' + i + ' is not exists');
     }
   });
