@@ -40,20 +40,21 @@ export default {
 
   getUser(username, password, callback) {
     console.log('in getUser (username: ' + username + ', password: ' + password + ')');
-    let type;
+    let data = {};
     if (/^1[3|4|5|7|8]\d{9}$/.test(username)) {
-      type = "mobile";
-    } else if (!Joi.validate(username, Joi.string().email())) {
-      type = "email";
+      data.mobile = username;
+    } else if (!Joi.validate(username, Joi.string().email()).error) {
+      data.email = username;
     } else {
       return callback(null, null);
     }
-    db.user.findOne({[type]: username})
+    db.user.findOne(data)
     .then(doc => {
       if (!doc) {
         return callback(null, null);
       }
       let result = bcrypt.compareSync(password, doc.password);
+      console.log(result);
       callback(null, result ? doc : null);
     }).catch(e => callback(e));
   },

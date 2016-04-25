@@ -18,7 +18,6 @@ import { apiErrorHandler } from 'lib/error';
 import 'lib/i18n';
 
 let app = express();
-global.App = app;
 
 let server = http.Server(app);
 // let io = socketio(server);
@@ -37,12 +36,12 @@ app.oauth = oauthserver({
 app.use('/oauth',bodyParser.urlencoded({ extended: true }));
 app.all('/oauth/token', app.oauth.grant());
 app.use('/oauth/revoke', oauthExtended.revokeToken);
-//app.use('/api', app.oauth.authorise());
-// app.use(app.oauth.errorHandler());
+// app.use('/api', app.oauth.authorise());
 
 // app.use('/', express.static('./public'));
 
 app.use('/api', apiRouter);
+app.use(app.oauth.errorHandler());
 
 // global error handler
 app.use(apiErrorHandler);

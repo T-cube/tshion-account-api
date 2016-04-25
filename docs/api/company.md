@@ -122,7 +122,7 @@ INPUT
 }
 ```
 
-### PUT /company/:company_id/logo
+### POST /company/:company_id/logo
 
 更新公司logo
 
@@ -130,6 +130,15 @@ INPUT
 ```javascript
 {
   logo: <URL>,
+}
+```
+
+### POST /company/:company_id/transfer
+
+INPUT
+```javascript
+{
+  user_id: <ObjectId>
 }
 ```
 

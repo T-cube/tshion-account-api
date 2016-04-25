@@ -15,6 +15,7 @@ export default {
       return next(new ApiError(400, 'missing token'));
     }
     let collection = 'oauth_' + token_type_hint.replace('_','');
+    console.log({[token_type_hint]: token});
     db[collection].findOne({[token_type_hint]: token})
     .then(doc => {
       if (!doc) {

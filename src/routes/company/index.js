@@ -13,6 +13,10 @@ import C from 'lib/constants';
 let api = require('express').Router();
 export default api;
 
+api.use((req, res, next) => {
+  req.app.oauth.authorise()(req, res, next);
+});
+
 api.get('/', (req, res, next) => {
   db.company.find({}, {name: 1, description: 1}).toArray()
   .then(docs => res.json(docs))
@@ -76,7 +80,7 @@ api.route('/:company_id')
 
     let data = req.body;
     sanitizeValidateObject(companySanitization, companyValidation, data);
-    
+
     db.company.update(
       {_id: ObjectId(req.params.company_id)},
       {$set: data}
