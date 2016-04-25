@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 import { time, userId } from 'lib/utils';
 import inspector from 'lib/inspector';
-import Structure from 'models/Structure';
+import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
 
 /* company collection */
@@ -39,17 +39,17 @@ api.post('/', (req, res, next) => {
   let structure = new Structure(req.company.structure);
   data.from.creator = userId();
   if (!structure.findNodeById(data.from.department)) {
-    throw new ApiError(400, 'from department is not exists');
+    throw new ApiError(400, null, 'from department is not exists');
   }
   data.to.department.forEach(i => {
     if (!structure.findNodeById(i)) {
-      throw new ApiError(400, 'to department: ' + i  + ' is not exists');
+      throw new ApiError(400, null, 'to department: ' + i  + ' is not exists');
     }
   });
   let memberIds = req.company.members.map(i => i._id);
   data.to.member.forEach(i => {
     if (-1 == memberIds.indexOf(i)) {
-      throw new ApiError(400, 'to member: ' + i + ' is not exists');
+      throw new ApiError(400, null, 'to member: ' + i + ' is not exists');
     }
   });
 

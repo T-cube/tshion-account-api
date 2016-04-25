@@ -64,8 +64,8 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/:_id', (req, res, next) => {
-  let project_id = ObjectId(req.params._id);
+api.get('/:_project_id', (req, res, next) => {
+  let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
    company_id: req.company._id,
    _id: project_id
@@ -106,24 +106,33 @@ api.put('/:project_id', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/:project_id', (req, res, next) => {
-  let object_id = ObjectId(req.params.project_id);
-  db.project.remove({
-    _id: object_id
-  })
-  .then(doc => {
-    return Promise.all([
-      db.company.update({
-        _id: req.company._id
-      }, {
-        $pull: { projects: object_id }
-      }),
-      db.user.update({
-        _id: userId()
-      }, {
-        $pull: { projects: object_id }
-      }),
-    ]).then(() => res.json({}));
+api.delete('/:_project_id', (req, res, next) => {
+  let object_id = ObjectId(req.params._project_id);
+  db.project.findOne({_id: object_id}, {members: 1, _id: 0})
+  .then(data => {
+    if (!data) {
+      throw new ApiError(400);
+    }
+    let projectMembers = [];
+    data.members && (projectMembers = data.members.map(i => i._id));
+    db.project.remove({
+      _id: object_id
+    })
+    .then(doc => {
+      return Promise.all([
+        db.company.update({
+          _id: req.company._id
+        }, {
+          $pull: {projects: object_id}
+        }),
+        db.user.update({
+          _id: {$in: projectMembers}
+        }, {
+          $pull: {projects: object_id}
+        }),
+      ]).then(() => res.json({}));
+    })
+    .catch(next);
   })
   .catch(next);
 });
