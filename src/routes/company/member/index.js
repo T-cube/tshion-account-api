@@ -3,7 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import { ApiError } from 'lib/error';
-import Structure from 'lib/structure';
+import Structure from 'models/structure';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
 import C from 'lib/constants';
