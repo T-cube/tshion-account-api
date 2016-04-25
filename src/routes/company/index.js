@@ -7,6 +7,7 @@ import upload from 'lib/upload';
 import { userId, userInfo } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
+import C from 'lib/constants';
 
 /* company collection */
 let api = require('express').Router();
@@ -26,13 +27,13 @@ api.post('/', (req, res, next) => {
     return next(result.customError);
   }
 
-  data.members = [userInfo()];
-  data.owner = userId();
+  data.members = [req.user];
+  data.owner = req.user._id;
 
   let position_id = ObjectId();
   _.extend(data, {
-    owner: userId(), //TODO fix this
-    members: [userInfo()], //TODO fix this
+    owner: req.user._id, //TODO fix this
+    members: [req.user], //TODO fix this
     structure: {
       _id: ObjectId(),
       name: data.name,
@@ -41,7 +42,7 @@ api.post('/', (req, res, next) => {
         title: __('administrator'),
       }],
       members: [{
-        _id: userId(), // TODO fix this
+        _id: req.user._id, // TODO fix this
         title: position_id,
       }],
       children: [],
@@ -54,10 +55,6 @@ api.post('/', (req, res, next) => {
   .then(docs => res.json(docs))
   .catch(next);
 });
-
-api.post('/avatar', upload().single('avatar'), (req, res, next) => {
-  res.json({});
-})
 
 api.param('company_id', (req, res, next, id) => {
   let company_id = ObjectId(id);
@@ -94,12 +91,63 @@ api.route('/:company_id')
   })
 
   .delete((req, res, next) => {
+    let user_id = ObjectId(req.body.user_id);
+    let company = req.company;
+    if (!req.user._id.equals(company.owner)) {
+      throw new ApiError(403, null, 'only owner can carry out this operation');
+    }
     db.company.remove({_id: ObjectId(req.params.company_id)})
     .then(function(doc) {
       res.json(doc);
     }).catch(next);
   })
 ;
+
+api.post('/:company_id/avatar', upload().single('avatar'), (req, res, next) => {
+  res.json({});
+})
+
+api.post('/:company_id/transfer', (req, res, next) => {
+  //TODO add two way checking
+  console.log(req.body);
+  let user_id = ObjectId(req.body.user_id);
+  let company = req.company;
+  if (!req.user._id.equals(company.owner)) {
+    throw new ApiError(403, null, 'only owner can carry out this operation');
+  }
+  let member = _.find(company.members, m => m._id.equals(user_id));
+  console.log('user_id=', user_id, 'member=', member)
+  if (!member) {
+    throw new ApiError(404, null, 'member not exists');
+  }
+  db.user.find({_id: user_id})
+  .then(user => {
+    if (!user) {
+      throw new ApiError(404, null, 'user not exists');
+    }
+    return Promise.all([
+      db.company.update({
+        _id: company._id,
+        'members._id': user_id,
+      }, {
+        $set: {
+          owner: user_id,
+          'members.$.type': C.COMPANY_MEMBER_TYPE.OWNER,
+        }
+      }),
+      db.company.update({
+        _id: company._id,
+        'members._id': req.user._id,
+      }, {
+        $set: {
+          'members.$.type': C.COMPANY_MEMBER_TYPE.ADMIN,
+        }
+      })
+    ])
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
 
 api.use('/:company_id/structure', require('./structure').default);
 api.use('/:company_id/member', require('./member').default);

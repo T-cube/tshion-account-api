@@ -15,6 +15,12 @@ let constants = {
     REJECTED: 'rejected',
   },
 
+  COMPANY_MEMBER_TYPE: {
+    NORMAL: 'normal',
+    ADMIN: 'admin',
+    OWNER: 'owner',
+  },
+
   PROJECT_MEMBER_TYPE: {
     GUEST: 'guest',
     NORMAL: 'normal',

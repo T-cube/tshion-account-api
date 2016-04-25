@@ -3,12 +3,23 @@
 // by alphakevin <antmary@126.com>
 
 import path from 'path';
+import fs from 'fs';
 import uuid from 'node-uuid';
 import Promise from 'bluebird';
 import qiniu from 'qiniu';
 import config from 'config';
 
-const fileExists = Promise.promisify(path.exists);
+const fileExists = function(path) {
+  return new Promise((resolve, reject) => {
+    fs.stat(path, (err, stat) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(stat.isFile());
+      }
+    })
+  });
+}
 const putFile = Promise.promisify(qiniu.io.putFile);
 
 qiniu.conf.ACCESS_KEY = config.get('vendor.qiniu.ACCESS_KEY');
