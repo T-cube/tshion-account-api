@@ -26,7 +26,9 @@
   _id: <ObjectId[auto]>,
   // account information
   email: <String>,
+  email_verified: <Boolean>
   mobile: <String>,
+  mobile_verified: <Boolean>,
   password: <HASH>,
   // basic information
   avatar: <URL>,
