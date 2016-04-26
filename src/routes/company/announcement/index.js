@@ -3,14 +3,17 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import { ApiError } from 'lib/error';
-import { time, userId } from 'lib/utils';
+import { time } from 'lib/utils';
 import inspector from 'lib/inspector';
 import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
+import { oauthCheck } from 'lib/middleware';
 
 /* company collection */
 let api = require('express').Router();
 export default api;
+
+api.use(oauthCheck());
 
 api.use((req, res, next) => {
   next();
@@ -37,7 +40,7 @@ api.post('/', (req, res, next) => {
 
   // validation of members and structure nodes
   let structure = new Structure(req.company.structure);
-  data.from.creator = userId();
+  data.from.creator = req.user._id();
   if (!structure.findNodeById(data.from.department)) {
     throw new ApiError(400, null, 'from department is not exists');
   }
