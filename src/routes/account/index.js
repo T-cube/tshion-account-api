@@ -72,7 +72,7 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
 
   db.user.findOne({_id: req.user._id})
   .then(user => {
-    let result = bcrypt.compareSync(password, user.password);
+    let result = comparePassword(password, user.password);
     console.log(result);
     if (!result) {
       throw new ApiError('401', 'invalid_password', 'password wrong')

@@ -79,7 +79,7 @@ export default {
       refresh_token: token,
       client_id: clientId,
       user_id: user.id,
-      expires: expires
+      expires: expires,
     };
     db.oauth_refreshtoken.insert(data).
     then(() => callback(null)).catch(e => callback(e));

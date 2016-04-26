@@ -89,7 +89,7 @@ api.route('/:company_id')
     .catch(next);
   })
 
-  .delete((req, res, next) => {
+  .delete(authCheck(), (req, res, next) => {
     let user_id = ObjectId(req.body.user_id);
     let company = req.company;
     if (!req.user._id.equals(company.owner)) {

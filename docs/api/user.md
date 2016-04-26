@@ -12,13 +12,58 @@
 
 ## Table of Contents
 
-* [GET /user/project](#post-project)
+* [GET /user/project](#post-user-project)
 
 ## API function
 
+### GET /user/info
+
+OUTPUT:
+```javascript
+{
+  _id: <ObjectId>,
+  name: <String>,
+  avatar: <URL>,
+  mobile: <String>,
+  birthdate: <Date>,
+  email: <String>,
+  mobile: <String>,
+  address: <String>,
+  sex: <String[Enum:F,M]>,
+  date_join: <Date>,
+}
+```
+
+### PUT /user/info
+
+INPUT:
+```javascript
+{
+  name: <String>,
+  mobile: <String>,
+  birthdate: <Date>,
+  address: <String>,
+  sex: <String[Enum:F,M]>,
+}
+```
+
+### PUT /user/avatar
+
+INPUT:
+`Content-Type: x-www-form-urlencoded`
+```javascript
+{
+  avatar: <File>,
+  crop_x: <Int>,
+  crop_y: <Int>,
+  crop_width: <Int>,
+  crop_height: <Int>,
+}
+```
+
 ### GET /user/project
 
-获取用户关联项目
+获取用户关联项目列表
 
 QUERY_STRING
 ```javascript
@@ -26,4 +71,14 @@ QUERY_STRING
   company: <ObjectId[Optional]>,
   type: <String[Enum:all,mine,achieved]>,
 }
+```
+
+OUTPUT:
+```javascript
+[{
+  _id: <ObjectId>,
+  name: <String>,
+  description: <String>,
+  logo: <URL>,
+}...]
 ```

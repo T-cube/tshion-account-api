@@ -110,3 +110,22 @@ OUTPUT
 ### DELETE /project/:project_id
 
 删除项目
+
+INPUT
+```javascript
+{
+  auth_check_token: <String> // 密码认证 token
+}
+```
+
+### POST /project/:project_id/transfer
+
+转让项目项目
+
+INPUT
+```javascript
+{
+  user_id: <ObjectId>,       // 目标用户
+  auth_check_token: <String> // 密码认证 token
+}
+```

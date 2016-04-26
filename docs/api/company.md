@@ -138,13 +138,21 @@ INPUT
 INPUT
 ```javascript
 {
-  user_id: <ObjectId>
+  user_id: <ObjectId>,
+  auth_check_token: <String> // 密码认证token
 }
 ```
 
 ### DELETE /company/:company_id
 
 删除公司
+
+INPUT
+```javascript
+{
+  auth_check_token: <String> // 密码认证token
+}
+```
 
 ### GET /company/:company_id/member
 
