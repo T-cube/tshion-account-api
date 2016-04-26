@@ -12,10 +12,7 @@
 
 ## Table of Contents
 
-* [POST /project](#post-project)
-* [GET /project](#get-company-company_id-project)
-* [GET /project/:project_id](#get-company-company_id-project-project_id)
-* [DELETE /project/:project_id](#delete-company-company_id-project-project_id)
+...
 
 ## API function
 
@@ -120,12 +117,24 @@ INPUT
 
 ### POST /project/:project_id/transfer
 
-转让项目项目
+转让项目
 
 INPUT
 ```javascript
 {
   user_id: <ObjectId>,       // 目标用户
+  auth_check_token: <String> // 密码认证 token
+}
+```
+
+### PUT /project/:project_id/archived
+
+归档项目
+
+INPUT
+```javascript
+{
+  archived: <Boolean>,       // 是否为归档项目
   auth_check_token: <String> // 密码认证 token
 }
 ```
