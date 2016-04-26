@@ -65,16 +65,19 @@ api.get('/project', (req, res, next) =>  {
     let condition = {
       _id: {$in: userInfo.projects}
     };
-    if (company && ObjectId.isValid(company)) {
-      condition['company_id'] = ObjectId(company);
+    if (company) {
+      if (ObjectId.isValid(company)) {
+        condition['company_id'] = ObjectId(company);
+      } else {
+        res.json([]);
+      }
     }
     switch (type) {
-      case 'mine':
-        condition['owner'] = userId();
-        break;
       case 'archived':
         condition['is_archived'] = true;
         break;
+      case 'mine':
+        condition['owner'] = userId();
       default:
         condition['is_archived'] = false;
     }
