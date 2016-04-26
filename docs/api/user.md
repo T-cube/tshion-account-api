@@ -22,13 +22,14 @@ OUTPUT:
 ```javascript
 {
   _id: <ObjectId>,
+  email: <String>,
+  email_verified: <Boolean>,
+  mobile: <String>,
+  mobile_verified: <Boolean>,
   name: <String>,
   description: <String>,
   avatar: <URL>,
-  mobile: <String>,
   birthdate: <Date>,
-  email: <String>,
-  mobile: <String>,
   address: <String>,
   sex: <String[Enum:F,M]>,
   local: <String>,

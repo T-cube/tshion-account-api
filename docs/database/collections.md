@@ -26,7 +26,7 @@
   _id: <ObjectId[auto]>,
   // account information
   email: <String>,
-  email_verified: <Boolean>
+  email_verified: <Boolean>,
   mobile: <String>,
   mobile_verified: <Boolean>,
   password: <HASH>,
@@ -37,6 +37,7 @@
   sex: <String[Enum:M,F]>,
   birthdate: <Date>,
   local: <String>,
+  // address
   address: {
     country: <String>,
     province: <String>,
