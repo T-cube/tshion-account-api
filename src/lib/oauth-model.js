@@ -1,5 +1,15 @@
 import bcrypt from 'bcrypt';
 import Joi from 'joi';
+import _ from 'underscore';
+import { camelCase } from 'change-case';
+
+function camelCaseObjectKey(obj) {
+  let _obj = {};
+  _.each(obj, (val, key) => {
+    _obj[camelCase(key)] = val;
+  });
+  return _obj;
+}
 
 export default {
   getAccessToken(bearerToken, callback) {
@@ -35,13 +45,14 @@ export default {
   grantTypeAllowed(clientId, grantType, callback) {
     console.log('in grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');
     if (grantType === 'password') {
-      return callback(false, true);
+      return callback(null, true);
     }
-    callback(false, true);
+    callback(null, true);
   },
 
   saveAccessToken(token, clientId, expires, user, callback) {
     console.log('in saveAccessToken (token: ' + token + ', clientId: ' + clientId + ', userid: ' + user.id + ', expires: ' + expires + ')');
+    console.log('user:', user);
     let data = {
       access_token: token,
       client_id: clientId,
@@ -62,7 +73,7 @@ export default {
     } else {
       return callback(null, null);
     }
-    db.user.findOne(data)
+    db.user.findOne(data, {_id: 1, name: 1, email: 1, mobile: 1, password: 1})
     .then(doc => {
       if (!doc) {
         return callback(null, null);
@@ -75,10 +86,11 @@ export default {
 
   saveRefreshToken(token, clientId, expires, user, callback) {
     console.log('in saveRefreshToken (token: ' + token + ', clientId: ' + clientId +', userId: ' + user.id + ', expires: ' + expires + ')');
+    console.log(user);
     let data = {
       refresh_token: token,
       client_id: clientId,
-      user_id: user.id,
+      user_id: user._id,
       expires: expires,
     };
     db.oauth_refreshtoken.insert(data).
@@ -88,7 +100,20 @@ export default {
   getRefreshToken(refreshToken, callback) {
     console.log('in getRefreshToken (refreshToken: ' + refreshToken + ')');
     db.oauth_refreshtoken.findOne({refresh_token: refreshToken})
-    .then(doc => callback(null, doc))
+    .then(token => {
+      if (!token) {
+        return callback(null, null);
+      }
+      return db.user.findOne({
+        _id: token.user_id
+      }, {
+        _id: 1, name: 1, email: 1, mobile: 1
+      })
+      .then(user => {
+        token.user = user;
+        callback(null, camelCaseObjectKey(token));
+      });
+    })
     .catch(e => callback(e));
   },
 
