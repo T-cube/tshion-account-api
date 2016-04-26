@@ -59,24 +59,6 @@ ERROR
 "validation error" //校验错误
 ```
 
-### POST /account/send_email
-发送验证邮件 NOT READY
-
-INPUT
-```javascript
-{
-  "email": "{email}"    // 电子邮件
-}
-```
-OUTPUT
-```javascript
-{}
-```
-ERROR
-```javascript
-"bad email format" //ID格式错误
-```
-
 ### POST /account/send_sms
 发送短信验证码 NOT READY
 
@@ -95,7 +77,8 @@ ERROR
 "bad mobile format" //ID格式错误
 ```
 
-### ~~POST account/verify_email~~
+### POST account/verify_email
+
 校验邮件验证码
 
 INPUT

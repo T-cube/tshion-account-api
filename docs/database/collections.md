@@ -34,8 +34,14 @@
   description: <String>,
   sex: <String[Enum:M,F]>,
   birthdate: <Date>,
+  local: <String>,
+  address: {
+    country: <String>,
+    province: <String>,
+    city: <String>,
+    address: <String>,
+  },
   date_join: <Date>,
-  address: <String>,
   // relations
   companies: [<ObjectId>...],
   projects: [<ObjectId>...],

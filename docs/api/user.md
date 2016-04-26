@@ -1,4 +1,4 @@
-# API Project
+# API User
 
 [返回目录](index.md)
 
@@ -23,6 +23,7 @@ OUTPUT:
 {
   _id: <ObjectId>,
   name: <String>,
+  description: <String>,
   avatar: <URL>,
   mobile: <String>,
   birthdate: <Date>,
@@ -30,6 +31,13 @@ OUTPUT:
   mobile: <String>,
   address: <String>,
   sex: <String[Enum:F,M]>,
+  local: <String>,
+  address: {
+    country: <String>,
+    province: <String>,
+    city: <String>,
+    address: <String>,
+  },
   date_join: <Date>,
 }
 ```
@@ -40,10 +48,16 @@ INPUT:
 ```javascript
 {
   name: <String>,
+  description: <String>,
   mobile: <String>,
   birthdate: <Date>,
-  address: <String>,
   sex: <String[Enum:F,M]>,
+  address: {
+    country: <String>,
+    province: <String>,
+    city: <String>,
+    address: <String>,
+  },
 }
 ```
 
