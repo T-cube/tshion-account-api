@@ -74,7 +74,7 @@ api.put('/info', (req, res, next) => {
   }, {
     $set: data
   })
-  .then(result => js.json(result))
+  .then(result => res.json(result))
   .catch(next);
 });
 
