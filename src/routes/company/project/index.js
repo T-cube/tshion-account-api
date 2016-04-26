@@ -76,6 +76,10 @@ api.get('/:_project_id', (req, res, next) => {
    if (!data) {
      throw new ApiError(404);
    }
+   let owner = data.owner;
+   data.owner = _.find(req.company.members, member => {
+     return member._id.equals(owner);
+   });
    res.json(data);
  })
  .catch(next);
