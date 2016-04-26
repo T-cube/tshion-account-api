@@ -3,6 +3,9 @@ import { ApiError } from 'lib/error';
 import { ObjectId } from 'mongodb';
 import { oauthCheck } from 'lib/middleware';
 
+import { sanitizeValidateObject } from 'lib/inspector';
+import { infoSanitization, infoValidation, avatarSanitization, avatarValidation } from './schema';
+
 /* users collection */
 let api = express.Router();
 export default api;
@@ -53,6 +56,31 @@ api.use(oauthCheck());
 //   db.user.remove({_id: pmongo.ObjectId(req.params.user_id)})
 //   .then(doc => res.json(doc)).catch(next);
 // });
+
+api.get('/info', (req, res, next) => {
+  db.user.find({
+    _id: req.user._id
+  })
+  .then(data => {
+    res.json(data);
+  });
+});
+
+api.put('/info', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(infoSanitization, infoValidation, data);
+  db.user.update({
+    _id: req.user._id
+  }, {
+    $set: data
+  })
+  .then(result => res.json(result))
+  .catch(next);
+});
+
+api.put('/avatar', (req, res, next) => {
+
+});
 
 api.get('/project', (req, res, next) =>  {
   db.user.findOne({
