@@ -1,11 +1,13 @@
 import express from 'express'
 import { ApiError } from 'lib/error';
-import { userId } from 'lib/utils';
 import { ObjectId } from 'mongodb';
+import { oauthCheck } from 'lib/middleware';
 
 /* users collection */
 let api = express.Router();
 export default api;
+
+api.use(oauthCheck());
 
 // api.route('/test')
 // .get((req, res, next) =>  {
@@ -54,7 +56,7 @@ export default api;
 
 api.get('/project', (req, res, next) =>  {
   db.user.findOne({
-    _id: userId()
+    _id: req.user._id
   }, {
     projects: 1
   }).then(userInfo => {
@@ -77,7 +79,7 @@ api.get('/project', (req, res, next) =>  {
         condition['is_archived'] = true;
         break;
       case 'mine':
-        condition['owner'] = userId();
+        condition['owner'] = req.user._id;
       default:
         condition['is_archived'] = false;
     }

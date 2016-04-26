@@ -4,14 +4,16 @@ import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
-import { userId, userInfo } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { projectSanitization, projectValidation, memberSanitization, memberValidation } from './schema';
 import C from 'lib/constants';
+import { oauthCheck } from 'lib/middleware';
 
 /* company collection */
 let api = require('express').Router();
 export default api;
+
+api.use(oauthCheck());
 
 api.use((req, res, next) => {
   next();
@@ -35,9 +37,9 @@ api.post('/', (req, res, next) => {
   _.extend(data, {
     company_id: req.company._id,
     is_archived: false,
-    owner: userId(),
+    owner: req.user._id,
     members: [{
-      _id: userId(),
+      _id: req.user._id,
       type: C.PROJECT_MEMBER_TYPE.OWNER,
       title: ''
     }],
@@ -53,7 +55,7 @@ api.post('/', (req, res, next) => {
         $push: { projects: doc._id }
       }),
       db.user.update({
-        _id: userId()
+        _id: req.user._id
       }, {
         $push: { projects: doc._id }
       }),
