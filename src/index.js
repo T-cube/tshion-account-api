@@ -15,6 +15,7 @@ import apiRouter from './routes';
 import oauthModel from 'lib/oauth-model.js';
 import oauthExtended from 'lib/oauth-extended.js';
 import { apiErrorHandler } from 'lib/error';
+import corsHandler from 'lib/cors';
 import 'lib/i18n';
 
 let app = express();
@@ -33,7 +34,8 @@ app.oauth = oauthserver({
   refreshTokenLifetime: 3600 * 24 * 15,
 });
 
-app.use('/oauth',bodyParser.urlencoded({ extended: true }));
+app.use('/oauth', corsHandler);
+app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 app.all('/oauth/token', app.oauth.grant());
 app.use('/oauth/revoke', oauthExtended.revokeToken);
 // app.use('/api', app.oauth.authorise());

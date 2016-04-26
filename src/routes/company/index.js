@@ -18,6 +18,7 @@ api.use((req, res, next) => {
 });
 
 api.get('/', (req, res, next) => {
+  console.log(req.user);
   db.company.find({}, {name: 1, description: 1}).toArray()
   .then(docs => res.json(docs))
   .catch(next);
