@@ -24,7 +24,7 @@ let validationCustom = {
     if (!schema.$objectId) {
       return;
     }
-    if (!ObjectId.isValid(candidate)) {
+    if (candidate && !ObjectId.isValid(candidate)) {
       this.report('invalid ObjectId: ' + candidate);
     }
   },
@@ -33,15 +33,20 @@ let validationCustom = {
     if (_.isArray(schema.$enum) || schema.$enum.length) {
       return;
     }
-    if (typeof candidate != 'string' || !schema.$enum.indexOf(candidate)) {
+    if (candidate && typeof candidate != 'string' || !schema.$enum.indexOf(candidate)) {
       this.report('invalid value: ' + candidate);
     }
   },
   email: function(schema, candidate) {
-    if (typeof candidate != 'string' || !isEmail(candidate)) {
+    if (candidate && typeof candidate != 'string' || !isEmail(candidate)) {
       this.report('invalid email: ' + candidate);
     }
   },
+  mobile: function(schema, candidate) {
+    if (candidate && !/^1[3|4|5|7|8]\d{9}$/.test(candidate)) {
+      this.report('invalid mobile: ' + candidate);
+    }
+  }
 };
 schemaInspector.Validation.extend(validationCustom);
 schemaInspector.Sanitization.extend(sanitizationCustom);

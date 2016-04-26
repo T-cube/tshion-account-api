@@ -98,7 +98,6 @@ api.param('project_id', (req, res, next, id) => {
 api.put('/:project_id', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(projectSanitization, projectValidation, data);
-
   db.project.update({
     _id: ObjectId(req.params.project_id)
   }, {
@@ -110,10 +109,13 @@ api.put('/:project_id', (req, res, next) => {
 
 api.delete('/:_project_id', (req, res, next) => {
   let object_id = ObjectId(req.params._project_id);
-  db.project.findOne({_id: object_id}, {members: 1, _id: 0})
+  db.project.findOne({_id: object_id}, {members: 1, _id: 0, owner: 1})
   .then(data => {
     if (!data) {
       throw new ApiError(400);
+    }
+    if (!req.user._id.equals(data.owner)) {
+      throw new ApiError(403);
     }
     let projectMembers = [];
     data.members && (projectMembers = data.members.map(i => i._id));
@@ -132,7 +134,8 @@ api.delete('/:_project_id', (req, res, next) => {
         }, {
           $pull: {projects: object_id}
         }),
-      ]).then(() => res.json({}));
+      ])
+      .then(() => res.json({}));
     })
     .catch(next);
   })
@@ -180,16 +183,29 @@ api.post('/:project_id/member', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/:project_id/member/:member_id', (req, res, next) => {
+api.delete('/:_project_id/member/:member_id', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
-  let project_id = ObjectId(req.params.project_id);
-  db.project.count({
-    _id: project_id,
-    'members._id': member_id
-  })
-  .then(count => {
-    if (0 == count) {
-      throw new ApiError(404);
+  let project_id = ObjectId(req.params._project_id);
+  db.project.findOne({_id: project_id}, {members: 1})
+  .then(data => {
+    if (!data) {
+      throw new ApiError(400);
+    }
+    let { members } = data;
+    let allowed = members.filter(member => {
+      return member._id.equals(req.user._id) && (member.type == C.PROJECT_MEMBER_TYPE.OWNER || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
+    }).length;
+    if (!allowed) {
+      throw new ApiError(403);
+    }
+    if (req.user._id.equals(member_id)) {
+      throw new ApiError(400, null, 'can not delete self');
+    }
+    let exists = members.filter(member => {
+      return member._id.equals(member_id);
+    }).length;
+    if (!exists) {
+      throw new ApiError(400);
     }
     db.project.update({
       _id: project_id
