@@ -9,10 +9,12 @@ export default {
   revokeToken(req, res, next) {
     let { token, token_type_hint } = req.body;
     if (!token_type_hint || !_.contains(token_types, token_type_hint)) {
-      return next(new ApiError(400, 'invalid token type'));
+      return next(new ApiError(400, 'invalid_request',
+        'The token type provided is invalid.'));
     }
     if (!token) {
-      return next(new ApiError(400, 'missing token'));
+      return next(new ApiError(401, 'invalid_token',
+        'The access token provided is invalid.'));
     }
     let collection = 'oauth_' + token_type_hint.replace('_','');
     console.log({[token_type_hint]: token});

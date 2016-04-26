@@ -37,25 +37,16 @@ export function ApiError(code, error, description, err) {
   if (error) {
     this.error = error;
   } else {
-    switch (code) {
-      case 200:
-        this.error = 'OK';
-        break;
-      case 400:
-        this.error = 'bad_request';
-        break;
-      case 403:
-        this.error = 'not_authorized';
-        break;
-      case 404:
-        this.error = 'not_found';
-        break;
-      case 500:
-        this.error = 'server_error';
-        break;
-      default:
-        this.error = 'unknown_error';
+    let known_errors = {
+      200: 'OK',
+      400: 'bad_request',
+      401: 'unauthorized',
+      403: 'forbidden',
+      404: 'not_found',
+      500: 'internel_server_error',
+      503: 'service_unavailable',
     }
+    this.error = known_errors[code] || 'unknown_error';
   }
   this.error_description = description || this.error;
 }

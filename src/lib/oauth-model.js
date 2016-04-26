@@ -5,7 +5,21 @@ export default {
   getAccessToken(bearerToken, callback) {
     console.log('in getAccessToken (bearerToken: ' + bearerToken + ')');
     db.oauth_accesstoken.findOne({access_token: bearerToken})
-    .then(doc => callback(null, doc)).catch(e => callback(e));
+    .then(token => {
+      if (!token) {
+        return callback(null, null);
+      }
+      return db.user.findOne({
+        _id: token.user_id
+      }, {
+        _id: 1, name: 1, email: 1, mobile: 1
+      })
+      .then(user => {
+        token.user = user;
+        callback(null, token);
+      });
+    })
+    .catch(e => callback(e));
   },
 
   getClient(clientId, clientSecret, callback) {

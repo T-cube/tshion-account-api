@@ -8,7 +8,7 @@ let _valid = {
     otherwise: Joi.any().strip(),
   }),
   mobile: Joi.alternatives().when('type', {is: 'mobile',
-    then: Joi.string().regex(/^1[3|4|5|7|8]\d{9}$/),
+    then: Joi.string().regex(/^1[3|4|5|7|8]\d{9}$/).required(),
     otherwise: Joi.any().strip(),
   }),
   password: Joi.string().min(6).max(20).required(),

@@ -15,7 +15,7 @@
 
 ## Function List
 
-### POST account/check
+### POST /account/check
 校验用户账号格式和存在
 
 INPUT
@@ -36,7 +36,7 @@ ERROR
 "validation error" //校验错误
 ```
 
-### POST account/register
+### POST /account/register
 用户注册
 
 INPUT
@@ -59,8 +59,7 @@ ERROR
 "validation error" //校验错误
 ```
 
-
-### POST account/send_email
+### POST /account/send_email
 发送验证邮件 NOT READY
 
 INPUT
@@ -78,7 +77,7 @@ ERROR
 "bad email format" //ID格式错误
 ```
 
-### POST account/send_sms
+### POST /account/send_sms
 发送短信验证码 NOT READY
 
 INPUT
@@ -96,7 +95,7 @@ ERROR
 "bad mobile format" //ID格式错误
 ```
 
-### POST account/verify_email
+### ~~POST account/verify_email~~
 校验邮件验证码
 
 INPUT
@@ -116,8 +115,10 @@ ERROR
 "bad verification code" //验证码错误
 ```
 
-### POST account/verify_sms
+### POST /account/verify_sms
 校验短信验证码
+
+TODO
 
 INPUT
 ```javascript
@@ -137,7 +138,7 @@ ERROR
 "bad verification code"     //验证码错误
 ```
 
-### POST account/register
+### POST /account/register
 用户注册
 
 INPUT
@@ -161,7 +162,25 @@ ERROR
 "validation_failed"        //验证码错误
 ```
 
-### GET account/info
+### POST /account/authorise
+
+用户密码校验，请求后得到临时 token，可用于关键操作，需将该 token 加入请求数据
+
+INPUT
+```javascript
+{
+  password: <String>,
+}
+```
+
+OUTPUT
+```javascript
+{
+  auth_check_token: <String>
+}
+```
+
+### GET /account/info
 获取当前登录用户信息
 
 INPUT

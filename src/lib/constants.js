@@ -4,6 +4,11 @@ import _ from 'underscore';
 
 let constants = {
 
+  USER_ID_TYPE: {
+    EMAIL: 'email',
+    MOBILE: 'mobile',
+  },
+
   SEX: {
     FEMALE: 'F',
     MALE: 'M',

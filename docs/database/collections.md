@@ -4,6 +4,19 @@
 
 ## Collections
 
+### auth_check_token
+
+用户临时校验 token
+
+```javascript
+{
+  _id: <ObjectId>,
+  user_id: <ObjectId>,
+  token: <String>,
+  expires: <Date>,
+}
+```
+
 ### user
 
 用户信息

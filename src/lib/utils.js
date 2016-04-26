@@ -1,5 +1,19 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+
+export let randomBytes = Promise.promisify(crypto.randomBytes);
+
+export function generateToken() {
+  return randomBytes(48)
+  .then(buffer => buffer.toString('hex'));
+}
+
+export let hashPassword = Promise.promisify(bcrypt.hash);
+
+export let comparePassword = Promise.promisify(bcrypt.compare);
 
 export function getUniqName(list, name, index) {
   if (_.contains(list, name)) {

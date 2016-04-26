@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import { ApiError } from 'lib/error';
+import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
 import { userId, userInfo } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -13,9 +14,7 @@ import C from 'lib/constants';
 let api = require('express').Router();
 export default api;
 
-api.use((req, res, next) => {
-  req.app.oauth.authorise()(req, res, next);
-});
+api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
   console.log(req.user);
@@ -107,7 +106,7 @@ api.post('/:company_id/avatar', upload().single('avatar'), (req, res, next) => {
   res.json({});
 })
 
-api.post('/:company_id/transfer', (req, res, next) => {
+api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   //TODO add two way checking
   console.log(req.body);
   let user_id = ObjectId(req.body.user_id);

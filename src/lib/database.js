@@ -15,5 +15,6 @@ export function database() {
     'task',
     'announcement',
     'project',
+    'auth_check_token',
   ]);
 }
