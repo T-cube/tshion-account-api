@@ -110,9 +110,10 @@
   //admins: [<ObjectId>...],        // 管理员
   members: [{
     _id: <ObjectId>,
-    type: <String[Enum:0,1,2,3,4]>, // 成员类型
+    type: <String[Enum]>,           // 成员类型
     title: <String>,                // 成员岗位
   }...],                            // 项目成员列表
+  tags: [<objectId>...],            // 项目标签
   date_create: <Date>,              // 创建时间
 }
 ```
@@ -121,11 +122,11 @@
 
 | Value | Title | Description |
 | ----- | ----- | ----------- |
-| 0     | 观察者 | 只可浏览、关注，无法修改项目内容 |
-| 1     | 普通成员 | 可操作任务、评论等常规任务 |
-| 2     | 管理员 | 可添加、移除成员 |
-| 3     | 所有者 | 除管理员权限外，可设置设置其他管理员，可移交项目 |
-| 4     | 监察者 | 与访客一致，但对其他成员不可见（此种类型待定） |
+| `guest` | 访客 | 只可浏览、关注，无法修改项目内容 |
+| `normal` | 普通成员 | 可操作任务、评论等常规任务 |
+| `admin` | 管理员 | 可添加、移除成员 |
+| `owner` | 所有者 | 除管理员权限外，可设置设置其他管理员，可移交项目 |
+| `supervisor` | 监察者 | 与访客一致，但对其他成员不可见（此种类型待定） |
 
 ### discussion
 
@@ -143,6 +144,19 @@
 }
 ```
 
+### tags
+
+项目标签
+
+```javascript
+{
+  _id: <ObjectId>,
+  project_id: <ObjectId>,         // 关联项目
+  name: <String>,                 // 标签名称
+  color: <String>,                // 标签颜色
+}
+```
+
 ### discussion.comments
 
 项目评论
@@ -151,10 +165,10 @@
 {
   _id: <ObjectId>,
   task_id: <ObjectId>,            // 关联讨论
-  creator: <ObjectId>,                // 作者
-  content: <String>,                  // 提交时分析其中的“@”功能，并发送通知
-  likes: <Int>,                       // 喜欢
-  date_create: <Date>,                // 创建时间
+  creator: <ObjectId>,            // 作者
+  content: <String>,              // 提交时分析其中的“@”功能，并发送通知
+  likes: <Int>,                   // 喜欢
+  date_create: <Date>,            // 创建时间
 }    
 ```    
 
