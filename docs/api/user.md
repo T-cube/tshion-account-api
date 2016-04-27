@@ -85,6 +85,7 @@ QUERY_STRING
 {
   company: <ObjectId[Optional]>,
   type: <String[Enum:all,mine,achieved]>,
+  search: <String>, // project name
 }
 ```
 
