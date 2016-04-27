@@ -17,5 +17,7 @@ export function database() {
     'project',
     'auth_check_token',
     'task',
+    'task.comments',
+    'task.log',
   ]);
 }

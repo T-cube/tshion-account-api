@@ -5,8 +5,8 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { sanitization, validation } from './schema';
-import C from 'lib/constants';
+import { sanitization, validation, commentSanitization, commentValidation } from './schema';
+import C, { ENUMS } from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 
 /* company collection */
@@ -19,15 +19,30 @@ api.use((req, res, next) => {
   next();
 });
 
+// TODO page
 api.get('/', (req, res, next) => {
-  let condition = {};
-  
-  db.task.find({
+  let condition = {
     project_id: req.project_id
-  })
-  .then(data => {
-    res.json(data || []);
-  })
+  };
+  let { keyword, sort, order, status, assignee, creator, follower} = req.query;
+  assignee = (assignee ? assignee.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
+  creator = (creator ? creator.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
+  follower = (follower ? follower.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
+  status = status ? status.split(',').filter(i => ENUMS.TASK_STATUS.indexOf(i) != -1) : [];
+  assignee.length && (condition['assignee'] = {$in: assignee});
+  creator.length && (condition['creator'] = {$in: creator});
+  follower.length && (condition['follower'] = {$in: follower});
+  status.length && (condition['status'] = {$in: status});
+  keyword && (condition['$text'] = { $search: keyword });
+  if (sort && -1 != ['title', 'assignee', 'creator', 'follower'].indexOf(sort)) {
+    order = order == 'desc' ? -1 : 1;
+    db.task.find(condition).sort({ [sort]: order })
+    .then(data => res.json(data || []))
+    .catch(next);
+    return;
+  }
+  db.task.find(condition)
+  .then(data => res.json(data || []))
   .catch(next);
 })
 
@@ -167,7 +182,51 @@ api.post('/:task_id/followers', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/:task_id/comment', (req, res, next) => {
+  db.task.comments.find({
+    task_id: ObjectId(req.params.task_id)
+  })
+  .then(data => {
+    res.json(data || []);
+  })
+  .catch(next);
+});
 
+api.post('/:task_id/comment', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(commentSanitization, commentValidation, data);
+  _.extend(data, {
+    task_id: ObjectId(req.params.task_id),
+    creator: req.user._id,
+    likes: 0,
+    date_create: new Date()
+  });
+  db.task.comments.insert(data)
+  .then(data => {
+    db.task.update({
+      _id: ObjectId(req.params.task_id)
+    }, {
+      $push: {
+        comments: data._id
+      }
+    })
+    .then(() => {
+      res.json(data)
+    })
+    .catch(next);
+  })
+  .catch(next);
+});
+
+api.get('/:task_id/log', (req, res, next) => {
+  db.task.log.find({
+    task_id: ObjectId(req.params.task_id)
+  })
+  .then(data => {
+    res.json(data || []);
+  })
+  .catch(next);
+});
 
 function updateField(field) {
   return (req, res, next) => {

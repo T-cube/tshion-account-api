@@ -30,3 +30,11 @@ export let validation = {
     items: { $objectId: 1 }
   },
 }
+
+export let commentSanitization = {
+  content: { type: 'string' }
+}
+
+export let commentValidation = {
+  content: { type: 'string', minLength: 3, maxLength: 500 }
+}
