@@ -35,7 +35,7 @@ let constants = {
   },
 
   TASK_STATUS: {
-    WAITING: 'waiting',
+    WAITING: 'pending',
     PROCESSING: 'processing',
     COMPLETED: 'completed',
     PAUSED: 'paused',
@@ -47,6 +47,7 @@ let constants = {
     LEVEL_1: 1,
     LEVEL_2: 2,
     LEVEL_3: 3,
+    TRASHED: 'trashed',
   }
 }
 

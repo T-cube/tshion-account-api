@@ -30,22 +30,22 @@ INPUT
   {
     "_id":"...",
     "title":"...",
-    //"company_id": <company_id>,
-    //"project_id": <project_id>,
-    //"parent_id": <task_id>,        // 父任务
-    "status": <1,2>                //任务状态
+    //"company_id": <ObjectId>,
+    //"project_id": <ObjectId>,
+    //"parent_id": <ObjectId>,        // 父任务
+    "status": <String[Enum:pending,processing,completed,paused,trashed]> //任务状态
     "title": "...",                // 任务标题
     "description": "...",          // 任务详情
-    "creator": <user_id>,          // 创建人
-    "assignee": <user_id>,         // 执行人
-    "followers": [<user_id>, ...], // 关注者
+    "creator": <ObjectId>,          // 创建人
+    "assignee": <ObjectId>,         // 执行人
+    "followers": [<ObjectId>, ...], // 关注者
     //"time_create": <Date>,       // 创建时间
     //"time_update": <Date>,       // 更新时间
     "date_start": <date>,          // 开始时间（optional）
     "date_due": <date>,            // 截止时间（optional）
     "priority": <0,1,2,3>,         // 优先级别
-    //"subtask": [<task_id>, ...], // 子任务
-    "tag": [<tag_id>, ...],        // 标签
+    //"subtask": [<ObjectId>, ...], // 子任务
+    "tag": [<ObjectId>, ...],        // 标签
   }
 ]
 ```
@@ -58,7 +58,7 @@ INPUT
 
 ```javascript
 {
-  status: <Enum:0,1,2,3>
+  status: <String[Enum:pending,processing,completed,paused,trashed]>
 }
 ```
 
@@ -147,28 +147,6 @@ INPUT
 
 ### GET /task
 
-获取全部任务
-
-QUERY
-
-| name | type | description |
-| ----:| --- | --- |
-| page | int | page number |
-| pagesize | int | page size |
-
-OUTPUT
-```javascript
-[
-  {
-    "_id":"...",
-    "title":"...",
-    //...
-  } // 参考任务详情
-]
-```
-
-### GET /task/search
-
 任务检索
 
 QUERY
@@ -202,25 +180,25 @@ OUTPUT
 
 ```javascript
 {
-  "_id": <object_id>,
-  "company_id": <company_id>,
-  "project_id": <project_id>,
-  "parent_id": <task_id>,        // 父任务
+  "_id": <ObjectId>,
+  "company_id": <ObjectId>,
+  "project_id": <ObjectId>,
+  "parent_id": <ObjectId>,        // 父任务
   "status": <1,2>                // 任务状态
   "title": "...",                // 任务标题
   "content": "...",              // 任务详情
   "creator": {
-    "_id": <user_id>,
+    "_id": <ObjectId>,
     "name": "...",
     "avatar": "..."
   },                             // 创建人
   "assignee": {
-    "_id": <user_id>,
+    "_id": <ObjectId>,
     "name": "...",
     "avatar": "..."
   },                             // 执行人
   "followers": [{
-    "_id": <user_id>,
+    "_id": <ObjectId>,
     "name": "...",
     "avatar": "..."
   }, ...],                       // 关注者
@@ -229,9 +207,9 @@ OUTPUT
   "date_start": <date>,          // 开始时间（optional）
   "date_due": <date>,            // 截止时间（optional）
   "priority": <0,1,2,3>,         // 优先级别
-  "subtask": [<task_id>, ...],   // 子任务
+  "subtask": [<ObjectId>, ...],   // 子任务
   "tag": [{
-    "_id": <tag_id>,
+    "_id": <ObjectId>,
     "name": "tag name",
     "color": "#ABCDEF"
   }, ...],                       // 标签
@@ -244,9 +222,9 @@ OUTPUT
 
 ```javascript
 [{                  
-  "_id": <object_id>,
+  "_id": <ObjectId>,
   "user": {
-    "_id": <user_id>,
+    "_id": <ObjectId>,
     "name": "...",
     "avatar": "..."
   },
@@ -261,7 +239,7 @@ OUTPUT
 
 ```javascript
 {
-  "user_id": <user_id>,
+  "ObjectId": <ObjectId>,
   "content": <String>,
   "time_add": <Date>
 }
@@ -275,12 +253,12 @@ OUTPUT
 "log": [{
   type: "task",
   from: {
-    "_id": <user_id>,
+    "_id": <ObjectId>,
     "name": "...",
     "avatar": "..."
   },
   to: {
-    "_id": <user_id>,
+    "_id": <ObjectId>,
     "name": "...",
     "avatar": "..."
   }

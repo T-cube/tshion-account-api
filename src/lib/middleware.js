@@ -29,6 +29,6 @@ export function authCheck() {
       }
     })
     .then(() => next())
-    .catch(next);
+    .catch(() => next('route'));
   }
 }
