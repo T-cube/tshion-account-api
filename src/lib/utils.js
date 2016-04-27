@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import fs from 'fs';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
@@ -15,6 +16,24 @@ export let hashPassword = Promise.promisify(bcrypt.hash);
 
 export let comparePassword = Promise.promisify(bcrypt.compare);
 
+export let fsStat = Promise.promisify(fs.stat);
+
+export let fsAccess = Promise.promisify(fs.access);
+
+export function fileExists(path) {
+  return fsAccess(path, fs.F_OK)
+  .then(() => fsStat(path))
+  .then(stat => stat.isFile())
+  .catch(err => false);
+}
+
+export function dirExists(path) {
+  return fsAccess(path, fs.F_OK)
+  .then(() => fsStat(path))
+  .then(stat => stat.isDirectory())
+  .catch(err => false);
+}
+
 export function getUniqName(list, name, index) {
   if (_.contains(list, name)) {
     let match = /^(.+)\((\d+)\)$/.exec(name);
@@ -22,7 +41,6 @@ export function getUniqName(list, name, index) {
       let baseName = match[1];
       let index = parseInt(match[2]) + 1;
       let newName = `${baseName}(${index})`;
-      console.log(newName);
       return getUniqName(list, newName);
     } else {
       return getUniqName(list, `${name}(2)`);

@@ -2,19 +2,22 @@
   database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
   upload: {
+    path: 'runtime/upload/',
+    url: 'http://tlifang.com:8080/upload/',
+    types: ['avatar', 'attachment'],
     allowed: {
-      picture: [
-        'png', 'jpg', 'gif',
+      avatar: [
+        '.png', '.jpg', '.gif',
       ],
       attachment: [
         // images
-        'png', 'jpg', 'gif',
+        '.png', '.jpg', '.gif',
         // pdf
-        'pdf',
+        '.pdf',
         // office
-        'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+        //'.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
         // achives
-        'zip', 'rar',
+        //'.zip', '.rar',
       ],
     },
   },

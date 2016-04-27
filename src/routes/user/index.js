@@ -1,10 +1,26 @@
 import express from 'express'
-import { ApiError } from 'lib/error';
 import { ObjectId } from 'mongodb';
+
+import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
+import upload from 'lib/upload';
 
 import { sanitizeValidateObject } from 'lib/inspector';
 import { infoSanitization, infoValidation, avatarSanitization, avatarValidation } from './schema';
+
+const BASIC_FIELDS = {
+  _id: 1,
+  email: 1,
+  email_verified: 1,
+  mobile: 1,
+  mobile_verified: 1,
+  avatar: 1,
+  name: 1,
+  description: 1,
+  sex: 1,
+  birthdate: 1,
+  local: 1,
+};
 
 /* users collection */
 let api = express.Router();
@@ -12,55 +28,10 @@ export default api;
 
 api.use(oauthCheck());
 
-// api.route('/test')
-// .get((req, res, next) =>  {
-//   var data = {
-//     accessToken:2,
-//     uid:1,
-//     expires:1
-//   }
-//   res.json(data);
-// }).post((req, res, next) =>  {
-//   // db.user.insert(req.body).then(doc =>  {
-//   //   res.json(doc);
-//   // }).catch(next);
-//   res.json(req.body);
-// });
-//
-// api.route('/')
-// .get((req, res, next) => {
-//   db.user.find().toArray().then(docs => res.json(docs)).catch(next);
-// })
-// .post((req, res, next) => {
-//   db.user.insert(req.body).then(doc => res.json(doc)).catch(next);
-// });
-//
-// //username,password,
-//
-// api.route('/:user_id')
-// .get((req, res, next) =>  {
-//   db.user.findOne({_id: pmongo.ObjectId(req.params.user_id)})
-//   .then(doc =>  {
-//     if (!doc) {
-//       throw new ApiError(404);
-//     }
-//     res.json(doc);
-//   }).catch(next);
-// })
-// .patch((req, res, next) =>  {
-//   db.user.update({_id: pmongo.ObjectId(req.params.user_id)}, req.body)
-//   .toArray()
-//   .then(doc => res.json(doc)).catch(next);
-// })
-// .delete((req, res, next) =>  {
-//   db.user.remove({_id: pmongo.ObjectId(req.params.user_id)})
-//   .then(doc => res.json(doc)).catch(next);
-// });
-
 api.get('/info', (req, res, next) => {
   db.user.find({
     _id: req.user._id
-  })
+  }, BASIC_FIELDS)
   .then(data => {
     res.json(data);
   });
@@ -78,8 +49,21 @@ api.put('/info', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/avatar', (req, res, next) => {
-
+api.put('/avatar', upload({type: 'avatar'}).single('avatar'),
+(req, res, next) => {
+  if (!req.file) {
+    throw new ApiError(400, null, 'file type not allowed');
+  }
+  let data = {
+    avatar: req.file.url
+  };
+  db.user.update({
+    _id: req.user._id
+  }, {
+    $set: data
+  })
+  .then(() => res.json(data))
+  .catch(next);
 });
 
 api.get('/project', (req, res, next) =>  {
@@ -87,7 +71,8 @@ api.get('/project', (req, res, next) =>  {
     _id: req.user._id
   }, {
     projects: 1
-  }).then(userInfo => {
+  })
+  .then(userInfo => {
     if (!userInfo || typeof userInfo.projects != 'object' || !userInfo.projects.length) {
       return res.json([]);
     }
