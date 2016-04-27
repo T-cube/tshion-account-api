@@ -147,28 +147,6 @@ INPUT
 
 ### GET /task
 
-获取全部任务
-
-QUERY
-
-| name | type | description |
-| ----:| --- | --- |
-| page | int | page number |
-| pagesize | int | page size |
-
-OUTPUT
-```javascript
-[
-  {
-    "_id":"...",
-    "title":"...",
-    //...
-  } // 参考任务详情
-]
-```
-
-### GET /task/search
-
 任务检索
 
 QUERY
