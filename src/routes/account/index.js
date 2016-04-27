@@ -73,12 +73,14 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
 
   db.user.findOne({_id: req.user._id})
   .then(user => {
-    let result = comparePassword(password, user.password);
-    console.log(result);
-    if (!result) {
-      throw new ApiError('401', 'invalid_password', 'password wrong')
-    }
-    return generateToken(48);
+    return comparePassword(password, user.password)
+    .then(result => {
+      console.log(result);
+      if (!result) {
+        throw new ApiError('401', 'invalid_password', 'password wrong')
+      }
+      return generateToken(48);
+    });
   })
   .then(token => {
     _token = token;
