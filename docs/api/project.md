@@ -50,8 +50,10 @@ OUTPUT
   {
     _id: <String>,
     name: <String>,
-    //...
-  } // 请参照项目详情
+    logo: <String>,
+    owner: <ObjectId>,
+    is_member: <Boolean>,         //
+  }
 ]
 ```
 
@@ -115,8 +117,9 @@ OUTPUT
 [{
   _id: <ObjectId>,
   type: <String[Enum]>,
+  title: <String>,
   name: <String>,
-  avatar: <String>,
+  avatar: <URL>,
 }...]
 ```
 

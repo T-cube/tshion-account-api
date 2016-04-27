@@ -102,7 +102,7 @@ api.route('/:company_id')
   })
 ;
 
-api.post('/:company_id/avatar', upload().single('avatar'), (req, res, next) => {
+api.put('/:company_id/avatar', upload().single('avatar'), (req, res, next) => {
   res.json({});
 })
 

@@ -28,24 +28,19 @@ INPUT
 ```javascript
 [
   {
-    "_id":"...",
-    "title":"...",
-    //"company_id": <ObjectId>,
-    //"project_id": <ObjectId>,
-    //"parent_id": <ObjectId>,        // 父任务
-    "status": <String[Enum:pending,processing,completed,paused,trashed]> //任务状态
-    "title": "...",                // 任务标题
-    "description": "...",          // 任务详情
-    "creator": <ObjectId>,          // 创建人
-    "assignee": <ObjectId>,         // 执行人
-    "followers": [<ObjectId>, ...], // 关注者
-    //"time_create": <Date>,       // 创建时间
-    //"time_update": <Date>,       // 更新时间
-    "date_start": <date>,          // 开始时间（optional）
-    "date_due": <date>,            // 截止时间（optional）
-    "priority": <0,1,2,3>,         // 优先级别
-    //"subtask": [<ObjectId>, ...], // 子任务
-    "tag": [<ObjectId>, ...],        // 标签
+    _id:<String>,
+    title:<String>,
+    status: <String[Enum:pending,processing,completed,paused,trashed]> //任务状态
+    title: <String>,                // 任务标题
+    description: <String>,          // 任务详情
+    creator: <ObjectId>,          // 创建人
+    assignee: <ObjectId>,         // 执行人
+    followers: [<ObjectId>, ...], // 关注者
+    date_start: <date>,          // 开始时间（optional）
+    date_due: <date>,            // 截止时间（optional）
+    priority: <0,1,2,3>,         // 优先级别
+    //subtask: [<ObjectId>, ...], // 子任务
+    tag: [<ObjectId>, ...],        // 标签
   }
 ]
 ```
@@ -167,8 +162,8 @@ OUTPUT
 ```javascript
 [
   {
-    "_id":"...",
-    "title":"...",
+    _id:<String>,
+    title:<String>,
     //...
   } // 参考任务详情页面
 ]
@@ -180,38 +175,38 @@ OUTPUT
 
 ```javascript
 {
-  "_id": <ObjectId>,
-  "company_id": <ObjectId>,
-  "project_id": <ObjectId>,
-  "parent_id": <ObjectId>,        // 父任务
-  "status": <1,2>                // 任务状态
-  "title": "...",                // 任务标题
-  "content": "...",              // 任务详情
-  "creator": {
-    "_id": <ObjectId>,
-    "name": "...",
-    "avatar": "..."
+  _id: <ObjectId>,
+  company_id: <ObjectId>,
+  project_id: <ObjectId>,
+  parent_id: <ObjectId>,        // 父任务
+  status: <1,2>                // 任务状态
+  title: <String>,                // 任务标题
+  content: <String>,              // 任务详情
+  creator: {
+    _id: <ObjectId>,
+    name: <String>,
+    avatar: <String>
   },                             // 创建人
-  "assignee": {
-    "_id": <ObjectId>,
-    "name": "...",
-    "avatar": "..."
+  assignee: {
+    _id: <ObjectId>,
+    name: <String>,
+    avatar: <String>
   },                             // 执行人
-  "followers": [{
-    "_id": <ObjectId>,
-    "name": "...",
-    "avatar": "..."
+  followers: [{
+    _id: <ObjectId>,
+    name: <String>,
+    avatar: <String>
   }, ...],                       // 关注者
-  "time_create": <Date>,         // 创建时间
-  "time_update": <Date>,         // 更新时间
-  "date_start": <date>,          // 开始时间（optional）
-  "date_due": <date>,            // 截止时间（optional）
-  "priority": <0,1,2,3>,         // 优先级别
-  "subtask": [<ObjectId>, ...],   // 子任务
-  "tag": [{
-    "_id": <ObjectId>,
-    "name": "tag name",
-    "color": "#ABCDEF"
+  time_create: <Date>,         // 创建时间
+  time_update: <Date>,         // 更新时间
+  date_start: <date>,          // 开始时间（optional）
+  date_due: <date>,            // 截止时间（optional）
+  priority: <0,1,2,3>,         // 优先级别
+  subtask: [<ObjectId>, ...],   // 子任务
+  tag: [{
+    _id: <ObjectId>,
+    name: <String>,
+    color: <String>
   }, ...],                       // 标签
 }
 ```
@@ -222,14 +217,14 @@ OUTPUT
 
 ```javascript
 [{                  
-  "_id": <ObjectId>,
-  "user": {
-    "_id": <ObjectId>,
-    "name": "...",
-    "avatar": "..."
+  _id: <ObjectId>,
+  user: {
+    _id: <ObjectId>,
+    name: <String>,
+    avatar: <String>
   },
-  "content": "",
-  "time_add": <Date>,
+  content: <String>,
+  time_add: <Date>,
 }, ...]
 ```
 
@@ -239,9 +234,9 @@ OUTPUT
 
 ```javascript
 {
-  "ObjectId": <ObjectId>,
-  "content": <String>,
-  "time_add": <Date>
+  ObjectId: <ObjectId>,
+  content: <String>,
+  time_add: <Date>
 }
 ```
 
@@ -250,19 +245,19 @@ OUTPUT
 获取任务日志
 
 ```javascript
-"log": [{
-  type: "task",
+log: [{
+  type: <String>,
   from: {
-    "_id": <ObjectId>,
-    "name": "...",
-    "avatar": "..."
+    _id: <ObjectId>,
+    name: <String>,
+    avatar: <String>
   },
   to: {
-    "_id": <ObjectId>,
-    "name": "...",
-    "avatar": "..."
+    _id: <ObjectId>,
+    name: <String>,
+    avatar: <String>
   }
-  content: "...",
+  content: <String>,
   time: <Date>
 }]
 ```

@@ -71,6 +71,7 @@ export function sanitizeValidateObject(sanitizationSchema, validationSchema, dat
   sanitizeObject(sanitizationSchema, data);
   let result = validateObject(validationSchema, data);
   if (!result.valid) {
+    console.log(result);
     throw new ApiError(400, null, result.error);
   }
   return result;
