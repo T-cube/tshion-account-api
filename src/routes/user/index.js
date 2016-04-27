@@ -91,10 +91,16 @@ api.get('/project', (req, res, next) =>  {
     if (!userInfo || typeof userInfo.projects != 'object' || !userInfo.projects.length) {
       return res.json([]);
     }
-    let { company, type } = req.query;
+
+    let { company, type, search } = req.query;
     let condition = {
       _id: {$in: userInfo.projects}
     };
+    if (search) {
+      condition['$text'] = {
+        $search: search
+      }
+    }
     if (company) {
       if (ObjectId.isValid(company)) {
         condition['company_id'] = ObjectId(company);

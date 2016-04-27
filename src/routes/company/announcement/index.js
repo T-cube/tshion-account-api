@@ -40,7 +40,7 @@ api.post('/', (req, res, next) => {
 
   // validation of members and structure nodes
   let structure = new Structure(req.company.structure);
-  data.from.creator = req.user._id();
+  data.from.creator = req.user._id;
   if (!structure.findNodeById(data.from.department)) {
     throw new ApiError(400, null, 'from department is not exists');
   }
