@@ -29,11 +29,10 @@ let validationCustom = {
     }
   },
   enum: function(schema, candidate) {
-    console.log(schema, candidate);
-    if (_.isArray(schema.$enum) || schema.$enum.length) {
+    if (!_.isArray(schema.$enum) || !schema.$enum.length) {
       return;
     }
-    if (candidate && typeof candidate != 'string' || !schema.$enum.indexOf(candidate)) {
+    if (!candidate || -1 == schema.$enum.indexOf(candidate)) {
       this.report('invalid value: ' + candidate);
     }
   },

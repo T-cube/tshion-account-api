@@ -86,6 +86,7 @@ api.get('/:_project_id', (req, res, next) => {
 });
 
 api.param('project_id', (req, res, next, id) => {
+  req.project_id = ObjectId(id);
   db.project.count({
     company_id: req.company._id,
     _id: ObjectId(id)
@@ -223,3 +224,19 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
   })
   .catch(next);
 });
+
+api.put('/:project_id/archived',  (req, res, next) => {
+  let { archived } = req.body;
+  archived = !!archived;
+  db.project.update({
+    _id: ObjectId(req.params.project_id)
+  }, {
+    $set: {
+      is_archived: archived
+    }
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+})
+
+api.use('/:project_id/task', require('./task').default);

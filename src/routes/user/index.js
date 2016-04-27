@@ -115,7 +115,7 @@ api.get('/project', (req, res, next) =>  {
       case 'mine':
         condition['owner'] = req.user._id;
       default:
-        condition['is_archived'] = false;
+        search || (condition['is_archived'] = false);
     }
     db.project.find(condition)
     .then(data => res.json(data))
