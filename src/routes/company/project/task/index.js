@@ -25,14 +25,13 @@ api.get('/', (req, res, next) => {
     project_id: req.project_id
   };
   let { keyword, sort, order, status, assignee, creator, follower} = req.query;
-  assignee = (assignee ? assignee.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
-  creator = (creator ? creator.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
-  follower = (follower ? follower.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
+  let idItems = _.pick(req.query, 'assignee', 'creator', 'follower');
+  _.each(idItems, (item, key) => {
+    item = item ? item.split(',').filter(i => ObjectId.isValid(i)).map(i => ObjectId(i)) : [];
+    item.length && (condition[key] = { $in: item });
+  });
   status = status ? status.split(',').filter(i => ENUMS.TASK_STATUS.indexOf(i) != -1) : [];
-  assignee.length && (condition['assignee'] = {$in: assignee});
-  creator.length && (condition['creator'] = {$in: creator});
-  follower.length && (condition['follower'] = {$in: follower});
-  status.length && (condition['status'] = {$in: status});
+  status.length && (condition['status'] = { $in: status });
   keyword && (condition['$text'] = { $search: keyword });
   if (sort && -1 != ['title', 'assignee', 'creator', 'follower'].indexOf(sort)) {
     order = order == 'desc' ? -1 : 1;
