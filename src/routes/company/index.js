@@ -54,7 +54,7 @@ api.post('/', (req, res, next) => {
     let position_id = ObjectId();
     _.extend(member, {
       joindate: time(),
-      status: C.INVITING_STATUS.NORMAL,
+      status: C.COMPANY_MEMBER_STATUS.NORMAL,
       type: C.COMPANY_MEMBER_TYPE.OWNER,
     });
     _.extend(data, {
