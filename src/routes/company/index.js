@@ -16,53 +16,88 @@ export default api;
 
 api.use(oauthCheck());
 
+// Get company list
 api.get('/', (req, res, next) => {
-  console.log(req.user);
-  db.company.find({}, {name: 1, description: 1}).toArray()
-  .then(docs => res.json(docs))
+  db.user.findOne({
+    _id: req.user._id
+  }, {
+    companies: 1
+  })
+  .then(user => {
+    let companies = user.companies || [];
+    return db.company.find({
+      _id: { $in: companies }
+    }, {
+      name: 1,
+      description: 1,
+      logo: 1,
+    });
+  })
+  .then(list => res.json(list))
   .catch(next);
 });
 
+// Add new company
 api.post('/', (req, res, next) => {
-  let data = req.body;
+  let data = req.body; // contains name, description only
 
   sanitizeValidateObject(companySanitization, companyValidation, data);
-
-  data.members = [req.user];
-  data.owner = req.user._id;
-
-  let position_id = ObjectId();
-  _.extend(data, {
-    owner: req.user._id, //TODO fix this
-    members: [req.user], //TODO fix this
-    structure: {
-      _id: ObjectId(),
-      name: data.name,
-      positions: [{
-        _id: position_id,
-        title: __('administrator'),
-      }],
-      members: [{
-        _id: req.user._id, // TODO fix this
-        title: position_id,
-      }],
-      children: [],
-    },
-    projects: [],
-  });
-  // console.log(data);
-
-  db.company.insert(data)
-  .then(docs => res.json(docs))
+  // get owner data
+  db.user.find({
+    _id: req.user._id
+  }, {
+    name: 1, email: 1, mobile: 1, birthdate: 1, sex: 1,
+  })
+  .then(member => {
+    // compose default data structure
+    let position_id = ObjectId();
+    _.extend(member, {
+      joindate: time(),
+      status: C.INVITING_STATUS.NORMAL,
+      type: C.COMPANY_MEMBER_TYPE.OWNER,
+    });
+    _.extend(data, {
+      owner: member._id,
+      members: [member],
+      structure: {
+        _id: ObjectId(),
+        name: data.name,
+        positions: [{
+          _id: position_id,
+          title: __('administrator'),
+        }],
+        members: [{
+          _id: member._id,
+          title: position_id,
+        }],
+        children: [],
+      },
+      projects: [],
+    });
+    // add company to user
+    return db.company.insert(data);
+  })
+  .then(doc => {
+    console.log(doc);
+    return db.user.update({
+      _id: req.user._id
+    }, {
+      $push: { companies: doc._id }
+    })
+    .then(() => res.json(doc));
+  })
   .catch(next);
 });
 
 api.param('company_id', (req, res, next, id) => {
   let company_id = ObjectId(id);
-  db.company.findOne({_id: company_id})
+  db.company.findOne({
+    _id: company_id,
+    'members._id': req.user._id,
+  })
   .then(company => {
     if (!company) {
-      throw new ApiError(404);
+      throw new ApiError(404, null, 'company not found');
     }
     req.company = company;
     next();
@@ -70,45 +105,56 @@ api.param('company_id', (req, res, next, id) => {
   .catch(next);
 });
 
-api.route('/:company_id')
+// Get company detail
+api.get('/:company_id', (req, res, next) => {
+  res.json(req.company);
+});
 
-  .get((req, res, next) => {
-    res.json(req.company);
+api.put('/:company_id', (req, res, next) => {
+
+  let data = req.body;
+  sanitizeValidateObject(companySanitization, companyValidation, data);
+
+  db.company.update(
+    {_id: ObjectId(req.params.company_id)},
+    {$set: data}
+  )
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.delete('/:company_id', authCheck(), (req, res, next) => {
+  let user_id = ObjectId(req.body.user_id);
+  let company = req.company;
+  if (!req.user._id.equals(company.owner)) {
+    throw new ApiError(403, null, 'only owner can carry out this operation');
+  }
+  // TODO remove related resources
+  db.company.remove({
+    _id: company._id
   })
+  .then(doc => res.json({}))
+  .catch(next);
+});
 
-  .put((req, res, next) => {
-
-    let data = req.body;
-    sanitizeValidateObject(companySanitization, companyValidation, data);
-
-    db.company.update(
-      {_id: ObjectId(req.params.company_id)},
-      {$set: data}
-    )
-    .then(doc => res.json(doc))
-    .catch(next);
+api.put('/:company_id/avatar', upload({type: 'avatar'}).single('avatar'),
+(req, res, next) => {
+  if (!req.file) {
+    throw new ApiError(400, null, 'file type not allowed');
+  }
+  let data = {
+    avatar: req.file.url
+  };
+  db.user.update({
+    _id: req.user._id
+  }, {
+    $set: data
   })
-
-  .delete(authCheck(), (req, res, next) => {
-    let user_id = ObjectId(req.body.user_id);
-    let company = req.company;
-    if (!req.user._id.equals(company.owner)) {
-      throw new ApiError(403, null, 'only owner can carry out this operation');
-    }
-    db.company.remove({_id: ObjectId(req.params.company_id)})
-    .then(function(doc) {
-      res.json(doc);
-    }).catch(next);
-  })
-;
-
-api.put('/:company_id/avatar', upload().single('avatar'), (req, res, next) => {
-  res.json({});
-})
+  .then(() => res.json(data))
+  .catch(next);
+});
 
 api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
-  //TODO add two way checking
-  console.log(req.body);
   let user_id = ObjectId(req.body.user_id);
   let company = req.company;
   if (!req.user._id.equals(company.owner)) {

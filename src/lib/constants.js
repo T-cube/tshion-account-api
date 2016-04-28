@@ -14,9 +14,10 @@ let constants = {
     MALE: 'M',
   },
 
-  INVITING_STATUS: {
+  COMPANY_MEMBER_STATUS: {
+    BANNED: 'banned',
     PENDING: 'pending',
-    ACCEPTED: 'accepted',
+    NORMAL: 'normal',
     REJECTED: 'rejected',
   },
 

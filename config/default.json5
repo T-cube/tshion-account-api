@@ -1,10 +1,13 @@
 {
+  apiUrl: 'http://tlifang.com/',
+  webUrl: 'http://tlifang.com/',
   database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
   upload: {
     path: 'runtime/upload/',
-    url: 'http://tlifang.com:8080/upload/',
+    url: 'http://tlifang.com/upload/',
     types: ['avatar', 'attachment'],
+    defaultType: 'attachment',
     allowed: {
       avatar: [
         '.png', '.jpg', '.gif',

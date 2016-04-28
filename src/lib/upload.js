@@ -6,37 +6,35 @@ import mkdirp from 'mkdirp-bluebird';
 import config from 'config';
 import { dirExists } from 'lib/utils';
 
-let basePath = config.get('upload.path');
-if (!/^\//.test(basePath)) {
-  basePath = BASE_PATH + basePath;
+function getUploadPath(dir) {
+  let basePath = config.get('upload.path');
+  if (!/^\//.test(basePath)) {
+    basePath = BASE_PATH + basePath;
+  }
+  if (!/\/$/.test(basePath)) {
+    basePath += '/';
+  }
+  return path.normalize(basePath + dir);
 }
-if (!/\/$/.test(basePath)) {
-  basePath += '/';
-}
 
-const baseUrl = config.get('upload.url');
-
-const DEFAULT_TYPE = 'files';
-
-let types = config.get('upload.types');
-if (!_.contains(types, DEFAULT_TYPE)) {
-  types.push(DEFAULT_TYPE);
+function getUploadUrl(type, filename) {
+  return config.get('upload.url') + type + '/' + filename;
 }
 
 function checkTypes(type) {
-  return _.contains(types, type);
+  return _.contains(config.get('upload.types'), type);
 }
 
 export default function upload(options) {
   options = _.defaults({}, options, {
-    type: DEFAULT_TYPE,
+    type: config.get('upload.defaultType'),
   });
   if (!checkTypes(options.type)) {
     throw new Error('invalid upload type');
   }
   let storage = multer.diskStorage({
     destination: (req, file, callback) => {
-      let dir = path.normalize(basePath + options.type);
+      let dir = getUploadPath(options.type);
       dirExists(dir)
       .then(exists => {
         if (!exists) {
@@ -53,7 +51,7 @@ export default function upload(options) {
     },
     filename: (req, file, callback) => {
       let name = uuid.v4() + path.extname(file.originalname);
-      file.url = baseUrl + options.type + '/' + name;
+      file.url = getUploadUrl(options.type, name);
       callback(null, name);
     }
   });
