@@ -65,14 +65,14 @@ INPUT:
 ### PUT /user/avatar
 
 INPUT:
-`Content-Type: x-www-form-urlencoded`
+`Content-Type: multipart/form-data`
 ```javascript
 {
   avatar: <File>,
-  crop_x: <Int>,
-  crop_y: <Int>,
-  crop_width: <Int>,
-  crop_height: <Int>,
+  crop_x: <Int>,       // optional
+  crop_y: <Int>,       // optional
+  crop_width: <Int>,   // optional
+  crop_height: <Int>,  // optional
 }
 ```
 
