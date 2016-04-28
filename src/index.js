@@ -3,12 +3,12 @@ import './bootstrap';
 
 import pmongo from 'pmongo';
 import Promise from 'bluebird';
-
 import http from 'http';
 import express from 'express';
 import socketio from 'socket.io';
 import oauthserver from 'oauth2-server';
 import bodyParser from 'body-parser';
+import config from 'config';
 
 import { database } from 'lib/database';
 import apiRouter from './routes';
@@ -17,6 +17,12 @@ import oauthExtended from 'lib/oauth-extended.js';
 import { apiErrorHandler } from 'lib/error';
 import corsHandler from 'lib/cors';
 import 'lib/i18n';
+
+console.log('Tlifang API service');
+console.log('--------------------------------------------------------------------------------');
+console.log('loaded config:');
+console.log(JSON.stringify(config, null, 2));
+console.log('initializing service...');
 
 let app = express();
 

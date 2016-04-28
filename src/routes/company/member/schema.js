@@ -1,5 +1,4 @@
 import { ENUMS } from 'lib/constants';
-console.log(ENUMS);
 
 export let sanitization = {
 	_id: { $objectId: 1 },
