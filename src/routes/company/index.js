@@ -44,12 +44,13 @@ api.post('/', (req, res, next) => {
 
   sanitizeValidateObject(companySanitization, companyValidation, data);
   // get owner data
-  db.user.find({
+  db.user.findOne({
     _id: req.user._id
   }, {
     name: 1, email: 1, mobile: 1, birthdate: 1, sex: 1,
   })
   .then(member => {
+    console.log(member);
     // compose default data structure
     let position_id = ObjectId();
     _.extend(member, {

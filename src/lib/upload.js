@@ -17,12 +17,20 @@ function getUploadPath(dir) {
   return path.normalize(basePath + dir);
 }
 
-function getUploadUrl(type, filename) {
-  return config.get('upload.url') + type + '/' + filename;
+function getUploadUrl(dir, filename) {
+  return config.get('upload.url') + dir + '/' + filename;
 }
 
 function checkTypes(type) {
   return _.contains(config.get('upload.types'), type);
+}
+
+export function randomAvatar(type, size) {
+  let index = _.random(1, size).toString();
+  let num = ('0'+index).slice(-2);
+  let filename = `${num}.png`;
+  let dir = `system/avatar/${type}`;
+  return getUploadUrl(dir, filename);
 }
 
 export default function upload(options) {

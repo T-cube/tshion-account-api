@@ -12,6 +12,7 @@ import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { authoriseSanitization, authoriseValidation } from './schema';
+import { randomAvatar } from 'lib/upload';
 
 let api = express.Router();
 export default api;
@@ -54,7 +55,7 @@ api.post('/register', validator(validation.register), (req, res, next) => {
       email_verified: false,
       mobile: req.body.mobile || null,
       mobile_verified: type == C.USER_ID_TYPE.MOBILE,
-      avatar: 'https://dn-coding-net-production-static.qbox.me/22ade391-68e9-4e9e-927f-b0132c8e9ce6.jpg?imageMogr2/auto-orient/format/jpeg/crop/!274x274a183a11', // TODO set a ramdom avatar from collection
+      avatar: randomAvatar('user', 8),
       password: hash,
     };
     return db.user.insert(data);
