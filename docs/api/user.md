@@ -50,7 +50,6 @@ INPUT:
 {
   name: <String>,
   description: <String>,
-  mobile: <String>,
   birthdate: <Date>,
   sex: <String[Enum:F,M]>,
   address: {
