@@ -231,7 +231,7 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
         $pull: {
           members: { _id: member_id }
         }
-      });
+      })
     })
     .then(doc => res.json({}))
     .catch(next);

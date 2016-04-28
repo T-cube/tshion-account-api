@@ -48,9 +48,10 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
+  let assignee = data.assignee;
   _.extend(data, {
     creator: req.user._id,
-    followers: [],
+    followers: [req.user._id],
     company_id: req.company._id,
     project_id: req.project_id,
     time_create: new Date(),
@@ -61,7 +62,33 @@ api.post('/', (req, res, next) => {
     db.user.update({
       _id: req.user._id
     }, {
-      $push: {'task.creator': doc._id}
+      $push: {
+        task: {
+          _id: doc._id,
+          company_id: req.company._id,
+          project_id: req.project_id,
+          is_creator: true,
+          is_assignee: assignee == req.user._id
+        }
+      }
+    })
+    .then(() => {
+      if (assignee == req.user._id) {
+        return;
+      }
+      return db.user.update({
+        _id: assignee
+      }, {
+        $push: {
+          task: {
+            _id: doc._id,
+            company_id: req.company._id,
+            project_id: req.project_id,
+            is_creator: false,
+            is_assignee: true
+          }
+        }
+      })
     })
     .then(() => {
       res.json(doc);
