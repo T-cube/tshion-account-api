@@ -58,7 +58,15 @@ api.post('/', (req, res, next) => {
   });
   db.task.insert(data)
   .then(doc => {
-    res.json(doc);
+    db.user.update({
+      _id: req.user._id
+    }, {
+      $push: {'task.creator': doc._id}
+    })
+    .then(() => {
+      res.json(doc);
+    })
+    .catch(next);
   })
   .catch(next);
 });
@@ -112,24 +120,66 @@ api.put('/:task_id/description', updateField('description'), (req, res, next) =>
 });
 
 api.put('/:task_id/assignee', (req, res, next) => {
-  let data = validField('assignee', req);
-  Promise.all([
-    isMemberOfProject(data.assignee, req.project_id).catch(next),
-    db.task.count({
-      _id: ObjectId(req.params.task_id),
-      assignee: data.assignee
+  let data = validField('assignee', req.body.assignee);
+  let task_id = ObjectId(req.params.task_id);
+  isMemberOfProject(data.assignee, req.project_id)
+  .then(doc => {
+    return db.task.findOne({
+      _id: task_id
+    }, {
+      assignee: 1
+    });
+  })
+  .then(doc => {
+    if (doc.assignee.equals(data.assignee)) {
+      res.json({});
+      return next();
+    }
+    return db.user.update({
+      _id: doc.assignee,
+      'task._id': task_id
+    }, {
+      $set: {
+        'task.$.is_assignee': false
+      }
+    });
+  })
+  .then(doc => {
+    return db.user.count({
+      _id: req.user._id,
+      'task._id': task_id
     })
-    .then(count => {
-      if (count) {
-        throw new ApiError(400, null, 'can not set assignee to assignee');
+  })
+  .then(count => {
+    if (count) {
+      return db.user.update({
+        _id: req.user._id,
+        'task._id': task_id
+      }, {
+        $set: {
+          'task.$.is_assignee': true
+        }
+      })
+    }
+    return db.user.update({
+      _id: req.user._id
+    }, {
+      $push: {
+        task: {
+          _id: task_id,
+          company_id: req.company._id,
+          project_id: req.project_id,
+          is_creator: false,
+          is_assignee: true
+        }
       }
     })
-    .catch(next)
-  ])
-  .then(() => next())
+  })
+  .then(() => {
+    return doUpdateField('assignee', req);
+  })
+  .then(() => res.json({}))
   .catch(next);
-}, updateField('assignee'), (req, res, next) => {
-  res.json({});
 });
 
 api.put('/:task_id/date_start', updateField('date_start'), (req, res, next) => {
@@ -162,7 +212,6 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
     }
   })
   .then(result => {
-    console.log(result);
     res.json(result);
   })
   .catch(next);
@@ -173,29 +222,78 @@ api.post('/:task_id/followers', (req, res, next) => {
     throw new ApiError(404);
   }
   let user_id = ObjectId(req.body._id);
-  isMemberOfProject(user_id, req.project_id).then(() => {
-    db.task.update({
-      _id: ObjectId(req.params.task_id)
+  let task_id = ObjectId(req.params.task_id);
+  isMemberOfCompany(user_id, req.project_id).then(() => {
+    return db.task.update({
+      _id: task_id
     }, {
       $addToSet: {
         followers: user_id
       }
     })
-    .then(result => res.json(result))
-    .catch(next);
+  })
+  .then(result => {
+    db.user.count({
+      _id: user_id,
+      'task._id': task_id
+    })
+    .then(count => {
+      if (count) {
+        return res.json(result);
+      }
+      db.user.update({
+        _id: user_id
+      }, {
+        $push: {
+          task: {
+            _id: task_id,
+            company_id: req.company._id,
+            project_id: req.project_id,
+            is_creator: false,
+            is_assignee: false
+          }
+        }
+      })
+      .then(() => {
+        res.json(result);
+      })
+      .catch(next);
+    })
   })
   .catch(next);
 });
 
 api.delete('/:task_id/followers/:follower_id', (req, res, next) => {
-  db.task.update({
-    _id: ObjectId(req.params.task_id)
-  }, {
-    $pull: {
-      followers: ObjectId(req.params.follower_id)
-    }
+  let user_id = ObjectId(req.params.follower_id);
+  let task_id = ObjectId(req.params.task_id);
+  db.task.count({
+    _id: task_id,
+    $or: [{assignee: user_id}, {creator: user_id}]
   })
-  .then(data => res.json(data))
+  .then(count => {
+    if (count) {
+      throw new ApiError(400, null, 'assignee and creator can not unfollow');
+    }
+    return db.task.update({
+      _id: task_id
+    }, {
+      $pull: {
+        followers: user_id
+      }
+    })
+  })
+  .then(doc => {
+    return db.user.update({
+      _id: user_id
+    }, {
+      $pull: {
+        task: {
+          _id: task_id
+        }
+      }
+    })
+  })
+  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -265,15 +363,19 @@ api.get('/:task_id/log', (req, res, next) => {
 
 function updateField(field) {
   return (req, res, next) => {
-    let data = validField(field, req.body[field]);
-    db.task.update({
-      _id: ObjectId(req.params.task_id)
-    }, {
-      $set: data
-    })
-    .then(() => next())
+    doUpdateField(field, req)
+    .then((doc) => next())
     .catch(() => next('route'));
   }
+}
+
+function doUpdateField(field, req) {
+  let data = validField(field, req.body[field]);
+  return db.task.update({
+    _id: ObjectId(req.params.task_id)
+  }, {
+    $set: data
+  });
 }
 
 function validField(field, val) {
@@ -292,6 +394,18 @@ function isMemberOfProject(user_id, project_id) {
   .then(count => {
     if (count == 0) {
       throw new ApiError(400, null, 'user is not one of the project member')
+    }
+  });
+}
+
+function isMemberOfCompany(user_id, company_id) {
+  return db.company.count({
+    _id: company_id,
+    'members._id': user_id
+  })
+  .then(count => {
+    if (count == 0) {
+      throw new ApiError(400, null, 'user is not one of the company member')
     }
   });
 }

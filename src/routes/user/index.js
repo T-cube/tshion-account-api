@@ -29,7 +29,7 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/info', (req, res, next) => {
-  db.user.find({
+  db.user.findOne({
     _id: req.user._id
   }, BASIC_FIELDS)
   .then(data => {

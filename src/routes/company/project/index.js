@@ -175,10 +175,17 @@ api.post('/:project_id/member', (req, res, next) => {
     if (0 != count) {
       throw new ApiError(400, null, 'member is exists');
     }
-    db.project.update({
-      _id: project_id
+    db.user.update({
+      _id: data._id
     }, {
-      $push: { members: data }
+      $push: {projects: project_id}
+    })
+    .then(() => {
+      return db.project.update({
+        _id: project_id
+      }, {
+        $push: { members: data }
+      });
     })
     .then(data => {
       res.json(data);
@@ -212,12 +219,19 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
     if (!exists) {
       throw new ApiError(400);
     }
-    db.project.update({
-      _id: project_id
+    db.user.update({
+      _id: data._id
     }, {
-      $pull: {
-        members: { _id: member_id }
-      }
+      $pull: {projects: project_id}
+    })
+    .then(doc => {
+      return db.project.update({
+        _id: project_id
+      }, {
+        $pull: {
+          members: { _id: member_id }
+        }
+      });
     })
     .then(doc => res.json({}))
     .catch(next);
