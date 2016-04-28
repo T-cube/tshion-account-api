@@ -9,17 +9,8 @@ import Promise from 'bluebird';
 import qiniu from 'qiniu';
 import config from 'config';
 
-const fileExists = function(path) {
-  return new Promise((resolve, reject) => {
-    fs.stat(path, (err, stat) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(stat.isFile());
-      }
-    })
-  });
-}
+import fileExists from 'lib/utils';
+
 const putFile = Promise.promisify(qiniu.io.putFile);
 
 qiniu.conf.ACCESS_KEY = config.get('vendor.qiniu.ACCESS_KEY');
