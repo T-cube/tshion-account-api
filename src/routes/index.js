@@ -5,19 +5,10 @@ import bodyParser from 'body-parser';
 import { apiErrorHandler } from 'lib/error';
 import corsHandler from 'lib/cors';
 
-//TODO remove this
-import { userInfo } from 'lib/utils';
-
 let api = express.Router();
 export default api;
 
 api.use(corsHandler);
-
-//TODO remove this
-api.use((req, res, next) => {
-  req.user = userInfo();
-  next();
-})
 
 api.use(bodyParser.json());
 
@@ -35,5 +26,3 @@ _.each(routes, route => {
   let module = require(file)['default'];
   api.use(path, module);
 });
-
-// api.use(apiErrorHandler);

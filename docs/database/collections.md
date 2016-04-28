@@ -48,11 +48,13 @@
   // relations
   companies: [<ObjectId>...],
   projects: [<ObjectId>...],
-  task: {
-    follow: [<ObjectId>...],
-    creator: [<ObjectId>...],
-    assignee: [<ObjectId>...],
-  },
+  task: [{
+    _id: <ObjectId>,
+    company_id: <ObjectId>,
+    project_id: <ObjectId>,
+    is_creator: <Boolean>,
+    is_assignee: <Boolean>,
+  }...],
 }
 ```
 

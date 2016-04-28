@@ -2,11 +2,12 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import { ApiError } from 'lib/error';
 import Structure from 'models/structure';
+import C from 'lib/constants';
+import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
-import C from 'lib/constants';
+import { checkUserType } from '../utils';
 
 /* company collection */
 let api = require('express').Router();
@@ -20,17 +21,29 @@ api.get('/', (req, res, next) => {
   res.json(req.company.members || []);
 });
 
-api.post('/', (req, res, next) => {
+api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
 
-  data._id = ObjectId();
-  data.user_id = null;
-  data.status = C.INVITING_STATUS.PENDING;
-  db.company.update({
-    _id: req.company._id,
-  }, {
-    $push: {members: data}
+  db.user.findOne({email: data.email})
+  .then(user => {
+    let member = _.find(req.company.members, m => m._id.equals(user._id));
+    if (member) {
+      throw new ApiError(400, null, 'member exists');
+    }
+    data.status = C.INVITING_STATUS.PENDING;
+    if (user) {
+      // invite registered user;
+      data._id = user._id;
+    } else {
+      // invite new user throw email;
+      data._id = ObjectId();
+    }
+    return db.company.update({
+      _id: req.company._id,
+    }, {
+      $push: {members: data}
+    });
   })
   .then(doc => res.json(data))
   .catch(next);
@@ -48,7 +61,7 @@ api.get('/:member_id', (req, res, next) => {
   res.json(member);
 });
 
-api.put('/:member_id', (req, res, next) => {
+api.put('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
   let data = {};
   _.each(req.body, (val, key) => {
@@ -64,7 +77,7 @@ api.put('/:member_id', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/:member_id', (req, res, next) => {
+api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
   let data = req.body;
   db.company.update({
