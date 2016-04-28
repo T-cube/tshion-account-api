@@ -25,14 +25,13 @@ api.get('/', (req, res, next) => {
     project_id: req.project_id
   };
   let { keyword, sort, order, status, assignee, creator, follower} = req.query;
-  assignee = (assignee ? assignee.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
-  creator = (creator ? creator.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
-  follower = (follower ? follower.split(',').filter(i => ObjectId.isValid(i)) : []).map(i => ObjectId(i));
+  let idItems = _.pick(req.query, 'assignee', 'creator', 'follower');
+  _.each(idItems, (item, key) => {
+    item = item ? item.split(',').filter(i => ObjectId.isValid(i)).map(i => ObjectId(i)) : [];
+    item.length && (condition[key] = { $in: item });
+  });
   status = status ? status.split(',').filter(i => ENUMS.TASK_STATUS.indexOf(i) != -1) : [];
-  assignee.length && (condition['assignee'] = {$in: assignee});
-  creator.length && (condition['creator'] = {$in: creator});
-  follower.length && (condition['follower'] = {$in: follower});
-  status.length && (condition['status'] = {$in: status});
+  status.length && (condition['status'] = { $in: status });
   keyword && (condition['$text'] = { $search: keyword });
   if (sort && -1 != ['title', 'assignee', 'creator', 'follower'].indexOf(sort)) {
     order = order == 'desc' ? -1 : 1;
@@ -76,7 +75,15 @@ api.get('/:_task_id', (req, res, next) => {
     res.json(data);
   })
   .catch(next);
-})
+});
+
+api.delete('/:task_id', (req, res, next) => {
+  db.task.remove({
+    _id: ObjectId(req.params.task_id)
+  })
+  .then(data => res.json(data))
+  .catch(next);
+});
 
 api.param('task_id', (req, res, next, id) => {
   db.task.count({
@@ -85,7 +92,7 @@ api.param('task_id', (req, res, next, id) => {
   })
   .then(count => {
     if (count == 0) {
-      throw new ApiError(400);
+      throw new ApiError(404);
     }
     next();
   })
@@ -162,12 +169,10 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
 });
 
 api.post('/:task_id/followers', (req, res, next) => {
-  let user_id = req.body._id;
-  if (ObjectId.isValid(user_id)) {
-    user_id = ObjectId(user_id);
-  } else {
-    throw new ApiError(400);
+  if (!ObjectId.isValid(req.body._id)) {
+    throw new ApiError(404);
   }
+  let user_id = ObjectId(req.body._id);
   isMemberOfProject(user_id, req.project_id).then(() => {
     db.task.update({
       _id: ObjectId(req.params.task_id)
@@ -179,6 +184,18 @@ api.post('/:task_id/followers', (req, res, next) => {
     .then(result => res.json(result))
     .catch(next);
   })
+  .catch(next);
+});
+
+api.delete('/:task_id/followers/:follower_id', (req, res, next) => {
+  db.task.update({
+    _id: ObjectId(req.params.task_id)
+  }, {
+    $pull: {
+      followers: ObjectId(req.params.follower_id)
+    }
+  })
+  .then(data => res.json(data))
   .catch(next);
 });
 
@@ -203,7 +220,7 @@ api.post('/:task_id/comment', (req, res, next) => {
   });
   db.task.comments.insert(data)
   .then(data => {
-    db.task.update({
+    return db.task.update({
       _id: ObjectId(req.params.task_id)
     }, {
       $push: {
@@ -215,6 +232,24 @@ api.post('/:task_id/comment', (req, res, next) => {
     })
     .catch(next);
   })
+  .catch(next);
+});
+
+api.delete('/:task_id/comment/:comment_id', (req, res, next) => {
+  let comment_id = ObjectId(req.params.comment_id);
+  db.task.comments.remove({
+    _id: comment_id
+  })
+  .then(() => {
+    return db.task.update({
+      _id: ObjectId(req.params.task_id)
+    }, {
+      $pull: {
+        comments: comment_id
+      }
+    })
+  })
+  .then(() => res.json({}))
   .catch(next);
 });
 
