@@ -4,8 +4,8 @@
   database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
   upload: {
-    path: 'runtime/upload/',
-    url: 'http://tlifang.com/upload/',
+    path: 'public/cdn/',
+    url: 'http://tlifang.com/cdn/upload/',
     types: ['avatar', 'attachment'],
     defaultType: 'attachment',
     allowed: {

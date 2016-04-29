@@ -42,7 +42,7 @@ export default function upload(options) {
   }
   let storage = multer.diskStorage({
     destination: (req, file, callback) => {
-      let dir = getUploadPath(options.type);
+      let dir = getUploadPath('upload/' + options.type);
       dirExists(dir)
       .then(exists => {
         if (!exists) {
