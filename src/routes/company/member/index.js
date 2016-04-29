@@ -7,7 +7,8 @@ import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
-import { checkUserType, isEmail } from '../utils';
+import { checkUserType } from '../utils';
+import { isEmail } from 'lib/utils';
 
 /* company collection */
 let api = require('express').Router();
@@ -55,7 +56,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   .catch(next);
 });
 
-api.get('/check', (req, res, next) => {
+api.post('/check', (req, res, next) => {
   let email = req.body.email;
   if (!isEmail(email)) {
     return res.json({});
