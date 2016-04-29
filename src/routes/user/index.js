@@ -20,6 +20,7 @@ const BASIC_FIELDS = {
   sex: 1,
   birthdate: 1,
   local: 1,
+  address: 1,
 };
 
 /* users collection */
