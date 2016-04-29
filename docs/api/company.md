@@ -140,8 +140,12 @@ INPUT:
 OUTPUT:
 ```javascript
 {
+  is_registered: <Boolean>,
+  is_member: <Boolean>,
   name: <String>,
   email: <String[email]>,
+  avatar: <String>,
+  status: <String[Enum]>
 }]
 ```
 
