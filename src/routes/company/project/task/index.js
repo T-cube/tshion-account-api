@@ -406,12 +406,12 @@ function updateField(field) {
 function logTask(task_id, type, creator, content) {
   let data = {
     type: type,
-    creator: creator,
     content: content || ''
   };
   sanitizeValidateObject(logSanitization, logValidation, data);
   _.extend(data, {
     task_id: task_id,
+    creator: creator,
     date_create: new Date(),
   });
   return db.task.log.insert(data);

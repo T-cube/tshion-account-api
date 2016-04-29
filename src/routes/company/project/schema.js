@@ -3,7 +3,7 @@ import { ENUMS } from 'lib/constants';
 
 export let projectSanitization = {
   name: { type: 'string' },
-  description: { type: 'string' }
+  description: { type: 'string', optional: true }
 }
 
 export let projectValidation = {
@@ -14,7 +14,8 @@ export let projectValidation = {
 	},
   description: {
 		type: 'string',
-		maxLength: 1000
+		maxLength: 1000,
+    optional: true
 	}
 }
 
