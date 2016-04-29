@@ -366,3 +366,51 @@
   thumb: <URL>,
 }
 ```
+
+### apply
+
+审批类型
+
+```javascript
+{
+  _id: <ObjectId>,
+  name: <String>,
+  description: <String>,
+  scope: [<ObjectId>...], // 适用部门
+  steps: [{
+    _id: <ObjectId>,
+    approver: <ObjectId>,
+    approver_type: <ENUM:department|member>
+  }...],
+  forms: [{
+    _id: <ObjectId>,
+    title: <String>,
+    form_type: <ENUM:text|textarea|date...>
+  }]
+}
+```
+
+user.apply
+
+用户审批
+
+```javascript
+{
+  _id: <ObjectId>,
+  apply_type: <ObjectId>, // 申请类型
+  proposer: <ObjectId>,
+  department: <ObjectId>,
+  apply_date: <Date>,
+  content: <String>,
+  is_done: <Boolean>,
+  is_archived: <Boolean>,
+  steps: [{
+    _id: <ObjectId>,
+    status: <Enum:pending|approve|reject|disable>,
+    log: <String> // 审批记录
+  }...],
+  forms: {
+    [<ObjectId>]: <String> // form id > value
+  }
+}
+```

@@ -65,6 +65,7 @@ api.post('/check', (req, res, next) => {
   db.user.findOne({
     email: email
   }, {
+    _id: 0,
     name: 1,
     avatar: 1,
     email: 1,
@@ -77,6 +78,8 @@ api.post('/check', (req, res, next) => {
       _.extend(data, doc);
     }
     if (member) {
+      data.name = member.name;
+      data.is_member = true;
       data.status = member.status;
     }
     res.json(data);
