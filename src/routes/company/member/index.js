@@ -49,6 +49,20 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   .catch(next);
 });
 
+api.get('/search', (req, res, next) => {
+  let email = req.query.email;
+  db.user.findOne({
+    email: email
+  }, {
+    name: 1,
+    avatar: 1,
+  })
+  .then(doc => {
+    res.json(doc || {});
+  })
+  .catch(next);
+});
+
 api.get('/:member_id', (req, res, next) => {
   console.log('bingo');
   let data = req.body;

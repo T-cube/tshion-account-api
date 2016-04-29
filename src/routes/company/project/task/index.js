@@ -122,9 +122,7 @@ api.get('/:_task_id', (req, res, next) => {
       doc.forEach(i => userIdMap[i._id] = i);
       data.creator = userIdMap[data.creator];
       data.assignee = userIdMap[data.assignee];
-      data.followers.forEach((j, k) => {
-        data.followers[k] = userIdMap[j];
-      });
+      data.followers.forEach((j, k) => data.followers[k] = userIdMap[j]);
       res.json(data);
     })
     .catch(next);
