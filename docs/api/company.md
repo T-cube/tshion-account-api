@@ -6,39 +6,7 @@
 
 ## Table of Contents
 
-### company
-
-* [GET /company](#get-company)
-* [GET /company/:company_id](#get-company-company_id)
-* [POST /company](#post-company)
-* [PUT /company/:company_id](#put-company-company_id)
-* [DELETE /company/:company_id](#delete-company-company_id)
-
-### member
-
-* [GET /company/:company_id/member](#get-company-company_id-member)
-* [GET /company/:company_id/member/:member_id](#get-company-company_id-member-member_id)
-* [DELETE /company/:company_id/member/:member_id](#delete-company-company_id-member-member_id)
-
-### structure
-
-#### structure node
-
-* [POST /company/:company_id/structure/:node_id](#post-company-company_id-structure-node_id)
-* [PUT /company/:company_id/structure/:node_id](#put-company-company_id-structure-node_id)
-* [DELETE /company/:company_id/structure/:node_id](#delete-company-company_id-structure-node_id)
-
-#### structure position
-
-* [POST /company/:company_id/structure/:node_id/position](#post-company-company_id-structure-node_id-position)
-* [PUT /company/:company_id/structure/:node_id/position](#put-company-company_id-structure-node_id-position)
-* [DELETE /company/:company_id/structure/:node_id/position](#delete-company-company_id-structure-node_id-position)
-
-#### structure member
-
-* [POST /company/:company_id/structure/:node_id/member](#post-company-company_id-structure-node_id-member)
-* [PUT /company/:company_id/structure/:node_id/member/:member_id](#put-company-company_id-structure-node_id-member-member_id)
-* [DELETE /company/:company_id/structure/:node_id/member/:member_id](#delete-company-company_id-structure-node_id-member-member_id)
+...
 
 ## Function List
 
@@ -157,6 +125,30 @@ INPUT
 ### GET /company/:company_id/member
 
 获取公司成员列表
+
+### POST /company/:company_id/member/check
+
+检验公司成员
+
+INPUT:
+```javascript
+{
+  email: <String[email]>,
+}]
+```
+
+OUTPUT:
+```javascript
+{
+  name: <String>,
+  email: <String[email]>,
+}]
+```
+
+ERROR:
+| code | error | error_description |
+| 400 | `member_exists` | member exists |
+| 400 | `bad_request` | email format error |
 
 OUTPUT:
 ```javascript
