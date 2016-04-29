@@ -24,16 +24,22 @@ api.get('/', (req, res, next) => {
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
+  let member = _.find(req.company.members, m => m.email == data.email);
+  if (member) {
+    throw new ApiError(400, null, 'member exists');
+  }
 
-  db.user.findOne({email: data.email})
+  db.user.findOne({email: data.email}, {_id: 1, name: 1})
   .then(user => {
-    let member = _.find(req.company.members, m => m._id.equals(user._id));
-    if (member) {
-      throw new ApiError(400, null, 'member exists');
-    }
-    data.status = C.INVITING_STATUS.PENDING;
+    data.status = C.COMPANY_MEMBER_STATUS.PENDING;
     if (user) {
       // invite registered user;
+      let member = _.find(req.company.members, m => {
+        m._id.equals(user._id)
+      });
+      if (member) {
+        throw new ApiError(400, null, 'member exists');
+      }
       data._id = user._id;
     } else {
       // invite new user throw email;
