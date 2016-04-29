@@ -108,7 +108,26 @@ api.get('/:_task_id', (req, res, next) => {
     if (!data) {
       throw new ApiError(404);
     }
-    res.json(data);
+    let userList = _.uniq([data.creator, data.assignee].concat(data.followers));
+    db.user.find({
+      _id: {
+        $in: userList
+      }
+    }, {
+      name: 1,
+      avatar: 1
+    })
+    .then(doc => {
+      let userIdMap = {};
+      doc.forEach(i => userIdMap[i._id] = i);
+      data.creator = userIdMap[data.creator];
+      data.assignee = userIdMap[data.assignee];
+      data.followers.forEach((j, k) => {
+        data.followers[k] = userIdMap[j];
+      });
+      res.json(data);
+    })
+    .catch(next);
   })
   .catch(next);
 });
