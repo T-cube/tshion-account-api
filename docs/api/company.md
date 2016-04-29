@@ -146,7 +146,9 @@ OUTPUT:
 ```
 
 ERROR:
+
 | code | error | error_description |
+| ---- | ----- | ----------------- |
 | 400 | `member_exists` | member exists |
 | 400 | `bad_request` | email format error |
 
