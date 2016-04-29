@@ -201,7 +201,7 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
   db.project.findOne({_id: project_id}, {members: 1})
   .then(data => {
     if (!data) {
-      throw new ApiError(400);
+      throw new ApiError(404);
     }
     let { members } = data;
     let allowed = members.filter(member => {
@@ -231,7 +231,7 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
         $pull: {
           members: { _id: member_id }
         }
-      })
+      });
     })
     .then(doc => res.json({}))
     .catch(next);

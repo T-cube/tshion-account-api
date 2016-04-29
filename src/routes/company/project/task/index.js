@@ -5,7 +5,7 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { sanitization, validation, commentSanitization, commentValidation } from './schema';
+import { sanitization, validation, commentSanitization, commentValidation, logSanitization, logValidation } from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 
@@ -90,6 +90,7 @@ api.post('/', (req, res, next) => {
         }
       })
     })
+    .then(() => logTask(doc._id, C.TASK_LOG_TYPE.CRAEATE, req.user._id))
     .then(() => {
       res.json(doc);
     })
@@ -139,11 +140,15 @@ api.put('/:task_id/status', updateField('status'), (req, res, next) => {
 });
 
 api.put('/:task_id/title', updateField('title'), (req, res, next) => {
-  res.json({});
+  logTask(ObjectId(req.params.task_id), C.TASK_LOG_TYPE.TITLE, req.user._id)
+  .then(() => res.json({}))
+  .catch(next);
 });
 
 api.put('/:task_id/description', updateField('description'), (req, res, next) => {
-  res.json({});
+  logTask(ObjectId(req.params.task_id), C.TASK_LOG_TYPE.DESCRIPTION, req.user._id)
+  .then(() => res.json({}))
+  .catch(next);
 });
 
 api.put('/:task_id/assignee', (req, res, next) => {
@@ -281,6 +286,7 @@ api.post('/:task_id/followers', (req, res, next) => {
           }
         }
       })
+      .then(() => logTask(task_id, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
       .then(() => {
         res.json(result);
       })
@@ -320,6 +326,7 @@ api.delete('/:task_id/followers/:follower_id', (req, res, next) => {
       }
     })
   })
+  .then(() => logTask(task_id, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
   .then(() => res.json({}))
   .catch(next);
 });
@@ -394,6 +401,20 @@ function updateField(field) {
     .then((doc) => next())
     .catch(() => next('route'));
   }
+}
+
+function logTask(task_id, type, creator, content) {
+  let data = {
+    type: type,
+    content: content || ''
+  };
+  sanitizeValidateObject(logSanitization, logValidation, data);
+  _.extend(data, {
+    task_id: task_id,
+    creator: creator,
+    date_create: new Date(),
+  });
+  return db.task.log.insert(data);
 }
 
 function doUpdateField(field, req) {

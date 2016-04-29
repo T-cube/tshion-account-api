@@ -38,3 +38,13 @@ export let commentSanitization = {
 export let commentValidation = {
   content: { type: 'string', minLength: 3, maxLength: 500 }
 }
+
+export let logSanitization = {
+  type: { type: 'string' },
+  content: { type: 'string' },
+}
+
+export let logValidation = {
+  type: { $enum: ENUMS.TASK_LOG_TYPE },
+  content: { type: 'string', maxLength: 500 },
+}
