@@ -59,7 +59,7 @@ export default function upload(options) {
     },
     filename: (req, file, callback) => {
       let name = uuid.v4() + path.extname(file.originalname);
-      file.url = getUploadUrl(options.type, name);
+      file.url = getUploadUrl('upload/' + options.type, name);
       callback(null, name);
     }
   });
