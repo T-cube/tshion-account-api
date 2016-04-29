@@ -49,6 +49,16 @@ let constants = {
     LEVEL_2: 2,
     LEVEL_3: 3,
     TRASHED: 'trashed',
+  },
+
+  TASK_LOG_TYPE: {
+    CRAEATE: 'create',                       // 创建
+    COMPLETE: 'complete',                     // 完成
+    REOPEN: 'reopen',                       // 重新开启
+    TITLE: 'title',                        // 标题
+    DESCRIPTION: 'description',                   // 描述
+    TAG: 'tag',                          // 标签
+    FOLLOWERS: 'followers',           
   }
 }
 
