@@ -61,14 +61,25 @@ api.post('/check', (req, res, next) => {
   if (!isEmail(email)) {
     return res.json({});
   }
+  let member = _.find(req.company.members, m => m.email == email);
   db.user.findOne({
     email: email
   }, {
     name: 1,
     avatar: 1,
+    email: 1,
   })
   .then(doc => {
-    res.json(doc || {});
+    let data = {
+      is_registered: !!doc
+    };
+    if (doc) {
+      _.extend(data, doc);
+    }
+    if (member) {
+      data.status = member.status;
+    }
+    res.json(data);
   })
   .catch(next);
 });
