@@ -78,6 +78,8 @@
     email: <String[email]>,
     address: <String>,
     sex: <String[Enum:M,F]>,
+    type: <String[Enum]>,
+    status: <String[Enum]>,
   }...],
   structure: <Structure:> {
     _id: <ObjectId>,
@@ -89,12 +91,37 @@
     members: [{
       _id: <ObjectId[link=user._id]>,
       position: <ObjectId>,
+      type: <String[Enum]>,
     }...],
     children: [<Structure>...],
   },
   projects: [<ObjectId>...],
 }
 ```
+
+关于公司成员类型 `members.type`：
+
+| Value | Title | Description |
+| ----- | ----- | ----------- |
+| `normal` | 普通成员 | 可操作任务、评论等常规任务 |
+| `admin` | 管理员 | 可添加、移除成员 |
+| `owner` | 所有者 | 除管理员权限外，可设置设置其他管理员，可移交项目 |
+
+关于公司成员状态 `members.status`：
+
+| Value | Title | Description |
+| ----- | ----- | ----------- |
+| `banned` | 被禁用 | 无法操作 |
+| `pending` | 未接受 | 未处理邀请 |
+| `normal` | 正常 | 正常成员 |
+| `rejected` | 被拒绝 | 决绝邀请 |
+
+关于组织架构成员类型 `structure.members.type`：
+
+| Value | Title | Description |
+| ----- | ----- | ----------- |
+| `normal` | 普通成员 | 可操作任务、评论等常规任务 |
+| `admin` | 管理员 | 可添加、移除成员 |
 
 ### project
 
