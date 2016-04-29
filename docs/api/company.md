@@ -158,13 +158,77 @@ INPUT
 
 获取公司成员列表
 
+OUTPUT:
+```javascript
+[{
+  _id: <ObjectId[link=user._id]>,
+  name: <String>,
+  mobile: <String>,
+  birthdate: <Date>,
+  joindate: <Date>,
+  email: <String[email]>,
+  address: <String>,
+  sex: <String[Enum:M,F]>,
+  type: <String[Enum]>,
+  status: <String[Enum]>,
+}...]
+```
+
 ### GET /company/:company_id/member/:member_id
 
 获取公司成员详情
 
-### POST /company/:company_id/member/:member_id
+OUTPUT:
+```javascript
+{
+  _id: <ObjectId[link=user._id]>,
+  name: <String>,
+  mobile: <String>,
+  birthdate: <Date>,
+  joindate: <Date>,
+  email: <String[email]>,
+  address: <String>,
+  sex: <String[Enum:M,F]>,
+  type: <String[Enum]>,
+  status: <String[Enum]>,
+}
+```
 
-添加修改公司成员
+### POST /company/:company_id/member
+
+添加公司成员
+
+INPUT:
+```javascript
+{
+  name: <String>,
+  mobile: <String>,
+  birthdate: <Date>,
+  joindate: <Date>,
+  email: <String[email]>,
+  address: <String>,
+  sex: <String[Enum:M,F]>,
+  type: <String[Enum]>,    //需管理员权限
+}
+```
+
+### PUT /company/:company_id/member/:member_id
+
+修改公司成员
+
+INPUT:
+```javascript
+{
+  name: <String>,
+  mobile: <String>,
+  birthdate: <Date>,
+  joindate: <Date>,
+  email: <String[email]>,
+  address: <String>,
+  sex: <String[Enum:M,F]>,
+  type: <String[Enum]>,    //需管理员权限
+}
+```
 
 ### DELETE /company/:company_id/member/:member_id
 
