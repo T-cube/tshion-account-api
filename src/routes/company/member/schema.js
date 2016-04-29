@@ -1,23 +1,23 @@
-import { ENUMS } from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
 
 export let sanitization = {
-	_id: { $objectId: 1 },
 	name: { type: 'string' },
-	mobile: { type: 'string' },
-	birthdate: { type: 'date' },
-	joindate: { type: 'date' },
 	email: { type: 'string', rules: ['trim', 'lower'] },
-	address: { type: 'string' },
-	sex: { type: 'string' },
+	mobile: { type: 'string', def: '' },
+	birthdate: { type: 'date', def: '' },
+	joindate: { type: 'date', def: '2012-12-20' },
+	address: { type: 'string', def: '' },
+	sex: { type: 'string', def: C.SEX.MALE },
+	type: { type: 'string', def: C.COMPANY_MEMBER_TYPE.NORMAL },
 };
 
 export let validation = {
-	_id: { $objectId: 1 },
-	name: { type: 'string', maxLength: 50 },
-	mobile: { type: 'string' },
-	birthdate: { type: 'date' },
-	joindate: { type: 'date' },
+	name: { type: 'string', minLength: 2, maxLength: 50 },
 	email: { type: 'string', pattern: 'email' },
-	address: { type: 'string' },
-	sex: { $enum: ENUMS.SEX },
+	mobile: { type: 'string', optional: true },
+	birthdate: { type: 'date', optional: true },
+	joindate: { type: 'date', optional: true },
+	address: { type: 'string', optional: true },
+	sex: { $enum: ENUMS.SEX, optional: true },
+	type: { $enum: ENUMS.COMPANY_MEMBER_TYPE },
 };
