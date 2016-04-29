@@ -5,7 +5,7 @@
   locale: 'zh-CN',
   upload: {
     path: 'public/cdn/',
-    url: 'http://tlifang.com/cdn/upload/',
+    url: 'http://api.tlifang.com/cdn/',
     types: ['avatar', 'attachment'],
     defaultType: 'attachment',
     allowed: {
