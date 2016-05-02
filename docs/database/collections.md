@@ -374,6 +374,7 @@
 ```javascript
 {
   _id: <ObjectId>,
+  company_id: <ObjectId>,
   name: <String>,
   description: <String>,
   scope: [<ObjectId>...], // 适用部门
@@ -398,7 +399,7 @@ user.apply
 {
   _id: <ObjectId>,
   apply_type: <ObjectId>, // 申请类型
-  proposer: <ObjectId>,
+  proposer: <ObjectId>, // 申请人
   department: <ObjectId>,
   apply_date: <Date>,
   content: <String>,
@@ -406,11 +407,15 @@ user.apply
   is_archived: <Boolean>,
   steps: [{
     _id: <ObjectId>,
+    approver: <ObjectId>,
     status: <Enum:pending|approve|reject|disable>,
     log: <String> // 审批记录
   }...],
-  forms: {
-    [<ObjectId>]: <String> // form id > value
-  }
+  forms: [{
+    _id: <ObjectId>,
+    title: <String>,
+    form_type: <ENUM:text|textarea|date...>,
+    value: <String>
+  }]
 }
 ```
