@@ -43,6 +43,16 @@ let constants = {
     DELETED: 'deleted',
   },
 
+  REQUEST_TYPE: {
+    COMPANY: 'company',
+  },
+
+  REQUEST_STATUS: {
+    PENDING: 'pending',
+    ACCEPTED: 'accepted',
+    REJECTED: 'rejected',
+  },
+
   TASK_PRIORITY: {
     LEVEL_0: 0,
     LEVEL_1: 1,
@@ -58,7 +68,7 @@ let constants = {
     TITLE: 'title',                        // 标题
     DESCRIPTION: 'description',                   // 描述
     TAG: 'tag',                          // 标签
-    FOLLOWERS: 'followers',           
+    FOLLOWERS: 'followers',
   }
 }
 

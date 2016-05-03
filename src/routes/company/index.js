@@ -2,7 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import upload from 'lib/upload';
+import upload, { randomAvatar } from 'lib/upload';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
@@ -61,6 +61,7 @@ api.post('/', (req, res, next) => {
     _.extend(data, {
       owner: member._id,
       members: [member],
+      logo: randomAvatar('company', 10),
       structure: {
         _id: ObjectId(),
         name: data.name,
@@ -113,7 +114,6 @@ api.get('/:company_id', (req, res, next) => {
 });
 
 api.put('/:company_id', (req, res, next) => {
-
   let data = req.body;
   sanitizeValidateObject(companySanitization, companyValidation, data);
 
@@ -139,16 +139,16 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:company_id/logo', upload({type: 'avatar'}).single('avatar'),
+api.put('/:company_id/logo', upload({type: 'avatar'}).single('logo'),
 (req, res, next) => {
   if (!req.file) {
     throw new ApiError(400, null, 'file type not allowed');
   }
   let data = {
-    avatar: req.file.url
+    logo: req.file.url
   };
-  db.user.update({
-    _id: req.user._id
+  db.company.update({
+    _id: req.company._id
   }, {
     $set: data
   })
