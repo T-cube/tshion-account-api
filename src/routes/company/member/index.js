@@ -27,12 +27,12 @@ api.get('/', (req, res, next) => {
     mobile: 1,
   })
   .then(users => {
-    let members = _.map(users, user => {
-      let member = _.find(req.company.members, m => m._id.equals(user._id));
-      return _.extend(user, member);
+    let members = _.map(req.company.members, member => {
+      let member = _.find(user, u => u._id.equals(member._id));
+      return _.extend(member, user);
     });
     res.json(members);
-  })
+  });
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
