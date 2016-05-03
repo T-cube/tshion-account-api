@@ -42,56 +42,79 @@ api.post('/', (req, res, next) => {
     //
     // });
   })
-  db.approval.user.insert(data)
+  db.approval.item.insert(data)
   .then(doc => res.json(doc))
   .catch(next);
 });
 
-api.get('/:approval_id', (req, res, next) => {
-  let approval_id = ObjectId(req.params.approval_id);
-  db.approval.user.find({
-    _id: approval_id
+api.get('/:item_id', (req, res, next) => {
+  let item_id = ObjectId(req.params.item_id);
+  db.approval.item.find({
+    _id: item_id
   })
   .then(doc => res.json(doc))
   .catch(next);
 });
 
-api.put('/:approval_id/steps', (req, res, next) => {
-  let approval_id = ObjectId(req.params.approval_id);
+api.put('/:item_id/steps', (req, res, next) => {
+  let item_id = ObjectId(req.params.item_id);
   let data = req.body;
   sanitizeValidateObject(stepSanitization, stepValidation, data);
-
-  db.approval.user.findOne({
-    _id: approval_id,
+  db.approval.item.findOne({
+    _id: item_id,
   })
-.then(doc => {
-  let steps = doc.steps;
-  let k = steps.indexOf(i => i._id == data._id);
-  if (k == -1) {
-    throw ApiError(400, null);
-  }
-})
-
-  data.approver = req.user._id;
-  db.approval.user.update({
-    _id: approval_id,
-    'steps._id': data._id
-  }, {
-    $set: {
-      'steps.$.status': data.status,
-      'steps.$.create_time': data.create_time,
-      'steps.$.log': data.log,
+  .then(doc => {
+    let { step, steps, template_id } = doc;
+    if (!step.equals(data._id)) {
+      throw ApiError(400, null);
     }
+    let k = steps.indexOf(i => i._id.equals(data._id));
+    let thisStep =  steps[k];
+    let nextStep = steps[k + 1] ? steps[k + 1] : null;
+    data.approver = req.user._id;
+    return db.approval.item.update({
+      _id: item_id,
+      'steps._id': data._id
+    }, {
+      $set: {
+        step: nextStep ? nextStep._id : null,
+        'steps.$.approver': req.user._id,
+        'steps.$.status': data.status,
+        'steps.$.create_time': data.create_time,
+        'steps.$.log': data.log,
+      }
+    })
+  })
+  .then(doc => {
+    if (nextStep.approver.type)
+    return db.approval.flow.update({
+      _id:
+    })
   })
   .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.get('/archived', (req, res, next) => {
-  db.approval.user.find({
+  db.approval.item.find({
     is_archived: true,
     company_id: req.company._id
   })
   .then(data => res.json(data || []))
   .catch(next);
 });
+
+function prepareNext(req, template_id, step_id) {
+  db.approval.template.findOne({
+    _id: template_id
+  }, {
+    steps: 1
+  })
+  .then(doc => {
+    let step = _.find(doc.steps, i => i._id.equals(step_id));
+    let approver = [];
+    if (step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
+      
+    }
+  })
+}
