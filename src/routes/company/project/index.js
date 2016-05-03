@@ -193,12 +193,15 @@ api.get('/:project_id/member', (req, res, next) => {
      avatar: 1
    })
    .then(memberInfo => {
+     console.log(members);
      members = members.map(i => {
        let info = _.find(memberInfo, j => {
-         return i._id == j._id;
+         return i._id.equals(j._id);
        });
-       i.name = info.name;
-       i.avatar = info.avatar;
+       if (info) {
+         i.name = info.name;
+         i.avatar = info.avatar;
+       }
        return i;
      });
      res.json(members || []);
