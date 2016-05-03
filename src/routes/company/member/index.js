@@ -81,6 +81,8 @@ api.post('/check', (req, res, next) => {
       data.name = member.name;
       data.is_member = true;
       data.status = member.status;
+    } else {
+      data.is_member = false;
     }
     res.json(data);
   })

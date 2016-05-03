@@ -19,5 +19,7 @@ export function database() {
     'task',
     'task.comments',
     'task.log',
+    'approval',
+    'user.approval',
   ]);
 }

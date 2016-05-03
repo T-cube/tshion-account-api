@@ -58,7 +58,29 @@ let constants = {
     TITLE: 'title',                        // 标题
     DESCRIPTION: 'description',                   // 描述
     TAG: 'tag',                          // 标签
-    FOLLOWERS: 'followers',           
+    FOLLOWERS: 'followers',
+  },
+
+  APPROVAL_STATUS: {
+    NORMAL: 'normal',
+    UNUSED: 'unused',
+  },
+
+  APPROVER_TYPE: {
+    DEPARTMENT: 'department',
+    MEMBER: 'member',
+  },
+
+  FORM_TYPE: {
+    TEXT: 'text',
+    TEXTAREA: 'textarea',
+    DATE: 'date',
+  },
+
+  USER_APPROVAL_STATUS: {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
   }
 }
 

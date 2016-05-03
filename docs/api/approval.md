@@ -4,17 +4,17 @@
 
 项目
 
-## 挂载点
+## 挂载点1
 
 ```
-/company/:company_id/apply
+/company/:company_id/approval/template
 ```
 
 ## Table of Contents
 
 ## API function
 
-### GET /item
+### GET /
 
 OUTPUT:
 ```javascript
@@ -29,7 +29,7 @@ OUTPUT:
 ]
 ```
 
-### POST /item
+### POST /
 
 INPUT:
 ```javascript
@@ -50,15 +50,15 @@ INPUT:
 }
 ```
 
-### GET /item/:application_id
+### PUT /:approval_id
 
-OUTPUT:
+INPUT:
 ```javascript
 {
-  _id: <ObjectId，
+  _id: <ObjectId>,
   name: <String>,
   description: <String>,
-  scope: [<ObjectId>...],
+  scope: [<ObjectId>...], // 适用部门
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
@@ -72,85 +72,39 @@ OUTPUT:
 }
 ```
 
-### GET /user
-
-OUTPUT:
-```javascript
-[
-  {
-    _id: <ObjectId>,
-    item: <ObjectId>,
-    proposer: <ObjectId>,
-    department: <ObjectId>,
-    apply_date: <Date>,
-    content: <String>
-  }
-  ...
-]
-```
-
-### POST /user
+### PUT /:approval_id/status
 
 INPUT:
 ```javascript
 {
-  _id: <ObjectId>,
-  item: <ObjectId>,
-  proposer: <ObjectId>,
-  department: <ObjectId>,
-  content: <String>,
-  forms: [{
-    _id: <ObjectId>,
-    title: <String>,
-    form_type: <ENUM:text|textarea|date...>,
-    value: <String>
-  }]
+  status: <ENUM:normal|unused>
 }
 ```
 
-### GET /user/:user_id
+### GET /:approval_id
 
-INPUT:
+OUTPUT:
 ```javascript
 {
-  _id: <ObjectId>,
-  item: <ObjectId>,
-  proposer: <ObjectId>,
-  department: <ObjectId>,
-  apply_date: <Date>,
-  content: <String>,
+  _id: <ObjectId，
+  name: <String>,
+  description: <String>,
+  scope: [<ObjectId>...],
+  status: <ENUM>,
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    status: <Enum:pending|approve|reject|disable>,
-    log: <String> // 审批记录
+    approver_type: <ENUM:department|member>
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <ENUM:text|textarea|date...>,
-    value: <String>
+    form_type: <ENUM:text|textarea|date...>
   }]
 }
 ```
 
-### PUT /user/:user_id
-
-INPUT:
-```javascript
-{
-  _id: <ObjectId>,
-  content: <String>,
-  forms: [{
-    _id: <ObjectId>,
-    title: <String>,
-    form_type: <ENUM:text|textarea|date...>,
-    value: <String>
-  }]
-}
-```
-
-### PUT /user/:user_id/steps
+### PUT /:approval_id/steps
 
 INPUT:
 ```javascript
@@ -163,3 +117,93 @@ INPUT:
 }
 ```
 
+### DELETE /:approval_id
+
+
+## 挂载点2
+
+```
+/company/:company_id/approval/item
+```
+
+### GET /
+
+OUTPUT:
+```javascript
+[
+  {
+    _id: <ObjectId>,
+    item: <ObjectId>,
+    proposer: <ObjectId>,
+    department: <ObjectId>,
+    apply_date: <Date>,
+    status: <ENUM>,
+    content: <String>
+  }
+  ...
+]
+```
+
+### POST /
+
+INPUT:
+```javascript
+{
+  _id: <ObjectId>,
+  template_id: <ObjectId>,
+  proposer: <ObjectId>,
+  department: <ObjectId>,
+  content: <String>,
+  forms: [{
+    _id: <ObjectId>,
+    title: <String>,
+    form_type: <ENUM:text|textarea|date...>,
+    value: <String>
+  }]
+}
+```
+
+### GET /:approval_id
+
+INPUT:
+```javascript
+{
+  _id: <ObjectId>,
+  template_id: <ObjectId>,
+  proposer: <ObjectId>,
+  department: <ObjectId>,
+  apply_date: <Date>,
+  status: <ENUM>,
+  content: <String>,
+  files: [<String>...],
+  steps: [{
+    _id: <ObjectId>,
+    approver: <ObjectId>,
+    status: <Enum:pending|approve|reject|disable>,
+    create_time: <Date>,
+    log: <String> // 审批记录
+  }...],
+  forms: [{
+    _id: <ObjectId>,
+    title: <String>,
+    form_type: <ENUM:text|textarea|date...>,
+    value: <String>
+  }]
+}
+```
+
+### PUT /:approval_id
+
+INPUT:
+```javascript
+{
+  _id: <ObjectId>,
+  content: <String>,
+  forms: [{
+    _id: <ObjectId>,
+    title: <String>,
+    form_type: <ENUM:text|textarea|date...>,
+    value: <String>
+  }]
+}
+```
