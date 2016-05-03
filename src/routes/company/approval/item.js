@@ -88,7 +88,7 @@ api.put('/:item_id/steps', (req, res, next) => {
   .then(doc => {
     if (nextStep.approver.type)
     return db.approval.flow.update({
-      _id:
+      
     })
   })
   .then(doc => res.json(doc))
@@ -114,7 +114,7 @@ function prepareNext(req, template_id, step_id) {
     let step = _.find(doc.steps, i => i._id.equals(step_id));
     let approver = [];
     if (step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
-      
+
     }
   })
 }
