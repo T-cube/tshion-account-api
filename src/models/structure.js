@@ -227,6 +227,25 @@ class Structure {
     }
   }
 
+  _findMemberByPosition(node, position_id, members) {
+    let nodeMembers = node.members.filter(i => i.position == position_id).map(j => j._id);
+    if (nodeMembers) {
+      members = members.concat(nodeMembers)
+    }
+    if (node.children) {
+      for (let k in node.children) {
+        let _node = node.children[k];
+        members = this._findMemberByPosition(_node, position_id, members);
+      }
+    }
+    return members;
+  }
+
+  findMemberByPosition(position_id) {
+    position_id = ObjectId(position_id);
+    return this._findMemberByPosition(this.root, position_id, [])
+  }
+
   object() {
     return this.root;
   }

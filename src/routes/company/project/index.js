@@ -190,10 +190,11 @@ api.get('/:project_id/member', (req, res, next) => {
      }
    }, {
      name: 1,
-     avatar: 1
+     avatar: 1,
+     email: 1,
+     mobile: 1
    })
    .then(memberInfo => {
-     console.log(members);
      members = members.map(i => {
        let info = _.find(memberInfo, j => {
          return i._id.equals(j._id);
@@ -201,6 +202,8 @@ api.get('/:project_id/member', (req, res, next) => {
        if (info) {
          i.name = info.name;
          i.avatar = info.avatar;
+         i.email = info.email;
+         i.mobile = info.mobile;
        }
        return i;
      });
@@ -215,11 +218,15 @@ api.post('/:project_id/member', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   let data = req.body;
 
-  sanitizeValidateObject(memberSanitization, memberValidation, data);
+  data.forEach(i => {
+    sanitizeValidateObject(memberSanitization, memberValidation, i);
+  })
 
   db.project.count({
     _id: project_id,
-    'members._id': data._id
+    'members._id': {
+      $in: data.map(i => i._id)
+    }
   })
   .then(count => {
     if (0 != count) {
