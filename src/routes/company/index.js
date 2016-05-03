@@ -139,7 +139,7 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:company_id/avatar', upload({type: 'avatar'}).single('avatar'),
+api.put('/:company_id/logo', upload({type: 'avatar'}).single('avatar'),
 (req, res, next) => {
   if (!req.file) {
     throw new ApiError(400, null, 'file type not allowed');
