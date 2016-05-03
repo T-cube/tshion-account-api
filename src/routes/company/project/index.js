@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
+import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { projectSanitization, projectValidation, memberSanitization, memberValidation } from './schema';
@@ -38,6 +39,7 @@ api.post('/', (req, res, next) => {
     company_id: req.company._id,
     is_archived: false,
     owner: req.user._id,
+    logo: randomAvatar('project', 14),
     members: [{
       _id: req.user._id,
       type: C.PROJECT_MEMBER_TYPE.OWNER,
@@ -151,6 +153,23 @@ api.delete('/:_project_id', (req, res, next) => {
     })
     .catch(next);
   })
+  .catch(next);
+});
+
+api.put('/:project_id/logo', upload({type: 'avatar'}).single('logo'),
+(req, res, next) => {
+  if (!req.file) {
+    throw new ApiError(400, null, 'file type not allowed');
+  }
+  let data = {
+    logo: req.file.url
+  };
+  db.project.update({
+    _id: req.project_id
+  }, {
+    $set: data
+  })
+  .then(() => res.json(data))
   .catch(next);
 });
 

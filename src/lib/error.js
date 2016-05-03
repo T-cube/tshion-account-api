@@ -81,6 +81,8 @@ export function apiErrorHandler(err, req, res, next) {
     }
     res.send(_err);
     return;
+  } else {
+    console.error(err);
   }
   next(err);
 }

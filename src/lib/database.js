@@ -6,20 +6,19 @@ export { ObjectId } from 'mongodb';
 export function database() {
   let dbConfig = config.get('database');
   return pmongo(dbConfig, [
+    'announcement',
+    'auth_check_token',
+    'company',
     'oauth_clients',
     'oauth_accesstoken',
     'oauth_refreshtoken',
-    'user',
-    'company',
     'project',
-    'task',
-    'announcement',
-    'project',
-    'auth_check_token',
+    'request',
     'task',
     'task.comments',
     'task.log',
     'approval',
+    'user',
     'user.approval',
   ]);
 }

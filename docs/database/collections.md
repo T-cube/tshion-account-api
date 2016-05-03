@@ -157,6 +157,36 @@
 | `owner` | 所有者 | 除管理员权限外，可设置设置其他管理员，可移交项目 |
 | `supervisor` | 监察者 | 与访客一致，但对其他成员不可见（此种类型待定） |
 
+### request
+
+关系申请（公司成员、好友关系）
+
+```javascript
+{
+  _id: <ObjectId>,
+  from: <ObjectId>,         // 申请人
+  to: <ObjectId>,           // 被申请人
+  type: <String[Enum]>,     // 申请类型
+  object: <ObjectId>,       // 申请对象
+  status: <String[Enum]>,   // 申请状态
+  date_create: <Date>,      // 创建日期
+}
+```
+
+关于 `type`
+
+| Value | Title | Description |
+| ----- | ----- | ----------- |
+| `company` | 公司 | 添加公司成员时发出 |
+
+关于 `status`
+
+| Value | Title | Description |
+| ----- | ----- | ----------- |
+| `pending` | 待确认 | 请求已发出，待被申请人确认 |
+| `accepted` | 已通过 | 被申请人通过了申请 |
+| `rejected` | 已拒绝 | 被申请人通过了申请 |
+
 ### discussion
 
 项目讨论

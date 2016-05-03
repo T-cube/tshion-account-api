@@ -3,11 +3,11 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import Structure from 'models/structure';
-import C from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
-import { checkUserType } from '../utils';
+import { time, checkUserType } from '../utils';
 import { isEmail } from 'lib/utils';
 
 /* company collection */
@@ -19,7 +19,20 @@ api.use((req, res, next) => {
 });
 
 api.get('/', (req, res, next) => {
-  res.json(req.company.members || []);
+  let memberIds = _.pluck(req.company.members, '_id');
+  db.user.find({
+    _id: {$in: memberIds}
+  }, {
+    avatar: 1,
+    mobile: 1,
+  })
+  .then(users => {
+    let members = _.map(users, user => {
+      let member = _.find(req.company.members, m => m._id.equals(user._id));
+      return _.extend(user, member);
+    });
+    res.json(members);
+  })
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
@@ -46,6 +59,14 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
       // invite new user throw email;
       data._id = ObjectId();
     }
+    db.request.insert({
+      from: req.user._id,
+      to: data._id,
+      type: C.REQUEST_TYPE.COMPANY,
+      object: req.company._id,
+      status: C.REQUEST_STATUS.PENDING,
+      date_create: time(),
+    });
     return db.company.update({
       _id: req.company._id,
     }, {
@@ -103,9 +124,10 @@ api.get('/:member_id', (req, res, next) => {
 
 api.put('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
+  sanitizeValidateObject(sanitization, validation, req.body);
   let data = {};
   _.each(req.body, (val, key) => {
-    data['members.$.'+key] = val;
+    data['members.$.' + key] = val;
   });
   db.company.update({
     _id: req.company._id,
@@ -113,7 +135,7 @@ api.put('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, ne
   }, {
     $set: data
   })
-  .then(doc => res.json(data))
+  .then(doc => res.json({}))
   .catch(next);
 });
 
