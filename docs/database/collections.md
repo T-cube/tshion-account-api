@@ -397,7 +397,9 @@
 }
 ```
 
-### apply
+### approval
+
+approval.template
 
 审批类型
 
@@ -408,10 +410,17 @@
   name: <String>,
   description: <String>,
   scope: [<ObjectId>...], // 适用部门
+  status: <ENUM>,
   steps: [{
     _id: <ObjectId>,
-    approver: <ObjectId>,
-    approver_type: <ENUM:department|member>
+    approver: {
+      _id: <ObjectId>,
+      type: <ENUM:department|member>
+    }
+    copy_to: [{
+      _id: <ObjectId>,
+      type: <ENUM:department|member>,
+    }...]
   }...],
   forms: [{
     _id: <ObjectId>,
@@ -421,31 +430,48 @@
 }
 ```
 
-user.apply
+approval.item
 
 用户审批
 
 ```javascript
 {
   _id: <ObjectId>,
-  apply_type: <ObjectId>, // 申请类型
-  proposer: <ObjectId>, // 申请人
+  template_id: <ObjectId>, // 申请类型
+  from: <ObjectId>, // 申请人
+  company_id: <ObjectId>,
   department: <ObjectId>,
   apply_date: <Date>,
+  status: <ENUM:processing|approved|rejected|revoked>,
+  step: <ObjectId>,
   content: <String>,
-  is_done: <Boolean>,
-  is_archived: <Boolean>,
+  files: [<String>...], // 附件
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    status: <Enum:pending|approve|reject|disable>,
+    status: <Enum:pending|approved|rejected>,
+    create_time: <Date>,
     log: <String> // 审批记录
   }...],
   forms: [{
     _id: <ObjectId>,
-    title: <String>,
-    form_type: <ENUM:text|textarea|date...>,
     value: <String>
-  }]
+  }...]
+}
+```
+
+approval.flow
+
+审批流程
+
+```javascript
+{
+  _id: <ObjectId>, // user_id
+  company: [{
+    company_id: <ObjectId>, // company_id
+    apply: [<ObjectId>...],
+    copy_to: [<ObjectId>...],
+    approve: [<ObjectId>...]
+  }...]
 }
 ```

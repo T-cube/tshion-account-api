@@ -79,6 +79,13 @@ api.get('/:_project_id', (req, res, next) => {
      throw new ApiError(404);
    }
    let owner = data.owner;
+   data.is_owner = owner == req.user._id;
+   data.is_admin = false;
+   req.company.members.forEach(i => {
+     if (i._id == req.user._id && i.type == C.PROJECT_MEMBER_TYPE.ADMIN) {
+       data.is_admin = true;
+     }
+   })
    data.owner = _.find(req.company.members, member => {
      return member._id.equals(owner);
    });
@@ -175,7 +182,28 @@ api.get('/:project_id/member', (req, res, next) => {
     _id: 0
  })
  .then(data => {
-   res.json(data['members'] || []);
+   let members = data.members;
+   let memberIds = members.map(i => i._id);
+   db.user.find({
+     _id: {
+       $in: memberIds
+     }
+   }, {
+     name: 1,
+     avatar: 1
+   })
+   .then(memberInfo => {
+     members = members.map(i => {
+       let info = _.find(memberInfo, j => {
+         return i._id == j._id;
+       });
+       i.name = info.name;
+       i.avatar = info.avatar;
+       return i;
+     });
+     res.json(members || []);
+   })
+   .catch(next)
  })
  .catch(next);
 });
@@ -224,7 +252,7 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
     }
     let { members } = data;
     let allowed = members.filter(member => {
-      return member._id.equals(req.user._id) && (member.type == C.PROJECT_MEMBER_TYPE.OWNER || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
+      return member._id.equals(req.user._id) || (member.type == C.PROJECT_MEMBER_TYPE.OWNER || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
     }).length;
     if (!allowed) {
       throw new ApiError(403);

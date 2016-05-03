@@ -19,7 +19,20 @@ api.use((req, res, next) => {
 });
 
 api.get('/', (req, res, next) => {
-  res.json(req.company.members || []);
+  let memberIds = _.pluck(req.company.members, '_id');
+  db.user.find({
+    _id: {$in: memberIds}
+  }, {
+    avatar: 1,
+    mobile: 1,
+  })
+  .then(users => {
+    let members = _.map(users, user => {
+      let member = _.find(req.company.members, m => m._id.equals(user._id));
+      return _.extend(user, member);
+    });
+    res.json(members);
+  })
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
@@ -89,6 +102,8 @@ api.post('/check', (req, res, next) => {
       data.name = member.name;
       data.is_member = true;
       data.status = member.status;
+    } else {
+      data.is_member = false;
     }
     res.json(data);
   })
