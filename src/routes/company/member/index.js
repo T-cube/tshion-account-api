@@ -28,7 +28,7 @@ api.get('/', (req, res, next) => {
   })
   .then(users => {
     let members = _.map(req.company.members, member => {
-      let member = _.find(user, u => u._id.equals(member._id));
+      let user = _.find(user, u => u._id.equals(member._id));
       return _.extend(member, user);
     });
     res.json(members);

@@ -135,7 +135,7 @@ function prepareNext(req, item_id, template_id, step_id) {
         let structure = new Structure(req.company.structure);
         copyto = copyto.concat(structure.findMemberByPosition(i._id));
       } else {
-        copyto[] = i._id;
+        copyto.push(i._id);
       }
     })
 
