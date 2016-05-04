@@ -2,7 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import upload, { randomAvatar } from 'lib/upload';
+import upload, { randomAvatar, defaultAvatar } from 'lib/upload';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
@@ -113,7 +113,7 @@ api.get('/:company_id', (req, res, next) => {
   let members = req.company.members;
   let memberIds = _.pluck(members, '_id');
   db.user.find({
-    _id: {$in: memberIds}
+    _id: {$in: memberIds},
   }, {
     avatar: 1,
     name: 1,
@@ -122,6 +122,7 @@ api.get('/:company_id', (req, res, next) => {
     _.each(members, m => {
       let user = _.find(users, u => u._id.equals(m._id));
       _.extend(m, user);
+      m.avatar = m.avatar || defaultAvatar('user');
     })
     res.json(req.company);
   })
