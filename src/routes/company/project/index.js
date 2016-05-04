@@ -221,33 +221,34 @@ api.post('/:project_id/member', (req, res, next) => {
     i.type = C.PROJECT_MEMBER_TYPE.NORMAL;
     return i;
   })
-
-  db.project.count({
-    _id: project_id,
-    'members._id': {
-      $in: data.map(i => i._id)
-    }
-  })
-  .then(count => {
-    if (0 != count) {
-      throw new ApiError(400, null, 'member is exists');
-    }
-    db.user.update({
-      _id: data._id
-    }, {
-      $push: {projects: project_id}
+  isAdminOfProject(req.user_id, project_id)
+  .then(() => {
+    return db.project.count({
+      _id: project_id,
+      'members._id': {
+        $in: data.map(i => i._id)
+      }
     })
-    .then(() => {
-      return db.project.update({
-        _id: project_id
+    .then(count => {
+      if (0 != count) {
+        throw new ApiError(400, null, 'member is exists');
+      }
+      return db.user.update({
+        _id: data._id
       }, {
-        $push: { members: {$each: data} }
-      });
+        $push: {projects: project_id}
+      })
+      .then(() => {
+        return db.project.update({
+          _id: project_id
+        }, {
+          $push: { members: {$each: data} }
+        });
+      })
+      .then(data => {
+        res.json(data);
+      })
     })
-    .then(data => {
-      res.json(data);
-    })
-    .catch(next);
   })
   .catch(next);
 });
@@ -259,13 +260,16 @@ api.put('/:_project_id/member/:member_id/type', (req, res, next) => {
   if (type != C.PROJECT_MEMBER_TYPE.ADMIN && type != C.PROJECT_MEMBER_TYPE.NORMAL) {
     throw new ApiError(400, null, 'wrong type');
   }
-  db.project.update({
-    _id: project_id,
-    'members._id': member_id
-  }, {
-    $set: {
-      'members.$.type': type
-    }
+  isOwnerOfProject(req.user._id, project_id)
+  .then(() => {
+    return db.project.update({
+      _id: project_id,
+      'members._id': member_id
+    }, {
+      $set: {
+        'members.$.type': type
+      }
+    })
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -274,54 +278,58 @@ api.put('/:_project_id/member/:member_id/type', (req, res, next) => {
 api.post('/:_project_id/transfer', authCheck(), (req, res, next) => {
   let member_id = ObjectId(req.body.user_id);
   let project_id = ObjectId(req.params._project_id);
-  isMemberOfProject(member_id, project_id)
+  isOwnerOfProject(req.user._id, project_id)
   .then(() => {
-    return db.project.update({
-      _id: project_id,
-      'members.type': C.PROJECT_MEMBER_TYPE.OWNER
-    }, {
-      $set: {
-        owner: member_id,
-        'members.$.type': C.PROJECT_MEMBER_TYPE.NORMAL
-      }
+    isMemberOfProject(member_id, project_id)
+    .then(() => {
+      return db.project.update({
+        _id: project_id,
+        'members.type': C.PROJECT_MEMBER_TYPE.OWNER
+      }, {
+        $set: {
+          owner: member_id,
+          'members.$.type': C.PROJECT_MEMBER_TYPE.NORMAL
+        }
+      })
     })
-  })
-  .then(() => {
-    return db.project.update({
-      _id: project_id,
-      'members._id': member_id
-    }, {
-      $set: {
-        'members.$.type': C.PROJECT_MEMBER_TYPE.OWNER
-      }
+    .then(() => {
+      return db.project.update({
+        _id: project_id,
+        'members._id': member_id
+      }, {
+        $set: {
+          'members.$.type': C.PROJECT_MEMBER_TYPE.OWNER
+        }
+      })
     })
+    .then(doc => res.json(doc))
+    .catch(next);
   })
-  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.delete('/:_project_id/member/:member_id', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
   let project_id = ObjectId(req.params._project_id);
-  db.project.findOne({_id: project_id}, {members: 1})
+  db.project.findOne({
+    _id: project_id
+  }, {
+    members: 1
+  })
   .then(data => {
     if (!data) {
       throw new ApiError(404);
     }
     let { members } = data;
-    let allowed = members.filter(member => {
+    let allowed = member_id.equals(req.user._id) || members.filter(member => {
       return member._id.equals(req.user._id)
-        || (member.type == C.PROJECT_MEMBER_TYPE.OWNER
-        || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
+        && (member.type == C.PROJECT_MEMBER_TYPE.OWNER
+          || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
     }).length;
     if (!allowed) {
       throw new ApiError(403);
     }
-    if (req.user._id.equals(member_id)) {
-      throw new ApiError(400, null, 'can not delete self');
-    }
-    let exists = members.filter(member => {
-      return member._id.equals(member_id);
-    }).length;
+    let exists = members.filter(member => member._id.equals(member_id)).length;
     if (!exists) {
       throw new ApiError(400);
     }
@@ -366,7 +374,31 @@ function isMemberOfProject(user_id, project_id) {
   })
   .then(count => {
     if (count == 0) {
-      throw new ApiError(400, null, 'user is not one of the project member')
+      throw new ApiError(400, null, 'user is not one of the project member');
+    }
+  });
+}
+
+function isOwnerOfProject(user_id, project_id) {
+  return db.project.count({
+    _id: project_id,
+    owner: user_id
+  })
+  .then(count => {
+    if (count == 0) {
+      throw new ApiError(400, null, 'user is not owner of the project');
+    }
+  });
+}
+
+function isAdminOfProject(user_id, project_id) {
+  return db.project.findOne({
+    _id: project_id,
+    'members._id': user_id
+  })
+  .then(data => {
+    if (!data || (data.type != C.PROJECT_MEMBER_TYPE.ADMIN && data.type != C.PROJECT_MEMBER_TYPE.OWNER)) {
+      throw new ApiError(400, null, 'user is not owner of the project');
     }
   });
 }

@@ -228,6 +228,9 @@ class Structure {
   }
 
   _findMemberByPosition(node, position_id, members) {
+    if (!node || !node.members) {
+      return members;
+    }
     let nodeMembers = node.members.filter(i => i.position == position_id).map(j => j._id);
     if (nodeMembers) {
       members = members.concat(nodeMembers)
