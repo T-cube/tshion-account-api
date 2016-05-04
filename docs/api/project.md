@@ -153,6 +153,17 @@ INPUT
 }
 ```
 
+### PUT /project/:project_id/member/:member_id/type
+
+设置成管理员或普通用户
+
+INPUT
+```javascript
+{
+  type: <ENUM:admin|normal>
+}
+```
+
 ### POST /project/:project_id/transfer
 
 转让项目
