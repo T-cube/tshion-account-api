@@ -80,6 +80,7 @@ api.put('/:item_id/steps', (req, res, next) => {
   sanitizeValidateObject(stepSanitization, stepValidation, data);
   db.approval.item.findOne({
     _id: item_id,
+    status: C.APPROVAL_ITEM_STATUS.PROCESSING
   }, {
     step: 1,
     steps: 1,

@@ -221,7 +221,7 @@ api.post('/:project_id/member', (req, res, next) => {
     i.type = C.PROJECT_MEMBER_TYPE.NORMAL;
     return i;
   })
-  isAdminOfProject(req.user_id, project_id)
+  isAdminOfProject(req.user._id, project_id)
   .then(() => {
     return db.project.count({
       _id: project_id,
