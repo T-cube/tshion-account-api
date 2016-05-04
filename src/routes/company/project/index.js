@@ -218,8 +218,10 @@ api.post('/:project_id/member', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   let data = req.body;
 
-  data.forEach(i => {
+  data.map(i => {
     sanitizeValidateObject(memberSanitization, memberValidation, i);
+    i.type = C.PROJECT_MEMBER_TYPE.NORMAL;
+    return i;
   })
 
   db.project.count({

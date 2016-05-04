@@ -122,13 +122,11 @@ export let userValidation = {
 export let stepSanitization = {
   _id: { $objectId: 1 },
   status: { type: 'string' },
-  create_time: { type: 'date' },
   log: { type: 'string' },
 }
 
 export let stepValidation = {
   _id: { $objectId: 1 },
   status: { $enum: [C.USER_APPROVAL_STATUS.APPROVED, C.USER_APPROVAL_STATUS.REJECTED] },
-  create_time: { type: 'date' },
   log: { type: 'string' },
 }

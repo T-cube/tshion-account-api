@@ -78,7 +78,7 @@ api.put('/:item_id/steps', (req, res, next) => {
       step: nextStep ? nextStep._id : null,
       'steps.$.approver': req.user._id,
       'steps.$.status': data.status,
-      'steps.$.create_time': data.create_time,
+      'steps.$.create_time': new Date(),
       'steps.$.log': data.log,
     };
     if (!nextStep && data.status == C.USER_APPROVAL_STATUS.APPROVED) {
@@ -135,7 +135,7 @@ function prepareNext(req, item_id, template_id, step_id) {
         let structure = new Structure(req.company.structure);
         copyto = copyto.concat(structure.findMemberByPosition(i._id));
       } else {
-        copyto[] = i._id;
+        copyto = copyto.concat(i._id);
       }
     })
 

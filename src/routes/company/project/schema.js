@@ -21,12 +21,10 @@ export let projectValidation = {
 
 export let memberSanitization = {
   _id: { $objectId: 1 },
-  type: { type: 'int' },
-	title: { type: 'string' }
+	title: { type: 'string', optional: true }
 }
 
 export let memberValidation = {
 	_id: { $objectId: 1 },
-  type: { $enum: ENUMS.PROJECT_MEMBER_TYPE },
-	title: { type: 'string' }
+	title: { type: 'string', optional: true }
 }
