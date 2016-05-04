@@ -16,7 +16,7 @@
 * [GET /task/:task_id/comment](#get-task-task_id-comment)
 * [GET /task/:task_id/log](#get-task-task_id-log)
 
-## 新建任务
+## 基本操作
 
 ### POST /task
 
@@ -26,24 +26,25 @@
 
 INPUT
 ```javascript
-[
-  {
-    _id:<String>,
-    title:<String>,
-    status: <String[Enum:pending,processing,completed,paused,trashed]> //任务状态
-    title: <String>,                // 任务标题
-    description: <String>,          // 任务详情
-    creator: <ObjectId>,          // 创建人
-    assignee: <ObjectId>,         // 执行人
-    followers: [<ObjectId>, ...], // 关注者
-    date_start: <date>,          // 开始时间（optional）
-    date_due: <date>,            // 截止时间（optional）
-    priority: <0,1,2,3>,         // 优先级别
-    //subtask: [<ObjectId>, ...], // 子任务
-    tag: [<ObjectId>, ...],        // 标签
-  }
-]
+{
+  title:<String>,
+  status: <String[Enum:pending,processing,completed,paused,trashed]> //任务状态
+  title: <String>,                // 任务标题
+  description: <String>,          // 任务详情
+  creator: <ObjectId>,          // 创建人
+  assignee: <ObjectId>,         // 执行人
+  followers: [<ObjectId>, ...], // 关注者
+  date_start: <date>,          // 开始时间（optional）
+  date_due: <date>,            // 截止时间（optional）
+  priority: <0,1,2,3>,         // 优先级别
+  //subtask: [<ObjectId>, ...], // 子任务
+  tag: [<ObjectId>, ...],        // 标签
+}
 ```
+
+### DELETE /task/:task_id
+
+删除任务
 
 ## 更新任务信息
 

@@ -87,10 +87,11 @@ let constants = {
     DATE: 'date',
   },
 
-  USER_APPROVAL_STATUS: {
-    PENDING: 'pending',
+  APPROVAL_ITEM_STATUS: {
+    PROCESSING: 'processing',
     APPROVED: 'approved',
     REJECTED: 'rejected',
+    REVOKED: 'revoked'
   }
 }
 

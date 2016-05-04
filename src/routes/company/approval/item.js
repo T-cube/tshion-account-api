@@ -5,8 +5,9 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { itemSanitization, itemValidation } from './schema';
-import C, { ENUMS } from 'lib/constants';
+import { itemSanitization, itemValidation, stepSanitization, stepValidation } from './schema';
+import Structure from 'models/structure';
+import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 
 let api = require('express').Router();
@@ -16,36 +17,51 @@ api.use(oauthCheck());
 
 api.post('/', (req, res, next) => {
   let data = req.body;
+  let user_id = req.user._id;
   sanitizeValidateObject(itemSanitization, itemValidation, data);
   _.extend(data, {
-    proposer: req.user._id,
+    from: user_id,
     company_id: req.company._id,
     apply_date: new Date(),
-    status: '',
-    is_done: false,
-    is_archived: false
+    status: C.APPROVAL_ITEM_STATUS.PROCESSING,
+    is_archived: false,
   });
-  db.approval.item.findOne({
-    _id: data.apply_item
+  db.approval.template.findOne({
+    _id: data.template_id
   })
   .then(template => {
     if (!template) {
-      throw new ApiError(400);
+      throw new ApiError(400, null, 'approval template is not existed');
     }
+    data.step = template.steps[0] ? template.steps[0]._id : null;
     data.steps = [];
-    console.log(template.steps);
     template.steps.forEach(step => {
       data.steps.push({
         _id: step._id,
-        status: C.USER_APPROVAL_STATUS.PENDING
+        status: C.APPROVAL_ITEM_STATUS.PROCESSING
       })
     });
     // data.forms.forEach(form => {
     //
     // });
+    return db.approval.item.insert(data)
+    .then(doc => {
+      res.json(doc);
+      return prepareNextStep(req.company.structure, doc._id, template._id, data.step)
+      .then(() => {
+        return db.approval.flow.update({
+          _id: user_id,
+          'company.company_id': req.company._id
+        }, {
+          $push: {
+            'company.apply': doc._id
+          }
+        }, {
+          upsert: true
+        })
+      })
+    })
   })
-  db.approval.item.insert(data)
-  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -64,16 +80,24 @@ api.put('/:item_id/steps', (req, res, next) => {
   sanitizeValidateObject(stepSanitization, stepValidation, data);
   db.approval.item.findOne({
     _id: item_id,
+    status: C.APPROVAL_ITEM_STATUS.PROCESSING
+  }, {
+    step: 1,
+    steps: 1,
+    template_id: 1,
   })
   .then(doc => {
+    if (!doc) {
+      throw new ApiError(400);
+    }
     let { step, steps, template_id } = doc;
     if (!step.equals(data._id)) {
-      throw ApiError(400, null);
+      throw ApiError(403, null);
     }
-    let k = steps.indexOf(i => i._id.equals(data._id));
+
+    let k = _.findIndex(steps, item => item._id.equals(step));
     let thisStep =  steps[k];
     let nextStep = steps[k + 1] ? steps[k + 1] : null;
-    data.approver = req.user._id;
 
     let update = {
       step: nextStep ? nextStep._id : null,
@@ -82,11 +106,11 @@ api.put('/:item_id/steps', (req, res, next) => {
       'steps.$.create_time': new Date(),
       'steps.$.log': data.log,
     };
-    if (!nextStep && data.status == C.USER_APPROVAL_STATUS.APPROVED) {
-      update.status = C.USER_APPROVAL_STATUS.APPROVED;
+    if (!nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
+      update.status = C.APPROVAL_ITEM_STATUS.APPROVED;
     }
-    if (data.status == C.USER_APPROVAL_STATUS.REJECTED) {
-      update.status = C.USER_APPROVAL_STATUS.REJECTED;
+    if (data.status == C.APPROVAL_ITEM_STATUS.REJECTED) {
+      update.status = C.APPROVAL_ITEM_STATUS.REJECTED;
     }
 
     return db.approval.item.update({
@@ -95,26 +119,17 @@ api.put('/:item_id/steps', (req, res, next) => {
     }, {
       $set: update
     })
-  })
-  .then(doc => {
-    if (nextStep && data.status == C.USER_APPROVAL_STATUS.APPROVED) {
-      return prepareNext(req, item_id, template_id, nextStep._id);
-    }
+    .then(doc => {
+      if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
+        return prepareNextStep(req.company.structure, item_id, template_id, nextStep._id);
+      }
+    })
   })
   .then(() => res.json({}))
   .catch(next);
 });
 
-api.get('/archived', (req, res, next) => {
-  db.approval.item.find({
-    is_archived: true,
-    company_id: req.company._id
-  })
-  .then(data => res.json(data || []))
-  .catch(next);
-});
-
-function prepareNext(req, item_id, template_id, step_id) {
+function prepareNextStep(structure, item_id, template_id, step_id) {
   return db.approval.template.findOne({
     _id: template_id
   }, {
@@ -124,8 +139,9 @@ function prepareNext(req, item_id, template_id, step_id) {
     let step = _.find(doc.steps, i => i._id.equals(step_id));
     let approver = [];
     let copyto = [];
+    structure = new Structure(structure);
+
     if (step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
-      let structure = new Structure(req.company.structure);
       approver = structure.findMemberByPosition(step.approver._id);
     } else {
       approver = [step.approver._id];
@@ -133,15 +149,14 @@ function prepareNext(req, item_id, template_id, step_id) {
 
     step.copy_to.forEach(i => {
       if (i.type == C.APPROVER_TYPE.DEPARTMENT) {
-        let structure = new Structure(req.company.structure);
         copyto = copyto.concat(structure.findMemberByPosition(i._id));
       } else {
         copyto = copyto.concat(i._id);
       }
-    })
+    });
 
-    Promise.all([
-      db.approval.flow.update({
+    return Promise.all([
+      approver.length && db.approval.flow.update({
         _id: {
           $in: approver
         }
@@ -149,8 +164,10 @@ function prepareNext(req, item_id, template_id, step_id) {
         $push: {
           approve: item_id
         }
+      }, {
+        upsert: true
       }),
-      db.approval.flow.update({
+      copyto.length && db.approval.flow.update({
         _id: {
           $in: copyto
         }
@@ -158,10 +175,9 @@ function prepareNext(req, item_id, template_id, step_id) {
         $push: {
           copy_to: item_id
         }
+      }, {
+        upsert: true
       })
     ])
-    .then(() => res.json({}))
-    .catch(next);
   })
-  .catch(next);
 }

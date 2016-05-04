@@ -12,10 +12,23 @@ export let sanitization = {
 		items: {
 			type: 'object',
 			properties: {
-		    approver: { $objectId: 1 },
-		    approver_type: { type: 'string' },
-		    copy_to: { $objectId: 1 },
-		    copy_to_type: { type: 'string' }
+		    approver: {
+          type: 'object',
+    			properties: {
+            _id: { $objectId: 1 },
+            type: { type: 'string' }
+          }
+        },
+		    copy_to: {
+          type: 'array',
+          items: {
+            type: 'object',
+      			properties: {
+              _id: { $objectId: 1 },
+              type: { type: 'string' }
+            }
+          }
+        }
 		  }
 		}
 	},
@@ -43,10 +56,23 @@ export let validation = {
 		items: {
 			type: 'object',
 			properties: {
-				approver: { $objectId: 1 },
-				approver_type: { $enum: ENUMS.APPROVER_TYPE },
-				copy_to: { $objectId: 1 },
-				copy_to_type: { $enum: ENUMS.APPROVER_TYPE },
+				approver: {
+          type: 'object',
+    			properties: {
+            _id: { $objectId: 1 },
+            type: { $enum: ENUMS.APPROVER_TYPE }
+          }
+        },
+				copy_to: {
+          type: 'array',
+          items: {
+            type: 'object',
+      			properties: {
+              _id: { $objectId: 1 },
+              type: { $enum: ENUMS.APPROVER_TYPE }
+            }
+          }
+        }
 			}
 		}
 	},
@@ -71,7 +97,7 @@ export let statusValidation = {
 }
 
 export let itemSanitization = {
-  apply_item: { $objectId: 1 },
+  template_id: { $objectId: 1 },
   department: { $objectId: 1 },
   content: { type: 'string' },
   files: {
@@ -93,7 +119,7 @@ export let itemSanitization = {
 }
 
 export let itemValidation = {
-  apply_item: { $objectId: 1 },
+  template_id: { $objectId: 1 },
   department: { $objectId: 1 },
   content: { type: 'string' },
   files: {
@@ -122,6 +148,6 @@ export let stepSanitization = {
 
 export let stepValidation = {
   _id: { $objectId: 1 },
-  status: { $enum: [C.USER_APPROVAL_STATUS.APPROVED, C.USER_APPROVAL_STATUS.REJECTED] },
+  status: { $enum: [C.APPROVAL_ITEM_STATUS.APPROVED, C.APPROVAL_ITEM_STATUS.REJECTED] },
   log: { type: 'string' },
 }
