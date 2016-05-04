@@ -123,8 +123,8 @@ api.put('/:project_id', (req, res, next) => {
 });
 
 api.delete('/:_project_id', authCheck(), (req, res, next) => {
-  let object_id = ObjectId(req.params._project_id);
-  db.project.findOne({_id: object_id}, {members: 1, _id: 0, owner: 1})
+  let project_id = ObjectId(req.params._project_id);
+  db.project.findOne({_id: project_id}, {members: 1, _id: 0, owner: 1})
   .then(data => {
     if (!data) {
       throw new ApiError(400);
@@ -135,19 +135,19 @@ api.delete('/:_project_id', authCheck(), (req, res, next) => {
     let projectMembers = [];
     data.members && (projectMembers = data.members.map(i => i._id));
     return db.project.remove({
-      _id: object_id
+      _id: project_id
     })
     .then(doc => {
       return Promise.all([
         db.company.update({
           _id: req.company._id
         }, {
-          $pull: {projects: object_id}
+          $pull: {projects: project_id}
         }),
         db.user.update({
           _id: {$in: projectMembers}
         }, {
-          $pull: {projects: object_id}
+          $pull: {projects: project_id}
         }),
       ])
       .then(() => res.json({}));
@@ -334,7 +334,7 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
       throw new ApiError(400);
     }
     db.user.update({
-      _id: data._id
+      _id: member_id
     }, {
       $pull: {projects: project_id}
     })

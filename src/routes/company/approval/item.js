@@ -43,7 +43,10 @@ api.post('/', (req, res, next) => {
     // data.forms.forEach(form => {
     //
     // });
-    return db.approval.item.insert(data);
+    return db.approval.item.insert(data)
+    .then(doc => {
+      
+    })
   })
   .then(doc => res.json(doc))
   .catch(next);
