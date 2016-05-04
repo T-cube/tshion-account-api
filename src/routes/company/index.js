@@ -6,8 +6,7 @@ import upload, { randomAvatar } from 'lib/upload';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { time } from 'lib/utils';
-import { userId, userInfo } from 'lib/utils';
+import { userId, userInfo, time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
 
@@ -71,11 +70,12 @@ api.post('/', (req, res, next) => {
         }],
         members: [{
           _id: member._id,
-          title: position_id,
+          position: position_id,
         }],
         children: [],
       },
       projects: [],
+      date_create: time(),
     });
     // add company to user
     return db.company.insert(data);
@@ -110,7 +110,21 @@ api.param('company_id', (req, res, next, id) => {
 
 // Get company detail
 api.get('/:company_id', (req, res, next) => {
-  res.json(req.company);
+  let members = req.company.members;
+  let memberIds = _.pluck(members, '_id');
+  db.user.find({
+    _id: {$in: memberIds}
+  }, {
+    avatar: 1,
+    name: 1,
+  })
+  .then(users => {
+    _.each(members, m => {
+      let user = _.find(users, u => u._id.equals(m._id));
+      _.extend(m, user);
+    })
+    res.json(req.company);
+  })
 });
 
 api.put('/:company_id', (req, res, next) => {

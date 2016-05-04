@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 import validation from './validation';
-import { timestamp, comparePassword, hashPassword, generateToken } from 'lib/utils';
+import { timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
@@ -40,10 +40,8 @@ api.post('/check', validator(validation.check), (req, res, next) => {
 api.post('/register', validator(validation.register), (req, res, next) => {
   let { type, password, code } = req.body;
   let id = req.body[type];
-  console.log({[type]: id});
   db.user.find({[type]: id}).count()
   .then(count => {
-    console.log(count);
     if (count > 0) {
       throw userExistsError(type);
     }
@@ -55,6 +53,7 @@ api.post('/register', validator(validation.register), (req, res, next) => {
       email_verified: false,
       mobile: req.body.mobile || null,
       mobile_verified: type == C.USER_ID_TYPE.MOBILE,
+      name: type == C.USER_ID_TYPE.MOBILE ? req.body.mobile : getEmailName(req.body.email),
       avatar: randomAvatar('user', 8),
       password: hash,
     };

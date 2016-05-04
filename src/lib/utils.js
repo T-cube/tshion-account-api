@@ -50,6 +50,16 @@ export function getUniqName(list, name, index) {
   }
 }
 
+export function getEmailName(email) {
+  let pattern = /^([\w\.]+?)@.+$/;
+  let result = pattern.exec(email);
+  if (!result) {
+    return email;
+  } else {
+    return result[1];
+  }
+}
+
 export function timestamp() {
   return +new Date;
 }
