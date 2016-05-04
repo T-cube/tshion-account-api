@@ -13,8 +13,8 @@ function camelCaseObjectKey(obj) {
 
 export default {
   getAccessToken(bearerToken, callback) {
-    console.log('in getAccessToken (bearerToken: ' + bearerToken + ')');
-    db.oauth_accesstoken.findOne({access_token: bearerToken})
+    // console.log('in getAccessToken (bearerToken: ' + bearerToken + ')');
+    db.oauth.accesstoken.findOne({access_token: bearerToken})
     .then(token => {
       if (!token) {
         return callback(null, null);
@@ -33,17 +33,17 @@ export default {
   },
 
   getClient(clientId, clientSecret, callback) {
-    console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
+    // console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
     if (clientSecret === null) {
-      return db.oauth_clients.findOne({client_id: clientId})
+      return db.oauth.clients.findOne({client_id: clientId})
       .then(doc => callback(null, doc)).catch(e => callback(e));
     }
-    db.oauth_clients.findOne({client_id: clientId, client_secret: clientSecret})
+    db.oauth.clients.findOne({client_id: clientId, client_secret: clientSecret})
     .then(doc => callback(null, doc)).catch(e => callback(e));
   },
 
   grantTypeAllowed(clientId, grantType, callback) {
-    console.log('in grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');
+    // console.log('in grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');
     if (grantType === 'password') {
       return callback(null, true);
     }
@@ -51,20 +51,19 @@ export default {
   },
 
   saveAccessToken(token, clientId, expires, user, callback) {
-    console.log('in saveAccessToken (token: ' + token + ', clientId: ' + clientId + ', userid: ' + user.id + ', expires: ' + expires + ')');
-    console.log('user:', user);
+    // console.log('in saveAccessToken (token: ' + token + ', clientId: ' + clientId + ', userid: ' + user.id + ', expires: ' + expires + ')');
     let data = {
       access_token: token,
       client_id: clientId,
       user_id: user._id,
       expires: expires
     }
-    db.oauth_accesstoken.insert(data).
+    db.oauth.accesstoken.insert(data).
     then(() => callback(null)).catch(e => callback(e));
   },
 
   getUser(username, password, callback) {
-    console.log('in getUser (username: ' + username + ', password: ' + password + ')');
+    // console.log('in getUser (username: ' + username + ', password: ' + password + ')');
     let data = {};
     if (/^1[3|4|5|7|8]\d{9}$/.test(username)) {
       data.mobile = username;
@@ -75,32 +74,29 @@ export default {
     }
     db.user.findOne(data, {_id: 1, name: 1, email: 1, mobile: 1, password: 1})
     .then(doc => {
-      console.log('!!!!!!!!');
       if (!doc) {
         return callback(null, null);
       }
       let result = bcrypt.compareSync(password, doc.password);
-      console.log(result);
       callback(null, result ? doc : null);
     }).catch(e => callback(e));
   },
 
   saveRefreshToken(token, clientId, expires, user, callback) {
-    console.log('in saveRefreshToken (token: ' + token + ', clientId: ' + clientId +', userId: ' + user.id + ', expires: ' + expires + ')');
-    console.log(user);
+    // console.log('in saveRefreshToken (token: ' + token + ', clientId: ' + clientId +', userId: ' + user.id + ', expires: ' + expires + ')');
     let data = {
       refresh_token: token,
       client_id: clientId,
       user_id: user._id,
       expires: expires,
     };
-    db.oauth_refreshtoken.insert(data).
+    db.oauth.refreshtoken.insert(data).
     then(() => callback(null)).catch(e => callback(e));
   },
 
   getRefreshToken(refreshToken, callback) {
-    console.log('in getRefreshToken (refreshToken: ' + refreshToken + ')');
-    db.oauth_refreshtoken.findOne({refresh_token: refreshToken})
+    // console.log('in getRefreshToken (refreshToken: ' + refreshToken + ')');
+    db.oauth.refreshtoken.findOne({refresh_token: refreshToken})
     .then(token => {
       if (!token) {
         return callback(null, null);
@@ -119,7 +115,7 @@ export default {
   },
 
   revokeRefreshToken(refreshToken, callback) {
-    db.oauth_refreshtoken.remove({refresh_token: refreshToken})
+    db.oauth.refreshtoken.remove({refresh_token: refreshToken})
     .then(doc => callback(null, doc))
     .catch(e => callback(e));
   }
