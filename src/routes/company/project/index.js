@@ -397,8 +397,9 @@ function isAdminOfProject(user_id, project_id) {
     'members._id': user_id
   })
   .then(data => {
-    if (!data || (data.type != C.PROJECT_MEMBER_TYPE.ADMIN && data.type != C.PROJECT_MEMBER_TYPE.OWNER)) {
-      throw new ApiError(400, null, 'user is not owner of the project');
+    if (!data || -1 == [C.PROJECT_MEMBER_TYPE.ADMIN, C.PROJECT_MEMBER_TYPE.OWNER]
+      .indexOf(_.find(data.members, member => member._id == user_id).type)) {
+      throw new ApiError(400, null, 'user is not admin of the project');
     }
   });
 }

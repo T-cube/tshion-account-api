@@ -45,7 +45,7 @@ api.post('/', (req, res, next) => {
     // });
     return db.approval.item.insert(data)
     .then(doc => {
-      
+
     })
   })
   .then(doc => res.json(doc))
@@ -78,9 +78,15 @@ api.put('/:item_id/steps', (req, res, next) => {
     }
     let { step, steps, template_id } = doc;
     if (!step.equals(data._id)) {
-      throw ApiError(400, null);
+      throw ApiError(403, null);
     }
-    let k = steps.indexOf(i => i._id.equals(data._id));
+
+    console.log(steps);
+    let k = steps.indexOf(item => {
+      console.log(step);
+      console.log(item._id);
+      return item._id.equals(step)
+    });
     let thisStep =  steps[k];
     let nextStep = steps[k + 1] ? steps[k + 1] : null;
 
