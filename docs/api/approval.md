@@ -4,17 +4,17 @@
 
 项目
 
-## 挂载点1
+## 挂载点
 
 ```
-/company/:company_id/approval/template
+/company/:company_id
 ```
 
 ## Table of Contents
 
 ## API function
 
-### GET /
+### GET /approval/template
 
 OUTPUT:
 ```javascript
@@ -29,7 +29,7 @@ OUTPUT:
 ]
 ```
 
-### POST /
+### POST /approval/template
 
 INPUT:
 ```javascript
@@ -50,7 +50,7 @@ INPUT:
 }
 ```
 
-### PUT /:approval_id
+### PUT /approval/template/:approval_id
 
 INPUT:
 ```javascript
@@ -72,7 +72,7 @@ INPUT:
 }
 ```
 
-### PUT /:approval_id/status
+### PUT /approval/template/:approval_id/status
 
 INPUT:
 ```javascript
@@ -81,7 +81,7 @@ INPUT:
 }
 ```
 
-### GET /:approval_id
+### GET /approval/template/:approval_id
 
 OUTPUT:
 ```javascript
@@ -104,7 +104,7 @@ OUTPUT:
 }
 ```
 
-### PUT /:approval_id/steps
+### PUT /approval/template/:approval_id/steps
 
 INPUT:
 ```javascript
@@ -117,16 +117,11 @@ INPUT:
 }
 ```
 
-### DELETE /:approval_id
+### DELETE /approval/template/:approval_id
 
+## 申请实例
 
-## 挂载点2
-
-```
-/company/:company_id/approval/item
-```
-
-### GET /
+### GET /approval/item
 
 OUTPUT:
 ```javascript
@@ -144,7 +139,7 @@ OUTPUT:
 ]
 ```
 
-### POST /
+### POST /approval/item
 
 INPUT:
 ```javascript
@@ -163,7 +158,7 @@ INPUT:
 }
 ```
 
-### GET /:approval_id
+### GET /approval/item/:approval_id
 
 INPUT:
 ```javascript
@@ -192,7 +187,7 @@ INPUT:
 }
 ```
 
-### PUT /:approval_id
+### PUT /approval/item/:approval_id
 
 INPUT:
 ```javascript
