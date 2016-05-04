@@ -12,7 +12,7 @@ import {
   memberSanitization,
   memberValidation
 } from './schema';
-import C from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
 import { oauthCheck, authCheck } from 'lib/middleware';
 
 /* company collection */
@@ -250,6 +250,20 @@ api.post('/:project_id/member', (req, res, next) => {
     .catch(next);
   })
   .catch(next);
+});
+
+api.put('/:_project_id/member/:member_id/type', (req, res, next) => {
+  let member_id = ObjectId(req.params.member_id);
+  let project_id = ObjectId(req.params._project_id);
+  let data = {
+    type: req.body.type
+  };
+  sanitizeValidateObject({
+    type: { type: 'string' }
+  }, {
+    type: { $enum: ENUMS.PROJECT_MEMBER_TYPE }
+  }, data);
+  
 });
 
 api.delete('/:_project_id/member/:member_id', (req, res, next) => {
