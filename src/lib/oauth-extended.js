@@ -17,7 +17,6 @@ export default {
         'The access token provided is invalid.'));
     }
     let collection = token_type_hint.replace('_','');
-    console.log({[token_type_hint]: token});
     db.oauth[collection].findOne({[token_type_hint]: token})
     .then(doc => {
       if (!doc) {

@@ -21,27 +21,41 @@ api.use((req, res, next) => {
 
 // TODO page
 api.get('/', (req, res, next) => {
-  let condition = {
-    project_id: req.project_id
-  };
   let { keyword, sort, order, status, assignee, creator, follower} = req.query;
+  let condition = {
+    company_id: req.company._id,
+    project_id: req.project_id,
+  };
   let idItems = _.pick(req.query, 'assignee', 'creator', 'follower');
-  _.each(idItems, (item, key) => {
-    item = item ? item.split(',').filter(i => ObjectId.isValid(i)).map(i => ObjectId(i)) : [];
-    item.length && (condition[key] = { $in: item });
-  });
-  status = status ? status.split(',').filter(i => ENUMS.TASK_STATUS.indexOf(i) != -1) : [];
-  status.length && (condition['status'] = { $in: status });
-  keyword && (condition['$text'] = { $search: keyword });
-  if (sort && -1 != ['title', 'assignee', 'creator', 'follower'].indexOf(sort)) {
-    order = order == 'desc' ? -1 : 1;
-    db.task.find(condition).sort({ [sort]: order })
-    .then(data => res.json(data || []))
-    .catch(next);
-    return;
+  if (!_.isEmpty(idItems)) {
+    _.each(idItems, (ids, key) => {
+      if (!ids) return;
+      let idarr = ids.split(',').filter(id => ObjectId.isValid(id)).map(id => ObjectId(id));
+      if (item.length) {
+        condition[key] = { $in: item };
+      }
+    });
   }
-  db.task.find(condition)
-  .then(data => res.json(data || []))
+  if (status) {
+    status = status.split(',').filter(s => _.contains(ENUMS.TASK_STATUS, s));
+    if (status.length) {
+      condition['status'] = { $in: status };
+    }
+  }
+  if (keyword) {
+    condition['$text'] = { $search: keyword }
+  }
+  let dbQuery = db.task.find(condition);
+  if (_.contains(['title', 'assignee', 'creator', 'follower'], sort)) {
+    order = order == 'desc' ? -1 : 1;
+    dbQuery = dbQuery.sort({ [sort]: order })
+  }
+  dbQuery.then(list => {
+    _.each(list, task => {
+      task.is_following = !!_.find(task.follower, id => id.equals(req.user._id));
+    });
+    return res.json(list)
+  })
   .catch(next);
 })
 

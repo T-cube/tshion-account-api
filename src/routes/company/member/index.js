@@ -7,8 +7,8 @@ import C, { ENUMS } from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
-import { time, checkUserType } from '../utils';
-import { isEmail } from 'lib/utils';
+import { checkUserType } from '../utils';
+import { isEmail, time } from 'lib/utils';
 
 /* company collection */
 let api = require('express').Router();
