@@ -24,6 +24,14 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
+  data.steps.map(i => {
+    i._id = ObjectId();
+    return i;
+  });
+  data.forms.map(i => {
+    i._id = ObjectId();
+    return i;
+  });
   data.company_id = req.company._id;
   data.status = C.APPROVAL_STATUS.NORMAL;
   db.approval.insert(data)

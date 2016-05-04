@@ -6,7 +6,12 @@ import Promise from 'bluebird';
 import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { projectSanitization, projectValidation, memberSanitization, memberValidation } from './schema';
+import {
+  projectSanitization,
+  projectValidation,
+  memberSanitization,
+  memberValidation
+} from './schema';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 
@@ -79,13 +84,9 @@ api.get('/:_project_id', (req, res, next) => {
      throw new ApiError(404);
    }
    let owner = data.owner;
-   data.is_owner = owner == req.user._id;
-   data.is_admin = false;
-   req.company.members.forEach(i => {
-     if (i._id == req.user._id && i.type == C.PROJECT_MEMBER_TYPE.ADMIN) {
-       data.is_admin = true;
-     }
-   })
+   data.is_owner = owner.equals(req.user._id);
+   let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
+   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
    data.owner = _.find(req.company.members, member => {
      return member._id.equals(owner);
    });
@@ -196,9 +197,7 @@ api.get('/:project_id/member', (req, res, next) => {
    })
    .then(memberInfo => {
      members = members.map(i => {
-       let info = _.find(memberInfo, j => {
-         return i._id.equals(j._id);
-       });
+       let info = _.find(memberInfo, j => i._id.equals(j._id));
        if (info) {
          i.name = info.name;
          i.avatar = info.avatar;
@@ -243,7 +242,7 @@ api.post('/:project_id/member', (req, res, next) => {
       return db.project.update({
         _id: project_id
       }, {
-        $push: { members: data }
+        $push: { members: {$each: data} }
       });
     })
     .then(data => {
@@ -264,7 +263,9 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
     }
     let { members } = data;
     let allowed = members.filter(member => {
-      return member._id.equals(req.user._id) || (member.type == C.PROJECT_MEMBER_TYPE.OWNER || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
+      return member._id.equals(req.user._id)
+        || (member.type == C.PROJECT_MEMBER_TYPE.OWNER
+        || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
     }).length;
     if (!allowed) {
       throw new ApiError(403);

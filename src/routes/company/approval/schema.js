@@ -5,15 +5,13 @@ export let sanitization = {
   description: { type: 'string' },
   scope: {
 		type: 'array',
-		properties: { $objectId: 1 }
+		items: { $objectId: 1 }
 	},
-  status: { type: 'string' },
   steps: {
 		type: 'array',
 		items: {
 			type: 'object',
 			properties: {
-		    _id: { $objectId: 1 },
 		    approver: { $objectId: 1 },
 		    approver_type: { type: 'string' },
 		    copy_to: { $objectId: 1 },
@@ -26,7 +24,6 @@ export let sanitization = {
 		items: {
 			type: 'object',
 			properties: {
-		    _id: { $objectId: 1 },
 		    title: { type: 'string' },
 		    form_type: { type: 'string' }
 			}
@@ -39,14 +36,13 @@ export let validation = {
 	description: { type: 'string' },
 	scope: {
 		type: 'array',
-		properties: { $objectId: 1 }
+		items: { $objectId: 1 }
 	},
 	steps: {
 		type: 'array',
 		items: {
 			type: 'object',
 			properties: {
-				_id: { $objectId: 1 },
 				approver: { $objectId: 1 },
 				approver_type: { $enum: ENUMS.APPROVER_TYPE },
 				copy_to: { $objectId: 1 },
@@ -59,7 +55,6 @@ export let validation = {
 		items: {
 			type: 'object',
 			properties: {
-				_id: { $objectId: 1 },
 				title: { type: 'string' },
 				form_type: { $enum: ENUMS.FORM_TYPE }
 			}
