@@ -49,7 +49,7 @@ app.use('/oauth/revoke', oauthExtended.revokeToken);
 // app.use('/', express.static('./public'));
 
 app.use('/api', apiRouter);
-app.use(app.oauth.errorHandler());
+//app.use(app.oauth.errorHandler());
 
 // global error handler
 app.use(apiErrorHandler);

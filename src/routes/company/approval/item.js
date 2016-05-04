@@ -5,7 +5,7 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { userSanitization, userValidation } from './schema';
+import { itemSanitization, itemValidation } from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 
@@ -16,7 +16,7 @@ api.use(oauthCheck());
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(userSanitization, userValidation, data);
+  sanitizeValidateObject(itemSanitization, itemValidation, data);
   _.extend(data, {
     proposer: req.user._id,
     company_id: req.company._id,
@@ -28,12 +28,13 @@ api.post('/', (req, res, next) => {
   db.approval.item.findOne({
     _id: data.apply_item
   })
-  .then(item => {
-    if (!item) {
+  .then(template => {
+    if (!template) {
       throw new ApiError(400);
     }
     data.steps = [];
-    item.steps.forEach(step => {
+    console.log(template.steps);
+    template.steps.forEach(step => {
       data.steps.push({
         _id: step._id,
         status: C.USER_APPROVAL_STATUS.PENDING

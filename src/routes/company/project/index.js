@@ -13,7 +13,7 @@ import {
   memberValidation
 } from './schema';
 import C from 'lib/constants';
-import { oauthCheck } from 'lib/middleware';
+import { oauthCheck, authCheck } from 'lib/middleware';
 
 /* company collection */
 let api = require('express').Router();
@@ -122,7 +122,7 @@ api.put('/:project_id', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/:_project_id', (req, res, next) => {
+api.delete('/:_project_id', authCheck(), (req, res, next) => {
   let object_id = ObjectId(req.params._project_id);
   db.project.findOne({_id: object_id}, {members: 1, _id: 0, owner: 1})
   .then(data => {
@@ -134,7 +134,7 @@ api.delete('/:_project_id', (req, res, next) => {
     }
     let projectMembers = [];
     data.members && (projectMembers = data.members.map(i => i._id));
-    db.project.remove({
+    return db.project.remove({
       _id: object_id
     })
     .then(doc => {
@@ -152,7 +152,6 @@ api.delete('/:_project_id', (req, res, next) => {
       ])
       .then(() => res.json({}));
     })
-    .catch(next);
   })
   .catch(next);
 });
@@ -196,7 +195,7 @@ api.get('/:project_id/member', (req, res, next) => {
      mobile: 1
    })
    .then(memberInfo => {
-     members = members.map(i => {
+     members.map(i => {
        let info = _.find(memberInfo, j => i._id.equals(j._id));
        if (info) {
          i.name = info.name;

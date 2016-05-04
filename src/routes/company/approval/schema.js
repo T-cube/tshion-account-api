@@ -70,7 +70,7 @@ export let statusValidation = {
 	status: { $enum: ENUMS.APPROVAL_STATUS }
 }
 
-export let userSanitization = {
+export let itemSanitization = {
   apply_item: { $objectId: 1 },
   department: { $objectId: 1 },
   content: { type: 'string' },
@@ -92,7 +92,7 @@ export let userSanitization = {
   }
 }
 
-export let userValidation = {
+export let itemValidation = {
   apply_item: { $objectId: 1 },
   department: { $objectId: 1 },
   content: { type: 'string' },

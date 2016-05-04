@@ -14,7 +14,7 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
-  db.approval.find({
+  db.approval.template.find({
     company_id: req.company._id
   })
   .then(data => res.json(data || []))
@@ -34,7 +34,7 @@ api.post('/', (req, res, next) => {
   });
   data.company_id = req.company._id;
   data.status = C.APPROVAL_STATUS.NORMAL;
-  db.approval.insert(data)
+  db.approval.template.insert(data)
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -43,7 +43,7 @@ api.put('/:template_id', (req, res, next) => {
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
   sanitizeValidateObject(sanitization, validation, data);
-  db.approval.update({
+  db.approval.template.update({
     _id: template_id,
     company_id: req.company._id
   }, {
@@ -55,7 +55,7 @@ api.put('/:template_id', (req, res, next) => {
 
 api.get('/:template_id', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
-  db.approval.findOne({
+  db.approval.template.findOne({
     _id: template_id,
     company_id: req.company._id
   })
@@ -67,7 +67,7 @@ api.put('/:template_id/status', (req, res, next) => {
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
   sanitizeValidateObject(statusSanitization, statusValidation, data);
-  db.approval.update({
+  db.approval.template.update({
     _id: template_id,
     company_id: req.company._id
   }, {
@@ -79,7 +79,7 @@ api.put('/:template_id/status', (req, res, next) => {
 
 api.delete('/:template_id', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
-  db.approval.remove({
+  db.approval.template.remove({
     _id: template_id,
     company_id: req.company._id
   })
