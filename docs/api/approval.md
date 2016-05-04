@@ -12,7 +12,9 @@
 
 ## Table of Contents
 
-## API function
+...
+
+## Approval Template
 
 ### GET /approval/template
 
@@ -40,12 +42,12 @@ INPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    approver_type: <ENUM:department|member>
+    approver_type: <Enum:department,member>
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <ENUM:text|textarea|date...>
+    form_type: <Enum:text,textarea,date,...>
   }]
 }
 ```
@@ -62,12 +64,12 @@ INPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    approver_type: <ENUM:department|member>
+    approver_type: <Enum:department,member>
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <ENUM:text|textarea|date...>
+    form_type: <Enum:text,textarea,date...>
   }]
 }
 ```
@@ -77,7 +79,7 @@ INPUT:
 INPUT:
 ```javascript
 {
-  status: <ENUM:normal|unused>
+  status: <Enum:normal,unused>
 }
 ```
 
@@ -94,12 +96,12 @@ OUTPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    approver_type: <ENUM:department|member>
+    approver_type: <Enum:department,member>
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <ENUM:text|textarea|date...>
+    form_type: <Enum:text,textarea,date...>
   }]
 }
 ```
@@ -111,7 +113,7 @@ INPUT:
 {
   steps: {
     _id: <ObjectId>,
-    status: <Enum:pending|approve|reject|disable>,
+    status: <Enum:pending,approve,reject,disable>,
     log: <String> // 审批记录
   }
 }
@@ -119,7 +121,9 @@ INPUT:
 
 ### DELETE /approval/template/:approval_id
 
-## 申请实例
+删除
+
+## Approval Item
 
 ### GET /approval/item
 
@@ -152,7 +156,7 @@ INPUT:
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <ENUM:text|textarea|date...>,
+    form_type: <Enum:text,textarea,date...>,
     value: <String>
   }]
 }
@@ -174,14 +178,14 @@ INPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    status: <Enum:pending|approve|reject|disable>,
+    status: <Enum:pending,approve,reject,disable>,
     create_time: <Date>,
     log: <String> // 审批记录
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <ENUM:text|textarea|date...>,
+    form_type: <Enum:text,textarea,date...>,
     value: <String>
   }]
 }
@@ -197,7 +201,7 @@ INPUT:
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <ENUM:text|textarea|date...>,
+    form_type: <Enum:text,textarea,date...>,
     value: <String>
   }]
 }
