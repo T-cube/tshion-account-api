@@ -255,15 +255,48 @@ api.post('/:project_id/member', (req, res, next) => {
 api.put('/:_project_id/member/:member_id/type', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
   let project_id = ObjectId(req.params._project_id);
-  let data = {
-    type: req.body.type
-  };
-  sanitizeValidateObject({
-    type: { type: 'string' }
+  let type = req.body.type;
+  if (type != C.PROJECT_MEMBER_TYPE.ADMIN && type != C.PROJECT_MEMBER_TYPE.NORMAL) {
+    throw new ApiError(400, null, 'wrong type');
+  }
+  db.project.update({
+    _id: project_id,
+    'members._id': member_id
   }, {
-    type: { $enum: ENUMS.PROJECT_MEMBER_TYPE }
-  }, data);
-  
+    $set: {
+      'members.$.type': type
+    }
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.post('/:_project_id/transfer', authCheck(), (req, res, next) => {
+  let member_id = ObjectId(req.body.user_id);
+  let project_id = ObjectId(req.params._project_id);
+  isMemberOfProject(member_id, project_id)
+  .then(() => {
+    return db.project.update({
+      _id: project_id,
+      'members.type': C.PROJECT_MEMBER_TYPE.OWNER
+    }, {
+      $set: {
+        owner: member_id,
+        'members.$.type': C.PROJECT_MEMBER_TYPE.NORMAL
+      }
+    })
+  })
+  .then(() => {
+    return db.project.update({
+      _id: project_id,
+      'members._id': member_id
+    }, {
+      $set: {
+        'members.$.type': C.PROJECT_MEMBER_TYPE.OWNER
+      }
+    })
+  })
+  .then(doc => res.json(doc))
 });
 
 api.delete('/:_project_id/member/:member_id', (req, res, next) => {
@@ -324,6 +357,18 @@ api.put('/:project_id/archived',  (req, res, next) => {
   })
   .then(doc => res.json(doc))
   .catch(next);
-})
+});
+
+function isMemberOfProject(user_id, project_id) {
+  return db.project.count({
+    _id: project_id,
+    'members._id': user_id
+  })
+  .then(count => {
+    if (count == 0) {
+      throw new ApiError(400, null, 'user is not one of the project member')
+    }
+  });
+}
 
 api.use('/:project_id/task', require('./task').default);
