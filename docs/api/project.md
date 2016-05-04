@@ -85,6 +85,16 @@ OUTPUT
 }
 ```
 
+### POST /project/:project_id/logo
+
+更新项目logo
+
+INPUT
+```javascript
+{
+  logo: <URL>,
+}
+```
 ### POST /project/:project_id/tag
 
 添加标签
