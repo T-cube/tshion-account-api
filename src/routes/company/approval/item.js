@@ -17,9 +17,10 @@ api.use(oauthCheck());
 
 api.post('/', (req, res, next) => {
   let data = req.body;
+  let user_id = req.user._id;
   sanitizeValidateObject(itemSanitization, itemValidation, data);
   _.extend(data, {
-    from: req.user._id,
+    from: user_id,
     company_id: req.company._id,
     apply_date: new Date(),
     status: C.APPROVAL_ITEM_STATUS.PROCESSING,
@@ -45,10 +46,22 @@ api.post('/', (req, res, next) => {
     // });
     return db.approval.item.insert(data)
     .then(doc => {
-
+      res.json(doc);
+      return prepareNextStep(req.company.structure, doc._id, template._id, data.step)
+      .then(() => {
+        return db.approval.flow.update({
+          _id: user_id,
+          'company.company_id': req.company._id
+        }, {
+          $push: {
+            'company.apply': doc._id
+          }
+        }, {
+          upsert: true
+        })
+      })
     })
   })
-  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -81,12 +94,7 @@ api.put('/:item_id/steps', (req, res, next) => {
       throw ApiError(403, null);
     }
 
-    console.log(steps);
-    let k = steps.indexOf(item => {
-      console.log(step);
-      console.log(item._id);
-      return item._id.equals(step)
-    });
+    let k = _.findIndex(steps, item => item._id.equals(step));
     let thisStep =  steps[k];
     let nextStep = steps[k + 1] ? steps[k + 1] : null;
 
@@ -155,6 +163,8 @@ function prepareNextStep(structure, item_id, template_id, step_id) {
         $push: {
           approve: item_id
         }
+      }, {
+        upsert: true
       }),
       copyto.length && db.approval.flow.update({
         _id: {
@@ -164,6 +174,8 @@ function prepareNextStep(structure, item_id, template_id, step_id) {
         $push: {
           copy_to: item_id
         }
+      }, {
+        upsert: true
       })
     ])
   })
