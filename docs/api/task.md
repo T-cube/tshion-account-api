@@ -16,7 +16,7 @@
 * [GET /task/:task_id/comment](#get-task-task_id-comment)
 * [GET /task/:task_id/log](#get-task-task_id-log)
 
-## 新建任务
+## 基本操作
 
 ### POST /task
 
@@ -41,6 +41,10 @@ INPUT
   tag: [<ObjectId>, ...],        // 标签
 }
 ```
+
+### DELETE /task/:task_id
+
+删除任务
 
 ## 更新任务信息
 
