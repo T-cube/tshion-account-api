@@ -26,23 +26,20 @@
 
 INPUT
 ```javascript
-[
-  {
-    _id:<String>,
-    title:<String>,
-    status: <String[Enum:pending,processing,completed,paused,trashed]> //任务状态
-    title: <String>,                // 任务标题
-    description: <String>,          // 任务详情
-    creator: <ObjectId>,          // 创建人
-    assignee: <ObjectId>,         // 执行人
-    followers: [<ObjectId>, ...], // 关注者
-    date_start: <date>,          // 开始时间（optional）
-    date_due: <date>,            // 截止时间（optional）
-    priority: <0,1,2,3>,         // 优先级别
-    //subtask: [<ObjectId>, ...], // 子任务
-    tag: [<ObjectId>, ...],        // 标签
-  }
-]
+{
+  title:<String>,
+  status: <String[Enum:pending,processing,completed,paused,trashed]> //任务状态
+  title: <String>,                // 任务标题
+  description: <String>,          // 任务详情
+  creator: <ObjectId>,          // 创建人
+  assignee: <ObjectId>,         // 执行人
+  followers: [<ObjectId>, ...], // 关注者
+  date_start: <date>,          // 开始时间（optional）
+  date_due: <date>,            // 截止时间（optional）
+  priority: <0,1,2,3>,         // 优先级别
+  //subtask: [<ObjectId>, ...], // 子任务
+  tag: [<ObjectId>, ...],        // 标签
+}
 ```
 
 ## 更新任务信息
