@@ -61,9 +61,6 @@ export let validation = {
     		},
       }
     },
-    date_publish: { type: "date", exec: function(schema, post){
-			if (new Date(post).getTime() <= new Date().getTime()) {
-				this.report('wrong date time');
-			}} },
+    date_publish: { type: "date" },
   }
 };
