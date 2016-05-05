@@ -68,13 +68,34 @@ api.get('/:announcement_id', (req, res, next) => {
     company_id: req.company._id,
     _id: announcement_id
   })
-  .then(data => {
-    if (!data) {
+  .then(announcement => {
+    if (!announcement) {
       return next(new ApiError(404));
     }
-    res.json(data);
+    return db.user.find({
+      _id: data.from.creator
+    }, {
+      name: 1,
+      avavtar: 1,
+    })
+    .then(user => {
+      announcement.from.creator = user;
+      res.json(announcement);
+    })
   })
   .catch(next);
+});
+
+api.put('/:announcement_id', (req, res, next) => {
+  let data = req.body;
+  // sanitization
+  inspector.sanitize(sanitization, data);
+  // validation
+  let result = inspector.validate(validation, data);
+  if (!result.valid) {
+    throw new ApiError(400, null, result.error);
+  }
+
 });
 
 api.delete('/:announcement_id', (req, res, next) => {

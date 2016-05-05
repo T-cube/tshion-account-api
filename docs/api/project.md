@@ -80,8 +80,8 @@ OUTPUT
     type: <Int[Enum:0,1,2,3,4]>,  // 成员类型
     title: <String>,              // 成员标题
   }, ...],                        // 项目成员
-  time_create: <Date>,            // 创建时间
-  time_update: <Date>,            // 更新时间
+  date_create: <Date>,            // 创建时间
+  date_update: <Date>,            // 更新时间
 }
 ```
 

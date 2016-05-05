@@ -259,8 +259,8 @@
   priority: <Int[Enum:0,1,2,3]>,   // 优先级别
   tags: [<ObjectId>...],           // 标签
   comments: [<ObjectId>...],       // 评论内容
-  time_create: <Date>,             // 创建时间
-  time_update: <Date>,             // 更新时间
+  date_create: <Date>,             // 创建时间
+  date_update: <Date>,             // 更新时间
 }
 ```
 
