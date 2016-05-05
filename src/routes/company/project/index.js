@@ -233,11 +233,13 @@ api.post('/:project_id/member', (req, res, next) => {
         throw new ApiError(400, null, 'member is exists');
       }
       return db.user.update({
-        _id: data._id
+        _id: {
+          $in: data.map(i => i._id)
+        }
       }, {
-        $push: {projects: project_id}
+        $addToSet: {projects: project_id}
       })
-      .then(() => {
+      .then(result => {
         return db.project.update({
           _id: project_id
         }, {
