@@ -2,13 +2,14 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
+import { defaultAvatar } from 'lib/upload';
 import Structure from 'models/structure';
 import C, { ENUMS } from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
-import { time, checkUserType } from '../utils';
-import { isEmail } from 'lib/utils';
+import { checkUserType } from '../utils';
+import { isEmail, time } from 'lib/utils';
 
 /* company collection */
 let api = require('express').Router();
@@ -27,9 +28,10 @@ api.get('/', (req, res, next) => {
     mobile: 1,
   })
   .then(users => {
-    let members = _.map(req.company.members, member => {
-      let user = _.find(user, u => u._id.equals(member._id));
-      return _.extend(member, user);
+    let members = _.map(req.company.members, m => {
+      let user = _.find(user, u => u._id.equals(m._id));
+      return _.extend(m, user);
+      m.avatar = m.avatar || defaultAvatar('user');
     });
     res.json(members);
   });

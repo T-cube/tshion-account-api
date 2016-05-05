@@ -16,16 +16,15 @@ export default {
       return next(new ApiError(401, 'invalid_token',
         'The access token provided is invalid.'));
     }
-    let collection = 'oauth_' + token_type_hint.replace('_','');
-    console.log({[token_type_hint]: token});
-    db[collection].findOne({[token_type_hint]: token})
+    let collection = token_type_hint.replace('_','');
+    db.oauth[collection].findOne({[token_type_hint]: token})
     .then(doc => {
       if (!doc) {
         throw new ApiError(400, 'invalid token');
       } else if (time() > doc.expires) {
         throw new ApiError(400, 'token expired');
       }
-      db[collection].remove({[token_type_hint]: token})
+      db.oauth[collection].remove({[token_type_hint]: token})
       .then(doc => res.json({code: 200}))
     })
     .catch(next);

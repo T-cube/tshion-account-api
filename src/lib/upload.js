@@ -33,6 +33,12 @@ export function randomAvatar(type, size) {
   return getUploadUrl(dir, filename);
 }
 
+export function defaultAvatar(type) {
+  let filename = `00.png`;
+  let dir = `system/avatar/${type}`;
+  return getUploadUrl(dir, filename);
+}
+
 export default function upload(options) {
   options = _.defaults({}, options, {
     type: config.get('upload.defaultType'),
