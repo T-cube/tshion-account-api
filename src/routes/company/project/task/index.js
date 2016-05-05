@@ -279,7 +279,7 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:task_id/follow', (req, res, next) => {
+api.post('/:task_id/follow', (req, res, next) => {
   taskFollow(req, taskId, userId)
   .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
   .then(res.json({
@@ -288,7 +288,7 @@ api.put('/:task_id/follow', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:task_id/unfollow', (req, res, next) => {
+api.post('/:task_id/unfollow', (req, res, next) => {
   taskUnfollow(req, taskId, userId)
   .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
   .then(res.json({
