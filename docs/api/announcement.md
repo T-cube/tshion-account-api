@@ -26,6 +26,30 @@ INPUT
   title: <String>,                // 标题
   content: <String>,              // 内容
   type: <Enum:notice|news>,       // 类型
+  is_published: <Boolean>,        // 发布或保存草稿
+  from: {
+    creator: <ObjectId>,          // 创建人
+    department: <ObjectId>,       // 发起部门
+  },
+  to: {
+    member: [<ObjectId>...],      // 接收成员
+    department: [<ObjectId>...],  // 接收部门
+  },
+  date_publish: <Date>,           // 发布日期
+}
+```
+
+### PUT /announcement/:announcement_id
+
+编辑公告
+
+INPUT
+```javascript
+{
+  title: <String>,                // 标题
+  content: <String>,              // 内容
+  type: <Enum:notice|news>,       // 类型
+  is_published: <Boolean>,        // 发布或保存草稿
   from: {
     creator: <ObjectId>,          // 创建人
     department: <ObjectId>,       // 发起部门
@@ -71,6 +95,60 @@ OUTPUT
 ```
 
 ### GET /announcement/:announcement_id
+
+获取公告详情
+
+OUTPUT
+```javascript
+{
+  _id: <ObjectId>,
+  company_id: <ObjectId>,
+  title: <String>,                // 标题
+  content: <String>,              // 内容
+  from: {
+    creator: {
+      _id: <ObjectId>,
+      name: <String>,
+      avatar: <URL>
+    },          // 创建人
+    department: <ObjectId>,       // 发起部门
+  },
+  to: {
+    member: [<ObjectId>...],      // 接收成员
+    department: [<ObjectId>...],  // 接收部门
+  },
+  date_publish: <Date>,           // 发布日期
+}
+```
+
+### GET /announcement/draft
+
+获取公司动态,事务通知草稿
+
+OUTPUT
+```javascript
+[{
+  _id: <ObjectId>,
+  company_id: <ObjectId>,
+  title: <String>,                // 标题
+  //content: <String>,              // 内容
+  from: {
+    creator: {
+      _id: <ObjectId>,
+      name: <String>,
+      avatar: <URL>
+    },          // 创建人
+    department: <ObjectId>,       // 发起部门
+  },
+  to: {
+    member: [<ObjectId>...],      // 接收成员
+    department: [<ObjectId>...],  // 接收部门
+  },
+  date_publish: <Date>,           // 发布日期
+}...]
+```
+
+### GET /announcement/draft/:announcement_id
 
 获取公告详情
 
