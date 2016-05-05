@@ -280,7 +280,7 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
 });
 
 api.post('/:task_id/follow', (req, res, next) => {
-  const taskId = Objectid(req.params.task_id);
+  const taskId = ObjectId(req.params.task_id);
   const userId = req.user._id;
   taskFollow(req, taskId, userId)
   .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
@@ -291,7 +291,7 @@ api.post('/:task_id/follow', (req, res, next) => {
 });
 
 api.post('/:task_id/unfollow', (req, res, next) => {
-  const taskId = Objectid(req.params.task_id);
+  const taskId = ObjectId(req.params.task_id);
   const userId = req.user._id;
   taskUnfollow(req, taskId, userId)
   .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
