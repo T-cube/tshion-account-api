@@ -132,8 +132,8 @@ OUTPUT:
 [
   {
     _id: <ObjectId>,
-    item: <ObjectId>,
-    proposer: <ObjectId>,
+    template_id: <ObjectId>,
+    from: <ObjectId>,
     department: <ObjectId>,
     apply_date: <Date>,
     status: <ENUM>,
@@ -150,7 +150,7 @@ INPUT:
 {
   _id: <ObjectId>,
   template_id: <ObjectId>,
-  proposer: <ObjectId>,
+  from: <ObjectId>,
   department: <ObjectId>,
   content: <String>,
   forms: [{
@@ -169,12 +169,13 @@ INPUT:
 {
   _id: <ObjectId>,
   template_id: <ObjectId>,
-  proposer: <ObjectId>,
+  from: <ObjectId>,
   department: <ObjectId>,
   apply_date: <Date>,
   status: <ENUM>,
   content: <String>,
   files: [<String>...],
+  step: <String>,
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
@@ -206,3 +207,22 @@ INPUT:
   }]
 }
 ```
+
+### GET /approval/flow/apply
+
+OUTPUT
+[{
+   _id: <ObjectId>,
+    template_id: <ObjectId>,
+    from: <ObjectId>,
+    department: <ObjectId>,
+    apply_date: <Date>,
+    status: <ENUM>,
+    content: <String>,
+    log: <String>
+}...]
+
+### GET /approval/flow/approve
+
+### GET /approval/flow/copyto
+
