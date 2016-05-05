@@ -174,6 +174,9 @@ api.put('/:company_id/logo', upload({type: 'avatar'}).single('logo'),
 api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   let user_id = ObjectId(req.body.user_id);
   let company = req.company;
+  if (req.user._id.equals(user_id)) {
+    throw new ApiError(400, null, 'can not transfer to your self');
+  }
   if (!req.user._id.equals(company.owner)) {
     throw new ApiError(403, null, 'only owner can carry out this operation');
   }

@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
 
 import { defaultAvatar } from 'lib/upload';
 import Structure from 'models/structure';
@@ -143,13 +144,22 @@ api.put('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, ne
 });
 
 api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  let member_id = ObjectId(req.params.member_id);
-  let data = req.body;
-  db.company.update({
-    _id: req.company._id,
-  }, {
-    $pull: {members: {_id: member_id}}
-  })
-  .then(doc => res.json(data))
+  const member_id = ObjectId(req.params.member_id);
+  if (member_id.equals(req.user._id)) {
+    throw new ApiError(400, null, 'can not remove yourself');
+  }
+  return Promise.All([
+    db.company.update({
+      _id: req.company._id,
+    }, {
+      $pull: {members: {_id: member_id}}
+    }),
+    db.user.update({
+      _id: member_id,
+    }, {
+      $pull: {companies: req.company._id}
+    })
+  ])
+  .then(() => res.json({}))
   .catch(next);
 });
