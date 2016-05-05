@@ -70,7 +70,7 @@ export function apiErrorHandler(err, req, res, next) {
     }
     delete err.headers;
     res.status(err.code)
-    res.send(err);
+    res.json(err);
     return;
   } else if (err instanceof ValidationError) {
     res.status(err.status);
@@ -79,7 +79,7 @@ export function apiErrorHandler(err, req, res, next) {
       error: err.message,
       error_description: err.errors
     }
-    res.send(_err);
+    res.json(_err);
     return;
   } else {
     console.error(err);

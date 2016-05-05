@@ -52,7 +52,7 @@ api.get('/', (req, res, next) => {
   }
   dbQuery.then(list => {
     _.each(list, task => {
-      task.is_following = !!_.find(task.follower, id => id.equals(req.user._id));
+      task.is_following = !!_.find(task.followers, id => id.equals(req.user._id));
     });
     return res.json(list)
   })
@@ -284,7 +284,7 @@ api.post('/:task_id/follow', (req, res, next) => {
   const userId = req.user._id;
   taskFollow(req, taskId, userId)
   .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
-  .then(res.json({
+  .then(() => res.json({
     is_following: true,
   }))
   .catch(next);
@@ -295,7 +295,7 @@ api.post('/:task_id/unfollow', (req, res, next) => {
   const userId = req.user._id;
   taskUnfollow(req, taskId, userId)
   .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
-  .then(res.json({
+  .then(() => res.json({
     is_following: false,
   }))
   .catch(next);
@@ -309,7 +309,7 @@ api.post('/:task_id/followers', (req, res, next) => {
   let taskId = ObjectId(req.params.task_id);
   taskFollow(req, taskId, userId)
   .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
-  .then(res.json({}))
+  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -425,10 +425,10 @@ function validField(field, val) {
   return data;
 }
 
-function isMemberOfProject(user_id, project_id) {
+function isMemberOfProject(userId, project_id) {
   return db.project.count({
     _id: project_id,
-    'members._id': user_id
+    'members._id': userId
   })
   .then(count => {
     if (count == 0) {
@@ -437,10 +437,10 @@ function isMemberOfProject(user_id, project_id) {
   });
 }
 
-function isMemberOfCompany(user_id, company_id) {
+function isMemberOfCompany(userId, company_id) {
   return db.company.count({
     _id: company_id,
-    'members._id': user_id
+    'members._id': userId
   })
   .then(count => {
     if (count == 0) {
@@ -456,13 +456,13 @@ function taskFollow(req, taskId, userId) {
       _id: taskId
     }, {
       $addToSet: {
-        followers: user_id
+        followers: userId
       }
     });
   })
   .then(() => {
     db.user.count({
-      _id: user_id,
+      _id: userId,
       'task._id': taskId,
     });
   })
@@ -471,7 +471,7 @@ function taskFollow(req, taskId, userId) {
       return;
     }
     db.user.update({
-      _id: user_id
+      _id: userId
     }, {
       $push: {
         task: {
