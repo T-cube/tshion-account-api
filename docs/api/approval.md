@@ -52,7 +52,7 @@ INPUT:
 }
 ```
 
-### PUT /approval/template/:approval_id
+### PUT /approval/template/:template_id
 
 INPUT:
 ```javascript
@@ -74,16 +74,7 @@ INPUT:
 }
 ```
 
-### PUT /approval/template/:approval_id/status
-
-INPUT:
-```javascript
-{
-  status: <Enum:normal,unused>
-}
-```
-
-### GET /approval/template/:approval_id
+### GET /approval/template/:template_id
 
 OUTPUT:
 ```javascript
@@ -106,20 +97,7 @@ OUTPUT:
 }
 ```
 
-### PUT /approval/template/:approval_id/steps
-
-INPUT:
-```javascript
-{
-  steps: {
-    _id: <ObjectId>,
-    status: <Enum:pending,approve,reject,disable>,
-    log: <String> // 审批记录
-  }
-}
-```
-
-### DELETE /approval/template/:approval_id
+### DELETE /approval/template/:template_id
 
 删除
 
@@ -162,7 +140,7 @@ INPUT:
 }
 ```
 
-### GET /approval/item/:approval_id
+### GET /approval/item/:item_id
 
 INPUT:
 ```javascript
@@ -192,7 +170,29 @@ INPUT:
 }
 ```
 
-### PUT /approval/item/:approval_id
+### PUT /approval/item/:item_id/status
+
+INPUT:
+```javascript
+{
+  status: <Enum:normal,unused>
+}
+```
+
+### PUT /approval/item/:item_id/steps
+
+INPUT:
+```javascript
+{
+  steps: {
+    _id: <ObjectId>,
+    status: <Enum:pending,approve,reject,disable>,
+    log: <String> // 审批记录
+  }
+}
+```
+
+### PUT /approval/item/:item_id
 
 INPUT:
 ```javascript
@@ -207,6 +207,8 @@ INPUT:
   }]
 }
 ```
+
+## approval flow
 
 ### GET /approval/flow/apply
 
