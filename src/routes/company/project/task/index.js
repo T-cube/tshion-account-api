@@ -68,7 +68,7 @@ api.post('/', (req, res, next) => {
     followers: [req.user._id],
     company_id: req.company._id,
     project_id: req.project_id,
-    time_create: new Date(),
+    date_create: new Date(),
     subtask: []
   });
   db.task.insert(data)

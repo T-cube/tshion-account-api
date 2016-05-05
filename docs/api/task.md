@@ -206,8 +206,8 @@ OUTPUT
     name: <String>,
     avatar: <String>
   }, ...],                       // 关注者
-  time_create: <Date>,         // 创建时间
-  time_update: <Date>,         // 更新时间
+  date_create: <Date>,         // 创建时间
+  date_update: <Date>,         // 更新时间
   date_start: <date>,          // 开始时间（optional）
   date_due: <date>,            // 截止时间（optional）
   priority: <0,1,2,3>,         // 优先级别
