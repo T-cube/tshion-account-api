@@ -219,7 +219,7 @@ api.post('/:project_id/member', (req, res, next) => {
   data.map(item => {
     sanitizeValidateObject(memberSanitization, memberValidation, item);
     item.type = C.PROJECT_MEMBER_TYPE.NORMAL;
-  })
+  });
   isAdminOfProject(req.user._id, project_id)
   .then(() => {
     return db.project.count({

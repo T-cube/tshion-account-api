@@ -91,6 +91,17 @@ INPUT
 }
 ```
 
+### PUT /task/:task_id/priority
+
+更新任务优先级
+
+INPUT
+```javascript
+{
+  priority: <Int[Enum:0,1,2,3]>
+}
+```
+
 ### POST /task/:task_id/followers
 
 添加关注者
