@@ -195,7 +195,7 @@ api.get('/:project_id/member', (req, res, next) => {
      mobile: 1
    })
    .then(memberInfo => {
-     members.map(i => {
+     members = members.map(i => {
        let info = _.find(memberInfo, j => i._id.equals(j._id));
        if (info) {
          i.name = info.name;

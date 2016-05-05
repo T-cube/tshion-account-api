@@ -61,3 +61,33 @@ export function time() {
 export function isEmail(email) {
   return /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/.test(email);
 }
+
+export function uniqObjectId(list) {
+  let newList = [];
+  list.forEach(item => {
+    let found = false;
+    newList.forEach(newItem => {
+      if (newItem.equals(item)) {
+        found = true;
+      }
+    });
+    found || newList.push(item);
+  });
+  return newList;
+}
+
+export function diffObjectId(list, otherList) {
+  uniqObjectId(list);
+  uniqObjectId(otherList);
+  let newList = [];
+  list.forEach(item => {
+    let found = false;
+    otherList.forEach(newItem => {
+      if (newItem.equals(item)) {
+        found = true;
+      }
+    });
+    found || newList.push(item);
+  });
+  return newList;
+}

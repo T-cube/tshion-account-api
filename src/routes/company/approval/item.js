@@ -9,6 +9,7 @@ import { itemSanitization, itemValidation, stepSanitization, stepValidation } fr
 import Structure from 'models/structure';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
+import { uniqObjectId, diffObjectId } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
@@ -47,18 +48,21 @@ api.post('/', (req, res, next) => {
     return db.approval.item.insert(data)
     .then(doc => {
       res.json(doc);
-      return prepareNextStep(req.company.structure, doc._id, template._id, data.step)
-      .then(() => {
+      // return upsertFlow(user_id, req.company._id)
+      // .then(() => {
         return db.approval.flow.update({
-          _id: user_id,
-          'company.company_id': req.company._id
+          user_id: user_id,
+          company_id: req.company._id
         }, {
-          $push: {
-            'company.apply': doc._id
+          $addToSet: {
+            apply: doc._id
           }
         }, {
           upsert: true
         })
+      // })
+      .then(() => {
+        return prepareNextStep(req.company, doc._id, template._id, data.step)
       })
     })
   })
@@ -69,6 +73,25 @@ api.get('/:item_id', (req, res, next) => {
   let item_id = ObjectId(req.params.item_id);
   db.approval.item.find({
     _id: item_id
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.put('/:item_id/status', (req, res, next) => {
+  let status = req.body.status;
+  let item_id = ObjectId(req.params.item_id);
+  if (status != C.APPROVAL_ITEM_STATUS.REVOKED) {
+    throw new ApiError(400, null, 'wrong status');
+  }
+  db.approval.item.update({
+    _id: item_id,
+    from: req.user._id
+  }, {
+    $set: {
+      status: status,
+      step: null
+    }
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -92,7 +115,7 @@ api.put('/:item_id/steps', (req, res, next) => {
     }
     let { step, steps, template_id } = doc;
     if (!step.equals(data._id)) {
-      throw ApiError(403, null);
+      throw new ApiError(403, null);
     }
 
     let k = _.findIndex(steps, item => item._id.equals(step));
@@ -101,6 +124,7 @@ api.put('/:item_id/steps', (req, res, next) => {
 
     let update = {
       step: nextStep ? nextStep._id : null,
+      log: data.log,
       'steps.$.approver': req.user._id,
       'steps.$.status': data.status,
       'steps.$.create_time': new Date(),
@@ -121,7 +145,7 @@ api.put('/:item_id/steps', (req, res, next) => {
     })
     .then(doc => {
       if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-        return prepareNextStep(req.company.structure, item_id, template_id, nextStep._id);
+        return prepareNextStep(req.company, item_id, template_id, nextStep._id);
       }
     })
   })
@@ -129,7 +153,7 @@ api.put('/:item_id/steps', (req, res, next) => {
   .catch(next);
 });
 
-function prepareNextStep(structure, item_id, template_id, step_id) {
+function prepareNextStep(company, item_id, template_id, step_id) {
   return db.approval.template.findOne({
     _id: template_id
   }, {
@@ -139,7 +163,7 @@ function prepareNextStep(structure, item_id, template_id, step_id) {
     let step = _.find(doc.steps, i => i._id.equals(step_id));
     let approver = [];
     let copyto = [];
-    structure = new Structure(structure);
+    let structure = new Structure(company.structure);
 
     if (step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
       approver = structure.findMemberByPosition(step.approver._id);
@@ -155,29 +179,66 @@ function prepareNextStep(structure, item_id, template_id, step_id) {
       }
     });
 
-    return Promise.all([
-      approver.length && db.approval.flow.update({
-        _id: {
-          $in: approver
-        }
-      }, {
-        $push: {
-          approve: item_id
-        }
-      }, {
-        upsert: true
-      }),
-      copyto.length && db.approval.flow.update({
-        _id: {
-          $in: copyto
-        }
-      }, {
-        $push: {
-          copy_to: item_id
-        }
-      }, {
-        upsert: true
-      })
-    ])
+    copyto = uniqObjectId(copyto);
+    approver = uniqObjectId(approver);
+    let userList = uniqObjectId(approver.concat(copyto));
+    return upsertFlow(userList, company._id)
+    .then(doc => {
+      return Promise.all([
+        approver.length && db.approval.flow.update({
+          user_id: {
+            $in: approver,
+          },
+          company_id: company._id
+        }, {
+          $push: {
+            approve: {
+              _id: item_id,
+              step: step_id
+            }
+          }
+        }),
+        copyto.length && db.approval.flow.update({
+          user_id: {
+            $in: copyto,
+          },
+          company_id: company._id
+        }, {
+          $push: {
+            copy_to: item_id
+          }
+        })
+      ])
+    })
+  })
+  .catch(next);
+}
+
+function upsertFlow(userList, company_id) {
+  if (!_.isArray(userList)) {
+    userList = [userList];
+  }
+  return db.approval.flow.find({
+    user_id: {
+      $in: userList
+    },
+    company_id: company_id
+  }, {
+    user_id: 1
+  })
+  .then(existedUser => {
+    let notExistedUser = diffObjectId(userList, existedUser.map(item => item.user_id));
+    notExistedUser = notExistedUser.map(user_id => {
+      return {
+        user_id: user_id,
+        company_id: company_id,
+        apply: [],
+        approve: [],
+        copy_to: [],
+      };
+    });
+    if (notExistedUser.length) {
+      return db.approval.flow.insert(notExistedUser);
+    }
   })
 }
