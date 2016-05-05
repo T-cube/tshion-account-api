@@ -166,6 +166,34 @@ api.param('task_id', (req, res, next, id) => {
   .catch(next)
 })
 
+api.put('/:task_id/follow', (req, res, next) => {
+  db.task.update({
+    _id: ObjectId(req.params.task_id),
+  }, {
+    $addToSet: {
+      followers: req.user._id,
+    }
+  })
+  .then(result => res.json({
+    is_following: true,
+  }))
+  res.json({});
+});
+
+api.put('/:task_id/unfollow', (req, res, next) => {
+  db.task.update({
+    _id: ObjectId(req.params.task_id),
+  }, {
+    $pull: {
+      followers: req.user._id,
+    }
+  })
+  .then(result => res.json({
+    is_following: false,
+  }))
+  res.json({});
+});
+
 api.put('/:task_id/status', updateField('status'), (req, res, next) => {
   res.json({});
 });

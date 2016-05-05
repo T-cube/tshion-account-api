@@ -106,6 +106,14 @@ INPUT
 
 移除关注者
 
+### POST /task/:task_id/follow
+
+添加自己为关注者
+
+### POST /task/:task_id/unfollow
+
+取消对任务的关注
+
 ### POST /task/:task_id/tag
 
 添加标签
