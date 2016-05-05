@@ -130,16 +130,16 @@ function fetchAnnouncementData(req) {
   // validation of members and structure nodes
   let structure = new Structure(req.company.structure);
   data.from.creator = req.user._id;
-  if (!structure.findNodeById(data.from.department)) {
+  if (data.from.department && !structure.findNodeById(data.from.department)) {
     throw new ApiError(400, null, 'from department is not exists');
   }
-  data.to.department.forEach(i => {
+  data.to && data.to.department.forEach(i => {
     if (!structure.findNodeById(i)) {
       throw new ApiError(400, null, 'to department: ' + i  + ' is not exists');
     }
   });
   let memberIds = req.company.members.map(i => i._id);
-  data.to.member.forEach(each => {
+  data.to && data.to.member.forEach(each => {
     if (-1 == indexObjectId(memberIds, each)) {
       throw new ApiError(400, null, 'to member: ' + each + ' is not exists');
     }
@@ -159,7 +159,7 @@ function getAnnouncement(req, res, next, is_published) {
       throw new ApiError(404);
     }
     return db.user.find({
-      _id: data.from.creator
+      _id: announcement.from.creator
     }, {
       name: 1,
       avavtar: 1,
