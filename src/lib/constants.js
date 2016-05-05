@@ -58,7 +58,6 @@ let constants = {
     LEVEL_1: 1,
     LEVEL_2: 2,
     LEVEL_3: 3,
-    TRASHED: 'trashed',
   },
 
   TASK_LOG_TYPE: {
@@ -69,6 +68,9 @@ let constants = {
     DESCRIPTION: 'description',   // 描述
     TAG: 'tag',                   // 标签
     FOLLOWERS: 'followers',       // 关注者
+    FOLLOW: 'follow',             // 关注
+    UNFOLLOW: 'follow',           // 关注
+    PRIORITY: 'priority',         // 优先级
   },
 
   APPROVAL_STATUS: {

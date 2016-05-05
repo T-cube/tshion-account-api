@@ -54,7 +54,7 @@ api.post('/register', validator(validation.register), (req, res, next) => {
       mobile: req.body.mobile || null,
       mobile_verified: type == C.USER_ID_TYPE.MOBILE,
       name: type == C.USER_ID_TYPE.MOBILE ? req.body.mobile : getEmailName(req.body.email),
-      avatar: randomAvatar('user', 12),
+      avatar: randomAvatar('user', 8),
       password: hash,
     };
     return db.user.insert(data);

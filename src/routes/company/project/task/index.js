@@ -45,12 +45,13 @@ api.get('/', (req, res, next) => {
   if (keyword) {
     condition['$text'] = { $search: keyword }
   }
-  let dbQuery = db.task.find(condition);
-  if (_.contains(['title', 'assignee', 'creator', 'follower'], sort)) {
+  let sortBy = { status: -1 };
+  if (_.contains(['date_create','date_update','priority'], sort)) {
     order = order == 'desc' ? -1 : 1;
-    dbQuery = dbQuery.sort({ [sort]: order })
+    sortBy = { [sort]: order }
   }
-  dbQuery.then(list => {
+  db.task.find(condition).sort(sortBy)
+  .then(list => {
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, id => id.equals(req.user._id));
     });
@@ -182,6 +183,12 @@ api.put('/:task_id/description', updateField('description'), (req, res, next) =>
   .catch(next);
 });
 
+api.put('/:task_id/priority', updateField('priority'), (req, res, next) => {
+  logTask(ObjectId(req.params.task_id), C.TASK_LOG_TYPE.PRIORITY, req.user._id)
+  .then(() => res.json({}))
+  .catch(next);
+});
+
 api.put('/:task_id/assignee', (req, res, next) => {
   let data = validField('assignee', req.body.assignee);
   let task_id = ObjectId(req.params.task_id);
@@ -283,7 +290,7 @@ api.post('/:task_id/follow', (req, res, next) => {
   const taskId = ObjectId(req.params.task_id);
   const userId = req.user._id;
   taskFollow(req, taskId, userId)
-  .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
+  .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOW, req.user._id))
   .then(() => res.json({
     is_following: true,
   }))
@@ -294,7 +301,7 @@ api.post('/:task_id/unfollow', (req, res, next) => {
   const taskId = ObjectId(req.params.task_id);
   const userId = req.user._id;
   taskUnfollow(req, taskId, userId)
-  .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
+  .then(() => logTask(taskId, C.TASK_LOG_TYPE.UNFOLLOW, req.user._id))
   .then(() => res.json({
     is_following: false,
   }))
