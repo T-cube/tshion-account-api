@@ -3,7 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import { ApiError } from 'lib/error';
-import { time } from 'lib/utils';
+import { time, indexObjectId, uniqObjectId } from 'lib/utils';
 import inspector from 'lib/inspector';
 import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
@@ -20,22 +20,9 @@ api.use((req, res, next) => {
   next();
 });
 
-api.get('/notice', (req, res, next) => {
-  db.announcement.find({
-    company_id: req.company._id,
-    type: C.ANNOUNCEMENT_TYPE.NOTICE,
-  })
-  .then(doc => res.json(doc))
-  .catch(next);
-});
-
-api.get('/news', (req, res, next) => {
-  db.announcement.find({
-    company_id: req.company._id,
-    type: C.ANNOUNCEMENT_TYPE.NEWS,
-  })
-  .then(doc => res.json(doc))
-  .catch(next);
+api.get('/', (req, res, next) => {
+  let type = req.query.type;
+  getAnnouncementList(req, res, next, type);
 });
 
 api.post('/', (req, res, next) => {
@@ -69,7 +56,7 @@ api.post('/', (req, res, next) => {
 
   // initial attributes
   data.company_id = req.company._id;
-  data.date_create = time();
+  data.date_create = new Date();
   db.announcement.insert(data)
   .then(doc => res.json(doc))
   .catch(next);
@@ -99,3 +86,31 @@ api.delete('/:announcement_id', (req, res, next) => {
   .then(doc => res.json({}))
   .catch(next);
 });
+
+function getAnnouncementList(req, res, next, type) {
+  db.announcement.find({
+    company_id: req.company._id,
+    type: type,
+  })
+  .then(announcements => {
+    if (!announcements.length) {
+      return res.json([]);
+    }
+    let creators = uniqObjectId(announcements.map(item => item.from.creator));
+    return db.user.find({
+      _id: {
+        $in: creators
+      }
+    }, {
+      name: 1,
+      avavtar: 1,
+    })
+    .then(users => {
+      announcements.forEach((announcement, k) => {
+        announcements[k].from.creator = _.find(users, user => user._id.equals(announcements[k].from.creator));
+      })
+      res.json(announcements);
+    })
+  })
+  .catch(next);
+}
