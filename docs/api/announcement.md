@@ -25,6 +25,7 @@ INPUT
 {
   title: <String>,                // 标题
   content: <String>,              // 内容
+  type: <Enum:notice|news>,       // 类型
   from: {
     creator: <ObjectId>,          // 创建人
     department: <ObjectId>,       // 发起部门
@@ -37,9 +38,32 @@ INPUT
 }
 ```
 
-### GET /announcement
+### GET /announcement/news
 
-获取全部公告
+获取公司动态
+
+OUTPUT
+```javascript
+[{
+  _id: <ObjectId>,
+  company_id: <ObjectId>,
+  title: <String>,                // 标题
+  //content: <String>,              // 内容
+  from: {
+    creator: <ObjectId>,          // 创建人
+    department: <ObjectId>,       // 发起部门
+  },
+  to: {
+    member: [<ObjectId>...],      // 接收成员
+    department: [<ObjectId>...],  // 接收部门
+  },
+  date_publish: <Date>,           // 发布日期
+}...]
+```
+
+### GET /announcement/notice
+
+获取事务通知
 
 OUTPUT
 ```javascript
