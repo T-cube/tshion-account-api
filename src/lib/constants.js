@@ -62,13 +62,13 @@ let constants = {
   },
 
   TASK_LOG_TYPE: {
-    CRAEATE: 'create',                       // 创建
-    COMPLETE: 'complete',                     // 完成
-    REOPEN: 'reopen',                       // 重新开启
-    TITLE: 'title',                        // 标题
-    DESCRIPTION: 'description',                   // 描述
-    TAG: 'tag',                          // 标签
-    FOLLOWERS: 'followers',
+    CREATE: 'create',             // 创建
+    COMPLETE: 'complete',         // 完成
+    REOPEN: 'reopen',             // 重新开启
+    TITLE: 'title',               // 标题
+    DESCRIPTION: 'description',   // 描述
+    TAG: 'tag',                   // 标签
+    FOLLOWERS: 'followers',       // 关注者
   },
 
   APPROVAL_STATUS: {

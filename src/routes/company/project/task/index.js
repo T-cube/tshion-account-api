@@ -104,7 +104,7 @@ api.post('/', (req, res, next) => {
         }
       })
     })
-    .then(() => logTask(doc._id, C.TASK_LOG_TYPE.CRAEATE, req.user._id))
+    .then(() => logTask(doc._id, C.TASK_LOG_TYPE.CREATE, req.user._id))
     .then(() => {
       res.json(doc);
     })
@@ -166,34 +166,6 @@ api.param('task_id', (req, res, next, id) => {
   .catch(next)
 })
 
-api.put('/:task_id/follow', (req, res, next) => {
-  db.task.update({
-    _id: ObjectId(req.params.task_id),
-  }, {
-    $addToSet: {
-      followers: req.user._id,
-    }
-  })
-  .then(result => res.json({
-    is_following: true,
-  }))
-  res.json({});
-});
-
-api.put('/:task_id/unfollow', (req, res, next) => {
-  db.task.update({
-    _id: ObjectId(req.params.task_id),
-  }, {
-    $pull: {
-      followers: req.user._id,
-    }
-  })
-  .then(result => res.json({
-    is_following: false,
-  }))
-  res.json({});
-});
-
 api.put('/:task_id/status', updateField('status'), (req, res, next) => {
   res.json({});
 });
@@ -223,8 +195,7 @@ api.put('/:task_id/assignee', (req, res, next) => {
   })
   .then(doc => {
     if (doc.assignee.equals(data.assignee)) {
-      res.json({});
-      return next();
+      throw new ApiError(400, null, 'member is already assignee of the task');
     }
     return db.user.update({
       _id: doc.assignee,
@@ -308,83 +279,40 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
   .catch(next);
 });
 
+api.put('/:task_id/follow', (req, res, next) => {
+  taskFollow(req, taskId, userId)
+  .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
+  .then(res.json({
+    is_following: true,
+  }))
+  .catch(next);
+});
+
+api.put('/:task_id/unfollow', (req, res, next) => {
+  taskUnfollow(req, taskId, userId)
+  .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
+  .then(res.json({
+    is_following: false,
+  }))
+  .catch(next);
+});
+
 api.post('/:task_id/followers', (req, res, next) => {
   if (!ObjectId.isValid(req.body._id)) {
-    throw new ApiError(404);
+    throw new ApiError(400);
   }
-  let user_id = ObjectId(req.body._id);
-  let task_id = ObjectId(req.params.task_id);
-  isMemberOfCompany(user_id, req.project_id).then(() => {
-    return db.task.update({
-      _id: task_id
-    }, {
-      $addToSet: {
-        followers: user_id
-      }
-    })
-  })
-  .then(result => {
-    db.user.count({
-      _id: user_id,
-      'task._id': task_id
-    })
-    .then(count => {
-      if (count) {
-        return res.json(result);
-      }
-      db.user.update({
-        _id: user_id
-      }, {
-        $push: {
-          task: {
-            _id: task_id,
-            company_id: req.company._id,
-            project_id: req.project_id,
-            is_creator: false,
-            is_assignee: false
-          }
-        }
-      })
-      .then(() => logTask(task_id, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
-      .then(() => {
-        res.json(result);
-      })
-      .catch(next);
-    })
-  })
+  let userId = ObjectId(req.body._id);
+  let taskId = ObjectId(req.params.task_id);
+  taskFollow(req, taskId, userId)
+  .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
+  .then(res.json({}))
   .catch(next);
 });
 
 api.delete('/:task_id/followers/:follower_id', (req, res, next) => {
-  let user_id = ObjectId(req.params.follower_id);
-  let task_id = ObjectId(req.params.task_id);
-  db.task.count({
-    _id: task_id,
-    $or: [{assignee: user_id}, {creator: user_id}]
-  })
-  .then(count => {
-    if (count) {
-      throw new ApiError(400, null, 'assignee and creator can not unfollow');
-    }
-    return db.task.update({
-      _id: task_id
-    }, {
-      $pull: {
-        followers: user_id
-      }
-    })
-  })
-  .then(doc => {
-    return db.user.update({
-      _id: user_id
-    }, {
-      $pull: {
-        task: {
-          _id: task_id
-        }
-      }
-    })
-  })
+  let userId = ObjectId(req.params.follower_id);
+  let taskId = ObjectId(req.params.task_id);
+  taskUnfollow(req, taskId, userId)
   .then(() => logTask(task_id, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
   .then(() => res.json({}))
   .catch(next);
@@ -514,5 +442,72 @@ function isMemberOfCompany(user_id, company_id) {
     if (count == 0) {
       throw new ApiError(400, null, 'user is not one of the company member')
     }
+  });
+}
+
+function taskFollow(req, taskId, userId) {
+  return isMemberOfProject(userId, req.project_id)
+  .then(() => {
+    return db.task.update({
+      _id: taskId
+    }, {
+      $addToSet: {
+        followers: user_id
+      }
+    });
+  })
+  .then(() => {
+    db.user.count({
+      _id: user_id,
+      'task._id': taskId,
+    });
+  })
+  .then(count => {
+    if (count) {
+      return;
+    }
+    db.user.update({
+      _id: user_id
+    }, {
+      $push: {
+        task: {
+          _id: taskId,
+          company_id: req.company._id,
+          project_id: req.project_id,
+          is_creator: false,
+          is_assignee: false
+        }
+      }
+    });
+  });
+}
+
+function taskUnfollow(req, taskId, userId) {
+  return db.task.count({
+    _id: task_id,
+    $or: [{assignee: user_id}, {creator: user_id}],
+  })
+  .then(count => {
+    if (count) {
+      throw new ApiError(400, null, 'assignee and creator can not unfollow');
+    }
+    return db.task.update({
+      _id: task_id
+    }, {
+      $pull: {
+        followers: user_id
+      }
+    })
+  })
+  .then(() => {
+    return db.user.update({
+      _id: user_id
+    }, {
+      $pull: {
+        task: {
+          _id: task_id
+        }
+      }
+    })
   });
 }
