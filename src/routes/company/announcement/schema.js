@@ -6,7 +6,7 @@ export let sanitization = {
 	properties: {
     title: { type: "string" },
     content: { type: "string" },
-		type: { type: "string" }
+		type: { type: "string" },
     from: {
       type: 'object',
       properties: {
