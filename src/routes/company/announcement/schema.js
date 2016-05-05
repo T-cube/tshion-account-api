@@ -1,9 +1,12 @@
+import import { ENUMS } from 'lib/constants';
+
 export let sanitization = {
 	// You can edit the sanitization too
 	type: "object",
 	properties: {
     title: { type: "string" },
     content: { type: "string" },
+		type: { type: "string" }
     from: {
       type: 'object',
       properties: {
@@ -33,6 +36,7 @@ export let validation = {
 	properties: {
     title: { type: "string", minLength: 1, error: '请填写标题' },
     content: { type: "string", minLength: 1, maxLength: 1000000 },
+		type: { $enum: ENUMS.ANNOUNCEMENT_TYPE },
     from: {
       type: 'object',
       properties: {

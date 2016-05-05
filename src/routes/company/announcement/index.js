@@ -8,6 +8,7 @@ import inspector from 'lib/inspector';
 import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
 import { oauthCheck } from 'lib/middleware';
+import C from 'lib/constants';
 
 /* company collection */
 let api = require('express').Router();
@@ -19,9 +20,19 @@ api.use((req, res, next) => {
   next();
 });
 
-api.get('/', (req, res, next) => {
+api.get('/notice', (req, res, next) => {
   db.announcement.find({
     company_id: req.company._id,
+    type: C.ANNOUNCEMENT_TYPE.NOTICE,
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.get('/news', (req, res, next) => {
+  db.announcement.find({
+    company_id: req.company._id,
+    type: C.ANNOUNCEMENT_TYPE.NEWS,
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -50,9 +61,9 @@ api.post('/', (req, res, next) => {
     }
   });
   let memberIds = req.company.members.map(i => i._id);
-  data.to.member.forEach(i => {
-    if (-1 == memberIds.indexOf(i)) {
-      throw new ApiError(400, null, 'to member: ' + i + ' is not exists');
+  data.to.member.forEach(each => {
+    if (-1 == indexObjectId(memberIds, each)) {
+      throw new ApiError(400, null, 'to member: ' + each + ' is not exists');
     }
   });
 

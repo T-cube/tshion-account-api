@@ -92,6 +92,11 @@ let constants = {
     APPROVED: 'approved',
     REJECTED: 'rejected',
     REVOKED: 'revoked'
+  },
+
+  ANNOUNCEMENT_TYPE: {
+    NOTICE: 'notice',
+    NEWS: 'news',
   }
 }
 
