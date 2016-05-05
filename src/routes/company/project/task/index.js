@@ -488,28 +488,28 @@ function taskFollow(req, taskId, userId) {
 
 function taskUnfollow(req, taskId, userId) {
   return db.task.count({
-    _id: task_id,
-    $or: [{assignee: user_id}, {creator: user_id}],
+    _id: taskId,
+    $or: [{assignee: userId}, {creator: userId}],
   })
   .then(count => {
     if (count) {
       throw new ApiError(400, null, 'assignee and creator can not unfollow');
     }
     return db.task.update({
-      _id: task_id
+      _id: taskId
     }, {
       $pull: {
-        followers: user_id
+        followers: userId
       }
     })
   })
   .then(() => {
     return db.user.update({
-      _id: user_id
+      _id: userId
     }, {
       $pull: {
         task: {
-          _id: task_id
+          _id: taskId
         }
       }
     })
