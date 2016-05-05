@@ -110,13 +110,13 @@ api.param('company_id', (req, res, next, id) => {
 
 // Get company detail
 api.get('/:company_id', (req, res, next) => {
-  let members = req.company.members;
-  let memberIds = _.pluck(members, '_id');
+  const members = req.company.members;
+  const memberIds = _.pluck(members, '_id');
   db.user.find({
     _id: {$in: memberIds},
   }, {
     avatar: 1,
-    name: 1,
+    mobile: 1,
   })
   .then(users => {
     _.each(members, m => {
@@ -125,7 +125,7 @@ api.get('/:company_id', (req, res, next) => {
       m.avatar = m.avatar || defaultAvatar('user');
     })
     res.json(req.company);
-  })
+  });
 });
 
 api.put('/:company_id', (req, res, next) => {

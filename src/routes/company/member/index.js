@@ -20,7 +20,8 @@ api.use((req, res, next) => {
 });
 
 api.get('/', (req, res, next) => {
-  let memberIds = _.pluck(req.company.members, '_id');
+  const members = req.company.members;
+  const memberIds = _.pluck(members, '_id');
   db.user.find({
     _id: {$in: memberIds}
   }, {
@@ -28,11 +29,11 @@ api.get('/', (req, res, next) => {
     mobile: 1,
   })
   .then(users => {
-    let members = _.map(req.company.members, m => {
-      let user = _.find(user, u => u._id.equals(m._id));
-      return _.extend(m, user);
+    _.each(members, m => {
+      let user = _.find(users, u => u._id.equals(m._id));
+      _.extend(m, user);
       m.avatar = m.avatar || defaultAvatar('user');
-    });
+    })
     res.json(members);
   });
 });
