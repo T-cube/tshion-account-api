@@ -52,7 +52,7 @@ INPUT:
 }
 ```
 
-### PUT /approval/template/:approval_id
+### PUT /approval/template/:template_id
 
 INPUT:
 ```javascript
@@ -74,16 +74,7 @@ INPUT:
 }
 ```
 
-### PUT /approval/template/:approval_id/status
-
-INPUT:
-```javascript
-{
-  status: <Enum:normal,unused>
-}
-```
-
-### GET /approval/template/:approval_id
+### GET /approval/template/:template_id
 
 OUTPUT:
 ```javascript
@@ -106,20 +97,7 @@ OUTPUT:
 }
 ```
 
-### PUT /approval/template/:approval_id/steps
-
-INPUT:
-```javascript
-{
-  steps: {
-    _id: <ObjectId>,
-    status: <Enum:pending,approve,reject,disable>,
-    log: <String> // 审批记录
-  }
-}
-```
-
-### DELETE /approval/template/:approval_id
+### DELETE /approval/template/:template_id
 
 删除
 
@@ -132,8 +110,8 @@ OUTPUT:
 [
   {
     _id: <ObjectId>,
-    item: <ObjectId>,
-    proposer: <ObjectId>,
+    template_id: <ObjectId>,
+    from: <ObjectId>,
     department: <ObjectId>,
     apply_date: <Date>,
     status: <ENUM>,
@@ -150,7 +128,7 @@ INPUT:
 {
   _id: <ObjectId>,
   template_id: <ObjectId>,
-  proposer: <ObjectId>,
+  from: <ObjectId>,
   department: <ObjectId>,
   content: <String>,
   forms: [{
@@ -162,19 +140,20 @@ INPUT:
 }
 ```
 
-### GET /approval/item/:approval_id
+### GET /approval/item/:item_id
 
 INPUT:
 ```javascript
 {
   _id: <ObjectId>,
   template_id: <ObjectId>,
-  proposer: <ObjectId>,
+  from: <ObjectId>,
   department: <ObjectId>,
   apply_date: <Date>,
   status: <ENUM>,
   content: <String>,
   files: [<String>...],
+  step: <String>,
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
@@ -191,7 +170,29 @@ INPUT:
 }
 ```
 
-### PUT /approval/item/:approval_id
+### PUT /approval/item/:item_id/status
+
+INPUT:
+```javascript
+{
+  status: <Enum:normal,unused>
+}
+```
+
+### PUT /approval/item/:item_id/steps
+
+INPUT:
+```javascript
+{
+  steps: {
+    _id: <ObjectId>,
+    status: <Enum:pending,approve,reject,disable>,
+    log: <String> // 审批记录
+  }
+}
+```
+
+### PUT /approval/item/:item_id
 
 INPUT:
 ```javascript
@@ -206,3 +207,24 @@ INPUT:
   }]
 }
 ```
+
+## approval flow
+
+### GET /approval/flow/apply
+
+OUTPUT
+[{
+   _id: <ObjectId>,
+    template_id: <ObjectId>,
+    from: <ObjectId>,
+    department: <ObjectId>,
+    apply_date: <Date>,
+    status: <ENUM>,
+    content: <String>,
+    log: <String>
+}...]
+
+### GET /approval/flow/approve
+
+### GET /approval/flow/copyto
+

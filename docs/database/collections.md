@@ -368,6 +368,8 @@
   company_id: <ObjectId>,
   title: <String>,
   content: <String>,
+  type: <Enum:news|notice>,       // 类型
+  is_published: <Bool>,           // 发布，草稿
   from: {
     creator: <ObjectId>,          // 创建人
     department: <ObjectId>,       // 发起部门
@@ -467,11 +469,12 @@ approval.flow
 ```javascript
 {
   _id: <ObjectId>, // user_id
-  company: [{
-    company_id: <ObjectId>, // company_id
-    apply: [<ObjectId>...],
-    copy_to: [<ObjectId>...],
-    approve: [<ObjectId>...]
+  company_id: <ObjectId>, // company_id
+  apply: [<ObjectId>...],
+  copy_to: [<ObjectId>...],
+  approve: [{
+    _id: <ObjectId>, // approval item id
+    step: <ObjectId>
   }...]
 }
 ```
