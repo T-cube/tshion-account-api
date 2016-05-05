@@ -1,4 +1,4 @@
-import import { ENUMS } from 'lib/constants';
+import { ENUMS } from 'lib/constants';
 
 export let sanitization = {
 	// You can edit the sanitization too
