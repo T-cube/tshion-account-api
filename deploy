@@ -1,4 +1,7 @@
 #!/bin/bash
+pushd "$(dirname "$0")"
 git pull
+npm install
 npm run compile
 pm2 startOrRestart pm2.json
+popd

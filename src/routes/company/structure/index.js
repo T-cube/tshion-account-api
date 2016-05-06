@@ -4,6 +4,13 @@ import { ObjectId } from 'mongodb';
 
 import { ApiError } from 'lib/error';
 import Structure from 'models/structure';
+import { sanitizeValidateObject } from 'lib/inspector';
+import {
+  structureSanitization,
+  structureValidation,
+  memberSanitization,
+  memberValidation
+} from './schema';
 
 /* company collection */
 let api = require('express').Router();
@@ -40,9 +47,10 @@ api.post('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
+  sanitizeValidateObject(structureSanitization, structureValidation, data);
   let node = tree.addNode(data, node_id);
   if (!node) {
-    return next(new ApiError('parent_node_not_exists'));
+    return next(new ApiError(404, null, 'node not exists'));
   }
   save(req)
   .then(doc => res.json(node))
@@ -118,6 +126,8 @@ api.post('/:node_id/member', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
+  console.log(data,memberSanitization,memberValidation);
+  sanitizeValidateObject(memberSanitization, memberValidation, data);
   let member = tree.addMember(data, node_id);
   save(req)
   .then(doc => res.json(member))

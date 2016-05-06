@@ -27,7 +27,6 @@ api.get('/', (req, res, next) => {
     _id: {$in: memberIds}
   }, {
     avatar: 1,
-    mobile: 1,
   })
   .then(users => {
     _.each(members, m => {
