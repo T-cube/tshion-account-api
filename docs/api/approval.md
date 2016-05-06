@@ -16,6 +16,8 @@
 
 ## Approval Template
 
+审批模板
+
 ### GET /approval/template
 
 OUTPUT:
@@ -42,12 +44,12 @@ INPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    approver_type: <Enum:department,member>
+    approver_type: <ENUM:department,member>
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <Enum:text,textarea,date,...>
+    form_type: <ENUM:text,textarea,date,...>
   }]
 }
 ```
@@ -64,12 +66,12 @@ INPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    approver_type: <Enum:department,member>
+    approver_type: <ENUM:department,member>
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <Enum:text,textarea,date...>
+    form_type: <ENUM:text,textarea,date...>
   }]
 }
 ```
@@ -87,39 +89,32 @@ OUTPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    approver_type: <Enum:department,member>
+    approver_type: <ENUM:department,member>
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <Enum:text,textarea,date...>
+    form_type: <ENUM:text,textarea,date...>
   }]
+}
+```
+
+### PUT /approval/item/:template_id/status
+
+INPUT:
+```javascript
+{
+  status: <ENUM:normal,unused>
 }
 ```
 
 ### DELETE /approval/template/:template_id
 
-删除
+删除模板
 
 ## Approval Item
 
-### GET /approval/item
-
-OUTPUT:
-```javascript
-[
-  {
-    _id: <ObjectId>,
-    template_id: <ObjectId>,
-    from: <ObjectId>,
-    department: <ObjectId>,
-    apply_date: <Date>,
-    status: <ENUM>,
-    content: <String>
-  }
-  ...
-]
-```
+用户的审批项目
 
 ### POST /approval/item
 
@@ -134,7 +129,7 @@ INPUT:
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <Enum:text,textarea,date...>,
+    form_type: <ENUM:text,textarea,date...>,
     value: <String>
   }]
 }
@@ -157,14 +152,14 @@ INPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    status: <Enum:pending,approve,reject,disable>,
+    status: <ENUM:pending,approve,reject,disable>,
     create_time: <Date>,
     log: <String> // 审批记录
   }...],
   forms: [{
     _id: <ObjectId>,
     title: <String>,
-    form_type: <Enum:text,textarea,date...>,
+    form_type: <ENUM:text,textarea,date...>,
     value: <String>
   }]
 }
@@ -172,21 +167,25 @@ INPUT:
 
 ### PUT /approval/item/:item_id/status
 
+撤回
+
 INPUT:
 ```javascript
 {
-  status: <Enum:normal,unused>
+  status: <String> // 'revoked'
 }
 ```
 
 ### PUT /approval/item/:item_id/steps
+
+审核
 
 INPUT:
 ```javascript
 {
   steps: {
     _id: <ObjectId>,
-    status: <Enum:pending,approve,reject,disable>,
+    status: <ENUM:processing,approved,rejected,revoked>,
     log: <String> // 审批记录
   }
 }
@@ -200,8 +199,6 @@ INPUT:
   content: <String>,
   forms: [{
     _id: <ObjectId>,
-    title: <String>,
-    form_type: <Enum:text,textarea,date...>,
     value: <String>
   }]
 }
@@ -209,10 +206,12 @@ INPUT:
 
 ## approval flow
 
+审批流程
+
 ### GET /approval/flow/apply
 
 OUTPUT
-```
+```javascript
 [{
    _id: <ObjectId>,
     template_id: <ObjectId>,
@@ -227,5 +226,33 @@ OUTPUT
 
 ### GET /approval/flow/approve
 
+OUTPUT
+```javascript
+[{
+   _id: <ObjectId>,
+    template_id: <ObjectId>,
+    from: <ObjectId>,
+    department: <ObjectId>,
+    apply_date: <Date>,
+    status: <ENUM>,
+    content: <String>,
+    log: <String>,
+    is_processing: <Boolean> // 是否可操作的
+}...]
+```
+
 ### GET /approval/flow/copyto
 
+### GET /approval/flow/apply/count
+
+OUTPUT
+```javascript
+[{
+   _id: <ENUM>, // status
+   count: <Number>
+}...]
+```
+
+### GET /approval/flow/approve/count
+
+### GET /approval/flow/copyto/count`

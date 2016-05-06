@@ -48,7 +48,22 @@ api.post('/', (req, res, next) => {
     return db.approval.item.insert(data)
     .then(doc => {
       res.json(doc);
-      return prepareNextStep(req.company, doc._id, template._id, data.step)
+      // return upsertFlow(user_id, req.company._id)
+      // .then(() => {
+        return db.approval.flow.update({
+          user_id: user_id,
+          company_id: req.company._id
+        }, {
+          $addToSet: {
+            apply: doc._id
+          }
+        }, {
+          upsert: true
+        })
+      // })
+      .then(() => {
+        return prepareNextStep(req.company, doc._id, template._id, data.step)
+      })
     })
   })
   .catch(next);
@@ -166,25 +181,64 @@ function prepareNextStep(company, item_id, template_id, step_id) {
 
     copyto = uniqObjectId(copyto);
     approver = uniqObjectId(approver);
-    let approverData = approver.map(user_id => {
+    let userList = uniqObjectId(approver.concat(copyto));
+    return upsertFlow(userList, company._id)
+    .then(doc => {
+      return Promise.all([
+        approver.length && db.approval.flow.update({
+          user_id: {
+            $in: approver,
+          },
+          company_id: company._id
+        }, {
+          $push: {
+            approve: {
+              _id: item_id,
+              step: step_id
+            }
+          }
+        }),
+        copyto.length && db.approval.flow.update({
+          user_id: {
+            $in: copyto,
+          },
+          company_id: company._id
+        }, {
+          $push: {
+            copy_to: item_id
+          }
+        })
+      ])
+    })
+  })
+  .catch(next);
+}
+
+function upsertFlow(userList, company_id) {
+  if (!_.isArray(userList)) {
+    userList = [userList];
+  }
+  return db.approval.flow.find({
+    user_id: {
+      $in: userList
+    },
+    company_id: company_id
+  }, {
+    user_id: 1
+  })
+  .then(existedUser => {
+    let notExistedUser = diffObjectId(userList, existedUser.map(item => item.user_id));
+    notExistedUser = notExistedUser.map(user_id => {
       return {
-        user: user_id,
-        company: company._id,
-        item: item_id,
-        step: step_id
-      }
+        user_id: user_id,
+        company_id: company_id,
+        apply: [],
+        approve: [],
+        copy_to: [],
+      };
     });
-    let copytoData = copyto.map(user_id => {
-      return {
-        user: user_id,
-        company: company._id,
-        item: item_id,
-        step: step_id
-      }
-    });
-    return Promise.all([
-      approver.length && db.approval.approve.insert(approverData),
-      copyto.length && db.approval.copyto.insert(copytoData)
-    ])
+    if (notExistedUser.length) {
+      return db.approval.flow.insert(notExistedUser);
+    }
   })
 }

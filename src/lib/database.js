@@ -7,7 +7,8 @@ export function database() {
   let dbConfig = config.get('database');
   return pmongo(dbConfig, [
     'announcement',
-    'approval.flow',
+    'approval.approve',
+    'approval.copyto',
     'approval.template',
     'approval.item',
     'auth_check_token',
