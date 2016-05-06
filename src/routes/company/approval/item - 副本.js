@@ -19,11 +19,10 @@ api.use(oauthCheck());
 api.post('/', (req, res, next) => {
   let data = req.body;
   let user_id = req.user._id;
-  let company_id = req.company._id;
   sanitizeValidateObject(itemSanitization, itemValidation, data);
   _.extend(data, {
     from: user_id,
-    company_id: company_id,
+    company_id: req.company._id,
     apply_date: new Date(),
     status: C.APPROVAL_ITEM_STATUS.PROCESSING,
     is_archived: false,
@@ -49,45 +48,21 @@ api.post('/', (req, res, next) => {
     return db.approval.item.insert(data)
     .then(doc => {
       res.json(doc);
-      let item_id = doc._id;
-      return db.approval.user.findOne({
-        _id: user_id,
-        'map.company_id': company_id
-      }, {
-        'map.$': 1
-      })
-      .then(mapData => {
-        let flow_id = mapData ? mapData.map[0].flow_id : null;
-        if (!mapData || !flow_id) {
-          return db.approval.flow.insert({
-            apply: [item_id]
-          })
-          .then(inserted => {
-            return db.approval.user.update({
-              _id: user_id,
-            }, {
-              $push: {
-                map: {
-                  company_id: company_id,
-                  flow_id: inserted._id
-                }
-              }
-            }, {
-              upsert: true
-            })
-          })
-        } else {
-          return db.approval.flow.update({
-            _id: flow_id
-          }, {
-            $push: {
-              apply: item_id
-            }
-          })
-        }
-      })
+      // return upsertFlow(user_id, req.company._id)
+      // .then(() => {
+        return db.approval.flow.update({
+          user_id: user_id,
+          company_id: req.company._id
+        }, {
+          $addToSet: {
+            apply: doc._id
+          }
+        }, {
+          upsert: true
+        })
+      // })
       .then(() => {
-        return prepareNextStep(req.company, item_id, template._id, data.step)
+        return prepareNextStep(req.company, doc._id, template._id, data.step)
       })
     })
   })
@@ -153,7 +128,7 @@ api.put('/:item_id/steps', (req, res, next) => {
       'steps.$.approver': req.user._id,
       'steps.$.status': data.status,
       'steps.$.create_time': new Date(),
-      // 'steps.$.log': data.log,
+      'steps.$.log': data.log,
     };
     if (!nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
       update.status = C.APPROVAL_ITEM_STATUS.APPROVED;
@@ -206,88 +181,64 @@ function prepareNextStep(company, item_id, template_id, step_id) {
 
     copyto = uniqObjectId(copyto);
     approver = uniqObjectId(approver);
-
-    return Promise.all(copyto.map(user_id => {
-      return db.approval.user.findOne({
-        _id: user_id,
-        'map.company_id': company._id
-      }, {
-        'map.$': 1
-      })
-      .then(mapData => {
-        let flow_id = mapData ? mapData.map[0].flow_id : null;
-        if (!mapData || !flow_id) {
-          return db.approval.flow.insert({
-            copy_to: [item_id]
-          })
-          .then(inserted => {
-            return db.approval.user.update({
-              _id: user_id,
-            }, {
-              $push: {
-                map: {
-                  company_id: company._id,
-                  flow_id: inserted._id
-                }
-              }
-            }, {
-              upsert: true
-            })
-          })
-        } else {
-          return db.approval.flow.update({
-            _id: flow_id
-          }, {
-            $push: {
-              copy_to: item_id
-            }
-          })
-        }
-      })
-    }))
-    .then(() => {
-      return Promise.all(approver.map(user_id => {
-        return db.approval.user.findOne({
-          _id: user_id,
-          'map.company_id': company._id
+    let userList = uniqObjectId(approver.concat(copyto));
+    return upsertFlow(userList, company._id)
+    .then(doc => {
+      return Promise.all([
+        approver.length && db.approval.flow.update({
+          user_id: {
+            $in: approver,
+          },
+          company_id: company._id
         }, {
-          'map.$': 1
-        })
-        .then(mapData => {
-          console.log(mapData);
-          let flow_id = mapData ? mapData.map[0].flow_id : null;
-          if (!mapData || !flow_id) {
-            return db.approval.flow.insert({
-              approve: [item_id]
-            })
-            .then(inserted => {
-              return db.approval.user.update({
-                _id: user_id
-              }, {
-                $push: {
-                  map: {
-                    company_id: company._id,
-                    flow_id: inserted._id
-                  }
-                }
-              }, {
-                upsert: true
-              })
-            })
-          } else {
-            return db.approval.flow.update({
-              _id: flow_id
-            }, {
-              $push: {
-                approve: {
-                  _id: item_id,
-                  step: step_id
-                }
-              }
-            })
+          $push: {
+            approve: {
+              _id: item_id,
+              step: step_id
+            }
+          }
+        }),
+        copyto.length && db.approval.flow.update({
+          user_id: {
+            $in: copyto,
+          },
+          company_id: company._id
+        }, {
+          $push: {
+            copy_to: item_id
           }
         })
-      }))
+      ])
     })
+  })
+  .catch(next);
+}
+
+function upsertFlow(userList, company_id) {
+  if (!_.isArray(userList)) {
+    userList = [userList];
+  }
+  return db.approval.flow.find({
+    user_id: {
+      $in: userList
+    },
+    company_id: company_id
+  }, {
+    user_id: 1
+  })
+  .then(existedUser => {
+    let notExistedUser = diffObjectId(userList, existedUser.map(item => item.user_id));
+    notExistedUser = notExistedUser.map(user_id => {
+      return {
+        user_id: user_id,
+        company_id: company_id,
+        apply: [],
+        approve: [],
+        copy_to: [],
+      };
+    });
+    if (notExistedUser.length) {
+      return db.approval.flow.insert(notExistedUser);
+    }
   })
 }

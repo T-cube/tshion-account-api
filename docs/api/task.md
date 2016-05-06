@@ -76,7 +76,7 @@ INPUT
 INPUT
 ```javascript
 {
-  title: <String>
+  description: <String>
 }
 ```
 

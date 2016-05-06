@@ -28,3 +28,15 @@ export let memberValidation = {
 	_id: { $objectId: 1 },
 	title: { type: 'string', optional: true }
 }
+
+export let tagSanitization = {
+  project_id: { $objectId: 1 },         // 关联项目
+  name: { type: 'string' },             // 标签名称
+  color: { type: 'string' },            // 标签颜色
+}
+
+export let tagValidation = {
+  project_id: { $objectId: 1 },
+  name: { type: 'string', minLength: 1 },
+  color: { type: 'string' },
+}
