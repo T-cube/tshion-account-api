@@ -197,7 +197,6 @@ INPUT:
 INPUT:
 ```javascript
 {
-  _id: <ObjectId>,
   content: <String>,
   forms: [{
     _id: <ObjectId>,
@@ -213,6 +212,7 @@ INPUT:
 ### GET /approval/flow/apply
 
 OUTPUT
+```
 [{
    _id: <ObjectId>,
     template_id: <ObjectId>,
@@ -223,6 +223,7 @@ OUTPUT
     content: <String>,
     log: <String>
 }...]
+```
 
 ### GET /approval/flow/approve
 
