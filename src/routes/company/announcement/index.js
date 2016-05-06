@@ -158,7 +158,7 @@ function getAnnouncement(req, res, next, is_published) {
     if (!announcement) {
       throw new ApiError(404);
     }
-    return db.user.find({
+    return db.user.findOne({
       _id: announcement.from.creator
     }, {
       name: 1,
