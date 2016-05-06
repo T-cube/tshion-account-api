@@ -28,6 +28,18 @@ INPUT
 }
 ```
 
+### POST /project/tags
+
+添加项目标签
+
+INPUT
+```javascript
+{
+  name: <String>,
+  color: <String>
+}
+```
+
 ### PUT /project/:project_id
 
 更新项目信息

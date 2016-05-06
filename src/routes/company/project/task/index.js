@@ -260,19 +260,17 @@ api.put('/:task_id/date_due', updateField('date_due'), (req, res, next) => {
 });
 
 api.post('/:task_id/tag', (req, res, next) => {
-  //TODO
   let data = validField('tag', req);
   db.task.update({
     _id: ObjectId(req.params.task_id)
   }, {
-    $push: data
+    $addToSet: data
   })
   .then(result => res.json(result))
   .catch(next);
 });
 
 api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
-  //TODO
   db.task.update({
     _id: ObjectId(req.params.task_id)
   }, {
@@ -280,9 +278,7 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
       tag: ObjectId(req.params.tag_id)
     }
   })
-  .then(result => {
-    res.json(result);
-  })
+  .then(result => res.json(result))
   .catch(next);
 });
 

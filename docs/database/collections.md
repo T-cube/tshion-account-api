@@ -462,6 +462,20 @@ approval.item
 }
 ```
 
+approval.user
+
+用户对应flow
+
+```javascript
+{
+  _id: <ObjectId>,
+  map: [{
+    company_id: <ObjectId>,
+    flow_id: <ObjectId>
+  }]
+}
+```
+
 approval.flow
 
 审批流程
@@ -469,7 +483,6 @@ approval.flow
 ```javascript
 {
   _id: <ObjectId>, // user_id
-  company_id: <ObjectId>, // company_id
   apply: [<ObjectId>...],
   copy_to: [<ObjectId>...],
   approve: [{
