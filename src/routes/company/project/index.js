@@ -75,23 +75,6 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/tag', (req, res, next) => {
-  let data = req.body;
-  sanitizeValidateObject(tagSanitization, tagValidation, data);
-  data.company_id = req.company._id;
-  db.project.tags.count({
-    name: data.name
-  })
-  .then(count => {
-    if (count != 0) {
-      throw new ApiError(400, null, 'tag is already exists');
-    }
-    return db.project.tags.insert(data);
-  })
-  .then(doc => res.json(doc))
-  .catch(next);
-})
-
 api.get('/:_project_id', (req, res, next) => {
   let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
@@ -389,24 +372,39 @@ api.put('/:project_id/archived',  (req, res, next) => {
 
 api.post('/:project_id/tag',  (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
-  let tag_id = req.body._id && ObjectId(req.body._id);
-  db.project.tags.count({
-    _id: tag_id,
-    company_id: req.company._id
+  let data = req.body;
+  sanitizeValidateObject(tagSanitization, tagValidation, data);
+  db.project.count({
+    _id: project_id,
+    'tags.name': data.name
   })
   .then(count => {
-    if (!count) {
-      throw new ApiError(400, null, 'tag is not exists');
+    if (count != 0) {
+      throw new ApiError(400, null, 'tag is already exists');
     }
+    data._id = ObjectId();
     return db.project.update({
       _id: project_id
     }, {
-      $addToSet: {
-        tags: tag_id
+      $push: {
+        tags: data
       }
-    })
+    });
   })
-  .then(doc => res.json(doc))
+  .then(() => res.json({
+    _id: data._id
+  }))
+  .catch(next);
+});
+
+api.get('/:project_id/tag',  (req, res, next) => {
+  let project_id = ObjectId(req.params.project_id);
+  db.project.findOne({
+    _id: project_id
+  }, {
+    tags: 1
+  })
+  .then(doc => res.json(doc.tags))
   .catch(next);
 });
 
@@ -417,7 +415,11 @@ api.delete('/:project_id/tag/:tag_id',  (req, res, next) => {
     _id: project_id
   }, {
     $pull: {
-      tags: tag_id
+      tags: {
+        $elemMatch: {
+          _id: tag_id
+        }
+      }
     }
   })
   .then(doc => res.json(doc))

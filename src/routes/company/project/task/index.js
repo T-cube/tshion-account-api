@@ -267,10 +267,19 @@ api.put('/:task_id/date_due', updateField('date_due'), (req, res, next) => {
 
 api.post('/:task_id/tag', (req, res, next) => {
   let data = validField('tag', req);
-  db.task.update({
-    _id: ObjectId(req.params.task_id)
-  }, {
-    $addToSet: data
+  db.project.count({
+    _id: req.project_id,
+    'tags._id': data.tag
+  })
+  .then(count => {
+    if (!count) {
+      throw new ApiError(400, null, 'tag is not exists');
+    }
+    return db.task.update({
+      _id: ObjectId(req.params.task_id)
+    }, {
+      $addToSet: data
+    })
   })
   .then(result => res.json(result))
   .catch(next);
