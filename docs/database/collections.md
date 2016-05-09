@@ -482,7 +482,7 @@ approval.flow
 
 ```javascript
 {
-  _id: <ObjectId>, // user_id
+  _id: <ObjectId>,
   apply: [<ObjectId>...],
   copy_to: [<ObjectId>...],
   approve: [{
