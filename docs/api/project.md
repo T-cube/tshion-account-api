@@ -28,18 +28,6 @@ INPUT
 }
 ```
 
-### POST /project/tag
-
-添加项目标签
-
-INPUT
-```javascript
-{
-  name: <String>,
-  color: <String>
-}
-```
-
 ### PUT /project/:project_id
 
 更新项目信息
@@ -107,20 +95,35 @@ INPUT
   logo: <URL>,
 }
 ```
+
 ### POST /project/:project_id/tag
 
-添加标签
+添加项目标签
 
 INPUT
 ```javascript
 {
-  _id: <ObjectId>,
+  name: <String>,
+  color: <String>
 }
+```
+
+### GET /project/:project_id/tag
+
+获取项目标签列表
+
+INPUT
+```javascript
+[{
+  _id: <ObjectId>,
+  name: <String>,
+  color: <String>,
+}...]
 ```
 
 ### DELETE /project/:project_id/tag/:tag_id
 
-删除标签
+删除项目标签
 
 ### POST /project/:project_id/member
 

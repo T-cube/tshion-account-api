@@ -1,11 +1,11 @@
-export let structureSanitization = {
+export let nodeSanitization = {
 	name: { type: 'string' },
-	description: { type: 'string' }
+	description: { type: 'string', optional: true },
 };
 
-export let structureValidation = {
+export let nodeValidation = {
 	name: { type: 'string' },
-	description: { type: 'string' }
+	description: { type: 'string', optional: true },
 };
 
 export let memberSanitization = {
