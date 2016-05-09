@@ -5,11 +5,17 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { sanitization, validation, commentSanitization, commentValidation, logSanitization, logValidation } from './schema';
+import {
+  sanitization,
+  validation,
+  commentSanitization,
+  commentValidation,
+  logSanitization,
+  logValidation,
+} from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 
-/* company collection */
 let api = require('express').Router();
 export default api;
 
