@@ -14,12 +14,22 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
-  db.approval.template.find({
+  let condition = {
     company_id: req.company._id
+  };
+  let scope = req.query.scope;
+  scope = scope && ObjectId.isValid(scope)
+    ? ObjectId(scope)
+    : null;
+  scope && (condition.scope = scope);
+  db.approval.template.find(condition, {
+    name: 1,
+    description: 1,
+    scope: 1
   })
   .then(data => res.json(data || []))
   .catch(next);
-})
+});
 
 api.post('/', (req, res, next) => {
   let data = req.body;

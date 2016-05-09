@@ -20,6 +20,13 @@
 
 ### GET /approval/template
 
+QUERY
+```javascript
+{
+  scope: <ObjectId>, // 部门
+}
+```
+
 OUTPUT:
 ```javascript
 [
