@@ -159,7 +159,7 @@ INPUT:
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
-    status: <ENUM:pending,approve,reject,disable>,
+    status: <ENUM:processing,approved,rejected>,
     create_time: <Date>,
     log: <String> // 审批记录
   }...],
