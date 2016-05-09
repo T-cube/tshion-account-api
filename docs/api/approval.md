@@ -106,7 +106,9 @@ OUTPUT:
 }
 ```
 
-### PUT /approval/item/:template_id/status
+### PUT /approval/template/:template_id/status
+
+更新模板的状态
 
 INPUT:
 ```javascript
