@@ -356,7 +356,7 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:project_id/archived',  (req, res, next) => {
+api.put('/:project_id/archived', (req, res, next) => {
   let { archived } = req.body;
   archived = !!archived;
   db.project.update({
@@ -370,7 +370,7 @@ api.put('/:project_id/archived',  (req, res, next) => {
   .catch(next);
 });
 
-api.post('/:project_id/tag',  (req, res, next) => {
+api.post('/:project_id/tag', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   let data = req.body;
   sanitizeValidateObject(tagSanitization, tagValidation, data);
@@ -397,7 +397,7 @@ api.post('/:project_id/tag',  (req, res, next) => {
   .catch(next);
 });
 
-api.get('/:project_id/tag',  (req, res, next) => {
+api.get('/:project_id/tag', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   db.project.findOne({
     _id: project_id
@@ -408,7 +408,7 @@ api.get('/:project_id/tag',  (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/:project_id/tag/:tag_id',  (req, res, next) => {
+api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   let tag_id = ObjectId(req.params.tag_id);
   db.project.update({
@@ -416,9 +416,7 @@ api.delete('/:project_id/tag/:tag_id',  (req, res, next) => {
   }, {
     $pull: {
       tags: {
-        $elemMatch: {
           _id: tag_id
-        }
       }
     }
   })
