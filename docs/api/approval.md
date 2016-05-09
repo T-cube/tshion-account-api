@@ -1,4 +1,4 @@
-# API Apply
+# API Approval
 
 [返回目录](index.md)
 
@@ -132,7 +132,6 @@ INPUT:
 {
   _id: <ObjectId>,
   template_id: <ObjectId>,
-  from: <ObjectId>,
   department: <ObjectId>,
   content: <String>,
   forms: [{
