@@ -78,12 +78,13 @@ api.post('/', (req, res, next) => {
 api.post('/tag', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(tagSanitization, tagValidation, data);
+  data.company_id = req.company._id;
   db.project.tags.count({
     name: data.name
   })
   .then(count => {
     if (count != 0) {
-      throw new ApiError(400, null, 'tag is already existed');
+      throw new ApiError(400, null, 'tag is already exists');
     }
     return db.project.tags.insert(data);
   })
@@ -388,13 +389,22 @@ api.put('/:project_id/archived',  (req, res, next) => {
 
 api.post('/:project_id/tag',  (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
-  let data = req.body;
-  db.project.update({
-    _id: project_id
-  }, {
-    $addToSet: {
-      tags: ObjectId(data._id)
+  let tag_id = req.body._id && ObjectId(req.body._id);
+  db.project.tags.count({
+    _id: tag_id,
+    company_id: req.company._id
+  })
+  .then(count => {
+    if (!count) {
+      throw new ApiError(400, null, 'tag is not exists');
     }
+    return db.project.update({
+      _id: project_id
+    }, {
+      $addToSet: {
+        tags: tag_id
+      }
+    })
   })
   .then(doc => res.json(doc))
   .catch(next);

@@ -28,7 +28,7 @@ INPUT
 }
 ```
 
-### POST /project/tags
+### POST /project/tag
 
 添加项目标签
 
