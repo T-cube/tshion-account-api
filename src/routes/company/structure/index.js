@@ -6,8 +6,8 @@ import { ApiError } from 'lib/error';
 import Structure from 'models/structure';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
-  structureSanitization,
-  structureValidation,
+  nodeSanitization,
+  nodeValidation,
   memberSanitization,
   memberValidation
 } from './schema';
@@ -47,7 +47,7 @@ api.post('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
-  sanitizeValidateObject(structureSanitization, structureValidation, data);
+  sanitizeValidateObject(nodeSanitization, nodeValidation, data);
   let node = tree.addNode(data, node_id);
   if (!node) {
     return next(new ApiError(404, null, 'node not exists'));
@@ -85,7 +85,6 @@ api.post('/:node_id/position', (req, res, next) => {
   let data = req.body;
   let node_id = req.params.node_id;
   let position = tree.addPosition(data.title, node_id);
-  console.log(position);
   if (position) {
     save(req)
     .then(doc => res.json(position))
