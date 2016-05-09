@@ -71,7 +71,9 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
     let data = fetchAnnouncementData(req);
     return db.announcement.update({
       _id: announcement_id
-    }, data)
+    }, {
+      $set: data
+    })
     .then(doc => res.json(doc))
   })
   .catch(next);
