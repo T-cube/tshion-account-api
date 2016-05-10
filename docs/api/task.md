@@ -254,9 +254,7 @@ OUTPUT
 
 ```javascript
 {
-  ObjectId: <ObjectId>,
   content: <String>,
-  time_add: <Date>
 }
 ```
 
