@@ -116,7 +116,8 @@ api.put('/:project_id', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(projectSanitization, projectValidation, data);
   db.project.update({
-    _id: ObjectId(req.params.project_id)
+    _id: ObjectId(req.params.project_id),
+    company_id: req.company._id,
   }, {
     $set: data
   })
@@ -126,7 +127,14 @@ api.put('/:project_id', (req, res, next) => {
 
 api.delete('/:_project_id', authCheck(), (req, res, next) => {
   let project_id = ObjectId(req.params._project_id);
-  db.project.findOne({_id: project_id}, {members: 1, _id: 0, owner: 1})
+  db.project.findOne({
+    _id: project_id,
+    company_id: req.company._id,
+  }, {
+    members: 1,
+    _id: 0,
+    owner: 1
+  })
   .then(data => {
     if (!data) {
       throw new ApiError(400);
@@ -167,7 +175,8 @@ api.put('/:project_id/logo', upload({type: 'avatar'}).single('logo'),
     logo: req.file.url
   };
   db.project.update({
-    _id: req.project_id
+    _id: req.project_id,
+    company_id: req.company._id,
   }, {
     $set: data
   })
@@ -178,7 +187,8 @@ api.put('/:project_id/logo', upload({type: 'avatar'}).single('logo'),
 api.get('/:project_id/member', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   db.project.findOne({
-    _id: project_id
+    _id: project_id,
+    company_id: req.company._id,
   }, {
     members: 1,
     _id: 0
@@ -315,7 +325,8 @@ api.delete('/:_project_id/member/:member_id', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
   let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
-    _id: project_id
+    _id: project_id,
+    company_id: req.company._id,
   }, {
     members: 1
   })
@@ -360,7 +371,8 @@ api.put('/:project_id/archived', (req, res, next) => {
   let { archived } = req.body;
   archived = !!archived;
   db.project.update({
-    _id: ObjectId(req.params.project_id)
+    _id: ObjectId(req.params.project_id),
+    company_id: req.company._id,
   }, {
     $set: {
       is_archived: archived
@@ -376,6 +388,7 @@ api.post('/:project_id/tag', (req, res, next) => {
   sanitizeValidateObject(tagSanitization, tagValidation, data);
   db.project.count({
     _id: project_id,
+    company_id: req.company._id,
     'tags.name': data.name
   })
   .then(count => {
@@ -384,7 +397,8 @@ api.post('/:project_id/tag', (req, res, next) => {
     }
     data._id = ObjectId();
     return db.project.update({
-      _id: project_id
+      _id: project_id,
+      company_id: req.company._id,
     }, {
       $push: {
         tags: data
@@ -400,7 +414,8 @@ api.post('/:project_id/tag', (req, res, next) => {
 api.get('/:project_id/tag', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   db.project.findOne({
-    _id: project_id
+    _id: project_id,
+    company_id: req.company._id,
   }, {
     tags: 1
   })
@@ -412,7 +427,8 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   let tag_id = ObjectId(req.params.tag_id);
   db.project.update({
-    _id: project_id
+    _id: project_id,
+    company_id: req.company._id,
   }, {
     $pull: {
       tags: {
@@ -422,6 +438,107 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
   })
   .then(doc => res.json(doc))
   .catch(next);
+});
+
+api.post('/:project_id/file',
+  upload({type: 'attachment'}).single('document'),
+  (req, res, next) => {
+    let data = req.body;
+    let project_id = ObjectId(req.params.project_id);
+    sanitizeValidateObject(fileSanitization, fileValidation, data);
+    _.extend(data, {
+      project_id: project_id,
+      author: req.user._id,
+      date_update: new Date(),
+      date_create: new Date(),
+    });
+    if (req.file) {
+      _.extend(data, {
+        mimetype: req.file.mimetype,
+        path: req.file.path,
+      });
+    }
+    db.document.file.insert(data)
+    .then(doc => {
+      res.json(doc);
+      return db.project.update({
+        _id: project_id,
+        company_id: req.company._id,
+      }, {
+        $push: {
+          files: doc._id
+        }
+      })
+    })
+    .catch(next);
+});
+
+api.get('/:project_id/file', (req, res, next) => {
+  let project_id = ObjectId(req.params.project_id);
+  db.project.findOne({
+    _id: project_id,
+    company_id: req.company._id,
+  }, {
+    files: 1
+  })
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404);
+    }
+    if (!doc.files || !doc.files.length) {
+      return res.json([]);
+    }
+    return db.document.file.find({
+      _id: {
+        $in: doc.files
+      }
+    }, {
+      title: 1,
+      description: 1,
+      author: 1,
+      author: 1,
+      date_update: 1,
+    })
+    .then(files => res.json(files))
+  })
+  .catch(next);
+});
+
+api.get('/:project_id/file/:file_id/download', (req, res, next) => {
+  let project_id = ObjectId(req.params.project_id);
+  let file_id = ObjectId(req.params.file_id);
+  db.document.file.findOne({
+    _id: file_id,
+    project_idproject_id: project_id,
+  })
+  .then(file => {
+    if (!file) {
+      throw new ApiError(404);
+    }
+    download(file.path); // TODO
+  })
+  .catch(next)
+});
+
+api.delete('/:project_id/file/:file_id', (req, res, next) => {
+  let project_id = ObjectId(req.params.project_id);
+  let file_id = ObjectId(req.params.file_id);
+  db.project.update({
+    _id: project_id,
+    company_id: req.company._id,
+  }, {
+    $pull: {
+      files: file_id
+    }
+  })
+  .then(doc => {
+    return db.document.file.remove({
+      _id: file_id,
+      project_id: project_id,
+    })
+  })
+  .then(() => res.json({}))
+  .catch(next)
 });
 
 function isMemberOfProject(user_id, project_id) {

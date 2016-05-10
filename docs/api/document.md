@@ -18,7 +18,7 @@
 
 文档目录
 
-### POST /
+### POST /document
 
 添加目录
 
@@ -92,6 +92,7 @@ OUTPUT:
   description: <String>,
   author: <String>,
   date_update: <Date>,
+  mimetype: <String>,
   path: <String>,
 }
 ```
@@ -111,6 +112,15 @@ OUTPUT:
   date_update: <Date>,
   path: <String>,
 }
+```
+
+### GET /document/:dir_id/file/:file_id/download
+
+下载文档
+
+OUTPUT:
+```javascript
+<File>
 ```
 
 ### DELETE /document/:dir_id/file/:file_id

@@ -12,12 +12,12 @@ export let dirValidation = {
 
 export let fileSanitization = {
 	title: {  type: 'string' },
-	description: {  type: 'string' },
-	content: {  type: 'string' },
+	description: {  type: 'string', optional: true },
+	content: {  type: 'string', optional: true },
 };
 
 export let fileValidation = {
 	title: {  type: 'string', minLength: 1 },
-	description: {  type: 'string' },
-	content: {  type: 'string' },
+	description: {  type: 'string', optional: true },
+	content: {  type: 'string', optional: true },
 };

@@ -152,7 +152,7 @@ api.get('/:dir_id/file', (req, res, next) => {
       throw new ApiError(404);
     }
     if (!doc.files || !doc.files.length) {
-      res.json([]);
+      return res.json([]);
     }
     return db.document.file.find({
       _id: {
@@ -165,8 +165,8 @@ api.get('/:dir_id/file', (req, res, next) => {
       author: 1,
       date_update: 1,
     })
+    .then(files => res.json(files))
   })
-  .then(files => res.json(files))
   .catch(next);
 });
 
@@ -186,6 +186,22 @@ api.get('/:dir_id/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
+api.get('/:dir_id/file/:file_id/download', (req, res, next) => {
+  let dir_id = ObjectId(req.params.dir_id);
+  let file_id = ObjectId(req.params.file_id);
+  db.document.file.findOne({
+    _id: file_id,
+    dir_id: dir_id,
+  })
+  .then(file => {
+    if (!file) {
+      throw new ApiError(404);
+    }
+    download(file.path); // TODO
+  })
+  .catch(next)
+});
+
 api.post('/:dir_id/file',
   upload({type: 'attachment'}).single('document'),
   (req, res, next) => {
@@ -197,11 +213,28 @@ api.post('/:dir_id/file',
     author: req.user._id,
     date_update: new Date(),
     date_create: new Date(),
-    mimetype: req.file.mimetype,
-    path: req.file.path,
+  });
+  if (req.file) {
+    _.extend(data, {
+      mimetype: req.file.mimetype,
+      path: req.file.path,
+    });
+  }
+  checkDir(dir_id, req.company._id)
+  .then(() => {
+    return db.document.file.insert(data)
+    .then(doc => {
+      res.json(doc);
+      return db.document.dir.update({
+        _id: dir_id,
+        company_id: req.company._id,
+      }, {
+        $push: {
+          files: doc._id
+        }
+      })
+    })
   })
-  db.document.file.insert(data)
-  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -243,6 +276,7 @@ api.delete('/:dir_id/file/:file_id', (req, res, next) => {
     }
   })
   .then(doc => {
+    // TODO remove file 
     return db.document.file.remove({
       _id: file_id,
       dir_id: dir_id,
@@ -251,3 +285,15 @@ api.delete('/:dir_id/file/:file_id', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next)
 });
+
+function checkDir(dir_id, company_id) {
+  return db.document.dir.count({
+    _id: dir_id,
+    company_id: company_id,
+  })
+  .then(count => {
+    if (!count) {
+      throw new ApiError(404);
+    }
+  })
+}
