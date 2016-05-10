@@ -51,7 +51,7 @@ api.get('/', (req, res, next) => {
   if (keyword) {
     condition['$text'] = { $search: keyword }
   }
-  let sortBy = { status: -1 };
+  let sortBy = { status: -1, date_update: 1 };
   if (_.contains(['date_create','date_update','priority'], sort)) {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order }
@@ -61,7 +61,7 @@ api.get('/', (req, res, next) => {
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, id => id.equals(req.user._id));
     });
-    return res.json(list)
+    return res.json(list);
   })
   .catch(next);
 })
@@ -76,6 +76,7 @@ api.post('/', (req, res, next) => {
     company_id: req.company._id,
     project_id: req.project_id,
     date_create: new Date(),
+    date_update: new Date(),
     subtask: []
   });
   db.task.insert(data)

@@ -276,7 +276,7 @@ api.delete('/:dir_id/file/:file_id', (req, res, next) => {
     }
   })
   .then(doc => {
-    // TODO remove file 
+    // TODO remove file
     return db.document.file.remove({
       _id: file_id,
       dir_id: dir_id,

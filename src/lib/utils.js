@@ -112,3 +112,55 @@ export function indexObjectId(list, id) {
   }
   return index;
 }
+
+export function fetchUserInfo(data) {
+  let args = [].slice.call(arguments);
+  args.shift();
+  let promiseLine = [];
+  _.forEach(args, pos => {
+    let promise = findUserPosition(data, [], pos);
+    if (_.isArray(promise)) {
+      promiseLine = promiseLine.concat(promise);
+    } else {
+      promiseLine.push(promise);
+    }
+  });
+  return Promise.all(promiseLine);
+}
+
+function findUserPosition(data, k, pos) {
+  if (k.length == 0 || (pos && !/^\.\./.test(pos))) {
+    let match = pos.match(/^\w+/);
+    if (!match) {
+      return;
+    }
+    k.push(match[0]);
+    pos = pos.replace(/^\w+/, '');
+  }
+  let dataAccess = 'data["' + k.join('"]["') + '"]';
+  if (pos) {
+    if (/^\.\./.test(pos)) {
+      let val = eval(dataAccess);
+      if (_.isArray(val)) {
+        pos = pos.substr(2);
+        let temp = [];
+        for (var i in val) {
+          k.push(i);
+          temp.push(findUserPosition(data, k, pos));
+        }
+        return temp;
+      }
+    } else {
+      return findUserPosition(data, k, pos);
+    }
+  }
+  return db.user.findOne({
+    _id: eval(dataAccess)
+  }, {
+    name: 1,
+    avatar: 1,
+  })
+  .then(info => {
+    eval(dataAccess + '=' + JSON.stringify(info));
+  })
+}

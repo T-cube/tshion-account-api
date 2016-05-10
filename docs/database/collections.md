@@ -143,6 +143,7 @@
     title: <String>,                // 成员岗位
   }...],                            // 项目成员列表
   tags: [<objectId>...],            // 项目标签
+  files: [<objectId>...],           // 项目文件
   date_create: <Date>,              // 创建时间
 }
 ```
@@ -196,12 +197,31 @@
   _id: <ObjectId>,
   project_id: <ObjectId>,         // 关联项目
   tags: [<ObjectId>...],          // 关联标签
+  creator: <ObjectId>,
   title: <String>,
   content: <String>,
-  date_create: <Date>,
+  followers: [<ObjectId>...],
+  comments: [<ObjectId>...],
   date_update: <Date>,
+  date_create: <Date>
 }
 ```
+
+### discussion.comments
+
+项目评论
+
+```javascript
+{
+  _id: <ObjectId>,
+  discussion_id: <ObjectId>,      // 关联讨论
+  creator: <ObjectId>,            // 作者
+  to: <ObjectId>,                 // @
+  content: <String>,              // 提交时分析其中的“@”功能，并发送通知
+  likes: <Int>,                   // 喜欢
+  date_create: <Date>,            // 创建时间
+}    
+```    
 
 ### tags
 
@@ -215,21 +235,6 @@
   color: <String>,                // 标签颜色
 }
 ```
-
-### discussion.comments
-
-项目评论
-
-```javascript
-{
-  _id: <ObjectId>,
-  task_id: <ObjectId>,            // 关联讨论
-  creator: <ObjectId>,            // 作者
-  content: <String>,              // 提交时分析其中的“@”功能，并发送通知
-  likes: <Int>,                   // 喜欢
-  date_create: <Date>,            // 创建时间
-}    
-```    
 
 ### project.task
 
@@ -491,6 +496,8 @@ approval.flow
   }...]
 }
 ```
+
+### document
 
 document.dir
 

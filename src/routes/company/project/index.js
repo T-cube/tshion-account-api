@@ -16,6 +16,7 @@ import {
 } from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck, authCheck } from 'lib/middleware';
+import { fetchUserInfo } from 'lib/utils';
 
 /* company collection */
 let api = require('express').Router();
@@ -30,6 +31,10 @@ api.use((req, res, next) => {
 api.get('/', (req, res, next) => {
   db.project.find({
     company_id: req.company._id,
+  }, {
+    name: 1,
+    description: 1,
+    logo: 1,
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -89,10 +94,11 @@ api.get('/:_project_id', (req, res, next) => {
    data.is_owner = owner.equals(req.user._id);
    let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
    data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
-   data.owner = _.find(req.company.members, member => {
-     return member._id.equals(owner);
-   });
-   res.json(data);
+  //  data.owner = _.find(req.company.members, member => {
+  //    return member._id.equals(owner);
+  //  });
+  return fetchUserInfo(data, 'owner', 'members.._id').then(() => {
+    res.json(data)});
  })
  .catch(next);
 });
@@ -509,7 +515,7 @@ api.get('/:project_id/file/:file_id/download', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
     _id: file_id,
-    project_idproject_id: project_id,
+    project_id: project_id,
   })
   .then(file => {
     if (!file) {
@@ -581,3 +587,4 @@ function isAdminOfProject(user_id, project_id) {
 }
 
 api.use('/:project_id/task', require('./task').default);
+api.use('/:project_id/discussion', require('./discussion').default);
