@@ -103,7 +103,7 @@ export let itemSanitization = {
   files: {
     type: 'array',
     items: {
-      type: 'string'
+      $objectId: 1
     }
   },
   forms: {
@@ -125,7 +125,7 @@ export let itemValidation = {
   files: {
     type: 'array',
     items: {
-      type: 'string'
+      $objectId: 1
     }
   },
   forms: {

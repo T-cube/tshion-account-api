@@ -15,6 +15,8 @@ export function database() {
     'approval.item',
     'auth_check_token',
     'company',
+    'document.dir',
+    'document.file',
     'oauth.clients',
     'oauth.accesstoken',
     'oauth.refreshtoken',
@@ -25,5 +27,6 @@ export function database() {
     'task.comments',
     'task.log',
     'user',
+    'wiki',
   ]);
 }

@@ -447,7 +447,7 @@ approval.item
   status: <ENUM:processing|approved|rejected|revoked>,
   step: <ObjectId>,
   content: <String>,
-  files: [<String>...], // 附件
+  files: [<ObjectId>...], // 附件
   steps: [{
     _id: <ObjectId>,
     approver: <ObjectId>,
@@ -489,5 +489,37 @@ approval.flow
     _id: <ObjectId>, // approval item id
     step: <ObjectId>
   }...]
+}
+```
+
+document.dir
+
+```javascript
+{
+  _id: <ObjectId>,
+  company_id: <ObjectId>,
+  name: <String>,
+  parent_dir: <ObjectId>,
+  children: [ObjectId...],
+  files: [ObjectId...],
+}
+```
+
+document.file
+
+文档
+
+```javascript
+{
+  _id: <ObjectId>,
+  dir_id: <ObjectId>,
+  title: <String>,
+  description: <String>,
+  content: <String>,
+  mimetype: <String>,
+  author: <ObjectId>,
+  date_update: <Date>,
+  date_create: <Date>,
+  path: <String>,
 }
 ```

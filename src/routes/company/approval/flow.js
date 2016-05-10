@@ -21,7 +21,7 @@ api.get('/approve', (req, res, next) => {
     _id: user_id,
     'map.company_id': company_id
   }, {
-    'map.$': 1
+    'map.$.flow_id': 1
   })
   .then(mapData => {
     let flow_id = mapData ? mapData.map[0].flow_id : null;
