@@ -258,6 +258,10 @@ OUTPUT
 }
 ```
 
+### DELETE /task/{task_id}/comment/:comment_id
+
+删除评论
+
 ### GET /task/{taks_id}/log
 
 获取任务日志
