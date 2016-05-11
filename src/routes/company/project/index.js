@@ -85,22 +85,21 @@ api.get('/:_project_id', (req, res, next) => {
   db.project.findOne({
    company_id: req.company._id,
    _id: project_id
- })
- .then(data => {
-   if (!data) {
-     throw new ApiError(404);
-   }
-   let owner = data.owner;
-   data.is_owner = owner.equals(req.user._id);
-   let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
-   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
-  //  data.owner = _.find(req.company.members, member => {
-  //    return member._id.equals(owner);
-  //  });
-  return fetchUserInfo(data, 'owner', 'members._id').then(() => {
-    res.json(data)});
   })
- .catch(next);
+  .then(data => {
+    if (!data) {
+      throw new ApiError(404);
+    }
+    let owner = data.owner;
+    data.is_owner = owner.equals(req.user._id);
+    let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
+    data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
+    data.owner = _.find(req.company.members, member => {
+      return member._id.equals(owner);
+    });
+    res.json(data);
+  })
+  .catch(next);
 });
 
 api.param('project_id', (req, res, next, id) => {

@@ -130,35 +130,38 @@ export function fetchUserInfo(data) {
 }
 
 function findUserPosition(data, k, pos) {
-  let posList = [];
-  k = k || [];
-  pos = pos.replace(/^\.+/, '');
-  if (pos) {
-    posList = pos.split('.');
-    k.push(posList.shift());
-  }
-  let dataAccess = k.length ? 'data["' + k.join('"]["') + '"]' : 'data';
-  let val = eval(dataAccess);
-  if (pos || _.isArray(val)) {
-    let newPos = posList.join('.');
-    if (_.isArray(val)) {
-      let tempPromise = [];
-      for (var i in val) {
-        k.push(i);
-        tempPromise.push(findUserPosition(data, k, newPos));
-      }
-      return tempPromise;
-    } else {
-      return findUserPosition(data, k, newPos);
+  try {
+    let posList = [];
+    k = k || [];
+    pos = pos.replace(/^\.+/, '');
+    if (pos) {
+      posList = pos.split('.');
+      k.push(posList.shift());
     }
+    let newPos = posList.join('.');
+    let dataAccess = k.length ? 'data["' + k.join('"]["') + '"]' : 'data';
+    let val = eval(dataAccess);
+    if (newPos || _.isArray(val)) {
+      if (_.isArray(val)) {
+        let tempPromise = [];
+        for (var i in val) {
+          tempPromise.push(findUserPosition(data, k.concat(i), newPos));
+        }
+        return tempPromise;
+      } else {
+        return findUserPosition(data, k, newPos);
+      }
+    }
+    return db.user.findOne({
+      _id: val
+    }, {
+      name: 1,
+      avatar: 1,
+    })
+    .then(info => {
+      eval(dataAccess + '=' + JSON.stringify(info));
+    })
+  } catch(e) {
+    return Promise.reject(e);
   }
-  return db.user.findOne({
-    _id: eval(dataAccess)
-  }, {
-    name: 1,
-    avatar: 1,
-  })
-  .then(info => {
-    eval(dataAccess + '=' + JSON.stringify(info));
-  })
 }
