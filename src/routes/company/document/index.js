@@ -21,12 +21,16 @@ api.use(oauthCheck());
 
 let posKey = null;
 let posVal = null;
-let uploader = null;
+let uploader = () => () => {};
 
 api.use((req, res, next) => {
   posKey = req.project_id ? 'project_id' : 'company_id';
   posVal = req.project_id || req.company._id;
-  posKey = req.project_id ? upload({type: 'attachment'}).single('document') : upload({type: 'attachment'}).array('document');
+  uploader = () => {
+    return req.project_id
+      ? upload({type: 'attachment'}).single('document')
+      : upload({type: 'attachment'}).array('document');
+  };
   next();
 });
 
@@ -229,7 +233,7 @@ api.get('/:dir_id/file/:file_id/download', (req, res, next) => {
 });
 
 api.post('/:dir_id/file',
-  uploader,
+  uploader(),
   (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
   let data = req.body;
