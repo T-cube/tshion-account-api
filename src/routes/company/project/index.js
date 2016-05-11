@@ -97,9 +97,9 @@ api.get('/:_project_id', (req, res, next) => {
   //  data.owner = _.find(req.company.members, member => {
   //    return member._id.equals(owner);
   //  });
-  return fetchUserInfo(data, 'owner', 'members.._id').then(() => {
+  return fetchUserInfo(data, 'owner', 'members._id').then(() => {
     res.json(data)});
- })
+  })
  .catch(next);
 });
 
