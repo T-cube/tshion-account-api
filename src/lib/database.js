@@ -17,6 +17,8 @@ export function database() {
     'company',
     'document.dir',
     'document.file',
+    'discussion',
+    'discussion.comment',
     'message',
     'oauth.clients',
     'oauth.accesstoken',

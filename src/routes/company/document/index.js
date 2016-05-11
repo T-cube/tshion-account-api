@@ -19,13 +19,24 @@ export default api;
 
 api.use(oauthCheck());
 
+let posKey = null;
+let posVal = null;
+let uploader = () => () => {};
+
 api.use((req, res, next) => {
+  posKey = req.project_id ? 'project_id' : 'company_id';
+  posVal = req.project_id || req.company._id;
+  uploader = () => {
+    return req.project_id
+      ? upload({type: 'attachment'}).single('document')
+      : upload({type: 'attachment'}).array('document');
+  };
   next();
 });
 
 api.get('/:dir_id?', (req, res, next) => {
   let condition = {
-    company_id: req.company._id
+    [posKey]: posVal
   };
   if (req.params.dir_id) {
     condition._id = ObjectId(req.params.dir_id);
@@ -62,7 +73,7 @@ api.get('/:dir_id?', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
-  data.company_id = req.company._id;
+  data[posKey] = posVal;
   db.document.dir.findOne({
     _id: data.parent_dir
   }, {
@@ -98,10 +109,10 @@ api.put('/:dir_id', (req, res, next) => {
   };
   let dir_id = ObjectId(req.params.dir_id);
   sanitizeValidateObject(_.pick(dirSanitization, 'name'), _.pick(dirValidation, 'name'), data);
-  data.company_id = req.company._id;
+  data[posKey] = posVal;
   db.document.dir.update({
     _id: dir_id,
-    company_id: req.company._id,
+    [posKey]: posVal,
   }, {
     $set: data
   })
@@ -113,7 +124,7 @@ api.delete('/:dir_id', (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
   db.document.dir.findOne({
     _id: dir_id,
-    company_id: req.company._id,
+    [posKey]: posVal,
   })
   .then(doc => {
     if (!doc) {
@@ -143,7 +154,7 @@ api.get('/:dir_id/file', (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
   db.document.dir.findOne({
     _id: dir_id,
-    company_id: req.company._id,
+    [posKey]: posVal,
   }, {
     files: 1
   })
@@ -186,6 +197,23 @@ api.get('/:dir_id/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
+api.get('/:dir_id/file/:file_id/download/:item_id', (req, res, next) => {
+  let dir_id = ObjectId(req.params.dir_id);
+  let file_id = ObjectId(req.params.file_id);
+  let item_id = ObjectId(req.params.item_id);
+  db.document.file.findOne({
+    _id: file_id,
+    dir_id: dir_id,
+  })
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404);
+    }
+    download(_.find(doc.files, file => file._id.equals(item_id)).path); // TODO
+  })
+  .catch(next)
+});
+
 api.get('/:dir_id/file/:file_id/download', (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
   let file_id = ObjectId(req.params.file_id);
@@ -193,17 +221,19 @@ api.get('/:dir_id/file/:file_id/download', (req, res, next) => {
     _id: file_id,
     dir_id: dir_id,
   })
-  .then(file => {
-    if (!file) {
+  .then(doc => {
+    if (!doc) {
       throw new ApiError(404);
     }
-    download(file.path); // TODO
+    if (doc.file) {
+      download(doc.file.path); // TODO
+    }
   })
   .catch(next)
 });
 
 api.post('/:dir_id/file',
-  upload({type: 'attachment'}).single('document'),
+  uploader(),
   (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
   let data = req.body;
@@ -214,10 +244,15 @@ api.post('/:dir_id/file',
     date_update: new Date(),
     date_create: new Date(),
   });
-  if (req.file) {
+  if (req.files) {
     _.extend(data, {
-      mimetype: req.file.mimetype,
-      path: req.file.path,
+      files: _.map(req.files, file => _.extend(_.pick(file, 'mimetype', 'path'), {
+        _id: ObjectId()
+      }))
+    });
+  } else if (req.file) {
+    _.extend(data, {
+      file: _.pick(req.file, 'mimetype', 'path')
     });
   }
   checkDir(dir_id, req.company._id)
@@ -227,7 +262,7 @@ api.post('/:dir_id/file',
       res.json(doc);
       return db.document.dir.update({
         _id: dir_id,
-        company_id: req.company._id,
+        [posKey]: posVal,
       }, {
         $push: {
           files: doc._id
@@ -238,9 +273,7 @@ api.post('/:dir_id/file',
   .catch(next);
 });
 
-api.put('/:dir_id/file/:file_id',
-  upload({type: 'attachment'}).single('document'),
-  (req, res, next) => {
+api.put('/:dir_id/file/:file_id', (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
   let file_id = ObjectId(req.params.file_id);
   let data = req.body;
@@ -248,12 +281,6 @@ api.put('/:dir_id/file/:file_id',
   _.extend(data, {
     date_update: new Date(),
   });
-  if (req.file) {
-    _.extend(data, {
-      mimetype: req.file.mimetype,
-      path: req.file.path,
-    });
-  }
   db.document.file.update({
     _id: file_id,
     dir_id: dir_id,
@@ -269,14 +296,14 @@ api.delete('/:dir_id/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.dir.update({
     _id: dir_id,
-    company_id: req.company._id,
+    [posKey]: posVal,
   }, {
     $pull: {
       files: file_id
     }
   })
   .then(doc => {
-    // TODO remove file
+    // TODO remove files
     return db.document.file.remove({
       _id: file_id,
       dir_id: dir_id,

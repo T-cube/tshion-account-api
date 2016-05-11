@@ -72,12 +72,12 @@ INPUT:
 
 INPUT:
 ```javascript
-{
+[{
   title: <String>,
   description: <String>,
   content: <String>,
-  document: <File>,
-}
+  document: [<File>...],
+}]
 ```
 
 ### GET /document/:dir_id/file
@@ -114,7 +114,7 @@ OUTPUT:
 }
 ```
 
-### GET /document/:dir_id/file/:file_id/download
+### GET /document/:dir_id/file/:file_id/download/:item_id
 
 下载文档
 
