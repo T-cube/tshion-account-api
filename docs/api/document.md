@@ -72,12 +72,12 @@ INPUT:
 
 INPUT:
 ```javascript
-{
+[{
   title: <String>,
   description: <String>,
   content: <String>,
   document: <File>,
-}
+}]
 ```
 
 ### GET /document/:dir_id/file
