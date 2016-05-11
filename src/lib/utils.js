@@ -4,6 +4,7 @@ import Promise from 'bluebird';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import fs from 'fs';
+import objectPath from 'object-path';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
@@ -139,8 +140,7 @@ function findUserPosition(data, k, pos) {
       k.push(posList.shift());
     }
     let newPos = posList.join('.');
-    let dataAccess = k.length ? 'data["' + k.join('"]["') + '"]' : 'data';
-    let val = eval(dataAccess);
+    let val = objectPath.get(data, k);
     if (newPos || _.isArray(val)) {
       if (_.isArray(val)) {
         let tempPromise = [];
@@ -159,7 +159,7 @@ function findUserPosition(data, k, pos) {
       avatar: 1,
     })
     .then(info => {
-      eval(dataAccess + '=' + JSON.stringify(info));
+      objectPath.set(data, k, info);
     })
   } catch(e) {
     return Promise.reject(e);
