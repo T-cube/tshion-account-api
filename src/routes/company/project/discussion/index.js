@@ -10,8 +10,11 @@ import {
   discussionValidation,
   commentSanitization,
   commentValidation,
+  followSanitization,
+  followValidation,
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
+import { fetchUserInfo } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
@@ -27,8 +30,12 @@ api.get('/', (req, res, next) => {
   if (type == 'follow') {
     condition.followers = req.user._id;
   }
-  return db.discussion.find(condition)
-  .then(discussion => res.json(discussion))
+  db.discussion.find(condition)
+  .then(doc => {
+    return fetchUserInfo(doc, 'followers').then(
+      () => res.json(doc)
+    );
+  })
   .catch(next);
 });
 
@@ -45,13 +52,6 @@ api.post('/', (req, res, next) => {
   db.discussion.insert(data)
   .then(doc => {
     res.json(doc);
-    // return db.project.update({
-    //   _id: project_id
-    // }, {
-    //   $push: {
-    //     discussion: doc._id
-    //   }
-    // })
   })
   .catch(next);
 });
@@ -67,8 +67,9 @@ api.get('/:discussion_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-
-    res.json(doc);
+    return fetchUserInfo(doc, 'followers').then(
+      () => res.json(doc)
+    );
   })
   .catch(next);
 });
@@ -80,33 +81,41 @@ api.delete('/:discussion_id', (req, res, next) => {
     _id: discussion_id,
     project_id: project_id,
   })
-  // .then(doc => {
-  //   return db.project.update({
-  //     _id: project_id
-  //   }, {
-  //     $pull: {
-  //       discussion: discussion_id
-  //     }
-  //   })
-  // })
   .then(() => res.json({}))
   .catch(next);
 });
 
-api.post('/discussion_id/follow', (req, res, next) => {
+api.post('/:discussion_id/follow', (req, res, next) => {
   let data = req.body;
   let project_id = req.project_id;
+  let discussion_id = ObjectId(req.params.discussion_id);
   sanitizeValidateObject(followSanitization, followValidation, data);
-  _.extend(data, {
-
-  });
-  db.discussion.update(data)
+  db.discussion.update({
+    _id: discussion_id,
+    project_id: project_id,
+  }, {
+    $addToSet: {
+      folloers: data._id
+    }
+  })
   .then(doc => res.json(doc))
   .catch(next);
 });
 
-api.delete('/discussion_id/follow', (req, res, next) => {
-
+api.delete('/:discussion_id/follow/:follower_id', (req, res, next) => {
+  let project_id = req.project_id;
+  let discussion_id = ObjectId(req.params.discussion_id);
+  let follower_id = ObjectId(req.params.follower_id);
+  db.discussion.update({
+    _id: discussion_id,
+    project_id: project_id,
+  }, {
+    $pull: {
+      folloers: follower_id
+    }
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.post('/:discussion_id/comment', (req, res, next) => {
@@ -153,7 +162,7 @@ api.get('/:discussion_id/comment', (req, res, next) => {
     .then(doc => res.json(doc))
   })
   .catch(next);
-})
+});
 
 api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
   let project_id = req.project_id;
@@ -174,4 +183,16 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
     .then(() => res.json({}))
   })
   .catch(next);
-})
+});
+
+function isMemberOfProject(user_id, project_id) {
+  return db.project.count({
+    _id: project_id,
+    'members._id': user_id
+  })
+  .then(count => {
+    if (count == 0) {
+      throw new ApiError(400, null, 'user is not one of the project member');
+    }
+  });
+}

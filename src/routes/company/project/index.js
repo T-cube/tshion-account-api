@@ -13,6 +13,8 @@ import {
   memberValidation,
   tagSanitization,
   tagValidation,
+  fileSanitization,
+  fileValidation,
 } from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck, authCheck } from 'lib/middleware';
@@ -83,8 +85,8 @@ api.post('/', (req, res, next) => {
 api.get('/:_project_id', (req, res, next) => {
   let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
-   company_id: req.company._id,
-   _id: project_id
+    company_id: req.company._id,
+    _id: project_id
   })
   .then(data => {
     if (!data) {
@@ -445,106 +447,106 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/:project_id/file',
-  upload({type: 'attachment'}).single('document'),
-  (req, res, next) => {
-    let data = req.body;
-    let project_id = ObjectId(req.params.project_id);
-    sanitizeValidateObject(fileSanitization, fileValidation, data);
-    _.extend(data, {
-      project_id: project_id,
-      author: req.user._id,
-      date_update: new Date(),
-      date_create: new Date(),
-    });
-    if (req.file) {
-      _.extend(data, {
-        mimetype: req.file.mimetype,
-        path: req.file.path,
-      });
-    }
-    db.document.file.insert(data)
-    .then(doc => {
-      res.json(doc);
-      return db.project.update({
-        _id: project_id,
-        company_id: req.company._id,
-      }, {
-        $push: {
-          files: doc._id
-        }
-      })
-    })
-    .catch(next);
-});
-
-api.get('/:project_id/file', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
-  db.project.findOne({
-    _id: project_id,
-    company_id: req.company._id,
-  }, {
-    files: 1
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
-    }
-    if (!doc.files || !doc.files.length) {
-      return res.json([]);
-    }
-    return db.document.file.find({
-      _id: {
-        $in: doc.files
-      }
-    }, {
-      title: 1,
-      description: 1,
-      author: 1,
-      author: 1,
-      date_update: 1,
-    })
-    .then(files => res.json(files))
-  })
-  .catch(next);
-});
-
-api.get('/:project_id/file/:file_id/download', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
-  let file_id = ObjectId(req.params.file_id);
-  db.document.file.findOne({
-    _id: file_id,
-    project_id: project_id,
-  })
-  .then(file => {
-    if (!file) {
-      throw new ApiError(404);
-    }
-    download(file.path); // TODO
-  })
-  .catch(next)
-});
-
-api.delete('/:project_id/file/:file_id', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
-  let file_id = ObjectId(req.params.file_id);
-  db.project.update({
-    _id: project_id,
-    company_id: req.company._id,
-  }, {
-    $pull: {
-      files: file_id
-    }
-  })
-  .then(doc => {
-    return db.document.file.remove({
-      _id: file_id,
-      project_id: project_id,
-    })
-  })
-  .then(() => res.json({}))
-  .catch(next)
-});
+// api.post('/:project_id/file',
+//   upload({type: 'attachment'}).single('document'),
+//   (req, res, next) => {
+//     let data = req.body;
+//     let project_id = ObjectId(req.params.project_id);
+//     sanitizeValidateObject(fileSanitization, fileValidation, data);
+//     _.extend(data, {
+//       project_id: project_id,
+//       author: req.user._id,
+//       date_update: new Date(),
+//       date_create: new Date(),
+//     });
+//     if (req.file) {
+//       _.extend(data, {
+//         mimetype: req.file.mimetype,
+//         path: req.file.path,
+//       });
+//     }
+//     db.document.file.insert(data)
+//     .then(doc => {
+//       res.json(doc);
+//       return db.project.update({
+//         _id: project_id,
+//         company_id: req.company._id,
+//       }, {
+//         $push: {
+//           files: doc._id
+//         }
+//       })
+//     })
+//     .catch(next);
+// });
+//
+// api.get('/:project_id/file', (req, res, next) => {
+//   let project_id = ObjectId(req.params.project_id);
+//   db.project.findOne({
+//     _id: project_id,
+//     company_id: req.company._id,
+//   }, {
+//     files: 1
+//   })
+//   .then(doc => {
+//     if (!doc) {
+//       throw new ApiError(404);
+//     }
+//     if (!doc.files || !doc.files.length) {
+//       return res.json([]);
+//     }
+//     return db.document.file.find({
+//       _id: {
+//         $in: doc.files
+//       }
+//     }, {
+//       title: 1,
+//       description: 1,
+//       author: 1,
+//       author: 1,
+//       date_update: 1,
+//     })
+//     .then(files => res.json(files))
+//   })
+//   .catch(next);
+// });
+//
+// api.get('/:project_id/file/:file_id/download', (req, res, next) => {
+//   let project_id = ObjectId(req.params.project_id);
+//   let file_id = ObjectId(req.params.file_id);
+//   db.document.file.findOne({
+//     _id: file_id,
+//     project_id: project_id,
+//   })
+//   .then(file => {
+//     if (!file) {
+//       throw new ApiError(404);
+//     }
+//     download(file.path); // TODO
+//   })
+//   .catch(next)
+// });
+//
+// api.delete('/:project_id/file/:file_id', (req, res, next) => {
+//   let project_id = ObjectId(req.params.project_id);
+//   let file_id = ObjectId(req.params.file_id);
+//   db.project.update({
+//     _id: project_id,
+//     company_id: req.company._id,
+//   }, {
+//     $pull: {
+//       files: file_id
+//     }
+//   })
+//   .then(doc => {
+//     return db.document.file.remove({
+//       _id: file_id,
+//       project_id: project_id,
+//     })
+//   })
+//   .then(() => res.json({}))
+//   .catch(next)
+// });
 
 function isMemberOfProject(user_id, project_id) {
   return db.project.count({
@@ -587,3 +589,4 @@ function isAdminOfProject(user_id, project_id) {
 
 api.use('/:project_id/task', require('./task').default);
 api.use('/:project_id/discussion', require('./discussion').default);
+api.use('/:project_id/document', require('../document').default);

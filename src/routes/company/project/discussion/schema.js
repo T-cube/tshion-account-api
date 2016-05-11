@@ -20,3 +20,11 @@ export let commentValidation = {
   to: { $objectId: 1 },
   content: { type: 'string' },
 }
+
+export let followSanitization = {
+  _id: { $objectId: 1 },
+}
+
+export let followValidation = {
+  _id: { $objectId: 1 },
+}

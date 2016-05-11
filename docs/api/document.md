@@ -76,7 +76,7 @@ INPUT:
   title: <String>,
   description: <String>,
   content: <String>,
-  document: <File>,
+  document: [<File>...],
 }]
 ```
 
@@ -114,7 +114,7 @@ OUTPUT:
 }
 ```
 
-### GET /document/:dir_id/file/:file_id/download
+### GET /document/:dir_id/file/:file_id/download/:item_id
 
 下载文档
 

@@ -117,41 +117,41 @@ export function indexObjectId(list, id) {
 export function fetchUserInfo(data) {
   let args = [].slice.call(arguments);
   args.shift();
-  let promiseLine = [];
   args = args.length ? args : [''];
+  let promiseLine = [];
   _.forEach(args, pos => {
-    let promise = findUserPosition(data, [], pos);
-    if (_.isArray(promise)) {
-      promiseLine = promiseLine.concat(promise);
-    } else {
-      promiseLine.push(promise);
-    }
+    let promise = _fetchUserInfo(data, [], pos);
+    promiseLine = promiseLine.concat(promise);
   });
   return Promise.all(promiseLine);
 }
 
-function findUserPosition(data, k, pos) {
+function _fetchUserInfo(data, k, pos) {
   try {
-    let posList = [];
     k = k || [];
     pos = pos.replace(/^\.+/, '');
-    if (pos) {
-      posList = pos.split('.');
+    let posList = pos.split('.');
+    if (pos && !(!k.length && _.isArray(data))) {
       k.push(posList.shift());
     }
     let newPos = posList.join('.');
     let val = objectPath.get(data, k);
+    let dataAccess = k.length ? 'data["' + k.join('"]["') + '"]' : 'data';
     if (newPos || _.isArray(val)) {
       if (_.isArray(val)) {
         let tempPromise = [];
         for (var i in val) {
-          tempPromise.push(findUserPosition(data, k.concat(i), newPos));
+          tempPromise.push(_fetchUserInfo(data, k.concat(i), newPos));
         }
         return tempPromise;
       } else {
-        return findUserPosition(data, k, newPos);
+        return _fetchUserInfo(data, k, newPos);
       }
     }
+    if (!ObjectId.isValid(val)) {
+      return null;
+    }
+    console.log(k);
     return db.user.findOne({
       _id: val
     }, {
@@ -159,7 +159,8 @@ function findUserPosition(data, k, pos) {
       avatar: 1,
     })
     .then(info => {
-      objectPath.set(data, k, info);
+      typeof data == 'object' && eval(dataAccess + '=' + JSON.stringify(info));
+      return info;
     })
   } catch(e) {
     return Promise.reject(e);
