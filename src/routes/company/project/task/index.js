@@ -32,15 +32,20 @@ api.get('/', (req, res, next) => {
     company_id: req.company._id,
     project_id: req.project_id,
   };
-  let idItems = _.pick(req.query, 'assignee', 'creator', 'follower');
+  let idItems = _.pick(req.query, 'assignee', 'creator', 'followers');
   if (!_.isEmpty(idItems)) {
     _.each(idItems, (ids, key) => {
       if (!ids) return;
       let idarr = ids.split(',').filter(id => ObjectId.isValid(id)).map(id => ObjectId(id));
-      if (item.length) {
-        condition[key] = { $in: item };
+      if (idarr.length) {
+        if (key == 'follower') {
+          condition[key] = { $elemMatch: { $in: idarr } };
+        } else {
+          condition[key] = { $in: idarr };
+        }
       }
     });
+    console.log(condition);
   }
   if (status) {
     status = status.split(',').filter(s => _.contains(ENUMS.TASK_STATUS, s));

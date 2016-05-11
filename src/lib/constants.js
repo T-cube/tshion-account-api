@@ -27,6 +27,21 @@ let constants = {
     OWNER: 'owner',
   },
 
+  MESSAGE_TARGET_TYPE: {
+    REQUEST: 'Request',
+    COMPANY: 'Company',
+    COMPANY_MEMBER: 'CompanyMember',
+    PROJECT: 'Project',
+    PROJECT_MEMBER: 'ProjectMember',
+    TASK: 'Task',
+  },
+
+  MESSAGE_VERB: {
+    CREATE: 'create',
+    UPDATE: 'update',
+    DELETE: 'delete',
+  },
+
   PROJECT_MEMBER_TYPE: {
     GUEST: 'guest',
     NORMAL: 'normal',

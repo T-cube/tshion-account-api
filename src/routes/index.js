@@ -15,6 +15,7 @@ api.use(bodyParser.json());
 let routes = [
   'account',
   'company',
+  'message',
   'relation',
   'task',
   'user',

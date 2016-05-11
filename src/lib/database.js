@@ -17,6 +17,7 @@ export function database() {
     'company',
     'document.dir',
     'document.file',
+    'message',
     'oauth.clients',
     'oauth.accesstoken',
     'oauth.refreshtoken',

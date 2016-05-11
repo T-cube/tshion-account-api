@@ -406,7 +406,7 @@
 
 ### approval
 
-approval.template
+#### approval.template
 
 审批类型
 
@@ -437,7 +437,7 @@ approval.template
 }
 ```
 
-approval.item
+#### approval.item
 
 用户审批
 
@@ -481,7 +481,7 @@ approval.user
 }
 ```
 
-approval.flow
+#### approval.flow
 
 审批流程
 
@@ -499,7 +499,7 @@ approval.flow
 
 ### document
 
-document.dir
+#### document.dir
 
 ```javascript
 {
@@ -512,7 +512,7 @@ document.dir
 }
 ```
 
-document.file
+#### document.file
 
 文档
 
@@ -530,3 +530,29 @@ document.file
   path: <String>,
 }
 ```
+
+### message
+
+消息
+
+```javascript
+{
+  _id: <ObjectId>,
+  from: <ObjectId>,
+  to: <ObjectId>,
+  verb: <String>,
+  target_type: <String[Enum]>,
+  target_id: <ObjectId>,
+  is_read: <Boolean>,
+  date_create: <Date>,
+}
+```
+
+关于消息类型 `type`：
+
+| Value | Title | Description |
+| ----- | ----- | ----------- |
+| `request` | 成员申请 | 成员加入请求 |
+| `company` | 公司 | 公司消息 |
+| `project` | 项目 | 项目消息 |
+| `task` | 任务 | 任务消息 |
