@@ -78,9 +78,20 @@ api.post('/dir', (req, res, next) => {
   data[posKey] = posVal;
   checkDirNameValid(data.name, data.parent_dir)
   .then(() => {
-    return db.document.dir.insert(data);
+    return db.document.dir.insert(data)
+    .then(doc => {
+      res.json(doc)
+      if (data.parent_dir) {
+        return db.document.dir.update({
+          _id: data.parent_dir
+        }, {
+          $push: {
+            children: doc._id
+          }
+        })
+      }
+    })
   })
-  .then(doc => res.json(doc))
   .catch(next);
 });
 
