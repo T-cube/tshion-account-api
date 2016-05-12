@@ -97,7 +97,7 @@ api.post('/dir', (req, res, next) => {
   .then(() => {
     return getFullPath(data.parent_dir)
     .then(path => {
-      if (path.length == 4) {
+      if (path.length >= 4) {
         throw new ApiError(400, null, '最多只能创建5级目录');
       }
     })
