@@ -74,34 +74,9 @@ api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
   data[posKey] = posVal;
-  db.document.dir.findOne({
-    _id: data.parent_dir
-  }, {
-    parent_dir: 1,
-    children: 1,
-  })
-  .then(list => {
-    if (!list && data.parent_dir != null) {
-      throw new ApiError(400, null, '父目录不存在');
-    }
-    if (list.parent_dir != null) {
-      throw new ApiError(400, null, '只能创建二级目录');
-    }
-    if (list == null) {
-      return db.document.dir.insert(data);
-    }
-    return db.document.dir.count({
-      _id: {
-        $in: list.children
-      },
-      name: data.name
-    })
-    .then(count => {
-      if (count) {
-        throw new ApiError(400, null, '目录' + data.name + '已存在');
-      }
-      return db.document.dir.insert(data);
-    })
+  checkDirNameValid(data.name, data.parent_dir)
+  .then(() => {
+    return db.document.dir.insert(data);
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -113,14 +88,24 @@ api.put('/dir/:dir_id', (req, res, next) => {
   };
   let dir_id = ObjectId(req.params.dir_id);
   sanitizeValidateObject(_.pick(dirSanitization, 'name'), _.pick(dirValidation, 'name'), data);
-  data[posKey] = posVal;
-  db.document.dir.update({
+  db.document.dir.findOne({
     _id: dir_id,
     [posKey]: posVal,
-  }, {
-    $set: data
   })
-  .then(doc => res.json(doc))
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404);
+    }
+    return checkDirNameValid(data.name, doc.parent_dir)
+    .then(() => {
+      return db.document.dir.update({
+        _id: dir_id
+      }, {
+        $set: data
+      })
+      .then(doc => res.json(doc))
+    })
+  })
   .catch(next);
 });
 
@@ -253,14 +238,13 @@ api.post('/dir/:dir_id/file',
       file: _.pick(req.file, 'mimetype', 'path')
     });
   }
-  checkDir(dir_id, req.company._id)
+  checkDirExist(dir_id)
   .then(() => {
     return db.document.file.insert(data)
     .then(doc => {
       res.json(doc);
       return db.document.dir.update({
         _id: dir_id,
-        [posKey]: posVal,
       }, {
         $push: {
           files: doc._id
@@ -308,10 +292,52 @@ api.delete('/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-function checkDir(dir_id, company_id) {
+function checkDirNameValid(dirName, parent_dir) {
+  if (parent_dir == null) {
+    return db.document.dir.count({
+      parent_dir: null,
+      [posKey]: posVal,
+      name: name
+    })
+    .then(count => {
+      if (count) {
+        throw new ApiError(400, null, '存在同名的目录');
+      }
+      return db.document.dir.insert(data)
+    })
+  }
+  return db.document.dir.findOne({
+    _id: parent_dir,
+    [posKey]: posVal,
+  }, {
+    parent_dir: 1,
+    children: 1,
+  })
+  .then(list => {
+    if (!list) {
+      throw new ApiError(400, null, '父目录不存在');
+    }
+    if (list.parent_dir != null) {
+      throw new ApiError(400, null, '只能创建二级目录');
+    }
+    return db.document.dir.count({
+      _id: {
+        $in: list.children
+      },
+      name: data.name
+    })
+    .then(count => {
+      if (count) {
+        throw new ApiError(400, null, '存在同名的目录');
+      }
+    })
+  })
+}
+
+function checkDirExist(dir_id) {
   return db.document.dir.count({
     _id: dir_id,
-    company_id: company_id,
+    [posKey]: posVal,
   })
   .then(count => {
     if (!count) {
