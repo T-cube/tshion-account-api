@@ -34,7 +34,7 @@ api.use((req, res, next) => {
   next();
 });
 
-api.get('/:dir_id?', (req, res, next) => {
+api.get('/dir/:dir_id?', (req, res, next) => {
   let condition = {
     [posKey]: posVal
   };
@@ -70,18 +70,22 @@ api.get('/:dir_id?', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/', (req, res, next) => {
+api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
   data[posKey] = posVal;
   db.document.dir.findOne({
     _id: data.parent_dir
   }, {
-    children: 1
+    parent_dir: 1,
+    children: 1,
   })
   .then(list => {
     if (!list && data.parent_dir != null) {
       throw new ApiError(400, null, '父目录不存在');
+    }
+    if (list.parent_dir != null) {
+      throw new ApiError(400, null, '只能创建二级目录');
     }
     if (list == null) {
       return db.document.dir.insert(data);
@@ -103,7 +107,7 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:dir_id', (req, res, next) => {
+api.put('/dir/:dir_id', (req, res, next) => {
   let data = {
     name: req.body.name
   };
@@ -120,7 +124,7 @@ api.put('/:dir_id', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/:dir_id', (req, res, next) => {
+api.delete('/dir/:dir_id', (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
   db.document.dir.findOne({
     _id: dir_id,
@@ -150,7 +154,7 @@ api.delete('/:dir_id', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/:dir_id/file', (req, res, next) => {
+api.get('/dir/:dir_id/file', (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
   db.document.dir.findOne({
     _id: dir_id,
@@ -181,12 +185,10 @@ api.get('/:dir_id/file', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/:dir_id/file/:file_id', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
+api.get('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
     _id: file_id,
-    dir_id: dir_id,
   })
   .then(file => {
     if (!file) {
@@ -197,13 +199,11 @@ api.get('/:dir_id/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-api.get('/:dir_id/file/:file_id/download/:item_id', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
+api.get('/file/:file_id/download/:item_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   let item_id = ObjectId(req.params.item_id);
   db.document.file.findOne({
     _id: file_id,
-    dir_id: dir_id,
   })
   .then(doc => {
     if (!doc) {
@@ -214,12 +214,10 @@ api.get('/:dir_id/file/:file_id/download/:item_id', (req, res, next) => {
   .catch(next)
 });
 
-api.get('/:dir_id/file/:file_id/download', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
+api.get('/file/:file_id/download', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
     _id: file_id,
-    dir_id: dir_id,
   })
   .then(doc => {
     if (!doc) {
@@ -232,7 +230,7 @@ api.get('/:dir_id/file/:file_id/download', (req, res, next) => {
   .catch(next)
 });
 
-api.post('/:dir_id/file',
+api.post('/dir/:dir_id/file',
   uploader(),
   (req, res, next) => {
   let dir_id = ObjectId(req.params.dir_id);
@@ -273,8 +271,7 @@ api.post('/:dir_id/file',
   .catch(next);
 });
 
-api.put('/:dir_id/file/:file_id', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
+api.put('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   let data = req.body;
   sanitizeValidateObject(fileSanitization, fileValidation, data);
@@ -283,7 +280,6 @@ api.put('/:dir_id/file/:file_id', (req, res, next) => {
   });
   db.document.file.update({
     _id: file_id,
-    dir_id: dir_id,
   }, {
     $set: data
   })
@@ -291,8 +287,7 @@ api.put('/:dir_id/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-api.delete('/:dir_id/file/:file_id', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
+api.delete('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.dir.update({
     _id: dir_id,

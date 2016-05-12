@@ -18,7 +18,7 @@
 
 文档目录
 
-### POST /document
+### POST /document/dir
 
 添加目录
 
@@ -31,7 +31,7 @@ INPUT
 }
 ```
 
-### GET /document/:dir_id?
+### GET /document/dir/:dir_id?
 
 获取目录名和子目录
 
@@ -47,7 +47,7 @@ OUTPUT:
 }
 ```
 
-### PUT /document/:dir_id
+### PUT /document/dir/:dir_id
 
 修改目录名
 
@@ -58,7 +58,7 @@ INPUT:
 }
 ```
 
-### DELETE /document/:dir_id
+### DELETE /document/dir/:dir_id
 
 删除目录
 
@@ -66,7 +66,7 @@ INPUT:
 
 文档文件
 
-### POST /document/:dir_id/file
+### POST /document/dir/:dir_id/file
 
 添加文档
 
@@ -80,7 +80,7 @@ INPUT:
 }]
 ```
 
-### GET /document/:dir_id/file
+### GET /document/dir/:dir_id/file
 
 获取文档列表
 
@@ -97,7 +97,20 @@ OUTPUT:
 }
 ```
 
-### GET /document/:dir_id/file/:file_id
+### PUT /document/file/:file_id
+
+修改文档详情
+
+INPUT
+```javascript
+{
+  title: <String>,
+  description: <String>,
+  content: <String>,
+}
+```
+
+### GET /document/file/:file_id
 
 获取文档详情
 
@@ -114,7 +127,7 @@ OUTPUT:
 }
 ```
 
-### GET /document/:dir_id/file/:file_id/download/:item_id
+### GET /document/file/:file_id/download/:item_id
 
 下载文档
 
@@ -123,6 +136,6 @@ OUTPUT:
 <File>
 ```
 
-### DELETE /document/:dir_id/file/:file_id
+### DELETE /document/file/:file_id
 
 删除文档
