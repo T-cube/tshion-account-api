@@ -15,6 +15,7 @@ import {
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
+import { getUniqName } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
@@ -32,7 +33,7 @@ api.use((req, res, next) => {
     // return req.project_id
     //   ? upload({type: 'attachment'}).single('document')
     //   : upload({type: 'attachment'}).array('document');
-    return upload({type: 'attachment'}).single('document');
+    return upload({type: 'attachment'}).array('document');
   };
   next();
 });
@@ -212,6 +213,7 @@ api.get('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
     _id: file_id,
+    [posKey]: posVal,
   })
   .then(file => {
     if (!file) {
@@ -241,13 +243,16 @@ api.get('/file/:file_id/download', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
     _id: file_id,
+    [posKey]: posVal,
   })
-  .then(doc => {
-    if (!doc) {
+  .then(fileInfo => {
+    if (!fileInfo) {
       throw new ApiError(404);
     }
-    if (doc.file) {
-      download(doc.file.path); // TODO
+    if (fileInfo.path) {
+      res.set('Content-disposition', 'attachment; filename=' + fileInfo.title);
+      res.set('Content-type', fileInfo.mimetype);
+      fs.createReadStream(doc.path).pipe(res);
     }
   })
   .catch(next)
@@ -255,24 +260,35 @@ api.get('/file/:file_id/download', (req, res, next) => {
 
 api.post('/upload', uploader(), (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(fileSanitization, fileValidation, data);
-  _.extend(data, {
-    author: req.user._id,
-    date_update: new Date(),
-    date_create: new Date(),
-  });
-  // if (req.files) {
-  //   _.extend(data, {
-  //     files: _.map(req.files, file => _.extend(_.pick(file, 'mimetype', 'path'), {
-  //       _id: ObjectId()
-  //     }))
-  //   });
-  // }
-  if (req.file) {
-    _.extend(data, _.pick(req.file, 'mimetype', 'path', 'size'));
+  let files = [];
+  if (data._type == 'content') {
+    sanitizeValidateObject(fileSanitization, fileValidation, data);
+    _.extend(data, {
+      name: getUniqName(data.name),
+      author: req.user._id,
+      date_update: new Date(),
+      date_create: new Date(),
+    });
+    data = [data];
+  } else if (req.files) {
+    data = _.map(req.files, file => {
+      let file = _.pick(file, 'mimetype', 'path', 'size', 'origin_name');
+      return _.extend(file, {
+        name: getUniqName(file.name),
+        author: req.user._id,
+        date_update: new Date(),
+        date_create: new Date(),
+      });
+    });
+  } else {
+    throw new ApiError(404);
   }
   checkDirExist(dir_id)
   .then(() => {
+    let total_size = 0;
+    data.forEach(item => {
+      total_size += item.size;
+    });
     return db.document.file.insert(data)
     .then(doc => {
       res.json(doc);
@@ -280,7 +296,9 @@ api.post('/upload', uploader(), (req, res, next) => {
         _id: dir_id,
       }, {
         $push: {
-          files: doc._id
+          files: {
+            $each: doc.map(item => item._id)
+          }
         }
       })
       .then(() => {
@@ -289,7 +307,7 @@ api.post('/upload', uploader(), (req, res, next) => {
           parent_dir: null
         }, {
           $inc: {
-            total_size: req.file.size
+            total_size: size
           }
         })
       })
@@ -349,9 +367,10 @@ api.delete('/file/:file_id', (req, res, next) => {
         })
       ])
     })
-  })
-  .then(() => {
-    // TODO remove files
+    .then(() => {
+      // TODO remove files
+
+    })
   })
   .then(() => res.json({}))
   .catch(next)
@@ -528,7 +547,6 @@ function checkDirExist(dir_id) {
 }
 
 function getFullPath(dir_id, path) {
-  console.log(dir_id);
   if (dir_id == null) {
     return Promise.resolve([]);
   }
