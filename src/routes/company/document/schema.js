@@ -21,3 +21,41 @@ export let fileValidation = {
 	description: {  type: 'string', optional: true },
 	content: {  type: 'string', optional: true },
 };
+
+export let locationSanitization = {
+	files: {
+		type: 'array',
+		optional: true,
+		items: {
+			$objectId: 1
+		}
+	},
+	dirs: {
+		type: 'array',
+		optional: true,
+		items: {
+			$objectId: 1
+		}
+	},
+	origin_dir: { $objectId: 1 },
+	target_dir: { $objectId: 1 },
+};
+
+export let locationValidation = {
+	files: {
+		type: 'array',
+		optional: true,
+		items: {
+			$objectId: 1
+		}
+	},
+	dirs: {
+		type: 'array',
+		optional: true,
+		items: {
+			$objectId: 1
+		}
+	},
+	origin_dir: { $objectId: 1 },
+	target_dir: { $objectId: 1 },
+};

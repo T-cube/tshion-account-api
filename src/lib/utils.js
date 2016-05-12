@@ -119,50 +119,54 @@ export function fetchUserInfo(data) {
   args.shift();
   args = args.length ? args : [''];
   let promiseLine = [];
+  let userList = [];
   _.forEach(args, pos => {
-    let promise = _fetchUserInfo(data, [], pos);
-    promiseLine = promiseLine.concat(promise);
+    let userId = _fetchUserInfo(data, [], pos);
+    userList = userList.concat(userId);
   });
-  return Promise.all(promiseLine);
+  return db.user.find({
+    _id: {
+      $in: userList
+    }
+  }, {
+    name: 1,
+    avatar: 1
+  })
+  .then(infoList => {
+    _.forEach(args, pos => {
+      _fetchUserInfo(data, [], pos, infoList);
+    });
+    return infoList.length == 1 ? infoList[0] : infoList;
+  })
 }
 
-function _fetchUserInfo(data, k, pos) {
-  try {
-    k = k || [];
-    pos = pos.replace(/^\.+/, '');
-    let posList = pos.split('.');
-    if (pos && !(!k.length && _.isArray(data))) {
-      k.push(posList.shift());
-    }
-    let newPos = posList.join('.');
-    let val = objectPath.get(data, k);
-    let dataAccess = k.length ? 'data["' + k.join('"]["') + '"]' : 'data';
-    if (newPos || _.isArray(val)) {
-      if (_.isArray(val)) {
-        let tempPromise = [];
-        for (var i in val) {
-          tempPromise.push(_fetchUserInfo(data, k.concat(i), newPos));
-        }
-        return tempPromise;
-      } else {
-        return _fetchUserInfo(data, k, newPos);
+function _fetchUserInfo(data, k, pos, infoList) {
+  k = k || [];
+  pos = pos.replace(/^\.+/, '');
+  let posList = pos.split('.');
+  if (pos && !(!k.length && _.isArray(data))) {
+    k.push(posList.shift());
+  }
+  let newPos = posList.join('.');
+  let val = objectPath.get(data, k);
+  if (newPos || _.isArray(val)) {
+    if (_.isArray(val)) {
+      let tempPromise = [];
+      for (var i in val) {
+        tempPromise = tempPromise.concat(_fetchUserInfo(data, k.concat(i), newPos, infoList));
       }
+      return tempPromise;
+    } else {
+      return _fetchUserInfo(data, k, newPos, infoList);
     }
-    if (!ObjectId.isValid(val)) {
-      return null;
-    }
-    console.log(k);
-    return db.user.findOne({
-      _id: val
-    }, {
-      name: 1,
-      avatar: 1,
-    })
-    .then(info => {
-      typeof data == 'object' && eval(dataAccess + '=' + JSON.stringify(info));
-      return info;
-    })
-  } catch(e) {
-    return Promise.reject(e);
+  }
+  if (!ObjectId.isValid(val)) {
+    return null;
+  }
+  val = ObjectId(val);
+  if (!infoList) {
+    return [val];
+  } else {
+    objectPath.set(data, k, _.find(infoList, info => info._id.equals(val)));
   }
 }
