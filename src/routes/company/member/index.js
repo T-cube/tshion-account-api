@@ -11,6 +11,7 @@ import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
 import { checkUserType } from '../utils';
 import { isEmail, time } from 'lib/utils';
+import Message from 'models/message';
 
 /* company collection */
 let api = require('express').Router();
@@ -69,7 +70,20 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
       object: req.company._id,
       status: C.REQUEST_STATUS.PENDING,
       date_create: time(),
-    });
+    })
+    .then(request => {
+      console.log('request:', request);
+      let msg = new Message();
+      console.log('msg', msg)
+      msg.from(req.user._id).to(user._id).send({
+        verb: C.MESSAGE_VERB.CREATE,
+        target_type: C.MESSAGE_TARGET_TYPE.REQUEST,
+        target_id: request._id,
+      });
+    }).catch(e => {
+      console.error(e);
+      console.error(e.stack);
+    })
     return db.company.update({
       _id: req.company._id,
     }, {
@@ -147,7 +161,7 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
   if (member_id.equals(req.user._id)) {
     throw new ApiError(400, null, 'can not remove yourself');
   }
-  return Promise.All([
+  return Promise.all([
     db.company.update({
       _id: req.company._id,
     }, {

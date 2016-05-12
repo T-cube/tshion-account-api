@@ -35,7 +35,7 @@ export function dirExists(path) {
   .catch(err => false);
 }
 
-export function getUniqName(list, name, index) {
+export function getUniqName(list, name) {
   if (_.contains(list, name)) {
     let match = /^(.+)\((\d+)\)$/.exec(name);
     if (match) {
