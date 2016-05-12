@@ -27,27 +27,33 @@ INPUT
 ```javascript
 {
   name: <String>,
-  parent_dir: <ObjectId> // 为null时根目录
+  parent_dir: <ObjectId>
 }
 ```
 
 ### GET /document/dir/:dir_id?
 
-获取目录名和子目录
+获取目录名和子目录和文件
 
 OUTPUT:
 ```javascript
 {
   _id: <ObjectId>,
   name: <String>,
-  children: [{
+  dirs: [{
     _id: <ObjectId>,
     name: <String>,
-  }]
+  }],
+  files: [{
+    _id: <ObjectId>,
+    title: <String>,
+    mimetype: <String>,
+    size: <Number>,
+  }...]
 }
 ```
 
-### PUT /document/dir/:dir_id
+### PUT /document/dir/:dir_id/name
 
 修改目录名
 
@@ -66,7 +72,7 @@ INPUT:
 
 文档文件
 
-### POST /document/dir/:dir_id/file
+### POST /document/file
 
 添加文档
 
@@ -74,27 +80,11 @@ INPUT:
 ```javascript
 [{
   title: <String>,
+  dir_id: <ObjectId>,
   description: <String>,
   content: <String>,
   document: [<File>...],
 }]
-```
-
-### GET /document/dir/:dir_id/file
-
-获取文档列表
-
-OUTPUT:
-```javascript
-{
-  _id: <ObjectId>,
-  title: <String>,
-  description: <String>,
-  author: <String>,
-  date_update: <Date>,
-  mimetype: <String>,
-  path: <String>,
-}
 ```
 
 ### PUT /document/file/:file_id
@@ -124,16 +114,9 @@ OUTPUT:
   content: <String>,
   date_update: <Date>,
   path: <String>,
+  mimetype: <String>,
+  size: <Number>,
 }
-```
-
-### GET /document/file/:file_id/download/:item_id
-
-下载文档
-
-OUTPUT:
-```javascript
-<File>
 ```
 
 ### DELETE /document/file/:file_id

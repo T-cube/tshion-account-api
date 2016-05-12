@@ -1,4 +1,4 @@
-import { ENUMS } from 'lib/constants';
+// import { ENUMS } from 'lib/constants';
 
 export let dirSanitization = {
 	name: { type: 'string' },
@@ -11,15 +11,17 @@ export let dirValidation = {
 };
 
 export let fileSanitization = {
-	title: {  type: 'string' },
-	description: {  type: 'string', optional: true },
-	content: {  type: 'string', optional: true },
+	title: { type: 'string' },
+	dir_id: { $objectId: 1 },
+	description: { type: 'string', optional: true },
+	content: { type: 'string', optional: true },
 };
 
 export let fileValidation = {
-	title: {  type: 'string', minLength: 1 },
-	description: {  type: 'string', optional: true },
-	content: {  type: 'string', optional: true },
+	title: { type: 'string', minLength: 1 },
+	dir_id: { $objectId: 1 },
+	description: { type: 'string', optional: true },
+	content: { type: 'string', optional: true },
 };
 
 export let locationSanitization = {

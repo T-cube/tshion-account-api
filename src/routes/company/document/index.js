@@ -29,9 +29,10 @@ api.use((req, res, next) => {
   posKey = req.project_id ? 'project_id' : 'company_id';
   posVal = req.project_id || req.company._id;
   uploader = () => {
-    return req.project_id
-      ? upload({type: 'attachment'}).single('document')
-      : upload({type: 'attachment'}).array('document');
+    // return req.project_id
+    //   ? upload({type: 'attachment'}).single('document')
+    //   : upload({type: 'attachment'}).array('document');
+    return upload({type: 'attachment'}).single('document');
   };
   next();
 });
@@ -55,7 +56,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
           files: [],
         });
         return db.document.dir.insert(condition).then(rootDir => {
-          return res.json(rootDir);
+          res.json(rootDir);
         })
       }
       throw new ApiError(404);
@@ -158,36 +159,36 @@ api.delete('/dir/:dir_id', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/dir/:dir_id/file', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
-  db.document.dir.findOne({
-    _id: dir_id,
-    [posKey]: posVal,
-  }, {
-    files: 1
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
-    }
-    if (!doc.files || !doc.files.length) {
-      return res.json([]);
-    }
-    return db.document.file.find({
-      _id: {
-        $in: doc.files
-      }
-    }, {
-      title: 1,
-      description: 1,
-      author: 1,
-      author: 1,
-      date_update: 1,
-    })
-    .then(files => res.json(files))
-  })
-  .catch(next);
-});
+// api.get('/dir/:dir_id/file', (req, res, next) => {
+//   let dir_id = ObjectId(req.params.dir_id);
+//   db.document.dir.findOne({
+//     _id: dir_id,
+//     [posKey]: posVal,
+//   }, {
+//     files: 1
+//   })
+//   .then(doc => {
+//     if (!doc) {
+//       throw new ApiError(404);
+//     }
+//     if (!doc.files || !doc.files.length) {
+//       return res.json([]);
+//     }
+//     return db.document.file.find({
+//       _id: {
+//         $in: doc.files
+//       }
+//     }, {
+//       title: 1,
+//       description: 1,
+//       author: 1,
+//       author: 1,
+//       date_update: 1,
+//     })
+//     .then(files => res.json(files))
+//   })
+//   .catch(next);
+// });
 
 api.get('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
@@ -203,20 +204,20 @@ api.get('/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-api.get('/file/:file_id/download/:item_id', (req, res, next) => {
-  let file_id = ObjectId(req.params.file_id);
-  let item_id = ObjectId(req.params.item_id);
-  db.document.file.findOne({
-    _id: file_id,
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
-    }
-    download(_.find(doc.files, file => file._id.equals(item_id)).path); // TODO
-  })
-  .catch(next)
-});
+// api.get('/file/:file_id/download/:item_id', (req, res, next) => {
+//   let file_id = ObjectId(req.params.file_id);
+//   let item_id = ObjectId(req.params.item_id);
+//   db.document.file.findOne({
+//     _id: file_id,
+//   })
+//   .then(doc => {
+//     if (!doc) {
+//       throw new ApiError(404);
+//     }
+//     download(_.find(doc.files, file => file._id.equals(item_id)).path); // TODO
+//   })
+//   .catch(next)
+// });
 
 api.get('/file/:file_id/download', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
@@ -234,25 +235,22 @@ api.get('/file/:file_id/download', (req, res, next) => {
   .catch(next)
 });
 
-api.post('/dir/:dir_id/file',
-  uploader(),
-  (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
+api.post('/file', uploader(), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(fileSanitization, fileValidation, data);
   _.extend(data, {
-    dir_id: dir_id,
     author: req.user._id,
     date_update: new Date(),
     date_create: new Date(),
   });
-  if (req.files) {
-    _.extend(data, {
-      files: _.map(req.files, file => _.extend(_.pick(file, 'mimetype', 'path'), {
-        _id: ObjectId()
-      }))
-    });
-  } else if (req.file) {
+  // if (req.files) {
+  //   _.extend(data, {
+  //     files: _.map(req.files, file => _.extend(_.pick(file, 'mimetype', 'path'), {
+  //       _id: ObjectId()
+  //     }))
+  //   });
+  // }
+  if (req.file) {
     _.extend(data, {
       file: _.pick(req.file, 'mimetype', 'path')
     });
@@ -468,7 +466,7 @@ function checkDirNameValid(name, parent_dir) {
 
 function checkDirExist(dir_id) {
   if (dir_id == null) {
-    return new Promise().resolve();
+    return Promise.resolve();
   }
   return db.document.dir.count({
     _id: dir_id,
