@@ -139,3 +139,17 @@ OUTPUT:
 ### DELETE /document/file/:file_id
 
 删除文档
+
+### PUT /document/location
+
+移动文件和文件夹
+
+INPUT
+```javascript
+{
+  files: [<ObjectId>..],
+  dirs: [<ObjectId>..],
+  origin_dir: <ObjectId>,
+  target_dir: <ObjectId>,
+}
+```
