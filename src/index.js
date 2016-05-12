@@ -10,6 +10,7 @@ import oauthserver from 'oauth2-server';
 import bodyParser from 'body-parser';
 import config from 'config';
 
+import bindLoader from 'lib/loader';
 import { database } from 'lib/database';
 import apiRouter from './routes';
 import oauthModel from 'lib/oauth-model.js';
@@ -28,6 +29,13 @@ let app = express();
 
 let server = http.Server(app);
 let io = socketio(server);
+
+// bind model loader
+bindLoader(app);
+
+app.use((req, res, next) => {
+  app.bindLoader(req);
+});
 
 global.db = database();
 //oauth开始
