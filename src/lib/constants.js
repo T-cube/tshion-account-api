@@ -114,6 +114,13 @@ let constants = {
   ANNOUNCEMENT_TYPE: {
     NOTICE: 'notice',
     NEWS: 'news',
+  },
+
+  DOCUMENT: {
+    COMPANY: {
+      MAX_TOTAL_SIZE: 1000000000, // 1G
+      MAX_FILE_SIZE: 10000, // 10M
+    }
   }
 }
 

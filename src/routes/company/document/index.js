@@ -268,12 +268,13 @@ api.post('/upload', uploader(), (req, res, next) => {
       author: req.user._id,
       date_update: new Date(),
       date_create: new Date(),
+      size: data.content.length
     });
     data = [data];
   } else if (req.files) {
     data = _.map(req.files, file => {
-      let file = _.pick(file, 'mimetype', 'path', 'size', 'origin_name');
-      return _.extend(file, {
+      let fileData = _.pick(file, 'mimetype', 'path', 'size', 'origin_name');
+      return _.extend(fileData, {
         name: getUniqName(file.name),
         author: req.user._id,
         date_update: new Date(),
@@ -283,12 +284,22 @@ api.post('/upload', uploader(), (req, res, next) => {
   } else {
     throw new ApiError(404);
   }
+
+  let total_size = 0;
+  data.forEach(item => {
+    if (item.size > C.DOCUMENT.COMPANY.MAX_FILE_SIZE) {
+      throw new ApiError(400, null, '文件大小超过上限')
+    }
+    total_size += item.size;
+  });
+  getTotalSize().then(size => {
+    if ((size + total_size) > C.DOCUMENT.COMPANY.MAX_TOTAL_SIZE) {
+      throw new ApiError(400, null, '您的文件存储空间不足')
+    }
+  })
+
   checkDirExist(dir_id)
   .then(() => {
-    let total_size = 0;
-    data.forEach(item => {
-      total_size += item.size;
-    });
     return db.document.file.insert(data)
     .then(doc => {
       res.json(doc);
@@ -544,6 +555,16 @@ function checkDirExist(dir_id) {
       throw new ApiError(404);
     }
   })
+}
+
+function getTotalSize() {
+  return db.document.dir.count({
+    parent_dir: null,
+    [posKey]: posVal,
+  }, {
+    size: 1
+  })
+  .then(doc => doc.size || 0)
 }
 
 function getFullPath(dir_id, path) {
