@@ -45,16 +45,22 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   } else {
     condition.parent_dir = null;
   }
-  db.document.dir.find(condition)
+  db.document.dir.findOne(condition)
   .then(doc => {
-    if (!condition._id) {
-      return res.json({
-        children: doc.map(item => _.pick(item, '_id', 'name'))
-      })
+    if (!doc) {
+      if (null == condition.parent_dir) {
+        _.extend(condition, {
+          name: '',
+          children: [],
+          files: [],
+        });
+        return db.document.dir.insert(condition).then(rootDir => {
+          return res.json(rootDir);
+        })
+      }
+      throw new ApiError(404);
     }
-    doc = doc[0];
-    if (!doc || !doc.children || doc.children.length == 0) {
-      doc.children = [];
+    if (!doc.children || doc.children.length == 0) {
       return res.json(doc);
     }
     return db.document.dir.find({
@@ -66,7 +72,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     })
     .then(children => {
       doc.children = children;
-      return res.json(doc);
+      res.json(doc);
     })
   })
   .catch(next);
@@ -418,18 +424,18 @@ api.put('/location', (req, res, next) => {
 });
 
 function checkDirNameValid(name, parent_dir) {
-  if (parent_dir == null) {
-    return db.document.dir.count({
-      parent_dir: null,
-      [posKey]: posVal,
-      name: name
-    })
-    .then(count => {
-      if (count) {
-        throw new ApiError(400, null, '存在同名的目录');
-      }
-    })
-  }
+  // if (parent_dir == null) {
+  //   return db.document.dir.count({
+  //     parent_dir: null,
+  //     [posKey]: posVal,
+  //     name: name
+  //   })
+  //   .then(count => {
+  //     if (count) {
+  //       throw new ApiError(400, null, '存在同名的目录');
+  //     }
+  //   })
+  // }
   return db.document.dir.findOne({
     _id: parent_dir,
     [posKey]: posVal,
@@ -441,9 +447,9 @@ function checkDirNameValid(name, parent_dir) {
     if (!list) {
       throw new ApiError(400, null, '父目录不存在');
     }
-    if (list.parent_dir != null) {
-      throw new ApiError(400, null, '只能创建二级目录');
-    }
+    // if (list.parent_dir != null) {
+    //   throw new ApiError(400, null, '只能创建二级目录');
+    // }
     if (list.children && list.children.length) {
       return db.document.dir.count({
         _id: {
