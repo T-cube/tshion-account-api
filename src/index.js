@@ -27,7 +27,7 @@ console.log('initializing service...');
 let app = express();
 
 let server = http.Server(app);
-// let io = socketio(server);
+let io = socketio(server);
 
 global.db = database();
 //oauth开始
@@ -54,14 +54,13 @@ app.use(app.oauth.errorHandler());
 // global error handler
 app.use(apiErrorHandler);
 
-// io.on('connection', function(socket){
-//   console.log('a user connected');
-//   socket.on('chat message', function(msg){
-//     console.log('message: ' + msg);
-//     io.emit('chat message', msg);
-//   });
-//
-// });
+io.on('connection', function(socket){
+  console.log('a user connected');
+  socket.on('chat message', function(msg){
+    console.log('message: ' + msg);
+    io.emit('chat message', msg);
+  });
+});
 
 server.listen(3000, function(){
   console.log('listening on *:3000');
