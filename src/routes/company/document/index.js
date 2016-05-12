@@ -41,8 +41,9 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   let condition = {
     [posKey]: posVal
   };
+  let dir_id = null;
   if (req.params.dir_id) {
-    condition._id = ObjectId(req.params.dir_id);
+    condition._id = dir_id = ObjectId(req.params.dir_id);
   } else {
     condition.parent_dir = null;
   }
@@ -54,6 +55,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
           name: '',
           dirs: [],
           files: [],
+          total_size: 0
         });
         return db.document.dir.insert(condition).then(rootDir => {
           res.json(rootDir);
@@ -73,17 +75,33 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     })
     .then(dirs => {
       doc.dirs = dirs;
-      res.json(doc);
+    })
+    .then(() => {
+      return getFullPath(dir_id)
+      .then(path => {
+        doc.path = path;
+        res.json(doc);
+      })
     })
   })
   .catch(next);
 });
+
+
 
 api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
   data[posKey] = posVal;
   checkDirNameValid(data.name, data.parent_dir)
+  .then(() => {
+    return getFullPath(data.parent_dir)
+    .then(path => {
+      if (path.length == 4) {
+        throw new ApiError(400, null, '最多只能创建5级目录');
+      }
+    })
+  })
   .then(() => {
     return db.document.dir.insert(data)
     .then(doc => {
@@ -264,6 +282,16 @@ api.post('/upload', uploader(), (req, res, next) => {
         $push: {
           files: doc._id
         }
+      })
+      .then(() => {
+        return db.document.dir.update({
+          [posKey]: posVal,
+          parent_dir: null
+        }, {
+          $inc: {
+            total_size: req.file.size
+          }
+        })
       })
     })
   })
@@ -474,5 +502,22 @@ function checkDirExist(dir_id) {
     if (!count) {
       throw new ApiError(404);
     }
+  })
+}
+
+function getFullPath(dir_id, path) {
+  path = path || [];
+  return db.document.dir.findOne({
+    _id: dir_id
+  }, {
+    name: 1,
+    parent_dir: 1
+  })
+  .then(doc => {
+    path.push(doc);
+    if (doc.parent_dir != null) {
+      return getFullPath(doc.parent_dir, path);
+    }
+    return path;
   })
 }
