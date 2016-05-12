@@ -72,7 +72,7 @@ INPUT:
 
 文档文件
 
-### POST /document/file
+### POST /document/upload
 
 添加文档
 

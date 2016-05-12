@@ -507,7 +507,7 @@ approval.user
   company_id: <ObjectId>,
   name: <String>,
   parent_dir: <ObjectId>,
-  children: [ObjectId...],
+  dirs: [ObjectId...],
   files: [ObjectId...],
 }
 ```

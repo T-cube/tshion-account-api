@@ -129,7 +129,7 @@ export function fetchUserInfo(data) {
   }
   return db.user.find({
     _id: {
-      $in: userList
+      $in: uniqObjectId(userList)
     }
   }, {
     name: 1,

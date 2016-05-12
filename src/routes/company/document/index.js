@@ -52,7 +52,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       if (null == condition.parent_dir) {
         _.extend(condition, {
           name: '',
-          children: [],
+          dirs: [],
           files: [],
         });
         return db.document.dir.insert(condition).then(rootDir => {
@@ -61,18 +61,18 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       }
       throw new ApiError(404);
     }
-    if (!doc.children || doc.children.length == 0) {
+    if (!doc.dirs || doc.dirs.length == 0) {
       return res.json(doc);
     }
     return db.document.dir.find({
       _id: {
-        $in: doc.children
+        $in: doc.dirs
       }
     }, {
       name: 1
     })
-    .then(children => {
-      doc.children = children;
+    .then(dirs => {
+      doc.dirs = dirs;
       res.json(doc);
     })
   })
@@ -93,7 +93,7 @@ api.post('/dir', (req, res, next) => {
           _id: data.parent_dir
         }, {
           $push: {
-            children: doc._id
+            dirs: doc._id
           }
         })
       }
@@ -139,14 +139,14 @@ api.delete('/dir/:dir_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    if (doc.children.length || doc.files.length) {
+    if (doc.dirs.length || doc.files.length) {
       throw new ApiError(400, null, '请先删除当前目录下的所有文件夹及文件');
     }
     return db.document.dir.update({
       _id: doc.parent_dir
     }, {
       $pull: {
-        children: dir_id
+        dirs: dir_id
       }
     })
     .then(() => {
@@ -235,7 +235,7 @@ api.get('/file/:file_id/download', (req, res, next) => {
   .catch(next)
 });
 
-api.post('/file', uploader(), (req, res, next) => {
+api.post('/upload', uploader(), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(fileSanitization, fileValidation, data);
   _.extend(data, {
@@ -251,9 +251,7 @@ api.post('/file', uploader(), (req, res, next) => {
   //   });
   // }
   if (req.file) {
-    _.extend(data, {
-      file: _.pick(req.file, 'mimetype', 'path')
-    });
+    _.extend(data, _.pick(req.file, 'mimetype', 'path', 'size'));
   }
   checkDirExist(dir_id)
   .then(() => {
@@ -400,7 +398,7 @@ api.put('/location', (req, res, next) => {
           _id: origin_dir
         }, {
           $pull: {
-            children: list
+            dirs: list
           }
         })
       })
@@ -409,7 +407,7 @@ api.put('/location', (req, res, next) => {
           _id: target_dir
         }, {
           $push: {
-            children: {
+            dirs: {
               $each: list
             }
           }
@@ -439,7 +437,7 @@ function checkDirNameValid(name, parent_dir) {
     [posKey]: posVal,
   }, {
     parent_dir: 1,
-    children: 1,
+    dirs: 1,
   })
   .then(list => {
     if (!list) {
@@ -448,10 +446,10 @@ function checkDirNameValid(name, parent_dir) {
     // if (list.parent_dir != null) {
     //   throw new ApiError(400, null, '只能创建二级目录');
     // }
-    if (list.children && list.children.length) {
+    if (list.dirs && list.dirs.length) {
       return db.document.dir.count({
         _id: {
-          $in: list.children
+          $in: list.dirs
         },
         name: name
       })
