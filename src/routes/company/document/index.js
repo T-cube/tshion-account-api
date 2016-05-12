@@ -316,20 +316,34 @@ api.put('/file/:file_id', (req, res, next) => {
 
 api.delete('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
-  db.document.dir.update({
-    _id: dir_id,
-    [posKey]: posVal,
+  db.document.file.findOne({
+    _id: file_id
   }, {
-    $pull: {
-      files: file_id
-    }
+    size: 1,
+    dir_id: 1
   })
-  .then(doc => {
-    // TODO remove files
-    return db.document.file.remove({
-      _id: file_id,
-      dir_id: dir_id,
+  .then(fileInfo => {
+    if (!fileInfo) {
+      throw new ApiError(404);
+    }
+    return checkDirExist(fileInfo.dir_id)
+    .then(() => {
+      return Promise.all([
+        db.document.file.remove({
+          _id: file_id,
+        }),
+        db.document.dir.update({
+          _id: fileInfo.dir_id,
+        }, {
+          $pull: {
+            files: file_id
+          }
+        })
+      ])
     })
+  })
+  .then(() => {
+    // TODO remove files
   })
   .then(() => res.json({}))
   .catch(next)
@@ -506,6 +520,9 @@ function checkDirExist(dir_id) {
 }
 
 function getFullPath(dir_id, path) {
+  if (dir_id == null) {
+    return Promise.resolve();
+  }
   path = path || [];
   return db.document.dir.findOne({
     _id: dir_id
