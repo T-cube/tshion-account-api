@@ -292,7 +292,7 @@ api.delete('/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-function checkDirNameValid(dirName, parent_dir) {
+function checkDirNameValid(name, parent_dir) {
   if (parent_dir == null) {
     return db.document.dir.count({
       parent_dir: null,
@@ -303,7 +303,6 @@ function checkDirNameValid(dirName, parent_dir) {
       if (count) {
         throw new ApiError(400, null, '存在同名的目录');
       }
-      return db.document.dir.insert(data)
     })
   }
   return db.document.dir.findOne({
@@ -324,7 +323,7 @@ function checkDirNameValid(dirName, parent_dir) {
       _id: {
         $in: list.children
       },
-      name: data.name
+      name: name
     })
     .then(count => {
       if (count) {
