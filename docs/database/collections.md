@@ -507,7 +507,7 @@ approval.user
   company_id: <ObjectId>,
   name: <String>,
   parent_dir: <ObjectId>,
-  children: [ObjectId...],
+  dirs: [ObjectId...],
   files: [ObjectId...],
 }
 ```
@@ -520,14 +520,15 @@ approval.user
 {
   _id: <ObjectId>,
   dir_id: <ObjectId>,
+  author: <ObjectId>,
   title: <String>,
   description: <String>,
   content: <String>,
   mimetype: <String>,
-  author: <ObjectId>,
   date_update: <Date>,
   date_create: <Date>,
   path: <String>,
+  size: <Number>,
 }
 ```
 

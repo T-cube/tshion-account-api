@@ -124,9 +124,12 @@ export function fetchUserInfo(data) {
     let userId = _fetchUserInfo(data, [], pos);
     userList = userList.concat(userId);
   });
+  if (!userList.length) {
+    return Promise.resolve();
+  }
   return db.user.find({
     _id: {
-      $in: userList
+      $in: uniqObjectId(userList)
     }
   }, {
     name: 1,

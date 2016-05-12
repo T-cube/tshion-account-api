@@ -29,9 +29,10 @@ api.use((req, res, next) => {
   posKey = req.project_id ? 'project_id' : 'company_id';
   posVal = req.project_id || req.company._id;
   uploader = () => {
-    return req.project_id
-      ? upload({type: 'attachment'}).single('document')
-      : upload({type: 'attachment'}).array('document');
+    // return req.project_id
+    //   ? upload({type: 'attachment'}).single('document')
+    //   : upload({type: 'attachment'}).array('document');
+    return upload({type: 'attachment'}).single('document');
   };
   next();
 });
@@ -40,8 +41,9 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   let condition = {
     [posKey]: posVal
   };
+  let dir_id = null;
   if (req.params.dir_id) {
-    condition._id = ObjectId(req.params.dir_id);
+    condition._id = dir_id = ObjectId(req.params.dir_id);
   } else {
     condition.parent_dir = null;
   }
@@ -51,38 +53,55 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       if (null == condition.parent_dir) {
         _.extend(condition, {
           name: '',
-          children: [],
+          dirs: [],
           files: [],
+          total_size: 0
         });
         return db.document.dir.insert(condition).then(rootDir => {
-          return res.json(rootDir);
+          res.json(rootDir);
         })
       }
       throw new ApiError(404);
     }
-    if (!doc.children || doc.children.length == 0) {
-      return res.json(doc);
-    }
-    return db.document.dir.find({
-      _id: {
-        $in: doc.children
+    return getFullPath(doc.parent_dir)
+    .then(path => {
+      doc.path = path;
+    })
+    .then(() => {
+      if (!doc.dirs || doc.dirs.length == 0) {
+        return;
       }
-    }, {
-      name: 1
+      return db.document.dir.find({
+        _id: {
+          $in: doc.dirs
+        }
+      }, {
+        name: 1
+      })
+      .then(dirs => {
+        doc.dirs = dirs;
+      })
     })
-    .then(children => {
-      doc.children = children;
-      res.json(doc);
-    })
+    .then(() => res.json(doc))
   })
   .catch(next);
 });
+
+
 
 api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
   data[posKey] = posVal;
   checkDirNameValid(data.name, data.parent_dir)
+  .then(() => {
+    return getFullPath(data.parent_dir)
+    .then(path => {
+      if (path.length >= 4) {
+        throw new ApiError(400, null, '最多只能创建5级目录');
+      }
+    })
+  })
   .then(() => {
     return db.document.dir.insert(data)
     .then(doc => {
@@ -92,7 +111,7 @@ api.post('/dir', (req, res, next) => {
           _id: data.parent_dir
         }, {
           $push: {
-            children: doc._id
+            dirs: doc._id
           }
         })
       }
@@ -138,14 +157,14 @@ api.delete('/dir/:dir_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    if (doc.children.length || doc.files.length) {
+    if (doc.dirs.length || doc.files.length) {
       throw new ApiError(400, null, '请先删除当前目录下的所有文件夹及文件');
     }
     return db.document.dir.update({
       _id: doc.parent_dir
     }, {
       $pull: {
-        children: dir_id
+        dirs: dir_id
       }
     })
     .then(() => {
@@ -158,36 +177,36 @@ api.delete('/dir/:dir_id', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/dir/:dir_id/file', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
-  db.document.dir.findOne({
-    _id: dir_id,
-    [posKey]: posVal,
-  }, {
-    files: 1
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
-    }
-    if (!doc.files || !doc.files.length) {
-      return res.json([]);
-    }
-    return db.document.file.find({
-      _id: {
-        $in: doc.files
-      }
-    }, {
-      title: 1,
-      description: 1,
-      author: 1,
-      author: 1,
-      date_update: 1,
-    })
-    .then(files => res.json(files))
-  })
-  .catch(next);
-});
+// api.get('/dir/:dir_id/file', (req, res, next) => {
+//   let dir_id = ObjectId(req.params.dir_id);
+//   db.document.dir.findOne({
+//     _id: dir_id,
+//     [posKey]: posVal,
+//   }, {
+//     files: 1
+//   })
+//   .then(doc => {
+//     if (!doc) {
+//       throw new ApiError(404);
+//     }
+//     if (!doc.files || !doc.files.length) {
+//       return res.json([]);
+//     }
+//     return db.document.file.find({
+//       _id: {
+//         $in: doc.files
+//       }
+//     }, {
+//       title: 1,
+//       description: 1,
+//       author: 1,
+//       author: 1,
+//       date_update: 1,
+//     })
+//     .then(files => res.json(files))
+//   })
+//   .catch(next);
+// });
 
 api.get('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
@@ -203,20 +222,20 @@ api.get('/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-api.get('/file/:file_id/download/:item_id', (req, res, next) => {
-  let file_id = ObjectId(req.params.file_id);
-  let item_id = ObjectId(req.params.item_id);
-  db.document.file.findOne({
-    _id: file_id,
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
-    }
-    download(_.find(doc.files, file => file._id.equals(item_id)).path); // TODO
-  })
-  .catch(next)
-});
+// api.get('/file/:file_id/download/:item_id', (req, res, next) => {
+//   let file_id = ObjectId(req.params.file_id);
+//   let item_id = ObjectId(req.params.item_id);
+//   db.document.file.findOne({
+//     _id: file_id,
+//   })
+//   .then(doc => {
+//     if (!doc) {
+//       throw new ApiError(404);
+//     }
+//     download(_.find(doc.files, file => file._id.equals(item_id)).path); // TODO
+//   })
+//   .catch(next)
+// });
 
 api.get('/file/:file_id/download', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
@@ -234,28 +253,23 @@ api.get('/file/:file_id/download', (req, res, next) => {
   .catch(next)
 });
 
-api.post('/dir/:dir_id/file',
-  uploader(),
-  (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
+api.post('/upload', uploader(), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(fileSanitization, fileValidation, data);
   _.extend(data, {
-    dir_id: dir_id,
     author: req.user._id,
     date_update: new Date(),
     date_create: new Date(),
   });
-  if (req.files) {
-    _.extend(data, {
-      files: _.map(req.files, file => _.extend(_.pick(file, 'mimetype', 'path'), {
-        _id: ObjectId()
-      }))
-    });
-  } else if (req.file) {
-    _.extend(data, {
-      file: _.pick(req.file, 'mimetype', 'path')
-    });
+  // if (req.files) {
+  //   _.extend(data, {
+  //     files: _.map(req.files, file => _.extend(_.pick(file, 'mimetype', 'path'), {
+  //       _id: ObjectId()
+  //     }))
+  //   });
+  // }
+  if (req.file) {
+    _.extend(data, _.pick(req.file, 'mimetype', 'path', 'size'));
   }
   checkDirExist(dir_id)
   .then(() => {
@@ -268,6 +282,16 @@ api.post('/dir/:dir_id/file',
         $push: {
           files: doc._id
         }
+      })
+      .then(() => {
+        return db.document.dir.update({
+          [posKey]: posVal,
+          parent_dir: null
+        }, {
+          $inc: {
+            total_size: req.file.size
+          }
+        })
       })
     })
   })
@@ -292,20 +316,42 @@ api.put('/file/:file_id', (req, res, next) => {
 
 api.delete('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
-  db.document.dir.update({
-    _id: dir_id,
-    [posKey]: posVal,
+  db.document.file.findOne({
+    _id: file_id
   }, {
-    $pull: {
-      files: file_id
-    }
+    size: 1,
+    dir_id: 1
   })
-  .then(doc => {
-    // TODO remove files
-    return db.document.file.remove({
-      _id: file_id,
-      dir_id: dir_id,
+  .then(fileInfo => {
+    if (!fileInfo) {
+      throw new ApiError(404);
+    }
+    return checkDirExist(fileInfo.dir_id)
+    .then(() => {
+      return Promise.all([
+        db.document.file.remove({
+          _id: file_id,
+        }),
+        db.document.dir.update({
+          _id: fileInfo.dir_id,
+        }, {
+          $pull: {
+            files: file_id
+          }
+        }),
+        db.document.dir.update({
+          [posKey]: posVal,
+          parent_dir: null
+        }, {
+          $inc: {
+            total_size: - fileInfo.size
+          }
+        })
+      ])
     })
+  })
+  .then(() => {
+    // TODO remove files
   })
   .then(() => res.json({}))
   .catch(next)
@@ -402,7 +448,7 @@ api.put('/location', (req, res, next) => {
           _id: origin_dir
         }, {
           $pull: {
-            children: list
+            dirs: list
           }
         })
       })
@@ -411,7 +457,7 @@ api.put('/location', (req, res, next) => {
           _id: target_dir
         }, {
           $push: {
-            children: {
+            dirs: {
               $each: list
             }
           }
@@ -441,7 +487,7 @@ function checkDirNameValid(name, parent_dir) {
     [posKey]: posVal,
   }, {
     parent_dir: 1,
-    children: 1,
+    dirs: 1,
   })
   .then(list => {
     if (!list) {
@@ -450,10 +496,10 @@ function checkDirNameValid(name, parent_dir) {
     // if (list.parent_dir != null) {
     //   throw new ApiError(400, null, '只能创建二级目录');
     // }
-    if (list.children && list.children.length) {
+    if (list.dirs && list.dirs.length) {
       return db.document.dir.count({
         _id: {
-          $in: list.children
+          $in: list.dirs
         },
         name: name
       })
@@ -468,7 +514,7 @@ function checkDirNameValid(name, parent_dir) {
 
 function checkDirExist(dir_id) {
   if (dir_id == null) {
-    return new Promise().resolve();
+    return Promise.resolve();
   }
   return db.document.dir.count({
     _id: dir_id,
@@ -478,5 +524,28 @@ function checkDirExist(dir_id) {
     if (!count) {
       throw new ApiError(404);
     }
+  })
+}
+
+function getFullPath(dir_id, path) {
+  console.log(dir_id);
+  if (dir_id == null) {
+    return Promise.resolve([]);
+  }
+  path = path || [];
+  return db.document.dir.findOne({
+    _id: dir_id
+  }, {
+    name: 1,
+    parent_dir: 1
+  })
+  .then(doc => {
+    if (doc) {
+      path.push(doc);
+      if (doc.parent_dir != null) {
+        return getFullPath(doc.parent_dir, path);
+      }
+    }
+    return path;
   })
 }
