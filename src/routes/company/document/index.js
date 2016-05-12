@@ -63,26 +63,26 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       }
       throw new ApiError(404);
     }
-    if (!doc.dirs || doc.dirs.length == 0) {
-      return res.json(doc);
-    }
-    return db.document.dir.find({
-      _id: {
-        $in: doc.dirs
-      }
-    }, {
-      name: 1
-    })
-    .then(dirs => {
-      doc.dirs = dirs;
+    return getFullPath(doc.parent_dir)
+    .then(path => {
+      doc.path = path;
     })
     .then(() => {
-      return getFullPath(dir_id)
-      .then(path => {
-        doc.path = path;
-        res.json(doc);
+      if (!doc.dirs || doc.dirs.length == 0) {
+        return;
+      }
+      return db.document.dir.find({
+        _id: {
+          $in: doc.dirs
+        }
+      }, {
+        name: 1
+      })
+      .then(dirs => {
+        doc.dirs = dirs;
       })
     })
+    .then(() => res.json(doc))
   })
   .catch(next);
 });
@@ -338,6 +338,14 @@ api.delete('/file/:file_id', (req, res, next) => {
           $pull: {
             files: file_id
           }
+        }),
+        db.document.dir.update({
+          [posKey]: posVal,
+          parent_dir: null
+        }, {
+          $inc: {
+            total_size: - fileInfo.size
+          }
         })
       ])
     })
@@ -520,8 +528,9 @@ function checkDirExist(dir_id) {
 }
 
 function getFullPath(dir_id, path) {
+  console.log(dir_id);
   if (dir_id == null) {
-    return Promise.resolve();
+    return Promise.resolve([]);
   }
   path = path || [];
   return db.document.dir.findOne({
@@ -531,9 +540,11 @@ function getFullPath(dir_id, path) {
     parent_dir: 1
   })
   .then(doc => {
-    path.push(doc);
-    if (doc.parent_dir != null) {
-      return getFullPath(doc.parent_dir, path);
+    if (doc) {
+      path.push(doc);
+      if (doc.parent_dir != null) {
+        return getFullPath(doc.parent_dir, path);
+      }
     }
     return path;
   })
