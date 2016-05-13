@@ -49,6 +49,10 @@ OUTPUT:
     title: <String>,
     mimetype: <String>,
     size: <Number>,
+  }...],
+  path: [{
+    _id: <ObjectId>,
+    name: <String>,
   }...]
 }
 ```
@@ -78,13 +82,18 @@ INPUT:
 
 INPUT:
 ```javascript
-[{
+{
   title: <String>,
   dir_id: <ObjectId>,
   description: <String>,
   content: <String>,
+  _type: <String:content>,
+}
+or 
+{
   document: [<File>...],
-}]
+  dir_id: <ObjectId>
+}
 ```
 
 ### PUT /document/file/:file_id
