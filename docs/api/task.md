@@ -125,7 +125,7 @@ INPUT
 
 取消对任务的关注
 
-### POST /task/:task_id/tag
+### PUT /task/:task_id/tag
 
 添加标签
 

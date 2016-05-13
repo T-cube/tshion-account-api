@@ -63,7 +63,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   db.document.dir.findOne(condition)
   .then(doc => {
     if (!doc) {
-      if (null == condition.parent_dir) {
+      if (!condition._id && null == condition.parent_dir) {
         _.extend(condition, {
           name: '',
           dirs: [],
@@ -76,16 +76,11 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       }
       throw new ApiError(404);
     }
-    return getFullPath(doc.parent_dir)
-    .then(path => {
-      doc.path = path;
-    })
-    .then(() => {
-      return mapObjectIdToData(doc, 'document.dir', ['name'], ['dirs'])
-    })
-    .then(() => {
-      return mapObjectIdToData(doc, 'document.file', ['title', 'mimetype'], ['files'])
-    })
+    return Promise.all([
+      getFullPath(doc.parent_dir).then(path => doc.path = path),
+      mapObjectIdToData(doc, 'document.dir', ['name'], ['dirs']),
+      mapObjectIdToData(doc, 'document.file', ['title', 'mimetype'], ['files']),
+    ])
     .then(() => res.json(doc))
   })
   .catch(next);
