@@ -40,6 +40,8 @@ let constants = {
     CREATE: 'create',
     UPDATE: 'update',
     DELETE: 'delete',
+    ACCEPT: 'accept',
+    REJECT: 'reject',
   },
 
   PROJECT_MEMBER_TYPE: {

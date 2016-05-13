@@ -11,7 +11,6 @@ import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
 import { checkUserType } from '../utils';
 import { isEmail, time } from 'lib/utils';
-import Message from 'models/message';
 
 /* company collection */
 let api = require('express').Router();
@@ -72,17 +71,12 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
       date_create: time(),
     })
     .then(request => {
-      console.log('request:', request);
-      let msg = new Message();
-      console.log('msg', msg)
+      let msg = req.model('message');
       msg.from(req.user._id).to(user._id).send({
         verb: C.MESSAGE_VERB.CREATE,
         target_type: C.MESSAGE_TARGET_TYPE.REQUEST,
         target_id: request._id,
       });
-    }).catch(e => {
-      console.error(e);
-      console.error(e.stack);
     })
     return db.company.update({
       _id: req.company._id,

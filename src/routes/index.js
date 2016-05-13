@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 
 import { apiErrorHandler } from 'lib/error';
 import corsHandler from 'lib/cors';
+import Message from 'models/message';
 
 let api = express.Router();
 export default api;
@@ -11,6 +12,11 @@ export default api;
 api.use(corsHandler);
 
 api.use(bodyParser.json());
+
+api.use((req, res, next) => {
+  req.loadModel('message', Message);
+  next();
+});
 
 let routes = [
   'account',

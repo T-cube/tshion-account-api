@@ -22,7 +22,6 @@ export default class Message {
   }
 
   send(data) {
-    console.log('Message.send()');
     let _data = _.extend({
       from: this._from,
       to: this._to,
@@ -44,7 +43,6 @@ export default class Message {
       is_read: false,
       date_create: time(),
     });
-    console.log(_data);
     return db.message.insert(_data);
   }
 

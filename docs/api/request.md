@@ -16,7 +16,7 @@
 
 ## API function
 
-### GET /request/inbox
+### GET /request
 
 收到的请求
 
@@ -45,35 +45,7 @@ OUTPUT:
 }...]
 ```
 
-### GET /request/outbox
-
-收到的请求
-
-OUTPUT:
-```javascript
-[{
-  _id: <ObjectId>,
-  from: {                   // 申请人
-    _id: <ObjectId>,
-    name: <String>,
-    avatar: <URL>,
-  },
-  to: {                     // 被申请人
-    _id: <ObjectId>,
-    name: <String>,
-    avatar: <URL>,
-  },
-  type: <String[Enum]>,     // 申请类型
-  object: {                 // 申请对象
-    _id: <ObjectId>,
-    name: <String>,
-  },
-  status: <String[Enum]>,   // 申请状态
-  date_create: <Date>,      // 创建日期
-}...]
-```
-
-### POST /request/inbox/:request_id/accept
+### POST /request/:request_id/accept
 
 INPUT:
 ```javascript
@@ -82,7 +54,7 @@ INPUT:
 }
 ```
 
-### POST /request/inbox/:request_id/reject
+### POST /request/:request_id/reject
 
 INPUT:
 ```javascript

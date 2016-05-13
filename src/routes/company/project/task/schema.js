@@ -10,10 +10,7 @@ export let sanitization = {
   date_start: { type: 'date', optional: 1 },// 开始时间（optional）
   date_due: { type: 'date', optional: 1 },  // 截止时间（optional）
   priority: { type: 'int' },                // 优先级别
-  tag: {
-    type: 'array',
-    items: { $objectId: 1 }
-  },
+  tag: { $objectId: 1 },
 }
 
 export let validation = {
@@ -25,10 +22,7 @@ export let validation = {
   date_start: { type: 'date', optional: 1 },
   date_due: { type: 'date', optional: 1 },
   priority: { $enum: ENUMS.TASK_PRIORITY },
-  tag: {
-    type: 'array',
-    items: { $objectId: 1 }
-  },
+  tag: { $objectId: 1 },
 }
 
 export let commentSanitization = {
