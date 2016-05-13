@@ -38,7 +38,7 @@ INPUT
   date_due: <date>,            // 截止时间（optional）
   priority: <0,1,2,3>,         // 优先级别
   //subtask: [<ObjectId>, ...], // 子任务
-  tag: [<ObjectId>, ...],        // 标签
+  tags: [<ObjectId>, ...],        // 标签
 }
 ```
 
@@ -132,7 +132,7 @@ INPUT
 INPUT
 ```javascript
 {
-  tag: <ObjectId>
+  tags: <ObjectId>
 }
 ```
 
