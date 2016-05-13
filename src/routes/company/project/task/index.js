@@ -272,7 +272,7 @@ api.put('/:task_id/date_due', updateField('date_due'), (req, res, next) => {
 });
 
 api.put('/:task_id/tag', (req, res, next) => {
-  let data = validField('tag', req.body.tag);
+  let data = validField('tags', req.body.tag);
   db.project.count({
     _id: req.project_id,
     'tags._id': data.tag

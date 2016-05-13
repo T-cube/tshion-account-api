@@ -208,23 +208,26 @@ api.get('/file/:file_id/download', (req, res, next) => {
   .catch(next)
 });
 
+api.post('/file', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(fileSanitization, fileValidation, data);
+  _.extend(data, {
+    [posKey]: posVal,
+    title: data.title,
+    author: req.user._id,
+    date_update: new Date(),
+    date_create: new Date(),
+    size: data.content.length
+  });
+  data = [data];
+  let dir_id = data.dir_id;
+  createFile(req, res, next, data, dir_id);
+});
+
 api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, next) => {
   let data = req.body;
-  let files = [];
   let dir_id = null;
-  if (data.type == 'content') {
-    sanitizeValidateObject(fileSanitization, fileValidation, data);
-    _.extend(data, {
-      [posKey]: posVal,
-      title: data.title,
-      author: req.user._id,
-      date_update: new Date(),
-      date_create: new Date(),
-      size: data.content.length
-    });
-    data = [data];
-    dir_id = data.dir_id;
-  } else if (req.files) {
+  if (req.files) {
     // sanitizeValidateObject(_.pick(fileSanitization, 'dir_id'), _.pick(fileValidation, 'dir_id'), data);
     dir_id = ObjectId(data.dir_id);
     data = _.map(req.files, file => {
@@ -241,72 +244,7 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
   } else {
     throw new ApiError(400);
   }
-
-  let total_size = 0;
-  data.forEach(item => {
-    if (item.size > max_file_size) {
-      throw new ApiError(400, null, '文件大小超过上限')
-    }
-    total_size += item.size;
-  });
-  getTotalSize().then(size => {
-    if ((size + total_size) > max_total_size) {
-      throw new ApiError(400, null, '您的文件存储空间不足')
-    }
-  })
-
-  checkDirExist(dir_id)
-  .then(() => {
-    return db.document.dir.findOne({
-      _id: dir_id
-    }, {
-      files: 1
-    })
-    .then(dirInfo => {
-      if (!dirInfo.files || !dirInfo.files.length) {
-        return [];
-      }
-      return db.document.file.find({
-        _id: {
-          $in: dirInfo.files
-        }
-      }, {
-        title: 1
-      })
-      .then(files => files.map(file => file.title))
-    })
-    .then(filenamelist => {
-      data.forEach((item, i) => {
-        data[i].file = getUniqName(filenamelist, data[i].file);
-      })
-    })
-    .then(() => {
-      return db.document.file.insert(data)
-      .then(doc => {
-        res.json(doc);
-        return Promise.all([
-          db.document.dir.update({
-            _id: dir_id,
-          }, {
-            $push: {
-              files: {
-                $each: doc.map(item => item._id)
-              }
-            }
-          }),
-          db.document.dir.update({
-            [posKey]: posVal,
-            parent_dir: null
-          }, {
-            $inc: {
-              total_size: size
-            }
-          })
-        ])
-      })
-    })
-  })
-  .catch(next);
+  createFile(req, res, next, data, dir_id)
 });
 
 api.put('/file/:file_id', (req, res, next) => {
@@ -521,6 +459,7 @@ function checkDirExist(dir_id) {
     [posKey]: posVal,
   })
   .then(count => {
+    console.log(count);
     if (!count) {
       throw new ApiError(404, null, '文件夹' + dir_id + '不存在');
     }
@@ -559,4 +498,72 @@ function getFullPath(dir_id, path) {
     }
     return path;
   })
+}
+
+function createFile(req, res, next, data, dir_id) {
+  let total_size = 0;
+  data.forEach(item => {
+    if (item.size > max_file_size) {
+      throw new ApiError(400, null, '文件大小超过上限')
+    }
+    total_size += item.size;
+  });
+  getTotalSize().then(size => {
+    if ((size + total_size) > max_total_size) {
+      throw new ApiError(400, null, '您的文件存储空间不足')
+    }
+  })
+
+  checkDirExist(dir_id)
+  .then(() => {
+    return db.document.dir.findOne({
+      _id: dir_id
+    }, {
+      files: 1
+    })
+    .then(dirInfo => {
+      if (!dirInfo.files || !dirInfo.files.length) {
+        return [];
+      }
+      return db.document.file.find({
+        _id: {
+          $in: dirInfo.files
+        }
+      }, {
+        title: 1
+      })
+      .then(files => files.map(file => file.title))
+    })
+    .then(filenamelist => {
+      data.forEach((item, i) => {
+        data[i].title = getUniqName(filenamelist, data[i].title);
+      })
+    })
+    .then(() => {
+      return db.document.file.insert(data)
+      .then(doc => {
+        res.json(doc);
+        return Promise.all([
+          db.document.dir.update({
+            _id: dir_id,
+          }, {
+            $push: {
+              files: {
+                $each: doc.map(item => item._id)
+              }
+            }
+          }),
+          db.document.dir.update({
+            [posKey]: posVal,
+            parent_dir: null
+          }, {
+            $inc: {
+              total_size: size
+            }
+          })
+        ])
+      })
+    })
+  })
+  .catch(next);
 }
