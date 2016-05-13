@@ -17,6 +17,7 @@ import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
 import { getUniqName } from 'lib/utils';
 import C from 'lib/constants';
+import config from 'config';
 
 let api = require('express').Router();
 export default api;
@@ -26,8 +27,8 @@ api.use(oauthCheck());
 let posKey = null;
 let posVal = null;
 let uploader = () => () => {};
-let MAX_FILE_SIZE = 0;
-let MAX_TOTAL_SIZE = 0;
+let max_file_size = 0;
+let max_total_size = 0;
 
 api.use((req, res, next) => {
   posKey = req.project_id ? 'project_id' : 'company_id';
@@ -39,17 +40,16 @@ api.use((req, res, next) => {
     return upload({type: 'attachment'}).array('document');
   };
   if (req.project_id) {
-    MAX_FILE_SIZE = C.DOCUMENT.PROJECT.MAX_FILE_SIZE;
-    MAX_TOTAL_SIZE = C.DOCUMENT.PROJECT.MAX_TOTAL_SIZE;
+    max_file_size = config.get('upload.document.project.max_file_size');
+    max_total_size = config.get('upload.document.project.max_total_size');
   } else {
-    MAX_FILE_SIZE = C.DOCUMENT.COMPANY.MAX_FILE_SIZE;
-    MAX_TOTAL_SIZE = C.DOCUMENT.COMPANY.MAX_TOTAL_SIZE;
+    max_file_size = config.get('upload.document.company.max_file_size');
+    max_total_size = config.get('upload.document.company.max_total_size');
   }
   next();
 });
 
 api.get('/dir/:dir_id?', (req, res, next) => {
-  console.log('here');
   let condition = {
     [posKey]: posVal
   };
@@ -168,7 +168,7 @@ api.delete('/dir/:dir_id', (req, res, next) => {
       throw new ApiError(404);
     }
     if (doc.dirs.length || doc.files.length) {
-      throw new ApiError(400, null, '请先删除当前目录下的所有文件夹及文件');
+      throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
     }
     return db.document.dir.update({
       _id: doc.parent_dir
@@ -267,14 +267,14 @@ api.get('/file/:file_id/download', (req, res, next) => {
   .catch(next)
 });
 
-api.post('/upload', uploader(), (req, res, next) => {
+api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, next) => {
   let data = req.body;
   let files = [];
   let dir_id = null;
   if (data._type == 'content') {
     sanitizeValidateObject(fileSanitization, fileValidation, data);
     _.extend(data, {
-      name: data.name,
+      title: data.title,
       author: req.user._id,
       date_update: new Date(),
       date_create: new Date(),
@@ -286,28 +286,28 @@ api.post('/upload', uploader(), (req, res, next) => {
     sanitizeValidateObject(_.pick(fileSanitization, 'dir_id'), _.pick(fileValidation, 'dir_id'), data);
     dir_id = data.dir_id;
     data = _.map(req.files, file => {
-      let fileData = _.pick(file, 'mimetype', 'path', 'size', 'origin_name');
+      let fileData = _.pick(file, 'mimetype', 'path', 'size', 'originalname');
       return _.extend(fileData, {
         dir_id: dir_id,
-        name: file.name,
+        title: fileData.originalname,
         author: req.user._id,
         date_update: new Date(),
         date_create: new Date(),
       });
     });
   } else {
-    throw new ApiError(404);
+    throw new ApiError(400);
   }
 
   let total_size = 0;
   data.forEach(item => {
-    if (item.size > MAX_FILE_SIZE) {
+    if (item.size > max_file_size) {
       throw new ApiError(400, null, '文件大小超过上限')
     }
     total_size += item.size;
   });
   getTotalSize().then(size => {
-    if ((size + total_size) > MAX_TOTAL_SIZE) {
+    if ((size + total_size) > max_total_size) {
       throw new ApiError(400, null, '您的文件存储空间不足')
     }
   })
@@ -325,35 +325,37 @@ api.post('/upload', uploader(), (req, res, next) => {
           $in: fileIdList
         }
       }, {
-        name: 1
+        title: 1
       })
-      .then(files => files.map(file => file.name))
+      .then(files => files.map(file => file.title))
     })
     .then(filenamelist => {
       data.forEach((item, i) => {
-        data[i].name = getUniqName(filenamelist, data[i].name);
+        data[i].file = getUniqName(filenamelist, data[i].file);
       })
     })
-    return db.document.file.insert(data)
-    .then(doc => {
-      res.json(doc);
-      return db.document.dir.update({
-        _id: dir_id,
-      }, {
-        $push: {
-          files: {
-            $each: doc.map(item => item._id)
-          }
-        }
-      })
-      .then(() => {
+    .then(() => {
+      return db.document.file.insert(data)
+      .then(doc => {
+        res.json(doc);
         return db.document.dir.update({
-          [posKey]: posVal,
-          parent_dir: null
+          _id: dir_id,
         }, {
-          $inc: {
-            total_size: size
+          $push: {
+            files: {
+              $each: doc.map(item => item._id)
+            }
           }
+        })
+        .then(() => {
+          return db.document.dir.update({
+            [posKey]: posVal,
+            parent_dir: null
+          }, {
+            $inc: {
+              total_size: size
+            }
+          })
         })
       })
     })
@@ -614,7 +616,7 @@ function getFullPath(dir_id, path) {
   })
   .then(doc => {
     if (doc) {
-      path.push(doc);
+      path.unshift(doc);
       if (doc.parent_dir != null) {
         return getFullPath(doc.parent_dir, path);
       }
