@@ -47,6 +47,7 @@ export function getUniqName(list, name) {
       return getUniqName(list, `${name}(2)`);
     }
   } else {
+    list.push(name);
     return name;
   }
 }

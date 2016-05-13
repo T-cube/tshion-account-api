@@ -270,21 +270,26 @@ api.get('/file/:file_id/download', (req, res, next) => {
 api.post('/upload', uploader(), (req, res, next) => {
   let data = req.body;
   let files = [];
+  let dir_id = null;
   if (data._type == 'content') {
     sanitizeValidateObject(fileSanitization, fileValidation, data);
     _.extend(data, {
-      name: getUniqName(data.name),
+      name: data.name,
       author: req.user._id,
       date_update: new Date(),
       date_create: new Date(),
       size: data.content.length
     });
     data = [data];
+    dir_id = data.dir_id;
   } else if (req.files) {
+    sanitizeValidateObject(_.pick(fileSanitization, 'dir_id'), _.pick(fileValidation, 'dir_id'), data);
+    dir_id = data.dir_id;
     data = _.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'path', 'size', 'origin_name');
       return _.extend(fileData, {
-        name: getUniqName(file.name),
+        dir_id: dir_id,
+        name: file.name,
         author: req.user._id,
         date_update: new Date(),
         date_create: new Date(),
@@ -309,6 +314,26 @@ api.post('/upload', uploader(), (req, res, next) => {
 
   checkDirExist(dir_id)
   .then(() => {
+    return db.document.dir.findOne({
+      _id: dir_id
+    }, {
+      files: 1
+    })
+    .then(fileIdList => {
+      return db.document.file.find({
+        _id: {
+          $in: fileIdList
+        }
+      }, {
+        name: 1
+      })
+      .then(files => files.map(file => file.name))
+    })
+    .then(filenamelist => {
+      data.forEach((item, i) => {
+        data[i].name = getUniqName(filenamelist, data[i].name);
+      })
+    })
     return db.document.file.insert(data)
     .then(doc => {
       res.json(doc);
