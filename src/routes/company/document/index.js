@@ -16,6 +16,7 @@ import {
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
 import { getUniqName } from 'lib/utils';
+import C from 'lib/constants';
 
 let api = require('express').Router();
 export default api;
@@ -25,6 +26,8 @@ api.use(oauthCheck());
 let posKey = null;
 let posVal = null;
 let uploader = () => () => {};
+let MAX_FILE_SIZE = 0;
+let MAX_TOTAL_SIZE = 0;
 
 api.use((req, res, next) => {
   posKey = req.project_id ? 'project_id' : 'company_id';
@@ -35,10 +38,18 @@ api.use((req, res, next) => {
     //   : upload({type: 'attachment'}).array('document');
     return upload({type: 'attachment'}).array('document');
   };
+  if (req.project_id) {
+    MAX_FILE_SIZE = C.DOCUMENT.PROJECT.MAX_FILE_SIZE;
+    MAX_TOTAL_SIZE = C.DOCUMENT.PROJECT.MAX_TOTAL_SIZE;
+  } else {
+    MAX_FILE_SIZE = C.DOCUMENT.COMPANY.MAX_FILE_SIZE;
+    MAX_TOTAL_SIZE = C.DOCUMENT.COMPANY.MAX_TOTAL_SIZE;
+  }
   next();
 });
 
 api.get('/dir/:dir_id?', (req, res, next) => {
+  console.log('here');
   let condition = {
     [posKey]: posVal
   };
@@ -88,13 +99,11 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   .catch(next);
 });
 
-
-
 api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
   data[posKey] = posVal;
-  checkDirNameValid(data.name, data.parent_dir)
+  checkDirValid(data.name, data.parent_dir)
   .then(() => {
     return getFullPath(data.parent_dir)
     .then(path => {
@@ -135,7 +144,7 @@ api.put('/dir/:dir_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    return checkDirNameValid(data.name, doc.parent_dir)
+    return checkDirValid(data.name, doc.parent_dir)
     .then(() => {
       return db.document.dir.update({
         _id: dir_id
@@ -287,13 +296,13 @@ api.post('/upload', uploader(), (req, res, next) => {
 
   let total_size = 0;
   data.forEach(item => {
-    if (item.size > C.DOCUMENT.COMPANY.MAX_FILE_SIZE) {
+    if (item.size > MAX_FILE_SIZE) {
       throw new ApiError(400, null, '文件大小超过上限')
     }
     total_size += item.size;
   });
   getTotalSize().then(size => {
-    if ((size + total_size) > C.DOCUMENT.COMPANY.MAX_TOTAL_SIZE) {
+    if ((size + total_size) > MAX_TOTAL_SIZE) {
       throw new ApiError(400, null, '您的文件存储空间不足')
     }
   })
@@ -499,7 +508,7 @@ api.put('/location', (req, res, next) => {
   .catch(next);
 });
 
-function checkDirNameValid(name, parent_dir) {
+function checkDirValid(name, parent_dir) {
   // if (parent_dir == null) {
   //   return db.document.dir.count({
   //     parent_dir: null,
