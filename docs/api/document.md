@@ -68,9 +68,16 @@ INPUT:
 }
 ```
 
-### DELETE /document/dir/:dir_id
+### DELETE /document/dir
 
 删除目录
+
+INPUT
+```javascript
+{
+  dirs: [<ObjectId>...]
+}
+```
 
 ## document file
 
@@ -89,7 +96,7 @@ INPUT:
   content: <String>,
   _type: <String:content>,
 }
-or 
+or
 {
   document: [<File>...],
   dir_id: <ObjectId>
@@ -128,9 +135,16 @@ OUTPUT:
 }
 ```
 
-### DELETE /document/file/:file_id
+### DELETE /document/file
 
 删除文档
+
+INPUT
+```javascript
+{
+  files: [<ObjectId>...]
+}
+```
 
 ### PUT /document/location
 
