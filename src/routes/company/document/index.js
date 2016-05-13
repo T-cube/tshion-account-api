@@ -289,17 +289,17 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
       return db.document.file.insert(data)
       .then(doc => {
         res.json(doc);
-        return db.document.dir.update({
-          _id: dir_id,
-        }, {
-          $push: {
-            files: {
-              $each: doc.map(item => item._id)
+        return Promise.all([
+          db.document.dir.update({
+            _id: dir_id,
+          }, {
+            $push: {
+              files: {
+                $each: doc.map(item => item._id)
+              }
             }
-          }
-        })
-        .then(() => {
-          return db.document.dir.update({
+          }),
+          db.document.dir.update({
             [posKey]: posVal,
             parent_dir: null
           }, {
@@ -307,7 +307,7 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
               total_size: size
             }
           })
-        })
+        ])
       })
     })
   })
@@ -403,28 +403,26 @@ api.put('/location', (req, res, next) => {
       if (!list.length) {
         return null;
       }
-      return db.document.file.update({
-        _id: {
-          $in: list
-        }
-      }, {
-        $set: {
-          dir_id: target_dir
-        }
-      }, {
-        multi: true
-      })
-      .then(doc => {
-        return db.document.dir.update({
+      return Promise.all([
+        db.document.file.update({
+          _id: {
+            $in: list
+          }
+        }, {
+          $set: {
+            dir_id: target_dir
+          }
+        }, {
+          multi: true
+        }),
+        db.document.dir.update({
           _id: origin_dir
         }, {
           $pull: {
             files: list
           }
-        })
-      })
-      .then(doc => {
-        return db.document.dir.update({
+        }),
+        db.document.dir.update({
           _id: target_dir
         }, {
           $push: {
@@ -433,7 +431,7 @@ api.put('/location', (req, res, next) => {
             }
           }
         })
-      })
+      ])
     })
   })
   .then(() => {
@@ -453,28 +451,26 @@ api.put('/location', (req, res, next) => {
       if (!list.length) {
         return null;
       }
-      return db.document.dir.update({
-        _id: {
-          $in: list
-        }
-      }, {
-        $set: {
-          parent_dir: target_dir
-        }
-      }, {
-        multi: true
-      })
-      .then(doc => {
-        return db.document.dir.update({
+      return Promise.all([
+        db.document.dir.update({
+          _id: {
+            $in: list
+          }
+        }, {
+          $set: {
+            parent_dir: target_dir
+          }
+        }, {
+          multi: true
+        }),
+        db.document.dir.update({
           _id: origin_dir
         }, {
           $pull: {
             dirs: list
           }
-        })
-      })
-      .then(doc => {
-        return db.document.dir.update({
+        }),
+        db.document.dir.update({
           _id: target_dir
         }, {
           $push: {
@@ -483,7 +479,7 @@ api.put('/location', (req, res, next) => {
             }
           }
         })
-      })
+      ])
     })
   })
   .then(() => res.json({}))

@@ -284,7 +284,7 @@ api.post('/:task_id/tag', (req, res, next) => {
     return db.task.update({
       _id: ObjectId(req.params.task_id)
     }, {
-      $addToSet: {data}
+      $addToSet: data
     })
   })
   .then(result => res.json(result))
