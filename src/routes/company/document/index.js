@@ -15,7 +15,7 @@ import {
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
-import { getUniqName } from 'lib/utils';
+import { getUniqName, mapObjectIdToData } from 'lib/utils';
 import C from 'lib/constants';
 import config from 'config';
 
@@ -80,19 +80,10 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       doc.path = path;
     })
     .then(() => {
-      if (!doc.dirs || doc.dirs.length == 0) {
-        return;
-      }
-      return db.document.dir.find({
-        _id: {
-          $in: doc.dirs
-        }
-      }, {
-        name: 1
-      })
-      .then(dirs => {
-        doc.dirs = dirs;
-      })
+      return mapObjectIdToData(doc, 'document.dir', ['name'], ['dirs'])
+    })
+    .then(() => {
+      return mapObjectIdToData(doc, 'document.file', ['title'], ['files'])
     })
     .then(() => res.json(doc))
   })
