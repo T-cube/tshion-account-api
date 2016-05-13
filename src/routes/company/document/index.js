@@ -283,10 +283,10 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
     data = [data];
     dir_id = data.dir_id;
   } else if (req.files) {
-    sanitizeValidateObject(_.pick(fileSanitization, 'dir_id'), _.pick(fileValidation, 'dir_id'), data);
-    dir_id = data.dir_id;
+    // sanitizeValidateObject(_.pick(fileSanitization, 'dir_id'), _.pick(fileValidation, 'dir_id'), data);
+    dir_id = ObjectId(data.dir_id);
     data = _.map(req.files, file => {
-      let fileData = _.pick(file, 'mimetype', 'path', 'size', 'originalname');
+      let fileData = _.pick(file, 'mimetype', 'path', 'size');
       return _.extend(fileData, {
         dir_id: dir_id,
         title: fileData.originalname,
@@ -319,10 +319,13 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
     }, {
       files: 1
     })
-    .then(fileIdList => {
+    .then(dirInfo => {
+      if (!dirInfo.files || !dirInfo.files.length) {
+        return [];
+      }
       return db.document.file.find({
         _id: {
-          $in: fileIdList
+          $in: dirInfo.files
         }
       }, {
         title: 1
