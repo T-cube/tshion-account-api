@@ -78,6 +78,18 @@ INPUT:
 
 ### POST /document/upload
 
+添加文件
+
+INPUT:
+```javascript
+{
+  document: [<File>...],
+  dir_id: <ObjectId>
+}
+```
+
+### POST /document/file
+
 添加文档
 
 INPUT:
@@ -87,12 +99,6 @@ INPUT:
   dir_id: <ObjectId>,
   description: <String>,
   content: <String>,
-  _type: <String:content>,
-}
-or 
-{
-  document: [<File>...],
-  dir_id: <ObjectId>
 }
 ```
 
