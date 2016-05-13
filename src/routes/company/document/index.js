@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
+import fs from 'fs';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -62,7 +63,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   db.document.dir.findOne(condition)
   .then(doc => {
     if (!doc) {
-      if (null == condition.parent_dir) {
+      if (!condition._id && null == condition.parent_dir) {
         _.extend(condition, {
           name: '',
           dirs: [],
@@ -75,16 +76,11 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       }
       throw new ApiError(404);
     }
-    return getFullPath(doc.parent_dir)
-    .then(path => {
-      doc.path = path;
-    })
-    .then(() => {
-      return mapObjectIdToData(doc, 'document.dir', ['name'], ['dirs'])
-    })
-    .then(() => {
-      return mapObjectIdToData(doc, 'document.file', ['title'], ['files'])
-    })
+    return Promise.all([
+      getFullPath(doc.parent_dir).then(path => doc.path = path),
+      mapObjectIdToData(doc, 'document.dir', ['name'], ['dirs']),
+      mapObjectIdToData(doc, 'document.file', ['title', 'mimetype'], ['files']),
+    ])
     .then(() => res.json(doc))
   })
   .catch(next);
@@ -94,6 +90,7 @@ api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
   data[posKey] = posVal;
+  data.files = [];
   checkDirValid(data.name, data.parent_dir)
   .then(() => {
     return getFullPath(data.parent_dir)
@@ -121,7 +118,7 @@ api.post('/dir', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/dir/:dir_id', (req, res, next) => {
+api.put('/dir/:dir_id/name', (req, res, next) => {
   let data = {
     name: req.body.name
   };
@@ -158,7 +155,7 @@ api.delete('/dir/:dir_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    if (doc.dirs.length || doc.files.length) {
+    if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
       throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
     }
     return db.document.dir.update({
@@ -178,37 +175,6 @@ api.delete('/dir/:dir_id', (req, res, next) => {
   .catch(next);
 });
 
-// api.get('/dir/:dir_id/file', (req, res, next) => {
-//   let dir_id = ObjectId(req.params.dir_id);
-//   db.document.dir.findOne({
-//     _id: dir_id,
-//     [posKey]: posVal,
-//   }, {
-//     files: 1
-//   })
-//   .then(doc => {
-//     if (!doc) {
-//       throw new ApiError(404);
-//     }
-//     if (!doc.files || !doc.files.length) {
-//       return res.json([]);
-//     }
-//     return db.document.file.find({
-//       _id: {
-//         $in: doc.files
-//       }
-//     }, {
-//       title: 1,
-//       description: 1,
-//       author: 1,
-//       author: 1,
-//       date_update: 1,
-//     })
-//     .then(files => res.json(files))
-//   })
-//   .catch(next);
-// });
-
 api.get('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
@@ -224,21 +190,6 @@ api.get('/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-// api.get('/file/:file_id/download/:item_id', (req, res, next) => {
-//   let file_id = ObjectId(req.params.file_id);
-//   let item_id = ObjectId(req.params.item_id);
-//   db.document.file.findOne({
-//     _id: file_id,
-//   })
-//   .then(doc => {
-//     if (!doc) {
-//       throw new ApiError(404);
-//     }
-//     download(_.find(doc.files, file => file._id.equals(item_id)).path); // TODO
-//   })
-//   .catch(next)
-// });
-
 api.get('/file/:file_id/download', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
@@ -252,35 +203,40 @@ api.get('/file/:file_id/download', (req, res, next) => {
     if (fileInfo.path) {
       res.set('Content-disposition', 'attachment; filename=' + fileInfo.title);
       res.set('Content-type', fileInfo.mimetype);
-      fs.createReadStream(doc.path).pipe(res);
+      fs.createReadStream(fileInfo.path).pipe(res);
     }
   })
   .catch(next)
 });
 
+api.post('/file', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(fileSanitization, fileValidation, data);
+  _.extend(data, {
+    [posKey]: posVal,
+    title: data.title,
+    author: req.user._id,
+    date_update: new Date(),
+    date_create: new Date(),
+    size: data.content.length
+  });
+  let dir_id = data.dir_id;
+  data = [data];
+  createFile(req, res, next, data, dir_id);
+});
+
 api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, next) => {
   let data = req.body;
-  let files = [];
   let dir_id = null;
-  if (data._type == 'content') {
-    sanitizeValidateObject(fileSanitization, fileValidation, data);
-    _.extend(data, {
-      title: data.title,
-      author: req.user._id,
-      date_update: new Date(),
-      date_create: new Date(),
-      size: data.content.length
-    });
-    data = [data];
-    dir_id = data.dir_id;
-  } else if (req.files) {
+  if (req.files) {
     // sanitizeValidateObject(_.pick(fileSanitization, 'dir_id'), _.pick(fileValidation, 'dir_id'), data);
     dir_id = ObjectId(data.dir_id);
     data = _.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'path', 'size');
       return _.extend(fileData, {
+        [posKey]: posVal,
         dir_id: dir_id,
-        title: fileData.originalname,
+        title: file.originalname,
         author: req.user._id,
         date_update: new Date(),
         date_create: new Date(),
@@ -289,7 +245,263 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
   } else {
     throw new ApiError(400);
   }
+  createFile(req, res, next, data, dir_id)
+});
 
+api.put('/file/:file_id', (req, res, next) => {
+  let file_id = ObjectId(req.params.file_id);
+  let data = req.body;
+  sanitizeValidateObject(fileSanitization, fileValidation, data);
+  _.extend(data, {
+    date_update: new Date(),
+  });
+  db.document.file.update({
+    _id: file_id,
+  }, {
+    $set: data
+  })
+  .then(doc => res.json(doc))
+  .catch(next)
+});
+
+api.delete('/file/:file_id', (req, res, next) => {
+  let file_id = ObjectId(req.params.file_id);
+  db.document.file.findOne({
+    _id: file_id
+  }, {
+    size: 1,
+    dir_id: 1,
+    path: 1
+  })
+  .then(fileInfo => {
+    if (!fileInfo) {
+      throw new ApiError(404);
+    }
+    return checkDirExist(fileInfo.dir_id)
+    .then(() => {
+      return Promise.all([
+        db.document.file.remove({
+          _id: file_id,
+        }),
+        db.document.dir.update({
+          _id: fileInfo.dir_id,
+        }, {
+          $pull: {
+            files: file_id
+          }
+        }),
+        db.document.dir.update({
+          [posKey]: posVal,
+          parent_dir: null
+        }, {
+          $inc: {
+            total_size: - fileInfo.size
+          }
+        })
+      ])
+    })
+    .then(() => {
+      try {
+        fs.unlinkSync(fileInfo.path);
+      } catch (e) {
+
+      }
+    })
+  })
+  .then(() => res.json({}))
+  .catch(next)
+});
+
+api.put('/location', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(locationSanitization, locationValidation, data);
+  let { files, dirs, origin_dir, target_dir } = data;
+  if (origin_dir.equals(target_dir)) {
+    throw new ApiError(404);
+  }
+  checkDirExist(target_dir)
+  .then(() => {
+    if (!files || !files.length) {
+      return null;
+    }
+    return db.document.file.find({
+      _id: {
+        $in: files
+      },
+      dir_id: origin_dir
+    }, {
+      _id: 1
+    })
+    .then(list => {
+      list = list.map(item => item._id);
+      if (!list.length) {
+        return null;
+      }
+      return Promise.all([
+        db.document.file.update({
+          _id: {
+            $in: list
+          }
+        }, {
+          $set: {
+            dir_id: target_dir
+          }
+        }, {
+          multi: true
+        }),
+        db.document.dir.update({
+          _id: origin_dir
+        }, {
+          $pull: {
+            files: list
+          }
+        }),
+        db.document.dir.update({
+          _id: target_dir
+        }, {
+          $push: {
+            files: {
+              $each: list
+            }
+          }
+        })
+      ])
+    })
+  })
+  .then(() => {
+    if (!dirs || !dirs.length) {
+      return null;
+    }
+    return db.document.dir.find({
+      _id: {
+        $in: dirs
+      },
+      parent_dir: origin_dir
+    }, {
+      _id: 1
+    })
+    .then(list => {
+      list = list.map(item => item._id);
+      if (!list.length) {
+        return null;
+      }
+      return Promise.all([
+        db.document.dir.update({
+          _id: {
+            $in: list
+          }
+        }, {
+          $set: {
+            parent_dir: target_dir
+          }
+        }, {
+          multi: true
+        }),
+        db.document.dir.update({
+          _id: origin_dir
+        }, {
+          $pull: {
+            dirs: list
+          }
+        }),
+        db.document.dir.update({
+          _id: target_dir
+        }, {
+          $push: {
+            dirs: {
+              $each: list
+            }
+          }
+        })
+      ])
+    })
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+function checkDirValid(name, parent_dir) {
+  return db.document.dir.findOne({
+    _id: parent_dir,
+    [posKey]: posVal,
+  }, {
+    parent_dir: 1,
+    dirs: 1,
+  })
+  .then(list => {
+    if (!list) {
+      throw new ApiError(400, null, '父目录不存在');
+    }
+    // if (list.parent_dir != null) {
+    //   throw new ApiError(400, null, '只能创建二级目录');
+    // }
+    if (list.dirs && list.dirs.length) {
+      return db.document.dir.count({
+        _id: {
+          $in: list.dirs
+        },
+        name: name
+      })
+      .then(count => {
+        if (count) {
+          throw new ApiError(400, null, '存在同名的目录');
+        }
+      })
+    }
+  })
+}
+
+function checkDirExist(dir_id) {
+  if (!dir_id) {
+    throw new ApiError(400);
+  }
+  return db.document.dir.count({
+    _id: dir_id,
+    [posKey]: posVal,
+  })
+  .then(count => {
+    console.log(count);
+    if (!count) {
+      throw new ApiError(404, null, '文件夹' + dir_id + '不存在');
+    }
+  })
+}
+
+function getTotalSize() {
+  return db.document.dir.count({
+    parent_dir: null,
+    [posKey]: posVal,
+  }, {
+    size: 1
+  })
+  .then(doc => {
+    return doc && doc.size ? doc.size : 0;
+  })
+}
+
+function getFullPath(dir_id, path) {
+  if (dir_id == null) {
+    return Promise.resolve([]);
+  }
+  path = path || [];
+  return db.document.dir.findOne({
+    _id: dir_id
+  }, {
+    name: 1,
+    parent_dir: 1
+  })
+  .then(doc => {
+    if (doc) {
+      path.unshift(doc);
+      if (doc.parent_dir != null) {
+        return getFullPath(doc.parent_dir, path);
+      }
+    }
+    return path;
+  })
+}
+
+function createFile(req, res, next, data, dir_id) {
   let total_size = 0;
   data.forEach(item => {
     if (item.size > max_file_size) {
@@ -325,24 +537,24 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
     })
     .then(filenamelist => {
       data.forEach((item, i) => {
-        data[i].file = getUniqName(filenamelist, data[i].file);
+        data[i].title = getUniqName(filenamelist, data[i].title);
       })
     })
     .then(() => {
       return db.document.file.insert(data)
       .then(doc => {
         res.json(doc);
-        return db.document.dir.update({
-          _id: dir_id,
-        }, {
-          $push: {
-            files: {
-              $each: doc.map(item => item._id)
+        return Promise.all([
+          db.document.dir.update({
+            _id: dir_id,
+          }, {
+            $push: {
+              files: {
+                $each: doc.map(item => item._id)
+              }
             }
-          }
-        })
-        .then(() => {
-          return db.document.dir.update({
+          }),
+          db.document.dir.update({
             [posKey]: posVal,
             parent_dir: null
           }, {
@@ -350,271 +562,9 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
               total_size: size
             }
           })
-        })
+        ])
       })
     })
   })
   .catch(next);
-});
-
-api.put('/file/:file_id', (req, res, next) => {
-  let file_id = ObjectId(req.params.file_id);
-  let data = req.body;
-  sanitizeValidateObject(fileSanitization, fileValidation, data);
-  _.extend(data, {
-    date_update: new Date(),
-  });
-  db.document.file.update({
-    _id: file_id,
-  }, {
-    $set: data
-  })
-  .then(doc => res.json(doc))
-  .catch(next)
-});
-
-api.delete('/file/:file_id', (req, res, next) => {
-  let file_id = ObjectId(req.params.file_id);
-  db.document.file.findOne({
-    _id: file_id
-  }, {
-    size: 1,
-    dir_id: 1
-  })
-  .then(fileInfo => {
-    if (!fileInfo) {
-      throw new ApiError(404);
-    }
-    return checkDirExist(fileInfo.dir_id)
-    .then(() => {
-      return Promise.all([
-        db.document.file.remove({
-          _id: file_id,
-        }),
-        db.document.dir.update({
-          _id: fileInfo.dir_id,
-        }, {
-          $pull: {
-            files: file_id
-          }
-        }),
-        db.document.dir.update({
-          [posKey]: posVal,
-          parent_dir: null
-        }, {
-          $inc: {
-            total_size: - fileInfo.size
-          }
-        })
-      ])
-    })
-    .then(() => {
-      // TODO remove files
-
-    })
-  })
-  .then(() => res.json({}))
-  .catch(next)
-});
-
-api.put('/location', (req, res, next) => {
-  let data = req.body;
-  sanitizeValidateObject(locationSanitization, locationValidation, data);
-  let { files, dirs, origin_dir, target_dir } = data;
-  if (origin_dir.equals(target_dir)) {
-    throw new ApiError(404);
-  }
-  checkDirExist(target_dir)
-  .then(() => {
-    if (!files || !files.length) {
-      return null;
-    }
-    return db.document.file.find({
-      _id: {
-        $in: files
-      },
-      dir_id: origin_dir
-    }, {
-      _id: 1
-    })
-    .then(list => {
-      list = list.map(item => item._id);
-      if (!list.length) {
-        return null;
-      }
-      return db.document.file.update({
-        _id: {
-          $in: list
-        }
-      }, {
-        $set: {
-          dir_id: target_dir
-        }
-      }, {
-        multi: true
-      })
-      .then(doc => {
-        return db.document.dir.update({
-          _id: origin_dir
-        }, {
-          $pull: {
-            files: list
-          }
-        })
-      })
-      .then(doc => {
-        return db.document.dir.update({
-          _id: target_dir
-        }, {
-          $push: {
-            files: {
-              $each: list
-            }
-          }
-        })
-      })
-    })
-  })
-  .then(() => {
-    if (!dirs || !dirs.length) {
-      return null;
-    }
-    return db.document.dir.find({
-      _id: {
-        $in: dirs
-      },
-      parent_dir: origin_dir
-    }, {
-      _id: 1
-    })
-    .then(list => {
-      list = list.map(item => item._id);
-      if (!list.length) {
-        return null;
-      }
-      return db.document.dir.update({
-        _id: {
-          $in: list
-        }
-      }, {
-        $set: {
-          parent_dir: target_dir
-        }
-      }, {
-        multi: true
-      })
-      .then(doc => {
-        return db.document.dir.update({
-          _id: origin_dir
-        }, {
-          $pull: {
-            dirs: list
-          }
-        })
-      })
-      .then(doc => {
-        return db.document.dir.update({
-          _id: target_dir
-        }, {
-          $push: {
-            dirs: {
-              $each: list
-            }
-          }
-        })
-      })
-    })
-  })
-  .then(() => res.json({}))
-  .catch(next);
-});
-
-function checkDirValid(name, parent_dir) {
-  // if (parent_dir == null) {
-  //   return db.document.dir.count({
-  //     parent_dir: null,
-  //     [posKey]: posVal,
-  //     name: name
-  //   })
-  //   .then(count => {
-  //     if (count) {
-  //       throw new ApiError(400, null, '存在同名的目录');
-  //     }
-  //   })
-  // }
-  return db.document.dir.findOne({
-    _id: parent_dir,
-    [posKey]: posVal,
-  }, {
-    parent_dir: 1,
-    dirs: 1,
-  })
-  .then(list => {
-    if (!list) {
-      throw new ApiError(400, null, '父目录不存在');
-    }
-    // if (list.parent_dir != null) {
-    //   throw new ApiError(400, null, '只能创建二级目录');
-    // }
-    if (list.dirs && list.dirs.length) {
-      return db.document.dir.count({
-        _id: {
-          $in: list.dirs
-        },
-        name: name
-      })
-      .then(count => {
-        if (count) {
-          throw new ApiError(400, null, '存在同名的目录');
-        }
-      })
-    }
-  })
-}
-
-function checkDirExist(dir_id) {
-  if (dir_id == null) {
-    return Promise.resolve();
-  }
-  return db.document.dir.count({
-    _id: dir_id,
-    [posKey]: posVal,
-  })
-  .then(count => {
-    if (!count) {
-      throw new ApiError(404);
-    }
-  })
-}
-
-function getTotalSize() {
-  return db.document.dir.count({
-    parent_dir: null,
-    [posKey]: posVal,
-  }, {
-    size: 1
-  })
-  .then(doc => doc.size || 0)
-}
-
-function getFullPath(dir_id, path) {
-  if (dir_id == null) {
-    return Promise.resolve([]);
-  }
-  path = path || [];
-  return db.document.dir.findOne({
-    _id: dir_id
-  }, {
-    name: 1,
-    parent_dir: 1
-  })
-  .then(doc => {
-    if (doc) {
-      path.unshift(doc);
-      if (doc.parent_dir != null) {
-        return getFullPath(doc.parent_dir, path);
-      }
-    }
-    return path;
-  })
 }

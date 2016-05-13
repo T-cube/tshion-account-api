@@ -433,17 +433,26 @@ api.get('/:project_id/tag', (req, res, next) => {
 api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
   let project_id = ObjectId(req.params.project_id);
   let tag_id = ObjectId(req.params.tag_id);
-  db.project.update({
-    _id: project_id,
-    company_id: req.company._id,
-  }, {
-    $pull: {
-      tags: {
-          _id: tag_id
+  Promise.all([
+    db.project.update({
+      _id: project_id,
+      company_id: req.company._id,
+    }, {
+      $pull: {
+        tags: tag_id
       }
-    }
-  })
-  .then(doc => res.json(doc))
+    }),
+    db.task.update({
+      project_id: project_id,
+      company_id: req.company._id,
+      'tags': tag_id
+    }, {
+      $pull: {
+        tags: tag_id
+      }
+    })
+  ])
+  .then(() => res.json({}))
   .catch(next);
 });
 

@@ -203,46 +203,10 @@ INPUT
 }
 ```
 
-### POST /:project_id/file
+### project document
 
-添加文件
+项目文件
 
-INPUT:
-```javascript
-{
-  title: <String>,
-  description: <String>,
-  content: <String>,
-  document: <File>,
-}
-```
+挂载点：/project/:project_id
 
-### GET /:project_id/file
-
-获取文件列表
-
-OUTPUT:
-```javascript
-{
-  _id: <ObjectId>,
-  title: <String>,
-  description: <String>,
-  author: <String>,
-  date_update: <Date>,
-  mimetype: <String>,
-  path: <String>,
-}
-```
-
-### GET /:project_id/file/:file_id/download
-
-下载文件
-
-OUTPUT:
-```javascript
-<File>
-```
-
-### DELETE /:project_id/file/:file_id
-
-删除文件
+详见：[document](document.md)

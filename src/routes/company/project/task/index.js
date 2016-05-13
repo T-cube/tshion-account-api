@@ -271,8 +271,8 @@ api.put('/:task_id/date_due', updateField('date_due'), (req, res, next) => {
   res.json({});
 });
 
-api.post('/:task_id/tag', (req, res, next) => {
-  let data = validField('tag', req.body.tag);
+api.put('/:task_id/tag', (req, res, next) => {
+  let data = validField('tags', req.body.tag);
   db.project.count({
     _id: req.project_id,
     'tags._id': data.tag
@@ -284,7 +284,7 @@ api.post('/:task_id/tag', (req, res, next) => {
     return db.task.update({
       _id: ObjectId(req.params.task_id)
     }, {
-      $addToSet: {data}
+      $addToSet: data
     })
   })
   .then(result => res.json(result))
@@ -296,7 +296,7 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
     _id: ObjectId(req.params.task_id)
   }, {
     $pull: {
-      tag: ObjectId(req.params.tag_id)
+      tags: ObjectId(req.params.tag_id)
     }
   })
   .then(result => res.json(result))
