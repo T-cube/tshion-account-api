@@ -35,6 +35,7 @@ bindLoader(app);
 
 app.use((req, res, next) => {
   app.bindLoader(req);
+  next();
 });
 
 global.db = database();
