@@ -136,6 +136,10 @@ INPUT
 }
 ```
 
+### DELETE /task/:task_id/tag/:tag_id
+
+删除标签
+
 ### PUT /task/:task_id/date_start
 
 更新开始时间
