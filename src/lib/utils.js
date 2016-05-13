@@ -47,6 +47,7 @@ export function getUniqName(list, name) {
       return getUniqName(list, `${name}(2)`);
     }
   } else {
+    list.push(name);
     return name;
   }
 }
@@ -117,33 +118,33 @@ export function indexObjectId(list, id) {
 export function fetchUserInfo(data) {
   let args = [].slice.call(arguments);
   args.shift();
-  args = args.length ? args : [''];
-  let promiseLine = [];
-  let userList = [];
-  _.forEach(args, pos => {
-    let userId = _fetchUserInfo(data, [], pos);
-    userList = userList.concat(userId);
+  return mapObjectIdToData(data, 'user', ['name', 'avatar'], args)
+}
+
+export function mapObjectIdToData(data, collection, fields, keys) {
+  let keyList = [];
+  keys = keys && keys.length ? keys : [''];
+  _.forEach(keys, pos => {
+    let id = _mapObjectIdToData(data, [], pos);
+    keyList = keyList.concat(id);
   });
-  if (!userList.length) {
+  if (!keyList.length) {
     return Promise.resolve();
   }
-  return db.user.find({
+  return objectPath.get(db, collection).find({
     _id: {
-      $in: uniqObjectId(userList)
+      $in: uniqObjectId(keyList)
     }
-  }, {
-    name: 1,
-    avatar: 1
-  })
+  }, _.object(fields, _.range(fields.length).map(i => 1)))
   .then(infoList => {
-    _.forEach(args, pos => {
-      _fetchUserInfo(data, [], pos, infoList);
+    _.forEach(keys, pos => {
+      _mapObjectIdToData(data, [], pos, infoList);
     });
     return infoList.length == 1 ? infoList[0] : infoList;
   })
 }
 
-function _fetchUserInfo(data, k, pos, infoList) {
+function _mapObjectIdToData(data, k, pos, infoList) {
   k = k || [];
   pos = pos.replace(/^\.+/, '');
   let posList = pos.split('.');
@@ -154,13 +155,13 @@ function _fetchUserInfo(data, k, pos, infoList) {
   let val = objectPath.get(data, k);
   if (newPos || _.isArray(val)) {
     if (_.isArray(val)) {
-      let tempPromise = [];
+      let tempLsit = [];
       for (var i in val) {
-        tempPromise = tempPromise.concat(_fetchUserInfo(data, k.concat(i), newPos, infoList));
+        tempLsit = tempLsit.concat(_mapObjectIdToData(data, k.concat(i), newPos, infoList));
       }
-      return tempPromise;
+      return tempLsit;
     } else {
-      return _fetchUserInfo(data, k, newPos, infoList);
+      return _mapObjectIdToData(data, k, newPos, infoList);
     }
   }
   if (!ObjectId.isValid(val)) {

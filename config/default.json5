@@ -23,6 +23,16 @@
         //'.zip', '.rar',
       ],
     },
+    document: {
+      company: {
+        max_total_size: 1000000000, // 1G
+        max_file_size: 10000, // 10M
+      },
+      project: {
+        max_total_size: 1000000000, // 1G
+        max_file_size: 10000, // 10M
+      },
+    }
   },
   vendor: {
     qiniu: {

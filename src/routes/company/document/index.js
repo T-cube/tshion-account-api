@@ -15,7 +15,9 @@ import {
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
-import { getUniqName } from 'lib/utils';
+import { getUniqName, mapObjectIdToData } from 'lib/utils';
+import C from 'lib/constants';
+import config from 'config';
 
 let api = require('express').Router();
 export default api;
@@ -25,6 +27,8 @@ api.use(oauthCheck());
 let posKey = null;
 let posVal = null;
 let uploader = () => () => {};
+let max_file_size = 0;
+let max_total_size = 0;
 
 api.use((req, res, next) => {
   posKey = req.project_id ? 'project_id' : 'company_id';
@@ -35,6 +39,13 @@ api.use((req, res, next) => {
     //   : upload({type: 'attachment'}).array('document');
     return upload({type: 'attachment'}).array('document');
   };
+  if (req.project_id) {
+    max_file_size = config.get('upload.document.project.max_file_size');
+    max_total_size = config.get('upload.document.project.max_total_size');
+  } else {
+    max_file_size = config.get('upload.document.company.max_file_size');
+    max_total_size = config.get('upload.document.company.max_total_size');
+  }
   next();
 });
 
@@ -69,32 +80,21 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       doc.path = path;
     })
     .then(() => {
-      if (!doc.dirs || doc.dirs.length == 0) {
-        return;
-      }
-      return db.document.dir.find({
-        _id: {
-          $in: doc.dirs
-        }
-      }, {
-        name: 1
-      })
-      .then(dirs => {
-        doc.dirs = dirs;
-      })
+      return mapObjectIdToData(doc, 'document.dir', ['name'], ['dirs'])
+    })
+    .then(() => {
+      return mapObjectIdToData(doc, 'document.file', ['title'], ['files'])
     })
     .then(() => res.json(doc))
   })
   .catch(next);
 });
 
-
-
 api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
   data[posKey] = posVal;
-  checkDirNameValid(data.name, data.parent_dir)
+  checkDirValid(data.name, data.parent_dir)
   .then(() => {
     return getFullPath(data.parent_dir)
     .then(path => {
@@ -135,7 +135,7 @@ api.put('/dir/:dir_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    return checkDirNameValid(data.name, doc.parent_dir)
+    return checkDirValid(data.name, doc.parent_dir)
     .then(() => {
       return db.document.dir.update({
         _id: dir_id
@@ -159,7 +159,7 @@ api.delete('/dir/:dir_id', (req, res, next) => {
       throw new ApiError(404);
     }
     if (doc.dirs.length || doc.files.length) {
-      throw new ApiError(400, null, '请先删除当前目录下的所有文件夹及文件');
+      throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
     }
     return db.document.dir.update({
       _id: doc.parent_dir
@@ -258,68 +258,98 @@ api.get('/file/:file_id/download', (req, res, next) => {
   .catch(next)
 });
 
-api.post('/upload', uploader(), (req, res, next) => {
+api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, next) => {
   let data = req.body;
   let files = [];
+  let dir_id = null;
   if (data._type == 'content') {
     sanitizeValidateObject(fileSanitization, fileValidation, data);
     _.extend(data, {
-      name: getUniqName(data.name),
+      title: data.title,
       author: req.user._id,
       date_update: new Date(),
       date_create: new Date(),
       size: data.content.length
     });
     data = [data];
+    dir_id = data.dir_id;
   } else if (req.files) {
+    // sanitizeValidateObject(_.pick(fileSanitization, 'dir_id'), _.pick(fileValidation, 'dir_id'), data);
+    dir_id = ObjectId(data.dir_id);
     data = _.map(req.files, file => {
-      let fileData = _.pick(file, 'mimetype', 'path', 'size', 'origin_name');
+      let fileData = _.pick(file, 'mimetype', 'path', 'size');
       return _.extend(fileData, {
-        name: getUniqName(file.name),
+        dir_id: dir_id,
+        title: fileData.originalname,
         author: req.user._id,
         date_update: new Date(),
         date_create: new Date(),
       });
     });
   } else {
-    throw new ApiError(404);
+    throw new ApiError(400);
   }
 
   let total_size = 0;
   data.forEach(item => {
-    if (item.size > C.DOCUMENT.COMPANY.MAX_FILE_SIZE) {
+    if (item.size > max_file_size) {
       throw new ApiError(400, null, '文件大小超过上限')
     }
     total_size += item.size;
   });
   getTotalSize().then(size => {
-    if ((size + total_size) > C.DOCUMENT.COMPANY.MAX_TOTAL_SIZE) {
+    if ((size + total_size) > max_total_size) {
       throw new ApiError(400, null, '您的文件存储空间不足')
     }
   })
 
   checkDirExist(dir_id)
   .then(() => {
-    return db.document.file.insert(data)
-    .then(doc => {
-      res.json(doc);
-      return db.document.dir.update({
-        _id: dir_id,
-      }, {
-        $push: {
-          files: {
-            $each: doc.map(item => item._id)
-          }
+    return db.document.dir.findOne({
+      _id: dir_id
+    }, {
+      files: 1
+    })
+    .then(dirInfo => {
+      if (!dirInfo.files || !dirInfo.files.length) {
+        return [];
+      }
+      return db.document.file.find({
+        _id: {
+          $in: dirInfo.files
         }
+      }, {
+        title: 1
       })
-      .then(() => {
+      .then(files => files.map(file => file.title))
+    })
+    .then(filenamelist => {
+      data.forEach((item, i) => {
+        data[i].file = getUniqName(filenamelist, data[i].file);
+      })
+    })
+    .then(() => {
+      return db.document.file.insert(data)
+      .then(doc => {
+        res.json(doc);
         return db.document.dir.update({
-          [posKey]: posVal,
-          parent_dir: null
+          _id: dir_id,
         }, {
-          $inc: {
-            total_size: size
+          $push: {
+            files: {
+              $each: doc.map(item => item._id)
+            }
           }
+        })
+        .then(() => {
+          return db.document.dir.update({
+            [posKey]: posVal,
+            parent_dir: null
+          }, {
+            $inc: {
+              total_size: size
+            }
+          })
         })
       })
     })
@@ -499,7 +529,7 @@ api.put('/location', (req, res, next) => {
   .catch(next);
 });
 
-function checkDirNameValid(name, parent_dir) {
+function checkDirValid(name, parent_dir) {
   // if (parent_dir == null) {
   //   return db.document.dir.count({
   //     parent_dir: null,
@@ -580,7 +610,7 @@ function getFullPath(dir_id, path) {
   })
   .then(doc => {
     if (doc) {
-      path.push(doc);
+      path.unshift(doc);
       if (doc.parent_dir != null) {
         return getFullPath(doc.parent_dir, path);
       }
