@@ -90,6 +90,7 @@ api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
   data[posKey] = posVal;
+  data.files = [];
   checkDirValid(data.name, data.parent_dir)
   .then(() => {
     return getFullPath(data.parent_dir)
@@ -154,7 +155,7 @@ api.delete('/dir/:dir_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    if (doc.dirs.length || doc.files.length) {
+    if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
       throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
     }
     return db.document.dir.update({
@@ -219,8 +220,8 @@ api.post('/file', (req, res, next) => {
     date_create: new Date(),
     size: data.content.length
   });
-  data = [data];
   let dir_id = data.dir_id;
+  data = [data];
   createFile(req, res, next, data, dir_id);
 });
 
@@ -451,8 +452,8 @@ function checkDirValid(name, parent_dir) {
 }
 
 function checkDirExist(dir_id) {
-  if (dir_id == null) {
-    return Promise.resolve();
+  if (!dir_id) {
+    throw new ApiError(400);
   }
   return db.document.dir.count({
     _id: dir_id,
