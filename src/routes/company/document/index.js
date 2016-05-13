@@ -212,7 +212,7 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
   let data = req.body;
   let files = [];
   let dir_id = null;
-  if (data._type == 'content') {
+  if (data.type == 'content') {
     sanitizeValidateObject(fileSanitization, fileValidation, data);
     _.extend(data, {
       [posKey]: posVal,

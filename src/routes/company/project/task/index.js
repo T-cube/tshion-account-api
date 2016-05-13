@@ -296,7 +296,7 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
     _id: ObjectId(req.params.task_id)
   }, {
     $pull: {
-      tag: ObjectId(req.params.tag_id)
+      tags: ObjectId(req.params.tag_id)
     }
   })
   .then(result => res.json(result))
