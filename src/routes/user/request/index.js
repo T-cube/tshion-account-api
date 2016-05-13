@@ -30,7 +30,7 @@ api.post('/:request_id/accept', (req, res, next) => {
   })
   .then(request => {
     if (!request) {
-      throw new ApiError(404);
+      throw new ApiError(404, null, 'request not found');
     }
     if (request.status != C.REQUEST_STATUS.PENDING) {
       throw new ApiError(400, null, 'request expired');
@@ -70,10 +70,51 @@ api.post('/:request_id/accept', (req, res, next) => {
       ]);
     }
   })
-  .then(doc => res.json(doc))
+  .then(() => res.json({}))
   .catch(next);
 });
 
 api.post('/:request_id/reject', (req, res, next) => {
-
+  let requestId = ObjectId(req.params.request_id);
+  db.request.findOne({
+    _id: requestId,
+    to: req.user._id,
+  })
+  .then(request => {
+    if (!request) {
+      throw new ApiError(404, null, 'request not found');
+    }
+    if (request.status != C.REQUEST_STATUS.PENDING) {
+      throw new ApiError(400, null, 'request expired');
+    }
+    db.request.update({
+      _id: requestId,
+    }, {
+      $set: {
+        status: C.REQUEST_STATUS.REJECTED,
+      }
+    });
+    if (request.type == C.REQUEST_TYPE.COMPANY) {
+      let companyId = request.object;
+      return Promise.all([
+        db.company.update({
+          _id: companyId,
+          'members._id': request.to,
+        }, {
+          $set: {
+            'members.$.status': C.COMPANY_MEMBER_STATUS.REJECTED,
+          }
+        }),
+        req.model('message').send({
+          from: request.to,
+          to: request.from,
+          verb: C.MESSAGE_VERB.REJECT,
+          object_type: C.MESSAGE_TARGET_TYPE.REQUEST,
+          object_id: requestId,
+        }),
+      ]);
+    }
+  })
+  .then(() => res.json({}))
+  .catch(next);
 });
