@@ -23,6 +23,7 @@ let routes = [
   'company',
   'message',
   'relation',
+  'request',
   'task',
   'user',
 ];

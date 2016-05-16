@@ -27,7 +27,7 @@ let constants = {
     OWNER: 'owner',
   },
 
-  MESSAGE_TARGET_TYPE: {
+  OBJECT_TYPE: {
     REQUEST: 'Request',
     COMPANY: 'Company',
     COMPANY_MEMBER: 'CompanyMember',

@@ -62,12 +62,12 @@ export function getEmailName(email) {
   }
 }
 
-export function timestamp() {
-  return +new Date;
+export function timestamp(t) {
+  return +new Date(t);
 }
 
-export function time() {
-  return new Date;
+export function time(t) {
+  return new Date(t);
 }
 
 export function isEmail(email) {
@@ -124,6 +124,9 @@ export function fetchUserInfo(data) {
 export function mapObjectIdToData(data, collection, fields, keys) {
   let keyList = [];
   let isDataObjectId = ObjectId.isValid(data);
+  if (_.isArray(data) && data.length == 0) {
+    return Promise.resolve(data);
+  }
   keys = keys && keys.length ? keys : [''];
   _.forEach(keys, pos => {
     let id = _mapObjectIdToData(data, [], pos);

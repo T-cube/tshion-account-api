@@ -1,10 +1,13 @@
+import _ from 'underscore';
 import express from 'express'
 import { ObjectId } from 'mongodb';
+import config from 'config';
 
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import upload from 'lib/upload';
-import C from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
+import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
 // import { sanitizeValidateObject } from 'lib/inspector';
 // import { infoSanitization, infoValidation, avatarSanitization, avatarValidation } from './schema';
@@ -13,13 +16,40 @@ import C from 'lib/constants';
 let api = express.Router();
 export default api;
 
+api.use(oauthCheck());
+
 api.get('/', (req, res, next) => {
-  db.request.findOne({
-    to: req.user._id
+  // TODO only company request for now, support other type of request later.
+  const limit = config.get('view.listNum');
+  const { status } = req.query;
+  const { before } = req.query;
+  let query = {
+    to: req.user._id,
+    type: C.REQUEST_TYPE.COMPANY,
+  };
+  if (before) {
+    let timeLimit = new Date(parseInt(before));
+    query.date_create = {
+      $lt: timeLimit,
+    }
+  }
+  if (status) {
+    if (!_.contains(ENUMS.REQUEST_STATUS, status)) {
+      throw ApiError(400, null, 'invalid request status: ' + status);
+    }
+    query.status = status;
+  }
+  db.request.find(query).sort({_id: -1}).limit(limit)
+  .then(list => {
+    return fetchUserInfo(list, 'from');
+  })
+  .then(list => {
+    return mapObjectIdToData(list, 'company', ['name', 'logo'], ['object']);
   })
   .then(list => {
     res.json(list);
-  });
+  })
+  .catch(next);
 });
 
 api.post('/:request_id/accept', (req, res, next) => {
@@ -64,7 +94,7 @@ api.post('/:request_id/accept', (req, res, next) => {
           from: request.to,
           to: request.from,
           verb: C.MESSAGE_VERB.ACCEPT,
-          object_type: C.MESSAGE_TARGET_TYPE.REQUEST,
+          object_type: C.OBJECT_TYPE.REQUEST,
           object_id: requestId,
         }),
       ]);
@@ -109,7 +139,7 @@ api.post('/:request_id/reject', (req, res, next) => {
           from: request.to,
           to: request.from,
           verb: C.MESSAGE_VERB.REJECT,
-          object_type: C.MESSAGE_TARGET_TYPE.REQUEST,
+          object_type: C.OBJECT_TYPE.REQUEST,
           object_id: requestId,
         }),
       ]);

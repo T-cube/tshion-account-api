@@ -109,5 +109,3 @@ api.get('/project', (req, res, next) =>  {
   })
   .catch(next)
 });
-
-api.use('/request', require('./request').default);

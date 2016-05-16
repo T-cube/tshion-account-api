@@ -3,6 +3,11 @@
   webUrl: 'http://tlifang.com/',
   database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
+  // 前端展示配置
+  view: {
+    // 每页默认显式条目数量
+    listNum: 20,
+  },
   upload: {
     path: 'public/cdn/',
     url: 'http://api.tlifang.com/cdn/',

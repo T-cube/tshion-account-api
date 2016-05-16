@@ -71,10 +71,12 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
       date_create: time(),
     })
     .then(request => {
-      let msg = req.model('message');
-      msg.from(req.user._id).to(user._id).send({
+      req.model('message')
+      .from(req.user._id)
+      .to(user._id)
+      .send({
         verb: C.MESSAGE_VERB.CREATE,
-        target_type: C.MESSAGE_TARGET_TYPE.REQUEST,
+        target_type: C.OBJECT_TYPE.REQUEST,
         target_id: request._id,
       });
     })
