@@ -4,6 +4,7 @@ import Promise from 'bluebird';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import fs from 'fs';
+import path from 'path';
 import objectPath from 'object-path';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
@@ -50,6 +51,21 @@ export function getUniqName(list, name) {
     list.push(name);
     return name;
   }
+}
+
+export function getUniqFileName(list, name) {
+  let extname = path.extname(name);
+  let basename = path.basename(name, extname);
+  let names = [];
+  list.forEach(filename => {
+    let _extname = path.extname(filename);
+    if (_extname == extname) {
+      let _basename = path.basename(filename, _extname);
+      names.push(_basename);
+    }
+  });
+  let newName = getUniqName(names, basename);
+  return newName + extname;
 }
 
 export function getEmailName(email) {

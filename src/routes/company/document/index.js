@@ -12,8 +12,8 @@ import {
   dirValidation,
   fileSanitization,
   fileValidation,
-  locationSanitization,
-  locationValidation,
+  moveSanitization,
+  moveValidation,
   delSanitization,
   delValidation,
 } from './schema';
@@ -28,14 +28,11 @@ export default api;
 
 api.use(oauthCheck());
 
-let posKey = null;
-let posVal = null;
-let max_file_size = 0;
-let max_total_size = 0;
-
 api.use((req, res, next) => {
-  posKey = req.project_id ? 'project_id' : 'company_id';
-  posVal = req.project_id || req.company._id;
+  let max_file_size = 0;
+  let max_total_size = 0;
+  let posKey = req.project_id ? 'project_id' : 'company_id';
+  let posVal = req.project_id || req.company._id;
   if (req.project_id) {
     max_file_size = config.get('upload.document.project.max_file_size');
     max_total_size = config.get('upload.document.project.max_total_size');
@@ -43,12 +40,18 @@ api.use((req, res, next) => {
     max_file_size = config.get('upload.document.company.max_file_size');
     max_total_size = config.get('upload.document.company.max_total_size');
   }
+  req.document = {
+    posKey: posKey,
+    posVal: posVal,
+    max_file_size: max_file_size,
+    max_total_size: max_total_size,
+  };
   next();
 });
 
 api.get('/dir/:dir_id?', (req, res, next) => {
   let condition = {
-    [posKey]: posVal
+    [req.document.posKey]: req.document.posVal
   };
   let dir_id = null;
   if (req.params.dir_id) {
@@ -89,11 +92,12 @@ api.post('/dir', (req, res, next) => {
   _.extend(data, {
     files: [],
     dirs: [],
-    [posKey]: posVal,
+    [req.document.posKey]: req.document.posVal,
     updated_by: req.user._id,
     date_update: new Date(),
+    date_create: new Date(),
   })
-  checkDirValid(data.name, data.parent_dir)
+  checkDirValid(req, data.name, data.parent_dir)
   .then(() => {
     return getFullPath(data.parent_dir)
     .then(path => {
@@ -132,13 +136,13 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
   });
   db.document.dir.findOne({
     _id: dir_id,
-    [posKey]: posVal,
+    [req.document.posKey]: req.document.posVal,
   })
   .then(doc => {
     if (!doc) {
       throw new ApiError(404);
     }
-    return checkDirValid(data.name, doc.parent_dir)
+    return checkDirValid(req, data.name, doc.parent_dir)
     .then(() => {
       return db.document.dir.update({
         _id: dir_id
@@ -154,7 +158,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
 api.delete('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(delSanitization, delValidation, data);
-  Promise.all([deleteDirs(data.dirs), deleteFiles(data.files)])
+  Promise.all([deleteDirs(req, data.dirs), deleteFiles(req, data.files)])
   .then(() => res.json({}))
   .catch(next);
 });
@@ -163,7 +167,7 @@ api.get('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
     _id: file_id,
-    [posKey]: posVal,
+    [req.document.posKey]: req.document.posVal,
   })
   .then(file => {
     if (!file) {
@@ -178,14 +182,14 @@ api.get('/file/:file_id/download', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.file.findOne({
     _id: file_id,
-    [posKey]: posVal,
+    [req.document.posKey]: req.document.posVal,
   })
   .then(fileInfo => {
     if (!fileInfo) {
       throw new ApiError(404);
     }
     if (fileInfo.path) {
-      res.set('Content-disposition', 'attachment; filename=' + fileInfo.title);
+      res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
       res.set('Content-type', fileInfo.mimetype);
       fs.createReadStream(fileInfo.path).pipe(res);
     }
@@ -193,12 +197,14 @@ api.get('/file/:file_id/download', (req, res, next) => {
   .catch(next)
 });
 
-api.post('/file', (req, res, next) => {
+api.post('/dir/:dir_id/create', (req, res, next) => {
   let data = req.body;
+  let dir_id = ObjectId(req.params.dir_id);
   sanitizeValidateObject(fileSanitization, fileValidation, data);
   _.extend(data, {
-    [posKey]: posVal,
-    title: data.title,
+    [req.document.posKey]: req.document.posVal,
+    title: data.name,
+    dir_id: dir_id,
     author: req.user._id,
     date_update: new Date(),
     date_create: new Date(),
@@ -207,7 +213,7 @@ api.post('/file', (req, res, next) => {
   });
   let dir_id = data.dir_id;
   data = [data];
-  createFile(data, dir_id)
+  createFile(req, data, dir_id)
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -222,16 +228,16 @@ api.post('/file', (req, res, next) => {
 //   s.pipe(res)
 // })
 
-api.post('/upload',
+api.post('/dir/:dir_id/upload',
   upload({type: 'attachment'}).array('document'),
   (req, res, next) => {
   let data = req.body;
-  let dir_id = ObjectId(data.dir_id);
+  let dir_id = ObjectId(req.params.dir_id);
   if (req.files) {
     data = _.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'path', 'size');
       return _.extend(fileData, {
-        [posKey]: posVal,
+        [req.document.posKey]: req.document.posVal,
         dir_id: dir_id,
         title: file.originalname,
         author: req.user._id,
@@ -243,7 +249,7 @@ api.post('/upload',
   } else {
     throw new ApiError(400);
   }
-  createFile(data, dir_id)
+  createFile(req, data, dir_id)
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -265,14 +271,14 @@ api.put('/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-api.put('/location', (req, res, next) => {
+api.put('/move', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(locationSanitization, locationValidation, data);
+  sanitizeValidateObject(moveSanitization, moveValidation, data);
   let { files, dirs, origin_dir, target_dir } = data;
   if (origin_dir.equals(target_dir)) {
-    throw new ApiError(404);
+    return res.json({});
   }
-  checkDirExist(target_dir)
+  checkDirExist(req, target_dir)
   .then(() => {
     if (!files || !files.length) {
       return null;
@@ -373,10 +379,10 @@ api.put('/location', (req, res, next) => {
   .catch(next);
 });
 
-function checkDirValid(name, parent_dir) {
+function checkDirValid(req, name, parent_dir) {
   return db.document.dir.findOne({
     _id: parent_dir,
-    [posKey]: posVal,
+    [req.document.posKey]: req.document.posVal,
   }, {
     parent_dir: 1,
     dirs: 1,
@@ -404,13 +410,13 @@ function checkDirValid(name, parent_dir) {
   })
 }
 
-function checkDirExist(dir_id) {
+function checkDirExist(req, dir_id) {
   if (!dir_id) {
     throw new ApiError(400);
   }
   return db.document.dir.count({
     _id: dir_id,
-    [posKey]: posVal,
+    [req.document.posKey]: req.document.posVal,
   })
   .then(count => {
     console.log(count);
@@ -420,10 +426,10 @@ function checkDirExist(dir_id) {
   })
 }
 
-function getTotalSize() {
+function getTotalSize(req) {
   return db.document.dir.count({
     parent_dir: null,
-    [posKey]: posVal,
+    [req.document.posKey]: req.document.posVal,
   }, {
     size: 1
   })
@@ -454,21 +460,21 @@ function getFullPath(dir_id, path) {
   })
 }
 
-function createFile(data, dir_id) {
+function createFile(req, data, dir_id) {
   let total_size = 0;
   data.forEach(item => {
-    if (item.size > max_file_size) {
+    if (item.size > req.document.max_file_size) {
       throw new ApiError(400, null, '文件大小超过上限')
     }
     total_size += parseFloat(item.size);
   });
-  getTotalSize().then(curSize => {
-    if ((curSize + total_size) > max_total_size) {
+  getTotalSize(req).then(curSize => {
+    if ((curSize + total_size) > req.document.max_total_size) {
       throw new ApiError(400, null, '您的文件存储空间不足')
     }
   })
 
-  return checkDirExist(dir_id)
+  return checkDirExist(req, dir_id)
   .then(() => {
     return db.document.dir.findOne({
       _id: dir_id
@@ -486,11 +492,12 @@ function createFile(data, dir_id) {
       }, {
         title: 1
       })
-      .then(files => files.map(file => file.title))
+      .then(files => files.map(file => file.name))
     })
     .then(filenamelist => {
       data.forEach((item, i) => {
-        data[i].title = getUniqName(filenamelist, data[i].title);
+        data[i].name = getUniqFileName(filenamelist, data[i].name);
+        filenamelist.push(data[i].name);
       })
     })
     .then(() => {
@@ -507,7 +514,7 @@ function createFile(data, dir_id) {
             }
           }),
           db.document.dir.update({
-            [posKey]: posVal,
+            [req.document.posKey]: req.document.posVal,
             parent_dir: null
           }, {
             $inc: {
@@ -521,14 +528,14 @@ function createFile(data, dir_id) {
   })
 }
 
-function deleteDirs(dirs) {
+function deleteDirs(req, dirs) {
   if (!dirs || !dirs.length) {
     return null;
   }
   return Promise.all(dirs.map(dir_id => {
     return db.document.dir.findOne({
       _id: dir_id,
-      [posKey]: posVal,
+      [req.document.posKey]: req.document.posVal,
     })
     .then(doc => {
       if (!doc) {
@@ -553,7 +560,7 @@ function deleteDirs(dirs) {
   }))
 }
 
-function deleteFiles(files) {
+function deleteFiles(req, files) {
   let incSize = 0;
   if (!files || !files.length) {
     return null;
@@ -571,7 +578,7 @@ function deleteFiles(files) {
         throw new ApiError(400, null, '未找到文件');
       }
       incSize -= fileInfo.size;
-      return checkDirExist(fileInfo.dir_id)
+      return checkDirExist(req, fileInfo.dir_id)
       .then(() => {
         return Promise.all([
           db.document.file.remove({
@@ -595,7 +602,7 @@ function deleteFiles(files) {
   }))
   .then(() => {
     return db.document.dir.update({
-      [posKey]: posVal,
+      [req.document.posKey]: req.document.posVal,
       parent_dir: null
     }, {
       $inc: {
