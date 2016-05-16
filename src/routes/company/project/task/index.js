@@ -273,7 +273,7 @@ api.put('/:task_id/tag', (req, res, next) => {
   let data = validField('tags', req.body.tag);
   db.project.count({
     _id: req.project_id,
-    'tags': data.tags
+    'tags._id': data.tags
   })
   .then(count => {
     if (!count) {
