@@ -96,12 +96,12 @@ api.post('/', (req, res, next) => {
           company_id: req.company._id,
           project_id: req.project_id,
           is_creator: true,
-          is_assignee: assignee.equals(req.user._id)
+          is_assignee: assignee && assignee.equals(req.user._id) ? true : false
         }
       }
     })
     .then(() => {
-      if (assignee.equals(req.user._id)) {
+      if (assignee && assignee.equals(req.user._id)) {
         return;
       }
       return db.user.update({
