@@ -141,35 +141,10 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/dir', (req, res, next) => {
-  let data = req.body.dirs;
-  sanitizeValidateObject(delDirSanitization, delDirValidation, data);
-  Promise.all(data.dirs.map(dir_id => {
-    return db.document.dir.findOne({
-      _id: dir_id,
-      [posKey]: posVal,
-    })
-    .then(doc => {
-      if (!doc) {
-        throw new ApiError(400, null, '未找到文件夹');
-      }
-      if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
-        throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
-      }
-      return db.document.dir.update({
-        _id: doc.parent_dir
-      }, {
-        $pull: {
-          dirs: dir_id
-        }
-      })
-      .then(() => {
-        return db.document.dir.remove({
-          _id: dir_id
-        })
-      })
-    })
-  }))
+api.delete('/', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(delSanitization, delValidation, data);
+  Promise.all([deleteDir(data.dirs), deleteFiles(dir.files)])
   .then(() => res.json({}))
   .catch(next);
 });
@@ -221,7 +196,9 @@ api.post('/file', (req, res, next) => {
   });
   let dir_id = data.dir_id;
   data = [data];
-  createFile(req, res, next, data, dir_id);
+  createFile(data, dir_id)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.post('/upload',
@@ -244,7 +221,9 @@ api.post('/upload',
   } else {
     throw new ApiError(400);
   }
-  createFile(req, res, next, data, dir_id);
+  createFile(data, dir_id)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.put('/file/:file_id', (req, res, next) => {
@@ -260,59 +239,6 @@ api.put('/file/:file_id', (req, res, next) => {
     $set: data
   })
   .then(doc => res.json(doc))
-  .catch(next)
-});
-
-api.delete('/file', (req, res, next) => {
-  let data = req.body.files;
-  sanitizeValidateObject(delFileSanitization, delFileValidation, data);
-  let incSize = 0;
-  Promise.all(data.files.map(file_id => {
-    return db.document.file.findOne({
-      _id: file_id
-    }, {
-      size: 1,
-      dir_id: 1,
-      path: 1
-    })
-    .then(fileInfo => {
-      if (!fileInfo) {
-        throw new ApiError(400, null, '未找到文件');
-      }
-      incSize -= fileInfo.size;
-      return checkDirExist(fileInfo.dir_id)
-      .then(() => {
-        return Promise.all([
-          db.document.file.remove({
-            _id: file_id,
-          }),
-          db.document.dir.update({
-            _id: fileInfo.dir_id,
-          }, {
-            $pull: {
-              files: file_id
-            }
-          }),
-        ])
-      })
-      .then(() => {
-        try {
-          fs.unlinkSync(fileInfo.path);
-        } catch (e) {}
-      })
-    })
-  }))
-  .then(() => {
-    return db.document.dir.update({
-      [posKey]: posVal,
-      parent_dir: null
-    }, {
-      $inc: {
-        total_size: incSize
-      }
-    })
-  })
-  .then(() => res.json({}))
   .catch(next)
 });
 
@@ -505,7 +431,7 @@ function getFullPath(dir_id, path) {
   })
 }
 
-function createFile(req, res, next, data, dir_id) {
+function createFile(data, dir_id) {
   let total_size = 0;
   data.forEach(item => {
     if (item.size > max_file_size) {
@@ -547,7 +473,6 @@ function createFile(req, res, next, data, dir_id) {
     .then(() => {
       return db.document.file.insert(data)
       .then(doc => {
-        res.json(doc);
         return Promise.all([
           db.document.dir.update({
             _id: dir_id,
@@ -567,8 +492,86 @@ function createFile(req, res, next, data, dir_id) {
             }
           })
         ])
+        .then(() => doc)
       })
     })
   })
-  .catch(next);
+}
+
+function deleteDir(dirs) {
+  return Promise.all(dirs.map(dir_id => {
+    return db.document.dir.findOne({
+      _id: dir_id,
+      [posKey]: posVal,
+    })
+    .then(doc => {
+      if (!doc) {
+        throw new ApiError(400, null, '未找到文件夹');
+      }
+      if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
+        throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
+      }
+      return db.document.dir.update({
+        _id: doc.parent_dir
+      }, {
+        $pull: {
+          dirs: dir_id
+        }
+      })
+      .then(() => {
+        return db.document.dir.remove({
+          _id: dir_id
+        })
+      })
+    })
+  }))
+}
+
+function deleteFiles(files) {
+  let incSize = 0;
+  return Promise.all(data.files.map(file_id => {
+    return db.document.file.findOne({
+      _id: file_id
+    }, {
+      size: 1,
+      dir_id: 1,
+      path: 1
+    })
+    .then(fileInfo => {
+      if (!fileInfo) {
+        throw new ApiError(400, null, '未找到文件');
+      }
+      incSize -= fileInfo.size;
+      return checkDirExist(fileInfo.dir_id)
+      .then(() => {
+        return Promise.all([
+          db.document.file.remove({
+            _id: file_id,
+          }),
+          db.document.dir.update({
+            _id: fileInfo.dir_id,
+          }, {
+            $pull: {
+              files: file_id
+            }
+          }),
+        ])
+      })
+      .then(() => {
+        try {
+          fs.unlinkSync(fileInfo.path);
+        } catch (e) {}
+      })
+    })
+  }))
+  .then(() => {
+    return db.document.dir.update({
+      [posKey]: posVal,
+      parent_dir: null
+    }, {
+      $inc: {
+        total_size: incSize
+      }
+    })
+  })
 }

@@ -24,25 +24,13 @@ export let fileValidation = {
 	content: { type: 'string', optional: true },
 };
 
-export let delFileSanitization = {
+export let delSanitization = {
 	files: {
 		type: 'array',
 		items: {
 			$objectId: 1
 		}
 	},
-};
-
-export let delFileValidation = {
-	files: {
-		type: 'array',
-		items: {
-			$objectId: 1
-		}
-	},
-};
-
-export let delDirSanitization = {
 	dirs: {
 		type: 'array',
 		items: {
@@ -51,7 +39,13 @@ export let delDirSanitization = {
 	},
 };
 
-export let delDirValidation = {
+export let delValidation = {
+	files: {
+		type: 'array',
+		items: {
+			$objectId: 1
+		}
+	},
 	dirs: {
 		type: 'array',
 		items: {

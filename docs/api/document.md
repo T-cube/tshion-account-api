@@ -68,14 +68,15 @@ INPUT:
 }
 ```
 
-### DELETE /document/dir
+### DELETE /document
 
 删除目录
 
 INPUT
 ```javascript
 {
-  dirs: [<ObjectId>...]
+  dirs: [<ObjectId>...],
+  files: [<ObjectId>...],
 }
 ```
 
@@ -106,15 +107,12 @@ INPUT:
   dir_id: <ObjectId>,
   description: <String>,
   content: <String>,
-<<<<<<< HEAD
   _type: <String:content>,
 }
 or
 {
   document: [<File>...],
   dir_id: <ObjectId>
-=======
->>>>>>> 2548919fd68811362fe8081f2e416d3850269ab4
 }
 ```
 
