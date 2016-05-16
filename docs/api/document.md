@@ -70,7 +70,7 @@ INPUT:
 
 ### DELETE /document
 
-删除目录
+删除目录和文件
 
 INPUT
 ```javascript
@@ -145,17 +145,6 @@ OUTPUT:
   path: <String>,
   mimetype: <String>,
   size: <Number>,
-}
-```
-
-### DELETE /document/file
-
-删除文档
-
-INPUT
-```javascript
-{
-  files: [<ObjectId>...]
 }
 ```
 
