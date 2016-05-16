@@ -58,7 +58,7 @@ api.get('/', (req, res, next) => {
     condition['$text'] = { $search: keyword }
   }
   let sortBy = { status: -1, date_update: 1 };
-  if (_.contains(['date_create','date_update','priority'], sort)) {
+  if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order }
   }
@@ -137,7 +137,17 @@ api.get('/:_task_id', (req, res, next) => {
       throw new ApiError(404);
     }
     return fetchUserInfo(data, 'creator', 'assignee', 'followers')
-    .then(() => res.json(data))
+    .then(() => {
+      return db.project.findOne({
+        _id: req.project_id
+      }, {
+        tags: 1
+      })
+    })
+    .then(project => {
+      data.tags && data.tags.map(tag_id => _.find(project.tags, tag => tag._id.equals(tag_id)))
+      res.json(data);
+    })
   })
   .catch(next);
 });

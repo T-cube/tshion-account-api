@@ -13,6 +13,8 @@ import {
   fileValidation,
   locationSanitization,
   locationValidation,
+  delSanitization,
+  delValidation,
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
