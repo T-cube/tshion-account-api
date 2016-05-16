@@ -522,6 +522,9 @@ function createFile(data, dir_id) {
 }
 
 function deleteDirs(dirs) {
+  if (!dirs || !dirs.length) {
+    return null;
+  }
   return Promise.all(dirs.map(dir_id => {
     return db.document.dir.findOne({
       _id: dir_id,
@@ -552,6 +555,9 @@ function deleteDirs(dirs) {
 
 function deleteFiles(files) {
   let incSize = 0;
+  if (!files || !files.length) {
+    return null;
+  }
   return Promise.all(files.map(file_id => {
     return db.document.file.findOne({
       _id: file_id
