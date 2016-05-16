@@ -211,7 +211,6 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     updated_by: req.user._id,
     size: ((encodeURI(data.content).split(/%..|./).length - 1) / 1024).toFixed(2)
   });
-  let dir_id = data.dir_id;
   data = [data];
   createFile(req, data, dir_id)
   .then(doc => res.json(doc))
