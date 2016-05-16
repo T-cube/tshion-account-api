@@ -15,6 +15,7 @@ import {
 } from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
+import { uniqObjectId, fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
@@ -135,33 +136,20 @@ api.get('/:_task_id', (req, res, next) => {
     if (!data) {
       throw new ApiError(404);
     }
-    let userList = _.uniq([data.creator, data.assignee].concat(data.followers));
-    db.user.find({
-      _id: {
-        $in: userList
-      }
-    }, {
-      name: 1,
-      avatar: 1
-    })
-    .then(doc => {
-      let userIdMap = {};
-      doc.forEach(i => userIdMap[i._id] = i);
-      data.creator = userIdMap[data.creator];
-      data.assignee = userIdMap[data.assignee];
-      data.followers.forEach((j, k) => data.followers[k] = userIdMap[j]);
-      res.json(data);
-    })
-    .catch(next);
+    return fetchUserInfo(data, 'creator', 'assignee', 'followers')
+    .then(() => res.json(data))
   })
   .catch(next);
 });
 
 api.delete('/:task_id', (req, res, next) => {
-  db.task.remove({
-    _id: ObjectId(req.params.task_id)
+  isMemberOfProject(req.user._id, req.project_id)
+  .then(() => {
+    return db.task.remove({
+      _id: ObjectId(req.params.task_id)
+    })
   })
-  .then(data => res.json(data))
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -275,7 +263,7 @@ api.put('/:task_id/tag', (req, res, next) => {
   let data = validField('tags', req.body.tag);
   db.project.count({
     _id: req.project_id,
-    'tags._id': data.tag
+    'tags._id': data.tags
   })
   .then(count => {
     if (!count) {
