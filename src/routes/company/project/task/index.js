@@ -65,7 +65,7 @@ api.get('/', (req, res, next) => {
   db.task.find(condition).sort(sortBy)
   .then(list => {
     _.each(list, task => {
-      task.is_following = !!_.find(task.followers, id => id.equals(req.user._id));
+      task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
     });
     return res.json(list);
   })
@@ -96,12 +96,12 @@ api.post('/', (req, res, next) => {
           company_id: req.company._id,
           project_id: req.project_id,
           is_creator: true,
-          is_assignee: assignee == req.user._id
+          is_assignee: assignee.equals(req.user._id)
         }
       }
     })
     .then(() => {
-      if (assignee == req.user._id) {
+      if (assignee.equals(req.user._id)) {
         return;
       }
       return db.user.update({
@@ -273,7 +273,7 @@ api.put('/:task_id/tag', (req, res, next) => {
   let data = validField('tags', req.body.tag);
   db.project.count({
     _id: req.project_id,
-    'tags._id': data.tags
+    'tags': data.tags
   })
   .then(count => {
     if (!count) {
