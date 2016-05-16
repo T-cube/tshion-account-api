@@ -138,14 +138,14 @@ api.get('/:_task_id', (req, res, next) => {
     }
     return fetchUserInfo(data, 'creator', 'assignee', 'followers')
     .then(() => {
-      return db.project.findOne({
-        _id: req.project_id
-      }, {
-        tags: 1
-      })
-    })
-    .then(project => {
-      data.tags && data.tags.map(tag_id => _.find(project.tags, tag => tag._id.equals(tag_id)))
+    //   return db.project.findOne({
+    //     _id: req.project_id
+    //   }, {
+    //     tags: 1
+    //   })
+    // })
+    // .then(project => {
+    //   data.tags && data.tags.map(tag_id => _.find(project.tags, tag => tag._id.equals(tag_id)))
       res.json(data);
     })
   })
