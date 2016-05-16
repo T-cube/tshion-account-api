@@ -123,6 +123,7 @@ export function fetchUserInfo(data) {
 
 export function mapObjectIdToData(data, collection, fields, keys) {
   let keyList = [];
+  let isDataObjectId = ObjectId.isValid(data);
   keys = keys && keys.length ? keys : [''];
   _.forEach(keys, pos => {
     let id = _mapObjectIdToData(data, [], pos);
@@ -140,7 +141,7 @@ export function mapObjectIdToData(data, collection, fields, keys) {
     _.forEach(keys, pos => {
       _mapObjectIdToData(data, [], pos, infoList);
     });
-    return infoList.length == 1 ? infoList[0] : infoList;
+    return isDataObjectId ? infoList[0] : data;
   })
 }
 
