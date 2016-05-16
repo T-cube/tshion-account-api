@@ -27,19 +27,12 @@ api.use(oauthCheck());
 
 let posKey = null;
 let posVal = null;
-let uploader = () => () => {};
 let max_file_size = 0;
 let max_total_size = 0;
 
 api.use((req, res, next) => {
   posKey = req.project_id ? 'project_id' : 'company_id';
   posVal = req.project_id || req.company._id;
-  uploader = () => {
-    // return req.project_id
-    //   ? upload({type: 'attachment'}).single('document')
-    //   : upload({type: 'attachment'}).array('document');
-    return upload({type: 'attachment'}).array('document');
-  };
   if (req.project_id) {
     max_file_size = config.get('upload.document.project.max_file_size');
     max_total_size = config.get('upload.document.project.max_total_size');
@@ -89,8 +82,11 @@ api.get('/dir/:dir_id?', (req, res, next) => {
 api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
-  data[posKey] = posVal;
-  data.files = [];
+  _.extend(data, {
+    files: [],
+    dirs: [],
+    [posKey]: posVal
+  })
   checkDirValid(data.name, data.parent_dir)
   .then(() => {
     return getFullPath(data.parent_dir)
@@ -145,32 +141,10 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/dir/:dir_id', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
-  db.document.dir.findOne({
-    _id: dir_id,
-    [posKey]: posVal,
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
-    }
-    if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
-      throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
-    }
-    return db.document.dir.update({
-      _id: doc.parent_dir
-    }, {
-      $pull: {
-        dirs: dir_id
-      }
-    })
-    .then(() => {
-      return db.document.dir.remove({
-        _id: dir_id
-      })
-    })
-  })
+api.delete('/', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(delSanitization, delValidation, data);
+  Promise.all([deleteDir(data.dirs), deleteFiles(dir.files)])
   .then(() => res.json({}))
   .catch(next);
 });
@@ -222,15 +196,17 @@ api.post('/file', (req, res, next) => {
   });
   let dir_id = data.dir_id;
   data = [data];
-  createFile(req, res, next, data, dir_id);
+  createFile(data, dir_id)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
-api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, next) => {
+api.post('/upload',
+  upload({type: 'attachment'}).array('document'),
+  (req, res, next) => {
   let data = req.body;
-  let dir_id = null;
+  let dir_id = ObjectId(data.dir_id);
   if (req.files) {
-    // sanitizeValidateObject(_.pick(fileSanitization, 'dir_id'), _.pick(fileValidation, 'dir_id'), data);
-    dir_id = ObjectId(data.dir_id);
     data = _.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'path', 'size');
       return _.extend(fileData, {
@@ -245,7 +221,9 @@ api.post('/upload', upload({type: 'attachment'}).array('document'), (req, res, n
   } else {
     throw new ApiError(400);
   }
-  createFile(req, res, next, data, dir_id)
+  createFile(data, dir_id)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.put('/file/:file_id', (req, res, next) => {
@@ -261,54 +239,6 @@ api.put('/file/:file_id', (req, res, next) => {
     $set: data
   })
   .then(doc => res.json(doc))
-  .catch(next)
-});
-
-api.delete('/file/:file_id', (req, res, next) => {
-  let file_id = ObjectId(req.params.file_id);
-  db.document.file.findOne({
-    _id: file_id
-  }, {
-    size: 1,
-    dir_id: 1,
-    path: 1
-  })
-  .then(fileInfo => {
-    if (!fileInfo) {
-      throw new ApiError(404);
-    }
-    return checkDirExist(fileInfo.dir_id)
-    .then(() => {
-      return Promise.all([
-        db.document.file.remove({
-          _id: file_id,
-        }),
-        db.document.dir.update({
-          _id: fileInfo.dir_id,
-        }, {
-          $pull: {
-            files: file_id
-          }
-        }),
-        db.document.dir.update({
-          [posKey]: posVal,
-          parent_dir: null
-        }, {
-          $inc: {
-            total_size: - fileInfo.size
-          }
-        })
-      ])
-    })
-    .then(() => {
-      try {
-        fs.unlinkSync(fileInfo.path);
-      } catch (e) {
-
-      }
-    })
-  })
-  .then(() => res.json({}))
   .catch(next)
 });
 
@@ -501,7 +431,7 @@ function getFullPath(dir_id, path) {
   })
 }
 
-function createFile(req, res, next, data, dir_id) {
+function createFile(data, dir_id) {
   let total_size = 0;
   data.forEach(item => {
     if (item.size > max_file_size) {
@@ -543,7 +473,6 @@ function createFile(req, res, next, data, dir_id) {
     .then(() => {
       return db.document.file.insert(data)
       .then(doc => {
-        res.json(doc);
         return Promise.all([
           db.document.dir.update({
             _id: dir_id,
@@ -563,8 +492,86 @@ function createFile(req, res, next, data, dir_id) {
             }
           })
         ])
+        .then(() => doc)
       })
     })
   })
-  .catch(next);
+}
+
+function deleteDir(dirs) {
+  return Promise.all(dirs.map(dir_id => {
+    return db.document.dir.findOne({
+      _id: dir_id,
+      [posKey]: posVal,
+    })
+    .then(doc => {
+      if (!doc) {
+        throw new ApiError(400, null, '未找到文件夹');
+      }
+      if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
+        throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
+      }
+      return db.document.dir.update({
+        _id: doc.parent_dir
+      }, {
+        $pull: {
+          dirs: dir_id
+        }
+      })
+      .then(() => {
+        return db.document.dir.remove({
+          _id: dir_id
+        })
+      })
+    })
+  }))
+}
+
+function deleteFiles(files) {
+  let incSize = 0;
+  return Promise.all(data.files.map(file_id => {
+    return db.document.file.findOne({
+      _id: file_id
+    }, {
+      size: 1,
+      dir_id: 1,
+      path: 1
+    })
+    .then(fileInfo => {
+      if (!fileInfo) {
+        throw new ApiError(400, null, '未找到文件');
+      }
+      incSize -= fileInfo.size;
+      return checkDirExist(fileInfo.dir_id)
+      .then(() => {
+        return Promise.all([
+          db.document.file.remove({
+            _id: file_id,
+          }),
+          db.document.dir.update({
+            _id: fileInfo.dir_id,
+          }, {
+            $pull: {
+              files: file_id
+            }
+          }),
+        ])
+      })
+      .then(() => {
+        try {
+          fs.unlinkSync(fileInfo.path);
+        } catch (e) {}
+      })
+    })
+  }))
+  .then(() => {
+    return db.document.dir.update({
+      [posKey]: posVal,
+      parent_dir: null
+    }, {
+      $inc: {
+        total_size: incSize
+      }
+    })
+  })
 }
