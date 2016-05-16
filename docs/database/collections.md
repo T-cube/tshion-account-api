@@ -507,6 +507,8 @@ approval.user
   company_id: <ObjectId>,
   name: <String>,
   parent_dir: <ObjectId>,
+  updated_by: <ObjectId>,
+  date_update: <Date>,
   dirs: [ObjectId...],
   files: [ObjectId...],
 }
@@ -525,6 +527,7 @@ approval.user
   description: <String>,
   content: <String>,
   mimetype: <String>,
+  updated_by: <ObjectId>,
   date_update: <Date>,
   date_create: <Date>,
   path: <String>,

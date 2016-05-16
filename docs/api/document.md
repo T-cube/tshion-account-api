@@ -53,7 +53,9 @@ OUTPUT:
   path: [{
     _id: <ObjectId>,
     name: <String>,
-  }...]
+  }...],
+  updated_by: <ObjectId>,
+  date_update: <Date>，
 }
 ```
 
@@ -142,6 +144,7 @@ OUTPUT:
   author: <String>,
   content: <String>,
   date_update: <Date>,
+  updated_by: <ObjectId>,
   path: <String>,
   mimetype: <String>,
   size: <Number>,

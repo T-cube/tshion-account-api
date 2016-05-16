@@ -18,7 +18,7 @@ import {
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
-import { getUniqName, mapObjectIdToData } from 'lib/utils';
+import { getUniqName, mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import C from 'lib/constants';
 import config from 'config';
 
@@ -75,6 +75,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       getFullPath(doc.parent_dir).then(path => doc.path = path),
       mapObjectIdToData(doc, 'document.dir', ['name'], ['dirs']),
       mapObjectIdToData(doc, 'document.file', ['title', 'mimetype'], ['files']),
+      fetchUserInfo(doc, 'updated_by')
     ])
     .then(() => res.json(doc))
   })
@@ -87,7 +88,9 @@ api.post('/dir', (req, res, next) => {
   _.extend(data, {
     files: [],
     dirs: [],
-    [posKey]: posVal
+    [posKey]: posVal,
+    updated_by: req.user._id,
+    date_update: new Date(),
   })
   checkDirValid(data.name, data.parent_dir)
   .then(() => {
@@ -122,6 +125,10 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
   };
   let dir_id = ObjectId(req.params.dir_id);
   sanitizeValidateObject(_.pick(dirSanitization, 'name'), _.pick(dirValidation, 'name'), data);
+  _.extend(data, {
+    updated_by: req.user._id,
+    date_update: new Date(),
+  });
   db.document.dir.findOne({
     _id: dir_id,
     [posKey]: posVal,
@@ -146,7 +153,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
 api.delete('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(delSanitization, delValidation, data);
-  Promise.all([deleteDir(data.dirs), deleteFiles(dir.files)])
+  Promise.all([deleteDirs(data.dirs), deleteFiles(data.files)])
   .then(() => res.json({}))
   .catch(next);
 });
@@ -194,6 +201,7 @@ api.post('/file', (req, res, next) => {
     author: req.user._id,
     date_update: new Date(),
     date_create: new Date(),
+    updated_by: req.user._id,
     size: data.content.length
   });
   let dir_id = data.dir_id;
@@ -218,6 +226,7 @@ api.post('/upload',
         author: req.user._id,
         date_update: new Date(),
         date_create: new Date(),
+        updated_by: req.user._id,
       });
     });
   } else {
@@ -234,6 +243,7 @@ api.put('/file/:file_id', (req, res, next) => {
   sanitizeValidateObject(fileSanitization, fileValidation, data);
   _.extend(data, {
     date_update: new Date(),
+    updated_by: req.user._id,
   });
   db.document.file.update({
     _id: file_id,
@@ -500,7 +510,7 @@ function createFile(data, dir_id) {
   })
 }
 
-function deleteDir(dirs) {
+function deleteDirs(dirs) {
   return Promise.all(dirs.map(dir_id => {
     return db.document.dir.findOne({
       _id: dir_id,
