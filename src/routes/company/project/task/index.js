@@ -274,9 +274,9 @@ api.put('/:task_id/tag', (req, res, next) => {
     tags: req.body.tag
   };
   sanitizeValidateObject({
-    tags: { $ObjectId: 1 }
+    tags: { $objectId: 1 }
   }, {
-    tags: { $ObjectId: 1 }
+    tags: { $objectId: 1 }
   }, data);
   db.project.count({
     _id: req.project_id,
