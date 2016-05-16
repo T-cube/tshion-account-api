@@ -270,10 +270,17 @@ api.put('/:task_id/date_due', updateField('date_due'), (req, res, next) => {
 });
 
 api.put('/:task_id/tag', (req, res, next) => {
-  let data = validField('tags', req.body.tag);
+  let data = {
+    tags: req.body.tag
+  };
+  sanitizeValidateObject({
+    tags: { $ObjectId: 1 }
+  }, {
+    tags: { $ObjectId: 1 }
+  }, data);
   db.project.count({
     _id: req.project_id,
-    'tags._id': data.tags[0]
+    'tags._id': data.tags
   })
   .then(count => {
     if (!count) {
