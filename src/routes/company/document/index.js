@@ -271,6 +271,28 @@ api.put('/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
+api.get('/dir/:dir_id/moveable', (req, res, next) => {
+  let dir_id = ObjectId(req.params.dir_id);
+  getFullPath(dir_id)
+  .then(path => {
+    return db.document.dir.findOne({
+      _id: dir_id
+    }, {
+      parent_dir: 1
+    })
+    .then(dirInfo => {
+      return db.document.dir.find({
+        _id: dirInfo.parent_dir
+      }, {
+        dirs: 1
+      })
+      .then({
+
+      })
+    })
+  })
+});
+
 api.put('/move', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(moveSanitization, moveValidation, data);
