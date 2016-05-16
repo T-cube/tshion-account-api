@@ -53,7 +53,10 @@ OUTPUT:
   path: [{
     _id: <ObjectId>,
     name: <String>,
-  }...]
+  }...],
+  updated_by: <ObjectId>,
+  date_update: <Date>，
+  date_create: <Date>，
 }
 ```
 
@@ -70,7 +73,7 @@ INPUT:
 
 ### DELETE /document
 
-删除目录
+删除目录和文件
 
 INPUT
 ```javascript
@@ -84,19 +87,19 @@ INPUT
 
 文档文件
 
-### POST /document/upload
+### POST /document/dir/:dir_id/upload
 
 添加文件
 
 INPUT:
 ```javascript
 {
-  document: [<File>...],
+  document: <File[multiple]>,
   dir_id: <ObjectId>
 }
 ```
 
-### POST /document/file
+### POST /document/dir/:dir_id/create
 
 添加文档
 
@@ -104,15 +107,8 @@ INPUT:
 ```javascript
 {
   title: <String>,
-  dir_id: <ObjectId>,
   description: <String>,
   content: <String>,
-  _type: <String:content>,
-}
-or
-{
-  document: [<File>...],
-  dir_id: <ObjectId>
 }
 ```
 
@@ -142,24 +138,15 @@ OUTPUT:
   author: <String>,
   content: <String>,
   date_update: <Date>,
+  date_create: <Date>,
+  updated_by: <ObjectId>,
   path: <String>,
   mimetype: <String>,
   size: <Number>,
 }
 ```
 
-### DELETE /document/file
-
-删除文档
-
-INPUT
-```javascript
-{
-  files: [<ObjectId>...]
-}
-```
-
-### PUT /document/location
+### PUT /document/move
 
 移动文件和文件夹
 

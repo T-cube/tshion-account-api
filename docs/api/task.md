@@ -132,7 +132,7 @@ INPUT
 INPUT
 ```javascript
 {
-  tags: <ObjectId>
+  tag: <ObjectId>
 }
 ```
 

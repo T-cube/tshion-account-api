@@ -75,9 +75,8 @@ api.post('/', (req, res, next) => {
       }, {
         $push: { projects: doc._id }
       }),
-    ]).then(() => {
-      res.json(doc);
-    });
+    ])
+    .then(() => res.json(doc));
   })
   .catch(next);
 });
@@ -191,8 +190,8 @@ api.put('/:project_id/logo', upload({type: 'avatar'}).single('logo'),
   .catch(next);
 });
 
-api.get('/:project_id/member', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
+api.get('/:_project_id/member', (req, res, next) => {
+  let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
     _id: project_id,
     company_id: req.company._id,
@@ -201,6 +200,9 @@ api.get('/:project_id/member', (req, res, next) => {
     _id: 0
  })
  .then(data => {
+   if (!data) {
+     throw new ApiError(404);
+   }
    let members = data.members;
    let memberIds = members.map(i => i._id);
    db.user.find({
@@ -426,7 +428,12 @@ api.get('/:project_id/tag', (req, res, next) => {
   }, {
     tags: 1
   })
-  .then(doc => res.json(doc.tags))
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404);
+    }
+    res.json(doc.tags || []);
+  })
   .catch(next);
 });
 
@@ -450,112 +457,13 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
       $pull: {
         tags: tag_id
       }
+    }, {
+      multi: true
     })
   ])
   .then(() => res.json({}))
   .catch(next);
 });
-
-// api.post('/:project_id/file',
-//   upload({type: 'attachment'}).single('document'),
-//   (req, res, next) => {
-//     let data = req.body;
-//     let project_id = ObjectId(req.params.project_id);
-//     sanitizeValidateObject(fileSanitization, fileValidation, data);
-//     _.extend(data, {
-//       project_id: project_id,
-//       author: req.user._id,
-//       date_update: new Date(),
-//       date_create: new Date(),
-//     });
-//     if (req.file) {
-//       _.extend(data, {
-//         mimetype: req.file.mimetype,
-//         path: req.file.path,
-//       });
-//     }
-//     db.document.file.insert(data)
-//     .then(doc => {
-//       res.json(doc);
-//       return db.project.update({
-//         _id: project_id,
-//         company_id: req.company._id,
-//       }, {
-//         $push: {
-//           files: doc._id
-//         }
-//       })
-//     })
-//     .catch(next);
-// });
-//
-// api.get('/:project_id/file', (req, res, next) => {
-//   let project_id = ObjectId(req.params.project_id);
-//   db.project.findOne({
-//     _id: project_id,
-//     company_id: req.company._id,
-//   }, {
-//     files: 1
-//   })
-//   .then(doc => {
-//     if (!doc) {
-//       throw new ApiError(404);
-//     }
-//     if (!doc.files || !doc.files.length) {
-//       return res.json([]);
-//     }
-//     return db.document.file.find({
-//       _id: {
-//         $in: doc.files
-//       }
-//     }, {
-//       title: 1,
-//       description: 1,
-//       author: 1,
-//       author: 1,
-//       date_update: 1,
-//     })
-//     .then(files => res.json(files))
-//   })
-//   .catch(next);
-// });
-//
-// api.get('/:project_id/file/:file_id/download', (req, res, next) => {
-//   let project_id = ObjectId(req.params.project_id);
-//   let file_id = ObjectId(req.params.file_id);
-//   db.document.file.findOne({
-//     _id: file_id,
-//     project_id: project_id,
-//   })
-//   .then(file => {
-//     if (!file) {
-//       throw new ApiError(404);
-//     }
-//     download(file.path); // TODO
-//   })
-//   .catch(next)
-// });
-//
-// api.delete('/:project_id/file/:file_id', (req, res, next) => {
-//   let project_id = ObjectId(req.params.project_id);
-//   let file_id = ObjectId(req.params.file_id);
-//   db.project.update({
-//     _id: project_id,
-//     company_id: req.company._id,
-//   }, {
-//     $pull: {
-//       files: file_id
-//     }
-//   })
-//   .then(doc => {
-//     return db.document.file.remove({
-//       _id: file_id,
-//       project_id: project_id,
-//     })
-//   })
-//   .then(() => res.json({}))
-//   .catch(next)
-// });
 
 function isMemberOfProject(user_id, project_id) {
   return db.project.count({

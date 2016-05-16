@@ -15,6 +15,7 @@ import {
 } from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
+import { uniqObjectId, fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
@@ -57,14 +58,14 @@ api.get('/', (req, res, next) => {
     condition['$text'] = { $search: keyword }
   }
   let sortBy = { status: -1, date_update: 1 };
-  if (_.contains(['date_create','date_update','priority'], sort)) {
+  if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order }
   }
   db.task.find(condition).sort(sortBy)
   .then(list => {
     _.each(list, task => {
-      task.is_following = !!_.find(task.followers, id => id.equals(req.user._id));
+      task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
     });
     return res.json(list);
   })
@@ -95,12 +96,12 @@ api.post('/', (req, res, next) => {
           company_id: req.company._id,
           project_id: req.project_id,
           is_creator: true,
-          is_assignee: assignee == req.user._id
+          is_assignee: assignee && assignee.equals(req.user._id) ? true : false
         }
       }
     })
     .then(() => {
-      if (assignee == req.user._id) {
+      if (assignee && assignee.equals(req.user._id)) {
         return;
       }
       return db.user.update({
@@ -135,33 +136,30 @@ api.get('/:_task_id', (req, res, next) => {
     if (!data) {
       throw new ApiError(404);
     }
-    let userList = _.uniq([data.creator, data.assignee].concat(data.followers));
-    db.user.find({
-      _id: {
-        $in: userList
-      }
-    }, {
-      name: 1,
-      avatar: 1
-    })
-    .then(doc => {
-      let userIdMap = {};
-      doc.forEach(i => userIdMap[i._id] = i);
-      data.creator = userIdMap[data.creator];
-      data.assignee = userIdMap[data.assignee];
-      data.followers.forEach((j, k) => data.followers[k] = userIdMap[j]);
+    return fetchUserInfo(data, 'creator', 'assignee', 'followers')
+    .then(() => {
+    //   return db.project.findOne({
+    //     _id: req.project_id
+    //   }, {
+    //     tags: 1
+    //   })
+    // })
+    // .then(project => {
+    //   data.tags && data.tags.map(tag_id => _.find(project.tags, tag => tag._id.equals(tag_id)))
       res.json(data);
     })
-    .catch(next);
   })
   .catch(next);
 });
 
 api.delete('/:task_id', (req, res, next) => {
-  db.task.remove({
-    _id: ObjectId(req.params.task_id)
+  isMemberOfProject(req.user._id, req.project_id)
+  .then(() => {
+    return db.task.remove({
+      _id: ObjectId(req.params.task_id)
+    })
   })
-  .then(data => res.json(data))
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -272,10 +270,17 @@ api.put('/:task_id/date_due', updateField('date_due'), (req, res, next) => {
 });
 
 api.put('/:task_id/tag', (req, res, next) => {
-  let data = validField('tags', req.body.tag);
+  let data = {
+    tags: req.body.tag
+  };
+  sanitizeValidateObject({
+    tags: { $objectId: 1 }
+  }, {
+    tags: { $objectId: 1 }
+  }, data);
   db.project.count({
     _id: req.project_id,
-    'tags._id': data.tag
+    'tags._id': data.tags
   })
   .then(count => {
     if (!count) {
@@ -284,7 +289,7 @@ api.put('/:task_id/tag', (req, res, next) => {
     return db.task.update({
       _id: ObjectId(req.params.task_id)
     }, {
-      $addToSet: data.tag
+      $addToSet: data
     })
   })
   .then(result => res.json(result))
@@ -445,6 +450,8 @@ function validField(field, val) {
   let data = {[field]: val};
   let fieldSanitization = _.pick(sanitization, field);
   let fieldValidation = _.pick(validation, field);
+  fieldSanitization[field].optional = false;
+  fieldValidation[field].optional = false;
   sanitizeValidateObject(fieldSanitization, fieldValidation, data);
   return data;
 }
