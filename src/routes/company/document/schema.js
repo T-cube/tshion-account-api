@@ -27,12 +27,14 @@ export let fileValidation = {
 export let delSanitization = {
 	files: {
 		type: 'array',
+		optional: true,
 		items: {
 			$objectId: 1
 		}
 	},
 	dirs: {
 		type: 'array',
+		optional: true,
 		items: {
 			$objectId: 1
 		}
@@ -42,12 +44,14 @@ export let delSanitization = {
 export let delValidation = {
 	files: {
 		type: 'array',
+		optional: true,
 		items: {
 			$objectId: 1
 		}
 	},
 	dirs: {
 		type: 'array',
+		optional: true,
 		items: {
 			$objectId: 1
 		}

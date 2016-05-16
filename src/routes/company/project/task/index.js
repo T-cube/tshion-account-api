@@ -272,7 +272,7 @@ api.put('/:task_id/tag', (req, res, next) => {
     return db.task.update({
       _id: ObjectId(req.params.task_id)
     }, {
-      $addToSet: data.tag
+      $addToSet: data.tags
     })
   })
   .then(result => res.json(result))
@@ -433,6 +433,8 @@ function validField(field, val) {
   let data = {[field]: val};
   let fieldSanitization = _.pick(sanitization, field);
   let fieldValidation = _.pick(validation, field);
+  fieldSanitization.optional = false;
+  fieldValidation.optional = false;
   sanitizeValidateObject(fieldSanitization, fieldValidation, data);
   return data;
 }
