@@ -75,9 +75,8 @@ api.post('/', (req, res, next) => {
       }, {
         $push: { projects: doc._id }
       }),
-    ]).then(() => {
-      res.json(doc);
-    });
+    ])
+    .then(() => res.json(doc));
   })
   .catch(next);
 });
@@ -191,8 +190,8 @@ api.put('/:project_id/logo', upload({type: 'avatar'}).single('logo'),
   .catch(next);
 });
 
-api.get('/:project_id/member', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
+api.get('/:_project_id/member', (req, res, next) => {
+  let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
     _id: project_id,
     company_id: req.company._id,
@@ -201,6 +200,9 @@ api.get('/:project_id/member', (req, res, next) => {
     _id: 0
  })
  .then(data => {
+   if (!data) {
+     throw new ApiError(404);
+   }
    let members = data.members;
    let memberIds = members.map(i => i._id);
    db.user.find({
@@ -426,7 +428,12 @@ api.get('/:project_id/tag', (req, res, next) => {
   }, {
     tags: 1
   })
-  .then(doc => res.json(doc.tags))
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404);
+    }
+    res.json(doc.tags || []);
+  })
   .catch(next);
 });
 
@@ -450,6 +457,8 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
       $pull: {
         tags: tag_id
       }
+    }, {
+      multi: true
     })
   ])
   .then(() => res.json({}))

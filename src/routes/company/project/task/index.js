@@ -443,8 +443,8 @@ function validField(field, val) {
   let data = {[field]: val};
   let fieldSanitization = _.pick(sanitization, field);
   let fieldValidation = _.pick(validation, field);
-  fieldSanitization.optional = false;
-  fieldValidation.optional = false;
+  fieldSanitization[field].optional = false;
+  fieldValidation[field].optional = false;
   sanitizeValidateObject(fieldSanitization, fieldValidation, data);
   return data;
 }
