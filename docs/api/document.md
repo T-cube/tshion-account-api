@@ -109,11 +109,6 @@ INPUT:
   content: <String>,
   _type: <String:content>,
 }
-or
-{
-  document: [<File>...],
-  dir_id: <ObjectId>
-}
 ```
 
 ### PUT /document/file/:file_id
