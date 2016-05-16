@@ -270,28 +270,6 @@ api.put('/file/:file_id', (req, res, next) => {
   .catch(next)
 });
 
-api.get('/dir/:dir_id/moveable', (req, res, next) => {
-  let dir_id = ObjectId(req.params.dir_id);
-  getFullPath(dir_id)
-  .then(path => {
-    return db.document.dir.findOne({
-      _id: dir_id
-    }, {
-      parent_dir: 1
-    })
-    .then(dirInfo => {
-      return db.document.dir.find({
-        _id: dirInfo.parent_dir
-      }, {
-        dirs: 1
-      })
-      .then({
-
-      })
-    })
-  })
-});
-
 api.put('/move', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(moveSanitization, moveValidation, data);
@@ -301,51 +279,13 @@ api.put('/move', (req, res, next) => {
   }
   checkDirExist(req, target_dir)
   .then(() => {
-    if (!files || !files.length) {
-      return null;
-    }
-    return db.document.file.find({
-      _id: {
-        $in: files
-      },
-      dir_id: origin_dir
-    }, {
-      _id: 1
-    })
-    .then(list => {
-      list = list.map(item => item._id);
-      if (!list.length) {
-        return null;
-      }
-      return Promise.all([
-        db.document.file.update({
-          _id: {
-            $in: list
-          }
-        }, {
-          $set: {
-            dir_id: target_dir
-          }
-        }, {
-          multi: true
-        }),
-        db.document.dir.update({
-          _id: origin_dir
-        }, {
-          $pull: {
-            files: list
-          }
-        }),
-        db.document.dir.update({
-          _id: target_dir
-        }, {
-          $push: {
-            files: {
-              $each: list
-            }
-          }
-        })
-      ])
+    return getFullPath(target_dir)
+    .then(path => {
+      dirs.forEach(dir => {
+        if (_.find(path, item => item._id.equals(dir))) {
+          throw new ApiError(400, null, '不能移动文件夹到其子文件夹');
+        }
+      })
     })
   })
   .then(() => {
@@ -389,6 +329,54 @@ api.put('/move', (req, res, next) => {
         }, {
           $push: {
             dirs: {
+              $each: list
+            }
+          }
+        })
+      ])
+    })
+  })
+  .then(() => {
+    if (!files || !files.length) {
+      return null;
+    }
+    return db.document.file.find({
+      _id: {
+        $in: files
+      },
+      dir_id: origin_dir
+    }, {
+      _id: 1
+    })
+    .then(list => {
+      list = list.map(item => item._id);
+      if (!list.length) {
+        return null;
+      }
+      return Promise.all([
+        db.document.file.update({
+          _id: {
+            $in: list
+          }
+        }, {
+          $set: {
+            dir_id: target_dir
+          }
+        }, {
+          multi: true
+        }),
+        db.document.dir.update({
+          _id: origin_dir
+        }, {
+          $pull: {
+            files: list
+          }
+        }),
+        db.document.dir.update({
+          _id: target_dir
+        }, {
+          $push: {
+            files: {
               $each: list
             }
           }
