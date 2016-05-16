@@ -109,7 +109,6 @@ INPUT:
   dir_id: <ObjectId>,
   description: <String>,
   content: <String>,
-  _type: <String:content>,
 }
 ```
 

@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import fs from 'fs';
+import stream from 'stream';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -202,7 +203,7 @@ api.post('/file', (req, res, next) => {
     date_update: new Date(),
     date_create: new Date(),
     updated_by: req.user._id,
-    size: data.content.length
+    size: ((encodeURI(data.content).split(/%..|./).length - 1) / 1024).toFixed(2)
   });
   let dir_id = data.dir_id;
   data = [data];
@@ -210,6 +211,16 @@ api.post('/file', (req, res, next) => {
   .then(doc => res.json(doc))
   .catch(next);
 });
+
+// api.get('/test', (req, res, next) => {
+//   let s = new stream.Readable();
+//   s._read = function noop() {}; // redundant? see update below
+//   s.push('your text here');
+//   s.push(null);
+//   res.set('Content-disposition', 'attachment; filename=title.txt');
+//   res.set('Content-type', 'text/plain');
+//   s.pipe(res)
+// })
 
 api.post('/upload',
   upload({type: 'attachment'}).array('document'),
@@ -449,15 +460,15 @@ function createFile(data, dir_id) {
     if (item.size > max_file_size) {
       throw new ApiError(400, null, '文件大小超过上限')
     }
-    total_size += item.size;
+    total_size += parseFloat(item.size);
   });
-  getTotalSize().then(size => {
-    if ((size + total_size) > max_total_size) {
+  getTotalSize().then(curSize => {
+    if ((curSize + total_size) > max_total_size) {
       throw new ApiError(400, null, '您的文件存储空间不足')
     }
   })
 
-  checkDirExist(dir_id)
+  return checkDirExist(dir_id)
   .then(() => {
     return db.document.dir.findOne({
       _id: dir_id
@@ -500,7 +511,7 @@ function createFile(data, dir_id) {
             parent_dir: null
           }, {
             $inc: {
-              total_size: size
+              total_size: total_size
             }
           })
         ])
@@ -541,7 +552,7 @@ function deleteDirs(dirs) {
 
 function deleteFiles(files) {
   let incSize = 0;
-  return Promise.all(data.files.map(file_id => {
+  return Promise.all(files.map(file_id => {
     return db.document.file.findOne({
       _id: file_id
     }, {
