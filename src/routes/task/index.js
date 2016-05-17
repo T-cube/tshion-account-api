@@ -1,19 +1,54 @@
+import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import { ApiError } from 'lib/error';
+import Promise from 'bluebird';
 
-/* company collection */
+import { ApiError } from 'lib/error';
+import { oauthCheck, authCheck } from 'lib/middleware';
+import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
+
 let api = require('express').Router();
 export default api;
 
+api.use(oauthCheck());
+
 api.get('/', (req, res, next) => {
-  res.json({hello: 'list!'})
-});
-
-api.get('/search', (req, res, next) => {
-  res.json({hello: 'search!', query: req.query})
-});
-
-api.get('/:task_id', (req, res, next) => {
-  res.json({hello: 'task!', task_id: req.params.task_id})
-});
+  let { keyword, sort, order, status, assignee, creator, follower} = req.query;
+  let condition = {};
+  if (req.company) {
+    condition.company_id = req.company._id;
+  }
+  let idItems = _.pick(req.query, 'assignee', 'creator', 'followers');
+  let type = req.query.type;
+  if (_.contains(['assignee', 'creator', 'followers'], type)) {
+    condition[type] = req.user._id;
+  } else {
+    condition['$or'] = ['assignee', 'creator', 'followers'].map(item => {
+      return {
+        [item]: req.user._id
+      }
+    })
+  }
+  if (status) {
+    status = status.split(',').filter(s => _.contains(ENUMS.TASK_STATUS, s));
+    if (status.length) {
+      condition['status'] = { $in: status };
+    }
+  }
+  if (keyword) {
+    condition['$text'] = { $search: keyword }
+  }
+  let sortBy = { status: -1, date_update: 1 };
+  if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
+    order = order == 'desc' ? -1 : 1;
+    sortBy = { [sort]: order }
+  }
+  db.task.find(condition).sort(sortBy)
+  .then(list => {
+    _.each(list, task => {
+      task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
+    });
+    return res.json(list);
+  })
+  .catch(next);
+})
