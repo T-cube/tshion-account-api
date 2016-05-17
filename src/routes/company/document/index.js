@@ -321,7 +321,8 @@ api.put('/move', (req, res, next) => {
   if (origin_dir.equals(target_dir)) {
     return res.json({});
   }
-  checkDirExist(req, target_dir)
+
+  return checkMoveable(target_dir, dirs, files)
   .then(() => {
     return getFullPath(target_dir)
     .then(path => {
@@ -679,5 +680,57 @@ function getFileNameListOfDir(dir_id) {
       name: 1
     })
     .then(files => files.map(file => file.name))
+  })
+}
+
+function checkMoveable(target_dir, dirs, files) {
+  return db.document.dir.find({
+    _id: target_dir
+  }, {
+    files: 1,
+    dirs: 1,
+  })
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404)
+    }
+    return mapObjectIdToData(doc, [
+      ['document.dir', 'name', 'dirs'],
+      ['document.file', 'name', 'files'],
+    ])
+    .then(doc => {
+      let dirNameList = doc.dirs ? doc.dirs.map(item => item.name) : [];
+      let fileNameList = doc.files ? doc.files.map(item => item.name) : [];
+      return Promise.all([
+        _.isArray(dirs) && db.document.dir.find({
+          _id: {
+            $in: dirs
+          }
+        }, {
+          name: 1
+        })
+        .then(dirsInfo => {
+          dirsInfo.forEach(dirInfo => {
+            if (_.find(dirNameList, dirInfo.name)) {
+              throw new ApiError(400, null, '存在同名的文件或文件夹');
+            }
+          })
+        }),
+        _.isArray(files) && db.document.file.find({
+          _id: {
+            $in: files
+          }
+        }, {
+          name: 1
+        })
+        .then(filesInfo => {
+          filesInfo.forEach(fileInfo => {
+            if (_.find(fileNameList, fileInfo.name)) {
+              throw new ApiError(400, null, '存在同名的文件或文件夹');
+            }
+          })
+        })
+      ])
+    })
   })
 }
