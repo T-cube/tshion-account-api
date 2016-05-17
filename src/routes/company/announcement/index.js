@@ -9,7 +9,8 @@ import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
 import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
-import { checkUserType, fetchUserInfo } from '../utils';
+import { checkUserType } from '../utils';
+import { fetchUserInfo } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
