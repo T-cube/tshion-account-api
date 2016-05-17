@@ -140,6 +140,9 @@ export function fetchUserInfo(data) {
 export function mapObjectIdToData(data, collection, fields, keys) {
   let keyList = [];
   let isDataObjectId = ObjectId.isValid(data);
+  if (_.isArray(data) && data.length == 0) {
+    return Promise.resolve(data);
+  }
   if (_.isArray(collection)) {
     let mapList = collection;
     return Promise.all(mapList.map(item => mapObjectIdToData(data, ...item)))
