@@ -46,11 +46,17 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
 });
 
 api.get('/:announcement_id', (req, res, next) => {
-  getAnnouncement(req, res, next, true);
+  let announcement_id = ObjectId(req.params.announcement_id);
+  getAnnouncement(req.company._id, announcement_id, true)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.get('/draft/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  getAnnouncement(req, res, next, false);
+  let announcement_id = ObjectId(req.params.announcement_id);
+  getAnnouncement(req.company._id, announcement_id, false)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
@@ -149,9 +155,8 @@ function fetchAnnouncementData(req) {
   return data;
 }
 
-function getAnnouncement(req, res, next, is_published) {
-  let announcement_id = ObjectId(req.params.announcement_id);
-  db.announcement.findOne({
+function getAnnouncement(company_id, announcement_id, is_published) {
+  return db.announcement.findOne({
     company_id: req.company._id,
     _id: announcement_id,
     is_published: is_published
@@ -160,16 +165,6 @@ function getAnnouncement(req, res, next, is_published) {
     if (!announcement) {
       throw new ApiError(404);
     }
-    return db.user.findOne({
-      _id: announcement.from.creator
-    }, {
-      name: 1,
-      avavtar: 1,
-    })
-    .then(user => {
-      announcement.from.creator = user;
-      res.json(announcement);
-    })
+    return fetchUserInfo(announcement, 'from.creator')
   })
-  .catch(next);
 }

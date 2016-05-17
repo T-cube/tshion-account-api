@@ -330,7 +330,7 @@ api.post('/:task_id/unfollow', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/:task_id/followers', (req, res, next) => {
+api.put('/:task_id/followers', (req, res, next) => {
   if (!ObjectId.isValid(req.body._id)) {
     throw new ApiError(400);
   }

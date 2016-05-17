@@ -97,11 +97,11 @@ api.post('/dir', (req, res, next) => {
     date_update: new Date(),
     date_create: new Date(),
   })
-  checkDirValid(req, data.name, data.parent_dir)
+  checkNameValid(req, data.name, data.parent_dir)
   .then(() => {
     return getFullPath(data.parent_dir)
     .then(path => {
-      if (path.length >= 4) {
+      if (path.length >= 5) {
         throw new ApiError(400, null, '最多只能创建5级目录');
       }
     })
@@ -142,7 +142,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    return checkDirValid(req, data.name, doc.parent_dir)
+    return checkNameValid(req, data.name, doc.parent_dir)
     .then(() => {
       return db.document.dir.update({
         _id: dir_id
@@ -188,10 +188,22 @@ api.get('/file/:file_id/download', (req, res, next) => {
     if (!fileInfo) {
       throw new ApiError(404);
     }
-    if (fileInfo.path) {
-      res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
-      res.set('Content-type', fileInfo.mimetype);
-      fs.createReadStream(fileInfo.path).pipe(res);
+    try {
+      if (fileInfo.path) {
+        res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
+        res.set('Content-type', fileInfo.mimetype);
+        fs.createReadStream(fileInfo.path).pipe(res);
+      } else if (fileInfo.content) {
+        let s = new stream.Readable();
+        s._read = function noop() {};
+        s.push(fileInfo.content);
+        s.push(null);
+        res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
+        res.set('Content-type', 'text/plain');
+        s.pipe(res);
+      }
+    } catch (e) {
+      return Promise.reject('can not download file')
     }
   })
   .catch(next)
@@ -217,15 +229,15 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   .catch(next);
 });
 
-// api.get('/test', (req, res, next) => {
-//   let s = new stream.Readable();
-//   s._read = function noop() {}; // redundant? see update below
-//   s.push('your text here');
-//   s.push(null);
-//   res.set('Content-disposition', 'attachment; filename=title.txt');
-//   res.set('Content-type', 'text/plain');
-//   s.pipe(res)
-// })
+api.get('/test', (req, res, next) => {
+  let s = new stream.Readable();
+  s._read = function noop() {}; // redundant? see update below
+  s.push('your text here');
+  s.push(null);
+  res.set('Content-disposition', 'attachment; filename=title.txt');
+  res.set('Content-type', 'text/plain');
+  s.pipe(res)
+})
 
 api.post('/dir/:dir_id/upload',
   upload({type: 'attachment'}).array('document'),
@@ -261,12 +273,33 @@ api.put('/file/:file_id', (req, res, next) => {
     date_update: new Date(),
     updated_by: req.user._id,
   });
-  db.document.file.update({
-    _id: file_id,
+  db.document.file.findOne({
+    _id: file_id
   }, {
-    $set: data
+    path: 1,
+    name: 1,
   })
-  .then(doc => res.json(doc))
+  .then(fileInfo => {
+    if (!fileInfo) {
+      throw new ApiError(404)
+    }
+    if (fileInfo.path) {
+      if (fileInfo.name == data.name) {
+        return res.json({});
+      }
+      data = _.pick(data, 'name');
+    }
+    return getFileNameListOfDir(fileInfo.dir_id)
+    .then(filenamelist => {
+      data.name = getUniqFileName(filenamelist, data.name);
+      return db.document.file.update({
+        _id: file_id,
+      }, {
+        $set: data
+      })
+      .then(doc => res.json(doc))
+    })
+  })
   .catch(next)
 });
 
@@ -388,7 +421,7 @@ api.put('/move', (req, res, next) => {
   .catch(next);
 });
 
-function checkDirValid(req, name, parent_dir) {
+function checkNameValid(req, name, parent_dir) {
   return db.document.dir.findOne({
     _id: parent_dir,
     [req.document.posKey]: req.document.posVal,
@@ -400,11 +433,10 @@ function checkDirValid(req, name, parent_dir) {
     if (!list) {
       throw new ApiError(400, null, '父目录不存在');
     }
-    // if (list.parent_dir != null) {
-    //   throw new ApiError(400, null, '只能创建二级目录');
-    // }
+    let findDirName = null;
+    let findFileName = null;
     if (list.dirs && list.dirs.length) {
-      return db.document.dir.count({
+      findDirName = db.document.dir.count({
         _id: {
           $in: list.dirs
         },
@@ -416,6 +448,21 @@ function checkDirValid(req, name, parent_dir) {
         }
       })
     }
+    // if (list.files && list.files.length) {
+    //   findFileName = db.document.dir.count({
+    //     _id: {
+    //       $in: list.files
+    //     },
+    //     name: name
+    //   })
+    //   .then(count => {
+    //     if (count) {
+    //       throw new ApiError(400, null, '存在同名的文件');
+    //     }
+    //   })
+    // }
+    // return Promise.all([findDirName, findFileName]);
+    return findDirName;
   })
 }
 
@@ -485,24 +532,7 @@ function createFile(req, data, dir_id) {
 
   return checkDirExist(req, dir_id)
   .then(() => {
-    return db.document.dir.findOne({
-      _id: dir_id
-    }, {
-      files: 1
-    })
-    .then(dirInfo => {
-      if (!dirInfo.files || !dirInfo.files.length) {
-        return [];
-      }
-      return db.document.file.find({
-        _id: {
-          $in: dirInfo.files
-        }
-      }, {
-        title: 1
-      })
-      .then(files => files.map(file => file.name))
-    })
+    return getFileNameListOfDir(dir_id)
     .then(filenamelist => {
       data.forEach((item, i) => {
         data[i].name = getUniqFileName(filenamelist, data[i].name);
@@ -547,7 +577,7 @@ function deleteDirs(req, dirs) {
       [req.document.posKey]: req.document.posVal,
     })
     .then(doc => {
-      if (!doc) {
+      if (!doc || doc.parent_dir == null) {
         throw new ApiError(400, null, '未找到文件夹');
       }
       if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
@@ -618,5 +648,26 @@ function deleteFiles(req, files) {
         total_size: incSize
       }
     })
+  })
+}
+
+function getFileNameListOfDir(dir_id) {
+  return db.document.dir.findOne({
+    _id: dir_id
+  }, {
+    files: 1
+  })
+  .then(dirInfo => {
+    if (!dirInfo.files || !dirInfo.files.length) {
+      return [];
+    }
+    return db.document.file.find({
+      _id: {
+        $in: dirInfo.files
+      }
+    }, {
+      title: 1
+    })
+    .then(files => files.map(file => file.name))
   })
 }
