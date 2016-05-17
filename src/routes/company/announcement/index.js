@@ -9,31 +9,34 @@ import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
 import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
-import { checkUserType } from '../utils';
+import { checkUserType, fetchUserInfo } from '../utils';
 
-/* company collection */
 let api = require('express').Router();
 export default api;
 
 api.use(oauthCheck());
 
-api.use((req, res, next) => {
-  next();
-});
-
 api.get('/', (req, res, next) => {
-  let type = req.query.type;
-  let query = {
-    is_published: true
+  let condition = {
+    company_id: req.company._id,
+    is_published: true,
   };
-  type && (query.type = type);
-  getAnnouncementList(req, res, next, query);
+  let type = req.query.type;
+  if (type && _.contains(['news', 'notice'], type)) {
+    condition.type = type;
+  }
+  getAnnouncementList(condition)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.get('/draft', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  getAnnouncementList(req, res, next, {
-    is_published: false
-  });
+  getAnnouncementList({
+    company_id: req.company._id,
+    is_published: false,
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
@@ -95,35 +98,16 @@ api.delete('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
   .catch(next);
 });
 
-function getAnnouncementList(req, res, next, query) {
-  let condition = {
-    company_id: req.company._id,
-  };
-  _.extend(condition, query);
-  db.announcement.find(condition, {
+function getAnnouncementList(condition) {
+  return db.announcement.find(condition, {
     content: 0
   })
   .then(announcements => {
     if (!announcements.length) {
       return res.json([]);
     }
-    let creators = uniqObjectId(announcements.map(item => item.from.creator));
-    return db.user.find({
-      _id: {
-        $in: creators
-      }
-    }, {
-      name: 1,
-      avavtar: 1,
-    })
-    .then(users => {
-      announcements.forEach((announcement, k) => {
-        announcements[k].from.creator = _.find(users, user => user._id.equals(announcements[k].from.creator));
-      })
-      res.json(announcements);
-    })
+    return fetchUserInfo(announcements, 'from.creator');
   })
-  .catch(next);
 }
 
 function fetchAnnouncementData(req) {
