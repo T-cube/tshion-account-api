@@ -211,7 +211,7 @@ api.put('/:task_id/assignee', (req, res, next) => {
     });
   })
   .then(doc => {
-    if (doc.assignee.equals(data.assignee)) {
+    if (doc.assignee && doc.assignee.equals(data.assignee)) {
       throw new ApiError(400, null, 'member is already assignee of the task');
     }
     return db.user.update({

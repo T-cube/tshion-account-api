@@ -219,3 +219,4 @@ api.use('/:company_id/project', require('./project').default);
 api.use('/:company_id/announcement', require('./announcement').default);
 api.use('/:company_id/approval', require('./approval').default);
 api.use('/:company_id/document', require('./document').default);
+api.use('/:company_id/task', require('../task').default);

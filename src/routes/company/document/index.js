@@ -20,7 +20,6 @@ import {
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchUserInfo } from 'lib/utils';
-import C from 'lib/constants';
 import config from 'config';
 
 let api = require('express').Router();
@@ -78,11 +77,21 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     return Promise.all([
       getFullPath(doc.parent_dir).then(path => doc.path = path),
       mapObjectIdToData(doc, [
-        ['document.dir', 'name', 'dirs'],
+        ['document.dir', 'name,dirs', 'dirs'],
         ['document.file', 'title,mimetype', 'files'],
       ]),
       fetchUserInfo(doc, 'updated_by'),
     ])
+    .then(() => {
+      doc.dirs.forEach(dir => {
+        if (dir.dirs) {
+          dir.dirCount = dir.dirs.length;
+          delete dir.dirs;
+        } else {
+          dir.dirCount = 0;
+        }
+      })
+    })
     .then(() => res.json(doc))
   })
   .catch(next);

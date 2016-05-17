@@ -95,7 +95,7 @@ api.post('/:discussion_id/follow', (req, res, next) => {
     project_id: project_id,
   }, {
     $addToSet: {
-      folloers: data._id
+      followers: data._id
     }
   })
   .then(doc => res.json(doc))
@@ -111,7 +111,7 @@ api.delete('/:discussion_id/follow/:follower_id', (req, res, next) => {
     project_id: project_id,
   }, {
     $pull: {
-      folloers: follower_id
+      followers: follower_id
     }
   })
   .then(doc => res.json(doc))
