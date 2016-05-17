@@ -344,8 +344,8 @@ api.put('/:task_id/followers', (req, res, next) => {
 
 api.delete('/:task_id/followers/:follower_id', (req, res, next) => {
   let userId = ObjectId(req.params.follower_id);
-  let taskId = ObjectId(req.params.task_id);
-  taskUnfollow(req, taskId, userId)
+  let task_id = ObjectId(req.params.task_id);
+  taskUnfollow(req, task_id, userId)
   .then(() => logTask(task_id, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
   .then(() => res.json({}))
   .catch(next);
