@@ -10,30 +10,34 @@ import { sanitization, validation } from './schema';
 import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import { checkUserType } from '../utils';
+import { fetchUserInfo } from 'lib/utils';
 
-/* company collection */
 let api = require('express').Router();
 export default api;
 
 api.use(oauthCheck());
 
-api.use((req, res, next) => {
-  next();
-});
-
 api.get('/', (req, res, next) => {
-  let type = req.query.type;
-  let query = {
-    is_published: true
+  let condition = {
+    company_id: req.company._id,
+    is_published: true,
   };
-  type && (query.type = type);
-  getAnnouncementList(req, res, next, query);
+  let type = req.query.type;
+  if (type && _.contains(['news', 'notice'], type)) {
+    condition.type = type;
+  }
+  getAnnouncementList(condition)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.get('/draft', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  getAnnouncementList(req, res, next, {
-    is_published: false
-  });
+  getAnnouncementList({
+    company_id: req.company._id,
+    is_published: false,
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
@@ -46,11 +50,17 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
 });
 
 api.get('/:announcement_id', (req, res, next) => {
-  getAnnouncement(req, res, next, true);
+  let announcement_id = ObjectId(req.params.announcement_id);
+  getAnnouncement(req.company._id, announcement_id, true)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.get('/draft/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  getAnnouncement(req, res, next, false);
+  let announcement_id = ObjectId(req.params.announcement_id);
+  getAnnouncement(req.company._id, announcement_id, false)
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
@@ -89,35 +99,16 @@ api.delete('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
   .catch(next);
 });
 
-function getAnnouncementList(req, res, next, query) {
-  let condition = {
-    company_id: req.company._id,
-  };
-  _.extend(condition, query);
-  db.announcement.find(condition, {
+function getAnnouncementList(condition) {
+  return db.announcement.find(condition, {
     content: 0
   })
   .then(announcements => {
     if (!announcements.length) {
-      return res.json([]);
+      return [];
     }
-    let creators = uniqObjectId(announcements.map(item => item.from.creator));
-    return db.user.find({
-      _id: {
-        $in: creators
-      }
-    }, {
-      name: 1,
-      avavtar: 1,
-    })
-    .then(users => {
-      announcements.forEach((announcement, k) => {
-        announcements[k].from.creator = _.find(users, user => user._id.equals(announcements[k].from.creator));
-      })
-      res.json(announcements);
-    })
+    return fetchUserInfo(announcements, 'from.creator');
   })
-  .catch(next);
 }
 
 function fetchAnnouncementData(req) {
@@ -149,9 +140,8 @@ function fetchAnnouncementData(req) {
   return data;
 }
 
-function getAnnouncement(req, res, next, is_published) {
-  let announcement_id = ObjectId(req.params.announcement_id);
-  db.announcement.findOne({
+function getAnnouncement(company_id, announcement_id, is_published) {
+  return db.announcement.findOne({
     company_id: req.company._id,
     _id: announcement_id,
     is_published: is_published
@@ -160,16 +150,6 @@ function getAnnouncement(req, res, next, is_published) {
     if (!announcement) {
       throw new ApiError(404);
     }
-    return db.user.findOne({
-      _id: announcement.from.creator
-    }, {
-      name: 1,
-      avavtar: 1,
-    })
-    .then(user => {
-      announcement.from.creator = user;
-      res.json(announcement);
-    })
+    return fetchUserInfo(announcement, 'from.creator')
   })
-  .catch(next);
 }

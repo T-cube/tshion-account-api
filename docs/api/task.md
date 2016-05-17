@@ -102,7 +102,7 @@ INPUT
 }
 ```
 
-### POST /task/:task_id/followers
+### PUT /task/:task_id/followers
 
 添加关注者
 
