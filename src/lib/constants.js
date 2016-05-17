@@ -4,14 +4,41 @@ import _ from 'underscore';
 
 let constants = {
 
-  USER_ID_TYPE: {
-    EMAIL: 'email',
-    MOBILE: 'mobile',
+  ACTIVITY_ACTION: {
+    CREATE: 'create',
+    UPDATE: 'update',
+    DELETE: 'delete',
+    ACCEPT: 'accept',
+    REJECT: 'reject',
   },
 
-  SEX: {
-    FEMALE: 'F',
-    MALE: 'M',
+  ACTIVITY_TYPE: {
+    COMPANY: 'company',
+    PROJECT: 'project',
+    TASK: 'task',
+    USER: 'user',
+  },
+
+  ANNOUNCEMENT_TYPE: {
+    NOTICE: 'notice',
+    NEWS: 'news',
+  },
+
+  APPROVAL_ITEM_STATUS: {
+    PROCESSING: 'processing',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    REVOKED: 'revoked'
+  },
+
+  APPROVAL_STATUS: {
+    NORMAL: 'normal',
+    UNUSED: 'unused',
+  },
+
+  APPROVER_TYPE: {
+    DEPARTMENT: 'department',
+    MEMBER: 'member',
   },
 
   COMPANY_MEMBER_STATUS: {
@@ -27,21 +54,25 @@ let constants = {
     OWNER: 'owner',
   },
 
-  MESSAGE_TARGET_TYPE: {
-    REQUEST: 'Request',
-    COMPANY: 'Company',
-    COMPANY_MEMBER: 'CompanyMember',
-    PROJECT: 'Project',
-    PROJECT_MEMBER: 'ProjectMember',
-    TASK: 'Task',
+  FORM_TYPE: {
+    TEXT: 'text',
+    TEXTAREA: 'textarea',
+    DATE: 'date',
   },
 
-  MESSAGE_VERB: {
-    CREATE: 'create',
-    UPDATE: 'update',
-    DELETE: 'delete',
-    ACCEPT: 'accept',
-    REJECT: 'reject',
+  OBJECT_TYPE: {
+    SELF: 'self',
+    COMPANY: 'company',
+    COMPANY_MEMBER: 'company.member',
+    COMPANY_DIR: 'company.dir',
+    COMPANY_FILE: 'company.file',
+    PROJECT: 'project',
+    PROJECT_TAG: 'project.tag',
+    PROJECT_MEMBER: 'project.member',
+    PROJECT_DIR: 'project.dir',
+    PROJECT_FILE: 'project.file',
+    REQUEST: 'request',
+    TASK: 'task',
   },
 
   PROJECT_MEMBER_TYPE: {
@@ -52,14 +83,6 @@ let constants = {
     SUPERVISOR: 'supervisor',
   },
 
-  TASK_STATUS: {
-    WAITING: 'pending',
-    PROCESSING: 'processing',
-    COMPLETED: 'completed',
-    PAUSED: 'paused',
-    DELETED: 'deleted',
-  },
-
   REQUEST_TYPE: {
     COMPANY: 'company',
   },
@@ -68,6 +91,19 @@ let constants = {
     PENDING: 'pending',
     ACCEPTED: 'accepted',
     REJECTED: 'rejected',
+  },
+
+  SEX: {
+    FEMALE: 'F',
+    MALE: 'M',
+  },
+
+  TASK_STATUS: {
+    WAITING: 'pending',
+    PROCESSING: 'processing',
+    COMPLETED: 'completed',
+    PAUSED: 'paused',
+    DELETED: 'deleted',
   },
 
   TASK_PRIORITY: {
@@ -90,32 +126,9 @@ let constants = {
     PRIORITY: 'priority',         // 优先级
   },
 
-  APPROVAL_STATUS: {
-    NORMAL: 'normal',
-    UNUSED: 'unused',
-  },
-
-  APPROVER_TYPE: {
-    DEPARTMENT: 'department',
-    MEMBER: 'member',
-  },
-
-  FORM_TYPE: {
-    TEXT: 'text',
-    TEXTAREA: 'textarea',
-    DATE: 'date',
-  },
-
-  APPROVAL_ITEM_STATUS: {
-    PROCESSING: 'processing',
-    APPROVED: 'approved',
-    REJECTED: 'rejected',
-    REVOKED: 'revoked'
-  },
-
-  ANNOUNCEMENT_TYPE: {
-    NOTICE: 'notice',
-    NEWS: 'news',
+  USER_ID_TYPE: {
+    EMAIL: 'email',
+    MOBILE: 'mobile',
   },
 
 }
