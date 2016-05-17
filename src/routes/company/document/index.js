@@ -78,7 +78,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       getFullPath(doc.parent_dir).then(path => doc.path = path),
       mapObjectIdToData(doc, [
         ['document.dir', 'name,dirs', 'dirs'],
-        ['document.file', 'title,mimetype', 'files'],
+        ['document.file', 'name,mimetype', 'files'],
       ]),
       fetchUserInfo(doc, 'updated_by'),
     ])

@@ -6,6 +6,7 @@
 
 挂载点：
 * `/company/:company_id/project/:project_id/task`
+* `/company/:company_id/task`
 * `/task`
 
 ## Table of Contents
@@ -286,4 +287,36 @@ log: [{
   content: <String>,
   time: <Date>
 }]
+```
+
+挂载点
+
+* `/company/:company_id/task` // 公司任务
+* `/task`  工作台任务
+
+### GET /
+
+任务检索
+
+QUERY
+
+| name | type | description |
+| ----:| --- | --- |
+| page | int | page number |
+| pagesize | int | page size |
+| keyword | string | search keyword |
+| sort | string | field_name |
+| order | [asc,desc] | sort method |
+| status | list | comma separated list |
+| type | string | assignee / creator / follower |
+
+OUTPUT
+```javascript
+[
+  {
+    _id:<String>,
+    title:<String>,
+    //...
+  } // 参考任务详情页面
+]
 ```
