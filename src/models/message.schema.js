@@ -11,7 +11,7 @@ export let sanitization = {
 export let validation = {
   from: { $objectId: 1 },
 	to: { $objectId: 1 },
-  verb: { $enum: C.ACTION_TYPE },
+  verb: { $enum: C.ACTIVITY_ACTION },
 	object_type: { $enum: C.OBJECT_TYPE },
 	object_id: { $objectId: 1 },
 };
