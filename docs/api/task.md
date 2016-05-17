@@ -289,9 +289,9 @@ log: [{
 }]
 ```
 
-挂载点
+## 挂载点
 
-* `/company/:company_id/task` // 公司任务
+* `/company/:company_id/task` 公司任务
 * `/task`  工作台任务
 
 ### GET /
