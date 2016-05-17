@@ -19,7 +19,7 @@ import {
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
-import { getUniqName, mapObjectIdToData, fetchUserInfo } from 'lib/utils';
+import { getUniqFileName, mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import C from 'lib/constants';
 import config from 'config';
 
@@ -217,7 +217,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   sanitizeValidateObject(fileSanitization, fileValidation, data);
   _.extend(data, {
     [req.document.posKey]: req.document.posVal,
-    title: data.name,
+    name: data.name,
     dir_id: dir_id,
     author: req.user._id,
     date_update: new Date(),
@@ -252,7 +252,7 @@ api.post('/dir/:dir_id/upload',
       return _.extend(fileData, {
         [req.document.posKey]: req.document.posVal,
         dir_id: dir_id,
-        title: file.originalname,
+        name: file.originalname,
         author: req.user._id,
         date_update: new Date(),
         date_create: new Date(),
@@ -477,7 +477,6 @@ function checkDirExist(req, dir_id) {
     [req.document.posKey]: req.document.posVal,
   })
   .then(count => {
-    console.log(count);
     if (!count) {
       throw new ApiError(404, null, '文件夹' + dir_id + '不存在');
     }
@@ -668,7 +667,7 @@ function getFileNameListOfDir(dir_id) {
         $in: dirInfo.files
       }
     }, {
-      title: 1
+      name: 1
     })
     .then(files => files.map(file => file.name))
   })
