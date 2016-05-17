@@ -77,9 +77,11 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     }
     return Promise.all([
       getFullPath(doc.parent_dir).then(path => doc.path = path),
-      mapObjectIdToData(doc, 'document.dir', ['name'], ['dirs']),
-      mapObjectIdToData(doc, 'document.file', ['title', 'mimetype'], ['files']),
-      fetchUserInfo(doc, 'updated_by')
+      mapObjectIdToData(doc, [
+        ['document.dir', 'name', 'dirs'],
+        ['document.file', 'title,mimetype', 'files'],
+      ]),
+      fetchUserInfo(doc, 'updated_by'),
     ])
     .then(() => res.json(doc))
   })
