@@ -46,7 +46,7 @@ OUTPUT:
   }],
   files: [{
     _id: <ObjectId>,
-    title: <String>,
+    name: <String>,
     mimetype: <String>,
     size: <Number>,
   }...],
@@ -133,7 +133,7 @@ OUTPUT:
 ```javascript
 {
   _id: <ObjectId>,
-  title: <String>,
+  name: <String>,
   description: <String>,
   author: <String>,
   content: <String>,
