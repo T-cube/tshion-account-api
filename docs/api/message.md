@@ -15,9 +15,9 @@
   _id: <ObjectId>,
   from: <ObjectId>,
   to: <ObjectId>,
+  action: <String>,
   target_type: <String[Enum]>,
   target_id: <ObjectId>,
-  verb: <String>,
   is_read: <Boolean>,
   date_create: <Date>,
 }...]

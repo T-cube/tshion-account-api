@@ -93,7 +93,7 @@ api.post('/:request_id/accept', (req, res, next) => {
         req.model('message').send({
           from: request.to,
           to: request.from,
-          verb: C.MESSAGE_VERB.ACCEPT,
+          action: C.ACTION_TYPE.ACCEPT,
           object_type: C.OBJECT_TYPE.REQUEST,
           object_id: requestId,
         }),
@@ -138,7 +138,7 @@ api.post('/:request_id/reject', (req, res, next) => {
         req.model('message').send({
           from: request.to,
           to: request.from,
-          verb: C.MESSAGE_VERB.REJECT,
+          verb: C.ACTIVITY_ACTION.REJECT,
           object_type: C.OBJECT_TYPE.REQUEST,
           object_id: requestId,
         }),

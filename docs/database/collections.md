@@ -560,3 +560,25 @@ approval.user
 | `company` | 公司 | 公司消息 |
 | `project` | 项目 | 项目消息 |
 | `task` | 任务 | 任务消息 |
+
+### `*.activity`
+
+包含
+company.activity, project.activity, task.activity
+
+日志（活动）
+
+```javascript
+{
+  _id: <ObjectId>,
+  subject: <ObjectId>,            // 关联对象id
+  user: <ObjectId>,               // 作者
+  action: <String[Enum]>,         // 动作类型
+  target: {                       // 被操作对象
+    type: <String[Enum]>,
+    object: <ObjectId>,
+    title: <String>,
+  },
+  date_create: <Date>,            // 创建时间
+}
+```

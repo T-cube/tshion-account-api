@@ -20,6 +20,14 @@
 
 收到的请求
 
+QUERY_STRING:
+```javascript
+{
+  status: <String[Enum=pending][optional]>, // 状态过滤
+  before: <Date>, // 分页
+}
+```
+
 OUTPUT:
 ```javascript
 [{
