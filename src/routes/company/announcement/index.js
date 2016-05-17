@@ -142,7 +142,7 @@ function fetchAnnouncementData(req) {
 
 function getAnnouncement(company_id, announcement_id, is_published) {
   return db.announcement.findOne({
-    company_id: req.company._id,
+    company_id: company_id,
     _id: announcement_id,
     is_published: is_published
   })
