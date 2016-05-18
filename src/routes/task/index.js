@@ -48,7 +48,16 @@ api.get('/', (req, res, next) => {
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
     });
-    return res.json(list);
+    return list
   })
+  .then(list => {
+    return Promise.all([
+      mapObjectIdToData(list, [
+        ['company', 'name', 'company_id']
+      ]),
+      fetchUserInfo(list, 'assignee', 'creator', 'followers')
+    ])
+  })
+  .then(list => res.json(list))
   .catch(next);
 })

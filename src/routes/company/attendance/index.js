@@ -16,11 +16,7 @@ export default api;
 api.use(oauthCheck());
 
 api.post('/', (req, res, next) => {
-
-})
-
-api.get('/mine', (req, res, next) => {
-
+  
 })
 
 api.get('/user/:user_id', (req, res, next) => {

@@ -574,11 +574,47 @@ company.activity, project.activity, task.activity
   subject: <ObjectId>,            // 关联对象id
   user: <ObjectId>,               // 作者
   action: <String[Enum]>,         // 动作类型
+  field: {
+    key: <String>,
+    value: <String>,
+  },
   target: {                       // 被操作对象
     type: <String[Enum]>,
     object: <ObjectId>,
     title: <String>,
   },
   date_create: <Date>,            // 创建时间
+}
+```
+
+### attendance
+
+```javascript
+{
+  _id: <ObjectId>,
+  user: <ObjectId>,
+  yaer: <Int>,
+  month: <Date>,
+  data: [{
+    date: <Int>,
+    time_signin: <Date>,
+    time_signout: <Date>,
+  }...]
+}
+```
+
+### attendance.audit
+
+```javascript
+{
+  _id: <ObjectId>,
+  user: <ObjectId>,
+  date: <Date>,
+  date_create: <Date>,
+  type: <String[Enum=sign_in,sign_out]>,
+  reason: <String>,     // 漏刷原因
+  auditor: <ObjectId>,
+  date_audit: <Date>,
+  status: <String[Enum=pending,accepted,rejected]>,
 }
 ```

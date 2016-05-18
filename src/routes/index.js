@@ -26,6 +26,7 @@ let routes = [
   'request',
   'task',
   'user',
+  'attendence',
 ];
 
 _.each(routes, route => {

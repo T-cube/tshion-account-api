@@ -408,7 +408,7 @@ api.delete('/:task_id/comment/:comment_id', (req, res, next) => {
 });
 
 api.get('/:task_id/log', (req, res, next) => {
-  db.task.log.find({
+  db.task.activity.find({
     task_id: ObjectId(req.params.task_id)
   })
   .then(data => {
@@ -425,18 +425,19 @@ function updateField(field) {
   }
 }
 
-function logTask(task_id, type, creator, content) {
+function logTask(task_id, action, user, title) {
   let data = {
-    type: type,
-    content: content || ''
-  };
-  sanitizeValidateObject(logSanitization, logValidation, data);
-  _.extend(data, {
-    task_id: task_id,
-    creator: creator,
+    subject: task_id,
+    user: user,
+    action: action,
+    target: {
+      type: 'task.tag',
+      object: 'tag_id',
+      title: title,
+    },
     date_create: new Date(),
-  });
-  return db.task.log.insert(data);
+  }
+  return db.task.activity.insert(data);
 }
 
 function doUpdateField(field, req) {

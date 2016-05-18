@@ -10,6 +10,11 @@ let constants = {
     DELETE: 'delete',
     ACCEPT: 'accept',
     REJECT: 'reject',
+
+    TASK_COMPLETE: 'task.complete',         // 完成
+    TASK_REOPEN: 'task.reopen',             // 重新开启
+    TASK_FOLLOW: 'task.follow',             // 关注
+    TASK_UNFOLLOW: 'task.unfollow',         // 取消关注
   },
 
   ACTIVITY_TYPE: {
@@ -73,6 +78,8 @@ let constants = {
     PROJECT_FILE: 'project.file',
     REQUEST: 'request',
     TASK: 'task',
+    TASK_TAG: 'task.tag',
+    TASK_FOLLOWERS: 'task.followers',
   },
 
   PROJECT_MEMBER_TYPE: {

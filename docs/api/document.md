@@ -112,6 +112,10 @@ INPUT:
 }
 ```
 
+### GET /file/:file_id/download
+
+下载文档
+
 ### PUT /document/file/:file_id
 
 修改文档详情
