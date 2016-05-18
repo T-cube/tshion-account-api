@@ -23,9 +23,10 @@
         // pdf
         '.pdf',
         // office
-        //'.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+        '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+        '.txt',
         // achives
-        //'.zip', '.rar',
+        '.zip', '.rar',
       ],
     },
     document: {

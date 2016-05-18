@@ -18,6 +18,7 @@ export function database() {
     'company',
     'document.dir',
     'document.file',
+    'document.token',
     'discussion',
     'discussion.comment',
     'message',

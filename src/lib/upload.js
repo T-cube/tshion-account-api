@@ -6,7 +6,7 @@ import mkdirp from 'mkdirp-bluebird';
 import config from 'config';
 import { dirExists } from 'lib/utils';
 
-function getUploadPath(dir) {
+export function getUploadPath(dir) {
   let basePath = config.get('upload.path');
   if (!/^\//.test(basePath)) {
     basePath = BASE_PATH + basePath;

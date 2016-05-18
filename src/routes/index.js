@@ -21,6 +21,7 @@ api.use((req, res, next) => {
 let routes = [
   'account',
   'company',
+  'download',
   'message',
   'relation',
   'request',
