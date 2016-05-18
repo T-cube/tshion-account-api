@@ -78,10 +78,12 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       getFullPath(doc.parent_dir).then(path => doc.path = path),
       mapObjectIdToData(doc, [
         ['document.dir', 'name,dirs', 'dirs'],
-        ['document.file', 'name,mimetype,size', 'files'],
+        ['document.file', 'name,mimetype,size,date_update,updated_by', 'files'],
       ]),
-      fetchUserInfo(doc, 'updated_by'),
     ])
+    .then(() => {
+      return fetchUserInfo(doc, 'updated_by', 'files.updated_by')
+    })
     .then(() => {
       doc.dirs.forEach(dir => {
         if (dir.dirs) {

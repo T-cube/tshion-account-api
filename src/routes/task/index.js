@@ -57,14 +57,16 @@ api.get('/', (req, res, next) => {
         ['company', 'name', 'company_id'],
         ['project', 'name,tags', 'project_id'],
       ]),
-      fetchUserInfo(list, 'assignee', 'creator', 'followers')
+      fetchUserInfo(list, 'assignee', 'creator')
     ])
     .then(() => {
       list.forEach(task => {
         task.tags = task.tags ? task.tags.map(tag_id => {
-          return _.find(task.project_id, project_tag => project_tag._id == tag_id)
+          return _.find(task.project_id.tags, project_tag => project_tag._id && project_tag._id.equals(tag_id))
         }) : [];
+        delete task.project_id.tags;
       })
+      list.filter(task => task.tags.length != 0)
       return res.json(list)
     })
   })
