@@ -16,7 +16,29 @@ export default api;
 api.use(oauthCheck());
 
 api.post('/', (req, res, next) => {
-  
+  let data = req.body;
+  sanitizeValidateObject(sanitization, validation, data);
+  let date = new Date().getDate();
+  db.attendance.findOne({
+    user: req.user._id,
+    year: data.year,
+    month: data.month,
+    'data.date': date,
+  })
+  .then(doc => {
+    return db.attendance.update({
+      user: req.user._id,
+      year: data.year,
+      month: data.month,
+    }, {
+      $push: {
+        data: {
+          date: date,
+          [data.type]: new Date(),
+        }
+      }
+    })
+  })
 })
 
 api.get('/user/:user_id', (req, res, next) => {
