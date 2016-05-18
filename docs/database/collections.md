@@ -535,6 +535,20 @@ approval.user
 }
 ```
 
+#### document.token
+
+下载token
+
+```javascript
+{
+  _id: <ObjectId>,
+  token: <String>,
+  user: <ObjectId>,
+  file: <ObjectId>,
+  expires: <Date>,
+}
+```
+
 ### message
 
 消息
