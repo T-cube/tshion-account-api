@@ -52,21 +52,22 @@ api.get('/', (req, res, next) => {
     return list
   })
   .then(list => {
-    return Promise.all([
-      mapObjectIdToData(list, [
-        ['company', 'name', 'company_id'],
-        ['project', 'name,tags', 'project_id'],
-      ]),
-      fetchUserInfo(list, 'assignee', 'creator', 'followers')
-    ])
-    .then(() => {
-      list.forEach(task => {
-        task.tags = task.tags ? task.tags.map(tag_id => {
-          return _.find(task.project_id, project_tag => project_tag._id == tag_id)
-        }) : [];
-      })
+    // return Promise.all([
+    //   mapObjectIdToData(list, [
+    //     ['company', 'name', 'company_id'],
+    //     ['project', 'name,tags', 'project_id'],
+    //   ]),
+    //   fetchUserInfo(list, 'assignee', 'creator')
+    // ])
+    // .then(() => {
+    //   list.forEach(task => {
+    //     task.tags = task.tags ? task.tags.map(tag_id => {
+    //       return _.find(task.project_id.tags, project_tag => project_tag._id && project_tag._id.equals(tag_id))
+    //     }) : [];
+    //     delete task.project_id.tags;
+    //   })
       return res.json(list)
-    })
+    // })
   })
   .catch(next);
 })

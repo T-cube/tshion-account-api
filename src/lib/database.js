@@ -13,6 +13,7 @@ export function database() {
     'approval.template',
     'approval.user',
     'approval.item',
+    'attendance',
     'auth_check_token',
     'company',
     'document.dir',
