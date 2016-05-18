@@ -66,7 +66,6 @@ api.get('/', (req, res, next) => {
         }) : [];
         delete task.project_id.tags;
       })
-      list.filter(task => task.tags.length != 0)
       return res.json(list)
     })
   })
