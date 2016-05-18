@@ -9,6 +9,8 @@ import { sanitization, validation } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import config from 'config';
+import C from 'lib/constants';
+import { checkUserTypeFunc } from '../utils';
 
 let api = require('express').Router();
 export default api;
@@ -66,14 +68,28 @@ api.post('/', (req, res, next) => {
   .catch(next);
 })
 
-api.get('/user/:user_id', (req, res, next) => {
+api.get('/user/:user_id/year/:year/month/:month', (req, res, next) => {
+  let user_id = ObjectId(req.params.user_id);
+  if (!user_id.equals(req.user._id) && !checkUserTypeFunc(req, C.COMPANY_MEMBER_TYPE.ADMIN)) {
+    throw new ApiError(403)
+  }
+  db.attendance.find({
+    user: user_id,
+    year: req.params.year,
+    month: req.params.month,
+  })
+  .then(doc => res.json(doc))
+  .catch(next)
+})
+
+api.get('/deppartment/:department_id', (req, res, next) => {
 
 })
 
-api.put('/:attendance_id', (req, res, next) => {
+api.post('/audit', (req, res, next) => {
 
 })
 
-api.post('/:attendance_id/check', (req, res, next) => {
+api.post('/audit/:audit_id/check', (req, res, next) => {
 
 })

@@ -19,7 +19,7 @@ import {
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import upload from 'lib/upload';
-import { getUniqFileName, mapObjectIdToData, fetchUserInfo } from 'lib/utils';
+import { getUniqFileName, mapObjectIdToData, fetchUserInfo, generateToken, timestamp } from 'lib/utils';
 import config from 'config';
 
 let api = require('express').Router();
@@ -193,6 +193,16 @@ api.get('/file/:file_id', (req, res, next) => {
 
 api.get('/file/:file_id/download', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
+  return generateToken(48).then(token => {
+    db.document.token.insert({
+      token: token,
+      user: req.user._id,
+      file: file_id,
+      expires: new Date(timestamp() + config.get('download.tokenExpires')),
+    })
+    res.json({ token });
+  })
+
   db.document.file.findOne({
     _id: file_id,
     [req.document.posKey]: req.document.posVal,

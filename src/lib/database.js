@@ -29,7 +29,7 @@ export function database() {
     'request',
     'task',
     'task.comments',
-    'task.log',
+    'task.activity',
     'user',
     'wiki',
   ]);

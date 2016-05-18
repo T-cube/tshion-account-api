@@ -45,5 +45,8 @@
       SECRET_KEY: 'U0uoDHEKE3MDEIF3jMoxb7f7G88NIblOd6CZeT_z',
       bucket: 'tlifang',
     }
+  },
+  download: {
+    tokenExpires: 1800000
   }
 }
