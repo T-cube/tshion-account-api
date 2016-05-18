@@ -82,7 +82,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       ]),
     ])
     .then(() => {
-      return fetchUserInfo(doc, 'updated_by', 'files.updated_by')
+      return fetchUserInfo(doc, 'updated_by', 'files.updated_by', 'dirs.updated_by')
     })
     .then(() => {
       doc.dirs.forEach(dir => {
