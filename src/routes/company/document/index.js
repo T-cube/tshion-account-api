@@ -289,6 +289,7 @@ api.put('/file/:file_id', (req, res, next) => {
   }, {
     path: 1,
     name: 1,
+    dir_id: 1,
   })
   .then(fileInfo => {
     if (!fileInfo) {
@@ -669,7 +670,7 @@ function getFileNameListOfDir(dir_id) {
     files: 1
   })
   .then(dirInfo => {
-    if (!dirInfo.files || !dirInfo.files.length) {
+    if (!dirInfo || !dirInfo.files || !dirInfo.files.length) {
       return [];
     }
     return db.document.file.find({

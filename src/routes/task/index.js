@@ -46,19 +46,27 @@ api.get('/', (req, res, next) => {
   db.task.find(condition).sort(sortBy)
   .then(list => {
     _.each(list, task => {
-      task.is_following = !!_.find(task.followers, user_id => user_id && user_id.equals(req.user._id));
+      task.is_following = !!_.find(task.followers, user_id => user_id
+        && user_id.equals(req.user._id));
     });
     return list
   })
   .then(list => {
     return Promise.all([
       mapObjectIdToData(list, [
-        ['company', 'name', 'company_id']
+        ['company', 'name', 'company_id'],
+        ['project', 'name,tags', 'project_id'],
       ]),
       fetchUserInfo(list, 'assignee', 'creator', 'followers')
     ])
-    .then(() => list)
+    .then(() => {
+      list.forEach(task => {
+        task.tags = task.tags ? task.tags.map(tag_id => {
+          return _.find(task.project_id, project_tag => project_tag._id == tag_id)
+        }) : [];
+      })
+      return res.json(list)
+    })
   })
-  .then(list => res.json(list))
   .catch(next);
 })

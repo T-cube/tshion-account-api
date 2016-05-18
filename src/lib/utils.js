@@ -95,7 +95,7 @@ export function uniqObjectId(list) {
   list.forEach(item => {
     let found = false;
     newList.forEach(newItem => {
-      if (newItem.equals(item)) {
+      if (!newItem || newItem.equals(item)) {
         found = true;
       }
     });
