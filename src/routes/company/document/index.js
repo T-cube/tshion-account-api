@@ -252,8 +252,10 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   data = [data];
   createFile(req, data, dir_id)
   .then(doc => {
-    delete doc.content;
-    doc.updated_by = _.pick(req.user, '_id', 'name', 'avatar');
+    doc.forEach(item => {
+      delete item.content;
+      item.updated_by = _.pick(req.user, '_id', 'name', 'avatar');
+    })
     res.json(doc);
   })
   .catch(next);
@@ -292,8 +294,10 @@ api.post('/dir/:dir_id/upload',
   }
   createFile(req, data, dir_id)
   .then(doc => {
-    doc.path = getUploadPath(doc.path);
-    doc.updated_by = _.pick(req.user, '_id', 'name', 'avatar');
+    doc.forEach(item => {
+      item.path = getUploadPath(item.path);
+      item.updated_by = _.pick(req.user, '_id', 'name', 'avatar');
+    })
     res.json(doc)
   })
   .catch(next);
