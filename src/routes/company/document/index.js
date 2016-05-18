@@ -18,7 +18,7 @@ import {
   delValidation,
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import upload from 'lib/upload';
+import upload, { getUploadPath } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchUserInfo, generateToken, timestamp } from 'lib/utils';
 import config from 'config';
 
@@ -186,6 +186,9 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
+    if (file.path) {
+      file.path = getUploadPath(file.path);
+    }
     res.json(file);
   })
   .catch(next)
@@ -248,7 +251,11 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   });
   data = [data];
   createFile(req, data, dir_id)
-  .then(doc => res.json(doc))
+  .then(doc => {
+    delete doc.content;
+    doc.updated_by = _.pick(req.user, '_id', 'name', 'avatar');
+    res.json(doc);
+  })
   .catch(next);
 });
 
@@ -284,7 +291,11 @@ api.post('/dir/:dir_id/upload',
     throw new ApiError(400);
   }
   createFile(req, data, dir_id)
-  .then(doc => res.json(doc))
+  .then(doc => {
+    doc.path = getUploadPath(doc.path);
+    doc.updated_by = _.pick(req.user, '_id', 'name', 'avatar');
+    res.json(doc)
+  })
   .catch(next);
 });
 

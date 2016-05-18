@@ -23,7 +23,7 @@ api.post('/', (req, res, next) => {
   let now = new Date();
   let date = now.getDate();
   let month = now.getMonth() + 1;
-  let year = now.getYear();
+  let year = now.getFullYear();
   db.attendance.findOne({
     user: req.user._id,
     year: year,
