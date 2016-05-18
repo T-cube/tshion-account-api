@@ -46,7 +46,7 @@ api.get('/', (req, res, next) => {
   db.task.find(condition).sort(sortBy)
   .then(list => {
     _.each(list, task => {
-      task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
+      task.is_following = !!_.find(task.followers, user_id => user_id && user_id.equals(req.user._id));
     });
     return list
   })
@@ -57,6 +57,7 @@ api.get('/', (req, res, next) => {
       ]),
       fetchUserInfo(list, 'assignee', 'creator', 'followers')
     ])
+    .then(() => list)
   })
   .then(list => res.json(list))
   .catch(next);

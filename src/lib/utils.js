@@ -155,7 +155,7 @@ export function mapObjectIdToData(data, collection, fields, keys) {
     let id = _mapObjectIdToData(data, [], pos);
     keyList = keyList.concat(id);
   });
-  keyList.filter(item => ObjectId.isValid(item));
+  keyList = keyList.filter(item => ObjectId.isValid(item));
   if (!keyList.length) {
     return Promise.resolve();
   }
