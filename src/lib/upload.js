@@ -17,6 +17,14 @@ export function getUploadPath(dir) {
   return path.normalize(basePath + dir);
 }
 
+export function getRelUploadPath(dir, name) {
+  return dir + '/' + name;
+}
+
+export function getUrlOfPath(path) {
+  return config.get('upload.url') + path.replace(/\\\\/g, '/').replace(BASE_PATH, '').replace(/\\/g, '/');
+}
+
 function getUploadUrl(dir, filename) {
   return config.get('upload.url') + dir + '/' + filename;
 }
@@ -66,6 +74,7 @@ export default function upload(options) {
     filename: (req, file, callback) => {
       let name = uuid.v4() + path.extname(file.originalname);
       file.url = getUploadUrl('upload/' + options.type, name);
+      file.relpath = getRelUploadPath('upload/' + options.type, name);
       callback(null, name);
     }
   });

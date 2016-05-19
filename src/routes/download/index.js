@@ -7,6 +7,8 @@ import stream from 'stream';
 
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
+import { timestamp } from 'lib/utils';
+import { getUploadPath } from 'lib/upload';
 
 let api = require('express').Router();
 export default api;
@@ -20,7 +22,7 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
     token: req.params.token
   })
   .then(doc => {
-    if (!doc) {
+    if (!doc || doc.tokenExpires < timestamp()) {
       throw new ApiError(401);
     }
     return db.document.file.findOne({
@@ -35,7 +37,7 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
       if (fileInfo.path) {
         res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
         res.set('Content-type', fileInfo.mimetype);
-        fs.createReadStream(fileInfo.path).pipe(res);
+        fs.createReadStream(getUploadPath(fileInfo.path)).pipe(res);
       } else if (fileInfo.content) {
         let s = new stream.Readable();
         s._read = function noop() {};

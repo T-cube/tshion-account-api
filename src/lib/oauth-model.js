@@ -72,7 +72,7 @@ export default {
     } else {
       return callback(null, null);
     }
-    db.user.findOne(data, {_id: 1, name: 1, email: 1, mobile: 1, password: 1})
+    db.user.findOne(data, {_id: 1, name: 1, avatar: 1, email: 1, mobile: 1, password: 1})
     .then(doc => {
       if (!doc) {
         return callback(null, null);

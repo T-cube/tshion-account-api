@@ -623,3 +623,64 @@ approval.user
   status: <String[Enum=pending,accepted,rejected]>,
 }
 ```
+
+### schedule
+
+日程
+
+```javascript
+{
+  _id: <ObjectId>,
+  title: <String>,
+  description: <String>,
+  date_from: <Date>,
+  date_end: <Date>,
+  date_create: <Date>,
+  date_update: <Date>,
+  repeat: {
+    frequency: <String[Enum=day,week,month,year]>,
+    at: [<String>...],
+  },
+  remind_type: <String[Enum=never,hour,day,week]>,
+  creator: <ObjectId>,
+  members: [<ObjectId>...],
+  share: [{
+    type: <String[Enum=company,department,project,task]>,
+    target: <ObjectId>,
+  }]
+}
+```
+
+### user.schedule
+
+用户日程
+
+```javascript
+{
+  _id: <ObjectId>,
+  data: [{
+    year: <Int>,
+    month: <Int>,
+    schedules: [{
+      date: <Int>,
+      _id: <ObjectId>,
+    }...],
+  }...],
+}
+```
+
+### reminding
+
+提醒
+
+```javascript
+{
+  _id: <ObjectId>,
+  title: <String>,
+  user: <ObjectId>,
+  target_type: <String[Enum]>,
+  target_id: <ObjectId>,
+  time: <String>,
+  is_send: <Boolean>,
+}
+```
