@@ -106,7 +106,7 @@ INPUT:
 INPUT:
 ```javascript
 {
-  title: <String>,
+  name: <String>,
   description: <String>,
   content: <String>,
 }
@@ -123,7 +123,7 @@ INPUT:
 INPUT
 ```javascript
 {
-  title: <String>,
+  name: <String>,
   description: <String>,
   content: <String>,
 }
