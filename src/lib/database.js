@@ -30,7 +30,6 @@ export function database() {
     'project.tags',
     'request',
     'task',
-    'task.activity',
     'task.comments',
     'user',
     'wiki',
