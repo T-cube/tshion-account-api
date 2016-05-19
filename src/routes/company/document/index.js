@@ -222,12 +222,9 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   data = [data];
   createFile(req, data, dir_id)
   .then(doc => {
-    doc.forEach(item => {
-      delete item.content;
-      item.updated_by = _.pick(req.user, '_id', 'name', 'avatar');
-    })
-    res.json(doc);
+    return fetchUserInfo(doc, 'updated_by')
   })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -248,7 +245,6 @@ api.post('/dir/:dir_id/upload',
   let dir_id = ObjectId(req.params.dir_id);
   if (req.files) {
     data = _.map(req.files, file => {
-      console.log(file);
       let fileData = _.pick(file, 'mimetype', 'url', 'size');
       return _.extend(fileData, {
         [req.document.posKey]: req.document.posVal,
@@ -266,11 +262,9 @@ api.post('/dir/:dir_id/upload',
   }
   createFile(req, data, dir_id)
   .then(doc => {
-    doc.forEach(item => {
-      item.updated_by = _.pick(req.user, '_id', 'name', 'avatar');
-    })
-    res.json(doc)
+    return fetchUserInfo(doc, 'updated_by')
   })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -299,6 +293,10 @@ api.put('/file/:file_id', (req, res, next) => {
       }
       data = _.pick(data, 'name');
     }
+    _.extend(data, {
+      date_update: new Date(),
+      updated_by: req.user._id,
+    });
     return getFileNameListOfDir(fileInfo.dir_id)
     .then(filenamelist => {
       data.name = getUniqFileName(filenamelist, data.name);
