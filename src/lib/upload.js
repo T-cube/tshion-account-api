@@ -21,10 +21,6 @@ export function getRelUploadPath(dir, name) {
   return dir + '/' + name;
 }
 
-export function getUrlOfPath(path) {
-  return config.get('upload.url') + path.replace(/\\\\/g, '/').replace(BASE_PATH, '').replace(/\\/g, '/');
-}
-
 function getUploadUrl(dir, filename) {
   return config.get('upload.url') + dir + '/' + filename;
 }

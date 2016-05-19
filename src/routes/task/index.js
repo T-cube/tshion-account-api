@@ -13,13 +13,11 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, assignee, creator, follower} = req.query;
+  let { keyword, sort, order, status, type} = req.query;
   let condition = {};
   if (req.company) {
     condition.company_id = req.company._id;
   }
-  let idItems = _.pick(req.query, 'assignee', 'creator', 'followers');
-  let type = req.query.type;
   if (_.contains(['assignee', 'creator', 'followers'], type)) {
     condition[type] = req.user._id;
   } else {
