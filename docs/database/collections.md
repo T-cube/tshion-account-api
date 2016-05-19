@@ -650,7 +650,7 @@ company.activity, project.activity, task.activity
     frequency: <String[Enum=day,week,month,year]>,
     at: [<String>...],
   },
-  remind: <String[Enum=never,hour,day,week]>,
+  remind_type: <String[Enum=never,hour,day,week]>,
   creator: <ObjectId>,
   members: [<ObjectId>...],
   share: [{
@@ -690,5 +690,6 @@ company.activity, project.activity, task.activity
   target_type: <String[Enum]>,
   target_id: <ObjectId>,
   time: <String>,
+  is_send: <Boolean>,
 }
 ```
