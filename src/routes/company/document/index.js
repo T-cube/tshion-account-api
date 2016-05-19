@@ -181,6 +181,8 @@ api.get('/file/:file_id', (req, res, next) => {
   db.document.file.findOne({
     _id: file_id,
     [req.document.posKey]: req.document.posVal,
+  }, {
+    path: 0,
   })
   .then(file => {
     if (!file) {
@@ -245,12 +247,11 @@ api.post('/dir/:dir_id/upload',
   let dir_id = ObjectId(req.params.dir_id);
   if (req.files) {
     data = _.map(req.files, file => {
-      let fileData = _.pick(file, 'mimetype', 'url', 'size');
+      let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size');
       return _.extend(fileData, {
         [req.document.posKey]: req.document.posVal,
         dir_id: dir_id,
         name: file.originalname,
-        path: file.relpath,
         author: req.user._id,
         date_update: new Date(),
         date_create: new Date(),
@@ -262,6 +263,9 @@ api.post('/dir/:dir_id/upload',
   }
   createFile(req, data, dir_id)
   .then(doc => {
+    doc.forEach(item => {
+      delete item.path;
+    });
     return fetchUserInfo(doc, 'updated_by')
   })
   .then(doc => res.json(doc))

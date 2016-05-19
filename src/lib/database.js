@@ -32,7 +32,6 @@ export function database() {
     'request',
     'schedule',
     'task',
-    'task.activity',
     'task.comments',
     'user',
     'wiki',

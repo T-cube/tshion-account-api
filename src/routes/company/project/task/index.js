@@ -442,6 +442,14 @@ function logTask(task_id, action, user, title) {
 
 function doUpdateField(field, req) {
   let data = validField(field, req.body[field]);
+  let taskId = ObjectId(req.params.task_id);
+  req.model('activity').insert({
+    creator: req.user._id,
+    action: C.ACTIVITY_ACTION.UPDATE,
+    target_type: C.OBJECT_TYPE.TASK,
+    field: data,
+    task: taskId,
+  })
   return db.task.update({
     _id: ObjectId(req.params.task_id)
   }, {
