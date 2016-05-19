@@ -34,20 +34,20 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
       throw new ApiError(404);
     }
     try {
+      console.log(fileInfo);
       if (fileInfo.path) {
         res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
         res.set('Content-type', fileInfo.mimetype);
-        fs.createReadStream(getUploadPath(fileInfo.path)).pipe(res);
+        fs.createReadStream(fileInfo.path).pipe(res);
       } else if (fileInfo.content) {
-        let s = new stream.Readable();
-        s._read = function noop() {};
-        s.push(fileInfo.content);
-        s.push(null);
         res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
         res.set('Content-type', 'text/plain');
-        s.pipe(res);
+        res.send(fileInfo.content);
+      } else {
+        throw new ApiError(404);
       }
     } catch (e) {
+      console.error(e);
       throw new ApiError(500, null, 'can not download file')
     }
   })
