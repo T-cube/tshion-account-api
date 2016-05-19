@@ -109,3 +109,5 @@ api.get('/project', (req, res, next) =>  {
   })
   .catch(next)
 });
+
+api.use('/schedule', require('./schedule').default);

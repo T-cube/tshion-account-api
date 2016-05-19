@@ -678,7 +678,7 @@ approval.user
   _id: <ObjectId>,
   title: <String>,
   user: <ObjectId>,
-  target_type: <String[Enum]>,
+  target_type: <String[Enum=schedule]>,
   target_id: <ObjectId>,
   time: <String>,
   is_send: <Boolean>,

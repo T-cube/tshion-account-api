@@ -10,7 +10,7 @@ import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
-import { checkUserTypeFunc } from '../utils';
+import { checkUserTypeFunc, checkUserType } from '../utils';
 
 let api = require('express').Router();
 export default api;
@@ -73,17 +73,18 @@ api.get('/user/:user_id/year/:year/month/:month', (req, res, next) => {
   if (!user_id.equals(req.user._id) && !checkUserTypeFunc(req, C.COMPANY_MEMBER_TYPE.ADMIN)) {
     throw new ApiError(403)
   }
-  db.attendance.find({
+  db.attendance.findOne({
     user: user_id,
-    year: req.params.year,
-    month: req.params.month,
+    year: parseInt(req.params.year),
+    month: parseInt(req.params.month),
   })
   .then(doc => res.json(doc))
   .catch(next)
 })
 
 api.get('/deppartment/:department_id', (req, res, next) => {
-
+  let department_id = ObjectId(req.params.department_id);
+  db.attendance.find()
 })
 
 api.post('/audit', (req, res, next) => {

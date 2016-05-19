@@ -156,6 +156,7 @@ export function mapObjectIdToData(data, collection, fields, keys) {
     return Promise.all(mapList.map(item => mapObjectIdToData(data, ...item)))
     .then(() => data)
   }
+  fields = fields || [];
   _.isString(fields) && (fields = fields.split(',')).map(field => field.trim());
   _.isString(keys) && (keys = keys.split(',')).map(key => key.trim());
   keys = keys && keys.length ? keys : [''];
@@ -165,7 +166,7 @@ export function mapObjectIdToData(data, collection, fields, keys) {
   });
   keyList = keyList.filter(item => ObjectId.isValid(item));
   if (!keyList.length) {
-    return Promise.resolve();
+    return Promise.resolve(isDataObjectId ? null : data);
   }
   return objectPath.get(db, collection).find({
     _id: {
@@ -201,10 +202,10 @@ function _mapObjectIdToData(data, k, pos, infoList) {
     }
   }
   if (!ObjectId.isValid(val)) {
-    return null;
+    return [];
   }
   val = ObjectId(val);
-  if (!infoList) {
+  if (undefined === infoList) {
     return [val];
   } else {
     objectPath.set(data, k, _.find(infoList, info => info._id.equals(val)));
