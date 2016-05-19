@@ -6,7 +6,7 @@
 
 ## API Functions
 
-### GET /message
+### GET /notification
 
 获取消息列表
 
@@ -17,7 +17,7 @@
   to: <ObjectId>,
   action: <String>,
   target_type: <String[Enum]>,
-  target_id: <ObjectId>,
+  [target]: <ObjectId>,
   is_read: <Boolean>,
   date_create: <Date>,
 }...]

@@ -267,25 +267,20 @@ OUTPUT
 
 删除评论
 
-### GET /task/{taks_id}/log
+### GET /task/{taks_id}/activity
 
 获取任务日志
 
 ```javascript
-log: [{
-  type: <String>,
-  from: {
-    _id: <ObjectId>,
-    name: <String>,
-    avatar: <String>
-  },
-  to: {
-    _id: <ObjectId>,
-    name: <String>,
-    avatar: <String>
-  }
-  content: <String>,
-  time: <Date>
+[{
+  _id: <ObjectId>,
+  creator: <ObjectId>,            // 作者
+  target_type: <String[Enum]>,    // 对象类型
+  action: <String[Enum]>,         // 动作类型
+  task: <ObjectId>,               // optional
+  project: <ObjectId>,            // optional
+  company: <ObjectId>,            // optional
+  date_create: <Date>,            // 创建时间
 }]
 ```
 

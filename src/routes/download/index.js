@@ -19,7 +19,7 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   db.document.token.findOne({
     file: file_id,
-    token: req.params.token
+    token: req.params.token,
   })
   .then(doc => {
     if (!doc || doc.tokenExpires < timestamp()) {
@@ -34,7 +34,6 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
       throw new ApiError(404);
     }
     try {
-      console.log(fileInfo);
       if (fileInfo.path) {
         res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
         res.set('Content-type', fileInfo.mimetype);
@@ -48,7 +47,7 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
       }
     } catch (e) {
       console.error(e);
-      throw new ApiError(500, null, 'can not download file')
+      throw new ApiError(500);
     }
   })
   .catch(next)

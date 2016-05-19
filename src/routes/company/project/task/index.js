@@ -38,15 +38,17 @@ api.get('/', (req, res, next) => {
     _.each(idItems, (ids, key) => {
       if (!ids) return;
       let idarr = ids.split(',').filter(id => ObjectId.isValid(id)).map(id => ObjectId(id));
+      console.log('idarr', idarr);
       if (idarr.length) {
-        if (key == 'follower') {
+        if (key == 'followers') {
           condition[key] = { $elemMatch: { $in: idarr } };
-        } else {
+        } else if (idarr.length > 1) {
           condition[key] = { $in: idarr };
+        } else {
+          condition[key] = idarr[0];
         }
       }
     });
-    console.log(condition);
   }
   if (status) {
     status = status.split(',').filter(s => _.contains(ENUMS.TASK_STATUS, s));
@@ -62,6 +64,7 @@ api.get('/', (req, res, next) => {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order }
   }
+  console.log('condition', condition);
   db.task.find(condition).sort(sortBy)
   .then(list => {
     _.each(list, task => {
@@ -87,6 +90,7 @@ api.post('/', (req, res, next) => {
   });
   db.task.insert(data)
   .then(doc => {
+    req.task = doc;
     db.user.update({
       _id: req.user._id
     }, {
@@ -118,7 +122,7 @@ api.post('/', (req, res, next) => {
         }
       })
     })
-    .then(() => logTask(doc._id, C.TASK_LOG_TYPE.CREATE, req.user._id))
+    .then(() => logTask(req, C.ACTIVITY_ACTION.CREATE))
     .then(() => {
       res.json(doc);
     })
@@ -138,70 +142,54 @@ api.get('/:_task_id', (req, res, next) => {
     }
     return fetchUserInfo(data, 'creator', 'assignee', 'followers')
     .then(() => {
-    //   return db.project.findOne({
-    //     _id: req.project_id
-    //   }, {
-    //     tags: 1
-    //   })
-    // })
-    // .then(project => {
-    //   data.tags && data.tags.map(tag_id => _.find(project.tags, tag => tag._id.equals(tag_id)))
       res.json(data);
     })
   })
   .catch(next);
 });
 
+api.param('task_id', (req, res, next, id) => {
+  let taskId = ObjectId(req.params.task_id);
+  db.task.findOne({
+    _id: taskId,
+    project_id: req.project_id,
+  })
+  .then(task => {
+    if (!task) {
+      throw new ApiError(404, null, 'task not found');
+    }
+    req.task = task;
+    next();
+  })
+  .catch(next)
+})
+
 api.delete('/:task_id', (req, res, next) => {
   isMemberOfProject(req.user._id, req.project_id)
   .then(() => {
     return db.task.remove({
-      _id: ObjectId(req.params.task_id)
+      _id: req.task._id
     })
   })
   .then(doc => res.json(doc))
   .catch(next);
 });
 
-api.param('task_id', (req, res, next, id) => {
-  db.task.count({
-    _id: ObjectId(req.params.task_id),
-    project_id: req.project_id,
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(404, null, 'task not found');
-    }
-    next();
-  })
-  .catch(next)
-})
+api.put('/:task_id/status', updateField('status'));
 
-api.put('/:task_id/status', updateField('status'), (req, res, next) => {
-  res.json({});
-});
+api.put('/:task_id/title', updateField('title'));
 
-api.put('/:task_id/title', updateField('title'), (req, res, next) => {
-  logTask(ObjectId(req.params.task_id), C.TASK_LOG_TYPE.TITLE, req.user._id)
-  .then(() => res.json({}))
-  .catch(next);
-});
+api.put('/:task_id/description', updateField('description'));
 
-api.put('/:task_id/description', updateField('description'), (req, res, next) => {
-  logTask(ObjectId(req.params.task_id), C.TASK_LOG_TYPE.DESCRIPTION, req.user._id)
-  .then(() => res.json({}))
-  .catch(next);
-});
+api.put('/:task_id/priority', updateField('priority'));
 
-api.put('/:task_id/priority', updateField('priority'), (req, res, next) => {
-  logTask(ObjectId(req.params.task_id), C.TASK_LOG_TYPE.PRIORITY, req.user._id)
-  .then(() => res.json({}))
-  .catch(next);
-});
+api.put('/:task_id/date_start', updateField('date_start'));
+
+api.put('/:task_id/date_due', updateField('date_due'));
 
 api.put('/:task_id/assignee', (req, res, next) => {
   let data = validField('assignee', req.body.assignee);
-  let task_id = ObjectId(req.params.task_id);
+  let task_id = req.task._id;
   isMemberOfProject(data.assignee, req.project_id)
   .then(doc => {
     return db.task.findOne({
@@ -257,18 +245,10 @@ api.put('/:task_id/assignee', (req, res, next) => {
     })
   })
   .then(() => {
-    return doUpdateField('assignee', req);
+    return doUpdateField(req, 'assignee');
   })
   .then(() => res.json({}))
   .catch(next);
-});
-
-api.put('/:task_id/date_start', updateField('date_start'), (req, res, next) => {
-  res.json({});
-});
-
-api.put('/:task_id/date_due', updateField('date_due'), (req, res, next) => {
-  res.json({});
 });
 
 api.put('/:task_id/tag', (req, res, next) => {
@@ -289,7 +269,7 @@ api.put('/:task_id/tag', (req, res, next) => {
       throw new ApiError(400, null, 'tag is not exists');
     }
     return db.task.update({
-      _id: ObjectId(req.params.task_id)
+      _id: req.task._id
     }, {
       $addToSet: data
     })
@@ -300,7 +280,7 @@ api.put('/:task_id/tag', (req, res, next) => {
 
 api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
   db.task.update({
-    _id: ObjectId(req.params.task_id)
+    _id: req.task._id
   }, {
     $pull: {
       tags: ObjectId(req.params.tag_id)
@@ -311,10 +291,10 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
 });
 
 api.post('/:task_id/follow', (req, res, next) => {
-  const taskId = ObjectId(req.params.task_id);
+  const taskId = req.task._id;
   const userId = req.user._id;
-  taskFollow(req, taskId, userId)
-  .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOW, req.user._id))
+  taskFollow(req)
+  .then(() => logTask(req, C.ACTIVITY_ACTION.FOLLOW))
   .then(() => res.json({
     is_following: true,
   }))
@@ -322,10 +302,10 @@ api.post('/:task_id/follow', (req, res, next) => {
 });
 
 api.post('/:task_id/unfollow', (req, res, next) => {
-  const taskId = ObjectId(req.params.task_id);
+  const taskId = req.task._id;
   const userId = req.user._id;
-  taskUnfollow(req, taskId, userId)
-  .then(() => logTask(taskId, C.TASK_LOG_TYPE.UNFOLLOW, req.user._id))
+  taskUnfollow(req)
+  .then(() => logTask(req, C.ACTIVITY_ACTION.UNFOLLOW))
   .then(() => res.json({
     is_following: false,
   }))
@@ -337,25 +317,31 @@ api.put('/:task_id/followers', (req, res, next) => {
     throw new ApiError(400);
   }
   let userId = ObjectId(req.body._id);
-  let taskId = ObjectId(req.params.task_id);
-  taskFollow(req, taskId, userId)
-  .then(() => logTask(taskId, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
+  let taskId = req.task._id;
+  taskFollow(req, userId)
+  .then(() => logTask(req, C.ACTIVITY_ACTION.ADD, {
+    target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
+    user: userId,
+  }))
   .then(() => res.json({}))
   .catch(next);
 });
 
 api.delete('/:task_id/followers/:follower_id', (req, res, next) => {
   let userId = ObjectId(req.params.follower_id);
-  let task_id = ObjectId(req.params.task_id);
+  let task_id = req.task._id;
   taskUnfollow(req, task_id, userId)
-  .then(() => logTask(task_id, C.TASK_LOG_TYPE.FOLLOWERS, req.user._id))
+  .then(() => logTask(req, C.ACTIVITY_ACTION.REMOVE, {
+    target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
+    user: userId,
+  }))
   .then(() => res.json({}))
   .catch(next);
 });
 
 api.get('/:task_id/comment', (req, res, next) => {
   db.task.comments.find({
-    task_id: ObjectId(req.params.task_id)
+    task_id: req.task._id
   })
   .then(data => {
     res.json(data || []);
@@ -367,7 +353,7 @@ api.post('/:task_id/comment', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(commentSanitization, commentValidation, data);
   _.extend(data, {
-    task_id: ObjectId(req.params.task_id),
+    task_id: req.task._id,
     creator: req.user._id,
     likes: 0,
     date_create: new Date()
@@ -375,7 +361,7 @@ api.post('/:task_id/comment', (req, res, next) => {
   db.task.comments.insert(data)
   .then(data => {
     return db.task.update({
-      _id: ObjectId(req.params.task_id)
+      _id: req.task._id
     }, {
       $push: {
         comments: data._id
@@ -396,7 +382,7 @@ api.delete('/:task_id/comment/:comment_id', (req, res, next) => {
   })
   .then(() => {
     return db.task.update({
-      _id: ObjectId(req.params.task_id)
+      _id: req.task._id
     }, {
       $pull: {
         comments: comment_id
@@ -407,54 +393,52 @@ api.delete('/:task_id/comment/:comment_id', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/:task_id/log', (req, res, next) => {
-  db.task.activity.find({
-    task_id: ObjectId(req.params.task_id)
+api.get('/:task_id/activity', (req, res, next) => {
+  let taskId = req.task._id;
+  let { last_id } = req.params;
+  req.model('activity').fetch({
+    task: taskId,
   })
-  .then(data => {
-    res.json(data || []);
-  })
+  .then(list => res.json(list))
   .catch(next);
 });
 
 function updateField(field) {
   return (req, res, next) => {
-    doUpdateField(field, req)
-    .then((doc) => next())
-    .catch(() => next('route'));
+    doUpdateField(req, field)
+    .then(data => res.json(data))
+    .catch(() => next());
   }
 }
 
-function logTask(task_id, action, user, title) {
-  let data = {
-    subject: task_id,
-    user: user,
+function logTask(req, action, data) {
+  let info = {
     action: action,
-    target: {
-      type: 'task.tag',
-      object: 'tag_id',
-      title: title,
-    },
-    date_create: new Date(),
-  }
-  return db.task.activity.insert(data);
+    target_type: C.OBJECT_TYPE.TASK,
+    task: req.task._id,
+    project: req.project_id,
+  };
+  let activity = _.extend({
+    creator: req.user._id,
+  }, info, data);
+  let notification = _.extend({
+    from: req.user._id,
+    to: req.task.followers,
+  }, info, data);
+  req.model('activity').insert(activity);
+  req.model('notification').send(notification);
 }
 
-function doUpdateField(field, req) {
+function doUpdateField(req, field) {
   let data = validField(field, req.body[field]);
-  let taskId = ObjectId(req.params.task_id);
-  req.model('activity').insert({
-    creator: req.user._id,
-    action: C.ACTIVITY_ACTION.UPDATE,
-    target_type: C.OBJECT_TYPE.TASK,
-    field: data,
-    task: taskId,
-  })
+  let taskId = req.task._id;
   return db.task.update({
-    _id: ObjectId(req.params.task_id)
+    _id: req.task._id
   }, {
-    $set: data
-  });
+    $set: data,
+  })
+  .then(() => logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data}))
+  .then(() => data);
 }
 
 function validField(field, val) {
@@ -491,7 +475,9 @@ function isMemberOfCompany(userId, company_id) {
   });
 }
 
-function taskFollow(req, taskId, userId) {
+function taskFollow(req, userId) {
+  const taskId = req.task._id;
+  userId = userId || req.user._id;
   return isMemberOfProject(userId, req.project_id)
   .then(() => {
     return db.task.update({
@@ -528,7 +514,9 @@ function taskFollow(req, taskId, userId) {
   });
 }
 
-function taskUnfollow(req, taskId, userId) {
+function taskUnfollow(req, userId) {
+  const taskId = req.task._id;
+  userId = userId || req.user._id;
   return db.task.count({
     _id: taskId,
     $or: [{assignee: userId}, {creator: userId}],

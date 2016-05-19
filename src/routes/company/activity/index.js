@@ -22,5 +22,6 @@ api.get('/', (req, res, next) => {
   req.model('activity').fetch({
     company: companyId,
   })
-  .then(list => res.json(list));
+  .then(list => res.json(list))
+  .catch(next);
 });

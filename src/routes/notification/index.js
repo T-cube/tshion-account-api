@@ -10,7 +10,7 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
-  db.message.find({
+  db.notification.find({
     to: req.user._id,
   })
   .then(list => res.json(list))
@@ -18,7 +18,7 @@ api.get('/', (req, res, next) => {
 });
 
 api.get('/unread', (req, res, next) => {
-  db.message.find({
+  db.notification.find({
     to: req.user._id,
     is_read: false,
   })
@@ -28,7 +28,7 @@ api.get('/unread', (req, res, next) => {
 
 api.post('/:message_id/read', (req, res, next) => {
   let messageId = ObjectId(req.params.message_id);
-  db.message.findOneAndUpdate({
+  db.notification.findOneAndUpdate({
     _id: messageId,
     to: req.user._id,
   }, {

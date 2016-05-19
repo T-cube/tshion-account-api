@@ -549,7 +549,7 @@ approval.user
 }
 ```
 
-### message
+### notification
 
 消息
 
@@ -558,8 +558,8 @@ approval.user
   _id: <ObjectId>,
   from: <ObjectId>,
   to: <ObjectId>,
-  verb: <String>,
   target_type: <String[Enum]>,
+  action: <String[Enum]>,         // 动作类型
   target_id: <ObjectId>,
   is_read: <Boolean>,
   date_create: <Date>,
