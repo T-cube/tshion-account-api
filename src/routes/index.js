@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 import { apiErrorHandler } from 'lib/error';
 import corsHandler from 'lib/cors';
 import Message from 'models/message';
+import Activity from 'models/activity';
 
 let api = express.Router();
 export default api;
@@ -15,6 +16,7 @@ api.use(bodyParser.json());
 
 api.use((req, res, next) => {
   req.loadModel('message', Message);
+  req.loadModel('activity', Activity);
   next();
 });
 

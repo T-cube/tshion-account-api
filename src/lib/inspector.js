@@ -66,11 +66,19 @@ export function validateObject(schema, data) {
   }, data);
 }
 
+export function validate(schema, data) {
+  let result = validateObject(schema, data);
+  if (!result.valid) {
+    console.error(result.error);
+    throw new Error(result.error);
+  }
+}
+
 export function sanitizeValidateObject(sanitizationSchema, validationSchema, data) {
   sanitizeObject(sanitizationSchema, data);
   let result = validateObject(validationSchema, data);
   if (!result.valid) {
-    console.log(result);
+    console.error(result);
     throw new ApiError(400, null, result.error);
   }
   return result;

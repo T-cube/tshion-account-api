@@ -22,13 +22,13 @@ api.get('/', (req, res, next) => {
   // TODO only company request for now, support other type of request later.
   const limit = config.get('view.listNum');
   const { status } = req.query;
-  const { before } = req.query;
+  const { last_id } = req.query;
   let query = {
     to: req.user._id,
     type: C.REQUEST_TYPE.COMPANY,
   };
-  if (before) {
-    let timeLimit = new Date(parseInt(before));
+  if (last_id) {
+    let timeLimit = new Date(parseInt(last_id));
     query.date_create = {
       $lt: timeLimit,
     }
