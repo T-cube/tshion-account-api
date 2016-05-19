@@ -114,7 +114,16 @@ INPUT:
 
 ### GET /file/:file_id/download
 
-下载文档
+下载文档，先获取token，再跳转到`/api/download/file/:file_id/token/:token`地址下载
+
+OUTPUT
+
+```javascript
+{
+  token: <String>
+}
+```
+
 
 ### PUT /document/file/:file_id
 

@@ -5,16 +5,21 @@ import _ from 'underscore';
 let constants = {
 
   ACTIVITY_ACTION: {
-    CREATE: 'create',
-    UPDATE: 'update',
-    DELETE: 'delete',
-    ACCEPT: 'accept',
-    REJECT: 'reject',
-
-    TASK_COMPLETE: 'task.complete',         // 完成
-    TASK_REOPEN: 'task.reopen',             // 重新开启
-    TASK_FOLLOW: 'task.follow',             // 关注
-    TASK_UNFOLLOW: 'task.unfollow',         // 取消关注
+    // 常规操作
+    CREATE: 'create',      // 创建
+    UPDATE: 'update',      // 更新（字段）
+    DELETE: 'delete',      // 删除
+    // 管理操作
+    TRANSFER: 'tansfer',   // 转让
+    // 邀请
+    ACCEPT: 'accept',      // 接受
+    REJECT: 'reject',      // 拒绝
+    // 关注
+    FOLLOW: 'follow',      // 关注
+    UNFOLLOW: 'unfollow',  // 取消关注
+    // 文件操作
+    RENAME: 'rename',      // 重命名
+    UPLOAD: 'upload',      // 上传
   },
 
   ACTIVITY_TYPE: {
@@ -66,7 +71,7 @@ let constants = {
   },
 
   OBJECT_TYPE: {
-    SELF: 'self',
+    FIELD: 'field',
     COMPANY: 'company',
     COMPANY_MEMBER: 'company.member',
     COMPANY_DIR: 'company.dir',

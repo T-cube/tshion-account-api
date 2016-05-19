@@ -80,14 +80,19 @@ api.post('/', (req, res, next) => {
     // add company to user
     return db.company.insert(data);
   })
-  .then(doc => {
-    console.log(doc);
+  .then(company => {
+    req.model('activity').insert({
+      creator: req.user._id,
+      action: C.ACTIVITY_ACTION.CREATE,
+      target_type: C.OBJECT_TYPE.COMPANY,
+      company: company._id
+    });
     return db.user.update({
       _id: req.user._id
     }, {
-      $push: { companies: doc._id }
+      $push: { companies: company._id }
     })
-    .then(() => res.json(doc));
+    .then(() => res.json(company));
   })
   .catch(next);
 });
@@ -213,11 +218,12 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.use('/:company_id/structure', require('./structure').default);
-api.use('/:company_id/member', require('./member').default);
-api.use('/:company_id/project', require('./project').default);
+api.use('/:company_id/activity', require('./activity').default);
 api.use('/:company_id/announcement', require('./announcement').default);
 api.use('/:company_id/approval', require('./approval').default);
-api.use('/:company_id/document', require('./document').default);
-api.use('/:company_id/task', require('../task').default);
 api.use('/:company_id/attendance', require('./attendance').default);
+api.use('/:company_id/document', require('./document').default);
+api.use('/:company_id/member', require('./member').default);
+api.use('/:company_id/project', require('./project').default);
+api.use('/:company_id/structure', require('./structure').default);
+api.use('/:company_id/task', require('../task').default);
