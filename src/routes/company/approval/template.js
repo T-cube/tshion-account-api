@@ -38,7 +38,7 @@ api.post('/', (req, res, next) => {
     i._id = ObjectId();
     return i;
   });
-  data.forms.map(i => {
+  data.forms && data.forms.map(i => {
     i._id = ObjectId();
     return i;
   });

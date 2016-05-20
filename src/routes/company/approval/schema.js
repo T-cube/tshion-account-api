@@ -34,6 +34,7 @@ export let sanitization = {
 	},
   forms: {
 		type: 'array',
+    optional: true,
 		items: {
 			type: 'object',
 			properties: {
@@ -78,6 +79,7 @@ export let validation = {
 	},
 	forms: {
 		type: 'array',
+    optional: true,
 		items: {
 			type: 'object',
 			properties: {
