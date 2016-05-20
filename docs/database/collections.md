@@ -640,7 +640,6 @@ approval.user
     type: <String[Enum=day,week,month,year,weekday]>,
     weekday: [<Boolean>, <Boolean>, <Boolean>, <Boolean>, <Boolean>, <Boolean>, <Boolean>],
     end: <Date>,
-    //at: [<String>...],
   },
   remind: {
     on: <Boolean>,

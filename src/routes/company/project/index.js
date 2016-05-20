@@ -446,7 +446,9 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
       company_id: req.company._id,
     }, {
       $pull: {
-        tags: tag_id
+        tags: {
+          _id: tag_id
+        }
       }
     }),
     db.task.update({
