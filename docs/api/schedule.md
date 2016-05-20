@@ -21,20 +21,14 @@ INPUT
 {
   title: <String>,
   description: <String>,
-  date_from: <Date>,
-  date_end: <Date>,
-  // date_create: <Date>,
+  time_start: <Date>,
+  time_end: <Date>,
+  repeat_end: <Date>,
   repeat: {
-    frequency: <String[Enum=day,week,month,year]>,
-    at: [<String>...],
+    type: <String[Enum=day,week,month,year,weekday]>,
+    info: [<String>...],
   },
-  remind: <String[Enum=never,hour,day,week]>,
-  // creator: <ObjectId>,
-  members: [<ObjectId>...],
-  share: [{
-    type: <String[Enum=company,department,project,task]>,
-    target: <ObjectId>,
-  }]
+  remind: <String[Enum=none,exact,ten_minute,half_hour,one_hour,day,week]>,
 }
 ```
 
@@ -46,18 +40,17 @@ INPUT
 {
   title: <String>,
   description: <String>,
-  date_from: <Date>,
-  date_end: <Date>,
+  time_start: <Date>,
+  time_end: <Date>,
+  repeat_end: <Date>,
   repeat: {
-    frequency: <String[Enum=day,week,month,year]>,
-    at: [<String>...],
+    type: <String[Enum=day,week,month,year,weekday]>,
+    info: [<String>...],
   },
-  remind: <String[Enum=never,hour,day,week]>,
-  members: [<ObjectId>...],
-  share: [{
-    type: <String[Enum=company,department,project,task]>,
-    target: <ObjectId>,
-  }]
+  remind: {
+    on: <Boolean>,
+    type: <String[Enum=none,exact,ten_minute,half_hour,one_hour,day,week]>,
+  }
 }
 ```
 
@@ -81,20 +74,20 @@ OUTPUT
   _id: <ObjectId>,
   title: <String>,
   description: <String>,
-  date_from: <Date>,
-  date_end: <Date>,
-  date_create: <Date>,
+  time_start: <Date>,
+  time_end: <Date>,
+  repeat_end: <Date>,
   repeat: {
-    frequency: <String[Enum=day,week,month,year]>,
-    at: [<String>...],
+    type: <String[Enum=day,week,month,year,weekday]>,
+    info: [<String>...],
   },
-  remind: <String[Enum=never,hour,day,week]>,
+  remind: {
+    on: <Boolean>,
+    type: <String[Enum=none,exact,ten_minute,half_hour,one_hour,day,week]>,
+  },
   creator: <ObjectId>,
-  members: [<ObjectId>...],
-  share: [{
-    type: <String[Enum=company,department,project,task]>,
-    target: <ObjectId>,
-  }]
+  date_create: <Date>,
+  date_update: <Date>,
 }
 ```
 

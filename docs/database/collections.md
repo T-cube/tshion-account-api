@@ -636,16 +636,15 @@ approval.user
   description: <String>,
   time_start: <Date>,
   time_end: <Date>,
+  repeat_end: <Date>,
   repeat: {
     type: <String[Enum=day,week,month,year,weekday]>,
-    weekday: [<Boolean>, <Boolean>, <Boolean>, <Boolean>, <Boolean>, <Boolean>, <Boolean>],
-    end: <Date>,
+    info: [<String>...],
   },
   remind: {
-    on: <Boolean>,
     type: <String[Enum=none,exact,minute,hour,day,week]>,
     num: <Int>,
-  }
+  },
   creator: <ObjectId>,
   date_create: <Date>,
   date_update: <Date>,
