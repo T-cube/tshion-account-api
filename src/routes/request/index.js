@@ -90,12 +90,12 @@ api.post('/:request_id/accept', (req, res, next) => {
             'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL,
           }
         }),
-        req.model('message').send({
+        req.model('notification').send({
           from: request.to,
           to: request.from,
           action: C.ACTIVITY_ACTION.ACCEPT,
-          object_type: C.OBJECT_TYPE.REQUEST,
-          object_id: requestId,
+          target_type: C.OBJECT_TYPE.REQUEST,
+          request: requestId,
         }),
       ]);
     }
@@ -135,12 +135,12 @@ api.post('/:request_id/reject', (req, res, next) => {
             'members.$.status': C.COMPANY_MEMBER_STATUS.REJECTED,
           }
         }),
-        req.model('message').send({
+        req.model('notification').send({
           from: request.to,
           to: request.from,
-          verb: C.ACTIVITY_ACTION.REJECT,
-          object_type: C.OBJECT_TYPE.REQUEST,
-          object_id: requestId,
+          action: C.ACTIVITY_ACTION.REJECT,
+          target_type: C.OBJECT_TYPE.REQUEST,
+          request: requestId,
         }),
       ]);
     }

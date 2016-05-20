@@ -79,11 +79,19 @@ export function getEmailName(email) {
 }
 
 export function timestamp(t) {
-  return +new Date(t);
+  if (t) {
+    return +new Date(t);
+  } else {
+    return +new Date();
+  }
 }
 
 export function time(t) {
-  return new Date(t);
+  if (t) {
+    return new Date(t);
+  } else {
+    return new Date();
+  }
 }
 
 export function isEmail(email) {

@@ -22,7 +22,7 @@ export function database() {
     'document.dir',
     'document.file',
     'document.token',
-    'message',
+    'notification',
     'oauth.accesstoken',
     'oauth.clients',
     'oauth.refreshtoken',

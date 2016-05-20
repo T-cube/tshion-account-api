@@ -106,8 +106,8 @@ api.get('/:_project_id', (req, res, next) => {
 api.param('project_id', (req, res, next, id) => {
   req.project_id = ObjectId(id);
   db.project.count({
+    _id: ObjectId(id),
     company_id: req.company._id,
-    _id: ObjectId(id)
   })
   .then(count => {
     if (0 == count) {

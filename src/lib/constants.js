@@ -6,6 +6,8 @@ let constants = {
 
   ACTIVITY_ACTION: {
     // 常规操作
+    ADD: 'add',            // 添加
+    REMOVE: 'remove',      // 添加
     CREATE: 'create',      // 创建
     UPDATE: 'update',      // 更新（字段）
     DELETE: 'delete',      // 删除
@@ -84,7 +86,7 @@ let constants = {
     REQUEST: 'request',
     TASK: 'task',
     TASK_TAG: 'task.tag',
-    TASK_FOLLOWERS: 'task.followers',
+    TASK_FOLLOWER: 'task.follower',
   },
 
   PROJECT_MEMBER_TYPE: {

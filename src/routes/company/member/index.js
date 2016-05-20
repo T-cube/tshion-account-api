@@ -71,13 +71,12 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
       date_create: time(),
     })
     .then(request => {
-      req.model('message')
-      .from(req.user._id)
-      .to(user._id)
-      .send({
-        verb: C.ACTIVITY_ACTION.CREATE,
+      req.model('notification').send({
+        from: req.user._id,
+        to: user._id,
+        action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.REQUEST,
-        target_id: request._id,
+        request: request._id,
       });
     })
     return db.company.update({

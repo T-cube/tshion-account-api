@@ -12,10 +12,10 @@ import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 export default class Activity {
 
   insert(data) {
-    validate(validation, data);
     data = _.extend({}, data, {
       date_create: time(),
     });
+    validate(validation, data);
     return db.activity.insert(data);
   }
 
@@ -33,6 +33,6 @@ export default class Activity {
         ['company', 'name', 'company'],
         ['task', 'title', 'task'],
       ]);
-    })
+    });
   }
 }
