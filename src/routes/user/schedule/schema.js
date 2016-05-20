@@ -1,61 +1,43 @@
 export let sanitization = {
 	title: { type: 'string' },
   description: { type: 'string' },
-  date_from: { type: 'date' },
-  date_end: { type: 'date' },
+  time_start: { type: 'date' },
+  time_end: { type: 'date' },
+  repeat_end: { type: 'date', optional: true },
   repeat: {
 		type: 'object',
 		properties: {
-			frequency: { type: 'string' },
-	    at: { type: 'string' },
+			type: { type: 'string' },
+	    info: { type: 'array', optional: true },
 		}
   },
-  remind: { type: 'string' },
-  members: {
-		type: 'array',
-		items: {
-			$objectId: 1
+  remind: {
+		type: 'object',
+		properties: {
+			type: { type: 'string' },
+	    num: { type: 'int' },
 		}
-	},
-  share: {
-		type: 'array',
-		items: {
-			type: 'object',
-			properties: {
-				type: { type: 'string' },
-		    target: { $objectId: 1 },
-			}
-		}
-	},
+  }
 };
 
 export let validation = {
 	title: { type: 'string' },
   description: { type: 'string' },
-  date_from: { type: 'date' },
-  date_end: { type: 'date' },
+  time_start: { type: 'date' },
+  time_end: { type: 'date' },
+  repeat_end: { type: 'date', optional: true },
   repeat: {
 		type: 'object',
 		properties: {
-			frequency: { $enum: ['day', 'week', 'month', 'year'] },
-	    at: { type: 'string' },
+			type: { type: 'string' },
+	    info: { type: 'array', optional: true  },
 		}
   },
-  remind: { $num: ['never', 'hour', 'day', 'week'] },
-  members: {
-		type: 'array',
-		items: {
-			$objectId: 1
+  remind: {
+		type: 'object',
+		properties: {
+			type: { type: 'string' },
+	    num: { type: 'int' },
 		}
-	},
-  share: {
-		type: 'array',
-		items: {
-			type: 'object',
-			properties: {
-				type: { $enum: ['company', 'department', 'project', 'task'] },
-		    target: { $objectId: 1 },
-			}
-		}
-	},
+  }
 };

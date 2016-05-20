@@ -55,6 +55,7 @@
     is_creator: <Boolean>,
     is_assignee: <Boolean>,
   }...],
+  timezone: <String>,
 }
 ```
 
@@ -633,54 +634,33 @@ approval.user
   _id: <ObjectId>,
   title: <String>,
   description: <String>,
-  date_from: <Date>,
-  date_end: <Date>,
+  time_start: <Date>,
+  time_end: <Date>,
+  repeat_end: <Date>,
+  repeat: {
+    type: <String[Enum=day,week,month,year,weekday]>,
+    info: [<String>...],
+  },
+  remind: {
+    type: <String[Enum=none,exact,minute,hour,day,week]>,
+    num: <Int>,
+  },
+  creator: <ObjectId>,
   date_create: <Date>,
   date_update: <Date>,
-  repeat: {
-    frequency: <String[Enum=day,week,month,year]>,
-    at: [<String>...],
-  },
-  remind_type: <String[Enum=never,hour,day,week]>,
-  creator: <ObjectId>,
-  members: [<ObjectId>...],
-  share: [{
-    type: <String[Enum=company,department,project,task]>,
-    target: <ObjectId>,
-  }]
 }
 ```
 
-### user.schedule
-
-用户日程
-
-```javascript
-{
-  _id: <ObjectId>,
-  data: [{
-    year: <Int>,
-    month: <Int>,
-    schedules: [{
-      date: <Int>,
-      _id: <ObjectId>,
-    }...],
-  }...],
-}
-```
-
-### reminding
+### user.reminding
 
 提醒
 
 ```javascript
 {
   _id: <ObjectId>,
-  title: <String>,
-  user: <ObjectId>,
   target_type: <String[Enum=schedule]>,
   target_id: <ObjectId>,
-  time: <String>,
-  is_send: <Boolean>,
+  time: <Date>,
+  is_done: <Boolean>,
 }
 ```
