@@ -219,7 +219,8 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     date_update: new Date(),
     date_create: new Date(),
     updated_by: req.user._id,
-    size: Buffer.byteLength(data.content, 'utf8')
+    mimetype: 'text/pain',
+    size: Buffer.byteLength(data.content, 'utf8'),
   });
   data = [data];
   createFile(req, data, dir_id)

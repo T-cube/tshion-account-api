@@ -34,13 +34,12 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
       throw new ApiError(404);
     }
     try {
+      let filename = encodeURIComponent(fileInfo.name);
+      res.set('Content-disposition', 'attachment; filename=*=UTF-8\'\'' + filename);
+      res.set('Content-type', fileInfo.mimetype);
       if (fileInfo.path) {
-        res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
-        res.set('Content-type', fileInfo.mimetype);
         fs.createReadStream(fileInfo.path).pipe(res);
       } else if (fileInfo.content) {
-        res.set('Content-disposition', 'attachment; filename=' + fileInfo.name);
-        res.set('Content-type', 'text/plain');
         res.send(fileInfo.content);
       } else {
         throw new ApiError(404);

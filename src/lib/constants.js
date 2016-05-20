@@ -16,6 +16,9 @@ let constants = {
     // 邀请
     ACCEPT: 'accept',      // 接受
     REJECT: 'reject',      // 拒绝
+    // 任务
+    COMPLETE: 'complete',  // 关注
+    REOPEN: 'reopen',      // 取消关注
     // 关注
     FOLLOW: 'follow',      // 关注
     UNFOLLOW: 'unfollow',  // 取消关注

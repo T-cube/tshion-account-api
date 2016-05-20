@@ -3,7 +3,10 @@ import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import { time } from 'lib/utils';
 import { validate } from 'lib/inspector';
+import config from 'config';
+
 import { validation } from './notification.schema';
+import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
 export default class Notification {
   constructor() {
@@ -34,6 +37,9 @@ export default class Notification {
   }
 
   sendToSingle(data, user) {
+    if (user.equals(data._id)) {
+      return Promise.resolve(true);
+    }
     data = _.extend({}, data, {
       to: user,
       is_read: false,
@@ -48,23 +54,39 @@ export default class Notification {
     return Promise.all(promises);
   }
 
-  fetch(userId, last_id) {
+  fetch(query, last_id) {
     const limit = config.get('view.listNum');
-    let query = {
-      to: userId,
-    };
     if (last_id) {
       _.extend(query, {
         _id: {$lt: last_id},
       })
     }
-    return db.activity.find(query).sort({_id: -1}).limit(limit)
+    return db.notification.find(query).sort({is_read: 1, _id: -1}).limit(limit)
     .then(list => {
+      console.log(list);
       return mapObjectIdToData(list, [
-        ['project', 'name', 'project'],
+        ['user', 'name', 'from'],
         ['company', 'name', 'company'],
-        ['task', 'title', 'task'],
+        ['project', 'name,company_id', 'project'],
+        ['task', 'title,company_id,project_id', 'task'],
       ]);
+    });
+  }
+
+  read(userId, id) {
+    let query = {
+      to: userId,
+      is_read: false,
+    };
+    if (_.isArray(id)) {
+      query._id = { $in: id };
+    } else if (_.isObject(id)) {
+      query._id = id;
+    }
+    return db.notification.update(query, {
+      $set: { is_read: true }
+    }, {
+      multi: true,
     });
   }
 }

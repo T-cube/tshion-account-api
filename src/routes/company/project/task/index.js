@@ -437,7 +437,16 @@ function doUpdateField(req, field) {
   }, {
     $set: data,
   })
-  .then(() => logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data}))
+  .then(() => {
+    if (data.status) {
+      if (data.status == C.TASK_STATUS.COMPLETED) {
+        return logTask(req, C.ACTIVITY_ACTION.COMPLETE);
+      } else if (data.status == C.TASK_STATUS.PROCESSING) {
+        return logTask(req, C.ACTIVITY_ACTION.REOPEN);
+      }
+    }
+    return logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
+  })
   .then(() => data);
 }
 
