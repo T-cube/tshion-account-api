@@ -50,8 +50,10 @@ INPUT:
   scope: [<ObjectId>...], // 适用部门
   steps: [{
     _id: <ObjectId>,
-    approver: <ObjectId>,
-    approver_type: <ENUM:department,member>
+    approver: {
+      _id: <ObjectId>,
+      type: <String[Enum=member|department]>
+    },
   }...],
   forms: [{
     _id: <ObjectId>,
@@ -72,8 +74,10 @@ INPUT:
   scope: [<ObjectId>...], // 适用部门
   steps: [{
     _id: <ObjectId>,
-    approver: <ObjectId>,
-    approver_type: <ENUM:department,member>
+    approver: {
+      _id: <ObjectId>,
+      type: <String[Enum=member|department]>
+    },
   }...],
   forms: [{
     _id: <ObjectId>,
@@ -95,8 +99,10 @@ OUTPUT:
   status: <ENUM>,
   steps: [{
     _id: <ObjectId>,
-    approver: <ObjectId>,
-    approver_type: <ENUM:department,member>
+    approver: {
+      _id: <ObjectId>,
+      type: <String[Enum=member|department]>
+    },
   }...],
   forms: [{
     _id: <ObjectId>,
