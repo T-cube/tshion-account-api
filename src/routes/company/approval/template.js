@@ -25,7 +25,8 @@ api.get('/', (req, res, next) => {
   db.approval.template.find(condition, {
     name: 1,
     description: 1,
-    scope: 1
+    scope: 1,
+    status: 1,
   })
   .then(data => res.json(data || []))
   .catch(next);

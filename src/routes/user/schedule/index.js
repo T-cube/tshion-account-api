@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import cronParser from 'cron-parser';
 import moment from 'moment';
+import scheduleService from 'node-schedule';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -12,6 +13,7 @@ import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
+import notification from 'models/notification';
 
 let api = require('express').Router();
 export default api;
@@ -135,7 +137,7 @@ function getNextRemindTime(cron_rule, repeat_end) {
 function addReminding(schedule_id, cron_rule, repeat_end) {
   let nextRemindTime = getNextRemindTime(cron_rule, repeat_end);
   if (!nextRemindTime) {
-    return;
+    return null;
   }
   let reminding = {
     target_type: 'schedule',
@@ -145,6 +147,13 @@ function addReminding(schedule_id, cron_rule, repeat_end) {
   };
   return db.reminding.insert(reminding);
 }
+
+ function removeReminding(schedule_id) {
+  return db.reminding.remove({
+    target_type: 'schedule',
+    target_id: schedule_id,
+  })
+ }
 
 // 切换cron rule
 function cronRule(rule, datetime, preType, info) {
@@ -243,18 +252,14 @@ function getPreDate(datetime, preType) {
   return new Date(newDatetime);
 }
 
-
-function runScheduleJob() {
-  let rule = '*/5 * * * *';
-  let job = schedule.scheduleJob(rule, dojob);
-}
-
-function dojob(last_id) {
+function doJob(time, limit, last_id) {
+  limit = limit || 1;
   let condition = {
-    time: {
-      $lt: new Date()
-    },
-    is_done: false
+    // time: {
+    //   $lt: new Date()
+    // },
+    // is_done: false
+    time: time
   }
   if (last_id) {
     condition._id = {
@@ -262,11 +267,47 @@ function dojob(last_id) {
     }
   }
   db.reminding.find(condition)
-  .limit(1000)
+  .limit(limit)
   .then(list => {
-    Promise.all(list.map(reminding => {
-
-    }));
-    return dojob(list[-1]._id);
+    let schedules = [];
+    list.forEach(reminding => schedules.push(reminding.target_id));
+    db.schedule.find({
+      _id: {
+        $in: schedules
+      }
+    })
+    .then(schedules => {
+      return Promise.all(schedules.map(schedule => updateReminding(schedule)))
+      .then(() => schedules.forEach(schedule => sentMessage(schedule)))
+    })
+    .then(() => doJob(time, limit, list[-1]._id))
   })
+  .catch(next);
 }
+
+function sentMessage(user) {
+  console.log('sentMessage');
+  notification.to(schedule.creator).send({
+    title: schedule.title
+  });
+}
+
+function updateReminding(schedule) {
+  console.log('updateReminding');
+  let nextRemindTime = getNextRemindTime(cron_rule, repeat_end);
+  if (!nextRemindTime) {
+    return removeReminding(schedule._id);
+  }
+  let reminding = {
+    time: nextRemindTime,
+    is_done: false,
+  };
+  return db.reminding.update({
+    target_type: 'schedule',
+    target_id: schedule_id,
+  }, {
+    $set: reminding
+  });
+}
+
+// scheduleService.scheduleJob('0,5,10,15,20,25,30,35,40,45,50,55 * * * * *', doJob(new Date(), 1000));

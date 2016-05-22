@@ -96,7 +96,7 @@ api.post('/', (req, res, next) => {
 
 api.get('/:item_id', (req, res, next) => {
   let item_id = ObjectId(req.params.item_id);
-  db.approval.item.find({
+  db.approval.item.findOne({
     _id: item_id
   })
   .then(doc => res.json(doc))
