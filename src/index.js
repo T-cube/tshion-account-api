@@ -9,6 +9,7 @@ import socketio from 'socket.io';
 import oauthserver from 'oauth2-server';
 import bodyParser from 'body-parser';
 import config from 'config';
+import _ from 'underscore';
 
 import bindLoader from 'lib/loader';
 import { database } from 'lib/database';
@@ -21,14 +22,16 @@ import 'lib/i18n';
 
 console.log('Tlifang API service');
 console.log('--------------------------------------------------------------------------------');
+console.log('enviroment:', process.env.NODE_ENV);
 console.log('loaded config:');
-console.log(JSON.stringify(config, null, 2));
+console.log(JSON.stringify(config, (key, value) => {
+  return _.isArray(value) ? value.join(';') : value;
+}, 2));
 console.log('initializing service...');
 
-let app = express();
-
-let server = http.Server(app);
-let io = socketio(server);
+const app = express();
+const server = http.Server(app);
+const io = socketio(server, { path: '/api/socket' });
 
 // bind model loader
 bindLoader(app);
@@ -71,6 +74,6 @@ io.on('connection', function(socket){
   });
 });
 
-server.listen(3000, function(){
-  console.log('listening on *:3000');
+server.listen(config.get('server'), () => {
+  console.log('listening on ', server.address());
 });

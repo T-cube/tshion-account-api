@@ -73,6 +73,16 @@ export default class Notification {
     });
   }
 
+  count(query) {
+    _.extend(query, {
+      is_read: false,
+    });
+    return db.notification.count(query)
+    .then(count => {
+      count: count,
+    });
+  }
+
   read(userId, id) {
     let query = {
       to: userId,
