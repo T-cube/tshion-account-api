@@ -330,7 +330,6 @@ api.put('/:task_id/followers', (req, res, next) => {
 
 api.delete('/:task_id/followers/:follower_id', (req, res, next) => {
   let userId = ObjectId(req.params.follower_id);
-  let taskId = req.task._id;
   taskUnfollow(req, userId)
   .then(() => logTask(req, C.ACTIVITY_ACTION.REMOVE, {
     target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
