@@ -124,7 +124,7 @@ api.post('/audit/:audit_id/check', (req, res, next) => {
 
 function checkAttendenceOpened(req, res, next) {
   db.attendence.setting.count({
-    company: req.company.-id,
+    company: req.company._id,
     is_open: true,
   })
   .then(count => {
