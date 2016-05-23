@@ -64,7 +64,7 @@ api.get('/', (req, res, next) => {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order }
   }
-  console.log('condition', condition);
+  // console.log('condition', condition);
   db.task.find(condition).sort(sortBy)
   .then(list => {
     _.each(list, task => {
@@ -88,7 +88,7 @@ api.post('/', (req, res, next) => {
     date_update: new Date(),
     subtask: []
   });
-  db.task.insert(data)
+  return db.task.insert(data)
   .then(doc => {
     req.task = doc;
     db.user.update({
@@ -125,8 +125,7 @@ api.post('/', (req, res, next) => {
     .then(() => logTask(req, C.ACTIVITY_ACTION.CREATE))
     .then(() => {
       res.json(doc);
-    })
-    .catch(next);
+    });
   })
   .catch(next);
 });
@@ -170,6 +169,9 @@ api.delete('/:task_id', (req, res, next) => {
     return db.task.remove({
       _id: req.task._id
     })
+  })
+  .then(() => {
+    return logTask(req, C.ACTIVITY_ACTION.DELETE);
   })
   .then(doc => res.json(doc))
   .catch(next);

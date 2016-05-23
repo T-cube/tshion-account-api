@@ -28,6 +28,16 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/unread-count', (req, res, next) => {
+  let userId = req.user._id;
+  let query = {
+    to: userId,
+  };
+  req.model('notification').count(query)
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
 api.post('/:notification_id/read', (req, res, next) => {
   const id = ObjectId(req.params.notification_id);
   const userId = req.user._id;
