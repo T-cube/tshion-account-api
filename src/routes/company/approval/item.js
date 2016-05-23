@@ -106,7 +106,12 @@ api.get('/:item_id', (req, res, next) => {
   })
   .then(data => {
     let tree = new Structure(req.company.structure);
-    data.from = _.find(req.company.members, member => member._id = data.from)
+    data.from = _.find(req.company.members, member => member._id = data.from);
+    data.steps.forEach(step => {
+      if (step.approver) {
+        step.approver = _.find(req.company.members, member => member._id = step.approver);
+      }
+    })
     data.department = tree.findNodeById(data.department);
     res.json(data);
   })

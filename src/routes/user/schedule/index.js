@@ -322,7 +322,7 @@ function updateReminding(schedule) {
   });
 }
 
-scheduleService.scheduleJob('*/5 * * * *', function() { // '0,5,10,15,20,25,30,35,40,45,50,55 * * * * *'
+scheduleService.scheduleJob('*/5 * * * *', function() {
   let time = new Date();
   time.setMilliseconds(0);
   time.setSeconds(0);
