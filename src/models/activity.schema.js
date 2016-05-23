@@ -7,6 +7,7 @@ export let validation = {
   company: { $objectId: 1, optional: true },
   project: { $objectId: 1, optional: true },
   task: { $objectId: 1, optional: true },
+  user: { $objectId: 1, optional: true },
 	field: { type: 'object', optional: true },
 	date_create: { type: 'date' },
 };

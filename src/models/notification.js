@@ -8,6 +8,13 @@ import config from 'config';
 import { validation } from './notification.schema';
 import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
+const extendedProps = [
+  ['user', 'name', 'from'],
+  ['company', 'name', 'company'],
+  ['project', 'name,company_id', 'project'],
+  ['task', 'title,company_id,project_id', 'task'],
+];
+
 export default class Notification {
   constructor() {
     this._from = null;
@@ -46,6 +53,9 @@ export default class Notification {
       date_create: time(),
     });
     validate(validation, data);
+    let extended = _.clone(data);
+    mapObjectIdToData(extended, extendedProps)
+    .then(d => this.model('socket').send(user, d) );
     return db.notification.insert(data);
   }
 
@@ -63,13 +73,7 @@ export default class Notification {
     }
     return db.notification.find(query).sort({is_read: 1, _id: -1}).limit(limit)
     .then(list => {
-      console.log(list);
-      return mapObjectIdToData(list, [
-        ['user', 'name', 'from'],
-        ['company', 'name', 'company'],
-        ['project', 'name,company_id', 'project'],
-        ['task', 'title,company_id,project_id', 'task'],
-      ]);
+      return mapObjectIdToData(list, extendedProps);
     });
   }
 

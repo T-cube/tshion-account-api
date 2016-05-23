@@ -11,6 +11,7 @@ import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
 
+import 'lib/i18n';
 import bindLoader from 'lib/loader';
 import { database } from 'lib/database';
 import apiRouter from './routes';
@@ -18,7 +19,7 @@ import oauthModel from 'lib/oauth-model.js';
 import oauthExtended from 'lib/oauth-extended.js';
 import { apiErrorHandler } from 'lib/error';
 import corsHandler from 'lib/cors';
-import 'lib/i18n';
+import initSocketServer from 'service/socket';
 
 console.log('Tlifang API service');
 console.log('--------------------------------------------------------------------------------');
@@ -32,9 +33,11 @@ console.log('initializing service...');
 const app = express();
 const server = http.Server(app);
 const io = socketio(server, { path: '/api/socket' });
+const socketServer = initSocketServer(io);
 
 // bind model loader
 bindLoader(app);
+app.bindModel('socket', socketServer);
 
 app.use((req, res, next) => {
   app.bindLoader(req);
@@ -65,14 +68,6 @@ app.use(app.oauth.errorHandler());
 
 // global error handler
 app.use(apiErrorHandler);
-
-io.on('connection', function(socket){
-  console.log('a user connected');
-  socket.on('chat message', function(msg){
-    console.log('message: ' + msg);
-    io.emit('chat message', msg);
-  });
-});
 
 server.listen(config.get('server'), () => {
   console.log('listening on ', server.address());

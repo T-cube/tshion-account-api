@@ -38,7 +38,6 @@ api.get('/', (req, res, next) => {
     _.each(idItems, (ids, key) => {
       if (!ids) return;
       let idarr = ids.split(',').filter(id => ObjectId.isValid(id)).map(id => ObjectId(id));
-      console.log('idarr', idarr);
       if (idarr.length) {
         if (key == 'followers') {
           condition[key] = { $elemMatch: { $in: idarr } };
@@ -137,7 +136,7 @@ api.get('/:_task_id', (req, res, next) => {
   })
   .then(data => {
     if (!data) {
-      throw new ApiError(404);
+      throw new ApiError(404, null, 'task not found!');
     }
     return fetchUserInfo(data, 'creator', 'assignee', 'followers')
     .then(() => {
@@ -425,7 +424,7 @@ function logTask(req, action, data) {
   }, info, data);
   let notification = _.extend({
     from: req.user._id,
-    to: req.task.followers,
+    to: req.task.followers.filter(_id => !_id.equals(req.user._id)),
   }, info, data);
   req.model('activity').insert(activity);
   req.model('notification').send(notification);
