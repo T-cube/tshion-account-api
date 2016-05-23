@@ -14,6 +14,7 @@ import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
 import notification from 'models/notification';
+import { database } from 'lib/database';
 
 let api = require('express').Router();
 export default api;
@@ -23,8 +24,7 @@ api.use(oauthCheck());
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
-  let repeat = data.repeat;
-  let cron_rule = cronRule(repeat, data.time_start, data.remind, data.repeat.info);
+  let cron_rule = cronRule(data);
   _.extend(data, {
     creator: req.user._id,
     date_create: new Date(),
@@ -34,7 +34,7 @@ api.post('/', (req, res, next) => {
   .then(doc => {
     res.json(doc);
     if (data.remind != 'none') {
-      addReminding(doc._id, cron_rule, data.repeat_end);
+      return addReminding(doc._id, cron_rule, data.repeat_end);
     }
   })
   .catch(next);
@@ -77,8 +77,7 @@ api.put('/:schedule_id', (req, res, next) => {
   let schedule_id = ObjectId(req.params.schedule_id);
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
-  let repeat = data.repeat;
-  let cron_rule = cronRule(repeat, data.time_start, data.remind, data.repeat.info);
+  let cron_rule = cronRule(data);
   console.log(cron_rule);
   _.extend(data, {
     date_update: new Date(),
@@ -156,7 +155,11 @@ function addReminding(schedule_id, cron_rule, repeat_end) {
  }
 
 // 切换cron rule
-function cronRule(rule, datetime, preType, info) {
+function cronRule(data) {
+  let rule = data.repeat;
+  let datetime = data.time_start;
+  let preType = data.remind;
+  let info = (rule && rule.info) || null;
 
   datetime = new Date(datetime);
   let newDatetime = getPreDate(datetime, preType);
@@ -252,49 +255,58 @@ function getPreDate(datetime, preType) {
   return new Date(newDatetime);
 }
 
-function doJob(time, limit, last_id) {
+function doJob(db, time, limit, last_id) {
+  console.log('dojob');
+  console.log(time);
   limit = limit || 1;
   let condition = {
-    // time: {
-    //   $lt: new Date()
-    // },
-    // is_done: false
     time: time
-  }
+  };
   if (last_id) {
     condition._id = {
       $gt: last_id
     }
   }
   db.reminding.find(condition)
-  .limit(limit)
+  // .limit(limit)
   .then(list => {
+    if (!list.length) {
+      console.log('exit job');
+      return;
+    } else {
+      console.log(list.length);
+    }
     let schedules = [];
     list.forEach(reminding => schedules.push(reminding.target_id));
-    db.schedule.find({
+    return db.schedule.find({
       _id: {
         $in: schedules
       }
     })
     .then(schedules => {
-      return Promise.all(schedules.map(schedule => updateReminding(schedule)))
-      .then(() => schedules.forEach(schedule => sentMessage(schedule)))
+      return Promise.all(schedules.map(schedule => {
+        sentMessage(schedule)
+        return updateReminding(schedule)
+      }))
     })
-    .then(() => doJob(time, limit, list[-1]._id))
+    // .then(() => doJob(db, time, limit, list[list.length - 1]._id))
   })
-  .catch(next);
+  .catch(e => {
+    console.log(e);
+  })
 }
 
-function sentMessage(user) {
-  console.log('sentMessage');
-  notification.to(schedule.creator).send({
-    title: schedule.title
+function sentMessage(schedule) {
+  console.log('sendMessage');
+  new notification().to(schedule.creator).send({
+    action: C.ACTIVITY_ACTION.SCHEDULE_REMINDING,
+    target_type: C.OBJECT_TYPE.SCHEDULE_REMINDING,
   });
 }
 
 function updateReminding(schedule) {
   console.log('updateReminding');
-  let nextRemindTime = getNextRemindTime(cron_rule, repeat_end);
+  let nextRemindTime = getNextRemindTime(cronRule(schedule), schedule.repeat_end);
   if (!nextRemindTime) {
     return removeReminding(schedule._id);
   }
@@ -304,10 +316,15 @@ function updateReminding(schedule) {
   };
   return db.reminding.update({
     target_type: 'schedule',
-    target_id: schedule_id,
+    target_id: schedule._id,
   }, {
     $set: reminding
   });
 }
 
-// scheduleService.scheduleJob('0,5,10,15,20,25,30,35,40,45,50,55 * * * * *', doJob(new Date(), 1000));
+scheduleService.scheduleJob('*/5 * * * *', function() { // '0,5,10,15,20,25,30,35,40,45,50,55 * * * * *'
+  let time = new Date();
+  time.setMilliseconds(0);
+  time.setSeconds(0);
+  doJob(database(), time, 1000);
+});

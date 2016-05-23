@@ -99,7 +99,7 @@ export let statusValidation = {
 }
 
 export let itemSanitization = {
-  template_id: { $objectId: 1 },
+  template: { $objectId: 1 },
   department: { $objectId: 1 },
   content: { type: 'string' },
   files: {
@@ -121,7 +121,7 @@ export let itemSanitization = {
 }
 
 export let itemValidation = {
-  template_id: { $objectId: 1 },
+  template: { $objectId: 1 },
   department: { $objectId: 1 },
   content: { type: 'string' },
   files: {

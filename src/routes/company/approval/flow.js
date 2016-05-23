@@ -3,6 +3,8 @@ import express from 'express';
 import { oauthCheck } from 'lib/middleware';
 
 import C, { ENUMS } from 'lib/constants';
+import { mapObjectIdToData } from 'lib/utils';
+import Structure from 'models/structure';
 let api = require('express').Router();
 export default api;
 
@@ -49,8 +51,8 @@ api.get('/approve', (req, res, next) => {
       return db.approval.item.find(condition, {
         from: 1,
         department: 1,
-        template_id: 1,
-        create_time: 1,
+        template: 1,
+        apply_date: 1,
         status: 1,
         content: 1,
         log: 1,
@@ -58,7 +60,17 @@ api.get('/approve', (req, res, next) => {
         steps: 1,
       })
       .then(data => {
+        return mapObjectIdToData(data, [
+          ['approval.template', 'name', 'template'],
+        ])
+      })
+      .then(data => {
+        let tree = new Structure(req.company.structure);
         data = data.map(item => {
+
+          item.from = _.find(req.company.members, member => member._id = item.from)
+          item.department = tree.findNodeById(item.department);
+
           let foundItem = _.find(approve, approveItem => approveItem._id.equals(item._id));
           if (foundItem
             && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING
@@ -109,15 +121,28 @@ function findItems(req, res, next, type) {
       return db.approval.item.find(condition, {
         from: 1,
         department: 1,
-        template_id: 1,
-        create_time: 1,
+        template: 1,
+        apply_date: 1,
         status: 1,
         content: 1,
         log: 1,
         step: 1,
         steps: 1,
       })
-      .then(data => res.json(data || []))
+      .then(data => {
+        return mapObjectIdToData(data, [
+          ['approval.template', 'name', 'template'],
+        ])
+      })
+      .then(data => {
+        let tree = new Structure(req.company.structure);
+        data = data.map(item => {
+          item.from = _.find(req.company.members, member => member._id = item.from)
+          item.department = tree.findNodeById(item.department);
+          return item;
+        })
+        res.json(data)
+      })
     })
   })
   .catch(next);

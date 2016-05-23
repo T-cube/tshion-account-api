@@ -44,7 +44,7 @@ api.post('/', (req, res, next) => {
     return i;
   });
   data.company_id = req.company._id;
-  data.status = C.APPROVAL_STATUS.NORMAL;
+  data.status = C.APPROVAL_STATUS.UNUSED;
   db.approval.template.insert(data)
   .then(doc => res.json(doc))
   .catch(next);

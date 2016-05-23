@@ -9,7 +9,7 @@ import { itemSanitization, itemValidation, stepSanitization, stepValidation } fr
 import Structure from 'models/structure';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
-import { uniqObjectId, diffObjectId } from 'lib/utils';
+import { uniqObjectId, diffObjectId, mapObjectIdToData } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
@@ -29,7 +29,7 @@ api.post('/', (req, res, next) => {
     is_archived: false,
   });
   db.approval.template.findOne({
-    _id: data.template_id
+    _id: data.template
   })
   .then(template => {
     if (!template) {
@@ -99,7 +99,17 @@ api.get('/:item_id', (req, res, next) => {
   db.approval.item.findOne({
     _id: item_id
   })
-  .then(doc => res.json(doc))
+  .then(data => {
+    return mapObjectIdToData(data, [
+      ['approval.template', 'name', 'template'],
+    ])
+  })
+  .then(data => {
+    let tree = new Structure(req.company.structure);
+    data.from = _.find(req.company.members, member => member._id = data.from)
+    data.department = tree.findNodeById(data.department);
+    res.json(data);
+  })
   .catch(next);
 });
 
@@ -132,13 +142,13 @@ api.put('/:item_id/steps', (req, res, next) => {
   }, {
     step: 1,
     steps: 1,
-    template_id: 1,
+    template: 1,
   })
   .then(doc => {
     if (!doc) {
       throw new ApiError(400);
     }
-    let { step, steps, template_id } = doc;
+    let { step, steps, template } = doc;
     if (!step.equals(data._id)) {
       throw new ApiError(403, null);
     }
@@ -170,7 +180,7 @@ api.put('/:item_id/steps', (req, res, next) => {
     })
     .then(doc => {
       if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-        return prepareNextStep(req.company, item_id, template_id, nextStep._id);
+        return prepareNextStep(req.company, item_id, template, nextStep._id);
       }
     })
   })
@@ -178,9 +188,9 @@ api.put('/:item_id/steps', (req, res, next) => {
   .catch(next);
 });
 
-function prepareNextStep(company, item_id, template_id, step_id) {
+function prepareNextStep(company, item_id, template, step_id) {
   return db.approval.template.findOne({
-    _id: template_id
+    _id: template
   }, {
     steps: 1
   })

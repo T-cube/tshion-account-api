@@ -25,6 +25,8 @@ let constants = {
     // 文件操作
     RENAME: 'rename',      // 重命名
     UPLOAD: 'upload',      // 上传
+
+    SCHEDULE_REMINDING: 'schedule.reminding', // 日程提醒
   },
 
   ACTIVITY_TYPE: {
@@ -90,6 +92,7 @@ let constants = {
     TASK: 'task',
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
+    SCHEDULE_REMINDING: 'schedule.reminding',
   },
 
   PROJECT_MEMBER_TYPE: {
