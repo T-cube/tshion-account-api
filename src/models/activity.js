@@ -15,7 +15,11 @@ export default class Activity {
     data = _.extend({}, data, {
       date_create: time(),
     });
-    validate(validation, data);
+    try {
+      validate(validation, data);
+    } catch(e) {
+      return Promise.reject(e);
+    }
     return db.activity.insert(data);
   }
 
