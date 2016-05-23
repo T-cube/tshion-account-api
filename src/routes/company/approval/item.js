@@ -101,7 +101,7 @@ api.get('/:item_id', (req, res, next) => {
   })
   .then(data => {
     return mapObjectIdToData(data, [
-      ['approval.template', 'name', 'template'],
+      ['approval.template', 'name,steps,forms', 'template'],
     ])
   })
   .then(data => {
