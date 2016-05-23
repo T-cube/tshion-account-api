@@ -9,7 +9,7 @@ import { validation } from './notification.schema';
 import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
 const extendedProps = [
-  ['user', 'name', 'from'],
+  ['user', 'name', 'from,user'],
   ['company', 'name', 'company'],
   ['project', 'name,company_id', 'project'],
   ['task', 'title,company_id,project_id', 'task'],

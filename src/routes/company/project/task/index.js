@@ -172,7 +172,7 @@ api.delete('/:task_id', (req, res, next) => {
   .then(() => {
     return logTask(req, C.ACTIVITY_ACTION.DELETE);
   })
-  .then(doc => res.json(doc))
+  .then(() => res.json({}))
   .catch(next);
 });
 

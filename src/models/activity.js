@@ -33,7 +33,7 @@ export default class Activity {
     return db.activity.find(query).sort({_id: -1}).limit(limit)
     .then(list => {
       return mapObjectIdToData(list, [
-        ['user', 'name', 'creator'],
+        ['user', 'name', 'creator,user'],
         ['company', 'name', 'company'],
         ['project', 'name,company_id', 'project'],
         ['task', 'title,company_id,project_id', 'task'],
