@@ -28,7 +28,7 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/unread_count', (req, res, next) => {
+api.get('/unread-count', (req, res, next) => {
   let userId = req.user._id;
   let query = {
     to: userId,

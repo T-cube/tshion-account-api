@@ -78,9 +78,9 @@ export default class Notification {
       is_read: false,
     });
     return db.notification.count(query)
-    .then(count => {
+    .then(count => ({
       count: count,
-    });
+    }));
   }
 
   read(userId, id) {
