@@ -257,22 +257,18 @@ function getPreDate(datetime, preType) {
 
 function doJob(db, time, limit, last_id) {
   console.log('dojob');
+  console.log(time);
   limit = limit || 1;
   let condition = {
-    // time: {
-    //   $lt: new Date()
-    // },
-    // is_done: false
     time: time
   };
-  console.log(time);
   if (last_id) {
     condition._id = {
       $gt: last_id
     }
   }
   db.reminding.find(condition)
-  .limit(limit)
+  // .limit(limit)
   .then(list => {
     if (!list.length) {
       console.log('exit job');
@@ -293,7 +289,7 @@ function doJob(db, time, limit, last_id) {
         return updateReminding(schedule)
       }))
     })
-    .then(() => doJob(db, time, limit, list[list.length - 1]._id))
+    // .then(() => doJob(db, time, limit, list[list.length - 1]._id))
   })
   .catch(e => {
     console.log(e);
@@ -311,7 +307,6 @@ function sentMessage(schedule) {
 function updateReminding(schedule) {
   console.log('updateReminding');
   let nextRemindTime = getNextRemindTime(cronRule(schedule), schedule.repeat_end);
-  console.log(schedule);
   if (!nextRemindTime) {
     return removeReminding(schedule._id);
   }
@@ -327,6 +322,9 @@ function updateReminding(schedule) {
   });
 }
 
-scheduleService.scheduleJob('0 * * * * *', function() { // '0,5,10,15,20,25,30,35,40,45,50,55 * * * * *'
-  doJob(database(), new Date(), 1000)
+scheduleService.scheduleJob('*/5 * * * *', function() { // '0,5,10,15,20,25,30,35,40,45,50,55 * * * * *'
+  let time = new Date();
+  time.setMilliseconds(0);
+  time.setSeconds(0);
+  doJob(database(), time, 1000);
 });

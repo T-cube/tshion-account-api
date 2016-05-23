@@ -52,7 +52,7 @@ api.get('/approve', (req, res, next) => {
         from: 1,
         department: 1,
         template: 1,
-        create_time: 1,
+        apply_date: 1,
         status: 1,
         content: 1,
         log: 1,
@@ -67,7 +67,7 @@ api.get('/approve', (req, res, next) => {
       .then(data => {
         let tree = new Structure(req.company.structure);
         data = data.map(item => {
-          
+
           item.from = _.find(req.company.members, member => member._id = item.from)
           item.department = tree.findNodeById(item.department);
 
@@ -122,7 +122,7 @@ function findItems(req, res, next, type) {
         from: 1,
         department: 1,
         template: 1,
-        create_time: 1,
+        apply_date: 1,
         status: 1,
         content: 1,
         log: 1,

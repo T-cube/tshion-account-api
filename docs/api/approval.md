@@ -155,9 +155,18 @@ INPUT:
 ```javascript
 {
   _id: <ObjectId>,
-  template: <ObjectId>,
-  from: <ObjectId>,
-  department: <ObjectId>,
+  template: {
+    _id: <ObjectId>,
+    name: <String>,
+  },
+  from: {
+    _id: <ObjectId>,
+    name: <String>,
+  },
+  department: {
+    _id: <ObjectId>,
+    name: <String>,
+  },
   apply_date: <Date>,
   status: <ENUM>,
   content: <String>,
@@ -228,9 +237,18 @@ OUTPUT
 ```javascript
 [{
    _id: <ObjectId>,
-    template: <ObjectId>,
-    from: <ObjectId>,
-    department: <ObjectId>,
+    template: {
+      _id: <ObjectId>,
+      name: <String>,
+    },
+    from: {
+      _id: <ObjectId>,
+      name: <String>,
+    },
+    department: {
+      _id: <ObjectId>,
+      name: <String>,
+    },
     apply_date: <Date>,
     status: <ENUM>,
     content: <String>,
@@ -244,9 +262,18 @@ OUTPUT
 ```javascript
 [{
    _id: <ObjectId>,
-    template: <ObjectId>,
-    from: <ObjectId>,
-    department: <ObjectId>,
+   template: {
+     _id: <ObjectId>,
+     name: <String>,
+   },
+   from: {
+     _id: <ObjectId>,
+     name: <String>,
+   },
+   department: {
+     _id: <ObjectId>,
+     name: <String>,
+   },
     apply_date: <Date>,
     status: <ENUM>,
     content: <String>,
