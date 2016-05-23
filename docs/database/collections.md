@@ -650,7 +650,7 @@ approval.user
 }
 ```
 
-### attendence.record
+### attendance.record
 
 ```javascript
 {

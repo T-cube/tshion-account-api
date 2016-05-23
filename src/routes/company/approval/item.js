@@ -43,9 +43,9 @@ api.post('/', (req, res, next) => {
         status: C.APPROVAL_ITEM_STATUS.PROCESSING
       })
     });
-    // data.forms.forEach(form => {
-    //
-    // });
+    data.forms.forEach(form => {
+      form.title = (_.find(template.forms, tpl_form => tpl_form._id.equals(form._id))).title;
+    });
     return db.approval.item.insert(data)
     .then(doc => {
       res.json(doc);

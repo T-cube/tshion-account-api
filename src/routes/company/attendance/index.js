@@ -5,7 +5,12 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { sanitization, validation } from './schema';
+import {
+  signSanitization,
+  signValidation,
+  settingSanitization,
+  settingValidation
+} from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import config from 'config';
@@ -20,7 +25,7 @@ api.use(oauthCheck());
 
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(sanitization, validation, data);
+  sanitizeValidateObject(signSanitization, signValidation, data);
   let now = new Date();
   let date = now.getDate();
   let month = now.getMonth() + 1;
@@ -31,19 +36,20 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
     month: month,
     'data.date': date,
   }, {
+    time_start: 1,
+    time_end: 1,
     'data.$.': 1
   })
   .then(doc => {
-    console.log(doc);
-    let settings = req.attendenceSetting;
+    let settings = req.attendanceSetting;
     let record = {};
     if (data.type == 'sign_in') {
       if (new Date(`${year}-${month}-${date} ${settings.time_start}`) < now) {
-        record.late = true;
+        record.type = 'late';
       }
     } else {
       if (new Date(`${year}-${month}-${date} ${settings.time_end}`) > now) {
-        record.leave_early = true;
+        record.type = 'leave_early';
       }
     }
     if (!doc) {
@@ -71,9 +77,10 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
         month: month,
         'data.date': date,
       }, {
-        $set: _.extend(record, {
-          ['data.$.' + data.type]: now
-        })
+        $set: {
+          ['data.$.' + data.type]: now,
+          ['data.$.' + record.type]: true,
+        }
       })
     }
   })
@@ -137,29 +144,51 @@ api.post('/audit/:audit_id/check', (req, res, next) => {
 
 })
 
+api.get('/setting', (req, res, next) => {
+  db.attendance.setting.findOne({
+    company: req.company._id
+  })
+  .then(doc => res.json(doc))
+  .catch(next)
+})
+
+api.put('/setting', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(settingSanitization, settingValidation, data);
+  db.attendance.setting.update({
+    company: req.company._id
+  }, {
+    $set: data
+  }, {
+    upsert: true
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+})
+
 function ensureFetchSetting(req, res, next) {
-  db.attendence.setting.findOne({
+  db.attendance.setting.findOne({
     company: req.company._id,
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(400, null, 'attendence is not opened');
+      throw new ApiError(400, null, 'attendance is not opened');
     }
-    req.attendenceSetting = doc;
+    req.attendanceSetting = doc;
     next();
   })
   .catch(() => next('route'))
 }
 
 function ensureFetchSettingOpened(req, res, next) {
-  db.attendence.setting.findOne({
+  db.attendance.setting.findOne({
     company: req.company._id,
   })
   .then(doc => {
     if (!doc || !doc.is_open) {
-      throw new ApiError(400, null, 'attendence is not opened');
+      return next(new ApiError(400, null, 'attendance is not opened'));
     }
-    req.attendenceSetting = doc;
+    req.attendanceSetting = doc;
     next();
   })
   .catch(() => next('route'))
