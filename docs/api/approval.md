@@ -206,11 +206,9 @@ INPUT:
 INPUT:
 ```javascript
 {
-  steps: {
-    _id: <ObjectId>,
-    status: <ENUM:processing,approved,rejected,revoked>,
-    log: <String> // 审批记录
-  }
+  _id: <ObjectId>,
+  status: <ENUM:processing,approved,rejected,revoked>,
+  log: <String> // 审批记录
 }
 ```
 

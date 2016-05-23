@@ -7,6 +7,7 @@ import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation, statusSanitization, statusValidation } from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
+import Structure from 'models/structure';
 
 let api = require('express').Router();
 export default api;
@@ -28,7 +29,15 @@ api.get('/', (req, res, next) => {
     scope: 1,
     status: 1,
   })
-  .then(data => res.json(data || []))
+  .then(data => {
+    let tree = new Structure(req.company.structure);
+    data.forEach(item => {
+      if (item.scope) {
+        item.scope = item.scope.map(scope => tree.findNodeById(scope));
+      }
+    });
+    res.json(data);
+  })
   .catch(next);
 });
 

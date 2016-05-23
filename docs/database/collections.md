@@ -593,14 +593,39 @@ approval.user
 }
 ```
 
-### attendance
+### attendance.setting
+
+```javascript
+{
+  _id: <ObjectId>,
+  company: <ObjectId>,
+  is_open: <Boolean>,
+  time_start: <String>,
+  time_end: <String>,
+  ahead_time: <Int>,
+  workday: [<Int>...],
+  location:[<String>...],
+  white_list: [<ObjectId>...], // 白名单用户
+  workday_special: [{
+    date: <String>,
+    title: <String>,
+  }...],
+  holiday: [{
+    date: <String>,
+    title: <String>,
+  }...],
+  date_update: <Date>,
+}
+```
+
+### attendance.sign
 
 ```javascript
 {
   _id: <ObjectId>,
   user: <ObjectId>,
   yaer: <Int>,
-  month: <Date>,
+  month: <Int>,
   data: [{
     date: <Int>,
     time_signin: <Date>,
@@ -622,6 +647,30 @@ approval.user
   auditor: <ObjectId>,
   date_audit: <Date>,
   status: <String[Enum=pending,accepted,rejected]>,
+}
+```
+
+### attendence.record
+
+```javascript
+{
+  _id: <ObjectId>,
+  company: <ObjectId>,
+  yaer: <Int>,
+  month: <Int>,
+  data: [{
+    member: <ObjectId>,
+    normal: <Int>,          // 正常工作天数
+    late: <Int>,            // 迟到
+    leave_early: <Int>,     // 早退
+    absent: <Int>,          // 缺勤
+    business_trip: <Int>,   // 出差
+    paid_vacation: <Int>,   // 带薪假期
+    nopaid_vacation: <Int>, // 不带薪假期
+    extra_work: <Int>,      // 加班
+    workday_total: <Int>,   // 应勤
+    workday_real: <Int>,    // 实际出勤
+  }...]
 }
 ```
 
@@ -660,7 +709,6 @@ approval.user
   _id: <ObjectId>,
   target_type: <String[Enum=schedule]>,
   target_id: <ObjectId>,
-  time: <Date>,
-  is_done: <Boolean>,
+  time: <Date>
 }
 ```
