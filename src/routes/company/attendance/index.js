@@ -133,5 +133,5 @@ function checkAttendenceOpened(req, res, next) {
     }
     next();
   })
-  .catch()
+  .catch();
 }

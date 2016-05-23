@@ -7,6 +7,7 @@ import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation, statusSanitization, statusValidation } from './schema';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
+import Structure from 'models/structure';
 
 let api = require('express').Router();
 export default api;
