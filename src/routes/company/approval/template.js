@@ -31,7 +31,11 @@ api.get('/', (req, res, next) => {
   })
   .then(data => {
     let tree = new Structure(req.company.structure);
-    data.scope.map(scope => tree.findNodeById(scope));
+    data.forEach(item => {
+      if (item.scope) {
+        item.scope = item.scope.map(scope => tree.findNodeById(scope));
+      }
+    });
     res.json(data);
   })
   .catch(next);

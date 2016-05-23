@@ -18,14 +18,14 @@ export default api;
 
 api.use(oauthCheck());
 
-api.post('/sign', (req, res, next) => {
+api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
   let now = new Date();
   let date = now.getDate();
   let month = now.getMonth() + 1;
   let year = now.getFullYear();
-  db.attendance.findOne({
+  db.attendance.sign.findOne({
     user: req.user._id,
     year: year,
     month: month,
@@ -34,6 +34,18 @@ api.post('/sign', (req, res, next) => {
     'data.$.': 1
   })
   .then(doc => {
+    console.log(doc);
+    let settings = req.attendenceSetting;
+    let record = {};
+    if (data.type == 'sign_in') {
+      if (new Date(`${year}-${month}-${date} ${settings.time_start}`) < now) {
+        record.late = true;
+      }
+    } else {
+      if (new Date(`${year}-${month}-${date} ${settings.time_end}`) > now) {
+        record.leave_early = true;
+      }
+    }
     if (!doc) {
       return db.attendance.sign.update({
         user: req.user._id,
@@ -41,10 +53,10 @@ api.post('/sign', (req, res, next) => {
         month: month,
       }, {
         $push: {
-          data: {
+          data: _.extend(record, {
             date: date,
-            [data.type]: new Date(),
-          }
+            [data.type]: now,
+          })
         }
       }, {
         upsert: true
@@ -59,9 +71,9 @@ api.post('/sign', (req, res, next) => {
         month: month,
         'data.date': date,
       }, {
-        $set: {
-          ['data.$.' + data.type]: new Date()
-        }
+        $set: _.extend(record, {
+          ['data.$.' + data.type]: now
+        })
       })
     }
   })
@@ -69,7 +81,7 @@ api.post('/sign', (req, res, next) => {
   .catch(next);
 })
 
-api.get('/user/:user_id', (req, res, next) => {
+api.get('/sign/user/:user_id', (req, res, next) => {
   let user_id = ObjectId(req.params.user_id);
   let year = parseInt(req.query.year);
   let month = parseInt(req.query.month);
@@ -90,7 +102,7 @@ api.get('/user/:user_id', (req, res, next) => {
   .catch(next)
 })
 
-api.get('/department/:department_id', (req, res, next) => {
+api.get('/sign/department/:department_id', (req, res, next) => {
   let department_id = ObjectId(req.params.department_id);
   let tree = new Structure(req.company.structure);
   let members = tree.getMemberAll(department_id).map(member => member._id);
@@ -109,7 +121,10 @@ api.get('/department/:department_id', (req, res, next) => {
     month: month,
   })
   .then(doc => {
+    let signData = [];
+    doc.forEach(sign => {
 
+    })
     console.log(doc);
   })
 })
@@ -122,16 +137,30 @@ api.post('/audit/:audit_id/check', (req, res, next) => {
 
 })
 
-function checkAttendenceOpened(req, res, next) {
-  db.attendence.setting.count({
+function ensureFetchSetting(req, res, next) {
+  db.attendence.setting.findOne({
     company: req.company._id,
-    is_open: true,
   })
-  .then(count => {
-    if (!count) {
+  .then(doc => {
+    if (!doc) {
       throw new ApiError(400, null, 'attendence is not opened');
     }
+    req.attendenceSetting = doc;
     next();
   })
-  .catch();
+  .catch(() => next('route'))
+}
+
+function ensureFetchSettingOpened(req, res, next) {
+  db.attendence.setting.findOne({
+    company: req.company._id,
+  })
+  .then(doc => {
+    if (!doc || !doc.is_open) {
+      throw new ApiError(400, null, 'attendence is not opened');
+    }
+    req.attendenceSetting = doc;
+    next();
+  })
+  .catch(() => next('route'))
 }

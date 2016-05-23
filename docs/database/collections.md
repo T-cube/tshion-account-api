@@ -602,7 +602,7 @@ approval.user
   is_open: <Boolean>,
   time_start: <String>,
   time_end: <String>,
-  ahead_time: <String[Enum=ten_minute,half_hour,hour]>,
+  ahead_time: <Int>,
   workday: [<Int>...],
   location:[<String>...],
   white_list: [<ObjectId>...], // 白名单用户
@@ -614,6 +614,7 @@ approval.user
     date: <String>,
     title: <String>,
   }...],
+  date_update: <Date>,
 }
 ```
 
