@@ -14,6 +14,7 @@ import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
 import notification from 'models/notification';
+import { database } from 'lib/database';
 
 let api = require('express').Router();
 export default api;
@@ -252,14 +253,14 @@ function getPreDate(datetime, preType) {
   return new Date(newDatetime);
 }
 
-function doJob(time, limit, last_id) {
+function doJob(db, time, limit, last_id) {
   limit = limit || 1;
   let condition = {
     // time: {
     //   $lt: new Date()
     // },
     // is_done: false
-    time: time
+    //time: time
   }
   if (last_id) {
     condition._id = {
@@ -269,24 +270,27 @@ function doJob(time, limit, last_id) {
   db.reminding.find(condition)
   .limit(limit)
   .then(list => {
+    if (!list.length) {
+      return;
+    }
     let schedules = [];
     list.forEach(reminding => schedules.push(reminding.target_id));
-    db.schedule.find({
+    return db.schedule.find({
       _id: {
         $in: schedules
       }
     })
     .then(schedules => {
-      return Promise.all(schedules.map(schedule => updateReminding(schedule)))
-      .then(() => schedules.forEach(schedule => sentMessage(schedule)))
+      return Promise.all(schedules.map(schedule => {
+        sentMessage(schedule)
+        return updateReminding(schedule)
+      }))
     })
-    .then(() => doJob(time, limit, list[-1]._id))
+    .then(() => doJob(db, time, limit, list[-1]._id))
   })
-  .catch(next);
 }
 
-function sentMessage(user) {
-  console.log('sentMessage');
+function sentMessage(schedule) {
   notification.to(schedule.creator).send({
     title: schedule.title
   });
@@ -310,4 +314,6 @@ function updateReminding(schedule) {
   });
 }
 
-// scheduleService.scheduleJob('0,5,10,15,20,25,30,35,40,45,50,55 * * * * *', doJob(new Date(), 1000));
+scheduleService.scheduleJob('0,5,10,15,20,25,30,35,40,45,50,55 * * * * *', function() {
+  doJob(database(), new Date(), 1000)
+});

@@ -137,7 +137,7 @@ INPUT:
 ```javascript
 {
   _id: <ObjectId>,
-  template_id: <ObjectId>,
+  template: <ObjectId>,
   department: <ObjectId>,
   content: <String>,
   forms: [{
@@ -155,7 +155,7 @@ INPUT:
 ```javascript
 {
   _id: <ObjectId>,
-  template_id: <ObjectId>,
+  template: <ObjectId>,
   from: <ObjectId>,
   department: <ObjectId>,
   apply_date: <Date>,
@@ -228,7 +228,7 @@ OUTPUT
 ```javascript
 [{
    _id: <ObjectId>,
-    template_id: <ObjectId>,
+    template: <ObjectId>,
     from: <ObjectId>,
     department: <ObjectId>,
     apply_date: <Date>,
@@ -244,7 +244,7 @@ OUTPUT
 ```javascript
 [{
    _id: <ObjectId>,
-    template_id: <ObjectId>,
+    template: <ObjectId>,
     from: <ObjectId>,
     department: <ObjectId>,
     apply_date: <Date>,

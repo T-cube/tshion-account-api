@@ -3,6 +3,8 @@ import express from 'express';
 import { oauthCheck } from 'lib/middleware';
 
 import C, { ENUMS } from 'lib/constants';
+import { mapObjectIdToData } from 'lib/utils';
+import Structure from 'models/structure';
 let api = require('express').Router();
 export default api;
 
@@ -49,7 +51,7 @@ api.get('/approve', (req, res, next) => {
       return db.approval.item.find(condition, {
         from: 1,
         department: 1,
-        template_id: 1,
+        template: 1,
         create_time: 1,
         status: 1,
         content: 1,
@@ -109,13 +111,26 @@ function findItems(req, res, next, type) {
       return db.approval.item.find(condition, {
         from: 1,
         department: 1,
-        template_id: 1,
+        template: 1,
         create_time: 1,
         status: 1,
         content: 1,
         log: 1,
         step: 1,
         steps: 1,
+      })
+      .then(data => {
+        return mapObjectIdToData(data, [
+          ['user', 'name', 'from'],
+          ['approval.template', 'name', 'template'],
+        ])
+      })
+      .then(data => {
+        let tree = new Structure(req.company.structure);
+        return data.map(item => {
+          item.department = tree.findNodeById(item.department);
+          return item;
+        })
       })
       .then(data => res.json(data || []))
     })
