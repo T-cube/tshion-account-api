@@ -60,7 +60,17 @@ api.get('/approve', (req, res, next) => {
         steps: 1,
       })
       .then(data => {
+        return mapObjectIdToData(data, [
+          ['approval.template', 'name', 'template'],
+        ])
+      })
+      .then(data => {
+        let tree = new Structure(req.company.structure);
         data = data.map(item => {
+          
+          item.from = _.find(req.company.members, member => member._id = item.from)
+          item.department = tree.findNodeById(item.department);
+
           let foundItem = _.find(approve, approveItem => approveItem._id.equals(item._id));
           if (foundItem
             && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING
@@ -121,18 +131,18 @@ function findItems(req, res, next, type) {
       })
       .then(data => {
         return mapObjectIdToData(data, [
-          ['user', 'name', 'from'],
           ['approval.template', 'name', 'template'],
         ])
       })
       .then(data => {
         let tree = new Structure(req.company.structure);
-        return data.map(item => {
+        data = data.map(item => {
+          item.from = _.find(req.company.members, member => member._id = item.from)
           item.department = tree.findNodeById(item.department);
           return item;
         })
+        res.json(data)
       })
-      .then(data => res.json(data || []))
     })
   })
   .catch(next);

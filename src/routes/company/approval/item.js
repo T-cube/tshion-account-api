@@ -9,7 +9,7 @@ import { itemSanitization, itemValidation, stepSanitization, stepValidation } fr
 import Structure from 'models/structure';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
-import { uniqObjectId, diffObjectId } from 'lib/utils';
+import { uniqObjectId, diffObjectId, mapObjectIdToData } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
@@ -99,7 +99,17 @@ api.get('/:item_id', (req, res, next) => {
   db.approval.item.findOne({
     _id: item_id
   })
-  .then(doc => res.json(doc))
+  .then(data => {
+    return mapObjectIdToData(data, [
+      ['approval.template', 'name', 'template'],
+    ])
+  })
+  .then(data => {
+    let tree = new Structure(req.company.structure);
+    data.from = _.find(req.company.members, member => member._id = data.from)
+    data.department = tree.findNodeById(data.department);
+    res.json(data);
+  })
   .catch(next);
 });
 

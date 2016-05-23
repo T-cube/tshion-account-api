@@ -445,7 +445,7 @@
 ```javascript
 {
   _id: <ObjectId>,
-  template_id: <ObjectId>, // 申请类型
+  template: <ObjectId>, // 申请类型
   from: <ObjectId>, // 申请人
   company_id: <ObjectId>,
   department: <ObjectId>,
