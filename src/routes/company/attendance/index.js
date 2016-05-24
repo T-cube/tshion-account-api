@@ -13,7 +13,6 @@ import {
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
-import config from 'config';
 import C from 'lib/constants';
 import { checkUserTypeFunc, checkUserType } from '../utils';
 import Structure from 'models/structure';
@@ -110,7 +109,7 @@ api.get('/sign/user/:user_id', (req, res, next) => {
   .catch(next)
 })
 
-api.get('/sign/department/:department_id', (req, res, next) => {
+api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) => {
   let department_id = ObjectId(req.params.department_id);
   let tree = new Structure(req.company.structure);
   let members = tree.getMemberAll(department_id).map(member => member._id);
@@ -131,13 +130,21 @@ api.get('/sign/department/:department_id', (req, res, next) => {
   .then(doc => {
     let signRecord = [];
     doc.forEach(sign => {
-      signRecord.push(parseUserRecord(sign));
+      signRecord.push(parseUserRecord(sign, req.attendanceSetting, year, month));
     })
     res.json(doc);
   })
 })
 
 api.post('/audit', (req, res, next) => {
+
+})
+
+api.get('/audit', (req, res, next) => {
+
+})
+
+api.get('/audit/:audit_id', (req, res, next) => {
 
 })
 
@@ -195,7 +202,7 @@ function ensureFetchSettingOpened(req, res, next) {
   .catch(() => next('route'))
 }
 
-function parseUserRecord(data) {
+function parseUserRecord(data, setting, year, month) {
   let record = {
     normal: 0,
     late: 0,
@@ -217,4 +224,40 @@ function parseUserRecord(data) {
     }
   });
   return record;
+}
+
+class AttendanceSetting {
+
+  constructor(setting) {
+    this.setting = setting;
+  }
+
+  isWorkDay(date) {
+    let date = new Date(date);
+    let weekday = date.getDay();
+    let setting = this.setting;
+    if (_.constants(setting.workday_special, date)) {
+      return true;
+    }
+    if (_.constants(setting.holiday, date)) {
+      return false;
+    }
+    if (setting.workday && setting.workday.length) {
+      return _.constants(setting.workday, weekday);
+    }
+    return false;
+  }
+
+  getMonthWorkdayCount(year, month) {
+    if (_.isDate(year)) {
+      let date = year;
+      year = date.getFullYear();
+      month = date.getMonth() + 1;
+    }
+    let now = new Date();
+    let isCurrentMonth = now.getMonth() == (month - 1);
+    // let lastDateOfMonth =
+
+  }
+
 }

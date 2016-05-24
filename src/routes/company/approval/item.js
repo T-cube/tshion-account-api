@@ -112,7 +112,7 @@ api.get('/:item_id', (req, res, next) => {
         step.approver = _.find(req.company.members, member => member._id = step.approver);
       }
     });
-    data.scope.map(scope => tree.findNodeById(scope));
+    data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
     data.department = tree.findNodeById(data.department);
     res.json(data);
   })
