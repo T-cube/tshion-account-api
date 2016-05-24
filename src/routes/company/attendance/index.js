@@ -233,7 +233,7 @@ class AttendanceSetting {
   }
 
   isWorkDay(date) {
-    let date = new Date(date);
+    date = new Date(date);
     let weekday = date.getDay();
     let setting = this.setting;
     if (_.constants(setting.workday_special, date)) {
