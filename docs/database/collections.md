@@ -656,7 +656,7 @@ approval.user
 }
 ```
 
-### attendence.record
+### attendance.record
 
 ```javascript
 {
@@ -674,7 +674,7 @@ approval.user
     paid_vacation: <Int>,   // 带薪假期
     nopaid_vacation: <Int>, // 不带薪假期
     extra_work: <Int>,      // 加班
-    workday_total: <Int>,   // 应勤
+    workday_all: <Int>,   // 应勤
     workday_real: <Int>,    // 实际出勤
   }...]
 }

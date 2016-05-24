@@ -2,7 +2,7 @@ import C, { ENUMS } from 'lib/constants';
 
 export let sanitization = {
   name: { type: 'string' },
-  description: { type: 'string' },
+  description: { type: 'string', optional: true },
   scope: {
 		type: 'array',
 		items: { $objectId: 1 }
@@ -23,6 +23,7 @@ export let sanitization = {
           type: 'array',
           items: {
             type: 'object',
+            optional: true,
       			properties: {
               _id: { $objectId: 1 },
               type: { type: 'string' }
@@ -47,7 +48,7 @@ export let sanitization = {
 
 export let validation = {
 	name: { type: 'string' },
-	description: { type: 'string' },
+	description: { type: 'string', optional: true },
 	scope: {
 		type: 'array',
 		items: { $objectId: 1 }
@@ -68,6 +69,7 @@ export let validation = {
           type: 'array',
           items: {
             type: 'object',
+            optional: true,
       			properties: {
               _id: { $objectId: 1 },
               type: { $enum: ENUMS.APPROVER_TYPE }

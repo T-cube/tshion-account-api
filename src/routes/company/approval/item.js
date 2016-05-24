@@ -43,9 +43,9 @@ api.post('/', (req, res, next) => {
         status: C.APPROVAL_ITEM_STATUS.PROCESSING
       })
     });
-    // data.forms.forEach(form => {
-    //
-    // });
+    data.forms.forEach(form => {
+      form.title = (_.find(template.forms, tpl_form => tpl_form._id.equals(form._id))).title;
+    });
     return db.approval.item.insert(data)
     .then(doc => {
       res.json(doc);
@@ -111,7 +111,8 @@ api.get('/:item_id', (req, res, next) => {
       if (step.approver) {
         step.approver = _.find(req.company.members, member => member._id = step.approver);
       }
-    })
+    });
+    data.scope.map(scope => tree.findNodeById(scope));
     data.department = tree.findNodeById(data.department);
     res.json(data);
   })

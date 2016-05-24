@@ -15,7 +15,7 @@ api.use(corsHandler);
 api.use(bodyParser.json());
 
 api.use((req, res, next) => {
-  req.loadModel('notification', Notification);
+  // req.loadModel('notification', Notification);
   req.loadModel('activity', Activity);
   next();
 });

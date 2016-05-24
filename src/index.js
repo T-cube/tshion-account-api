@@ -20,6 +20,8 @@ import oauthExtended from 'lib/oauth-extended.js';
 import { apiErrorHandler } from 'lib/error';
 import corsHandler from 'lib/cors';
 import initSocketServer from 'service/socket';
+import scheduleServer from 'service/schedule';
+import Notification from 'models/notification';
 
 console.log('Tlifang API service');
 console.log('--------------------------------------------------------------------------------');
@@ -38,6 +40,7 @@ const socketServer = initSocketServer(io);
 // bind model loader
 bindLoader(app);
 app.bindModel('socket', socketServer);
+app.loadModel('notification', Notification);
 
 app.use((req, res, next) => {
   app.bindLoader(req);
@@ -45,6 +48,9 @@ app.use((req, res, next) => {
 });
 
 global.db = database();
+
+app.loadModel('schedule', scheduleServer);
+app.model('schedule').doJobs();
 //oauth开始
 
 app.oauth = oauthserver({

@@ -5,7 +5,12 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { sanitization, validation } from './schema';
+import {
+  signSanitization,
+  signValidation,
+  settingSanitization,
+  settingValidation
+} from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import config from 'config';
@@ -20,7 +25,7 @@ api.use(oauthCheck());
 
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(sanitization, validation, data);
+  sanitizeValidateObject(signSanitization, signValidation, data);
   let now = new Date();
   let date = now.getDate();
   let month = now.getMonth() + 1;
@@ -31,19 +36,20 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
     month: month,
     'data.date': date,
   }, {
+    time_start: 1,
+    time_end: 1,
     'data.$.': 1
   })
   .then(doc => {
-    console.log(doc);
-    let settings = req.attendenceSetting;
-    let record = {};
+    let settings = req.attendanceSetting;
+    let recordTypes = [];
     if (data.type == 'sign_in') {
       if (new Date(`${year}-${month}-${date} ${settings.time_start}`) < now) {
-        record.late = true;
+        recordTypes.push('late');
       }
     } else {
       if (new Date(`${year}-${month}-${date} ${settings.time_end}`) > now) {
-        record.leave_early = true;
+        recordTypes.push('leave_early');
       }
     }
     if (!doc) {
@@ -53,10 +59,11 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
         month: month,
       }, {
         $push: {
-          data: _.extend(record, {
+          data: {
             date: date,
             [data.type]: now,
-          })
+            [record.type]: true,
+          }
         }
       }, {
         upsert: true
@@ -71,9 +78,10 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
         month: month,
         'data.date': date,
       }, {
-        $set: _.extend(record, {
-          ['data.$.' + data.type]: now
-        })
+        $set: {
+          ['data.$.' + data.type]: now,
+          ['data.$.' + record.type]: true,
+        }
       })
     }
   })
@@ -121,11 +129,11 @@ api.get('/sign/department/:department_id', (req, res, next) => {
     month: month,
   })
   .then(doc => {
-    let signData = [];
+    let signRecord = [];
     doc.forEach(sign => {
-
+      signRecord.push(parseUserRecord(sign));
     })
-    console.log(doc);
+    res.json(doc);
   })
 })
 
@@ -137,30 +145,76 @@ api.post('/audit/:audit_id/check', (req, res, next) => {
 
 })
 
+api.get('/setting', (req, res, next) => {
+  db.attendance.setting.findOne({
+    company: req.company._id
+  })
+  .then(doc => res.json(doc))
+  .catch(next)
+})
+
+api.put('/setting', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(settingSanitization, settingValidation, data);
+  db.attendance.setting.update({
+    company: req.company._id
+  }, {
+    $set: data
+  }, {
+    upsert: true
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+})
+
 function ensureFetchSetting(req, res, next) {
-  db.attendence.setting.findOne({
+  db.attendance.setting.findOne({
     company: req.company._id,
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(400, null, 'attendence is not opened');
+      throw new ApiError(400, null, 'attendance is not opened');
     }
-    req.attendenceSetting = doc;
+    req.attendanceSetting = doc;
     next();
   })
   .catch(() => next('route'))
 }
 
 function ensureFetchSettingOpened(req, res, next) {
-  db.attendence.setting.findOne({
+  db.attendance.setting.findOne({
     company: req.company._id,
   })
   .then(doc => {
     if (!doc || !doc.is_open) {
-      throw new ApiError(400, null, 'attendence is not opened');
+      return next(new ApiError(400, null, 'attendance is not opened'));
     }
-    req.attendenceSetting = doc;
+    req.attendanceSetting = doc;
     next();
   })
   .catch(() => next('route'))
+}
+
+function parseUserRecord(data) {
+  let record = {
+    normal: 0,
+    late: 0,
+    leave_early: 0,
+    workday_real: data.length,
+    workday_all: 0,
+    extra_work: 0,
+    absent: 0,
+  };
+  data.forEach(item => {
+    if (item.late) {
+      record.late += 1;
+    }
+    if (item.leave_early) {
+      record.leave_early += 1;
+    }
+    if (!item.late && !item.leave_early) {
+      record.normal += 1;
+    }
+  });
+  return record;
 }

@@ -64,6 +64,7 @@ api.post('/', (req, res, next) => {
 
   db.project.insert(data)
   .then(doc => {
+    req.project = doc;
     return Promise.all([
       db.company.update({
         _id: req.company._id
@@ -76,7 +77,25 @@ api.post('/', (req, res, next) => {
         $push: { projects: doc._id }
       }),
     ])
-    .then(() => res.json(doc));
+    .then(() => logProject(req, C.ACTIVITY_ACTION.CREATE))
+    .then(() => res.json(doc))
+  })
+  .catch(next);
+});
+
+api.param('project_id', (req, res, next, id) => {
+  req.project = {
+    _id: ObjectId(id)
+  };
+  db.project.count({
+    _id: ObjectId(id),
+    company_id: req.company._id,
+  })
+  .then(count => {
+    if (0 == count) {
+      throw new ApiError(404);
+    }
+    next();
   })
   .catch(next);
 });
@@ -95,27 +114,12 @@ api.get('/:_project_id', (req, res, next) => {
     data.is_owner = owner.equals(req.user._id);
     let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
     data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
-    // data.owner = _.find(req.company.members, member => {
-    //   return member._id.equals(owner);
-    // });
+    data.owner = _.find(req.company.members, member => {
+      return member._id.equals(owner);
+    });
     return fetchUserInfo(data, 'owner')
   })
   .then(data => res.json(data))
-  .catch(next);
-});
-
-api.param('project_id', (req, res, next, id) => {
-  req.project_id = ObjectId(id);
-  db.project.count({
-    _id: ObjectId(id),
-    company_id: req.company._id,
-  })
-  .then(count => {
-    if (0 == count) {
-      throw new ApiError(404);
-    }
-    next();
-  })
   .catch(next);
 });
 
@@ -129,6 +133,7 @@ api.put('/:project_id', (req, res, next) => {
     $set: data
   })
   .then(doc => res.json(doc))
+  .then(() => logProject(req, C.ACTIVITY_ACTION.UPDATE))
   .catch(next);
 });
 
@@ -144,7 +149,7 @@ api.delete('/:_project_id', authCheck(), (req, res, next) => {
   })
   .then(data => {
     if (!data) {
-      throw new ApiError(400);
+      throw new ApiError(404);
     }
     if (!req.user._id.equals(data.owner)) {
       throw new ApiError(403);
@@ -167,7 +172,13 @@ api.delete('/:_project_id', authCheck(), (req, res, next) => {
           $pull: {projects: project_id}
         }),
       ])
-      .then(() => res.json({}));
+      .then(() => res.json({}))
+      .then(() => {
+        req.project = {
+          _id: project_id
+        };
+        logProject(req, C.ACTIVITY_ACTION.DELETE);
+      })
     })
   })
   .catch(next);
@@ -182,7 +193,7 @@ api.put('/:project_id/logo', upload({type: 'avatar'}).single('logo'),
     logo: req.file.url
   };
   db.project.update({
-    _id: req.project_id,
+    _id: req.project._id,
     company_id: req.company._id,
   }, {
     $set: data
@@ -235,7 +246,7 @@ api.get('/:_project_id/member', (req, res, next) => {
 });
 
 api.post('/:project_id/member', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
+  let project_id = req.project._id;
   let data = req.body;
 
   data.map(item => {
@@ -393,7 +404,7 @@ api.put('/:project_id/archived', (req, res, next) => {
 });
 
 api.post('/:project_id/tag', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
+  let project_id = req.project._id;
   let data = req.body;
   sanitizeValidateObject(tagSanitization, tagValidation, data);
   db.project.count({
@@ -422,7 +433,7 @@ api.post('/:project_id/tag', (req, res, next) => {
 });
 
 api.get('/:project_id/tag', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
+  let project_id = req.project._id;
   db.project.findOne({
     _id: project_id,
     company_id: req.company._id,
@@ -439,7 +450,7 @@ api.get('/:project_id/tag', (req, res, next) => {
 });
 
 api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
-  let project_id = ObjectId(req.params.project_id);
+  let project_id = req.project._id;
   let tag_id = ObjectId(req.params.tag_id);
   Promise.all([
     db.project.update({
@@ -467,6 +478,28 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next);
 });
+
+api.get('/:project_id/activity', (req, res, next) => {
+  let project_id = req.project._id;
+  req.model('activity').fetch({
+    project: project_id,
+  })
+  .then(list => res.json(list))
+  .catch(next);
+});
+
+function logProject(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.PROJECT,
+    project: req.project._id,
+    company: req.company._id,
+  };
+  let activity = _.extend({
+    creator: req.user._id,
+  }, info, data);
+  req.model('activity').insert(activity);
+}
 
 function isMemberOfProject(user_id, project_id) {
   return db.project.count({
