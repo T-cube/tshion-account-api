@@ -30,34 +30,37 @@ api.get('/', (req, res, next) => {
 
 api.get('/unread-count', (req, res, next) => {
   let userId = req.user._id;
-  let query = {
-    to: userId,
-  };
-  req.model('notification').count(query)
+  req.model('notification').count(userId, false)
   .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.post('/:notification_id/read', (req, res, next) => {
+  const notification = req.model('notification');
   const id = ObjectId(req.params.notification_id);
   const userId = req.user._id;
-  req.model('notification').read(userId, id)
-  .then(() => res.json({}))
+  notification.read(userId, id)
+  .then(() => notification.count(userId, false))
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.post('/read', (req, res, next) => {
+  const notification = req.model('notification');
   const userId = req.user._id;
   sanitizeValidateObject(readSanitization, readValidation, req.body);
   let { ids } = req.body;
-  req.model('notification').read(userId, ids)
-  .then(() => res.json({}))
+  notification.read(userId, ids)
+  .then(() => notification.count(userId, false))
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.post('/read/all', (req, res, next) => {
+  const notification = req.model('notification');
   const userId = req.user._id;
-  req.model('notification').read(userId)
-  .then(() => res.json({}))
+  notification.read(userId)
+  .then(() => notification.count(userId, false))
+  .then(doc => res.json(doc))
   .catch(next);
 });

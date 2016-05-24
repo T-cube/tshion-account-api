@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 import validation from './validation';
-import { timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
+import { time, timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
@@ -56,6 +56,14 @@ api.post('/register', validator(validation.register), (req, res, next) => {
       name: type == C.USER_ID_TYPE.MOBILE ? req.body.mobile : getEmailName(req.body.email),
       avatar: randomAvatar('user', 8),
       password: hash,
+      locale: 'zh-CN',
+      timezone: 'Asia/Shanghai',
+      options: {
+        notice_request: true,
+        notice_project: true,
+      },
+      date_join: time();
+      current_company: null,
     };
     return db.user.insert(data);
   })

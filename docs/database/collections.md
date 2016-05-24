@@ -36,7 +36,6 @@
   description: <String>,
   sex: <String[Enum:M,F]>,
   birthdate: <Date>,
-  local: <String>,
   // address
   address: {
     country: <String>,
@@ -44,7 +43,15 @@
     city: <String>,
     address: <String>,
   },
+  // date of join OA system
   date_join: <Date>,
+  locale: <String>,
+  timezone: <String>,
+  options: {
+    notice_request: <Boolean>,
+    notice_project: <Boolean>,
+  },
+  current_company: <ObjectId>,
   // relations
   companies: [<ObjectId>...],
   projects: [<ObjectId>...],
@@ -55,7 +62,6 @@
     is_creator: <Boolean>,
     is_assignee: <Boolean>,
   }...],
-  timezone: <String>,
 }
 ```
 

@@ -78,10 +78,15 @@ export default class Notification {
     });
   }
 
-  count(query) {
-    _.extend(query, {
-      is_read: false,
-    });
+  count(query, isRead) {
+    if (query instanceof ObjectId) {
+      query = {
+        to: query,
+      };
+    }
+    if (!_.isUndefined(isRead)) {
+      query.is_read: isRead;
+    }
     return db.notification.count(query)
     .then(count => ({
       count: count,
