@@ -83,13 +83,6 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
-api.param('_project_id', (req, res, next, id) => {
-  req.project = {
-    _id: ObjectId(id)
-  };
-  next();
-});
-
 api.param('project_id', (req, res, next, id) => {
   req.project = {
     _id: ObjectId(id)
@@ -108,7 +101,7 @@ api.param('project_id', (req, res, next, id) => {
 });
 
 api.get('/:_project_id', (req, res, next) => {
-  let project_id = req.project._id;
+  let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
     company_id: req.company._id,
     _id: project_id
@@ -145,7 +138,7 @@ api.put('/:project_id', (req, res, next) => {
 });
 
 api.delete('/:_project_id', authCheck(), (req, res, next) => {
-  let project_id = req.project._id;
+  let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
     _id: project_id,
     company_id: req.company._id,
@@ -210,7 +203,7 @@ api.put('/:project_id/logo', upload({type: 'avatar'}).single('logo'),
 });
 
 api.get('/:_project_id/member', (req, res, next) => {
-  let project_id = req.project._id;
+  let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
     _id: project_id,
     company_id: req.company._id,
@@ -296,7 +289,7 @@ api.post('/:project_id/member', (req, res, next) => {
 
 api.put('/:_project_id/member/:member_id/type', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
-  let project_id = req.project._id;
+  let project_id = ObjectId(req.params._project_id);
   let type = req.body.type;
   if (type != C.PROJECT_MEMBER_TYPE.ADMIN && type != C.PROJECT_MEMBER_TYPE.NORMAL) {
     throw new ApiError(400, null, 'wrong type');
@@ -318,7 +311,7 @@ api.put('/:_project_id/member/:member_id/type', (req, res, next) => {
 
 api.post('/:_project_id/transfer', authCheck(), (req, res, next) => {
   let member_id = ObjectId(req.body.user_id);
-  let project_id = req.project._id;
+  let project_id = ObjectId(req.params._project_id);
   isOwnerOfProject(req.user._id, project_id)
   .then(() => {
     isMemberOfProject(member_id, project_id)
@@ -351,7 +344,7 @@ api.post('/:_project_id/transfer', authCheck(), (req, res, next) => {
 
 api.delete('/:_project_id/member/:member_id', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
-  let project_id = req.project._id;
+  let project_id = ObjectId(req.params._project_id);
   db.project.findOne({
     _id: project_id,
     company_id: req.company._id,
