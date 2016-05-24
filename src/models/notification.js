@@ -13,6 +13,7 @@ const extendedProps = [
   ['company', 'name', 'company'],
   ['project', 'name,company_id', 'project'],
   ['task', 'title,company_id,project_id', 'task'],
+  ['request', 'type', 'request'],
   ['reminding', 'title,description', 'reminding'],
 ];
 

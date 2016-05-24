@@ -66,6 +66,7 @@ api.get('/', (req, res, next) => {
   // console.log('condition', condition);
   db.task.find(condition).sort(sortBy)
   .then(list => {
+    console.log(list);
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
     });
