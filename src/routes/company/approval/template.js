@@ -93,7 +93,7 @@ api.get('/:template_id', (req, res, next) => {
       throw new ApiError(404)
     }
     let tree = new Structure(req.company.structure);
-    doc.scope.map(scope => tree.findNodeById(scope));
+    doc.scope = doc.scope.map(scope => tree.findNodeById(scope));
     res.json(doc)
   })
   .catch(next);

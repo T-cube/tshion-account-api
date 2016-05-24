@@ -23,6 +23,7 @@ export let sanitization = {
           type: 'array',
           items: {
             type: 'object',
+            optional: true,
       			properties: {
               _id: { $objectId: 1 },
               type: { type: 'string' }
@@ -68,6 +69,7 @@ export let validation = {
           type: 'array',
           items: {
             type: 'object',
+            optional: true,
       			properties: {
               _id: { $objectId: 1 },
               type: { $enum: ENUMS.APPROVER_TYPE }
