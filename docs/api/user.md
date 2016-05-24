@@ -32,7 +32,7 @@ OUTPUT:
   birthdate: <Date>,
   address: <String>,
   sex: <String[Enum:F,M]>,
-  local: <String>,
+  locale: <String>,
   address: {
     country: <String>,
     province: <String>,
