@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
+import moment from 'moment';
 
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -254,10 +255,15 @@ class AttendanceSetting {
       year = date.getFullYear();
       month = date.getMonth() + 1;
     }
+    let setting = req.setting;
     let now = new Date();
     let isCurrentMonth = now.getMonth() == (month - 1);
-    // let lastDateOfMonth =
-
+    let lastDateOfMonth = moment([year, month, 1]).subtract(1, 'day').getDate();
+    let firstWeekday = moment([year, month - 1, 1]).getDay();
+    let days = _.range(1, lastDateOfMonth + 1);
+    days.forEach(day => {
+      
+    })
   }
 
 }

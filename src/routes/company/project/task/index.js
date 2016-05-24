@@ -31,7 +31,7 @@ api.get('/', (req, res, next) => {
   let { keyword, sort, order, status, assignee, creator, follower} = req.query;
   let condition = {
     company_id: req.company._id,
-    project_id: req.project_id,
+    project_id: req.project._id,
   };
   let idItems = _.pick(req.query, 'assignee', 'creator', 'followers');
   if (!_.isEmpty(idItems)) {
@@ -82,7 +82,7 @@ api.post('/', (req, res, next) => {
     creator: req.user._id,
     followers: [req.user._id],
     company_id: req.company._id,
-    project_id: req.project_id,
+    project_id: req.project._id,
     date_create: new Date(),
     date_update: new Date(),
     subtask: []
@@ -97,7 +97,7 @@ api.post('/', (req, res, next) => {
         task: {
           _id: doc._id,
           company_id: req.company._id,
-          project_id: req.project_id,
+          project_id: req.project._id,
           is_creator: true,
           is_assignee: assignee && assignee.equals(req.user._id) ? true : false
         }
@@ -114,7 +114,7 @@ api.post('/', (req, res, next) => {
           task: {
             _id: doc._id,
             company_id: req.company._id,
-            project_id: req.project_id,
+            project_id: req.project._id,
             is_creator: false,
             is_assignee: true
           }
@@ -132,7 +132,7 @@ api.post('/', (req, res, next) => {
 api.get('/:_task_id', (req, res, next) => {
   db.task.findOne({
     _id: ObjectId(req.params._task_id),
-    project_id: req.project_id,
+    project_id: req.project._id,
   })
   .then(data => {
     if (!data) {
@@ -150,7 +150,7 @@ api.param('task_id', (req, res, next, id) => {
   let taskId = ObjectId(req.params.task_id);
   db.task.findOne({
     _id: taskId,
-    project_id: req.project_id,
+    project_id: req.project._id,
   })
   .then(task => {
     if (!task) {
@@ -163,7 +163,7 @@ api.param('task_id', (req, res, next, id) => {
 })
 
 api.delete('/:task_id', (req, res, next) => {
-  isMemberOfProject(req.user._id, req.project_id)
+  isMemberOfProject(req.user._id, req.project._id)
   .then(() => {
     return db.task.remove({
       _id: req.task._id
@@ -191,7 +191,7 @@ api.put('/:task_id/date_due', updateField('date_due'));
 api.put('/:task_id/assignee', (req, res, next) => {
   let data = validField('assignee', req.body.assignee);
   let task_id = req.task._id;
-  isMemberOfProject(data.assignee, req.project_id)
+  isMemberOfProject(data.assignee, req.project._id)
   .then(doc => {
     return db.task.findOne({
       _id: task_id
@@ -238,7 +238,7 @@ api.put('/:task_id/assignee', (req, res, next) => {
         task: {
           _id: task_id,
           company_id: req.company._id,
-          project_id: req.project_id,
+          project_id: req.project._id,
           is_creator: false,
           is_assignee: true
         }
@@ -262,7 +262,7 @@ api.put('/:task_id/tag', (req, res, next) => {
     tags: { $objectId: 1 }
   }, data);
   db.project.count({
-    _id: req.project_id,
+    _id: req.project._id,
     'tags._id': data.tags
   })
   .then(count => {
@@ -416,7 +416,7 @@ function logTask(req, action, data) {
     action: action,
     target_type: C.OBJECT_TYPE.TASK,
     task: req.task._id,
-    project: req.project_id,
+    project: req.project._id,
   };
   let activity = _.extend({
     creator: req.user._id,
@@ -487,7 +487,7 @@ function isMemberOfCompany(userId, company_id) {
 function taskFollow(req, userId) {
   const taskId = req.task._id;
   userId = userId || req.user._id;
-  return isMemberOfProject(userId, req.project_id)
+  return isMemberOfProject(userId, req.project._id)
   .then(() => {
     return db.task.update({
       _id: taskId
@@ -514,7 +514,7 @@ function taskFollow(req, userId) {
         task: {
           _id: taskId,
           company_id: req.company._id,
-          project_id: req.project_id,
+          project_id: req.project._id,
           is_creator: false,
           is_assignee: false
         }
