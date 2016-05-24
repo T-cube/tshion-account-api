@@ -42,14 +42,14 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   })
   .then(doc => {
     let settings = req.attendanceSetting;
-    let record = {};
+    let recordTypes = [];
     if (data.type == 'sign_in') {
       if (new Date(`${year}-${month}-${date} ${settings.time_start}`) < now) {
-        record.type = 'late';
+        recordTypes.push('late');
       }
     } else {
       if (new Date(`${year}-${month}-${date} ${settings.time_end}`) > now) {
-        record.type = 'leave_early';
+        recordTypes.push('leave_early');
       }
     }
     if (!doc) {
@@ -59,10 +59,11 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
         month: month,
       }, {
         $push: {
-          data: _.extend(record, {
+          data: {
             date: date,
             [data.type]: now,
-          })
+            [record.type]: true,
+          }
         }
       }, {
         upsert: true
@@ -128,11 +129,11 @@ api.get('/sign/department/:department_id', (req, res, next) => {
     month: month,
   })
   .then(doc => {
-    let signData = [];
+    let signRecord = [];
     doc.forEach(sign => {
-
+      signRecord.push(parseUserRecord(sign));
     })
-    console.log(doc);
+    res.json(doc);
   })
 })
 
@@ -192,4 +193,28 @@ function ensureFetchSettingOpened(req, res, next) {
     next();
   })
   .catch(() => next('route'))
+}
+
+function parseUserRecord(data) {
+  let record = {
+    normal: 0,
+    late: 0,
+    leave_early: 0,
+    workday_real: data.length,
+    workday_all: 0,
+    extra_work: 0,
+    absent: 0,
+  };
+  data.forEach(item => {
+    if (item.late) {
+      record.late += 1;
+    }
+    if (item.leave_early) {
+      record.leave_early += 1;
+    }
+    if (!item.late && !item.leave_early) {
+      record.normal += 1;
+    }
+  });
+  return record;
 }

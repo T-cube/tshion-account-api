@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation, statusSanitization, statusValidation } from './schema';
-import C, { ENUMS } from 'lib/constants';
+import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 import Structure from 'models/structure';
 
@@ -17,7 +17,9 @@ api.use(oauthCheck());
 api.get('/', (req, res, next) => {
   let condition = {
     company_id: req.company._id,
-    is_deleted: false,
+    status: {
+      $ne: C.APPROVAL_STATUS.DELETED
+    },
   };
   let scope = req.query.scope;
   scope = scope && ObjectId.isValid(scope)
@@ -67,7 +69,9 @@ api.put('/:template_id', (req, res, next) => {
   db.approval.template.update({
     _id: template_id,
     company_id: req.company._id,
-    is_deleted: false,
+    status: {
+      $ne: C.APPROVAL_STATUS.DELETED
+    }
   }, {
     $set: data
   })
@@ -80,9 +84,16 @@ api.get('/:template_id', (req, res, next) => {
   db.approval.template.findOne({
     _id: template_id,
     company_id: req.company._id,
-    is_deleted: false,
+    status: {
+      $ne: C.APPROVAL_STATUS.DELETED
+    }
   })
-  .then(doc => res.json(doc))
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404)
+    }
+    res.json(doc)
+  })
   .catch(next);
 });
 
@@ -93,7 +104,9 @@ api.put('/:template_id/status', (req, res, next) => {
   db.approval.template.update({
     _id: template_id,
     company_id: req.company._id,
-    is_deleted: false,
+    status: {
+      $ne: C.APPROVAL_STATUS.DELETED
+    }
   }, {
     $set: data
   })
@@ -108,7 +121,7 @@ api.delete('/:template_id', (req, res, next) => {
     company_id: req.company._id
   }, {
     $set: {
-      is_deleted: true
+      status: C.APPROVAL_STATUS.DELETED
     }
   })
   .then(() => res.json({}))

@@ -13,6 +13,7 @@ const extendedProps = [
   ['company', 'name', 'company'],
   ['project', 'name,company_id', 'project'],
   ['task', 'title,company_id,project_id', 'task'],
+  ['reminding', 'title,description', 'reminding'],
 ];
 
 export default class Notification {

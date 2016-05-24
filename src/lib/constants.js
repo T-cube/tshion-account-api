@@ -26,7 +26,7 @@ let constants = {
     RENAME: 'rename',      // 重命名
     UPLOAD: 'upload',      // 上传
 
-    SCHEDULE_REMINDING: 'schedule.reminding', // 日程提醒
+    REMINDING: 'reminding', // 提醒
   },
 
   ACTIVITY_TYPE: {
@@ -51,6 +51,7 @@ let constants = {
   APPROVAL_STATUS: {
     NORMAL: 'normal',
     UNUSED: 'unused',
+    DELETED: 'deleted',
   },
 
   APPROVER_TYPE: {
@@ -92,7 +93,7 @@ let constants = {
     TASK: 'task',
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
-    SCHEDULE_REMINDING: 'schedule.reminding',
+    REMINDING: 'reminding',
   },
 
   PROJECT_MEMBER_TYPE: {

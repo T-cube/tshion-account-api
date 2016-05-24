@@ -298,10 +298,13 @@ function doJob(db, time, limit, last_id) {
 
 function sentMessage(schedule) {
   console.log('sendMessage');
-  new notification().to(schedule.creator).send({
-    action: C.ACTIVITY_ACTION.SCHEDULE_REMINDING,
-    target_type: C.OBJECT_TYPE.SCHEDULE_REMINDING,
-  });
+  // this.model('notification').send({
+  //   from: 'system',
+  //   to: schedule.creator,
+  //   action: C.ACTIVITY_ACTION.REMINDING,
+  //   target_type: C.OBJECT_TYPE.REMINDING,
+  //   reminding: schedule._id,
+  // });
 }
 
 function updateReminding(schedule) {
