@@ -16,7 +16,8 @@ api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
   let condition = {
-    company_id: req.company._id
+    company_id: req.company._id,
+    is_deleted: false,
   };
   let scope = req.query.scope;
   scope = scope && ObjectId.isValid(scope)
@@ -65,7 +66,8 @@ api.put('/:template_id', (req, res, next) => {
   sanitizeValidateObject(sanitization, validation, data);
   db.approval.template.update({
     _id: template_id,
-    company_id: req.company._id
+    company_id: req.company._id,
+    is_deleted: false,
   }, {
     $set: data
   })
@@ -77,7 +79,8 @@ api.get('/:template_id', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
   db.approval.template.findOne({
     _id: template_id,
-    company_id: req.company._id
+    company_id: req.company._id,
+    is_deleted: false,
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -89,7 +92,8 @@ api.put('/:template_id/status', (req, res, next) => {
   sanitizeValidateObject(statusSanitization, statusValidation, data);
   db.approval.template.update({
     _id: template_id,
-    company_id: req.company._id
+    company_id: req.company._id,
+    is_deleted: false,
   }, {
     $set: data
   })
@@ -99,9 +103,13 @@ api.put('/:template_id/status', (req, res, next) => {
 
 api.delete('/:template_id', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
-  db.approval.template.remove({
+  db.approval.template.update({
     _id: template_id,
     company_id: req.company._id
+  }, {
+    $set: {
+      is_deleted: true
+    }
   })
   .then(() => res.json({}))
   .catch(next);
