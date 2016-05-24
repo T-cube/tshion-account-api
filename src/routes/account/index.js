@@ -62,7 +62,7 @@ api.post('/register', validator(validation.register), (req, res, next) => {
         notice_request: true,
         notice_project: true,
       },
-      date_join: time();
+      date_join: time(),
       current_company: null,
     };
     return db.user.insert(data);
