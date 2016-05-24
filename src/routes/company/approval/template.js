@@ -92,6 +92,8 @@ api.get('/:template_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404)
     }
+    let tree = new Structure(req.company.structure);
+    doc.scope.map(scope => tree.findNodeById(scope));
     res.json(doc)
   })
   .catch(next);
