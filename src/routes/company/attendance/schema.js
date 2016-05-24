@@ -92,3 +92,25 @@ export let signSanitization = {
 export let signValidation = {
 	type: { $enum: ['sign_in', 'sign_out'] },
 };
+
+export let auditSanitization = {
+  date: { type: 'date' },
+  type: { type: 'string' },
+  reason: { type: 'string', optional: true },
+};
+
+export let auditValidation = {
+  date: { type: 'date' },
+  type: { $enum: ['sign_in', 'sign_out'] },
+  reason: { type: 'string', optional: true },
+};
+
+export let auditCheckSanitization = {
+  is_agreed: { type: 'boolean' },
+  audit_message: { type: 'string', optional: true },
+};
+
+export let auditCheckValidation = {
+	is_agreed: { type: 'boolean' },
+  audit_message: { type: 'string', optional: true },
+};

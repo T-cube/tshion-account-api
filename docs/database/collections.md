@@ -646,11 +646,13 @@ approval.user
 {
   _id: <ObjectId>,
   user: <ObjectId>,
+  company: <ObjectId>,
   date: <Date>,
   date_create: <Date>,
   type: <String[Enum=sign_in,sign_out]>,
   reason: <String>,     // 漏刷原因
   auditor: <ObjectId>,
+  audit_message: <String>,
   date_audit: <Date>,
   status: <String[Enum=pending,accepted,rejected]>,
 }
