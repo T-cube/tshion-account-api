@@ -85,7 +85,7 @@ export default class Notification {
       };
     }
     if (!_.isUndefined(isRead)) {
-      query.is_read: isRead;
+      query.is_read: isRead
     }
     return db.notification.count(query)
     .then(count => ({
