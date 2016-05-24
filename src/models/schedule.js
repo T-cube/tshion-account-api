@@ -1,4 +1,7 @@
 import _ from 'underscore';
+import cronParser from 'cron-parser';
+
+import C from 'lib/constants';
 
 export default class Schedule {
 
@@ -92,18 +95,14 @@ export default class Schedule {
 
   cronRule(data) {
     let rule = data.repeat;
-    let datetime = data.time_start;
     let preType = data.remind;
     let info = (rule && rule.info) || null;
-
-    datetime = new Date(datetime);
-    let newDatetime = getPreDate(datetime, preType);
-    let oriDate = datetime.getDate();
-    let oriMonth = datetime.getMonth();
+    let datetime = new Date(data.time_start);
+    let newDatetime = this.getPreDate(datetime, preType);
     let newDate = newDatetime.getDate();
     let newMonth = newDatetime.getMonth();
     let time = [newDatetime.getHours(), newDatetime.getMinutes()];
-    let preDays = newDate - oriDate;
+    let preDays = newDate - datetime.getDate();
 
     if (typeof rule == 'string') {
       rule = rule.split(' ');
@@ -193,7 +192,7 @@ export default class Schedule {
   sentMessage(schedule) {
     console.log('sendMessage');
     this.notification.send({
-      from: 'system',
+      from: 0,
       to: schedule.creator,
       action: C.ACTIVITY_ACTION.REMINDING,
       target_type: C.OBJECT_TYPE.REMINDING,
@@ -203,9 +202,9 @@ export default class Schedule {
 
   updateReminding(schedule) {
     console.log('updateReminding');
-    let nextRemindTime = getNextRemindTime(cronRule(schedule), schedule.repeat_end);
+    let nextRemindTime = this.getNextRemindTime(this.cronRule(schedule), schedule.repeat_end);
     if (!nextRemindTime) {
-      return removeReminding(schedule._id);
+      return this.removeReminding(schedule._id);
     }
     let reminding = {
       time: nextRemindTime,

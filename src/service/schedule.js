@@ -5,6 +5,10 @@ import ScheduleModel from 'models/schedule';
 export default class ScheduleService {
 
   constructor() {
+    
+  }
+
+  initJobs() {
     let scheduleModel = new ScheduleModel(db, this.model('notification'));
     this.jobs = {
       schedule_reminding: {
@@ -16,8 +20,9 @@ export default class ScheduleService {
   }
 
   doJobs() {
-    this.jobs.forEach(job => {
-      job.worker = scheduleService.scheduleJob(...job.init);
+    this.initJobs()
+    _.each(this.jobs, job => {
+      job.worker = scheduleService.scheduleJob(...job.init)
     })
   }
 
