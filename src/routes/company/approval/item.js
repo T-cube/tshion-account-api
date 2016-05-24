@@ -112,7 +112,6 @@ api.get('/:item_id', (req, res, next) => {
         step.approver = _.find(req.company.members, member => member._id = step.approver);
       }
     });
-    let tree = new Structure(req.company.structure);
     data.scope.map(scope => tree.findNodeById(scope));
     data.department = tree.findNodeById(data.department);
     res.json(data);
