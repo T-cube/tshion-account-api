@@ -83,13 +83,17 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
-api.param(['_project_id', 'project_id'], (req, res, next, id) => {
+api.param('_project_id', (req, res, next, id) => {
   req.project = {
     _id: ObjectId(id)
   };
-  if (req.params._project_id) {
-    return next();
-  }
+  next();
+});
+
+api.param('project_id', (req, res, next, id) => {
+  req.project = {
+    _id: ObjectId(id)
+  };
   db.project.count({
     _id: ObjectId(id),
     company_id: req.company._id,

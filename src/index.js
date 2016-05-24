@@ -39,7 +39,7 @@ const socketServer = initSocketServer(io);
 // bind model loader
 bindLoader(app);
 app.bindModel('socket', socketServer);
-app.loadModel('schedule', scheduleServer);
+//app.loadModel('schedule', scheduleServer);
 
 app.use((req, res, next) => {
   app.bindLoader(req);
