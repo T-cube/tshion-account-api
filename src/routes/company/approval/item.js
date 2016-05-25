@@ -113,7 +113,7 @@ api.get('/:item_id', (req, res, next) => {
       }
     });
     data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
-    data.department = tree.findNodeById(data.department);
+    data.department = _.find(tree.findNodeById(data.department), '_id', 'name');
     res.json(data);
   })
   .catch(next);

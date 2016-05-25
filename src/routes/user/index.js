@@ -148,4 +148,13 @@ api.get('/project', (req, res, next) =>  {
   .catch(next)
 });
 
+api.get('/activity', (req, res, next) => {
+  let { last_id } = req.params;
+  req.model('activity').fetch({
+    user: req.user_id,
+  }, last_id)
+  .then(list => res.json(list))
+  .catch(next);
+})
+
 api.use('/schedule', require('./schedule').default);

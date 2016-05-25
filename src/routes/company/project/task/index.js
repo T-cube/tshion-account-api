@@ -399,7 +399,7 @@ api.get('/:task_id/activity', (req, res, next) => {
   let { last_id } = req.params;
   req.model('activity').fetch({
     task: taskId,
-  })
+  }, last_id)
   .then(list => res.json(list))
   .catch(next);
 });
