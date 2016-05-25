@@ -10,7 +10,9 @@ import {
   signSanitization,
   signValidation,
   settingSanitization,
-  settingValidation
+  settingValidation,
+  auditSanitization,
+  auditValidation,
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
@@ -130,27 +132,74 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
   })
   .then(doc => {
     let signRecord = [];
+    let setting = new AttendanceSetting(req.attendanceSetting);
     doc.forEach(sign => {
-      signRecord.push(parseUserRecord(sign, req.attendanceSetting, year, month));
+      signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
+        user: _.find(req.company.members, member => member._id.equals(sign.user))
+      }))
     })
-    res.json(doc);
+    res.json(signRecord);
   })
+  .catch(next)
 })
 
 api.post('/audit', (req, res, next) => {
-
+  let data = req.body;
+  sanitizeValidateObject(auditSanitization, auditValidation, data);
+  _.extend(data, {
+    user: req.user._id,
+    company: req.company._id,
+    date_create: new Date()
+  })
+  db.attendance.audit.insert(data)
+  .then(doc => res.json(doc))
+  .catch(next)
 })
 
 api.get('/audit', (req, res, next) => {
-
+  db.attendance.audit.find({
+    company: req.company._id,
+  })
+  .then(doc => res.json(doc))
 })
 
 api.get('/audit/:audit_id', (req, res, next) => {
-
+  db.attendance.audit.findOne({
+    company: req.company._id,
+    _id: ObjectId(req.params.audit_id),
+  })
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404)
+    }
+    res.json(doc)
+  })
+  .catch(next)
 })
 
-api.post('/audit/:audit_id/check', (req, res, next) => {
+api.post('/audit/:audit_id/accept', (req, res, next) => {
+  db.attendance.audit.findOne({
+    company: req.company._id,
+    _id: ObjectId(req.params.audit_id),
+  })
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404)
+    }
 
+  })
+  .catch(next)
+})
+
+api.post('/audit/:audit_id/reject', (req, res, next) => {
+  db.attendance.audit.update({
+    company: req.company._id,
+    _id: ObjectId(req.params.audit_id),
+  }, {
+    status: ''
+  })
+  .then(doc => res.json(doc))
+  .catch(next)
 })
 
 api.get('/setting', (req, res, next) => {
@@ -203,30 +252,6 @@ function ensureFetchSettingOpened(req, res, next) {
   .catch(() => next('route'))
 }
 
-function parseUserRecord(data, setting, year, month) {
-  let record = {
-    normal: 0,
-    late: 0,
-    leave_early: 0,
-    workday_real: data.length,
-    workday_all: 0,
-    extra_work: 0,
-    absent: 0,
-  };
-  data.forEach(item => {
-    if (item.late) {
-      record.late += 1;
-    }
-    if (item.leave_early) {
-      record.leave_early += 1;
-    }
-    if (!item.late && !item.leave_early) {
-      record.normal += 1;
-    }
-  });
-  return record;
-}
-
 class AttendanceSetting {
 
   constructor(setting) {
@@ -236,15 +261,16 @@ class AttendanceSetting {
   isWorkDay(date) {
     date = new Date(date);
     let weekday = date.getDay();
+    date = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
     let setting = this.setting;
-    if (_.constants(setting.workday_special, date)) {
+    if (_.has(setting.workday_special, date)) {
       return true;
     }
-    if (_.constants(setting.holiday, date)) {
+    if (_.has(setting.holiday, date)) {
       return false;
     }
     if (setting.workday && setting.workday.length) {
-      return _.constants(setting.workday, weekday);
+      return _.has(setting.workday, weekday);
     }
     return false;
   }
@@ -255,15 +281,69 @@ class AttendanceSetting {
       year = date.getFullYear();
       month = date.getMonth() + 1;
     }
-    let setting = req.setting;
-    let now = new Date();
-    let isCurrentMonth = now.getMonth() == (month - 1);
-    let lastDateOfMonth = moment([year, month, 1]).subtract(1, 'day').getDate();
-    let firstWeekday = moment([year, month - 1, 1]).getDay();
-    let days = _.range(1, lastDateOfMonth + 1);
+    let count = 0;
+    let days = this._getMonthDays(year, month);
     days.forEach(day => {
-      
-    })
+      if (this.isWorkDay(`${year}-${month}-${day}`)) {
+        count += 1;
+      }
+    });
+    return count;
   }
 
+  getMonthWorkdayAttendCount(data, year, month) {
+    if (_.isDate(year)) {
+      let date = year;
+      year = date.getFullYear();
+      month = date.getMonth() + 1;
+    }
+    let count = 0;
+    let days = this._getMonthDays(year, month);
+    days.forEach(day => {
+      if (this.isWorkDay(`${year}-${month}-${day}`) && _.find(data, item => item.date == day)) {
+        count += 1;
+      }
+    });
+    return count;
+  }
+
+  _getMonthDays(year, month) {
+    let now = new Date();
+    let isCurrentMonth = now.getMonth() == (month - 1);
+    let lastDateOfMonth = isCurrentMonth
+      ? now.getDate()
+      : moment([year, month, 1]).subtract(1, 'day').getDate();
+    let firstWeekday = moment([year, month - 1, 1]).toDate().getDay();
+    return _.range(1, lastDateOfMonth + 1);
+  }
+
+  parseUserRecord(data, year, month) {
+    let workday_all = this.getMonthWorkdayCount(year, month);
+    let workday_attend = this.getMonthWorkdayAttendCount(data, year, month);
+    let record = {
+      normal: 0,
+      late: 0,
+      leave_early: 0,
+      workday_real: data.length,
+      workday_all: workday_all,
+      extra_work: 0,
+      absent: workday_all - workday_attend,
+    };
+    data.forEach(item => {
+      if (item.late) {
+        record.late += 1;
+      }
+      if (item.leave_early) {
+        record.leave_early += 1;
+      }
+      if (!item.late && !item.leave_early) {
+        record.normal += 1;
+      }
+    });
+    return record;
+  }
+
+  isUserAuditor(user_id) {
+    this.setting.auditor && this.setting.auditor.equals(user_id);
+  }
 }
