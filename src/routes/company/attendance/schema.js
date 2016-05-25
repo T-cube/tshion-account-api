@@ -3,7 +3,7 @@ import { ENUMS } from 'lib/constants';
 export let settingSanitization = {
 	is_open: { type: 'boolean' },
   time_start: { type: 'string' },
-  time_end: { type: 'string' },
+  time_end: { type: 'string', optional: true },
   ahead_time: { type: 'string' },
   workday: {
 		type: 'array',
@@ -46,7 +46,7 @@ export let settingSanitization = {
 export let settingValidation = {
 	is_open: { type: 'boolean' },
   time_start: { type: 'string' },
-  time_end: { type: 'string' },
+  time_end: { type: 'string', optional: true },
   ahead_time: { type: 'string' },
   workday: {
 		type: 'array',
@@ -99,12 +99,32 @@ export let signValidation = {
 
 export let auditSanitization = {
   date: { type: 'date' },
+	data: {
+		type: 'array',
+		items: {
+			type: 'object',
+			properties: {
+				type: { type: 'string' },
+				date: { type: 'date' },
+			}
+		}
+	},
   type: { type: 'string' },
   reason: { type: 'string', optional: true },
 };
 
 export let auditValidation = {
   date: { type: 'date' },
+	data: {
+		type: 'array',
+		items: {
+			type: 'object',
+			properties: {
+				type: { $enum: ENUMS.ATTENDANCE_SIGN_TYPE },
+				date: { type: 'date' },
+			}
+		}
+	},
   type: { $enum: ['sign_in', 'sign_out'] },
   reason: { type: 'string', optional: true },
 };
