@@ -481,9 +481,10 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
 
 api.get('/:project_id/activity', (req, res, next) => {
   let project_id = req.project._id;
+  let { last_id } = req.params;
   req.model('activity').fetch({
     project: project_id,
-  })
+  }, last_id)
   .then(list => res.json(list))
   .catch(next);
 });

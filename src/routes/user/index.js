@@ -111,7 +111,7 @@ api.get('/project', (req, res, next) =>  {
 });
 
 api.get('/activity', (req, res, next) => {
-  let last_id = ObjectId(req.params.last_id);
+  let { last_id } = req.params;
   req.model('activity').fetch({
     user: req.user_id,
   }, last_id)

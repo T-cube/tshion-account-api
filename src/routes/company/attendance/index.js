@@ -184,8 +184,9 @@ api.post('/audit/:audit_id/accept', (req, res, next) => {
     throw new ApiError(403, null, 'user is not auditor')
   }
   db.attendance.audit.findOne({
-    company: req.company._id,
     _id: ObjectId(req.params.audit_id),
+    company: req.company._id,
+    status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
   })
   .then(doc => {
     if (!doc) {
@@ -202,8 +203,9 @@ api.post('/audit/:audit_id/reject', (req, res, next) => {
     throw new ApiError(403, null, 'user is not auditor')
   }
   db.attendance.audit.update({
-    company: req.company._id,
     _id: ObjectId(req.params.audit_id),
+    company: req.company._id,
+    status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
   }, {
     status: C.ATTENDANCE_AUDIT_STATUS.REJECTED,
   })

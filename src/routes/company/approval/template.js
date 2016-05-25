@@ -47,13 +47,11 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
-  data.steps.map(i => {
+  data.steps.forEach(i => {
     i._id = ObjectId();
-    return i;
   });
-  data.forms && data.forms.map(i => {
+  data.forms && data.forms.forEach(i => {
     i._id = ObjectId();
-    return i;
   });
   data.company_id = req.company._id;
   data.status = C.APPROVAL_STATUS.UNUSED;
