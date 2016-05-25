@@ -57,7 +57,9 @@ export class Attendance {
           throw new ApiError(400, null, 'user has signed')
         }
         let update = {
-          $set: {['data.$.' + data.type]: now},
+          $set: {
+            ['data.$.' + data.type]: now
+          },
         }
         recordType && (update['$set']['data.$.' + recordType] = true);
         data.patch && (update['$push']['patch'] = data.type);
@@ -69,6 +71,28 @@ export class Attendance {
         }, update)
       }
     })
+  }
+
+  _parseSignData(data, isDocExist) {
+    let settings = this.attendanceSetting;
+    let recordType = null;
+    if (data.type == 'sign_in') {
+      if (new Date(`${year}-${month}-${date} ${settings.time_start}`) < now) {
+        recordType = 'late';
+      }
+    } else {
+      if (new Date(`${year}-${month}-${date} ${settings.time_end}`) > now) {
+        recordType = 'leave_early';
+      }
+    }
+    if (!isDocExist) {
+      let update = {
+        date: date,
+        [data.type]: now,
+      }
+      recordType && (update[recordType] = true);
+      data.patch && (update['patch'] = data.type);
+    }
   }
 }
 

@@ -359,7 +359,15 @@ function prepareNextStep(company, item_id, template, step_id) {
 
 function updateAttendance(doc, status) {
   if (status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-
+    let attendanceSign = doc['attendance_sign'];
+    if (!_.isArray(attendanceSign) || !attendanceSign.length) {
+      return;
+    }
+    let data = {
+      patch: true,
+      data: attendanceSign,
+    }
+    return new Attendance(req.attendanceSetting).updateSign(data, req.user._id)
   }
   return;
 }

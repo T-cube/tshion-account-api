@@ -1,3 +1,5 @@
+import { ENUMS } from 'lib/constants';
+
 export let settingSanitization = {
 	is_open: { type: 'boolean' },
   time_start: { type: 'string' },
@@ -90,7 +92,7 @@ export let signSanitization = {
 };
 
 export let signValidation = {
-	type: { $enum: ['sign_in', 'sign_out'] },
+	type: { $enum: ENUMS.ATTENDANCE_SIGN_TYPE },
 };
 
 export let auditSanitization = {
