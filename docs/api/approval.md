@@ -31,7 +31,7 @@ OUTPUT:
 ```javascript
 [
   {
-    _id: <ObjectId>,
+    _id: <ObjectId>, 
     name: <String>,
     description: <String>,
     scope: [<ObjectId>...], // 适用部门
