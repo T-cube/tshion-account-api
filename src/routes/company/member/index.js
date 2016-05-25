@@ -77,6 +77,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
         action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.REQUEST,
         request: request._id,
+        company: req.company._id,
       });
     })
     return db.company.update({

@@ -40,6 +40,13 @@ OUTPUT:
     address: <String>,
   },
   date_join: <Date>,
+  locale: <String>,
+  timezone: <String>,
+  options: {
+    notice_request: <Boolean>,
+    notice_project: <Boolean>,
+  },
+  current_company: <ObjectId>,
 }
 ```
 
@@ -61,7 +68,44 @@ INPUT:
 }
 ```
 
+### PUT /user/settings
+
+修改用户选项
+
+INPUT:
+```javascript
+{
+  locale: <String>,
+  timezone: <String>,
+  current_company: <ObjectId>,
+}
+```
+
+### PUT /user/options
+
+修改用户选项
+
+INPUT:
+```javascript
+{
+  notice_request: <Boolean>,
+  notice_project: <Boolean>,
+}
+```
+
 ### PUT /user/avatar
+
+设置用户头像
+
+INPUT:
+```javascript
+{
+  avatar: <String>,
+}
+```
+### PUT /user/avatar/upload
+
+上传用户头像
 
 INPUT:
 `Content-Type: multipart/form-data`
