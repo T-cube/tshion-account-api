@@ -258,7 +258,7 @@
 ```javascript
 {
   _id: <ObjectId>,
-  status: <Int:[Enum:0,1,2]>       // 任务状态(1)
+  status: <String[Enum]>           // 任务状态(1)
   company_id: <ObjectId>,          // 关联公司
   project_id: <ObjectId>,          // 关联项目
   title: <String>,                 // 任务标题
@@ -280,11 +280,11 @@
 
 | Value | Title | Description |
 | ----- | ----- | ----------- |
-| 0 | 未开启 | 任务处于未开启状态，用于设置开始时间的任务 |
-| 1 | 正在进行 | 任务正在进行 |
-| 2 | 已完成 | 任务已完成√ |
-| 3 | 暂停 | 任务处于暂停状态 |
-| 3 | 已删除 | 任务位于垃圾篓 |
+| pending | 未开启 | 任务处于未开启状态，用于设置开始时间的任务 |
+| processing | 正在进行 | 任务正在进行 |
+| completed | 已完成 | 任务已完成√ |
+| paused | 暂停 | 任务处于暂停状态 |
+| deleted | 已删除 | 任务位于垃圾篓 |
 
 ### task.comments
 

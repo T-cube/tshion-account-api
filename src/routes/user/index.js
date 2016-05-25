@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import express from 'express'
 import { ObjectId } from 'mongodb';
 
@@ -6,7 +7,12 @@ import { oauthCheck } from 'lib/middleware';
 import upload from 'lib/upload';
 
 import { sanitizeValidateObject } from 'lib/inspector';
-import { infoSanitization, infoValidation, avatarSanitization, avatarValidation } from './schema';
+import {
+  infoSanitization, infoValidation,
+  avatarSanitization, avatarValidation,
+  settingsSanitization, settingsValidation,
+  optionsSanitization, optionsValidation,
+} from './schema';
 
 const BASIC_FIELDS = {
   _id: 1,
@@ -47,6 +53,38 @@ api.put('/info', (req, res, next) => {
     $set: data
   })
   .then(result => res.json(result))
+  .catch(next);
+});
+
+api.put('/settings', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(settingsSanitization, settingsValidation, data);
+  if (!_.keys(data).length) {
+    throw new ApiError(400, null, 'no setting provided!');
+  }
+  db.user.update({
+    _id: req.user._id
+  }, {
+    $set: data
+  })
+  .then(() => res.json(data))
+  .catch(next);
+});
+
+api.put('/options', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(optionsSanitization, optionsValidation, data);
+  if (!_.keys(data).length) {
+    throw new ApiError(400, null, 'no option provided!');
+  }
+  db.user.update({
+    _id: req.user._id
+  }, {
+    $set: {
+      options: data
+    }
+  })
+  .then(() => res.json(data))
   .catch(next);
 });
 

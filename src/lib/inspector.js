@@ -3,6 +3,7 @@ import schemaInspector from 'schema-inspector';
 import { ObjectId } from 'mongodb';
 import { isEmail, userId } from './utils';
 import { ApiError } from './error';
+import moment from 'moment-timezone';
 
 let sanitizationCustom = {
   objectId: function (schema, post) {
@@ -34,6 +35,14 @@ let validationCustom = {
     }
     if (-1 == schema.$enum.indexOf(candidate)) {
       this.report('invalid value: ' + candidate);
+    }
+  },
+  timezone: function(schema, candidate) {
+    if (!schema.$timezone) {
+      return;
+    }
+    if (!moment.tz.zone(candidate)) {
+      this.report('invalid timezone: ' + candidate)
     }
   },
   email: function(schema, candidate) {

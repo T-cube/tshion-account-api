@@ -32,6 +32,28 @@ export let infoValidation = {
   },
 };
 
+export let settingsSanitization = {
+  locale: { type: 'string', optional: true },
+  timezone: { type: 'string', optional: true },
+  current_company: { $ObjectId: true, optional: true },
+};
+
+export let settingsValidation = {
+  locale: { type: 'string', optional: true },
+  timezone: { $timezone: true, optional: true },
+  current_company: { $ObjectId: true, optional: true },
+};
+
+export let optionsSanitization = {
+  notice_request: { type: 'boolean', optional: true },
+  notice_project: { type: 'boolean', optional: true },
+};
+
+export let optionsValidation = {
+  notice_request: { type: 'boolean', optional: true },
+  notice_project: { type: 'boolean', optional: true },
+};
+
 export let avatarSanitization = {
   avatar: '',
   // crop_x: 'int',
