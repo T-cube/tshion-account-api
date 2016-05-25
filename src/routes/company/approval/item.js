@@ -105,16 +105,53 @@ api.get('/:item_id', (req, res, next) => {
     ])
   })
   .then(data => {
-    let tree = new Structure(req.company.structure);
-    data.from = _.find(req.company.members, member => member._id = data.from);
-    data.steps.forEach(step => {
-      if (step.approver) {
-        step.approver = _.find(req.company.members, member => member._id = step.approver);
+    let user_id = req.user._id;
+    let company_id = req.company._id;
+    return db.approval.user.findOne({
+      _id: user_id,
+      'map.company_id': company_id
+    }, {
+      'map.$.flow_id': 1
+    })
+    .then(mapData => {
+      let flow_id = mapData ? mapData.map[0].flow_id : null;
+      if (!mapData || !flow_id) {
+        data.is_processing = false;
+        return res.json(data);
       }
-    });
-    data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
-    data.department = _.find(tree.findNodeById(data.department), '_id', 'name');
-    res.json(data);
+      return db.approval.flow.findOne({
+        _id: flow_id,
+        'approve._id': item_id
+      }, {
+        'approve.$': 1
+      })
+      .then(approveInfo => {
+        if (!approveInfo) {
+          data.is_processing = false;
+        } else {
+          if (data.status == C.APPROVAL_ITEM_STATUS.PROCESSING
+            && approveInfo.approve[0].step
+            && approveInfo.approve[0].step.equals(data.step)) {
+            data.is_processing = true;
+          } else {
+            data.is_processing = false;
+          }
+        }
+        return data;
+      })
+    })
+    .then(data => {
+      let tree = new Structure(req.company.structure);
+      data.from = _.find(req.company.members, member => member._id = data.from);
+      data.steps.forEach(step => {
+        if (step.approver) {
+          step.approver = _.find(req.company.members, member => member._id = step.approver);
+        }
+      });
+      data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
+      data.department = _.find(tree.findNodeById(data.department), '_id', 'name');
+      res.json(data);
+    })
   })
   .catch(next);
 });
@@ -149,6 +186,7 @@ api.put('/:item_id/steps', (req, res, next) => {
     step: 1,
     steps: 1,
     template: 1,
+    type: 1,
   })
   .then(doc => {
     if (!doc) {
@@ -184,15 +222,26 @@ api.put('/:item_id/steps', (req, res, next) => {
     }, {
       $set: update
     })
-    .then(doc => {
+    .then(() => {
       if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
         return prepareNextStep(req.company, item_id, template, nextStep._id);
+      }
+      if (!nextStep) {
+        return doAfterApproval(doc, data.status)
       }
     })
   })
   .then(() => res.json({}))
   .catch(next);
 });
+
+function doAfterApproval(doc, status) {
+  switch (doc.type) {
+    case C.APPROVAL_TYPE.ATTENDANCE:
+      return updateAttendance(doc, status);
+    return;
+  }
+}
 
 function prepareNextStep(company, item_id, template, step_id) {
   return db.approval.template.findOne({
@@ -306,4 +355,11 @@ function prepareNextStep(company, item_id, template, step_id) {
       }))
     })
   })
+}
+
+function updateAttendance(doc, status) {
+  if (status == C.APPROVAL_ITEM_STATUS.APPROVED) {
+
+  }
+  return;
 }

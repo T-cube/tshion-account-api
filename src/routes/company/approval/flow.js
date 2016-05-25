@@ -66,7 +66,7 @@ api.get('/approve', (req, res, next) => {
       })
       .then(data => {
         let tree = new Structure(req.company.structure);
-        data = data.map(item => {
+        data.forEach(item => {
 
           item.from = _.find(req.company.members, member => member._id = item.from)
           item.department = tree.findNodeById(item.department);
@@ -80,7 +80,6 @@ api.get('/approve', (req, res, next) => {
           } else {
             item.is_processing = false;
           }
-          return item;
         });
         res.json(data || []);
       })

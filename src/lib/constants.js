@@ -59,6 +59,11 @@ let constants = {
     MEMBER: 'member',
   },
 
+  APPROVAL_TYPE: {
+    NORMAL: 'normal',
+    ATTENDANCE: 'attendance',
+  },
+
   COMPANY_MEMBER_STATUS: {
     BANNED: 'banned',
     PENDING: 'pending',
@@ -150,12 +155,6 @@ let constants = {
   USER_ID_TYPE: {
     EMAIL: 'email',
     MOBILE: 'mobile',
-  },
-
-  ATTENDANCE_AUDIT_STATUS: {
-    PENDING: 'pending',
-    ACCEPTED: 'accepted',
-    REJECTED: 'rejected',
   },
 
   ATTENDANCE_SIGN_TYPE: {

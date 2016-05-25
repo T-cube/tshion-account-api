@@ -6,6 +6,7 @@ import Promise from 'bluebird';
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
+import C, { ENUMS } from 'lib/constants';
 
 let api = require('express').Router();
 export default api;
