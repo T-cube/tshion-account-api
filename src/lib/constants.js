@@ -152,6 +152,17 @@ let constants = {
     MOBILE: 'mobile',
   },
 
+  ATTENDANCE_AUDIT_STATUS: {
+    PENDING: 'pending',
+    ACCEPTED: 'accepted',
+    REJECTED: 'rejected',
+  },
+
+  ATTENDANCE_SIGN_TYPE: {
+    SIGN_IN: 'sign_in',
+    SIGN_OUT: 'sign_out',
+  },
+
 }
 
 function buildList(constants) {

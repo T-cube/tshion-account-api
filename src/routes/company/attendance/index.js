@@ -149,7 +149,8 @@ api.post('/audit', (req, res, next) => {
   _.extend(data, {
     user: req.user._id,
     company: req.company._id,
-    date_create: new Date()
+    date_create: new Date(),
+    status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
   })
   db.attendance.audit.insert(data)
   .then(doc => res.json(doc))
@@ -178,6 +179,10 @@ api.get('/audit/:audit_id', (req, res, next) => {
 })
 
 api.post('/audit/:audit_id/accept', (req, res, next) => {
+  let setting = new AttendanceSetting(req.attendanceSetting);
+  if (!setting.isAuditor(req.user._id)) {
+    throw new ApiError(403, null, 'user is not auditor')
+  }
   db.attendance.audit.findOne({
     company: req.company._id,
     _id: ObjectId(req.params.audit_id),
@@ -192,11 +197,15 @@ api.post('/audit/:audit_id/accept', (req, res, next) => {
 })
 
 api.post('/audit/:audit_id/reject', (req, res, next) => {
+  let setting = new AttendanceSetting(req.attendanceSetting);
+  if (!setting.isAuditor(req.user._id)) {
+    throw new ApiError(403, null, 'user is not auditor')
+  }
   db.attendance.audit.update({
     company: req.company._id,
     _id: ObjectId(req.params.audit_id),
   }, {
-    status: ''
+    status: C.ATTENDANCE_AUDIT_STATUS.REJECTED,
   })
   .then(doc => res.json(doc))
   .catch(next)
@@ -343,7 +352,7 @@ class AttendanceSetting {
     return record;
   }
 
-  isUserAuditor(user_id) {
-    this.setting.auditor && this.setting.auditor.equals(user_id);
+  isAuditor(user_id) {
+    return this.setting.auditor && this.setting.auditor.equals(user_id);
   }
 }
