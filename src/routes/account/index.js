@@ -54,8 +54,17 @@ api.post('/register', validator(validation.register), (req, res, next) => {
       mobile: req.body.mobile || null,
       mobile_verified: type == C.USER_ID_TYPE.MOBILE,
       name: type == C.USER_ID_TYPE.MOBILE ? req.body.mobile : getEmailName(req.body.email),
+      description: '',
       avatar: randomAvatar('user', 8),
       password: hash,
+      birthdate: null,
+      address: {
+        country: '中国',
+        province: '',
+        city: '',
+        address: ''
+      },
+      sex: null,
       locale: 'zh-CN',
       timezone: 'Asia/Shanghai',
       options: {
