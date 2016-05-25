@@ -18,7 +18,7 @@ import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import C from 'lib/constants';
 import { checkUserTypeFunc, checkUserType } from '../utils';
 import Structure from 'models/structure';
-import { AttendanceSetting, Attendance } from 'models/attendance';
+import Attendance from 'models/attendance';
 
 let api = require('express').Router();
 export default api;
@@ -28,7 +28,12 @@ api.use(oauthCheck());
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(signSanitization, signValidation, data);
-  new Attendance(req.attendanceSetting).updateSign(data, req.user._id)
+  _.extend(data, {
+    date: new Date()
+  })
+  new Attendance(req.attendanceSetting).updateSign({
+    data: [data]
+  }, req.user._id, true)
   .then(doc => res.json(doc))
   .catch(next);
 })
@@ -74,7 +79,7 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
   })
   .then(doc => {
     let signRecord = [];
-    let setting = new AttendanceSetting(req.attendanceSetting);
+    let setting = new Attendance(req.attendanceSetting);
     doc.forEach(sign => {
       signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
         user: _.find(req.company.members, member => member._id.equals(sign.user))
@@ -120,40 +125,40 @@ api.get('/audit/:audit_id', (req, res, next) => {
   .catch(next)
 })
 
-api.post('/audit/:audit_id/accept', (req, res, next) => {
-  let setting = new AttendanceSetting(req.attendanceSetting);
-  if (!setting.isAuditor(req.user._id)) {
-    throw new ApiError(403, null, 'user is not auditor')
-  }
-  db.attendance.audit.findOne({
-    _id: ObjectId(req.params.audit_id),
-    company: req.company._id,
-    status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404)
-    }
-
-  })
-  .catch(next)
-})
-
-api.post('/audit/:audit_id/reject', (req, res, next) => {
-  let setting = new AttendanceSetting(req.attendanceSetting);
-  if (!setting.isAuditor(req.user._id)) {
-    throw new ApiError(403, null, 'user is not auditor')
-  }
-  db.attendance.audit.update({
-    _id: ObjectId(req.params.audit_id),
-    company: req.company._id,
-    status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
-  }, {
-    status: C.ATTENDANCE_AUDIT_STATUS.REJECTED,
-  })
-  .then(doc => res.json(doc))
-  .catch(next)
-})
+// api.post('/audit/:audit_id/accept', (req, res, next) => {
+//   let setting = new Attendance(req.attendanceSetting);
+//   if (!setting.isAuditor(req.user._id)) {
+//     throw new ApiError(403, null, 'user is not auditor')
+//   }
+//   db.attendance.audit.findOne({
+//     _id: ObjectId(req.params.audit_id),
+//     company: req.company._id,
+//     status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
+//   })
+//   .then(doc => {
+//     if (!doc) {
+//       throw new ApiError(404)
+//     }
+//
+//   })
+//   .catch(next)
+// })
+//
+// api.post('/audit/:audit_id/reject', (req, res, next) => {
+//   let setting = new Attendance(req.attendanceSetting);
+//   if (!setting.isAuditor(req.user._id)) {
+//     throw new ApiError(403, null, 'user is not auditor')
+//   }
+//   db.attendance.audit.update({
+//     _id: ObjectId(req.params.audit_id),
+//     company: req.company._id,
+//     status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
+//   }, {
+//     status: C.ATTENDANCE_AUDIT_STATUS.REJECTED,
+//   })
+//   .then(doc => res.json(doc))
+//   .catch(next)
+// })
 
 api.get('/setting', (req, res, next) => {
   db.attendance.setting.findOne({
@@ -174,6 +179,27 @@ api.put('/setting', (req, res, next) => {
     upsert: true
   })
   .then(doc => res.json(doc))
+  .catch(next);
+})
+
+api.get('/approval-template', (req, res, next) => {
+  db.attendance.setting.findOne({
+    company: req.company._id
+  }, {
+    approval_template: 1
+  })
+  .then(setting => {
+    if (!setting || !setting.approval_template) {
+      return {};
+    }
+    return db.approval.template.findOne({
+      _id: setting.approval_template,
+      status: {
+        $ne: C.APPROVAL_STATUS.DELETED
+      },
+    })
+  })
+  .then(template => res.json(template))
   .catch(next);
 })
 

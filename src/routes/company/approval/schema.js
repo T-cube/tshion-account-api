@@ -43,7 +43,7 @@ export let sanitization = {
 		    form_type: { type: 'string' }
 			}
 		}
-	}
+	},
 };
 
 export let validation = {
@@ -104,14 +104,9 @@ export let itemSanitization = {
   template: { $objectId: 1 },
   department: { $objectId: 1 },
   content: { type: 'string' },
-  files: {
-    type: 'array',
-    items: {
-      $objectId: 1
-    }
-  },
   forms: {
     type: 'array',
+    optional: true,
     items: {
       type: 'object',
       properties: {
@@ -119,21 +114,24 @@ export let itemSanitization = {
         value: { type: 'string' }
       }
     }
-  }
+  },
+  target: {
+    type: 'object',
+    optional: true,
+    properties: {
+      _id: { $objectId: 1 },
+      type: { type: 'string' }
+    }
+  },
 }
 
 export let itemValidation = {
   template: { $objectId: 1 },
   department: { $objectId: 1 },
   content: { type: 'string' },
-  files: {
-    type: 'array',
-    items: {
-      $objectId: 1
-    }
-  },
   forms: {
     type: 'array',
+    optional: true,
     items: {
       type: 'object',
       properties: {
@@ -141,7 +139,15 @@ export let itemValidation = {
         value: { type: 'string' }
       }
     }
-  }
+  },
+  target: {
+    type: 'object',
+    optional: true,
+    properties: {
+      _id: { $objectId: 1 },
+      type: { $enum: ENUMS.APPROVAL_TARGET }
+    }
+  },
 }
 
 export let stepSanitization = {

@@ -59,9 +59,8 @@ let constants = {
     MEMBER: 'member',
   },
 
-  APPROVAL_TYPE: {
-    NORMAL: 'normal',
-    ATTENDANCE: 'attendance',
+  APPROVAL_TARGET: {
+    ATTENDANCE_AUDIT: 'attendance.audit',
   },
 
   COMPANY_MEMBER_STATUS: {
@@ -161,6 +160,12 @@ let constants = {
     SIGN_IN: 'sign_in',
     SIGN_OUT: 'sign_out',
   },
+
+  ATTENDANCE_AUDIT_STATUS: {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+  }
 
 }
 

@@ -40,6 +40,7 @@ export let settingSanitization = {
 			}
 		}
 	},
+	approval_template: { $objectId: 1, optional: true },
 };
 
 export let settingValidation = {
@@ -85,6 +86,7 @@ export let settingValidation = {
 			}
 		}
 	},
+	approval_template: { $objectId: 1, optional: true },
 };
 
 export let signSanitization = {

@@ -1,13 +1,18 @@
 import _ from 'underscore';
 import moment from 'moment';
 
-export class Attendance {
+import { ApiError } from 'lib/error';
+import C from 'lib/constants';
+
+export default class Attendance {
 
   constructor(attendanceSetting) {
-    this.attendanceSetting = attendanceSetting;
+    this.setting = attendanceSetting;
   }
 
-  updateSign(data, user_id, date) {
+  updateSign(data, user_id, isPatch) {
+    let { date } = data;
+    data = data.data;
     let now = date ? new Date(date) : new Date();
     date = now.getDate();
     let month = now.getMonth() + 1;
@@ -24,45 +29,21 @@ export class Attendance {
     })
     .then(doc => {
       let settings = this.attendanceSetting;
-      let recordType = null;
-      if (data.type == 'sign_in') {
-        if (new Date(`${year}-${month}-${date} ${settings.time_start}`) < now) {
-          recordType = 'late';
-        }
-      } else {
-        if (new Date(`${year}-${month}-${date} ${settings.time_end}`) > now) {
-          recordType = 'leave_early';
-        }
-      }
+      let update = this._parseSignData(data, `${year}-${month}-${date}`, doc, isPatch);
       if (!doc) {
-        let update = {
-          date: date,
-          [data.type]: now,
-        }
-        recordType && (update[recordType] = true);
-        data.patch && (update['patch'] = data.type);
         return db.attendance.sign.update({
           user: user_id,
           year: year,
           month: month,
-        }, {
-          $push: {
-            data: update
-          }
-        }, {
+        }, update, {
           upsert: true
         })
       } else {
-        if (doc.data[0][data.type]) {
-          throw new ApiError(400, null, 'user has signed')
-        }
-        let update = {
-          $set: {
-            ['data.$.' + data.type]: now
-          },
-        }
-        recordType && (update['$set']['data.$.' + recordType] = true);
-        data.patch && (update['$push']['patch'] = data.type);
+        data.forEach(item => {
+          if (doc.data[0][item.type]) {
+            throw new ApiError(400, null, 'user has signed')
+          }
+        })
         return db.attendance.sign.update({
           user: user_id,
           year: year,
@@ -73,33 +54,55 @@ export class Attendance {
     })
   }
 
-  _parseSignData(data, isDocExist) {
-    let settings = this.attendanceSetting;
-    let recordType = null;
-    if (data.type == 'sign_in') {
-      if (new Date(`${year}-${month}-${date} ${settings.time_start}`) < now) {
-        recordType = 'late';
+  _parseSignData(data, date, docExist, isPatch) {
+    let settings = this.setting;
+    let recordType = [];
+    data.forEach(item => {
+      let signDate = new Date(item.date);
+      if (item.type == 'sign_in') {
+        if (new Date(`${date} ${settings.time_start}`) < signDate) {
+          recordType.push('late');
+        }
+      } else {
+        if (new Date(`${date} ${settings.time_end}`) > signDate) {
+          recordType.push('leave_early');
+        }
       }
-    } else {
-      if (new Date(`${year}-${month}-${date} ${settings.time_end}`) > now) {
-        recordType = 'leave_early';
-      }
-    }
-    if (!isDocExist) {
+    })
+    let patch = data.map(i => i.type);
+    if (!docExist) {
       let update = {
-        date: date,
-        [data.type]: now,
+        date: new Date(date).getDate(),
       }
-      recordType && (update[recordType] = true);
-      data.patch && (update['patch'] = data.type);
+      data.forEach(item => {
+        update[item.type] = item.date;
+      })
+      isPatch && (update.patch = patch);
+      recordType.forEach(type => update[type] = true);
+      update = {
+        $push: {
+          data: update
+        }
+      }
+      return update;
+    } else {
+      let update = {};
+      recordType.forEach(type => update['data.$.' + type] = true);
+      data.forEach(item => {
+        update['data.$.' + item.type] = item.date;
+      })
+      if (isPatch) {
+        let existPatch = docExist.data[0].patch;
+        if (existPatch && existPatch.length) {
+          patch = patch.concat(existPatch);
+        }
+        update['data.$.patch'] = patch;
+      }
+      update = {
+        $set: update
+      }
+      return update;
     }
-  }
-}
-
-export class AttendanceSetting {
-
-  constructor(setting) {
-    this.setting = setting;
   }
 
   isWorkDay(date) {
@@ -189,5 +192,37 @@ export class AttendanceSetting {
 
   isAuditor(user_id) {
     return this.setting.auditor && this.setting.auditor.equals(user_id);
+  }
+
+  static audit(audit_id, status) {
+    return db.attendance.audit.findAndModify({
+      query: {
+        _id: audit_id,
+        status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
+      },
+      update: {
+        $set: {
+          status: status
+        }
+      }
+    })
+    .then(audit => {
+      if (!audit || status == C.ATTENDANCE_AUDIT_STATUS.REJECTED) {
+        return;
+      }
+      return db.attendance.setting.findOne({
+        company: audit.company,
+        is_open: true,
+      })
+      .then(setting => {
+        if (!setting) {
+          return;
+        }
+        return new Attendance(setting).updateSign({
+          data: audit.data,
+          date: audit.date,
+        }, audit.user, true)
+      })
+    })
   }
 }

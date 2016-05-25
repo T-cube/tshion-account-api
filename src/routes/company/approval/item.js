@@ -10,6 +10,7 @@ import Structure from 'models/structure';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 import { uniqObjectId, diffObjectId, mapObjectIdToData } from 'lib/utils';
+import Attendance from 'models/attendance';
 
 let api = require('express').Router();
 export default api;
@@ -203,11 +204,11 @@ api.put('/:item_id/steps', (req, res, next) => {
 
     let update = {
       step: nextStep ? nextStep._id : null,
-      log: data.log,
+      // log: data.log,
       'steps.$.approver': req.user._id,
       'steps.$.status': data.status,
       'steps.$.create_time': new Date(),
-      // 'steps.$.log': data.log,
+      'steps.$.log': data.log,
     };
     if (!nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
       update.status = C.APPROVAL_ITEM_STATUS.APPROVED;
@@ -236,9 +237,12 @@ api.put('/:item_id/steps', (req, res, next) => {
 });
 
 function doAfterApproval(doc, status) {
-  switch (doc.type) {
-    case C.APPROVAL_TYPE.ATTENDANCE:
-      return updateAttendance(doc, status);
+  if (!doc.target) {
+    return;
+  }
+  switch (doc.target.type) {
+    case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
+      return updateAttendance(doc.target._id, status);
     return;
   }
 }
@@ -357,17 +361,11 @@ function prepareNextStep(company, item_id, template, step_id) {
   })
 }
 
-function updateAttendance(doc, status) {
+function updateAttendance(audit_id, status) {
   if (status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-    let attendanceSign = doc['attendance_sign'];
-    if (!_.isArray(attendanceSign) || !attendanceSign.length) {
-      return;
-    }
-    let data = {
-      patch: true,
-      data: attendanceSign,
-    }
-    return new Attendance(req.attendanceSetting).updateSign(data, req.user._id)
+    status = C.ATTENDANCE_AUDIT_STATUS.APPROVED;
+  } else {
+    status = C.ATTENDANCE_AUDIT_STATUS.REJECTED;
   }
-  return;
+  return Attendance.audit(audit_id, status)
 }
