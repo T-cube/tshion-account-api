@@ -19,6 +19,7 @@ import C from 'lib/constants';
 import { checkUserTypeFunc, checkUserType } from '../utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
+import Approval from 'models/approval';
 
 let api = require('express').Router();
 export default api;
@@ -92,38 +93,72 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
 
 api.post('/audit', (req, res, next) => {
   let data = req.body;
+  let company_id = req.company._id;
+  let user_id = req.user._id;
   sanitizeValidateObject(auditSanitization, auditValidation, data);
   _.extend(data, {
-    user: req.user._id,
-    company: req.company._id,
+    user: user_id,
+    company: company_id,
     date_create: new Date(),
     status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
   })
   db.attendance.audit.insert(data)
-  .then(doc => res.json(doc))
+  .then(audit => {
+    res.json(audit)
+    return getApprovalTpl(company_id, '_id')
+    .then(template => {
+      let signInData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SING_IN);
+      let signOutData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SING_OUT);
+      let item = {
+        template: template._id,
+        department: '',
+        content: data.reason,
+        forms: [{
+          _id: template.forms[0]._id,
+          value: audit.date,
+        }, {
+          _id: template.forms[1]._id,
+          value: signInData ? signInData.date : '',
+        }, {
+          _id: template.forms[2]._id,
+          value: signOutData ? signOutData.date : '',
+        }],
+        target: {
+          type: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
+          _id: audit._id,
+        },
+        from: user_id,
+        company_id: company_id,
+        apply_date: new Date(),
+        status: C.APPROVAL_ITEM_STATUS.PROCESSING,
+        is_archived: false,
+      }
+      return Approval.createItem(item);
+    })
+  })
   .catch(next)
 })
 
-api.get('/audit', (req, res, next) => {
-  db.attendance.audit.find({
-    company: req.company._id,
-  })
-  .then(doc => res.json(doc))
-})
-
-api.get('/audit/:audit_id', (req, res, next) => {
-  db.attendance.audit.findOne({
-    company: req.company._id,
-    _id: ObjectId(req.params.audit_id),
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404)
-    }
-    res.json(doc)
-  })
-  .catch(next)
-})
+// api.get('/audit', (req, res, next) => {
+//   db.attendance.audit.find({
+//     company: req.company._id,
+//   })
+//   .then(doc => res.json(doc))
+// })
+//
+// api.get('/audit/:audit_id', (req, res, next) => {
+//   db.attendance.audit.findOne({
+//     company: req.company._id,
+//     _id: ObjectId(req.params.audit_id),
+//   })
+//   .then(doc => {
+//     if (!doc) {
+//       throw new ApiError(404)
+//     }
+//     res.json(doc)
+//   })
+//   .catch(next)
+// })
 
 // api.post('/audit/:audit_id/accept', (req, res, next) => {
 //   let setting = new Attendance(req.attendanceSetting);
@@ -164,27 +199,102 @@ api.get('/setting', (req, res, next) => {
   db.attendance.setting.findOne({
     company: req.company._id
   })
-  .then(doc => res.json(doc))
+  .then(doc => res.json(doc || {}))
   .catch(next)
 })
 
 api.put('/setting', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
-  db.attendance.setting.update({
-    company: req.company._id
-  }, {
-    $set: data
-  }, {
-    upsert: true
+  let company_id = req.company._id;
+  // db.attendance.setting.findOne({
+  //   company: company_id
+  // }, {
+  //   approval_template: 1
+  // })
+  // .then(setting => {
+  //   if (!setting) {
+  //     throw new ApiError(404)
+  //   }
+  //
+  // })
+  db.attendance.setting.findAndModify({
+    query: {
+      company: company_id
+    },
+    update: {
+      $set: data
+    }
   })
-  .then(doc => res.json(doc))
+  .then(setting => {
+    db.attendance.setting.update({
+      _id: setting.approval_template
+    }, {
+      // $set:
+    })
+    res.json(doc)
+  })
+  .catch(next);
+})
+
+api.post('/setting', (req, res, next) => {
+  let data = req.body;
+  let company_id = req.company._id;
+  sanitizeValidateObject(settingSanitization, settingValidation, data);
+  _.extend(data, {
+    company: company_id
+  })
+  db.attendance.setting.insert(data)
+  .then(setting => {
+    res.json(setting);
+    let template = {
+      name: '补签',
+      description: '',
+      scope: req.company.structure._id,
+      company_id: company_id,
+      status: C.APPROVAL_STATUS.NORMAL,
+      steps: [{
+        _id: ObjectId(),
+        approver: setting.auditor,
+        approvar_type: 'member',
+      }],
+      forms: [{
+        _id: ObjectId(),
+        title: '补签日期',
+        type: 'text',
+      }, {
+        _id: ObjectId(),
+        title: '签到时间',
+        type: 'text',
+      }, {
+        _id: ObjectId(),
+        title: '签退时间',
+        type: 'text',
+      }],
+    };
+    return db.approval.template.insert(template)
+  })
+  .then(template => {
+    return db.attendance.setting.update({
+      _id: setting._id
+    }, {
+      $set: {
+        approval_template: template._id
+      }
+    })
+  })
   .catch(next);
 })
 
 api.get('/approval-template', (req, res, next) => {
-  db.attendance.setting.findOne({
-    company: req.company._id
+  getApprovalTpl(req.company._id)
+  .then(template => res.json(template))
+  .catch(next);
+})
+
+function getApprovalTpl(company_id) {
+  return db.attendance.setting.findOne({
+    company: company_id
   }, {
     approval_template: 1
   })
@@ -193,15 +303,10 @@ api.get('/approval-template', (req, res, next) => {
       return {};
     }
     return db.approval.template.findOne({
-      _id: setting.approval_template,
-      status: {
-        $ne: C.APPROVAL_STATUS.DELETED
-      },
+      _id: setting.approval_template
     })
   })
-  .then(template => res.json(template))
-  .catch(next);
-})
+}
 
 function ensureFetchSetting(req, res, next) {
   db.attendance.setting.findOne({
