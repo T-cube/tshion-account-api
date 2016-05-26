@@ -38,17 +38,23 @@ api.post('/', (req, res, next) => {
 })
 
 api.get([
+  '/year/:year',
   '/year/:year/month/:month',
   '/year/:year/month/:month/day/:day'
 ], (req, res, next) => {
   let { year, month, day } = req.params;
-  let dateStart = new Date(`${year}-${month}-` + (day || 1));
+  let dateStart = new Date(`${year}-` + (month || 1) + '-' + (day || 1));
   if (dateStart.getFullYear() != year) {
     throw new ApiError(400);
   }
-  let dateEnd = day
-    ? moment(dateStart).add(1, 'days').toDate()
-    : moment(dateStart).add(1, 'months').toDate();
+  let dateEnd;
+  if (!month) {
+    dateEnd = moment(dateStart).add(1, 'year').toDate();
+  } else {
+    dateEnd = day
+     ? moment(dateStart).add(1, 'day').toDate()
+     : moment(dateStart).add(1, 'month').toDate();
+  }
   db.schedule.find({
     creator: req.user._id,
     time_start: {

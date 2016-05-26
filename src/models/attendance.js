@@ -187,10 +187,10 @@ export default class Attendance {
       if (item.leave_early) {
         record.leave_early += 1;
       }
-      if (item.sign_in) {
+      if (!item.sign_in) {
         record.no_sign_in += 1;
       }
-      if (item.sign_out) {
+      if (!item.sign_out) {
         record.no_sign_out += 1;
       }
       if (!item.late && !item.leave_early && item.sign_in && item.sign_out) {

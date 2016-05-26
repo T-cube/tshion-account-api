@@ -196,7 +196,8 @@ function cancelItemsUseTemplate(template_id) {
     status: C.APPROVAL_STATUS.NORMAL,
   }, {
     $set: {
-      status: C.APPROVAL_STATUS.TEMPLATE_CHNAGED
+      status: C.APPROVAL_STATUS.TEMPLATE_CHNAGED,
+      step: null,
     }
   })
 }
