@@ -62,7 +62,7 @@ api.get('/approve', (req, res, next) => {
       .sort({_id: -1})
       .then(data => {
         return mapObjectIdToData(data, [
-          ['approval.template', 'name', 'template'],
+          ['approval.template', 'name,status', 'template'],
         ])
       })
       .then(data => {
@@ -132,7 +132,7 @@ function findItems(req, res, next, type) {
       .sort({_id: -1})
       .then(data => {
         return mapObjectIdToData(data, [
-          ['approval.template', 'name', 'template'],
+          ['approval.template', 'name,status', 'template'],
         ])
       })
       .then(data => {

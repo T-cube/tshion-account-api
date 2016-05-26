@@ -655,7 +655,6 @@
   }...]
   reason: <String>,     // 漏刷原因
   auditor: <ObjectId>,
-  audit_message: <String>,
   date_audit: <Date>,
   status: <String[Enum=pending,accepted,rejected]>,
 }
