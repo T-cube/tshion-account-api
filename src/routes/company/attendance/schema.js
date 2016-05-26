@@ -5,6 +5,7 @@ export let settingSanitization = {
   time_start: { type: 'string' },
   time_end: { type: 'string', optional: true },
   ahead_time: { type: 'string' },
+	auditor: { $objectId: 1 },
   workday: {
 		type: 'array',
 		items: { type: 'int' },
@@ -48,6 +49,7 @@ export let settingValidation = {
   time_start: { type: 'string' },
   time_end: { type: 'string', optional: true },
   ahead_time: { type: 'string' },
+	auditor: { $objectId: 1 },
   workday: {
 		type: 'array',
 		items: {
@@ -109,7 +111,6 @@ export let auditSanitization = {
 			}
 		}
 	},
-  type: { type: 'string' },
   reason: { type: 'string', optional: true },
 };
 
@@ -125,7 +126,6 @@ export let auditValidation = {
 			}
 		}
 	},
-  type: { $enum: ['sign_in', 'sign_out'] },
   reason: { type: 'string', optional: true },
 };
 

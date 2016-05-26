@@ -34,7 +34,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   })
   new Attendance(req.attendanceSetting).updateSign({
     data: [data]
-  }, req.user._id, true)
+  }, req.user._id, false)
   .then(doc => res.json(doc))
   .catch(next);
 })
@@ -107,8 +107,8 @@ api.post('/audit', (req, res, next) => {
     res.json(audit)
     return getApprovalTpl(company_id, '_id')
     .then(template => {
-      let signInData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SING_IN);
-      let signOutData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SING_OUT);
+      let signInData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_IN);
+      let signOutData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_OUT);
       let item = {
         template: template._id,
         department: '',
@@ -133,7 +133,7 @@ api.post('/audit', (req, res, next) => {
         status: C.APPROVAL_ITEM_STATUS.PROCESSING,
         is_archived: false,
       }
-      return Approval.createItem(item);
+      return Approval.createItem(item, req);
     })
   })
   .catch(next)
@@ -227,12 +227,14 @@ api.put('/setting', (req, res, next) => {
     }
   })
   .then(setting => {
-    db.attendance.setting.update({
+    res.json({})
+    return db.attendance.setting.update({
       _id: setting.approval_template
     }, {
-      // $set:
+      $set: {
+        'steps.$.approver': setting.auditor
+      }
     })
-    res.json(doc)
   })
   .catch(next);
 })
@@ -250,7 +252,7 @@ api.post('/setting', (req, res, next) => {
     let template = {
       name: '补签',
       description: '',
-      scope: req.company.structure._id,
+      scope: [req.company.structure._id],
       company_id: company_id,
       status: C.APPROVAL_STATUS.NORMAL,
       steps: [{
@@ -273,14 +275,14 @@ api.post('/setting', (req, res, next) => {
       }],
     };
     return db.approval.template.insert(template)
-  })
-  .then(template => {
-    return db.attendance.setting.update({
-      _id: setting._id
-    }, {
-      $set: {
-        approval_template: template._id
-      }
+    .then(template => {
+      return db.attendance.setting.update({
+        _id: setting._id
+      }, {
+        $set: {
+          approval_template: template._id
+        }
+      })
     })
   })
   .catch(next);

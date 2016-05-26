@@ -175,6 +175,7 @@ export default class Attendance {
       workday_all: workday_all,
       extra_work: 0,
       absent: workday_all - workday_attend,
+      patch: 0,
     };
     data.forEach(item => {
       if (item.late) {
@@ -185,6 +186,9 @@ export default class Attendance {
       }
       if (!item.late && !item.leave_early) {
         record.normal += 1;
+      }
+      if (item.patch && item.patch.length) {
+        record.patch += 1;
       }
     });
     return record;
@@ -207,14 +211,17 @@ export default class Attendance {
       }
     })
     .then(audit => {
-      if (!audit || status == C.ATTENDANCE_AUDIT_STATUS.REJECTED) {
+      console.log('audit', audit);
+      if (!audit || status != C.ATTENDANCE_AUDIT_STATUS.APPROVED) {
         return;
       }
+      audit = audit.value;
       return db.attendance.setting.findOne({
         company: audit.company,
-        is_open: true,
+        // is_open: true,
       })
       .then(setting => {
+        console.log('setting', setting);
         if (!setting) {
           return;
         }

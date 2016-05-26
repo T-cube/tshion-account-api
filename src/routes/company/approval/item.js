@@ -102,7 +102,7 @@ api.get('/:item_id', (req, res, next) => {
   })
   .then(data => {
     return mapObjectIdToData(data, [
-      ['approval.template', 'name,steps,forms', 'template'],
+      ['approval.template', 'name,steps,forms,status', 'template'],
     ])
   })
   .then(data => {
@@ -150,7 +150,7 @@ api.get('/:item_id', (req, res, next) => {
         }
       });
       data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
-      data.department = _.find(tree.findNodeById(data.department), '_id', 'name');
+      data.department && (data.department = _.find(tree.findNodeById(data.department), '_id', 'name'));
       res.json(data);
     })
   })
@@ -183,11 +183,6 @@ api.put('/:item_id/steps', (req, res, next) => {
   db.approval.item.findOne({
     _id: item_id,
     status: C.APPROVAL_ITEM_STATUS.PROCESSING
-  }, {
-    step: 1,
-    steps: 1,
-    template: 1,
-    type: 1,
   })
   .then(doc => {
     if (!doc) {
@@ -323,7 +318,6 @@ function prepareNextStep(company, item_id, template, step_id) {
           'map.$': 1
         })
         .then(mapData => {
-          console.log(mapData);
           let flow_id = mapData ? mapData.map[0].flow_id : null;
           if (!mapData || !flow_id) {
             return db.approval.flow.insert({
@@ -362,6 +356,7 @@ function prepareNextStep(company, item_id, template, step_id) {
 }
 
 function updateAttendance(audit_id, status) {
+  console.log('audit_id', audit_id);
   if (status == C.APPROVAL_ITEM_STATUS.APPROVED) {
     status = C.ATTENDANCE_AUDIT_STATUS.APPROVED;
   } else {
