@@ -110,14 +110,14 @@ export default class Attendance {
     let weekday = date.getDay();
     date = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
     let setting = this.setting;
-    if (_.has(setting.workday_special, date)) {
+    if (_.contains(setting.workday_special, date)) {
       return true;
     }
-    if (_.has(setting.holiday, date)) {
+    if (_.contains(setting.holiday, date)) {
       return false;
     }
     if (setting.workday && setting.workday.length) {
-      return _.has(setting.workday, weekday);
+      return _.contains(setting.workday, weekday);
     }
     return false;
   }
@@ -166,14 +166,15 @@ export default class Attendance {
 
   parseUserRecord(data, year, month) {
     let workday_all = this.getMonthWorkdayCount(year, month);
+    let attend_all = data.length;
     let workday_attend = this.getMonthWorkdayAttendCount(data, year, month);
     let record = {
       normal: 0,
       late: 0,
       leave_early: 0,
-      workday_real: data.length,
+      workday_real: attend_all,
       workday_all: workday_all,
-      extra_work: 0,
+      extra_work: attend_all - workday_attend,
       absent: workday_all - workday_attend,
       patch: 0,
     };

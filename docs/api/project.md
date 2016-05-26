@@ -217,6 +217,86 @@ INPUT
 }...]
 ```
 
+### POST /project/:project_id/discussion
+
+```javascript
+{
+  title: <String>,
+  content: <String>,
+}
+```
+
+### GET /project/:project_id/discussion
+
+```javascript
+[{
+  _id: <ObjectId>,
+  project_id: <ObjectId>,         // 关联项目
+  tags: [<ObjectId>...],          // 关联标签
+  creator: <ObjectId>,
+  title: <String>,
+  content: <String>,
+  followers: [<ObjectId>...],
+  comments: [<ObjectId>...],
+  date_update: <Date>,
+  date_create: <Date>
+}...]
+```
+
+### GET /project/:project_id/discussion/:discussion_id
+
+```javascript
+{
+  _id: <ObjectId>,
+  project_id: <ObjectId>,         // 关联项目
+  tags: [<ObjectId>...],          // 关联标签
+  creator: <ObjectId>,
+  title: <String>,
+  content: <String>,
+  followers: [<ObjectId>...],
+  comments: [<ObjectId>...],
+  date_update: <Date>,
+  date_create: <Date>
+}
+```
+
+### DELETE /project/:project_id/discussion/:discussion_id
+
+### POST /project/:project_id/discussion/:discussion_id/follow
+
+```javascript
+{
+  _id: <ObjectId>,  // followers id
+}
+```
+
+### DELETE /project/:project_id/discussion/:discussion_id/follow/:follower_id
+
+### POST /project/:project_id/discussion/:discussion_id/comment
+
+```javascript
+{
+  to: <ObjectId>, // 评论的用户
+  content: <String>,
+}
+```
+
+### GET /project/:project_id/discussion/:discussion_id/comment
+
+```javascript
+[{
+  _id: <ObjectId>,
+  discussion_id: <ObjectId>,      // 关联讨论
+  creator: <ObjectId>,            // 作者
+  to: <ObjectId>,                 // @
+  content: <String>,              // 提交时分析其中的“@”功能，并发送通知
+  likes: <Int>,                   // 喜欢
+  date_create: <Date>,         
+}...]
+```
+
+### DELETE /project/:project_id/discussion/:discussion_id/comment/:comment_id
+
 ### project document
 
 项目文件

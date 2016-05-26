@@ -675,11 +675,12 @@
     late: <Int>,            // 迟到
     leave_early: <Int>,     // 早退
     absent: <Int>,          // 缺勤
+    patch: <Int>,           // 补签
     business_trip: <Int>,   // 出差
     paid_vacation: <Int>,   // 带薪假期
     nopaid_vacation: <Int>, // 不带薪假期
     extra_work: <Int>,      // 加班
-    workday_all: <Int>,   // 应勤
+    workday_all: <Int>,     // 应勤
     workday_real: <Int>,    // 实际出勤
   }...]
 }
