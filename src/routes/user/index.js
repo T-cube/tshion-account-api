@@ -149,9 +149,9 @@ api.get('/project', (req, res, next) =>  {
 });
 
 api.get('/activity', (req, res, next) => {
-  let { last_id } = req.params;
+  let { last_id } = req.query;
   req.model('activity').fetch({
-    user: req.user_id,
+    user: req.user._id,
   }, last_id)
   .then(list => res.json(list))
   .catch(next);

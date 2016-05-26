@@ -177,6 +177,8 @@ export default class Attendance {
       extra_work: attend_all - workday_attend,
       absent: workday_all - workday_attend,
       patch: 0,
+      no_sign_in: 0,
+      no_sign_out: 0,
     };
     data.forEach(item => {
       if (item.late) {
@@ -185,7 +187,13 @@ export default class Attendance {
       if (item.leave_early) {
         record.leave_early += 1;
       }
-      if (!item.late && !item.leave_early) {
+      if (item.sign_in) {
+        record.no_sign_in += 1;
+      }
+      if (item.sign_out) {
+        record.no_sign_out += 1;
+      }
+      if (!item.late && !item.leave_early && item.sign_in && item.sign_out) {
         record.normal += 1;
       }
       if (item.patch && item.patch.length) {

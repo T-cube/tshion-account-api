@@ -25,7 +25,7 @@ export default class Activity {
 
   fetch(query, last_id) {
     const limit = config.get('view.listNum');
-    if (last_id) {
+    if (last_id && ObjectId.isValid(last_id)) {
       last_id = ObjectId(last_id);
       query = _.extend({}, query, {
         _id: {$lt: last_id},

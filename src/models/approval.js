@@ -29,8 +29,8 @@ export default class Approval {
         form.title = (_.find(template.forms, tpl_form => tpl_form._id.equals(form._id))).title;
       });
       return db.approval.item.insert(data)
-      .then(doc => {
-        let item_id = doc._id;
+      .then(item => {
+        let item_id = item._id;
         return db.approval.user.findOne({
           _id: data.from,
           'map.company_id': data.company_id
@@ -70,7 +70,7 @@ export default class Approval {
         .then(() => {
           return this.prepareNextStep(req.company, item_id, template._id, data.step)
         })
-        .then(() => doc)
+        .then(() => item)
       })
     })
   }
