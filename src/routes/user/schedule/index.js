@@ -60,9 +60,15 @@ api.get([
     time_start: {
       $lte: dateEnd
     },
-    repeat_end: {
-      $gte: dateStart
-    }
+    $or: [{
+      repeat_end: {
+        $gte: dateStart
+      }
+    }, {
+      time_end: {
+        $gte: dateStart
+      }
+    }]
   })
   .then(doc => res.json(doc))
   .catch(next);
