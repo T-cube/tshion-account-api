@@ -228,6 +228,8 @@ INPUT
 
 ### GET /project/:project_id/discussion
 
+QUERY: `type: creator|follower`
+
 ```javascript
 [{
   _id: <ObjectId>,

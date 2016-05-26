@@ -20,14 +20,14 @@ let api = require('express').Router();
 export default api;
 
 api.get('/', (req, res, next) => {
-  let type = req.query.type;
+  let { type } = req.query;
   let condition = {
     project_id: req.project_id
   };
-  if (type == 'mine') {
+  if (type == 'creator') {
     condition.creator = req.user._id;
   }
-  if (type == 'follow') {
+  if (type == 'follower') {
     condition.followers = req.user._id;
   }
   db.discussion.find(condition)
@@ -50,9 +50,7 @@ api.post('/', (req, res, next) => {
     date_create: new Date(),
   });
   db.discussion.insert(data)
-  .then(doc => {
-    res.json(doc);
-  })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
