@@ -138,3 +138,47 @@ export let auditCheckValidation = {
 	is_agreed: { type: 'boolean' },
   audit_message: { type: 'string', optional: true },
 };
+
+export let recordSanitization = {
+	yaer: { type: 'int' },
+  month: { type: 'int' },
+	data: {
+		type: 'object',
+		properties: {
+	    member: { $objectId: 1 },
+	    normal: { type: 'int' },
+	    late: { type: 'int' },
+	    leave_early: { type: 'int' },
+	    absent: { type: 'int' },
+	    patch: { type: 'int' },
+	    business_trip: { type: 'int' },
+	    paid_vacation: { type: 'int' },
+	    nopaid_vacation: { type: 'int' },
+	    extra_work: { type: 'int' },
+	    workday_all: { type: 'int' },
+	    workday_real: { type: 'int' },
+	  }
+	}
+};
+
+export let recordValidation = {
+	yaer: { type: 'int' },
+	month: { type: 'int' },
+	data: {
+		type: 'object',
+		properties: {
+			user: { $objectId: 1 },
+			normal: { type: 'int' },
+			late: { type: 'int' },
+			leave_early: { type: 'int' },
+			absent: { type: 'int' },
+			patch: { type: 'int' },
+			business_trip: { type: 'int' },
+			paid_vacation: { type: 'int' },
+			nopaid_vacation: { type: 'int' },
+			extra_work: { type: 'int' },
+			workday_all: { type: 'int' },
+			workday_real: { type: 'int' },
+		}
+	}
+};

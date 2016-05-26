@@ -670,7 +670,7 @@
   yaer: <Int>,
   month: <Int>,
   data: [{
-    member: <ObjectId>,
+    user: <ObjectId>,
     normal: <Int>,          // 正常工作天数
     late: <Int>,            // 迟到
     leave_early: <Int>,     // 早退
@@ -699,7 +699,7 @@
   time_end: <Date>,
   repeat_end: <Date>,
   repeat: {
-    type: <String[Enum=day,week,month,year,weekday]>,
+    type: <String[Enum=none,day,week,month,year,weekday]>,
     info: [<String>...],
   },
   remind: {

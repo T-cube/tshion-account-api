@@ -12,6 +12,8 @@ import {
   settingValidation,
   auditSanitization,
   auditValidation,
+  recordSanitization,
+  recordValidation
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
@@ -71,23 +73,50 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
     year = date.getFullYear();
     month = date.getMonth() + 1;
   }
-  db.attendance.sign.find({
-    user: {
-      $in: members
-    },
+  db.attendance.record.findOne({
+    company: req.company._id,
     year: year,
     month: month,
   })
-  .then(doc => {
-    let signRecord = [];
-    let setting = new Attendance(req.attendanceSetting);
-    doc.forEach(sign => {
-      signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
-        user: _.find(req.company.members, member => member._id.equals(sign.user))
-      }))
+  .then(record => {
+    if (record) {
+      return record.data
+    }
+    return db.attendance.sign.find({
+      user: {
+        $in: members
+      },
+      year: year,
+      month: month,
     })
-    res.json(signRecord);
+    .then(doc => {
+      let signRecord = [];
+      let setting = new Attendance(req.attendanceSetting);
+      doc.forEach(sign => {
+        signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
+          user: sign.user
+        }))
+      })
+      return signRecord
+    })
   })
+  .then(record => {
+    record.forEach(item => {
+      item.user = _.find(req.company.members, member => member._id.equals(item.user))
+    })
+    res.json(record)
+  })
+  .catch(next)
+})
+
+api.post('/record', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(recordSanitization, recordValidation, data);
+  _.extend(data, {
+    company: req.company._id,
+  })
+  db.attendance.record.insert(data)
+  .then(doc => res.json(_.pick(doc, '_id')))
   .catch(next)
 })
 
@@ -227,6 +256,9 @@ api.put('/setting', (req, res, next) => {
     }
   })
   .then(setting => {
+    if (!setting || !setting.value) {
+      throw new ApiError(400, null, 'attendance is closed');
+    }
     res.json({})
     return db.attendance.setting.update({
       _id: setting.approval_template
@@ -316,7 +348,7 @@ function ensureFetchSetting(req, res, next) {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(400, null, 'attendance is not opened');
+      throw new ApiError(400, null, 'attendance is closed');
     }
     req.attendanceSetting = doc;
     next();
@@ -330,7 +362,7 @@ function ensureFetchSettingOpened(req, res, next) {
   })
   .then(doc => {
     if (!doc || !doc.is_open) {
-      return next(new ApiError(400, null, 'attendance is not opened'));
+      return next(new ApiError(400, null, 'attendance is closed'));
     }
     req.attendanceSetting = doc;
     next();
