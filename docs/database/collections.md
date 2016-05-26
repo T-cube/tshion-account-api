@@ -413,6 +413,17 @@
 
 ### approval
 
+#### approval.template.master
+
+```javascript
+{
+  _id: <ObjectId>,
+  company_id: <ObjectId>,
+  reversions: [<ObjectId>...],
+  current: <ObjectId>,
+}
+```
+
 #### approval.template
 
 审批类型
@@ -420,6 +431,7 @@
 ```javascript
 {
   _id: <ObjectId>,
+  master_id: <ObjectId>,
   company_id: <ObjectId>,
   name: <String>,
   description: <String>,

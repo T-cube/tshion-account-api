@@ -186,7 +186,7 @@ api.put('/:item_id/steps', (req, res, next) => {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(400);
+      throw new ApiError(404);
     }
     let { step, steps, template } = doc;
     if (!step.equals(data._id)) {

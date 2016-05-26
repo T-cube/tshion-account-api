@@ -188,4 +188,25 @@ export default class Approval {
       })
     })
   }
+
+  static createTemplate(template) {
+    return db.approval.template.insert(template)
+    .then(template => {
+      return db.approval.template.master.insert({
+        company_id: template.company_id,
+        reversions: [template._id],
+        current: template._id,
+      })
+      .then(master => {
+        return db.approval.template.update({
+          _id: template._id,
+        }, {
+          $set: {
+            master_id: master._id
+          }
+        })
+      })
+      .then(() => template)
+    })
+  }
 }

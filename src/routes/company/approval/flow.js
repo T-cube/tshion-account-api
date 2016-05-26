@@ -139,7 +139,7 @@ function findItems(req, res, next, type) {
         let tree = new Structure(req.company.structure);
         data = data.map(item => {
           item.from = _.find(req.company.members, member => member._id = item.from)
-          item.department = tree.findNodeById(item.department);
+          item.department && (item.department = tree.findNodeById(item.department));
           return item;
         })
         res.json(data)

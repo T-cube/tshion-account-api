@@ -45,7 +45,8 @@ let constants = {
     PROCESSING: 'processing',
     APPROVED: 'approved',
     REJECTED: 'rejected',
-    REVOKED: 'revoked'
+    REVOKED: 'revoked',
+    TEMPLATE_CHNAGED: 'template.changed',
   },
 
   APPROVAL_STATUS: {

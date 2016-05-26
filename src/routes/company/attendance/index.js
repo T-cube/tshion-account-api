@@ -306,7 +306,7 @@ api.post('/setting', (req, res, next) => {
         type: 'text',
       }],
     };
-    return db.approval.template.insert(template)
+    return Approval.createTemplate(template)
     .then(template => {
       return db.attendance.setting.update({
         _id: setting._id
