@@ -69,7 +69,7 @@ api.get('/', (req, res, next) => {
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
     });
-    return fetchUserInfo(data, 'assignee')
+    return fetchUserInfo(list, 'assignee')
   })
   .then(data => res.json(data))
   .catch(next);

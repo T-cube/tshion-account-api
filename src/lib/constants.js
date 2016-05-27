@@ -29,6 +29,9 @@ let constants = {
     REMINDING: 'reminding', // 提醒
 
     REVOKE_APPROVAL: 'revoke.approval', // 提醒
+
+    APPERVER: 'approver', // 待审核的审批
+    COPYTO: 'copyto',     // 抄送给我的审批
   },
 
   ACTIVITY_TYPE: {

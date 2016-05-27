@@ -91,14 +91,20 @@ export default class Approval {
     .then(doc => {
       let { copyto, approver } = this.getNextStepRelatedMembers(company.structure, doc, step_id)
 
-      req.model('notification').send({
+      let notification = {
         approval_item: item_id,
-        action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
         company: req.company._id,
         from: req.user._id,
+      }
+      req.model('notification').send(_.extend(notification, {
+        action: C.ACTIVITY_ACTION.APPERVER,
         to: approver,
-      });
+      }));
+      req.model('notification').send(_.extend(notification, {
+        action: C.ACTIVITY_ACTION.COPYTO,
+        to: approver,
+      }));
 
       return Promise.all(copyto.map(user_id => {
         return db.approval.user.findOne({

@@ -124,14 +124,14 @@ api.put('/:item_id/status', (req, res, next) => {
       steps: 1
     })
     .then(template => {
-      let { approver } = Approval.getNextStepRelatedMembers(req.company.structure, template, item.step);
+      let { approver, copyto } = Approval.getNextStepRelatedMembers(req.company.structure, template, item.step);
       return Promise.all([
         addActivity(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
           approval_item: item_id
         }),
         addNotification(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
           approval_item: item_id,
-          to: approver
+          to: approver.concat(copyto)
         })
       ])
     })
