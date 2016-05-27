@@ -66,12 +66,12 @@ api.get('/', (req, res, next) => {
   // console.log('condition', condition);
   db.task.find(condition).sort(sortBy)
   .then(list => {
-    console.log(list);
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
     });
-    return res.json(list);
+    return fetchUserInfo(list, 'assignee')
   })
+  .then(data => res.json(data))
   .catch(next);
 })
 
@@ -140,9 +140,7 @@ api.get('/:_task_id', (req, res, next) => {
       throw new ApiError(404, null, 'task not found!');
     }
     return fetchUserInfo(data, 'creator', 'assignee', 'followers')
-    .then(() => {
-      res.json(data);
-    })
+    .then(() => res.json(data))
   })
   .catch(next);
 });

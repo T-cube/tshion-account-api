@@ -118,10 +118,9 @@ api.get('/project', (req, res, next) =>  {
     projects: 1
   })
   .then(userInfo => {
-    if (!userInfo || typeof userInfo.projects != 'object' || !userInfo.projects.length) {
+    if (!userInfo || !userInfo.projects.length) {
       return res.json([]);
     }
-
     let { company, type, search } = req.query;
     let condition = {
       _id: {$in: userInfo.projects}
@@ -147,10 +146,9 @@ api.get('/project', (req, res, next) =>  {
       default:
         search || (condition['is_archived'] = false);
     }
-    db.project.find(condition)
-    .then(data => res.json(data))
-    .catch(next)
+    return db.project.find(condition)
   })
+  .then(data => res.json(data))
   .catch(next)
 });
 

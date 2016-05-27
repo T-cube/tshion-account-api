@@ -706,6 +706,7 @@
   _id: <ObjectId>,
   title: <String>,
   description: <String>,
+  is_full_day: <Boolean>,
   time_start: <Date>,
   time_end: <Date>,
   repeat_end: <Date>,

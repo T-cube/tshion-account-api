@@ -109,13 +109,16 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
   .catch(next)
 })
 
-api.post('/record', (req, res, next) => {
+api.put('/record', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(recordSanitization, recordValidation, data);
-  _.extend(data, {
+  let condition = _.pick(data, 'year', 'month')
+  delete data.year;
+  delete data.month;
+  _.extend(condition, {
     company: req.company._id,
   })
-  db.attendance.record.insert(data)
+  db.attendance.record.update(condition, data, {upsert: true})
   .then(doc => res.json(_.pick(doc, '_id')))
   .catch(next)
 })
