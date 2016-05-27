@@ -27,6 +27,8 @@ let constants = {
     UPLOAD: 'upload',      // 上传
 
     REMINDING: 'reminding', // 提醒
+
+    REVOKE_APPROVAL: 'revoke.approval', // 提醒
   },
 
   ACTIVITY_TYPE: {
@@ -99,6 +101,7 @@ let constants = {
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
     REMINDING: 'reminding',
+    APPROVAL_ITEM: 'approval.item',
   },
 
   PROJECT_MEMBER_TYPE: {

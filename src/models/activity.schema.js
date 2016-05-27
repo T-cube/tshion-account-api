@@ -9,5 +9,6 @@ export let validation = {
   task: { $objectId: 1, optional: true },
   user: { $objectId: 1, optional: true },
 	field: { type: 'object', optional: true },
+	approval_item: { type: 'object', optional: true },
 	date_create: { type: 'date' },
 };

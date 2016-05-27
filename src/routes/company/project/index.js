@@ -495,10 +495,9 @@ function logProject(req, action, data) {
     target_type: C.OBJECT_TYPE.PROJECT,
     project: req.project._id,
     company: req.company._id,
-  };
-  let activity = _.extend({
     creator: req.user._id,
-  }, info, data);
+  };
+  let activity = _.extend(info, data);
   req.model('activity').insert(activity);
 }
 

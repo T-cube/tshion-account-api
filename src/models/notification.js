@@ -15,6 +15,7 @@ const extendedProps = [
   ['task', 'title,company_id,project_id', 'task'],
   ['request', 'type', 'request'],
   ['reminding', 'title,description', 'reminding'],
+  ['approval.item', 'apply_date,content', 'approval_item'],
 ];
 
 export default class Notification {

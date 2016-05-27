@@ -103,16 +103,39 @@ api.put('/:item_id/status', (req, res, next) => {
   if (status != C.APPROVAL_ITEM_STATUS.REVOKED) {
     throw new ApiError(400, null, 'wrong status');
   }
-  db.approval.item.update({
+  db.approval.item.findAndModify({
     _id: item_id,
-    from: req.user._id
+    from: req.user._id,
+    status: C.APPROVAL_STATUS.PENDING
   }, {
     $set: {
       status: status,
       step: null
     }
   })
-  .then(doc => res.json(doc))
+  .then(item => {
+    if (!item || !item.value) {
+      throw new ApiError(400, null, 'wrong approval status')
+    }
+    res.json({})
+    return db.approval.template.findOne({
+      _id: item.template
+    }, {
+      steps: 1
+    })
+    .then(template => {
+      let { approver } = Approval.getNextStepRelatedMembers(req.company.structure, template, item.step);
+      return Promise.all([
+        addActivity(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
+          approval_item: item_id
+        }),
+        addNotification(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
+          approval_item: item_id,
+          to: approver
+        })
+      ])
+    })
+  })
   .catch(next);
 });
 
@@ -171,6 +194,28 @@ api.put('/:item_id/steps', (req, res, next) => {
   .catch(next);
 });
 
+function addActivity(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+    company: req.company._id,
+    creator: req.user._id,
+  };
+  _.extend(info, data);
+  req.model('activity').insert(info);
+}
+
+function addNotification(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+    company: req.company._id,
+    from: req.user._id,
+  };
+  _.extend(info, data);
+  req.model('notification').send(info);
+}
+
 function doAfterApproval(doc, status) {
   if (!doc.target) {
     return;
@@ -183,7 +228,6 @@ function doAfterApproval(doc, status) {
 }
 
 function updateAttendance(audit_id, status) {
-  console.log('audit_id', audit_id);
   if (status == C.APPROVAL_ITEM_STATUS.APPROVED) {
     status = C.ATTENDANCE_AUDIT_STATUS.APPROVED;
   } else {

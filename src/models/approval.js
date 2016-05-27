@@ -31,6 +31,13 @@ export default class Approval {
       return db.approval.item.insert(data)
       .then(item => {
         let item_id = item._id;
+        req.model('activity').insert({
+          approval_item: item_id,
+          action: C.ACTIVITY_ACTION.CREATE,
+          target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+          company: req.company._id,
+          creator: req.user._id,
+        })
         return db.approval.user.findOne({
           _id: data.from,
           'map.company_id': data.company_id
@@ -82,27 +89,16 @@ export default class Approval {
       steps: 1
     })
     .then(doc => {
-      let step = _.find(doc.steps, i => i._id.equals(step_id));
-      let approver = [];
-      let copyto = [];
-      let structure = new Structure(company.structure);
+      let { copyto, approver } = this.getNextStepRelatedMembers(company.structure, doc, step_id)
 
-      if (step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
-        approver = structure.findMemberByPosition(step.approver._id);
-      } else {
-        approver = [step.approver._id];
-      }
-
-      step.copy_to && step.copy_to.forEach(i => {
-        if (i.type == C.APPROVER_TYPE.DEPARTMENT) {
-          copyto = copyto.concat(structure.findMemberByPosition(i._id));
-        } else {
-          copyto = copyto.concat(i._id);
-        }
+      req.model('notification').send({
+        approval_item: item_id,
+        action: C.ACTIVITY_ACTION.CREATE,
+        target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+        company: req.company._id,
+        from: req.user._id,
+        to: approver,
       });
-
-      copyto = uniqObjectId(copyto);
-      approver = uniqObjectId(approver);
 
       return Promise.all(copyto.map(user_id => {
         return db.approval.user.findOne({
@@ -209,4 +205,28 @@ export default class Approval {
       .then(() => template)
     })
   }
+
+  static getNextStepRelatedMembers(structure, template, step_id) {
+    let step = _.find(template.steps, i => i._id.equals(step_id));
+    let approver = [];
+    let copyto = [];
+    let structure = new Structure(structure);
+    if (step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
+      approver = structure.findMemberByPosition(step.approver._id);
+    } else {
+      approver = [step.approver._id];
+    }
+    step.copy_to && step.copy_to.forEach(i => {
+      if (i.type == C.APPROVER_TYPE.DEPARTMENT) {
+        copyto = copyto.concat(structure.findMemberByPosition(i._id));
+      } else {
+        copyto = copyto.concat(i._id);
+      }
+    })
+    return {
+      copyto: uniqObjectId(copyto),
+      approver: uniqObjectId(approver)
+    }
+  }
+
 }
