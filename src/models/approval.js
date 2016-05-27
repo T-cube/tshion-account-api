@@ -210,7 +210,7 @@ export default class Approval {
     let step = _.find(template.steps, i => i._id.equals(step_id));
     let approver = [];
     let copyto = [];
-    let structure = new Structure(structure);
+    structure = new Structure(structure);
     if (step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
       approver = structure.findMemberByPosition(step.approver._id);
     } else {
