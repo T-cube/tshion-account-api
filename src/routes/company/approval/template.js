@@ -221,8 +221,8 @@ function cancelItemsUseTemplate(req, template_id) {
   .then(items => {
     itemIdList = items.map(item => item._id);
     let notification = {
-      action: C.ACTIVITY_ACTION.,
-      target_type: C.OBJECT_TYPE.APPROVAL_TEMPLATE,
+      action: C.ACTIVITY_ACTION.APPROVAL_TEMPLATE_CHANGED,
+      target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
       company: req.company._id,
       from: req.user._id,
     }

@@ -34,11 +34,12 @@ let constants = {
     APPROVAL_COPYTO: 'copyto',     // 抄送给我的审批
     APPROVAL_APPROVED: 'approval.approved',
     APPROVAL_REJECTED: 'approval.rejected',
+    APPROVAL_TEMPLATE_CHANGED: 'approval.template.change', // 审批模板修改或删除
 
     SIGN: 'sign',         // 签到
     SIGN_AUDIT: 'sign.audit', // 补签
 
-    RELEASE: 'release', // 发布
+    RELEASE: 'release',   // 发布
   },
 
   ACTIVITY_TYPE: {
