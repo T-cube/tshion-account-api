@@ -3,6 +3,7 @@ export let sanitization = {
   description: { type: 'string' },
   time_start: { type: 'date' },
   time_end: { type: 'date' },
+	is_full_day: { type: 'boolean' },
   repeat_end: { type: 'date', optional: true },
   repeat: {
 		type: 'object',
@@ -25,6 +26,7 @@ export let validation = {
   description: { type: 'string' },
   time_start: { type: 'date' },
   time_end: { type: 'date' },
+	is_full_day: { type: 'boolean' },
   repeat_end: { type: 'date', optional: true },
   repeat: {
 		type: 'object',

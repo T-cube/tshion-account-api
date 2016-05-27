@@ -23,6 +23,7 @@ INPUT
   description: <String>,
   time_start: <Date>,
   time_end: <Date>,
+  is_full_day: <Boolean>,
   repeat_end: <Date>,
   repeat: {
     type: <String[Enum=none,day,week,month,year,weekday]>,
@@ -45,6 +46,7 @@ INPUT
   description: <String>,
   time_start: <Date>,
   time_end: <Date>,
+  is_full_day: <Boolean>,
   repeat_end: <Date>,
   repeat: {
     type: <String[Enum=none,day,week,month,year,weekday]>,
@@ -79,6 +81,7 @@ OUTPUT
   description: <String>,
   time_start: <Date>,
   time_end: <Date>,
+  is_full_day: <Boolean>,
   repeat_end: <Date>,
   repeat: {
     type: <String[Enum=none,day,week,month,year,weekday]>,

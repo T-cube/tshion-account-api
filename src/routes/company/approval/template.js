@@ -92,6 +92,9 @@ api.put('/:template_id', (req, res, next) => {
     if (!oldTpl) {
       throw new ApiError(404, null, 'template is not exist')
     }
+    if (oldTpl.status != C.APPROVAL_STATUS.UNUSED) {
+      // throw new ApiError(404, null, '启用中的模板不能删除')
+    }
     return Promise.all([
       db.approval.template.insert(data)
       .then(newTpl => {
