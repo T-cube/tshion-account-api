@@ -21,7 +21,7 @@ export function getRelUploadPath(dir, name) {
   return dir + '/' + name;
 }
 
-function getUploadUrl(dir, filename) {
+export function getUploadUrl(dir, filename) {
   return config.get('upload.url') + dir + '/' + filename;
 }
 

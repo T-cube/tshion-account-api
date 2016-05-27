@@ -12,6 +12,13 @@
     // 每页默认显式条目数量
     listNum: 20,
   },
+  avatar: {
+    count: {
+      company: 10,
+      project: 24,
+      user: 8,
+    },
+  },
   upload: {
     path: 'public/cdn/',
     url: 'http://api.tlifang.com/cdn/',
