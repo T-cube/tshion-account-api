@@ -45,7 +45,17 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   data.company_id = req.company._id;
   data.date_create = new Date();
   db.announcement.insert(data)
-  .then(doc => res.json(doc))
+  .then(doc => {
+    res.json(doc)
+    let addingNotification = doc.is_published
+      && addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
+      announcement: doc._id,
+    })
+    let addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+      announcement: doc._id
+    })
+    return Promise.all([addingActivity, addingNotification])
+  })
   .catch(next);
 });
 
@@ -56,7 +66,9 @@ api.get('/:announcement_id', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/draft/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
+api.get('/draft/:announcement_id',
+  checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN),
+  (req, res, next) => {
   let announcement_id = ObjectId(req.params.announcement_id);
   getAnnouncement(req.company._id, announcement_id, false)
   .then(doc => res.json(doc))
@@ -84,7 +96,18 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
     }, {
       $set: data
     })
-    .then(doc => res.json(doc))
+    .then(doc => {
+      res.json(doc)
+      let addingNotification = !announcement.is_published
+        && data.is_published
+        && addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
+        announcement: doc._id,
+      })
+      let addingActivity = addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+        announcement: announcement_id
+      })
+      return Promise.all([addingActivity, addingNotification])
+    })
   })
   .catch(next);
 });
@@ -152,4 +175,27 @@ function getAnnouncement(company_id, announcement_id, is_published) {
     }
     return fetchUserInfo(announcement, 'from.creator')
   })
+}
+
+function addActivity(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.ANNOUNCEMENT,
+    company: req.company._id,
+    creator: req.user._id,
+  };
+  _.extend(info, data);
+  return req.model('activity').insert(info);
+}
+
+function addNotification(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.ANNOUNCEMENT,
+    company: req.company._id,
+    from: req.user._id,
+    to: _.filter(req.company.members.map(member => member._id), id => id.equals(req.user._id))
+  };
+  _.extend(info, data);
+  return req.model('notification').send(info);
 }

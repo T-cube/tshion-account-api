@@ -38,6 +38,12 @@ export default class Activity {
         ['company', 'name', 'company'],
         ['project', 'name,company_id', 'project'],
         ['task', 'title,company_id,project_id', 'task'],
+        ['document.dir', 'name', 'document_dir'],
+        ['document.file', 'name', 'document_file'],
+        ['approval.item', 'apply_date,content', 'approval_item'],
+        ['approval.template', 'title', 'approval_template'],
+        ['schedule', 'title', 'schedule'],
+        ['announcement', 'title,is_published', 'announcement'],
       ]);
     });
   }

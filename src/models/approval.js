@@ -75,37 +75,22 @@ export default class Approval {
           }
         })
         .then(() => {
-          return this.prepareNextStep(req.company, item_id, template._id, data.step)
+          return this.prepareNextStep(req, item_id, template._id, data.step)
         })
         .then(() => item)
       })
     })
   }
 
-  static prepareNextStep(company, item_id, template, step_id) {
+  static prepareNextStep(req, item_id, template, step_id) {
+    let company = req.company
     return db.approval.template.findOne({
       _id: template
     }, {
       steps: 1
     })
     .then(doc => {
-      let { copyto, approver } = this.getNextStepRelatedMembers(company.structure, doc, step_id)
-
-      let notification = {
-        approval_item: item_id,
-        target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
-        company: req.company._id,
-        from: req.user._id,
-      }
-      req.model('notification').send(_.extend(notification, {
-        action: C.ACTIVITY_ACTION.APPERVER,
-        to: approver,
-      }));
-      req.model('notification').send(_.extend(notification, {
-        action: C.ACTIVITY_ACTION.COPYTO,
-        to: approver,
-      }));
-
+      let { copyto, approver } = this.getNextStepRelatedMembers(company.structure, doc, step_id);
       return Promise.all(copyto.map(user_id => {
         return db.approval.user.findOne({
           _id: user_id,
@@ -188,6 +173,24 @@ export default class Approval {
           })
         }))
       })
+      .then(() => {
+        let notification = {
+          approval_item: item_id,
+          target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+          company: company._id,
+          from: req.user._id,
+        }
+        return Promise.all([
+          approver.length && req.model('notification').send(_.extend(notification, {
+            action: C.ACTIVITY_ACTION.APPROVAL_APPERVER,
+            to: approver,
+          })),
+          copyto.length && req.model('notification').send(_.extend(notification, {
+            action: C.ACTIVITY_ACTION.APPROVAL_COPYTO,
+            to: copyto,
+          }))
+        ])
+      })
     })
   }
 
@@ -214,6 +217,7 @@ export default class Approval {
 
   static getNextStepRelatedMembers(structure, template, step_id) {
     let step = _.find(template.steps, i => i._id.equals(step_id));
+    console.log('step', step);
     let approver = [];
     let copyto = [];
     structure = new Structure(structure);

@@ -11,8 +11,10 @@ export let validation = {
   reminding: { $objectId: 1, optional: true },
   user: { $objectId: 1, optional: true },
   request: { $objectId: 1, optional: true },
+	approval_item: { $objectId: 1, optional: true },
+	approval_template: { $objectId: 1, optional: true },
+	announcement: { $objectId: 1, optional: true },
   field: { type: 'object', optional: true },
-  approval_item: { type: 'object', optional: true },
 	is_read: { type: 'boolean' },
 	date_create: { type: 'date' },
 };
