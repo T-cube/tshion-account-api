@@ -31,13 +31,23 @@ api.use(oauthCheck());
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(signSanitization, signValidation, data);
+  let now = new Date();
   _.extend(data, {
-    date: new Date()
+    date: now
   })
   new Attendance(req.attendanceSetting).updateSign({
-    data: [data]
+    data: [data],
+    date: now,
   }, req.user._id, false)
-  .then(doc => res.json(doc))
+  .then(doc => {
+    res.json(doc)
+    return addActivity(req, C.ACTIVITY_ACTION.SIGN, {
+      field: {
+        type: data.type,
+        date: now,
+      }
+    });
+  })
   .catch(next);
 })
 
@@ -137,7 +147,13 @@ api.post('/audit', (req, res, next) => {
   db.attendance.audit.insert(data)
   .then(audit => {
     res.json(audit)
-    return getApprovalTpl(company_id, '_id')
+    let addAuditActivity = addActivity(req, C.ACTIVITY_ACTION.SIGN_AUDIT, {
+      field: {
+        date: data.date,
+        data: data.data
+      }
+    })
+    let createApprovalItem = getApprovalTpl(company_id, '_id')
     .then(template => {
       let signInData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_IN);
       let signOutData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_OUT);
@@ -167,6 +183,7 @@ api.post('/audit', (req, res, next) => {
       }
       return Approval.createItem(item, req);
     })
+    return Promise.all([addAuditActivity, createApprovalItem])
   })
   .catch(next)
 })
@@ -292,8 +309,10 @@ api.post('/setting', (req, res, next) => {
       status: C.APPROVAL_STATUS.NORMAL,
       steps: [{
         _id: ObjectId(),
-        approver: setting.auditor,
-        approvar_type: 'member',
+        approver: {
+          _id: setting.auditor,
+          type: 'member',
+        }
       }],
       forms: [{
         _id: ObjectId(),
@@ -320,12 +339,6 @@ api.post('/setting', (req, res, next) => {
       })
     })
   })
-  .catch(next);
-})
-
-api.get('/approval-template', (req, res, next) => {
-  getApprovalTpl(req.company._id)
-  .then(template => res.json(template))
   .catch(next);
 })
 
@@ -371,4 +384,15 @@ function ensureFetchSettingOpened(req, res, next) {
     next();
   })
   .catch(() => next('route'))
+}
+
+function addActivity(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.ATTENDANCE,
+    company: req.company._id,
+    creator: req.user._id,
+  };
+  _.extend(info, data);
+  return req.model('activity').insert(info);
 }

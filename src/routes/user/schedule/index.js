@@ -30,9 +30,13 @@ api.post('/', (req, res, next) => {
   db.schedule.insert(data)
   .then(doc => {
     res.json(doc);
-    if (data.remind != 'none') {
-      return scheduleModel.addReminding(doc._id, cron_rule, data.repeat_end);
-    }
+    return Promise.all([
+      addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+        schedule: doc._id
+      }),
+      data.remind != 'none' &&
+      scheduleModel.addReminding(doc._id, cron_rule, data.repeat_end)
+    ])
   })
   .catch(next);
 })
@@ -106,9 +110,13 @@ api.put('/:schedule_id', (req, res, next) => {
     return scheduleModel.removeReminding(schedule_id)
   })
   .then(() => {
-    if (data.remind != 'none') {
-      return scheduleModel.addReminding(schedule_id, cron_rule, data.repeat_end);
-    }
+    return Promise.all([
+      addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+        schedule: schedule_id
+      }),
+      data.remind != 'none' &&
+      scheduleModel.addReminding(schedule_id, cron_rule, data.repeat_end)
+    ])
   })
   .catch(next);
 })
@@ -121,7 +129,23 @@ api.delete('/:schedule_id', (req, res, next) => {
   })
   .then(doc => {
     res.json(doc);
-    return new ScheduleModel(db).removeReminding(schedule_id)
+    return Promise.all([
+      addActivity(req, C.ACTIVITY_ACTION.DETETE, {
+        schedule: schedule_id
+      }),
+      data.remind != 'none' &&
+      (new ScheduleModel(db).removeReminding(schedule_id))
+    ])
   })
   .catch(next);
 })
+
+function addActivity(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.SCHEDULE,
+    creator: req.user._id,
+  };
+  _.extend(info, data);
+  return req.model('activity').insert(info);
+}

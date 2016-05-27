@@ -70,7 +70,12 @@ api.post('/', (req, res, next) => {
   data.company_id = req.company._id;
   data.status = C.APPROVAL_STATUS.UNUSED;
   Approval.createTemplate(data)
-  .then(template => res.json(template))
+  .then(template => {
+    res.json(template)
+    return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+      approval_template: template._id
+    });
+  })
   .catch(next);
 });
 
@@ -110,9 +115,12 @@ api.put('/:template_id', (req, res, next) => {
           }
         })
       }),
-      cancelItemsUseTemplate(template_id)
+      cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
     ])
   })
+  .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+    approval_template: template_id
+  }))
   .catch(next);
 });
 
@@ -130,7 +138,7 @@ api.get('/:template_id', (req, res, next) => {
       throw new ApiError(404)
     }
     let tree = new Structure(req.company.structure);
-    doc.scope = doc.scope.map(scope => tree.findNodeById(scope));
+    doc.scope = doc.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
     res.json(doc)
   })
   .catch(next);
@@ -151,9 +159,16 @@ api.put('/:template_id/status', (req, res, next) => {
   })
   .then(doc => {
     res.json(doc)
-    if (data.status == C.APPROVAL_STATUS.UNUSED) {
-      return cancelItemsUseTemplate(template_id)
+    if (!doc.nModified) {
+      return;
     }
+    return Promise.all([
+      addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+        approval_template: template_id
+      }),
+      data.status == C.APPROVAL_STATUS.UNUSED
+        && cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
+    ])
   })
   .catch(next);
 });
@@ -186,21 +201,59 @@ api.delete('/:template_id', (req, res, next) => {
           status: C.APPROVAL_STATUS.DELETED
         }
       }),
-      cancelItemsUseTemplate(template_id)
+      cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.DELETE),
+      addActivity(req, C.ACTIVITY_ACTION.DELETE, {
+        approval_template: template_id
+      })
     ])
   })
   .then(() => res.json({}))
   .catch(next);
 });
 
-function cancelItemsUseTemplate(template_id) {
-  return db.approval.item.update({
+function cancelItemsUseTemplate(req, template_id) {
+  return db.approval.item.find({
     template: template_id,
     status: C.APPROVAL_STATUS.NORMAL,
   }, {
-    $set: {
-      status: C.APPROVAL_STATUS.TEMPLATE_CHNAGED,
-      step: null,
-    }
+    form: 1
   })
+  .then(items => {
+    itemIdList = items.map(item => item._id);
+    let notification = {
+      action: C.ACTIVITY_ACTION.APPROVAL_TEMPLATE_CHANGED,
+      target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+      company: req.company._id,
+      from: req.user._id,
+    }
+    return Promise.all(
+      items.map(item => {
+        req.model('notification').send(_.extend(notification, {
+          to: item.from,
+          approval_item: item._id,
+        }))
+      })
+      .concat(db.approval.item.update({
+        _id: {
+          $in: itemIdList
+        }
+      }, {
+        $set: {
+          status: C.APPROVAL_STATUS.TEMPLATE_CHNAGED,
+          step: null,
+        }
+      }))
+    )
+  })
+}
+
+function addActivity(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.APPROVAL_TEMPLATE,
+    company: req.company._id,
+    creator: req.user._id,
+  };
+  _.extend(info, data);
+  return req.model('activity').insert(info);
 }

@@ -123,15 +123,21 @@ api.post('/dir', (req, res, next) => {
     return db.document.dir.insert(data)
     .then(doc => {
       res.json(doc)
-      if (data.parent_dir) {
-        return db.document.dir.update({
-          _id: data.parent_dir
-        }, {
-          $push: {
-            dirs: doc._id
-          }
-        })
-      }
+      return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+        document_dir: doc._id,
+        target_type: C.OBJECT_TYPE.DOCUMENT_DIR,
+      })
+      .then(() => {
+        if (data.parent_dir) {
+          return db.document.dir.update({
+            _id: data.parent_dir
+          }, {
+            $push: {
+              dirs: doc._id
+            }
+          })
+        }
+      })
     })
   })
   .catch(next);
@@ -165,6 +171,10 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
       .then(doc => res.json(doc))
     })
   })
+  // .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+  //   document_dir: doc._id,
+  //   target_type: C.OBJECT_TYPE.DOCUMENT_DIR)
+  // })
   .catch(next);
 });
 
@@ -231,16 +241,6 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/test', (req, res, next) => {
-  let s = new stream.Readable();
-  s._read = function noop() {}; // redundant? see update below
-  s.push('your text here');
-  s.push(null);
-  res.set('Content-disposition', 'attachment; filename=title.txt');
-  res.set('Content-type', 'text/plain');
-  s.pipe(res)
-})
-
 api.post('/dir/:dir_id/upload',
   upload({type: 'attachment'}).array('document'),
   (req, res, next) => {
@@ -260,7 +260,7 @@ api.post('/dir/:dir_id/upload',
       });
     });
   } else {
-    throw new ApiError(400);
+    throw new ApiError(400, null, '文件未上传');
   }
   createFile(req, data, dir_id)
   .then(doc => {
@@ -735,4 +735,15 @@ function checkMoveable(target_dir, dirs, files) {
       ])
     })
   })
+}
+
+function addActivity(req, action, data) {
+  let info = {
+    action: action,
+    company: req.company._id,
+    creator: req.user._id,
+  };
+  posKey == 'project_id' && (info.project = posVal);
+  _.extend(info, data);
+  return req.model('activity').insert(info);
 }

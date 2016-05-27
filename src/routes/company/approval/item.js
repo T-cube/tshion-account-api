@@ -149,7 +149,7 @@ api.put('/:item_id/steps', (req, res, next) => {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(400, null, 'item can not be modified');
+      throw new ApiError(400, null, 'wrong approval status');
     }
     let { step, steps, template } = doc;
     if (!step.equals(data._id)) {
@@ -183,14 +183,29 @@ api.put('/:item_id/steps', (req, res, next) => {
     })
     .then(() => {
       if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-        return Approval.prepareNextStep(req.company, item_id, template, nextStep._id);
+        return Approval.prepareNextStep(req, item_id, template, nextStep._id);
       }
       if (!nextStep) {
+        let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED ?
+          C.ACTIVITY_ACTION.APPROVAL_REJECTED :
+          C.ACTIVITY_ACTION.APPROVAL_APPROVED;
+        addNotification(req, activityAction, {
+          approval_item: item_id,
+          to: doc.from
+        });
         return doAfterApproval(doc, data.status)
       }
     })
   })
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({})
+    let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED ?
+      C.ACTIVITY_ACTION.APPROVAL_REJECTED :
+      C.ACTIVITY_ACTION.APPROVAL_APPROVED;
+    return addActivity(req, activityAction, {
+      approval_item: item_id
+    })
+  })
   .catch(next);
 });
 
@@ -202,7 +217,7 @@ function addActivity(req, action, data) {
     creator: req.user._id,
   };
   _.extend(info, data);
-  req.model('activity').insert(info);
+  return req.model('activity').insert(info);
 }
 
 function addNotification(req, action, data) {
@@ -213,7 +228,7 @@ function addNotification(req, action, data) {
     from: req.user._id,
   };
   _.extend(info, data);
-  req.model('notification').send(info);
+  return req.model('notification').send(info);
 }
 
 function doAfterApproval(doc, status) {

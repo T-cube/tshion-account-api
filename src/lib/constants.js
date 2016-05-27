@@ -28,10 +28,18 @@ let constants = {
 
     REMINDING: 'reminding', // 提醒
 
-    REVOKE_APPROVAL: 'revoke.approval', // 提醒
+    REVOKE_APPROVAL: 'approval.revoke', // 提醒
 
-    APPERVER: 'approver', // 待审核的审批
-    COPYTO: 'copyto',     // 抄送给我的审批
+    APPROVAL_APPERVER: 'approver', // 待审核的审批
+    APPROVAL_COPYTO: 'copyto',     // 抄送给我的审批
+    APPROVAL_APPROVED: 'approval.approved',
+    APPROVAL_REJECTED: 'approval.rejected',
+    APPROVAL_TEMPLATE_CHANGED: 'approval.template.change', // 审批模板修改或删除
+
+    SIGN: 'sign',         // 签到
+    SIGN_AUDIT: 'sign.audit', // 补签
+
+    RELEASE: 'release',   // 发布
   },
 
   ACTIVITY_TYPE: {
@@ -105,6 +113,12 @@ let constants = {
     TASK_FOLLOWER: 'task.follower',
     REMINDING: 'reminding',
     APPROVAL_ITEM: 'approval.item',
+    APPROVAL_TEMPLATE: 'approval.template',
+    DOCUMENT_DIR: 'document.dir',
+    DOCUMENT_FILE: 'dir.file',
+    SCHEDULE: 'schedule',
+    ATTENDANCE: 'attendance',
+    ANNOUNCEMENT: 'announcement',
   },
 
   PROJECT_MEMBER_TYPE: {

@@ -172,3 +172,26 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
   .then(() => res.json({}))
   .catch(next);
 });
+
+function addActivity(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.MEMBER,
+    company: req.company._id,
+    creator: req.user._id,
+  };
+  _.extend(info, data);
+  return req.model('activity').insert(info);
+}
+
+function addNotification(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.MEMBER,
+    company: req.company._id,
+    from: req.user._id,
+    to: _.filter(req.company.members.map(member => member._id), id => id.equals(req.user._id))
+  };
+  _.extend(info, data);
+  return req.model('notification').send(info);
+}
