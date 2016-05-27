@@ -71,7 +71,7 @@ api.put('/settings', (req, res, next) => {
   db.user.update({
     _id: req.user._id
   }, {
-    $set: data
+    $set: data,
   })
   .then(() => res.json(data))
   .catch(next);
@@ -83,12 +83,14 @@ api.put('/options', (req, res, next) => {
   if (!_.keys(data).length) {
     throw new ApiError(400, null, 'no option provided!');
   }
+  let fields = {};
+  _.each(data, (val, key) => {
+    fields[`options.${key}`] = val;
+  });
   db.user.update({
     _id: req.user._id
   }, {
-    $set: {
-      options: data
-    }
+    $set: fields,
   })
   .then(() => res.json(data))
   .catch(next);
