@@ -102,7 +102,7 @@ export let statusValidation = {
 
 export let itemSanitization = {
   template: { $objectId: 1 },
-  department: { $objectId: 1 },
+  department: { $objectId: 1, optional: true },
   content: { type: 'string' },
   forms: {
     type: 'array',
@@ -127,7 +127,7 @@ export let itemSanitization = {
 
 export let itemValidation = {
   template: { $objectId: 1 },
-  department: { $objectId: 1 },
+  department: { $objectId: 1, optional: true },
   content: { type: 'string' },
   forms: {
     type: 'array',

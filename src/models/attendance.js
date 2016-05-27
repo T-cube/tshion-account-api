@@ -110,14 +110,14 @@ export default class Attendance {
     let weekday = date.getDay();
     date = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
     let setting = this.setting;
-    if (_.has(setting.workday_special, date)) {
+    if (_.contains(setting.workday_special, date)) {
       return true;
     }
-    if (_.has(setting.holiday, date)) {
+    if (_.contains(setting.holiday, date)) {
       return false;
     }
     if (setting.workday && setting.workday.length) {
-      return _.has(setting.workday, weekday);
+      return _.contains(setting.workday, weekday);
     }
     return false;
   }
@@ -166,15 +166,19 @@ export default class Attendance {
 
   parseUserRecord(data, year, month) {
     let workday_all = this.getMonthWorkdayCount(year, month);
+    let attend_all = data.length;
     let workday_attend = this.getMonthWorkdayAttendCount(data, year, month);
     let record = {
       normal: 0,
       late: 0,
       leave_early: 0,
-      workday_real: data.length,
+      workday_real: attend_all,
       workday_all: workday_all,
-      extra_work: 0,
+      extra_work: attend_all - workday_attend,
       absent: workday_all - workday_attend,
+      patch: 0,
+      no_sign_in: 0,
+      no_sign_out: 0,
     };
     data.forEach(item => {
       if (item.late) {
@@ -183,8 +187,17 @@ export default class Attendance {
       if (item.leave_early) {
         record.leave_early += 1;
       }
-      if (!item.late && !item.leave_early) {
+      if (!item.sign_in) {
+        record.no_sign_in += 1;
+      }
+      if (!item.sign_out) {
+        record.no_sign_out += 1;
+      }
+      if (!item.late && !item.leave_early && item.sign_in && item.sign_out) {
         record.normal += 1;
+      }
+      if (item.patch && item.patch.length) {
+        record.patch += 1;
       }
     });
     return record;
@@ -207,14 +220,17 @@ export default class Attendance {
       }
     })
     .then(audit => {
-      if (!audit || status == C.ATTENDANCE_AUDIT_STATUS.REJECTED) {
+      console.log('audit', audit);
+      if (!audit || status != C.ATTENDANCE_AUDIT_STATUS.APPROVED) {
         return;
       }
+      audit = audit.value;
       return db.attendance.setting.findOne({
         company: audit.company,
-        is_open: true,
+        // is_open: true,
       })
       .then(setting => {
+        console.log('setting', setting);
         if (!setting) {
           return;
         }

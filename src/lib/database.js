@@ -13,6 +13,7 @@ export function database() {
     'approval.flow',
     'approval.item',
     'approval.template',
+    'approval.template.master',
     'approval.user',
     'attendance.setting',
     'attendance.sign',

@@ -413,6 +413,17 @@
 
 ### approval
 
+#### approval.template.master
+
+```javascript
+{
+  _id: <ObjectId>,
+  company_id: <ObjectId>,
+  reversions: [<ObjectId>...],
+  current: <ObjectId>,
+}
+```
+
 #### approval.template
 
 审批类型
@@ -420,6 +431,7 @@
 ```javascript
 {
   _id: <ObjectId>,
+  master_id: <ObjectId>,
   company_id: <ObjectId>,
   name: <String>,
   description: <String>,
@@ -474,7 +486,7 @@
 }
 ```
 
-approval.user
+### approval.user
 
 用户对应flow
 
@@ -655,7 +667,6 @@ approval.user
   }...]
   reason: <String>,     // 漏刷原因
   auditor: <ObjectId>,
-  audit_message: <String>,
   date_audit: <Date>,
   status: <String[Enum=pending,accepted,rejected]>,
 }
@@ -670,16 +681,17 @@ approval.user
   yaer: <Int>,
   month: <Int>,
   data: [{
-    member: <ObjectId>,
+    user: <ObjectId>,
     normal: <Int>,          // 正常工作天数
     late: <Int>,            // 迟到
     leave_early: <Int>,     // 早退
     absent: <Int>,          // 缺勤
+    patch: <Int>,           // 补签
     business_trip: <Int>,   // 出差
     paid_vacation: <Int>,   // 带薪假期
     nopaid_vacation: <Int>, // 不带薪假期
     extra_work: <Int>,      // 加班
-    workday_all: <Int>,   // 应勤
+    workday_all: <Int>,     // 应勤
     workday_real: <Int>,    // 实际出勤
   }...]
 }
@@ -698,7 +710,7 @@ approval.user
   time_end: <Date>,
   repeat_end: <Date>,
   repeat: {
-    type: <String[Enum=day,week,month,year,weekday]>,
+    type: <String[Enum=none,day,week,month,year,weekday]>,
     info: [<String>...],
   },
   remind: {

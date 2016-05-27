@@ -30,7 +30,7 @@ export let validation = {
 		type: 'object',
 		properties: {
 			type: { type: 'string' },
-	    info: { type: 'array', optional: true  },
+	    info: { type: 'array', optional: true },
 		}
   },
   remind: {

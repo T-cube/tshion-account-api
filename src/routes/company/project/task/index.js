@@ -396,7 +396,7 @@ api.delete('/:task_id/comment/:comment_id', (req, res, next) => {
 
 api.get('/:task_id/activity', (req, res, next) => {
   let taskId = req.task._id;
-  let { last_id } = req.params;
+  let { last_id } = req.query;
   req.model('activity').fetch({
     task: taskId,
   }, last_id)

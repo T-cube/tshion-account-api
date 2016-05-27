@@ -12,6 +12,8 @@ import {
   settingValidation,
   auditSanitization,
   auditValidation,
+  recordSanitization,
+  recordValidation
 } from './schema';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
@@ -34,7 +36,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   })
   new Attendance(req.attendanceSetting).updateSign({
     data: [data]
-  }, req.user._id, true)
+  }, req.user._id, false)
   .then(doc => res.json(doc))
   .catch(next);
 })
@@ -71,23 +73,50 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
     year = date.getFullYear();
     month = date.getMonth() + 1;
   }
-  db.attendance.sign.find({
-    user: {
-      $in: members
-    },
+  db.attendance.record.findOne({
+    company: req.company._id,
     year: year,
     month: month,
   })
-  .then(doc => {
-    let signRecord = [];
-    let setting = new Attendance(req.attendanceSetting);
-    doc.forEach(sign => {
-      signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
-        user: _.find(req.company.members, member => member._id.equals(sign.user))
-      }))
+  .then(record => {
+    if (record) {
+      return record.data
+    }
+    return db.attendance.sign.find({
+      user: {
+        $in: members
+      },
+      year: year,
+      month: month,
     })
-    res.json(signRecord);
+    .then(doc => {
+      let signRecord = [];
+      let setting = new Attendance(req.attendanceSetting);
+      doc.forEach(sign => {
+        signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
+          user: sign.user
+        }))
+      })
+      return signRecord
+    })
   })
+  .then(record => {
+    record.forEach(item => {
+      item.user = _.find(req.company.members, member => member._id.equals(item.user))
+    })
+    res.json(record)
+  })
+  .catch(next)
+})
+
+api.post('/record', (req, res, next) => {
+  let data = req.body;
+  sanitizeValidateObject(recordSanitization, recordValidation, data);
+  _.extend(data, {
+    company: req.company._id,
+  })
+  db.attendance.record.insert(data)
+  .then(doc => res.json(_.pick(doc, '_id')))
   .catch(next)
 })
 
@@ -107,8 +136,8 @@ api.post('/audit', (req, res, next) => {
     res.json(audit)
     return getApprovalTpl(company_id, '_id')
     .then(template => {
-      let signInData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SING_IN);
-      let signOutData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SING_OUT);
+      let signInData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_IN);
+      let signOutData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_OUT);
       let item = {
         template: template._id,
         department: '',
@@ -133,7 +162,7 @@ api.post('/audit', (req, res, next) => {
         status: C.APPROVAL_ITEM_STATUS.PROCESSING,
         is_archived: false,
       }
-      return Approval.createItem(item);
+      return Approval.createItem(item, req);
     })
   })
   .catch(next)
@@ -227,12 +256,17 @@ api.put('/setting', (req, res, next) => {
     }
   })
   .then(setting => {
-    db.attendance.setting.update({
+    if (!setting || !setting.value) {
+      throw new ApiError(400, null, 'attendance is closed');
+    }
+    res.json({})
+    return db.attendance.setting.update({
       _id: setting.approval_template
     }, {
-      // $set:
+      $set: {
+        'steps.$.approver': setting.auditor
+      }
     })
-    res.json(doc)
   })
   .catch(next);
 })
@@ -250,7 +284,7 @@ api.post('/setting', (req, res, next) => {
     let template = {
       name: '补签',
       description: '',
-      scope: req.company.structure._id,
+      scope: [req.company.structure._id],
       company_id: company_id,
       status: C.APPROVAL_STATUS.NORMAL,
       steps: [{
@@ -272,15 +306,15 @@ api.post('/setting', (req, res, next) => {
         type: 'text',
       }],
     };
-    return db.approval.template.insert(template)
-  })
-  .then(template => {
-    return db.attendance.setting.update({
-      _id: setting._id
-    }, {
-      $set: {
-        approval_template: template._id
-      }
+    return Approval.createTemplate(template)
+    .then(template => {
+      return db.attendance.setting.update({
+        _id: setting._id
+      }, {
+        $set: {
+          approval_template: template._id
+        }
+      })
     })
   })
   .catch(next);
@@ -314,7 +348,7 @@ function ensureFetchSetting(req, res, next) {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(400, null, 'attendance is not opened');
+      throw new ApiError(400, null, 'attendance is closed');
     }
     req.attendanceSetting = doc;
     next();
@@ -328,7 +362,7 @@ function ensureFetchSettingOpened(req, res, next) {
   })
   .then(doc => {
     if (!doc || !doc.is_open) {
-      return next(new ApiError(400, null, 'attendance is not opened'));
+      return next(new ApiError(400, null, 'attendance is closed'));
     }
     req.attendanceSetting = doc;
     next();

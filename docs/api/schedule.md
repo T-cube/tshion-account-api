@@ -25,10 +25,13 @@ INPUT
   time_end: <Date>,
   repeat_end: <Date>,
   repeat: {
-    type: <String[Enum=day,week,month,year,weekday]>,
+    type: <String[Enum=none,day,week,month,year,weekday]>,
     info: [<String>...],
   },
-  remind: <String[Enum=none,exact,ten_minute,half_hour,one_hour,day,week]>,
+  remind: {
+    type: <String[Enum=none,exact,minute,hour,day,week]>,
+    num: <Int>,
+  },
 }
 ```
 
@@ -44,13 +47,13 @@ INPUT
   time_end: <Date>,
   repeat_end: <Date>,
   repeat: {
-    type: <String[Enum=day,week,month,year,weekday]>,
+    type: <String[Enum=none,day,week,month,year,weekday]>,
     info: [<String>...],
   },
   remind: {
-    on: <Boolean>,
-    type: <String[Enum=none,exact,ten_minute,half_hour,one_hour,day,week]>,
-  }
+    type: <String[Enum=none,exact,minute,hour,day,week]>,
+    num: <Int>,
+  },
 }
 ```
 
@@ -78,12 +81,12 @@ OUTPUT
   time_end: <Date>,
   repeat_end: <Date>,
   repeat: {
-    type: <String[Enum=day,week,month,year,weekday]>,
+    type: <String[Enum=none,day,week,month,year,weekday]>,
     info: [<String>...],
   },
   remind: {
-    on: <Boolean>,
-    type: <String[Enum=none,exact,ten_minute,half_hour,one_hour,day,week]>,
+    type: <String[Enum=none,exact,minute,hour,day,week]>,
+    num: <Int>,
   },
   creator: <ObjectId>,
   date_create: <Date>,

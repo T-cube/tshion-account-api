@@ -59,9 +59,10 @@ api.get('/approve', (req, res, next) => {
         step: 1,
         steps: 1,
       })
+      .sort({_id: -1})
       .then(data => {
         return mapObjectIdToData(data, [
-          ['approval.template', 'name', 'template'],
+          ['approval.template', 'name,status', 'template'],
         ])
       })
       .then(data => {
@@ -128,16 +129,17 @@ function findItems(req, res, next, type) {
         step: 1,
         steps: 1,
       })
+      .sort({_id: -1})
       .then(data => {
         return mapObjectIdToData(data, [
-          ['approval.template', 'name', 'template'],
+          ['approval.template', 'name,status', 'template'],
         ])
       })
       .then(data => {
         let tree = new Structure(req.company.structure);
         data = data.map(item => {
           item.from = _.find(req.company.members, member => member._id = item.from)
-          item.department = tree.findNodeById(item.department);
+          item.department && (item.department = tree.findNodeById(item.department));
           return item;
         })
         res.json(data)
