@@ -30,7 +30,6 @@ OUTPUT:
   description: <String>,
   avatar: <URL>,
   birthdate: <Date>,
-  address: <String>,
   sex: <String[Enum:F,M]>,
   locale: <String>,
   address: {
@@ -40,12 +39,12 @@ OUTPUT:
     address: <String>,
   },
   date_join: <Date>,
-  locale: <String>,
-  timezone: <String>,
   options: {
     notice_request: <Boolean>,
     notice_project: <Boolean>,
   },
+  locale: <String>,
+  timezone: <String>,
   current_company: <ObjectId>,
 }
 ```
