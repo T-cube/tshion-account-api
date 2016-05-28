@@ -10,6 +10,8 @@ export let validation = {
   user: { $objectId: 1, optional: true },
 	approval_item: { $objectId: 1, optional: true },
 	approval_template: { $objectId: 1, optional: true },
+	document_dir: { $objectId: 1, optional: true },
+	document_file: { $objectId: 1, optional: true },
 	announcement: { $objectId: 1, optional: true },
 	schedule: { $objectId: 1, optional: true },
 	field: { type: 'object', optional: true },

@@ -390,7 +390,6 @@ function addActivity(req, action, data) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.ATTENDANCE,
-    company: req.company._id,
     creator: req.user._id,
   };
   _.extend(info, data);

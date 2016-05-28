@@ -21,6 +21,7 @@ import { oauthCheck, authCheck } from 'lib/middleware';
 import upload, { getUploadPath } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchUserInfo, generateToken, timestamp } from 'lib/utils';
 import config from 'config';
+import C from 'lib/constants';
 
 let api = require('express').Router();
 export default api;
@@ -743,7 +744,7 @@ function addActivity(req, action, data) {
     company: req.company._id,
     creator: req.user._id,
   };
-  posKey == 'project_id' && (info.project = posVal);
+  req.params.project_id && (info.project = ObjectId(req.params.project_id));
   _.extend(info, data);
   return req.model('activity').insert(info);
 }

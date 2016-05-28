@@ -21,10 +21,12 @@ export let sanitization = {
       properties: {
         member: {
     			type: "array",
+					optional: true,
     			items: { $objectId: true, optional: true }
     		},
         department: {
     			type: "array",
+					optional: true,
     			items: { $objectId: true, optional: true }
     		},
       }
@@ -53,10 +55,12 @@ export let validation = {
       properties: {
         member: {
     			type: "array",
+					optional: true,
     			items: { $objectId: true, optional: true }
     		},
         department: {
     			type: "array",
+					optional: true,
     			items: { $objectId: true, optional: true }
     		},
       }

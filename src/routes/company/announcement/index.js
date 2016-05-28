@@ -3,14 +3,13 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import { ApiError } from 'lib/error';
-import { time, indexObjectId, uniqObjectId } from 'lib/utils';
+import { time, indexObjectId, fetchUserInfo, uniqObjectId } from 'lib/utils';
 import inspector from 'lib/inspector';
 import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
 import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import { checkUserType } from '../utils';
-import { fetchUserInfo } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;
@@ -47,13 +46,21 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   db.announcement.insert(data)
   .then(doc => {
     res.json(doc)
-    let addingNotification = doc.is_published
-      && addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
-      announcement: doc._id,
-    })
-    let addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-      announcement: doc._id
-    })
+    let addingNotification = null;
+    let addingActivity = null;
+    if (doc.is_published) {
+      addingNotification = addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
+        announcement: doc._id,
+      }, data.to)
+      addingActivity = addActivity(req, C.ACTIVITY_ACTION.RELEASE, {
+        announcement: doc._id,
+        company: req.company._id,
+      })
+    } else {
+      addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+        announcement: doc._id,
+      })
+    }
     return Promise.all([addingActivity, addingNotification])
   })
   .catch(next);
@@ -98,14 +105,21 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
     })
     .then(doc => {
       res.json(doc)
-      let addingNotification = !announcement.is_published
-        && data.is_published
-        && addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
-        announcement: doc._id,
-      })
-      let addingActivity = addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
-        announcement: announcement_id
-      })
+      let addingNotification = null;
+      let addingActivity = null;
+      if (!announcement.is_published && data.is_published) {
+        addingNotification = addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
+          announcement: announcement_id,
+        }, data.to);
+        addingActivity = addActivity(req, C.ACTIVITY_ACTION.RELEASE, {
+          announcement: announcement_id,
+          company: req.company._id,
+        })
+      } else {
+        addingActivity = addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+          announcement: announcement_id
+        })
+      }
       return Promise.all([addingActivity, addingNotification])
     })
   })
@@ -181,21 +195,37 @@ function addActivity(req, action, data) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.ANNOUNCEMENT,
-    company: req.company._id,
     creator: req.user._id,
   };
   _.extend(info, data);
   return req.model('activity').insert(info);
 }
 
-function addNotification(req, action, data) {
+function addNotification(req, action, data, to) {
+  to = getNotifyUsers(req, to);
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.ANNOUNCEMENT,
     company: req.company._id,
     from: req.user._id,
-    to: _.filter(req.company.members.map(member => member._id), id => id.equals(req.user._id))
+    to: to
   };
   _.extend(info, data);
   return req.model('notification').send(info);
+}
+
+function getNotifyUsers(req, to) {
+  let users = [];
+  if (to) {
+    if (to.member) {
+      users = users.concat(to.member.map(member => ObjectId(member)));
+    }
+    if (to.department) {
+      let structure = new Structure(req.company.structure);
+      users = users.concat(_.flatten(to.department.map(department => structure.findNodeById(department).members)))
+    }
+  } else {
+    users = _.filter(req.company.members.map(member => member._id), id => id.equals(req.user._id));
+  }
+  return uniqObjectId(users)
 }

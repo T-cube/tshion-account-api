@@ -494,7 +494,6 @@ function logProject(req, action, data) {
     action: action,
     target_type: C.OBJECT_TYPE.PROJECT,
     project: req.project._id,
-    company: req.company._id,
     creator: req.user._id,
   };
   let activity = _.extend(info, data);

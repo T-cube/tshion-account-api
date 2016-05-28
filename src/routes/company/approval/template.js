@@ -72,9 +72,9 @@ api.post('/', (req, res, next) => {
   Approval.createTemplate(data)
   .then(template => {
     res.json(template)
-    return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-      approval_template: template._id
-    });
+    // return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+    //   approval_template: template._id
+    // });
   })
   .catch(next);
 });
@@ -118,9 +118,9 @@ api.put('/:template_id', (req, res, next) => {
       cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
     ])
   })
-  .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
-    approval_template: template_id
-  }))
+  // .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+  //   approval_template: template_id
+  // }))
   .catch(next);
 });
 
@@ -162,13 +162,13 @@ api.put('/:template_id/status', (req, res, next) => {
     if (!doc.nModified) {
       return;
     }
-    return Promise.all([
-      addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+    if (data.status == C.APPROVAL_STATUS.UNUSED) {
+      return cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
+    } else {
+      return addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
         approval_template: template_id
-      }),
-      data.status == C.APPROVAL_STATUS.UNUSED
-        && cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
-    ])
+      })
+    }
   })
   .catch(next);
 });

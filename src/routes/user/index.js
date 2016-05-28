@@ -156,9 +156,22 @@ api.get('/project', (req, res, next) =>  {
 
 api.get('/activity', (req, res, next) => {
   let { last_id } = req.query;
-  req.model('activity').fetch({
-    user: req.user._id,
-  }, last_id)
+  db.user.findOne({
+    _id: req.user._id
+  }, {
+    companies: 1
+  })
+  .then(userInfo => {
+    return req.model('activity').fetch({
+      $or: [{
+        company: {
+          $in: userInfo.companies
+        }
+      }, {
+        creator: req.user._id,
+      }]
+    }, last_id)
+  })
   .then(list => res.json(list))
   .catch(next);
 })
