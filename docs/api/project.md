@@ -85,7 +85,7 @@ OUTPUT
 }
 ```
 
-### POST /project/:project_id/logo
+### PUT /project/:project_id/logo
 
 更新项目logo
 
@@ -93,6 +93,22 @@ INPUT
 ```javascript
 {
   logo: <URL>,
+}
+```
+
+### PUT /project/:project_id/logo/upload
+
+上传项目logo
+
+INPUT:
+`Content-Type: multipart/form-data`
+```javascript
+{
+  logo: <File>,
+  crop_x: <Int>,       // optional
+  crop_y: <Int>,       // optional
+  crop_width: <Int>,   // optional
+  crop_height: <Int>,  // optional
 }
 ```
 

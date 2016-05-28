@@ -90,7 +90,7 @@ INPUT
 }
 ```
 
-### POST /company/:company_id/logo
+### PUT /company/:company_id/logo
 
 更新公司logo
 
@@ -98,6 +98,22 @@ INPUT
 ```javascript
 {
   logo: <URL>,
+}
+```
+
+### PUT /company/:company_id/logo/upload
+
+上传公司logo
+
+INPUT:
+`Content-Type: multipart/form-data`
+```javascript
+{
+  logo: <File>,
+  crop_x: <Int>,       // optional
+  crop_y: <Int>,       // optional
+  crop_width: <Int>,   // optional
+  crop_height: <Int>,  // optional
 }
 ```
 
