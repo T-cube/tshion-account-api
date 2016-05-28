@@ -120,7 +120,7 @@ api.get('/project', (req, res, next) =>  {
     projects: 1
   })
   .then(userInfo => {
-    if (!userInfo || !userInfo.projects.length) {
+    if (!userInfo || !userInfo.projects || !userInfo.projects.length) {
       return res.json([]);
     }
     let { company, type, search } = req.query;
