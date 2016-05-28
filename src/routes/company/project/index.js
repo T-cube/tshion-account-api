@@ -184,7 +184,22 @@ api.delete('/:_project_id', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:project_id/logo', upload({type: 'avatar'}).single('logo'),
+api.put('/:project_id/logo', (req, res, next) => {
+  let { logo } = req.body;
+  let data = {
+    logo: logo,
+  };
+  db.project.update({
+    _id: req.project._id,
+    company_id: req.company._id,
+  }, {
+    $set: data
+  })
+  .then(() => res.json(data))
+  .catch(next);
+});
+
+api.put('/:project_id/logo/upload', upload({type: 'avatar'}).single('logo'),
 (req, res, next) => {
   if (!req.file) {
     throw new ApiError(400, null, 'file type not allowed');

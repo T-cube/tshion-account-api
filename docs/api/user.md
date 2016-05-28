@@ -99,7 +99,7 @@ INPUT:
 INPUT:
 ```javascript
 {
-  avatar: <String>,
+  avatar: <URL>,
 }
 ```
 ### PUT /user/avatar/upload

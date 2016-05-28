@@ -96,7 +96,21 @@ api.put('/options', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/avatar', upload({type: 'avatar'}).single('avatar'),
+api.put('/avatar', (req, res, next) => {
+  let { avatar } = req.body;
+  let data = {
+    avatar: avatar
+  };
+  db.user.update({
+    _id: req.user._id
+  }, {
+    $set: data
+  })
+  .then(() => res.json(data))
+  .catch(next);
+});
+
+api.put('/avatar/upload', upload({type: 'avatar'}).single('avatar'),
 (req, res, next) => {
   if (!req.file) {
     throw new ApiError(400, null, 'file type not allowed');
