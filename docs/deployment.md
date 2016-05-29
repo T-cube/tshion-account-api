@@ -76,6 +76,9 @@ sudo systemctl enable ip6tables
 
 sudo systemctl start iptables
 sudo systemctl start ip6tables
+
+service iptables save
+
 ```
 
 开放默认80端口，8000端口（主要用于测试），3000端口（API，生产环境部署使用nginx代理到80）
