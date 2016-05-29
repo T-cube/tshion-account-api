@@ -2,10 +2,14 @@ import _ from 'underscore';
 import scheduleService from 'node-schedule';
 import ScheduleModel from 'models/schedule';
 
-export default class ScheduleService {
+export default class ScheduleServer {
 
   constructor() {
-    
+
+  }
+
+  init() {
+    this.doJobs();
   }
 
   initJobs() {

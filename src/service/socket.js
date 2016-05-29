@@ -28,7 +28,7 @@ class SocketClient {
 
 }
 
-class SocketServer extends EventEmitter {
+export default class SocketServer extends EventEmitter {
 
   constructor(io) {
     super();
@@ -114,8 +114,4 @@ class SocketServer extends EventEmitter {
       });
     }
   }
-}
-
-export default function initSocketServer(io) {
-  return new SocketServer(io);
 }

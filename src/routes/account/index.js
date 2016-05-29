@@ -4,6 +4,7 @@ import Promise from 'bluebird';
 import validator from 'express-validation';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import config from 'config';
 
 import validation from './validation';
 import { time, timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
@@ -48,6 +49,15 @@ api.post('/register', validator(validation.register), (req, res, next) => {
     return hashPassword(password, 10);
   })
   .then(hash => {
+    if (type == 'email') {
+      const webUrl = config.get('webUrl');
+      let url = webUrl + 'account/confirm/123';
+      let data = {
+        name: getEmailName(req.body.email),
+        url: url,
+      };
+      req.model('email').send('test_template_active', req.body.email, data);
+    }
     let data = {
       email: req.body.email || null,
       email_verified: false,

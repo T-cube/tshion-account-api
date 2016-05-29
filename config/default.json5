@@ -56,6 +56,20 @@
       ACCESS_KEY: 'Tre8EMtc8k5iEg7EmThib_6fGBucIqJYTRRh_Hqx',
       SECRET_KEY: 'U0uoDHEKE3MDEIF3jMoxb7f7G88NIblOd6CZeT_z',
       bucket: 'tlifang',
+    },
+    sendcloud: {
+      apiUser: 'tlifang201506',
+      apiKey: 'IlQLQ88VxnHFjr8v',
+      email: {
+        url: 'http://api.sendcloud.net/apiv2/mail/sendtemplate',
+        from: 'no-reply@tlifang.com',
+        fromName: 'T立方',
+        templates: {
+          test_template_active: {
+            variables: ['name', 'url'],
+          }
+        },
+      }
     }
   },
   download: {

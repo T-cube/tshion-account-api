@@ -19,9 +19,11 @@ import oauthModel from 'lib/oauth-model.js';
 import oauthExtended from 'lib/oauth-extended.js';
 import { apiErrorHandler } from 'lib/error';
 import corsHandler from 'lib/cors';
-import initSocketServer from 'service/socket';
-import scheduleServer from 'service/schedule';
+import SocketServer from 'service/socket';
+import { SocketClient } from 'service/socket';
+import ScheduleServer from 'service/schedule';
 import Notification from 'models/notification';
+import Email from 'vendor/sendcloud';
 
 console.log('Tlifang API service');
 console.log('--------------------------------------------------------------------------------');
@@ -35,11 +37,14 @@ console.log('initializing service...');
 const app = express();
 const server = http.Server(app);
 const io = socketio(server, { path: '/api/socket' });
-const socketServer = initSocketServer(io);
 
 // bind model loader
 bindLoader(app);
-app.bindModel('socket', socketServer);
+// start services;
+app.loadModel('schedule', ScheduleServer);
+app.loadModel('socket', SocketServer, io);
+
+app.loadModel('email', Email, config.get('vendor.sendcloud'));
 app.loadModel('notification', Notification);
 
 app.use((req, res, next) => {
@@ -49,10 +54,9 @@ app.use((req, res, next) => {
 
 global.db = database();
 
-app.loadModel('schedule', scheduleServer);
-app.model('schedule').doJobs();
-//oauth开始
 
+
+//oauth开始
 app.oauth = oauthserver({
   model: oauthModel,
   grants: ['password','refresh_token'],
