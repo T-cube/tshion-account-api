@@ -57,16 +57,23 @@ api.get('/:item_id', (req, res, next) => {
     .then(mapData => {
       let flow_id = mapData ? mapData.map[0].flow_id : null;
       if (!mapData || !flow_id) {
-        data.is_processing = false;
-        return res.json(data);
+        // data.is_processing = false;
+        // return res.json(data);
+        throw new ApiError(400, null, 'you have not permission to read')
       }
       return db.approval.flow.findOne({
         _id: flow_id,
-        'approve._id': item_id
-      }, {
-        'approve.$': 1
       })
-      .then(approveInfo => {
+      .then(flowInfo => {
+        if (!flowInfo) {
+          throw new ApiError(400, null, 'you have not permission to read')
+        }
+        let approveInfo = _.find(flowInfo.approve, v => v._id == item_id);
+        let inApply = _.contains(flowInfo.apply, item_id),
+        let inCopyto = _.contains(flowInfo.copy_to, item_id),
+        if (!inApply && !inCopyto && !approveInfo) {
+          throw new ApiError(400, null, 'you have not permission to read')
+        }
         if (!approveInfo) {
           data.is_processing = false;
         } else {
@@ -124,7 +131,7 @@ api.put('/:item_id/status', (req, res, next) => {
       steps: 1
     })
     .then(template => {
-      let { approver, copyto } = Approval.getNextStepRelatedMembers(req.company.structure, template, item.step);
+      let { approver, copyto } = Approval.getStepRelatedMembers(req.company.structure, template, item.step);
       return Promise.all([
         addActivity(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
           approval_item: item_id
@@ -147,61 +154,61 @@ api.put('/:item_id/steps', (req, res, next) => {
     _id: item_id,
     status: C.APPROVAL_ITEM_STATUS.PROCESSING
   })
-  .then(doc => {
-    if (!doc) {
+  .then(item => {
+    if (!item) {
       throw new ApiError(400, null, 'wrong approval status');
     }
-    let { step, steps, template } = doc;
+    let { step, steps, template } = item;
     if (!step.equals(data._id)) {
-      throw new ApiError(403, null);
+      throw new ApiError(400, null, 'you have not permission to audit');
     }
-
-    let k = _.findIndex(steps, item => item._id.equals(step));
-    let thisStep =  steps[k];
-    let nextStep = steps[k + 1] ? steps[k + 1] : null;
-
-    let update = {
-      step: nextStep ? nextStep._id : null,
-      // log: data.log,
-      'steps.$.approver': req.user._id,
-      'steps.$.status': data.status,
-      'steps.$.create_time': new Date(),
-      'steps.$.log': data.log,
-    };
-    if (!nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-      update.status = C.APPROVAL_ITEM_STATUS.APPROVED;
-    }
-    if (data.status == C.APPROVAL_ITEM_STATUS.REJECTED) {
-      update.status = C.APPROVAL_ITEM_STATUS.REJECTED;
-    }
-
-    return db.approval.item.update({
-      _id: item_id,
-      'steps._id': data._id
-    }, {
-      $set: update
-    })
-    .then(() => {
-      if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-        return Approval.prepareNextStep(req, item_id, template, nextStep._id);
+    return checkAprroverOfStepAndGetSteps(req, item)
+    .then(templateSteps => {
+      let k = _.findIndex(steps, item => item._id.equals(step));
+      let thisStep =  steps[k];
+      let nextStep = steps[k + 1] ? steps[k + 1] : null;
+      let update = {
+        step: nextStep ? nextStep._id : null,
+        // log: data.log,
+        'steps.$.approver': req.user._id,
+        'steps.$.status': data.status,
+        'steps.$.create_time': new Date(),
+        'steps.$.log': data.log,
+      };
+      if (!nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
+        update.status = C.APPROVAL_ITEM_STATUS.APPROVED;
       }
-      if (!nextStep) {
-        let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED ?
-          C.ACTIVITY_ACTION.APPROVAL_REJECTED :
-          C.ACTIVITY_ACTION.APPROVAL_APPROVED;
-        addNotification(req, activityAction, {
-          approval_item: item_id,
-          to: doc.from
-        });
-        return doAfterApproval(doc, data.status)
+      if (data.status == C.APPROVAL_ITEM_STATUS.REJECTED) {
+        update.status = C.APPROVAL_ITEM_STATUS.REJECTED;
       }
+      return db.approval.item.update({
+        _id: item_id,
+        'steps._id': data._id
+      }, {
+        $set: update
+      })
+      .then(() => {
+        if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
+          return Approval.prepareNextStep(req, item_id, templateSteps, nextStep._id);
+        }
+        if (!nextStep) {
+          let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
+            ? C.ACTIVITY_ACTION.APPROVAL_REJECTED
+            : C.ACTIVITY_ACTION.APPROVAL_APPROVED;
+          addNotification(req, activityAction, {
+            approval_item: item_id,
+            to: item.from
+          });
+          return doAfterApproval(item, data.status)
+        }
+      })
     })
   })
   .then(() => {
     res.json({})
-    let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED ?
-      C.ACTIVITY_ACTION.APPROVAL_REJECTED :
-      C.ACTIVITY_ACTION.APPROVAL_APPROVED;
+    let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
+      ? C.ACTIVITY_ACTION.APPROVAL_REJECTED
+      : C.ACTIVITY_ACTION.APPROVAL_APPROVED;
     return addActivity(req, activityAction, {
       approval_item: item_id
     })
@@ -230,13 +237,13 @@ function addNotification(req, action, data) {
   return req.model('notification').send(info);
 }
 
-function doAfterApproval(doc, status) {
-  if (!doc.target) {
+function doAfterApproval(item, status) {
+  if (!item.target) {
     return;
   }
-  switch (doc.target.type) {
+  switch (item.target.type) {
     case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
-      return updateAttendance(doc.target._id, status);
+      return updateAttendance(item.target._id, status);
     return;
   }
 }
@@ -248,4 +255,19 @@ function updateAttendance(audit_id, status) {
     status = C.ATTENDANCE_AUDIT_STATUS.REJECTED;
   }
   return Attendance.audit(audit_id, status)
+}
+
+function checkAprroverOfStepAndGetSteps(req, item) {
+  return db.approval.template.findOne({
+    _id: item.template
+  }, {
+    steps: 1
+  })
+  .then(template => {
+    let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
+    if (!_.contains(approver, req.user._id)) {
+      throw new ApiError(400, null, 'you have not permission to audit');
+    }
+    return template.steps;
+  })
 }

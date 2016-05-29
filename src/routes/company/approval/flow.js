@@ -8,6 +8,18 @@ import Structure from 'models/structure';
 let api = require('express').Router();
 export default api;
 
+const fetchItemFields = {
+  from: 1,
+  department: 1,
+  template: 1,
+  apply_date: 1,
+  status: 1,
+  content: 1,
+  log: 1,
+  step: 1,
+  steps: 1,
+};
+
 api.get('/apply', (req, res, next) => {
   findItems(req, res, next, 'apply')
 });
@@ -48,17 +60,7 @@ api.get('/approve', (req, res, next) => {
         $or: approve,
         status: C.APPROVAL_ITEM_STATUS.PROCESSING
       };
-      return db.approval.item.find(condition, {
-        from: 1,
-        department: 1,
-        template: 1,
-        apply_date: 1,
-        status: 1,
-        content: 1,
-        log: 1,
-        step: 1,
-        steps: 1,
-      })
+      return db.approval.item.find(condition, fetchItemFields)
       .sort({_id: -1})
       .then(data => {
         return mapObjectIdToData(data, [
@@ -118,17 +120,7 @@ function findItems(req, res, next, type) {
         }
       };
       _.extend(condition, getQueryCondition(req.query));
-      return db.approval.item.find(condition, {
-        from: 1,
-        department: 1,
-        template: 1,
-        apply_date: 1,
-        status: 1,
-        content: 1,
-        log: 1,
-        step: 1,
-        steps: 1,
-      })
+      return db.approval.item.find(condition, fetchItemFields)
       .sort({_id: -1})
       .then(data => {
         return mapObjectIdToData(data, [

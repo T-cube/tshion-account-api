@@ -548,6 +548,7 @@ function createFile(req, data, dir_id) {
   .then(() => {
     return getFileNameListOfDir(dir_id)
     .then(filenamelist => {
+      console.log(filenamelist);
       data.forEach((item, i) => {
         data[i].name = getUniqFileName(filenamelist, data[i].name);
         filenamelist.push(data[i].name);
@@ -672,16 +673,7 @@ function getFileNameListOfDir(dir_id) {
     files: 1
   })
   .then(dirInfo => {
-    if (!dirInfo || !dirInfo.files || !dirInfo.files.length) {
-      return [];
-    }
-    return db.document.file.find({
-      _id: {
-        $in: dirInfo.files
-      }
-    }, {
-      name: 1
-    })
+    return mapObjectIdToData(dirInfo.files, 'document.file', 'name')
     .then(files => files.map(file => file.name))
   })
 }

@@ -76,6 +76,9 @@ sudo systemctl enable ip6tables
 
 sudo systemctl start iptables
 sudo systemctl start ip6tables
+
+service iptables save
+
 ```
 
 开放默认80端口，8000端口（主要用于测试），3000端口（API，生产环境部署使用nginx代理到80）
@@ -131,10 +134,12 @@ vim /etc/yum.repos.d/mongodb-org-3.2.repo
 
 填写配置信息：
 ```
-[mongodb-org-3.2]name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.2/x86_64/gpg
-check=0
+[mongodb-org-3.2]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.2/x86_64/
+gpgcheck=1
 enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-3.2.asc
 ```  
 
 安装mongodb:

@@ -191,7 +191,7 @@ api.delete('/:template_id', (req, res, next) => {
   })
   .then(template => {
     if (!template || !template.value) {
-      throw new ApiError(400, null, 'template is not exist')
+      throw new ApiError(404)
     }
     return Promise.all([
       db.approval.template.master.update({
@@ -216,7 +216,7 @@ function cancelItemsUseTemplate(req, template_id) {
     template: template_id,
     status: C.APPROVAL_STATUS.NORMAL,
   }, {
-    form: 1
+    from: 1
   })
   .then(items => {
     itemIdList = items.map(item => item._id);
