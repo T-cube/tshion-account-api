@@ -75,60 +75,53 @@ export default class Approval {
           }
         })
         .then(() => {
-          return this.prepareNextStep(req, item_id, template._id, data.step)
+          return this.prepareNextStep(req, item_id, template.steps, data.step)
         })
         .then(() => item)
       })
     })
   }
 
-  static prepareNextStep(req, item_id, template, step_id) {
-    let company = req.company
-    return db.approval.template.findOne({
-      _id: template
-    }, {
-      steps: 1
-    })
-    .then(doc => {
-      let { copyto, approver } = this.getNextStepRelatedMembers(company.structure, doc, step_id);
-      return Promise.all(copyto.map(user_id => {
-        return db.approval.user.findOne({
-          _id: user_id,
-          'map.company_id': company._id
-        }, {
-          'map.$': 1
-        })
-        .then(mapData => {
-          let flow_id = mapData ? mapData.map[0].flow_id : null;
-          if (!mapData || !flow_id) {
-            return db.approval.flow.insert({
-              copy_to: [item_id]
-            })
-            .then(inserted => {
-              return db.approval.user.update({
-                _id: user_id,
-              }, {
-                $push: {
-                  map: {
-                    company_id: company._id,
-                    flow_id: inserted._id
-                  }
-                }
-              }, {
-                upsert: true
-              })
-            })
-          } else {
-            return db.approval.flow.update({
-              _id: flow_id
+  static prepareNextStep(req, item_id, steps, step_id) {
+    let company = req.company;
+    let { copyto, approver } = this.getStepRelatedMembers(company.structure, steps, step_id);
+    return Promise.all(copyto.map(user_id => {
+      return db.approval.user.findOne({
+        _id: user_id,
+        'map.company_id': company._id
+      }, {
+        'map.$': 1
+      })
+      .then(mapData => {
+        let flow_id = mapData ? mapData.map[0].flow_id : null;
+        if (!mapData || !flow_id) {
+          return db.approval.flow.insert({
+            copy_to: [item_id]
+          })
+          .then(inserted => {
+            return db.approval.user.update({
+              _id: user_id,
             }, {
               $push: {
-                copy_to: item_id
+                map: {
+                  company_id: company._id,
+                  flow_id: inserted._id
+                }
               }
+            }, {
+              upsert: true
             })
-          }
-        })
-      }))
+          })
+        } else {
+          return db.approval.flow.update({
+            _id: flow_id
+          }, {
+            $push: {
+              copy_to: item_id
+            }
+          })
+        }
+      })
       .then(() => {
         return Promise.all(approver.map(user_id => {
           return db.approval.user.findOne({
@@ -215,9 +208,8 @@ export default class Approval {
     })
   }
 
-  static getNextStepRelatedMembers(structure, template, step_id) {
-    let step = _.find(template.steps, i => i._id.equals(step_id));
-    console.log('step', step);
+  static getStepRelatedMembers(structure, steps, step_id) {
+    let step = _.find(steps, i => i._id.equals(step_id));
     let approver = [];
     let copyto = [];
     structure = new Structure(structure);

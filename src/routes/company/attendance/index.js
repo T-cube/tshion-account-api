@@ -291,7 +291,7 @@ api.put('/setting', (req, res, next) => {
   .catch(next);
 })
 
-api.post('/setting', (req, res, next) => {
+api.post('/setting', ensureSettingNotExist, (req, res, next) => {
   let data = req.body;
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
@@ -369,7 +369,7 @@ function ensureFetchSetting(req, res, next) {
     req.attendanceSetting = doc;
     next();
   })
-  .catch(() => next('route'))
+  .catch(e => next(e))
 }
 
 function ensureFetchSettingOpened(req, res, next) {
@@ -378,12 +378,25 @@ function ensureFetchSettingOpened(req, res, next) {
   })
   .then(doc => {
     if (!doc || !doc.is_open) {
-      return next(new ApiError(400, null, 'attendance is closed'));
+      throw new ApiError(400, null, 'attendance is closed');
     }
     req.attendanceSetting = doc;
     next();
   })
-  .catch(() => next('route'))
+  .catch(e => next(e))
+}
+
+function ensureSettingNotExist(req, res, next) {
+  db.attendance.setting.findOne({
+    company: req.company._id,
+  })
+  .then(doc => {
+    if (doc) {
+      throw new ApiError(400, null, 'can not create setting');
+    }
+    next();
+  })
+  .catch(e => next(e))
 }
 
 function addActivity(req, action, data) {

@@ -141,9 +141,6 @@ function getAnnouncementList(condition) {
     content: 0
   })
   .then(announcements => {
-    if (!announcements.length) {
-      return [];
-    }
     return fetchUserInfo(announcements, 'from.creator');
   })
 }
