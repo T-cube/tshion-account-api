@@ -18,7 +18,6 @@ import { randomAvatar } from 'lib/upload';
 let api = express.Router();
 export default api;
 
-
 function userExistsError(type) {
   return new ApiError(400, null, [{
     field: type,
@@ -50,13 +49,7 @@ api.post('/register', validator(validation.register), (req, res, next) => {
   })
   .then(hash => {
     if (type == 'email') {
-      const webUrl = config.get('webUrl');
-      let url = webUrl + 'account/confirm/123';
-      let data = {
-        name: getEmailName(req.body.email),
-        url: url,
-      };
-      req.model('email').send('test_template_active', req.body.email, data);
+      req.model('account').sendConfirmEmail(req.body.email, data);
     }
     let data = {
       email: req.body.email || null,
@@ -81,6 +74,7 @@ api.post('/register', validator(validation.register), (req, res, next) => {
         notice_request: true,
         notice_project: true,
       },
+      confirmed: type == C.USER_ID_TYPE.MOBILE,
       date_join: time(),
       current_company: null,
     };
@@ -90,6 +84,17 @@ api.post('/register', validator(validation.register), (req, res, next) => {
     type: type,
     [type]: id,
   }))
+  .catch(next);
+});
+
+api.post('/confirm/:code', (req, res, next) => {
+  const { codeLength } = config.get('userConfirm.email');
+  const { code } = req.params;
+  if (!(/^[a-f0-9]+$/.test(code) && code.length == codeLength * 2 )) {
+    throw new ApiError(400, null, 'invalid confirm code');
+  }
+  req.model('account').confirmEmailCode(code)
+  .then(() => res.json({}))
   .catch(next);
 });
 

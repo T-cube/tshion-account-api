@@ -1,4 +1,4 @@
-{
+module.exports = {
   apiUrl: 'http://tlifang.com/',
   webUrl: 'http://tlifang.com/',
   server: {
@@ -18,6 +18,20 @@
       project: 24,
       user: 8,
     },
+  },
+  oauth: {
+    accessTokenLifetime: 30 * 60,
+    refreshTokenLifetime: 15 * 24 * 3600,
+  },
+  userConfirm: {
+    email: {
+      codeLength: 24,
+      expires: 2 * 24 * 60 * 60, // 2 days in seconds
+    },
+    mobile: {
+      codeLength: 6,
+      expires: 10 * 60, // 10 minutes in seconds
+    }
   },
   upload: {
     path: 'public/cdn/',
@@ -42,12 +56,12 @@
     },
     document: {
       company: {
-        max_total_size: 524288000, // 500M
-        max_file_size: 10485760, // 10M
+        max_total_size: 500 * 1024 * 1024, // 500M
+        max_file_size: 10 * 1024 * 1024, // 10M
       },
       project: {
-        max_total_size: 524288000, // 500M
-        max_file_size: 10485760, // 10M
+        max_total_size: 500 * 1024 * 1024, // 500M
+        max_file_size: 10 * 1024 * 1024, // 10M
       },
     }
   },
@@ -67,12 +81,12 @@
         templates: {
           test_template_active: {
             variables: ['name', 'url'],
-          }
+          },
         },
       }
     }
   },
   download: {
-    tokenExpires: 1800000
+    tokenExpires: 30 * 60 * 1000, // half a hour
   }
 }
