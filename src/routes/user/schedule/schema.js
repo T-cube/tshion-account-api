@@ -5,6 +5,7 @@ export let sanitization = {
   time_end: { type: 'date' },
 	is_full_day: { type: 'boolean' },
   repeat_end: { type: 'date', optional: true },
+	type: { type: 'int', optional: true },
   repeat: {
 		type: 'object',
 		properties: {
@@ -28,6 +29,7 @@ export let validation = {
   time_end: { type: 'date' },
 	is_full_day: { type: 'boolean' },
   repeat_end: { type: 'date', optional: true },
+	type: { $enum: [1, 2, 3], optional: true },
   repeat: {
 		type: 'object',
 		properties: {
