@@ -69,8 +69,8 @@ api.get('/:item_id', (req, res, next) => {
           throw new ApiError(400, null, 'you have not permission to read')
         }
         let approveInfo = _.find(flowInfo.approve, v => v._id == item_id);
-        let inApply = _.contains(flowInfo.apply, item_id),
-        let inCopyto = _.contains(flowInfo.copy_to, item_id),
+        let inApply = _.contains(flowInfo.apply, item_id);
+        let inCopyto = _.contains(flowInfo.copy_to, item_id);
         if (!inApply && !inCopyto && !approveInfo) {
           throw new ApiError(400, null, 'you have not permission to read')
         }
