@@ -30,7 +30,7 @@ api.get('/', (req, res, next) => {
   if (type == 'follower') {
     condition.followers = req.user._id;
   }
-  db.discussion.find(condition)
+  db.discussion.find(condition).sort({_id: -1})
   .then(doc => {
     return fetchUserInfo(doc, 'followers').then(
       () => res.json(doc)
