@@ -20,7 +20,7 @@ api.use(oauthCheck());
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
-  if (data.time_end < time_start) {
+  if (data.time_end < data.time_start) {
     throw new ApiError(400, null, 'wrong end time');
   }
   let scheduleModel = new ScheduleModel(db);
