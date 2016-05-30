@@ -85,7 +85,7 @@ export default class Approval {
   static prepareNextStep(req, item_id, steps, step_id) {
     let company = req.company;
     let { copyto, approver } = this.getStepRelatedMembers(company.structure, steps, step_id);
-    return Promise.all(copyto.map(user_id => {
+    let addingApprover = approver.map(user_id => {
       return db.approval.user.findOne({
         _id: user_id,
         'map.company_id': company._id
@@ -96,11 +96,11 @@ export default class Approval {
         let flow_id = mapData ? mapData.map[0].flow_id : null;
         if (!mapData || !flow_id) {
           return db.approval.flow.insert({
-            copy_to: [item_id]
+            approve: [item_id]
           })
           .then(inserted => {
             return db.approval.user.update({
-              _id: user_id,
+              _id: user_id
             }, {
               $push: {
                 map: {
@@ -117,73 +117,74 @@ export default class Approval {
             _id: flow_id
           }, {
             $push: {
-              copy_to: item_id
+              approve: {
+                _id: item_id,
+                step: step_id
+              }
             }
           })
         }
       })
-      .then(() => {
-        return Promise.all(approver.map(user_id => {
-          return db.approval.user.findOne({
-            _id: user_id,
-            'map.company_id': company._id
-          }, {
-            'map.$': 1
-          })
-          .then(mapData => {
-            console.log(mapData);
-            let flow_id = mapData ? mapData.map[0].flow_id : null;
-            if (!mapData || !flow_id) {
-              return db.approval.flow.insert({
-                approve: [item_id]
-              })
-              .then(inserted => {
-                return db.approval.user.update({
-                  _id: user_id
-                }, {
-                  $push: {
-                    map: {
-                      company_id: company._id,
-                      flow_id: inserted._id
-                    }
-                  }
-                }, {
-                  upsert: true
-                })
-              })
-            } else {
-              return db.approval.flow.update({
-                _id: flow_id
+    });
+    return Promise.all(addingApprover)
+    .then(() => {
+      let addingCopyto = copyto.map(user_id => {
+        return db.approval.user.findOne({
+          _id: user_id,
+          'map.company_id': company._id
+        }, {
+          'map.$': 1
+        })
+        .then(mapData => {
+          let flow_id = mapData ? mapData.map[0].flow_id : null;
+          if (!mapData || !flow_id) {
+            return db.approval.flow.insert({
+              copy_to: [item_id]
+            })
+            .then(inserted => {
+              return db.approval.user.update({
+                _id: user_id,
               }, {
                 $push: {
-                  approve: {
-                    _id: item_id,
-                    step: step_id
+                  map: {
+                    company_id: company._id,
+                    flow_id: inserted._id
                   }
                 }
+              }, {
+                upsert: true
               })
-            }
-          })
+            })
+          } else {
+            return db.approval.flow.update({
+              _id: flow_id
+            }, {
+              $push: {
+                copy_to: item_id
+              }
+            })
+          }
+        })
+      });
+      return addingCopyto;
+    })
+    .then(() => {
+      let notification = {
+        approval_item: item_id,
+        target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+        company: company._id,
+        from: req.user._id,
+      }
+      return Promise.all([
+        approver.length && req.model('notification').send(_.extend(notification, {
+          action: C.ACTIVITY_ACTION.APPROVAL_APPERVER,
+          to: approver,
+        })),
+        copyto.length && req.model('notification').send(_.extend(notification, {
+          action: C.ACTIVITY_ACTION.APPROVAL_COPYTO,
+          to: copyto,
         }))
-      })
-      .then(() => {
-        let notification = {
-          approval_item: item_id,
-          target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
-          company: company._id,
-          from: req.user._id,
-        }
-        return Promise.all([
-          approver.length && req.model('notification').send(_.extend(notification, {
-            action: C.ACTIVITY_ACTION.APPROVAL_APPERVER,
-            to: approver,
-          })),
-          copyto.length && req.model('notification').send(_.extend(notification, {
-            action: C.ACTIVITY_ACTION.APPROVAL_COPYTO,
-            to: copyto,
-          }))
-        ])
-      })
+      ])
     })
   }
 

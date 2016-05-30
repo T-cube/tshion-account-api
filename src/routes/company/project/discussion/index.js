@@ -22,7 +22,7 @@ export default api;
 api.get('/', (req, res, next) => {
   let { type } = req.query;
   let condition = {
-    project_id: req.project_id
+    project_id: req.project._id
   };
   if (type == 'creator') {
     condition.creator = req.user._id;
@@ -41,7 +41,7 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  let project_id = req.project_id;
+  let project_id = req.project._id;
   sanitizeValidateObject(discussionSanitization, discussionValidation, data);
   _.extend(data, {
     project_id: project_id,
@@ -55,7 +55,7 @@ api.post('/', (req, res, next) => {
 });
 
 api.get('/:discussion_id', (req, res, next) => {
-  let project_id = req.project_id;
+  let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
   db.discussion.findOne({
     _id: discussion_id,
@@ -73,7 +73,7 @@ api.get('/:discussion_id', (req, res, next) => {
 });
 
 api.delete('/:discussion_id', (req, res, next) => {
-  let project_id = req.project_id;
+  let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
   db.discussion.remove({
     _id: discussion_id,
@@ -85,7 +85,7 @@ api.delete('/:discussion_id', (req, res, next) => {
 
 api.post('/:discussion_id/follow', (req, res, next) => {
   let data = req.body;
-  let project_id = req.project_id;
+  let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
   sanitizeValidateObject(followSanitization, followValidation, data);
   db.discussion.update({
@@ -101,7 +101,7 @@ api.post('/:discussion_id/follow', (req, res, next) => {
 });
 
 api.delete('/:discussion_id/follow/:follower_id', (req, res, next) => {
-  let project_id = req.project_id;
+  let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
   let follower_id = ObjectId(req.params.follower_id);
   db.discussion.update({
@@ -117,7 +117,7 @@ api.delete('/:discussion_id/follow/:follower_id', (req, res, next) => {
 });
 
 api.post('/:discussion_id/comment', (req, res, next) => {
-  let project_id = req.project_id;
+  let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
   let data = req.body;
   sanitizeValidateObject(commentSanitization, commentValidation, data);
@@ -137,7 +137,7 @@ api.post('/:discussion_id/comment', (req, res, next) => {
 });
 
 api.get('/:discussion_id/comment', (req, res, next) => {
-  let project_id = req.project_id;
+  let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
   db.discussion.findOne({
     _id: discussion_id,
@@ -163,7 +163,7 @@ api.get('/:discussion_id/comment', (req, res, next) => {
 });
 
 api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
-  let project_id = req.project_id;
+  let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
   let comment_id = ObjectId(req.params.comment_id);
   db.discussion.count({
