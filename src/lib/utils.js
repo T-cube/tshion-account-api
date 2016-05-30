@@ -9,8 +9,8 @@ import objectPath from 'object-path';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
-export function generateToken() {
-  return randomBytes(48)
+export function generateToken(length = 48) {
+  return randomBytes(length)
   .then(buffer => buffer.toString('hex'));
 }
 
@@ -92,6 +92,10 @@ export function time(t) {
   } else {
     return new Date();
   }
+}
+
+export function expire(ms) {
+  return time(timestamp() + ms);
 }
 
 export function isEmail(email) {

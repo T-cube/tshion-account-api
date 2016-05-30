@@ -65,6 +65,34 @@
 }
 ```
 
+### user.confirm.email
+
+用户邮箱验证
+
+```javascript
+{
+  _id: <ObjectId>,
+  hash: <String>,
+  email: <String>,
+  expires: <Date>,
+  date_create: <Date>,
+}
+```
+
+### user.confirm.mobile
+
+用户邮箱验证
+
+```javascript
+{
+  _id: <ObjectId>,
+  hash: <String>,
+  mobile: <String>,
+  expires: <Date>,
+  date_create: <Date>,
+}
+```
+
 ### company
 
 企业信息

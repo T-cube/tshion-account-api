@@ -36,6 +36,9 @@ class Loader {
     F.prototype = constructor.prototype;
     let object = new F();
     this.bindModel(name, object);
+    if ('init' in object) {
+      object.init();
+    }
     return object;
   }
 

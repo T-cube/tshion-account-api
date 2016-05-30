@@ -32,16 +32,15 @@ export default class SocketServer extends EventEmitter {
 
   constructor(io) {
     super();
-    this.initIO(io);
+    this.io = io;
     this.clients = new Map();
-    this.on('socket', socket => this.initSocket(socket));
   }
 
-  initIO(io) {
-    this.io = io;
-    io.on('connection', socket => {
+  init() {
+    this.io.on('connection', socket => {
       this.initSocket(socket);
     });
+    this.on('socket', socket => this.initSocket(socket));
   }
 
   initSocket(socket) {

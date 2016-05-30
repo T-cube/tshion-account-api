@@ -38,6 +38,8 @@ export function database() {
     'task',
     'task.comments',
     'user',
+    'user.confirm.email',
+    'user.confirm.mobile',
     'wiki',
   ]);
 }
