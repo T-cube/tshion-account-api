@@ -45,7 +45,6 @@ export default class Approval {
           'map.$': 1
         })
         .then(mapData => {
-          console.log('mapData', mapData);
           let flow_id = mapData ? mapData.map[0].flow_id : null;
           if (!mapData || !flow_id) {
             return db.approval.flow.insert({

@@ -9,7 +9,7 @@ import { itemSanitization, itemValidation, stepSanitization, stepValidation } fr
 import Structure from 'models/structure';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
-import { uniqObjectId, diffObjectId, mapObjectIdToData } from 'lib/utils';
+import { uniqObjectId, diffObjectId, mapObjectIdToData, indexObjectId } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 
@@ -68,9 +68,12 @@ api.get('/:item_id', (req, res, next) => {
         if (!flowInfo) {
           throw new ApiError(400, null, 'you have not permission to read')
         }
-        let approveInfo = _.find(flowInfo.approve, v => v._id == item_id);
-        let inApply = _.contains(flowInfo.apply, item_id);
-        let inCopyto = _.contains(flowInfo.copy_to, item_id);
+        let approveInfo = _.find(flowInfo.approve, v => v._id.equals(item_id));
+        let inApply = indexObjectId(flowInfo.apply, item_id) != -1;
+        let inCopyto = indexObjectId(flowInfo.copy_to, item_id) != -1;
+        console.log(approveInfo);
+        console.log(flowInfo.apply);
+        console.log(inCopyto);
         if (!inApply && !inCopyto && !approveInfo) {
           throw new ApiError(400, null, 'you have not permission to read')
         }
