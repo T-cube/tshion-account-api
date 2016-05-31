@@ -376,7 +376,6 @@ api.put('/move', (req, res, next) => {
     }, {
       _id: 1
     })
-
     .then(list => {
       list = list.map(item => item._id);
       if (!list.length) {
@@ -425,7 +424,6 @@ api.put('/move', (req, res, next) => {
     }, {
       _id: 1
     })
-
     .then(list => {
       list = list.map(item => item._id);
       if (!list.length) {
