@@ -397,7 +397,9 @@ api.put('/move', (req, res, next) => {
           _id: origin_dir
         }, {
           $pull: {
-            dirs: list
+            dirs: {
+              $in: list
+            }
           }
         }),
         db.document.dir.update({
@@ -445,7 +447,9 @@ api.put('/move', (req, res, next) => {
           _id: origin_dir
         }, {
           $pull: {
-            files: list
+            files: {
+              $in: list
+            }
           }
         }),
         db.document.dir.update({
