@@ -239,7 +239,7 @@ api.post('/:project_id/member', (req, res, next) => {
   ensureProjectAdmin(req.project, req.user._id);
   data.map(item => {
     let user_id = item._id;
-    if (indexObjectId(req.project.members, user_id) == -1) {
+    if (indexObjectId(req.project.members.map(i => i._id), user_id) == -1) {
       throw new ApiError(400, null, 'member is exists');
     }
   })
