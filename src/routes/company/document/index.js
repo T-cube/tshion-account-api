@@ -70,9 +70,8 @@ api.get('/dir/:dir_id?', (req, res, next) => {
           files: [],
           total_size: 0
         });
-        return db.document.dir.insert(condition).then(rootDir => {
-          res.json(rootDir);
-        })
+        return db.document.dir.insert(condition)
+        .then(rootDir => res.json(rootDir))
       }
       throw new ApiError(404);
     }
@@ -730,14 +729,13 @@ function checkMoveable(target_dir, dirs, files) {
       let dirNameList = doc.dirs ? doc.dirs.map(item => item.name) : [];
       let fileNameList = doc.files ? doc.files.map(item => item.name) : [];
       return Promise.all([
-        _.isArray(dirs) && db.document.dir.find({
+        _.isArray(dirs) && dirs.length && db.document.dir.find({
           _id: {
             $in: dirs
           }
         }, {
           name: 1
         })
-
         .then(dirsInfo => {
           dirsInfo.forEach(dirInfo => {
             if (_.find(dirNameList, dirInfo.name)) {
@@ -745,14 +743,13 @@ function checkMoveable(target_dir, dirs, files) {
             }
           })
         }),
-        _.isArray(files) && db.document.file.find({
+        _.isArray(files) && files.length && db.document.file.find({
           _id: {
             $in: files
           }
         }, {
           name: 1
         })
-
         .then(filesInfo => {
           filesInfo.forEach(fileInfo => {
             if (_.find(fileNameList, fileInfo.name)) {

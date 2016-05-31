@@ -40,6 +40,24 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/count', (req, res, next) => {
+  let count = {};
+  Promise.all([
+    db.discussion.count({
+      project_id: req.project._id,
+      creator: req.user._id
+    })
+    .then(createCount => count.create = createCount),
+    db.discussion.count({
+      project_id: req.project._id,
+      followers: req.user._id
+    })
+    .then(followCount => count.follow = followCount),
+  ])
+  .then(() => res.json(count))
+  .catch(next);
+})
+
 api.post('/', (req, res, next) => {
   let data = req.body;
   let project_id = req.project._id;

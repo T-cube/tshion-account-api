@@ -46,15 +46,15 @@ api.get('/', (req, res, next) => {
       scope: 1,
       status: 1,
     })
-  })
-  .then(template => {
-    let tree = new Structure(req.company.structure);
-    template.forEach(item => {
-      if (item.scope) {
-        item.scope = item.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
-      }
-    });
-    res.json(template);
+    .then(template => {
+      let tree = new Structure(req.company.structure);
+      template.forEach(item => {
+        if (item.scope) {
+          item.scope = item.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
+        }
+      });
+      res.json(template);
+    })
   })
   .catch(next);
 });

@@ -123,11 +123,9 @@ api.post('/', (req, res, next) => {
         }
       })
     })
-    .then(() => logTask(req, C.ACTIVITY_ACTION.CREATE))
-    .then(() => {
-      res.json(doc);
-    });
+    .then(() => res.json(doc));
   })
+  .then(() => logTask(req, C.ACTIVITY_ACTION.CREATE))
   .catch(next);
 });
 
