@@ -63,6 +63,7 @@ export let sanitization = {
 	},
   forms: {
     type: 'array',
+    optional: true,
     items: fieldValidation
   },
 };
@@ -103,6 +104,7 @@ export let validation = {
 	},
 	forms: {
     type: 'array',
+    optional: true,
     items: fieldValidation
   },
 };
