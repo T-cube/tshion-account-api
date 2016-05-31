@@ -41,7 +41,9 @@ export default {
       .then(doc => callback(null, doc)).catch(e => callback(e));
     }
     db.oauth.clients.findOne({client_id: clientId, client_secret: clientSecret})
-    .then(doc => callback(null, doc)).catch(e => callback(e));
+    .then(doc => {
+      callback(null, doc)
+    }).catch(e => callback(e));
   },
 
   grantTypeAllowed(clientId, grantType, callback) {

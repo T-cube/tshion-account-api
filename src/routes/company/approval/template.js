@@ -25,7 +25,7 @@ api.get('/', (req, res, next) => {
   }, {
     current: 1
   })
-  .toArray()
+  
   .then(masters => {
     masters = masters.map(master => master.current);
     if (!masters.length) {
@@ -220,7 +220,7 @@ function cancelItemsUseTemplate(req, template_id) {
   }, {
     from: 1
   })
-  .toArray()
+  
   .then(items => {
     itemIdList = items.map(item => item._id);
     let notification = {

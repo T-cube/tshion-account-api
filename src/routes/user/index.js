@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express'
 import { ObjectId } from 'mongodb';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import upload from 'lib/upload';
@@ -162,7 +163,7 @@ api.get('/project', (req, res, next) =>  {
       default:
         search || (condition['is_archived'] = false);
     }
-    return db.project.find(condition).toArray()
+    return db.project.find(condition)
   })
   .then(data => res.json(data))
   .catch(next)

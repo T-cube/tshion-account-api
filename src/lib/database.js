@@ -1,4 +1,4 @@
-import pmongo from 'promised-mongo';
+import pmongo from 'pmongo';
 import config from 'config';
 import _ from 'underscore';
 

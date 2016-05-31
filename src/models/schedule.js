@@ -31,7 +31,7 @@ export default class Schedule {
     }
     db.reminding.find(condition)
     // .limit(limit)
-    .toArray()
+    
     .then(list => {
       if (!list.length) {
         console.log('exit job');
@@ -46,7 +46,7 @@ export default class Schedule {
           $in: schedules
         }
       })
-      .toArray()
+      
       .then(schedules => {
         return Promise.all(schedules.map(schedule => {
           this.sentMessage(schedule)

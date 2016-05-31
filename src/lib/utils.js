@@ -174,8 +174,7 @@ export function mapObjectIdToData(data, collection, fields, keys) {
   if (!keyList.length) {
     return Promise.resolve(isDataObjectId ? null : data);
   }
-  console.log('!!!!!!!!!!!!!!!!', collection);
-  return db.collection(collection).find({
+  return objectPath.get(db, collection).find({
     _id: {
       $in: uniqObjectId(keyList)
     }

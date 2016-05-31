@@ -3,8 +3,9 @@ import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import config from 'config';
 
-import { time } from 'lib/utils';
+import db from 'lib/database';
 import C, {ENUMS} from 'lib/constants';
+import { time } from 'lib/utils';
 import { validate } from 'lib/inspector';
 import { validation } from './activity.schema';
 import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
@@ -31,7 +32,7 @@ export default class Activity {
         _id: {$lt: last_id},
       })
     }
-    return db.activity.find(query).sort({_id: -1}).limit(limit).toArray()
+    return db.activity.find(query).sort({_id: -1}).limit(limit)
     .then(list => {
       return mapObjectIdToData(list, [
         ['user', 'name', 'creator,user'],
