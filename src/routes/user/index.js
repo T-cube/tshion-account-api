@@ -163,6 +163,7 @@ api.get('/project', (req, res, next) =>  {
       default:
         search || (condition['is_archived'] = false);
     }
+    console.log(condition);
     return db.project.find(condition)
     .then(data => res.json(data))
   })

@@ -39,7 +39,7 @@ api.get('/', (req, res, next) => {
     description: 1,
     logo: 1,
   })
-  
+
   .then(doc => res.json(doc))
   .catch(next);
   // let projects = req.company.projects || [];
@@ -89,38 +89,33 @@ api.param('project_id', (req, res, next, id) => {
   req.project = {
     _id: ObjectId(id)
   };
-  db.project.count({
+  db.project.findOne({
     _id: ObjectId(id),
     company_id: req.company._id,
   })
-  .then(count => {
-    if (0 == count) {
+  .then(project => {
+    if (!project) {
       throw new ApiError(404);
     }
+    if (indexObjectId(project.members, req.user._id) == -1) {
+      throw new ApiError(400, null, 'you are not the member of this project');
+    }
+    req.project = project;
     next();
   })
   .catch(next);
 });
 
-api.get('/:_project_id', (req, res, next) => {
-  let project_id = ObjectId(req.params._project_id);
-  db.project.findOne({
-    company_id: req.company._id,
-    _id: project_id
-  })
-  .then(data => {
-    if (!data) {
-      throw new ApiError(404);
-    }
-    let owner = data.owner;
-    data.is_owner = owner.equals(req.user._id);
-    let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
-    data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
-    data.owner = _.find(req.company.members, member => {
-      return member._id.equals(owner);
-    });
-    return fetchUserInfo(data, 'owner')
-  })
+api.get('/:project_id', (req, res, next) => {
+  let data = req.project;
+  let owner = data.owner;
+  data.is_owner = owner.equals(req.user._id);
+  let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
+  data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
+  data.owner = _.find(req.company.members, member => {
+    return member._id.equals(owner);
+  });
+  fetchUserInfo(data, 'owner')
   .then(data => res.json(data))
   .catch(next);
 });
@@ -139,49 +134,34 @@ api.put('/:project_id', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/:_project_id', authCheck(), (req, res, next) => {
+api.delete('/:project_id', authCheck(), (req, res, next) => {
   let project_id = ObjectId(req.params._project_id);
-  db.project.findOne({
-    _id: project_id,
-    company_id: req.company._id,
-  }, {
-    members: 1,
-    _id: 0,
-    owner: 1
+  let data = req.project;
+  if (!req.user._id.equals(data.owner)) {
+    throw new ApiError(403);
+  }
+  let projectMembers = [];
+  data.members && (projectMembers = data.members.map(i => i._id));
+  return db.project.remove({
+    _id: project_id
   })
-  .then(data => {
-    if (!data) {
-      throw new ApiError(404);
-    }
-    if (!req.user._id.equals(data.owner)) {
-      throw new ApiError(403);
-    }
-    let projectMembers = [];
-    data.members && (projectMembers = data.members.map(i => i._id));
-    return db.project.remove({
-      _id: project_id
-    })
-    .then(doc => {
-      return Promise.all([
-        db.company.update({
-          _id: req.company._id
-        }, {
-          $pull: {projects: project_id}
-        }),
-        db.user.update({
-          _id: {$in: projectMembers}
-        }, {
-          $pull: {projects: project_id}
-        }),
-      ])
-      .then(() => res.json({}))
-      .then(() => {
-        req.project = {
-          _id: project_id
-        };
-        logProject(req, C.ACTIVITY_ACTION.DELETE);
-      })
-    })
+  .then(doc => {
+    return Promise.all([
+      db.company.update({
+        _id: req.company._id
+      }, {
+        $pull: {projects: project_id}
+      }),
+      db.user.update({
+        _id: {$in: projectMembers}
+      }, {
+        $pull: {projects: project_id}
+      }),
+    ])
+  })
+  .then(() => {
+    res.json({});
+    logProject(req, C.ACTIVITY_ACTION.DELETE);
   })
   .catch(next);
 });
@@ -219,47 +199,33 @@ api.put('/:project_id/logo/upload', upload({type: 'avatar'}).single('logo'),
   .catch(next);
 });
 
-api.get('/:_project_id/member', (req, res, next) => {
-  let project_id = ObjectId(req.params._project_id);
-  db.project.findOne({
-    _id: project_id,
-    company_id: req.company._id,
-  }, {
-    members: 1,
-    _id: 0
- })
- .then(data => {
-   if (!data) {
-     throw new ApiError(404);
+api.get('/:project_id/member', (req, res, next) => {
+  let data = req.project;
+  let members = data.members;
+  let memberIds = members.map(i => i._id);
+  db.user.find({
+   _id: {
+     $in: memberIds
    }
-   let members = data.members;
-   let memberIds = members.map(i => i._id);
-   db.user.find({
-     _id: {
-       $in: memberIds
+  }, {
+   name: 1,
+   avatar: 1,
+   email: 1,
+   mobile: 1,
+  })
+  .then(memberInfo => {
+    members.forEach(i => {
+     let info = _.find(memberInfo, j => i._id.equals(j._id));
+     if (info) {
+       i.name = info.name;
+       i.avatar = info.avatar;
+       i.email = info.email;
+       i.mobile = info.mobile;
      }
-   }, {
-     name: 1,
-     avatar: 1,
-     email: 1,
-     mobile: 1
-   })
-   .then(memberInfo => {
-     members = members.map(i => {
-       let info = _.find(memberInfo, j => i._id.equals(j._id));
-       if (info) {
-         i.name = info.name;
-         i.avatar = info.avatar;
-         i.email = info.email;
-         i.mobile = info.mobile;
-       }
-       return i;
-     });
-     res.json(members || []);
-   })
-   .catch(next)
- })
- .catch(next);
+    });
+    res.json(members || []);
+  })
+  .catch(next);
 });
 
 api.post('/:project_id/member', (req, res, next) => {
@@ -278,84 +244,76 @@ api.post('/:project_id/member', (req, res, next) => {
         $in: data.map(i => i._id)
       }
     })
-    .then(count => {
-      if (0 != count) {
-        throw new ApiError(400, null, 'member is exists');
-      }
-      return db.user.update({
+  })
+  .then(count => {
+    if (0 != count) {
+      throw new ApiError(400, null, 'member is exists');
+    }
+    return Promise.all([
+      db.user.update({
         _id: {
           $in: data.map(i => i._id)
         }
       }, {
         $addToSet: {projects: project_id}
+      }),
+      db.project.update({
+        _id: project_id
+      }, {
+        $push: { members: {$each: data} }
       })
-      .then(result => {
-        return db.project.update({
-          _id: project_id
-        }, {
-          $push: { members: {$each: data} }
-        });
-      })
-      .then(data => {
-        res.json(data);
-      })
-    })
+    ])
   })
+  .then(() => res.json({}))
   .catch(next);
 });
 
-api.put('/:_project_id/member/:member_id/type', (req, res, next) => {
+api.put('/:project_id/member/:member_id/type', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
-  let project_id = ObjectId(req.params._project_id);
+  let project_id = req.project._id;
   let type = req.body.type;
   if (type != C.PROJECT_MEMBER_TYPE.ADMIN && type != C.PROJECT_MEMBER_TYPE.NORMAL) {
     throw new ApiError(400, null, 'wrong type');
   }
-  isOwnerOfProject(req.user._id, project_id)
-  .then(() => {
-    return db.project.update({
-      _id: project_id,
-      'members._id': member_id
-    }, {
-      $set: {
-        'members.$.type': type
-      }
-    })
+  ensureProjectOwner(req.project, req.user._id);
+  ensureProjectMember(req.project, member_id));
+  return db.project.update({
+    _id: project_id,
+    'members._id': member_id
+  }, {
+    $set: {
+      'members.$.type': type
+    }
   })
   .then(doc => res.json(doc))
   .catch(next);
 });
 
-api.post('/:_project_id/transfer', authCheck(), (req, res, next) => {
+api.post('/:project_id/transfer', authCheck(), (req, res, next) => {
   let member_id = ObjectId(req.body.user_id);
-  let project_id = ObjectId(req.params._project_id);
-  isOwnerOfProject(req.user._id, project_id)
-  .then(() => {
-    isMemberOfProject(member_id, project_id)
-    .then(() => {
-      return db.project.update({
-        _id: project_id,
-        'members.type': C.PROJECT_MEMBER_TYPE.OWNER
-      }, {
-        $set: {
-          owner: member_id,
-          'members.$.type': C.PROJECT_MEMBER_TYPE.NORMAL
-        }
-      })
+  let project_id = req.project._id;
+  ensureProjectOwner(req.project, req.user._id);
+  ensureProjectMember(req.project, member_id));
+  return Promise.all([
+    db.project.update({
+      _id: project_id,
+      'members.type': C.PROJECT_MEMBER_TYPE.OWNER
+    }, {
+      $set: {
+        owner: member_id,
+        'members.$.type': C.PROJECT_MEMBER_TYPE.NORMAL
+      }
+    }),
+    db.project.update({
+      _id: project_id,
+      'members._id': member_id
+    }, {
+      $set: {
+        'members.$.type': C.PROJECT_MEMBER_TYPE.OWNER
+      }
     })
-    .then(() => {
-      return db.project.update({
-        _id: project_id,
-        'members._id': member_id
-      }, {
-        $set: {
-          'members.$.type': C.PROJECT_MEMBER_TYPE.OWNER
-        }
-      })
-    })
-    .then(doc => res.json(doc))
-    .catch(next);
-  })
+  ])
+  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -539,6 +497,18 @@ function isOwnerOfProject(user_id, project_id) {
       throw new ApiError(400, null, 'user is not owner of the project');
     }
   });
+}
+
+function ensureProjectOwner(project, user_id) {
+  if (!project.owner.equals(user_id)) {
+    throw new ApiError(400, null, 'user is not owner of the project');
+  }
+}
+
+function ensureProjectMember(project, user_id) {
+  if (indexObjectId(project.members, user_id) == -1) {
+    throw new ApiError(400, null, 'not the member of this project');
+  }
 }
 
 function isAdminOfProject(user_id, project_id) {
