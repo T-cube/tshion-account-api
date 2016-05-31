@@ -6,6 +6,7 @@ import Promise from 'bluebird';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import upload, { getUploadPath } from 'lib/upload';
+import config from 'config';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { itemSanitization, itemValidation, stepSanitization, stepValidation } from './schema';
 import Structure from 'models/structure';
@@ -26,7 +27,12 @@ api.post('/', upload({type: 'attachment'}).array('files'), (req, res, next) => {
   let company_id = req.company._id;
   sanitizeValidateObject(itemSanitization, itemValidation, data);
   if (req.files) {
-    data.files = _.map(req.files, file => _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size'));
+    data.files = _.map(req.files, file => {
+      if (config.get('upload.approval_attachment.max_file_size') < file.size) {
+        throw new ApiError(400, null, 'file is too large')
+      }
+      return _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size')
+    });
   }
   _.extend(data, {
     from: user_id,

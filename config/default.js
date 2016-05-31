@@ -63,7 +63,10 @@ module.exports = {
         max_total_size: 500 * 1024 * 1024, // 500M
         max_file_size: 10 * 1024 * 1024, // 10M
       },
-    }
+    },
+    approval_attachment: {
+      max_file_size: 10 * 1024 * 1024, // 10M
+    },
   },
   vendor: {
     qiniu: {

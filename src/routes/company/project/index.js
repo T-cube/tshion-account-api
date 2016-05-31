@@ -94,10 +94,7 @@ api.param('project_id', (req, res, next, id) => {
     if (!project) {
       throw new ApiError(404);
     }
-    let memberIds = project.members.map(member => member._id);
-    if (indexObjectId(memberIds, req.user._id) == -1) {
-      throw new ApiError(400, null, 'you are not the member of this project');
-    }
+    ensureProjectMember(project, req.user._id);
     req.project = project;
     next();
   })
