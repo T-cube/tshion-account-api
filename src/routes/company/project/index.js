@@ -321,10 +321,6 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
   if (!allowed) {
     throw new ApiError(403);
   }
-  let exists = members.filter(member => member._id.equals(member_id)).length;
-  if (!exists) {
-    throw new ApiError(400);
-  }
   return Promise.all([
     db.user.update({
       _id: member_id
@@ -442,30 +438,6 @@ function logProject(req, action, data) {
   req.model('activity').insert(activity);
 }
 
-function isMemberOfProject(user_id, project_id) {
-  return db.project.count({
-    _id: project_id,
-    'members._id': user_id
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(400, null, 'user is not one of the project member');
-    }
-  });
-}
-
-function isOwnerOfProject(user_id, project_id) {
-  return db.project.count({
-    _id: project_id,
-    owner: user_id
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(400, null, 'user is not owner of the project');
-    }
-  });
-}
-
 function ensureProjectOwner(project, user_id) {
   if (!project.owner.equals(user_id)) {
     throw new ApiError(400, null, 'user is not owner of the project');
@@ -473,7 +445,7 @@ function ensureProjectOwner(project, user_id) {
 }
 
 function ensureProjectMember(project, user_id) {
-  if (indexObjectId(project.members, user_id) == -1) {
+  if (indexObjectId(project.members.map(i => i._id), user_id) == -1) {
     throw new ApiError(400, null, 'not the member of this project');
   }
 }
