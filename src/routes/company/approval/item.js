@@ -5,6 +5,7 @@ import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
+import upload, { getUploadPath } from 'lib/upload';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { itemSanitization, itemValidation, stepSanitization, stepValidation } from './schema';
 import Structure from 'models/structure';
@@ -19,11 +20,14 @@ export default api;
 
 api.use(oauthCheck());
 
-api.post('/', (req, res, next) => {
+api.post('/', upload({type: 'attachment'}).array('files'), (req, res, next) => {
   let data = req.body;
   let user_id = req.user._id;
   let company_id = req.company._id;
   sanitizeValidateObject(itemSanitization, itemValidation, data);
+  if (req.files) {
+    data.files = _.map(req.files, file => _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size'));
+  }
   _.extend(data, {
     from: user_id,
     company_id: company_id,
