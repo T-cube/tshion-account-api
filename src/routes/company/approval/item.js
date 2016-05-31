@@ -75,17 +75,13 @@ api.get('/:item_id', (req, res, next) => {
         if (!inApply && !inCopyto && !approveInfo) {
           throw new ApiError(400, null, 'you have not permission to read')
         }
-        if (!approveInfo) {
-          data.is_processing = false;
+        if (data.status == C.APPROVAL_ITEM_STATUS.PROCESSING
+          && approveInfo
+          && approveInfo.step
+          && approveInfo.step.equals(data.step)) {
+          data.is_processing = true;
         } else {
-          if (data.status == C.APPROVAL_ITEM_STATUS.PROCESSING
-            && approveInfo
-            && approveInfo.approve.step
-            && approveInfo.approve.step.equals(data.step)) {
-            data.is_processing = true;
-          } else {
-            data.is_processing = false;
-          }
+          data.is_processing = false;
         }
         return data;
       })
