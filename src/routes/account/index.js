@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import config from 'config';
 
-import validation from './validation';
+import db from 'lib/database';
 import { time, timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -14,6 +14,7 @@ import { oauthCheck } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { authoriseSanitization, authoriseValidation } from './schema';
 import { randomAvatar } from 'lib/upload';
+import validation from './validation';
 
 let api = express.Router();
 export default api;

@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import moment from 'moment';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 

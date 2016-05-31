@@ -31,7 +31,7 @@ export default class Activity {
         _id: {$lt: last_id},
       })
     }
-    return db.activity.find(query).sort({_id: -1}).limit(limit)
+    return db.activity.find(query).sort({_id: -1}).limit(limit).toArray()
     .then(list => {
       return mapObjectIdToData(list, [
         ['user', 'name', 'creator,user'],

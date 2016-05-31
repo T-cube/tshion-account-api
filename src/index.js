@@ -1,7 +1,6 @@
 // fix absolute path
 import './bootstrap';
 
-import pmongo from 'pmongo';
 import Promise from 'bluebird';
 import http from 'http';
 import express from 'express';
@@ -38,9 +37,6 @@ console.log('initializing service...');
 const app = express();
 const server = http.Server(app);
 const io = socketio(server, { path: '/api/socket' });
-
-// expose db to global
-global.db = database();
 
 // bind model loader
 bindLoader(app);

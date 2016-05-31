@@ -1,5 +1,6 @@
 import _ from 'underscore';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import Structure from 'models/structure';

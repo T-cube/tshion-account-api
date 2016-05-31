@@ -3,6 +3,8 @@ import Joi from 'joi';
 import _ from 'underscore';
 import { camelCase } from 'change-case';
 
+import db from 'lib/database';
+
 function camelCaseObjectKey(obj) {
   let _obj = {};
   _.each(obj, (val, key) => {

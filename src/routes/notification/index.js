@@ -1,6 +1,7 @@
 import express from 'express'
 import { ObjectId } from 'mongodb';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';

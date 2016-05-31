@@ -5,6 +5,7 @@ import { time } from 'lib/utils';
 import { validate } from 'lib/inspector';
 import config from 'config';
 
+import db from 'lib/database';
 import { validation } from './notification.schema';
 import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
@@ -75,7 +76,8 @@ export default class Notification {
         _id: {$lt: last_id},
       })
     }
-    return db.notification.find(query).sort({is_read: 1, _id: -1}).limit(limit)
+    return db.notification.find(query)
+    .sort({is_read: 1, _id: -1}).limit(limit).toArray()
     .then(list => {
       return mapObjectIdToData(list, extendedProps);
     });

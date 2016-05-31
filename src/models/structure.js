@@ -4,6 +4,8 @@
 
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+
+import db from 'lib/database';
 import { getUniqName } from 'lib/utils';
 
 class Structure {

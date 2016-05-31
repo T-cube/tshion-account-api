@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
@@ -99,6 +100,7 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
       year: year,
       month: month,
     })
+    .toArray()
     .then(doc => {
       let signRecord = [];
       let setting = new Attendance(req.attendanceSetting);
@@ -192,6 +194,7 @@ api.post('/audit', (req, res, next) => {
 //   db.attendance.audit.find({
 //     company: req.company._id,
 //   })
+//   .toArray()
 //   .then(doc => res.json(doc))
 // })
 //

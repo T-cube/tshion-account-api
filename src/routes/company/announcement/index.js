@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { time, indexObjectId, fetchUserInfo, uniqObjectId } from 'lib/utils';
 import inspector from 'lib/inspector';
@@ -139,7 +140,7 @@ api.delete('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
 function getAnnouncementList(condition) {
   return db.announcement.find(condition, {
     content: 0
-  })
+  }).toArray()
   .then(announcements => {
     return fetchUserInfo(announcements, 'from.creator');
   })

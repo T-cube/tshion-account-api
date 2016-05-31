@@ -3,8 +3,12 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
+import C, { ENUMS } from 'lib/constants';
+import { oauthCheck } from 'lib/middleware';
+import { uniqObjectId, fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 import {
   sanitization,
   validation,
@@ -13,9 +17,6 @@ import {
   logSanitization,
   logValidation,
 } from './schema';
-import C, { ENUMS } from 'lib/constants';
-import { oauthCheck } from 'lib/middleware';
-import { uniqObjectId, fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
 let api = require('express').Router();
 export default api;

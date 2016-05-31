@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
@@ -30,7 +31,7 @@ api.get('/', (req, res, next) => {
   if (type == 'follower') {
     condition.followers = req.user._id;
   }
-  db.discussion.find(condition).sort({_id: -1})
+  db.discussion.find(condition).sort({_id: -1}).toArray()
   .then(doc => {
     return fetchUserInfo(doc, 'followers').then(
       () => res.json(doc)
@@ -157,6 +158,7 @@ api.get('/:discussion_id/comment', (req, res, next) => {
         $in: discussion.comments
       }
     })
+    .toArray()
     .then(doc => res.json(doc))
   })
   .catch(next);
@@ -178,6 +180,7 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
       _id: comment_id,
       discussion_id: discussion_id,
     })
+    .toArray()
     .then(() => res.json({}))
   })
   .catch(next);

@@ -1,12 +1,12 @@
 import _ from 'underscore';
 import cronParser from 'cron-parser';
 
+import db from 'lib/database';
 import C from 'lib/constants';
 
 export default class Schedule {
 
-  constructor(db, notification) {
-    this.db = db;
+  constructor(notification) {
     this.notification = notification;
   }
 
@@ -18,7 +18,6 @@ export default class Schedule {
   }
 
   doRemindingJob(time, limit, last_id) {
-    let db = this.db;
     console.log('dojob');
     console.log(time);
     limit = limit || 1;
@@ -32,6 +31,7 @@ export default class Schedule {
     }
     db.reminding.find(condition)
     // .limit(limit)
+    .toArray()
     .then(list => {
       if (!list.length) {
         console.log('exit job');
@@ -46,6 +46,7 @@ export default class Schedule {
           $in: schedules
         }
       })
+      .toArray()
       .then(schedules => {
         return Promise.all(schedules.map(schedule => {
           this.sentMessage(schedule)
@@ -83,11 +84,11 @@ export default class Schedule {
       time: nextRemindTime,
       is_done: false,
     };
-    return this.db.reminding.insert(reminding);
+    return db.reminding.insert(reminding);
   }
 
   removeReminding(schedule_id) {
-    return this.db.reminding.remove({
+    return db.reminding.remove({
       target_type: 'schedule',
       target_id: schedule_id,
     })
@@ -210,7 +211,7 @@ export default class Schedule {
       time: nextRemindTime,
       is_done: false,
     };
-    return this.db.reminding.update({
+    return db.reminding.update({
       target_type: 'schedule',
       target_id: schedule._id,
     }, {

@@ -3,8 +3,9 @@ import config from 'config';
 import pad from 'node-string-pad';
 import Promise from 'bluebird';
 
-import { generateToken, getEmailName, expire, time } from 'lib/utils';
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
+import { generateToken, getEmailName, expire, time } from 'lib/utils';
 
 export default class Account {
 

@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import config from 'config';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';

@@ -7,6 +7,8 @@ import fs from 'fs';
 import path from 'path';
 import objectPath from 'object-path';
 
+import db from 'lib/database';
+
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
 export function generateToken(length = 48) {
@@ -172,7 +174,7 @@ export function mapObjectIdToData(data, collection, fields, keys) {
   if (!keyList.length) {
     return Promise.resolve(isDataObjectId ? null : data);
   }
-  return objectPath.get(db, collection).find({
+  return db.collection(collection).find({
     _id: {
       $in: uniqObjectId(keyList)
     }
