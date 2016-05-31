@@ -10,9 +10,8 @@ let sanitizationCustom = {
     if (/^[A-Fa-f0-9]{24}$/.test(post)) {
       this.report();
       return ObjectId(post);
-    } else {
-      return post;
     }
+    return post;
   },
   emptyArray: function (schema, post) {
     this.report();

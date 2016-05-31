@@ -5,6 +5,8 @@ import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
+import upload, { getUploadPath } from 'lib/upload';
+import config from 'config';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { itemSanitization, itemValidation, stepSanitization, stepValidation } from './schema';
 import Structure from 'models/structure';
@@ -19,11 +21,19 @@ export default api;
 
 api.use(oauthCheck());
 
-api.post('/', (req, res, next) => {
+api.post('/', upload({type: 'attachment'}).array('files'), (req, res, next) => {
   let data = req.body;
   let user_id = req.user._id;
   let company_id = req.company._id;
   sanitizeValidateObject(itemSanitization, itemValidation, data);
+  if (req.files) {
+    data.files = _.map(req.files, file => {
+      if (config.get('upload.approval_attachment.max_file_size') < file.size) {
+        throw new ApiError(400, null, 'file is too large')
+      }
+      return _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size')
+    });
+  }
   _.extend(data, {
     from: user_id,
     company_id: company_id,
@@ -263,7 +273,7 @@ function checkAprroverOfStepAndGetSteps(req, item) {
   })
   .then(template => {
     let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
-    if (!_.contains(approver, req.user._id)) {
+    if (-1 == indexObjectId(approver, req.user._id)) {
       throw new ApiError(400, null, 'you have not permission to audit');
     }
     return template.steps;

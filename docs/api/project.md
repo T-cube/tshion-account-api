@@ -261,6 +261,15 @@ QUERY: `type: creator|follower`
 }...]
 ```
 
+### GET /project/:project_id/discussion/count
+
+```javascript
+{
+  create: <Int>,
+  follow: <Int>,
+}
+```
+
 ### GET /project/:project_id/discussion/:discussion_id
 
 ```javascript

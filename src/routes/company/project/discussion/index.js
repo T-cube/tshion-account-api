@@ -40,6 +40,24 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/count', (req, res, next) => {
+  let count = {};
+  Promise.all([
+    db.discussion.count({
+      project_id: req.project._id,
+      creator: req.user._id
+    })
+    .then(createCount => count.create = createCount),
+    db.discussion.count({
+      project_id: req.project._id,
+      followers: req.user._id
+    })
+    .then(followCount => count.follow = followCount),
+  ])
+  .then(() => res.json(count))
+  .catch(next);
+})
+
 api.post('/', (req, res, next) => {
   let data = req.body;
   let project_id = req.project._id;
@@ -180,24 +198,11 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
     if (!count) {
       throw new ApiError(404);
     }
-    return db.discussion.comment.find({
+    return db.discussion.comment.remove({
       _id: comment_id,
       discussion_id: discussion_id,
     })
-
-    .then(() => res.json({}))
   })
+  .then(() => res.json({}))
   .catch(next);
 });
-
-function isMemberOfProject(user_id, project_id) {
-  return db.project.count({
-    _id: project_id,
-    'members._id': user_id
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(400, null, 'user is not one of the project member');
-    }
-  });
-}

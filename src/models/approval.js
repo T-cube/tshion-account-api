@@ -181,10 +181,10 @@ export default class Approval {
           action: C.ACTIVITY_ACTION.APPROVAL_APPERVER,
           to: approver,
         })),
-        copyto.length && req.model('notification').send(_.extend(notification, {
-          action: C.ACTIVITY_ACTION.APPROVAL_COPYTO,
-          to: copyto,
-        }))
+        // copyto.length && req.model('notification').send(_.extend(notification, {
+        //   action: C.ACTIVITY_ACTION.APPROVAL_COPYTO,
+        //   to: copyto,
+        // }))
       ])
     })
   }

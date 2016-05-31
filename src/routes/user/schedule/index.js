@@ -137,7 +137,7 @@ api.delete('/:schedule_id', (req, res, next) => {
       addActivity(req, C.ACTIVITY_ACTION.DETETE, {
         schedule: schedule_id
       }),
-      data.remind != 'none' &&
+      doc.remind != 'none' &&
       (new ScheduleModel(db).removeReminding(schedule_id))
     ])
   })

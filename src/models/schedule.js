@@ -31,7 +31,7 @@ export default class Schedule {
     }
     db.reminding.find(condition)
     // .limit(limit)
-    
+
     .then(list => {
       if (!list.length) {
         console.log('exit job');
@@ -46,7 +46,7 @@ export default class Schedule {
           $in: schedules
         }
       })
-      
+
       .then(schedules => {
         return Promise.all(schedules.map(schedule => {
           this.sentMessage(schedule)
@@ -108,7 +108,7 @@ export default class Schedule {
     if (typeof rule == 'string') {
       rule = rule.split(' ');
       let data = {};
-      rule.length == 6 && rulet.shift();
+      rule.length == 6 && rule.shift();
       if (rule[2] == '*') {
         if (rule[4] == '*') {
           data = {

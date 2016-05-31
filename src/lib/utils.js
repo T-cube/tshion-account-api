@@ -137,7 +137,7 @@ export function diffObjectId(list, otherList) {
 export function indexObjectId(list, id) {
   let index = -1;
   for (let k in list) {
-    if (list[k].equals(id)) {
+    if (ObjectId.isValid(list[k]) && list[k].equals(id)) {
       index = k;
       break;
     }

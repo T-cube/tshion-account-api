@@ -86,9 +86,6 @@ api.post('/', (req, res, next) => {
 });
 
 api.param('project_id', (req, res, next, id) => {
-  req.project = {
-    _id: ObjectId(id)
-  };
   db.project.findOne({
     _id: ObjectId(id),
     company_id: req.company._id,
@@ -97,10 +94,7 @@ api.param('project_id', (req, res, next, id) => {
     if (!project) {
       throw new ApiError(404);
     }
-    let memberIds = project.members.map(member => member._id);
-    if (indexObjectId(memberIds, req.user._id) == -1) {
-      throw new ApiError(400, null, 'you are not the member of this project');
-    }
+    ensureProjectMember(project, req.user._id);
     req.project = project;
     next();
   })
@@ -237,9 +231,8 @@ api.post('/:project_id/member', (req, res, next) => {
     item.type = C.PROJECT_MEMBER_TYPE.NORMAL;
   });
   ensureProjectAdmin(req.project, req.user._id);
-  data.map(item => {
-    let user_id = item._id;
-    if (indexObjectId(req.project.members, user_id) == -1) {
+  data.forEach(item => {
+    if (indexObjectId(req.project.members.map(i => i._id), item._id) != -1) {
       throw new ApiError(400, null, 'member is exists');
     }
   })
@@ -250,6 +243,8 @@ api.post('/:project_id/member', (req, res, next) => {
       }
     }, {
       $addToSet: {projects: project_id}
+    }, {
+      multi: true
     }),
     db.project.update({
       _id: project_id
@@ -322,10 +317,6 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
   }).length;
   if (!allowed) {
     throw new ApiError(403);
-  }
-  let exists = members.filter(member => member._id.equals(member_id)).length;
-  if (!exists) {
-    throw new ApiError(400);
   }
   return Promise.all([
     db.user.update({
@@ -444,30 +435,6 @@ function logProject(req, action, data) {
   req.model('activity').insert(activity);
 }
 
-function isMemberOfProject(user_id, project_id) {
-  return db.project.count({
-    _id: project_id,
-    'members._id': user_id
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(400, null, 'user is not one of the project member');
-    }
-  });
-}
-
-function isOwnerOfProject(user_id, project_id) {
-  return db.project.count({
-    _id: project_id,
-    owner: user_id
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(400, null, 'user is not owner of the project');
-    }
-  });
-}
-
 function ensureProjectOwner(project, user_id) {
   if (!project.owner.equals(user_id)) {
     throw new ApiError(400, null, 'user is not owner of the project');
@@ -475,7 +442,7 @@ function ensureProjectOwner(project, user_id) {
 }
 
 function ensureProjectMember(project, user_id) {
-  if (indexObjectId(project.members, user_id) == -1) {
+  if (indexObjectId(project.members.map(i => i._id), user_id) == -1) {
     throw new ApiError(400, null, 'not the member of this project');
   }
 }

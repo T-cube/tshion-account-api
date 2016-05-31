@@ -33,7 +33,6 @@ api.get('/', (req, res, next) => {
       description: 1,
       logo: 1,
     })
-    ;
   })
   .then(list => res.json(list))
   .catch(next);
