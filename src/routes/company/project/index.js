@@ -8,7 +8,7 @@ import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { fetchUserInfo } from 'lib/utils';
+import { fetchUserInfo, indexObjectId } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
   projectSanitization,
@@ -97,7 +97,8 @@ api.param('project_id', (req, res, next, id) => {
     if (!project) {
       throw new ApiError(404);
     }
-    if (indexObjectId(project.members, req.user._id) == -1) {
+    let memberIds = project.members.map(member => member._id);
+    if (indexObjectId(memberIds, req.user._id) == -1) {
       throw new ApiError(400, null, 'you are not the member of this project');
     }
     req.project = project;
@@ -231,39 +232,31 @@ api.get('/:project_id/member', (req, res, next) => {
 api.post('/:project_id/member', (req, res, next) => {
   let project_id = req.project._id;
   let data = req.body;
-
   data.map(item => {
     sanitizeValidateObject(memberSanitization, memberValidation, item);
     item.type = C.PROJECT_MEMBER_TYPE.NORMAL;
   });
-  isAdminOfProject(req.user._id, project_id)
-  .then(() => {
-    return db.project.count({
-      _id: project_id,
-      'members._id': {
-        $in: data.map(i => i._id)
-      }
-    })
-  })
-  .then(count => {
-    if (0 != count) {
+  ensureProjectAdmin(req.project, req.user._id);
+  data.map(item => {
+    let user_id = item._id;
+    if (indexObjectId(req.project.members, user_id) == -1) {
       throw new ApiError(400, null, 'member is exists');
     }
-    return Promise.all([
-      db.user.update({
-        _id: {
-          $in: data.map(i => i._id)
-        }
-      }, {
-        $addToSet: {projects: project_id}
-      }),
-      db.project.update({
-        _id: project_id
-      }, {
-        $push: { members: {$each: data} }
-      })
-    ])
   })
+  Promise.all([
+    db.user.update({
+      _id: {
+        $in: data.map(i => i._id)
+      }
+    }, {
+      $addToSet: {projects: project_id}
+    }),
+    db.project.update({
+      _id: project_id
+    }, {
+      $push: { members: {$each: data} }
+    })
+  ])
   .then(() => res.json({}))
   .catch(next);
 });
@@ -317,49 +310,38 @@ api.post('/:project_id/transfer', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/:_project_id/member/:member_id', (req, res, next) => {
+api.delete('/:project_id/member/:member_id', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
-  let project_id = ObjectId(req.params._project_id);
-  db.project.findOne({
-    _id: project_id,
-    company_id: req.company._id,
-  }, {
-    members: 1
-  })
-  .then(data => {
-    if (!data) {
-      throw new ApiError(404);
-    }
-    let { members } = data;
-    let allowed = member_id.equals(req.user._id) || members.filter(member => {
-      return member._id.equals(req.user._id)
-        && (member.type == C.PROJECT_MEMBER_TYPE.OWNER
-          || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
-    }).length;
-    if (!allowed) {
-      throw new ApiError(403);
-    }
-    let exists = members.filter(member => member._id.equals(member_id)).length;
-    if (!exists) {
-      throw new ApiError(400);
-    }
+  let project_id = req.project._id;
+  ensureProjectMember(req.project, member_id);
+  let { members } = req.project;
+  let allowed = member_id.equals(req.user._id) || members.filter(member => {
+    return member._id.equals(req.user._id)
+      && (member.type == C.PROJECT_MEMBER_TYPE.OWNER
+        || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
+  }).length;
+  if (!allowed) {
+    throw new ApiError(403);
+  }
+  let exists = members.filter(member => member._id.equals(member_id)).length;
+  if (!exists) {
+    throw new ApiError(400);
+  }
+  return Promise.all([
     db.user.update({
       _id: member_id
     }, {
       $pull: {projects: project_id}
+    }),
+    db.project.update({
+      _id: project_id
+    }, {
+      $pull: {
+        members: { _id: member_id }
+      }
     })
-    .then(doc => {
-      return db.project.update({
-        _id: project_id
-      }, {
-        $pull: {
-          members: { _id: member_id }
-        }
-      });
-    })
-    .then(doc => res.json({}))
-    .catch(next);
-  })
+  ])
+  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -408,20 +390,7 @@ api.post('/:project_id/tag', (req, res, next) => {
 });
 
 api.get('/:project_id/tag', (req, res, next) => {
-  let project_id = req.project._id;
-  db.project.findOne({
-    _id: project_id,
-    company_id: req.company._id,
-  }, {
-    tags: 1
-  })
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
-    }
-    res.json(doc.tags || []);
-  })
-  .catch(next);
+  res.json(req.project.tags || []);
 });
 
 api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
@@ -511,19 +480,11 @@ function ensureProjectMember(project, user_id) {
   }
 }
 
-function isAdminOfProject(user_id, project_id) {
-  return db.project.findOne({
-    _id: project_id,
-    'members._id': user_id
-  }, {
-    members: 1
-  })
-  .then(data => {
-    if (!data || -1 == [C.PROJECT_MEMBER_TYPE.ADMIN, C.PROJECT_MEMBER_TYPE.OWNER]
-      .indexOf(_.find(data.members, member => member._id.equals(user_id)).type)) {
-      throw new ApiError(400, null, 'user is not admin of the project');
-    }
-  });
+function ensureProjectAdmin(project, user_id) {
+  if (-1 == [C.PROJECT_MEMBER_TYPE.ADMIN, C.PROJECT_MEMBER_TYPE.OWNER]
+    .indexOf(_.find(project.members, member => member._id.equals(user_id)).type)) {
+    throw new ApiError(400, null, 'user is not admin of the project');
+  }
 }
 
 api.use('/:project_id/task', require('./task').default);
