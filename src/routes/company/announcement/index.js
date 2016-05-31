@@ -161,13 +161,13 @@ function fetchAnnouncementData(req) {
   if (data.from.department && !structure.findNodeById(data.from.department)) {
     throw new ApiError(400, null, 'from department is not exists');
   }
-  data.to && data.to.department.forEach(i => {
+  data.to && data.to.department && data.to.department.forEach(i => {
     if (!structure.findNodeById(i)) {
       throw new ApiError(400, null, 'to department: ' + i  + ' is not exists');
     }
   });
   let memberIds = req.company.members.map(i => i._id);
-  data.to && data.to.member.forEach(each => {
+  data.to && data.to.member && data.to.member.forEach(each => {
     if (-1 == indexObjectId(memberIds, each)) {
       throw new ApiError(400, null, 'to member: ' + each + ' is not exists');
     }
