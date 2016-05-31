@@ -151,7 +151,7 @@ api.get('/project', (req, res, next) =>  {
       if (ObjectId.isValid(company)) {
         condition['company_id'] = ObjectId(company);
       } else {
-        res.json([]);
+        return res.json([]);
       }
     }
     switch (type) {
@@ -164,8 +164,8 @@ api.get('/project', (req, res, next) =>  {
         search || (condition['is_archived'] = false);
     }
     return db.project.find(condition)
+    .then(data => res.json(data))
   })
-  .then(data => res.json(data))
   .catch(next)
 });
 
@@ -177,15 +177,23 @@ api.get('/activity', (req, res, next) => {
     companies: 1
   })
   .then(userInfo => {
-    return req.model('activity').fetch({
-      $or: [{
-        company: {
-          $in: userInfo.companies
-        }
-      }, {
+    let condition = null;
+    if (!userInfo.companies || !userInfo.companies.length) {
+      condition = {
         creator: req.user._id,
-      }]
-    }, last_id)
+      }
+    } else {
+      condition = {
+        $or: [{
+          company: {
+            $in: userInfo.companies
+          }
+        }, {
+          creator: req.user._id,
+        }]
+      }
+    }
+    return req.model('activity').fetch(condition, last_id)
   })
   .then(list => res.json(list))
   .catch(next);
