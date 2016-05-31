@@ -86,9 +86,6 @@ api.post('/', (req, res, next) => {
 });
 
 api.param('project_id', (req, res, next, id) => {
-  req.project = {
-    _id: ObjectId(id)
-  };
   db.project.findOne({
     _id: ObjectId(id),
     company_id: req.company._id,
@@ -237,9 +234,8 @@ api.post('/:project_id/member', (req, res, next) => {
     item.type = C.PROJECT_MEMBER_TYPE.NORMAL;
   });
   ensureProjectAdmin(req.project, req.user._id);
-  data.map(item => {
-    let user_id = item._id;
-    if (indexObjectId(req.project.members.map(i => i._id), user_id) != -1) {
+  data.forEach(item => {
+    if (indexObjectId(req.project.members.map(i => i._id), item._id) != -1) {
       throw new ApiError(400, null, 'member is exists');
     }
   })
@@ -250,6 +246,8 @@ api.post('/:project_id/member', (req, res, next) => {
       }
     }, {
       $addToSet: {projects: project_id}
+    }, {
+      multi: true
     }),
     db.project.update({
       _id: project_id
