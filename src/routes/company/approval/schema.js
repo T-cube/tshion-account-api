@@ -1,5 +1,33 @@
 import C, { ENUMS } from 'lib/constants';
 
+const fieldValidation = {
+  type: 'object',
+  strict: false,
+  properties: {
+    type: { type: 'string' },
+    label: {
+      type: 'string',
+      minLength: 2,
+      maxLength: 50,
+      error: '请输入2~50个字符',
+    },
+    required: { type: 'boolean' },
+    defaultValue: { type: ['boolean', 'array', 'string', 'null', 'number'], optional: true },
+    options: {
+      type: ['array', 'null'],
+      optional: true,
+      minLength: 2,
+      maxLength: 10,
+      items: {
+        label: { type: 'string', minLength: 1 },
+        value: { type: 'string', minLength: 1 },
+      },
+      error: '请至少添加2个项目，最多10个',
+    },
+    optionsKeyValueSame: { type: 'boolean', optional: true },
+  }
+};
+
 export let sanitization = {
   name: { type: 'string' },
   description: { type: 'string', optional: true },
@@ -34,16 +62,9 @@ export let sanitization = {
 		}
 	},
   forms: {
-		type: 'array',
-    optional: true,
-		items: {
-			type: 'object',
-			properties: {
-		    title: { type: 'string' },
-		    form_type: { type: 'string' }
-			}
-		}
-	},
+    type: 'array',
+    items: fieldValidation
+  },
 };
 
 export let validation = {
@@ -67,6 +88,7 @@ export let validation = {
         },
 				copy_to: {
           type: 'array',
+          optional: true,
           items: {
             type: 'object',
             optional: true,
@@ -80,16 +102,9 @@ export let validation = {
 		}
 	},
 	forms: {
-		type: 'array',
-    optional: true,
-		items: {
-			type: 'object',
-			properties: {
-				title: { type: 'string' },
-				form_type: { $enum: ENUMS.FORM_TYPE }
-			}
-		}
-	}
+    type: 'array',
+    items: fieldValidation
+  },
 };
 
 export let statusSanitization = {

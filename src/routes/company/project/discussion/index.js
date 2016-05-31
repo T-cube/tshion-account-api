@@ -184,19 +184,7 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
       _id: comment_id,
       discussion_id: discussion_id,
     })
-    .then(() => res.json({}))
   })
+  .then(() => res.json({}))
   .catch(next);
 });
-
-function isMemberOfProject(user_id, project_id) {
-  return db.project.count({
-    _id: project_id,
-    'members._id': user_id
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(400, null, 'user is not one of the project member');
-    }
-  });
-}

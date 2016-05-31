@@ -10,9 +10,10 @@ let sanitizationCustom = {
     if (/^[A-Fa-f0-9]{24}$/.test(post)) {
       this.report();
       return ObjectId(post);
-    } else {
-      return post;
+    } else if (undefined === post) {
+      return null;
     }
+    return post;
   },
   emptyArray: function (schema, post) {
     this.report();
@@ -25,7 +26,7 @@ let validationCustom = {
     if (!schema.$objectId) {
       return;
     }
-    if (candidate && !ObjectId.isValid(candidate)) {
+    if (candidate !== null && !ObjectId.isValid(candidate)) {
       this.report('invalid ObjectId: ' + candidate);
     }
   },
