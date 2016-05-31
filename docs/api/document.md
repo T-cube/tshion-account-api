@@ -31,6 +31,20 @@ INPUT
 }
 ```
 
+### POST /document/tree
+
+目录树
+
+INPUT
+
+```javascript
+<Dir:> {
+  _id: <ObjectId>,
+  name: <String>,
+  children: [<Dir>...],
+}
+```
+
 ### GET /document/dir/:dir_id?
 
 获取目录名和子目录和文件

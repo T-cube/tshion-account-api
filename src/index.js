@@ -22,6 +22,7 @@ import { SocketClient } from 'service/socket';
 import ScheduleServer from 'service/schedule';
 import Notification from 'models/notification';
 import Account from 'models/account';
+import Document from 'models/document';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 
 console.log('Tlifang API service');
@@ -45,6 +46,7 @@ app.loadModel('email', EmailSender, config.get('vendor.sendcloud'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud'));
 app.loadModel('notification', Notification);
 app.loadModel('account', Account);
+app.loadModel('document', Document);
 
 // load services;
 app.loadModel('schedule', ScheduleServer);
