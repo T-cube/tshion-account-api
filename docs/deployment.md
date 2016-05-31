@@ -152,6 +152,10 @@ sudo yum install -y mongodb-org
 cd /        #切换到根目录
 mkdir -p data/mongodb/db data/mongodb/log  #创建数据存储目录db和日志目录log
 ```
+修改过mongo.conf:
+```
+dbpath：/data/db 改成指定目录
+```
 
 修改指定启动数据库路径和日志输出路径：
 ```
