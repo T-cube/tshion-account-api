@@ -164,6 +164,10 @@ mkdir -p data/mongodb/db data/mongodb/log  #创建数据存储目录db和日志�
 
 ### 备份和恢复
 
+以服务器启动mongod:
+```
+serveric mongod
+```
 备份：
 ```
 mongodump -d dbname -o <dbdirectory>
