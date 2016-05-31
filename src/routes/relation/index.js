@@ -1,8 +1,9 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
-
 import express from 'express';
 import { ObjectId } from 'mongodb';
+
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 
 let api = express.Router();

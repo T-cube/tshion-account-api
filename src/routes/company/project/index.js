@@ -3,8 +3,12 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
+import db from 'lib/database';
 import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
+import C, { ENUMS } from 'lib/constants';
+import { oauthCheck, authCheck } from 'lib/middleware';
+import { fetchUserInfo } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
   projectSanitization,
@@ -16,9 +20,6 @@ import {
   fileSanitization,
   fileValidation,
 } from './schema';
-import C, { ENUMS } from 'lib/constants';
-import { oauthCheck, authCheck } from 'lib/middleware';
-import { fetchUserInfo } from 'lib/utils';
 
 /* company collection */
 let api = require('express').Router();
@@ -38,10 +39,11 @@ api.get('/', (req, res, next) => {
     description: 1,
     logo: 1,
   })
+  .toArray()
   .then(doc => res.json(doc))
   .catch(next);
   // let projects = req.company.projects || [];
-  // db.project.find({_id:{$in: projects}})
+  // db.project.find({_id:{$in: projects}}).toArray()
   // .then(list => res.json(list));
 });
 

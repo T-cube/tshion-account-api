@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import Structure from 'models/structure';
 import { sanitizeValidateObject } from 'lib/inspector';

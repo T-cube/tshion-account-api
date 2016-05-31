@@ -162,7 +162,7 @@ api.get('/project', (req, res, next) =>  {
       default:
         search || (condition['is_archived'] = false);
     }
-    return db.project.find(condition)
+    return db.project.find(condition).toArray()
   })
   .then(data => res.json(data))
   .catch(next)

@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation, statusSanitization, statusValidation } from './schema';
@@ -24,6 +25,7 @@ api.get('/', (req, res, next) => {
   }, {
     current: 1
   })
+  .toArray()
   .then(masters => {
     masters = masters.map(master => master.current);
     if (!masters.length) {
@@ -218,6 +220,7 @@ function cancelItemsUseTemplate(req, template_id) {
   }, {
     from: 1
   })
+  .toArray()
   .then(items => {
     itemIdList = items.map(item => item._id);
     let notification = {

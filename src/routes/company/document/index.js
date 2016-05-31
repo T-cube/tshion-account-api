@@ -5,6 +5,7 @@ import Promise from 'bluebird';
 import fs from 'fs';
 import stream from 'stream';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
@@ -348,6 +349,7 @@ api.put('/move', (req, res, next) => {
     }, {
       _id: 1
     })
+    .toArray()
     .then(list => {
       list = list.map(item => item._id);
       if (!list.length) {
@@ -396,6 +398,7 @@ api.put('/move', (req, res, next) => {
     }, {
       _id: 1
     })
+    .toArray()
     .then(list => {
       list = list.map(item => item._id);
       if (!list.length) {
@@ -685,6 +688,7 @@ function checkMoveable(target_dir, dirs, files) {
     files: 1,
     dirs: 1,
   })
+  .toArray()
   .then(doc => {
     if (!doc) {
       throw new ApiError(404)
@@ -704,6 +708,7 @@ function checkMoveable(target_dir, dirs, files) {
         }, {
           name: 1
         })
+        .toArray()
         .then(dirsInfo => {
           dirsInfo.forEach(dirInfo => {
             if (_.find(dirNameList, dirInfo.name)) {
@@ -718,6 +723,7 @@ function checkMoveable(target_dir, dirs, files) {
         }, {
           name: 1
         })
+        .toArray()
         .then(filesInfo => {
           filesInfo.forEach(fileInfo => {
             if (_.find(fileNameList, fileInfo.name)) {

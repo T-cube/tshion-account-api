@@ -31,7 +31,8 @@ api.get('/', (req, res, next) => {
       name: 1,
       description: 1,
       logo: 1,
-    });
+    })
+    .toArray();
   })
   .then(list => res.json(list))
   .catch(next);

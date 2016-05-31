@@ -5,6 +5,7 @@ import Promise from 'bluebird';
 import fs from 'fs';
 import stream from 'stream';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { timestamp } from 'lib/utils';
