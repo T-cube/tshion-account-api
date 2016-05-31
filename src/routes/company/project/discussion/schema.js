@@ -12,12 +12,12 @@ export let discussionValidation = {
 }
 
 export let commentSanitization = {
-  to: { $objectId: 1 },
+  to: { $objectId: 1, optional: true },
   content: { type: 'string' },
 }
 
 export let commentValidation = {
-  to: { $objectId: 1 },
+  to: { $objectId: 1, optional: true },
   content: { type: 'string' },
 }
 
