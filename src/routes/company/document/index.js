@@ -101,6 +101,33 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/tree', (req, res, next) => {
+  let condition = {
+    [req.document.posKey]: req.document.posVal
+  };
+  db.document.dir.find(condition)
+  .then(dirs => {
+    if (dirs.length == 0) {
+      _.extend(condition, {
+        name: '',
+        dirs: [],
+        files: [],
+        total_size: 0,
+      });
+      return db.document.dir.insert(condition)
+      .then(rootDir => {
+        return [rootDir];
+      })
+    }
+    return dirs;
+  })
+  .then(dirs => {
+    let tree = req.model('document').buildTree(dirs);
+    res.json(tree);
+  })
+  .catch(next);
+});
+
 api.post('/dir', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(dirSanitization, dirValidation, data);
@@ -349,7 +376,7 @@ api.put('/move', (req, res, next) => {
     }, {
       _id: 1
     })
-    
+
     .then(list => {
       list = list.map(item => item._id);
       if (!list.length) {
@@ -398,7 +425,7 @@ api.put('/move', (req, res, next) => {
     }, {
       _id: 1
     })
-    
+
     .then(list => {
       list = list.map(item => item._id);
       if (!list.length) {
@@ -688,7 +715,7 @@ function checkMoveable(target_dir, dirs, files) {
     files: 1,
     dirs: 1,
   })
-  
+
   .then(doc => {
     if (!doc) {
       throw new ApiError(404)
@@ -708,7 +735,7 @@ function checkMoveable(target_dir, dirs, files) {
         }, {
           name: 1
         })
-        
+
         .then(dirsInfo => {
           dirsInfo.forEach(dirInfo => {
             if (_.find(dirNameList, dirInfo.name)) {
@@ -723,7 +750,7 @@ function checkMoveable(target_dir, dirs, files) {
         }, {
           name: 1
         })
-        
+
         .then(filesInfo => {
           filesInfo.forEach(fileInfo => {
             if (_.find(fileNameList, fileInfo.name)) {
