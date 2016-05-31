@@ -1,3 +1,4 @@
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { time } from 'lib/utils';
 
