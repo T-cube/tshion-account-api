@@ -1,5 +1,7 @@
 import _ from 'underscore';
 import { time } from './utils';
+
+import db from 'lib/database';
 import { ApiError } from './error';
 
 const token_types = ['access_token', 'refresh_token'];

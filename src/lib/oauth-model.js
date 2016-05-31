@@ -41,9 +41,8 @@ export default {
       .then(doc => callback(null, doc)).catch(e => callback(e));
     }
     db.oauth.clients.findOne({client_id: clientId, client_secret: clientSecret})
-    .then(doc => {
-      callback(null, doc)
-    }).catch(e => callback(e));
+    .then(doc => callback(null, doc))
+    .catch(e => callback(e));
   },
 
   grantTypeAllowed(clientId, grantType, callback) {
@@ -68,15 +67,16 @@ export default {
 
   getUser(username, password, callback) {
     // console.log('in getUser (username: ' + username + ', password: ' + password + ')');
-    let data = {};
+    let query = {};
     if (/^1[3|4|5|7|8]\d{9}$/.test(username)) {
-      data.mobile = username;
+      query.mobile = username;
     } else if (!Joi.validate(username, Joi.string().email()).error) {
-      data.email = username;
+      query.email = username;
     } else {
       return callback(null, null);
     }
-    db.user.findOne(data, {_id: 1, name: 1, avatar: 1, email: 1, mobile: 1, password: 1})
+    query.activiated = true;
+    db.user.findOne(query, {_id: 1, name: 1, avatar: 1, email: 1, mobile: 1, password: 1})
     .then(doc => {
       if (!doc) {
         return callback(null, null);

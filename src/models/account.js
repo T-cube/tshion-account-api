@@ -20,12 +20,13 @@ export default class Account {
     .then(code => {
       let confirmUrl = config.get('webUrl') + 'account/confirm/' + code;
       let userName = getEmailName(email);
-      this.model('email').send('test_template_active', email, {
+      return this.model('email').send('tlifang_email_active', email, {
         name: userName,
+        email: email,
         url: confirmUrl,
       })
-      .then(result => {
-        db.user.confirm.email.insert({
+      .then(() => {
+        return db.user.confirm.email.insert({
           code: code,
           email: email,
           expires: expire(expires * 1000),
@@ -36,11 +37,15 @@ export default class Account {
   }
 
   confirmEmailCode(code) {
-    db.user.confirm.email.findOne({
+    return db.user.confirm.email.findOne({
       code: code,
     })
     .then(doc => {
-      if (doc.expires > time()) {
+      if (!doc) {
+        throw new ApiError(400, 'code_invalid', 'code is not valid');
+      }
+      console.log(doc);
+      if (time() > doc.expires) {
         throw new ApiError(400, 'code_expired', 'code has been expired');
       }
       return db.user.findOne({
@@ -50,17 +55,17 @@ export default class Account {
       });
     })
     .then(user => {
-      if (user.confirmed) {
-        throw new ApiError(400, 'already_confirmed', 'the email has been already confirmed')
+      if (user.activiated) {
+        throw new ApiError(400, 'already_activiated', 'the email has been activiated already');
       }
-      db.user.update({
+      return db.user.update({
         _id: user._id,
       }, {
         $set: {
-          //TODO
+          activiated: true,
         }
       });
-    })
+    });
   }
 
   genSmsCode() {

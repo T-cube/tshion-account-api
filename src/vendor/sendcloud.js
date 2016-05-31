@@ -11,7 +11,6 @@ export class SendCloudError extends Error {
 
 export class EmailSender {
   constructor(options) {
-    console.log(options);
     this.options = options;
   }
 
@@ -29,7 +28,7 @@ export class EmailSender {
 
   send(template, to, data) {
     const { options } = this;
-    this.checkTemplate(template)
+    return this.checkTemplate(template)
     .then(() => {
       let _data = _.extend({}, data, {
         to: to,
@@ -40,7 +39,7 @@ export class EmailSender {
 
   sendToMany(template, data) {
     const { options } = this;
-    this.checkTemplate(template)
+    return this.checkTemplate(template)
     .then(() => {
       let formData = {
         apiUser: options.apiUser,
@@ -92,7 +91,7 @@ export class SmsSender {
   send(template, to, data) {
     const { options } = this;
     if (!_.has(options.email.templates, template)) {
-      return Promise.reject(new EmailError('invalid email template:', template));
+      return Promise.reject(new SendCloudError('invalid email template:', template));
     }
     let _data = _.extend({}, data, {
       to: to,

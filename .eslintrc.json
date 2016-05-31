@@ -23,6 +23,11 @@
         "semi": [
             "error",
             "always"
+        ],
+        "comma-dangle": [
+            "warn",
+            "only-multiline"
         ]
+
     }
 }

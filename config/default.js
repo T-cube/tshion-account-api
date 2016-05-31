@@ -72,15 +72,15 @@ module.exports = {
       bucket: 'tlifang',
     },
     sendcloud: {
-      apiUser: 'tlifang201506',
-      apiKey: 'IlQLQ88VxnHFjr8v',
+      apiUser: 'tlf_api_production',
+      apiKey: 'UjWSflKRRJ52NEVi',
       email: {
         url: 'http://api.sendcloud.net/apiv2/mail/sendtemplate',
         from: 'no-reply@tlifang.com',
         fromName: 'T立方',
         templates: {
-          test_template_active: {
-            variables: ['name', 'url'],
+          tlifang_email_active: {
+            variables: ['name', 'email', 'url'],
           },
         },
       }

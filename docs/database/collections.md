@@ -62,6 +62,7 @@
     is_creator: <Boolean>,
     is_assignee: <Boolean>,
   }...],
+  activiated: <Boolean>,
 }
 ```
 

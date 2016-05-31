@@ -50,7 +50,8 @@ api.post('/register', validator(validation.register), (req, res, next) => {
   })
   .then(hash => {
     if (type == 'email') {
-      req.model('account').sendConfirmEmail(req.body.email, data);
+      req.model('account').sendConfirmEmail(req.body.email, data)
+      .catch(console.error);
     }
     let data = {
       email: req.body.email || null,
@@ -75,7 +76,7 @@ api.post('/register', validator(validation.register), (req, res, next) => {
         notice_request: true,
         notice_project: true,
       },
-      confirmed: type == C.USER_ID_TYPE.MOBILE,
+      activiated: type == C.USER_ID_TYPE.MOBILE,
       date_join: time(),
       current_company: null,
     };
@@ -88,10 +89,10 @@ api.post('/register', validator(validation.register), (req, res, next) => {
   .catch(next);
 });
 
-api.post('/confirm/:code', (req, res, next) => {
+api.post('/confirm', (req, res, next) => {
   const { codeLength } = config.get('userConfirm.email');
-  const { code } = req.params;
-  if (!(/^[a-f0-9]+$/.test(code) && code.length == codeLength * 2 )) {
+  const { code } = req.body;
+  if (!code || !(/^[a-f0-9]+$/.test(code) && code.length == codeLength * 2 )) {
     throw new ApiError(400, null, 'invalid confirm code');
   }
   req.model('account').confirmEmailCode(code)

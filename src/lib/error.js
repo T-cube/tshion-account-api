@@ -62,17 +62,7 @@ export function apiErrorHandler(err, req, res, next) {
   // if (err instanceof DbError) {
   //   err = ApiError(500, err.message, err.description, err);
   // }
-  if (err instanceof ApiError) {
-    delete err.name;
-    delete err.message;
-    if (err.headers) {
-      res.set(err.headers);
-    }
-    delete err.headers;
-    res.status(err.code)
-    res.json(err);
-    return;
-  } else if (err instanceof ValidationError) {
+  if (err instanceof ValidationError) {
     res.status(err.status);
     let _err = {
       code: err.status,
@@ -82,7 +72,19 @@ export function apiErrorHandler(err, req, res, next) {
     res.json(_err);
     return;
   } else {
-    console.error(err);
+    if (!(err instanceof ApiError)) {
+      console.error(err);
+      err = new ApiError(500);
+    }
+    delete err.name;
+    delete err.message;
+    if (err.headers) {
+      res.set(err.headers);
+    }
+    delete err.headers;
+    res.status(err.code)
+    res.json(err);
+    return;
   }
   next(err);
 }
