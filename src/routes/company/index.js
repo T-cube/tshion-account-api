@@ -2,9 +2,10 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
-import upload, { randomAvatar, defaultAvatar } from 'lib/upload';
-import C from 'lib/constants';
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
+import C from 'lib/constants';
+import upload, { randomAvatar, defaultAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { userId, userInfo, time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -32,7 +33,7 @@ api.get('/', (req, res, next) => {
       description: 1,
       logo: 1,
     })
-    .toArray();
+    ;
   })
   .then(list => res.json(list))
   .catch(next);

@@ -12,7 +12,6 @@ import _ from 'underscore';
 
 import 'lib/i18n';
 import bindLoader from 'lib/loader';
-import { database } from 'lib/database';
 import apiRouter from './routes';
 import oauthModel from 'lib/oauth-model.js';
 import oauthExtended from 'lib/oauth-extended.js';

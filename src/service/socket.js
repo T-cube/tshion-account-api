@@ -2,6 +2,7 @@ import _ from 'underscore';
 import { EventEmitter } from 'events';
 import { ObjectId } from 'mongodb';
 
+import db from 'lib/database';
 import { time } from 'lib/utils';
 
 class SocketClient {

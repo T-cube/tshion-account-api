@@ -140,7 +140,7 @@ api.delete('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
 function getAnnouncementList(condition) {
   return db.announcement.find(condition, {
     content: 0
-  }).toArray()
+  })
   .then(announcements => {
     return fetchUserInfo(announcements, 'from.creator');
   })

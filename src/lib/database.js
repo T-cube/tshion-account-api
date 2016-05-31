@@ -1,4 +1,4 @@
-import pmongo from 'promised-mongo';
+import pmongo from 'pmongo';
 import config from 'config';
 import _ from 'underscore';
 
@@ -45,26 +45,5 @@ const collections = [
 const dbConfig = config.get('database');
 
 let db = pmongo(dbConfig, collections);
-
-function extendPath(object, path, property) {
-  let keys = path.split('.');
-  console.log(keys);
-  let length = keys.length;
-  _.each(keys, (key, i) => {
-    if (i < length - 1) {
-      object[key] = {};
-    } else {
-      object[key] = property;
-    }
-    object = object[key];
-  });
-}
-console.log(db);
-//
-// _.each(collections, name => {
-//   const collection = db.collection(name);
-//   extendPath(db, name, collection);
-// });
-
 
 export default db;

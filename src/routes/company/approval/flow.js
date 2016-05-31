@@ -62,7 +62,7 @@ api.get('/approve', (req, res, next) => {
         status: C.APPROVAL_ITEM_STATUS.PROCESSING
       };
       return db.approval.item.find(condition, fetchItemFields)
-      .sort({_id: -1}).toArray()
+      .sort({_id: -1})
       .then(data => {
         return mapObjectIdToData(data, [
           ['approval.template', 'name,status', 'template'],
@@ -122,7 +122,7 @@ function findItems(req, res, next, type) {
       };
       _.extend(condition, getQueryCondition(req.query));
       return db.approval.item.find(condition, fetchItemFields)
-      .sort({_id: -1}).toArray()
+      .sort({_id: -1})
       .then(data => {
         return mapObjectIdToData(data, [
           ['approval.template', 'name,status', 'template'],

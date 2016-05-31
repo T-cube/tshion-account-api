@@ -39,11 +39,11 @@ api.get('/', (req, res, next) => {
     description: 1,
     logo: 1,
   })
-  .toArray()
+  
   .then(doc => res.json(doc))
   .catch(next);
   // let projects = req.company.projects || [];
-  // db.project.find({_id:{$in: projects}}).toArray()
+  // db.project.find({_id:{$in: projects}})
   // .then(list => res.json(list));
 });
 

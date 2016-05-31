@@ -100,7 +100,7 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
       year: year,
       month: month,
     })
-    .toArray()
+    
     .then(doc => {
       let signRecord = [];
       let setting = new Attendance(req.attendanceSetting);
@@ -194,7 +194,7 @@ api.post('/audit', (req, res, next) => {
 //   db.attendance.audit.find({
 //     company: req.company._id,
 //   })
-//   .toArray()
+//   
 //   .then(doc => res.json(doc))
 // })
 //
