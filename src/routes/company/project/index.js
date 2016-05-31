@@ -276,7 +276,7 @@ api.put('/:project_id/member/:member_id/type', (req, res, next) => {
     throw new ApiError(400, null, 'wrong type');
   }
   ensureProjectOwner(req.project, req.user._id);
-  ensureProjectMember(req.project, member_id));
+  ensureProjectMember(req.project, member_id);
   return db.project.update({
     _id: project_id,
     'members._id': member_id
@@ -293,7 +293,7 @@ api.post('/:project_id/transfer', authCheck(), (req, res, next) => {
   let member_id = ObjectId(req.body.user_id);
   let project_id = req.project._id;
   ensureProjectOwner(req.project, req.user._id);
-  ensureProjectMember(req.project, member_id));
+  ensureProjectMember(req.project, member_id);
   return Promise.all([
     db.project.update({
       _id: project_id,
