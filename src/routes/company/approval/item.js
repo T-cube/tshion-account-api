@@ -263,7 +263,7 @@ function checkAprroverOfStepAndGetSteps(req, item) {
   })
   .then(template => {
     let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
-    if (!_.contains(approver, req.user._id)) {
+    if (-1 == indexObjectId(approver, req.user._id)) {
       throw new ApiError(400, null, 'you have not permission to audit');
     }
     return template.steps;

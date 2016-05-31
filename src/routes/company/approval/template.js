@@ -25,7 +25,6 @@ api.get('/', (req, res, next) => {
   }, {
     current: 1
   })
-  
   .then(masters => {
     masters = masters.map(master => master.current);
     if (!masters.length) {
@@ -47,15 +46,15 @@ api.get('/', (req, res, next) => {
       scope: 1,
       status: 1,
     })
-    .then(template => {
-      let tree = new Structure(req.company.structure);
-      template.forEach(item => {
-        if (item.scope) {
-          item.scope = item.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
-        }
-      });
-      res.json(template);
-    })
+  })
+  .then(template => {
+    let tree = new Structure(req.company.structure);
+    template.forEach(item => {
+      if (item.scope) {
+        item.scope = item.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
+      }
+    });
+    res.json(template);
   })
   .catch(next);
 });
@@ -100,7 +99,7 @@ api.put('/:template_id', (req, res, next) => {
       throw new ApiError(404, null, 'template is not exist')
     }
     if (oldTpl.status != C.APPROVAL_STATUS.UNUSED) {
-      // throw new ApiError(404, null, '启用中的模板不能删除')
+      throw new ApiError(404, null, '启用中的模板不能编辑')
     }
     return Promise.all([
       db.approval.template.insert(data)
@@ -220,7 +219,6 @@ function cancelItemsUseTemplate(req, template_id) {
   }, {
     from: 1
   })
-  
   .then(items => {
     itemIdList = items.map(item => item._id);
     let notification = {
