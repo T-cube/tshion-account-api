@@ -72,22 +72,16 @@ api.get('/:item_id', (req, res, next) => {
         let approveInfo = _.find(flowInfo.approve, v => v._id.equals(item_id));
         let inApply = indexObjectId(flowInfo.apply, item_id) != -1;
         let inCopyto = indexObjectId(flowInfo.copy_to, item_id) != -1;
-        console.log(approveInfo);
-        console.log(flowInfo.apply);
-        console.log(inCopyto);
         if (!inApply && !inCopyto && !approveInfo) {
           throw new ApiError(400, null, 'you have not permission to read')
         }
-        if (!approveInfo) {
-          data.is_processing = false;
+        if (data.status == C.APPROVAL_ITEM_STATUS.PROCESSING
+          && approveInfo
+          && approveInfo.step
+          && approveInfo.step.equals(data.step)) {
+          data.is_processing = true;
         } else {
-          if (data.status == C.APPROVAL_ITEM_STATUS.PROCESSING
-            && approveInfo.approve[0].step
-            && approveInfo.approve[0].step.equals(data.step)) {
-            data.is_processing = true;
-          } else {
-            data.is_processing = false;
-          }
+          data.is_processing = false;
         }
         return data;
       })

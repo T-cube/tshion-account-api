@@ -122,6 +122,11 @@ api.post('/:discussion_id/comment', (req, res, next) => {
   let discussion_id = ObjectId(req.params.discussion_id);
   let data = req.body;
   sanitizeValidateObject(commentSanitization, commentValidation, data);
+  _.extend(data, {
+    discussion_id: discussion_id,
+    creator: req.user._id,
+    date_create: new Date(),
+  })
   db.discussion.comment.insert(data)
   .then(doc => {
     res.json(doc);
@@ -158,7 +163,6 @@ api.get('/:discussion_id/comment', (req, res, next) => {
         $in: discussion.comments
       }
     })
-    
     .then(doc => res.json(doc))
   })
   .catch(next);
@@ -180,7 +184,7 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
       _id: comment_id,
       discussion_id: discussion_id,
     })
-    
+
     .then(() => res.json({}))
   })
   .catch(next);

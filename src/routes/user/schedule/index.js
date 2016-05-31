@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import moment from 'moment';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
