@@ -180,11 +180,10 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
     if (!count) {
       throw new ApiError(404);
     }
-    return db.discussion.comment.find({
+    return db.discussion.comment.remove({
       _id: comment_id,
       discussion_id: discussion_id,
     })
-
     .then(() => res.json({}))
   })
   .catch(next);
