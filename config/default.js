@@ -30,7 +30,7 @@ module.exports = {
     },
     mobile: {
       codeLength: 6,
-      expires: 10 * 60, // 10 minutes in seconds
+      expires: 15 * 60, // 15 minutes in seconds
     }
   },
   upload: {
@@ -75,9 +75,9 @@ module.exports = {
       bucket: 'tlifang',
     },
     sendcloud: {
-      apiUser: 'tlf_api_production',
-      apiKey: 'UjWSflKRRJ52NEVi',
       email: {
+        apiUser: 'tlf_api_production',
+        apiKey: 'UjWSflKRRJ52NEVi',
         url: 'http://api.sendcloud.net/apiv2/mail/sendtemplate',
         from: 'no-reply@tlifang.com',
         fromName: 'T立方',
@@ -86,8 +86,23 @@ module.exports = {
             variables: ['name', 'email', 'url'],
           },
         },
-      }
-    }
+      },
+      sms: {
+        smsUser: 'tlifang_sms_prod',
+        smsKey: 'MFO8diU8qaqPWxicmFMJRPB7IXn5OEE0',
+        url: 'http://sendcloud.sohu.com/smsapi/send',
+        templates: {
+          tlifang_mobile_activite: {
+            id: 1288,
+            variables: ['code'],
+          },
+          tlifang_reset_pass: {
+            id: 1289,
+            variables: ['code'],
+          },
+        },
+      },
+    },
   },
   download: {
     tokenExpires: 30 * 60 * 1000, // half a hour

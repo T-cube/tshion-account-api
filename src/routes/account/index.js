@@ -38,19 +38,25 @@ api.post('/check', validator(validation.check), (req, res, next) => {
 
 api.post('/register', validator(validation.register), (req, res, next) => {
   let { type, password, code } = req.body;
+  if (!_.contains(['email', 'mobile'], type)) {
+    throw new ApiError(400, 'invalid_param', 'invalid account type');
+  }
   let id = req.body[type];
   db.user.find({[type]: id}).count()
   .then(count => {
     if (count > 0) {
       throw userExistsError(type);
     }
+    if (type == 'email') {
+      return req.model('account').sendConfirmEmail(id);
+    } else {
+      return req.model('account').confirmSmsCode(id, code);
+    }
+  })
+  .then(() => {
     return hashPassword(password, 10);
   })
   .then(hash => {
-    if (type == 'email') {
-      req.model('account').sendConfirmEmail(req.body.email, data)
-      .catch(console.error);
-    }
     let data = {
       email: req.body.email || null,
       email_verified: false,
@@ -76,6 +82,7 @@ api.post('/register', validator(validation.register), (req, res, next) => {
       },
       activiated: type == C.USER_ID_TYPE.MOBILE,
       date_join: time(),
+      date_create: time(),
       current_company: null,
     };
     return db.user.insert(data);
@@ -95,6 +102,16 @@ api.post('/confirm', (req, res, next) => {
   }
   req.model('account').confirmEmailCode(code)
   .then(data => res.json(data))
+  .catch(next);
+});
+
+api.post('/send-sms', (req, res, next) => {
+  const { mobile } = req.body;
+  if (!mobile || !/^1[34578]\d{9}$/.test(mobile)) {
+    throw new ApiError(400, 'invalid_number', 'invalid mobile number');
+  }
+  req.model('account').sendSmsCode(mobile)
+  .then(() => res.json({}))
   .catch(next);
 });
 

@@ -20,7 +20,8 @@ export default class Account {
     .then(code => {
       let confirmUrl = config.get('webUrl') + 'account/confirm/' + code;
       let userName = getEmailName(email);
-      return this.model('email').send('tlifang_email_active', email, {
+      return this.model('email')
+      .send('tlifang_email_active', email, {
         name: userName,
         email: email,
         url: confirmUrl,
@@ -53,23 +54,32 @@ export default class Account {
       }, {
         email: 1,
         activiated: 1,
-      });
-    })
-    .then(user => {
-      console.log(user);
-      if (user.activiated) {
-        throw new ApiError(400, 'already_activiated', 'the email has been activiated already');
-      }
-      return db.user.update({
-        _id: user._id,
-      }, {
-        $set: {
-          activiated: true,
+      })
+      .then(user => {
+        console.log(user);
+        if (user.activiated) {
+          throw new ApiError(400, 'already_activiated', 'the email has been activiated already');
         }
+        return Promise.all([
+          db.user.update({
+            _id: user._id,
+          }, {
+            $set: {
+              activiated: true,
+            }
+          }),
+          db.user.confirm.email.update({
+            _id: doc._id,
+          }, {
+            $set: {
+              expires: new Date(0),
+            },
+          }),
+        ]);
       })
       .then(() => {
         return {
-          email: user.email,
+          email: doc.email,
         };
       });
     });
@@ -78,7 +88,7 @@ export default class Account {
   genSmsCode() {
     const { codeLength } = config.get('userConfirm.mobile');
     let num = Math.pow(10, codeLength) - 1;
-    let code =  pad(Math.round(Math.random() * num), 6, 'RIGHT', '0');
+    let code = pad(Math.round(Math.random() * num) + '', 6, 'RIGHT', '0');
     return Promise.resolve(code);
   }
 
@@ -86,12 +96,40 @@ export default class Account {
     const { expires } = config.get('userConfirm.mobile');
     return this.genSmsCode()
     .then(code => {
-      //TODO send code
-      db.user.confirm.mobile.insert({
+      return this.model('sms')
+      .send('tlifang_mobile_activite', mobile, {
         code: code,
-        mobile: mobile,
-        expires: expire(expires * 1000),
-        date_create: time(),
+      })
+      .then(() => {
+        return db.user.confirm.mobile.insert({
+          code: code,
+          mobile: mobile,
+          expires: expire(expires * 1000),
+          date_create: time(),
+        });
+      });
+    });
+  }
+
+  confirmSmsCode(mobile, code) {
+    return db.user.confirm.mobile.findOne({
+      mobile: mobile,
+      code: code,
+    })
+    .then(doc => {
+      console.log('confirmSmsCode:', doc);
+      if (!doc) {
+        throw new ApiError(400, 'sms_code_invalid', 'code is not valid');
+      }
+      if (time() > doc.expires) {
+        throw new ApiError(400, 'sms_code_expired', 'code has been expired');
+      }
+      return db.user.confirm.mobile.update({
+        _id: doc._id,
+      }, {
+        $set: {
+          expires: time(0),
+        },
       });
     });
   }

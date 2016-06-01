@@ -42,8 +42,8 @@ const io = socketio(server, { path: '/api/socket' });
 bindLoader(app);
 
 // load models
-app.loadModel('email', EmailSender, config.get('vendor.sendcloud'));
-app.loadModel('sms', SmsSender, config.get('vendor.sendcloud'));
+app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
+app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
 app.loadModel('notification', Notification);
 app.loadModel('account', Account);
 app.loadModel('document', Document);
