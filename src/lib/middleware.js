@@ -11,7 +11,6 @@ export function oauthCheck() {
 export function authCheck() {
   return (req, res, next) => {
     let token = req.body.auth_check_token;
-    console.log(token);
     if (!token || !/^\w+$/.test(token)) {
       throw new ApiError(401, 'invalid_request', 'bad or missing authorise token');
     }
