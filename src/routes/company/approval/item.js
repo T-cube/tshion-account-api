@@ -119,7 +119,9 @@ api.put('/:item_id/status', (req, res, next) => {
     _id: item_id,
     from: req.user._id,
   }, {
-    status: 1
+    status: 1,
+    template: 1,
+    step: 1,
   })
   .then(item => {
     if (!item || item.status != C.APPROVAL_ITEM_STATUS.PROCESSING) {
@@ -142,7 +144,7 @@ api.put('/:item_id/status', (req, res, next) => {
         steps: 1
       })
       .then(template => {
-        let { approver, copyto } = Approval.getStepRelatedMembers(req.company.structure, template, item.step);
+        let { approver, copyto } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
         return Promise.all([
           addActivity(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
             approval_item: item_id
