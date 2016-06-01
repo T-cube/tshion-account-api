@@ -3,7 +3,6 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import fs from 'fs';
-import stream from 'stream';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -18,7 +17,7 @@ import {
   delSanitization,
   delValidation,
 } from './schema';
-import { oauthCheck, authCheck } from 'lib/middleware';
+import { oauthCheck } from 'lib/middleware';
 import upload, { getUploadPath } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchUserInfo, generateToken, timestamp } from 'lib/utils';
 import config from 'config';
@@ -32,9 +31,9 @@ api.use(oauthCheck());
 api.use((req, res, next) => {
   let max_file_size = 0;
   let max_total_size = 0;
-  let posKey = req.project._id ? 'project_id' : 'company_id';
-  let posVal = req.project._id || req.company._id;
-  if (req.project._id) {
+  let posKey = req.project ? 'project_id' : 'company_id';
+  let posVal = req.project ? req.project._id : req.company._id;
+  if (req.project) {
     max_file_size = config.get('upload.document.project.max_file_size');
     max_total_size = config.get('upload.document.project.max_total_size');
   } else {
