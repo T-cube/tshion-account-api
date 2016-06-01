@@ -54,4 +54,4 @@ class Loader {
 
 export default function(object) {
   return new Loader(object);
-};
+}

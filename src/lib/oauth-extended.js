@@ -27,8 +27,8 @@ export default {
         throw new ApiError(400, 'token expired');
       }
       db.oauth[collection].remove({[token_type_hint]: token})
-      .then(doc => res.json({code: 200}))
+      .then(() => res.json({code: 200}));
     })
     .catch(next);
   }
-}
+};

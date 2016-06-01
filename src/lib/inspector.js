@@ -1,7 +1,7 @@
 import _ from 'underscore';
 import schemaInspector from 'schema-inspector';
 import { ObjectId } from 'mongodb';
-import { isEmail, userId } from './utils';
+import { isEmail } from './utils';
 import { ApiError } from './error';
 import moment from 'moment-timezone';
 
@@ -41,7 +41,7 @@ let validationCustom = {
       return;
     }
     if (!moment.tz.zone(candidate)) {
-      this.report('invalid timezone: ' + candidate)
+      this.report('invalid timezone: ' + candidate);
     }
   },
   email: function(schema, candidate) {

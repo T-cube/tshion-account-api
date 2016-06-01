@@ -5,14 +5,15 @@ import { ObjectId } from 'mongodb';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
+import __ from 'lib/i18n';
 import upload, { randomAvatar, defaultAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { userId, userInfo, time } from 'lib/utils';
+import { time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
 
 /* company collection */
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.use(oauthCheck());
@@ -32,7 +33,7 @@ api.get('/', (req, res, next) => {
       name: 1,
       description: 1,
       logo: 1,
-    })
+    });
   })
   .then(list => res.json(list))
   .catch(next);
@@ -128,9 +129,10 @@ api.get('/:company_id', (req, res, next) => {
       let user = _.find(users, u => u._id.equals(m._id));
       _.extend(m, user);
       m.avatar = m.avatar || defaultAvatar('user');
-    })
+    });
     res.json(req.company);
-  });
+  })
+  .catch(next);
 });
 
 api.put('/:company_id', (req, res, next) => {
@@ -146,7 +148,6 @@ api.put('/:company_id', (req, res, next) => {
 });
 
 api.delete('/:company_id', authCheck(), (req, res, next) => {
-  let user_id = ObjectId(req.body.user_id);
   let company = req.company;
   if (!req.user._id.equals(company.owner)) {
     throw new ApiError(403, null, 'only owner can carry out this operation');
@@ -155,7 +156,7 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
   db.company.remove({
     _id: company._id
   })
-  .then(doc => res.json({}))
+  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -200,7 +201,7 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
     throw new ApiError(403, null, 'only owner can carry out this operation');
   }
   let member = _.find(company.members, m => m._id.equals(user_id));
-  console.log('user_id=', user_id, 'member=', member)
+  console.log('user_id=', user_id, 'member=', member);
   if (!member) {
     throw new ApiError(404, null, 'member not exists');
   }
@@ -227,7 +228,7 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
           'members.$.type': C.COMPANY_MEMBER_TYPE.ADMIN,
         }
       })
-    ])
+    ]);
   })
   .then(() => res.json({}))
   .catch(next);

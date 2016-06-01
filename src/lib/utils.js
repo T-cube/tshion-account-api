@@ -28,14 +28,14 @@ export function fileExists(path) {
   return fsAccess(path, fs.F_OK)
   .then(() => fsStat(path))
   .then(stat => stat.isFile())
-  .catch(err => false);
+  .catch(() => false);
 }
 
 export function dirExists(path) {
   return fsAccess(path, fs.F_OK)
   .then(() => fsStat(path))
   .then(stat => stat.isDirectory())
-  .catch(err => false);
+  .catch(() => false);
 }
 
 export function getUniqName(list, name) {
@@ -148,7 +148,7 @@ export function indexObjectId(list, id) {
 export function fetchUserInfo(data) {
   let args = [].slice.call(arguments);
   args.shift();
-  return mapObjectIdToData(data, 'user', ['name', 'avatar'], args)
+  return mapObjectIdToData(data, 'user', ['name', 'avatar'], args);
 }
 
 export function mapObjectIdToData(data, collection, fields, keys) {
@@ -160,7 +160,7 @@ export function mapObjectIdToData(data, collection, fields, keys) {
   if (_.isArray(collection)) {
     let mapList = collection;
     return Promise.all(mapList.map(item => mapObjectIdToData(data, ...item)))
-    .then(() => data)
+    .then(() => data);
   }
   fields = fields || [];
   _.isString(fields) && (fields = fields.split(',')).map(field => field.trim());
@@ -178,13 +178,13 @@ export function mapObjectIdToData(data, collection, fields, keys) {
     _id: {
       $in: uniqObjectId(keyList)
     }
-  }, _.object(fields, _.range(fields.length).map(i => 1)))
+  }, _.object(fields, _.range(fields.length).map(() => 1)))
   .then(infoList => {
     _.forEach(keys, pos => {
       _mapObjectIdToData(data, [], pos, infoList);
     });
     return isDataObjectId ? infoList[0] : data;
-  })
+  });
 }
 
 function _mapObjectIdToData(data, k, pos, infoList) {

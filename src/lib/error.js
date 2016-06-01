@@ -45,7 +45,7 @@ export function ApiError(code, error, description, err) {
       404: 'not_found',
       500: 'internel_server_error',
       503: 'service_unavailable',
-    }
+    };
     this.error = known_errors[code] || 'unknown_error';
   }
   this.error_description = description || this.error;
@@ -68,12 +68,12 @@ export function apiErrorHandler(err, req, res, next) {
       code: err.status,
       error: err.message,
       error_description: err.errors
-    }
+    };
     res.json(_err);
     return;
   } else {
     if (!(err instanceof ApiError)) {
-      console.error(err);
+      console.error(err.stack);
       err = new ApiError(500);
     }
     delete err.name;
@@ -82,9 +82,8 @@ export function apiErrorHandler(err, req, res, next) {
       res.set(err.headers);
     }
     delete err.headers;
-    res.status(err.code)
+    res.status(err.code);
     res.json(err);
     return;
   }
-  next(err);
 }

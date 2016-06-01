@@ -60,7 +60,7 @@ export default {
       client_id: clientId,
       user_id: user._id,
       expires: expires
-    }
+    };
     db.oauth.accesstoken.insert(data).
     then(() => callback(null)).catch(e => callback(e));
   },
@@ -123,4 +123,4 @@ export default {
     .then(doc => callback(null, doc))
     .catch(e => callback(e));
   }
-}
+};

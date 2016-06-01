@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import path from 'path';
 
 // application constants
 
@@ -188,11 +189,8 @@ let constants = {
     REJECTED: 'rejected',
   }
 
-}
-
-function buildList(constants) {
-  return _.values(constants);
-}
+};
 
 export default constants;
 export let ENUMS = _.mapObject(constants, c => _.values(c));
+export let BASE_PATH = path.normalize(__dirname + '/../../');

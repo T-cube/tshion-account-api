@@ -2,8 +2,6 @@ import _ from 'underscore'
 import express from 'express';
 import Promise from 'bluebird';
 import validator from 'express-validation';
-import bcrypt from 'bcrypt';
-import crypto from 'crypto';
 import config from 'config';
 
 import db from 'lib/database';

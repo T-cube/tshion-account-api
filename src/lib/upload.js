@@ -5,6 +5,7 @@ import path from 'path';
 import mkdirp from 'mkdirp-bluebird';
 import config from 'config';
 import { dirExists } from 'lib/utils';
+import { BASE_PATH } from 'lib/constants';
 
 export function getUploadPath(dir) {
   let basePath = config.get('upload.path');
@@ -38,7 +39,7 @@ export function randomAvatar(type, size) {
 }
 
 export function defaultAvatar(type) {
-  let filename = `00.png`;
+  let filename = '00.png';
   let dir = `system/avatar/${type}`;
   return getUploadUrl(dir, filename);
 }
@@ -56,7 +57,7 @@ export default function upload(options) {
       dirExists(dir)
       .then(exists => {
         if (!exists) {
-          return mkdirp(dir)
+          return mkdirp(dir);
         }
       })
       .then(() => {

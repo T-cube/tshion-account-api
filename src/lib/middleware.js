@@ -2,10 +2,10 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { time } from 'lib/utils';
 
-export function oauthCheck(options) {
+export function oauthCheck() {
   return (req, res, next) => {
     req.app.oauth.authorise()(req, res, next);
-  }
+  };
 }
 
 export function authCheck() {
@@ -31,5 +31,5 @@ export function authCheck() {
     })
     .then(() => next())
     .catch(() => next('route'));
-  }
+  };
 }
