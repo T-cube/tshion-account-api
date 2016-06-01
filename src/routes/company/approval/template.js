@@ -81,6 +81,14 @@ api.put('/:template_id', (req, res, next) => {
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
   sanitizeValidateObject(sanitization, validation, data);
+  data.steps.forEach(i => {
+    i._id = ObjectId();
+  });
+  data.forms && data.forms.forEach(i => {
+    i._id = ObjectId();
+  });
+  data.company_id = req.company._id;
+  data.status = C.APPROVAL_STATUS.UNUSED;
   let condition = {
     _id: template_id,
     company_id: req.company._id,
@@ -89,14 +97,15 @@ api.put('/:template_id', (req, res, next) => {
     }
   };
   db.approval.template.findOne(condition, {
-    master_id: 1
+    master_id: 1,
+    status: 1,
   })
   .then(oldTpl => {
     if (!oldTpl) {
       throw new ApiError(404, null, 'template is not exist')
     }
     if (oldTpl.status != C.APPROVAL_STATUS.UNUSED) {
-      throw new ApiError(404, null, '启用中的模板不能编辑')
+      throw new ApiError(400, null, '启用中的模板不能编辑')
     }
     return Promise.all([
       db.approval.template.insert(data)
