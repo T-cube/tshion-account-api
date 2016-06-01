@@ -115,38 +115,44 @@ api.put('/:item_id/status', (req, res, next) => {
   if (status != C.APPROVAL_ITEM_STATUS.REVOKED) {
     throw new ApiError(400, null, 'wrong status');
   }
-  db.approval.item.findAndModify({
+  db.approval.item.findOne({
     _id: item_id,
     from: req.user._id,
-    status: C.APPROVAL_STATUS.PROCESSING
   }, {
-    $set: {
-      status: status,
-      step: null
-    }
+    status: 1
   })
   .then(item => {
-    if (!item || !item.value) {
-      throw new ApiError(400, null, 'wrong approval status')
+    if (!item || item.status != C.APPROVAL_ITEM_STATUS.PROCESSING) {
+      throw new ApiError(400, null, 'wrong approval status');
     }
-    res.json({})
-    item = item.value
-    return db.approval.template.findOne({
-      _id: item.template
+    return db.approval.item.update({
+      _id: item_id,
+      from: req.user._id,
     }, {
-      steps: 1
+      $set: {
+        status: status,
+        step: null
+      }
     })
-    .then(template => {
-      let { approver, copyto } = Approval.getStepRelatedMembers(req.company.structure, template, item.step);
-      return Promise.all([
-        addActivity(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
-          approval_item: item_id
-        }),
-        addNotification(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
-          approval_item: item_id,
-          to: approver.concat(copyto)
-        })
-      ])
+    .then(() => {
+      res.json({})
+      return db.approval.template.findOne({
+        _id: item.template
+      }, {
+        steps: 1
+      })
+      .then(template => {
+        let { approver, copyto } = Approval.getStepRelatedMembers(req.company.structure, template, item.step);
+        return Promise.all([
+          addActivity(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
+            approval_item: item_id
+          }),
+          addNotification(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
+            approval_item: item_id,
+            to: approver.concat(copyto)
+          })
+        ])
+      })
     })
   })
   .catch(next);
