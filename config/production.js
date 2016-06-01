@@ -5,7 +5,7 @@ module.exports = {
   locale: 'zh-CN',
   upload: {
     path: 'public/cdn/',
-    url: 'http://api.tlifang.com/cdn/',
+    url: 'https://tlifang.com/cdn/',
     types: ['avatar', 'attachment'],
     defaultType: 'attachment',
     allowed: {
