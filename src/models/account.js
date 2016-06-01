@@ -42,19 +42,21 @@ export default class Account {
     })
     .then(doc => {
       if (!doc) {
-        throw new ApiError(400, 'code_invalid', 'code is not valid');
+        throw new ApiError(400, 'activiate_code_invalid', 'code is not valid');
       }
       console.log(doc);
       if (time() > doc.expires) {
-        throw new ApiError(400, 'code_expired', 'code has been expired');
+        throw new ApiError(400, 'activiate_code_expired', 'code has been expired');
       }
       return db.user.findOne({
         email: doc.email,
       }, {
         email: 1,
+        activiated: 1,
       });
     })
     .then(user => {
+      console.log(user);
       if (user.activiated) {
         throw new ApiError(400, 'already_activiated', 'the email has been activiated already');
       }
@@ -64,6 +66,11 @@ export default class Account {
         $set: {
           activiated: true,
         }
+      })
+      .then(() => {
+        return {
+          email: user.email,
+        };
       });
     });
   }

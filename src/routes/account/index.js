@@ -94,7 +94,7 @@ api.post('/confirm', (req, res, next) => {
     throw new ApiError(400, null, 'invalid confirm code');
   }
   req.model('account').confirmEmailCode(code)
-  .then(() => res.json({}))
+  .then(data => res.json(data))
   .catch(next);
 });
 
