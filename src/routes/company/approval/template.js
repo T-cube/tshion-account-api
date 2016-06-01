@@ -81,6 +81,14 @@ api.put('/:template_id', (req, res, next) => {
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
   sanitizeValidateObject(sanitization, validation, data);
+  data.steps.forEach(i => {
+    i._id = ObjectId();
+  });
+  data.forms && data.forms.forEach(i => {
+    i._id = ObjectId();
+  });
+  data.company_id = req.company._id;
+  data.status = C.APPROVAL_STATUS.UNUSED;
   let condition = {
     _id: template_id,
     company_id: req.company._id,
