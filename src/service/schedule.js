@@ -2,8 +2,6 @@ import _ from 'underscore';
 import scheduleService from 'node-schedule';
 import ScheduleModel from 'models/schedule';
 
-import db from 'lib/database';
-
 export default class ScheduleServer {
 
   constructor() {

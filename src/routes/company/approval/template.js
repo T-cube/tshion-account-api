@@ -7,14 +7,11 @@ import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation, statusSanitization, statusValidation } from './schema';
 import C from 'lib/constants';
-import { oauthCheck } from 'lib/middleware';
 import Structure from 'models/structure';
 import Approval from 'models/approval';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
-
-api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
   db.approval.template.master.find({

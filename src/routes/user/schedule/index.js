@@ -8,12 +8,11 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
-import { oauthCheck, authCheck } from 'lib/middleware';
-import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
+import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import ScheduleModel from 'models/schedule';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.use(oauthCheck());

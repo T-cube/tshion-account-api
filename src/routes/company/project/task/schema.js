@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import { ENUMS } from 'lib/constants';
 
 export let sanitization = {

@@ -16,10 +16,9 @@ import {
   recordSanitization,
   recordValidation
 } from './schema';
-import { oauthCheck, authCheck } from 'lib/middleware';
-import { mapObjectIdToData, fetchUserInfo } from 'lib/utils';
+import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
-import { checkUserTypeFunc, checkUserType } from '../utils';
+import { checkUserTypeFunc } from '../utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
@@ -100,7 +99,7 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
       year: year,
       month: month,
     })
-    
+
     .then(doc => {
       let signRecord = [];
       let setting = new Attendance(req.attendanceSetting);
@@ -194,7 +193,7 @@ api.post('/audit', (req, res, next) => {
 //   db.attendance.audit.find({
 //     company: req.company._id,
 //   })
-//   
+//
 //   .then(doc => res.json(doc))
 // })
 //

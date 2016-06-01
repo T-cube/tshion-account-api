@@ -29,7 +29,6 @@ export default class Attendance {
       'data.$.': 1
     })
     .then(doc => {
-      let settings = this.attendanceSetting;
       let update = this._parseSignData(data, `${year}-${month}-${date}`, doc, isPatch);
       if (!doc) {
         return db.attendance.sign.update({
@@ -161,7 +160,7 @@ export default class Attendance {
     let lastDateOfMonth = isCurrentMonth
       ? now.getDate()
       : moment([year, month, 1]).subtract(1, 'day').getDate();
-    let firstWeekday = moment([year, month - 1, 1]).toDate().getDay();
+    // let firstWeekday = moment([year, month - 1, 1]).toDate().getDay();
     return _.range(1, lastDateOfMonth + 1);
   }
 
@@ -221,7 +220,6 @@ export default class Attendance {
       }
     })
     .then(audit => {
-      console.log('audit', audit);
       if (!audit || status != C.ATTENDANCE_AUDIT_STATUS.APPROVED) {
         return;
       }
@@ -231,7 +229,6 @@ export default class Attendance {
         // is_open: true,
       })
       .then(setting => {
-        console.log('setting', setting);
         if (!setting) {
           return;
         }

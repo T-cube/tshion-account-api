@@ -1,14 +1,4 @@
-import _ from 'underscore';
 import express from 'express'
-import { ObjectId } from 'mongodb';
-import config from 'config';
-
-import db from 'lib/database';
-import { ApiError } from 'lib/error';
-import { oauthCheck } from 'lib/middleware';
-import upload from 'lib/upload';
-import C, { ENUMS } from 'lib/constants';
-import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
 // import { sanitizeValidateObject } from 'lib/inspector';
 // import { infoSanitization, infoValidation, avatarSanitization, avatarValidation } from './schema';
@@ -22,7 +12,7 @@ api.get('/', (req, res, next) => {
   let { last_id } = req.params;
   req.model('activity').fetch({
     company: companyId,
-  })
+  }, last_id)
   .then(list => res.json(list))
   .catch(next);
 });

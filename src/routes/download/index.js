@@ -3,15 +3,13 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import fs from 'fs';
-import stream from 'stream';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { timestamp } from 'lib/utils';
-import { getUploadPath } from 'lib/upload';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 // api.use(oauthCheck());
@@ -46,7 +44,6 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
         throw new ApiError(404);
       }
     } catch (e) {
-      console.error(e);
       throw new ApiError(500);
     }
   })

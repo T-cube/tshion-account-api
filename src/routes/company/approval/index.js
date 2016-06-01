@@ -1,7 +1,7 @@
 import express from 'express';
 import { oauthCheck } from 'lib/middleware';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.use(oauthCheck());
