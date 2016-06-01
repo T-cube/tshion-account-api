@@ -37,7 +37,6 @@ api.get('/', (req, res, next) => {
     description: 1,
     logo: 1,
   })
-
   .then(doc => res.json(doc))
   .catch(next);
   // let projects = req.company.projects || [];
@@ -105,11 +104,13 @@ api.get('/:project_id', (req, res, next) => {
   data.is_owner = owner.equals(req.user._id);
   let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
-  data.owner = _.find(req.company.members, member => {
-    return member._id.equals(owner);
-  });
   fetchUserInfo(data, 'owner')
-  .then(data => res.json(data))
+  .then(data => {
+    _.extend(data.owner, _.find(req.company.members, member => {
+      return member._id.equals(owner);
+    }));
+    res.json(data)
+  })
   .catch(next);
 });
 

@@ -215,7 +215,7 @@ export default class Approval {
     let approver = [];
     let copyto = [];
     structure = new Structure(structure);
-    if (step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
+    if (step.approver && step.approver.type == C.APPROVER_TYPE.DEPARTMENT) {
       approver = structure.findMemberByPosition(step.approver._id);
     } else {
       approver = [step.approver._id];
