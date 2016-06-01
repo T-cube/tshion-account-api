@@ -32,9 +32,9 @@ api.use(oauthCheck());
 api.use((req, res, next) => {
   let max_file_size = 0;
   let max_total_size = 0;
-  let posKey = req.project_id ? 'project_id' : 'company_id';
-  let posVal = req.project_id || req.company._id;
-  if (req.project_id) {
+  let posKey = req.project._id ? 'project_id' : 'company_id';
+  let posVal = req.project._id || req.company._id;
+  if (req.project._id) {
     max_file_size = config.get('upload.document.project.max_file_size');
     max_total_size = config.get('upload.document.project.max_total_size');
   } else {
