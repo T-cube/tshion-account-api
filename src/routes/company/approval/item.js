@@ -118,7 +118,7 @@ api.put('/:item_id/status', (req, res, next) => {
   db.approval.item.findAndModify({
     _id: item_id,
     from: req.user._id,
-    status: C.APPROVAL_STATUS.PENDING
+    status: C.APPROVAL_STATUS.PROCESSING
   }, {
     $set: {
       status: status,
