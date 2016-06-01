@@ -11,7 +11,7 @@ const fieldValidation = {
       maxLength: 50,
       error: '请输入2~50个字符',
     },
-    required: { type: 'boolean' },
+    required: { type: 'boolean', optional: true },
     defaultValue: { type: ['boolean', 'array', 'string', 'null', 'number'], optional: true },
     options: {
       type: ['array', 'null'],
