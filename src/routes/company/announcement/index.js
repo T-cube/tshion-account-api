@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { time, indexObjectId, fetchUserInfo, uniqObjectId } from 'lib/utils';
+import { indexObjectId, fetchUserInfo, uniqObjectId } from 'lib/utils';
 import inspector from 'lib/inspector';
 import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
@@ -12,7 +12,7 @@ import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import { checkUserType } from '../utils';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.use(oauthCheck());
@@ -133,7 +133,7 @@ api.delete('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
     company_id: req.company._id,
     _id: announcement_id
   })
-  .then(doc => res.json({}))
+  .then(() => res.json({}))
   .catch(next);
 });
 

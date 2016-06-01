@@ -5,21 +5,18 @@ import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import upload, { getUploadPath } from 'lib/upload';
+import upload from 'lib/upload';
 import config from 'config';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { itemSanitization, itemValidation, stepSanitization, stepValidation } from './schema';
 import Structure from 'models/structure';
 import C from 'lib/constants';
-import { oauthCheck } from 'lib/middleware';
-import { uniqObjectId, diffObjectId, mapObjectIdToData, indexObjectId } from 'lib/utils';
+import { mapObjectIdToData, indexObjectId } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
-
-api.use(oauthCheck());
 
 api.post('/', upload({type: 'attachment'}).array('files'), (req, res, next) => {
   let data = req.body;
@@ -166,14 +163,13 @@ api.put('/:item_id/steps', (req, res, next) => {
     if (!item) {
       throw new ApiError(400, null, 'wrong approval status');
     }
-    let { step, steps, template } = item;
+    let { step, steps } = item;
     if (!step.equals(data._id)) {
       throw new ApiError(400, null, 'you have not permission to audit');
     }
     return checkAprroverOfStepAndGetSteps(req, item)
     .then(templateSteps => {
       let k = _.findIndex(steps, item => item._id.equals(step));
-      let thisStep =  steps[k];
       let nextStep = steps[k + 1] ? steps[k + 1] : null;
       let update = {
         step: nextStep ? nextStep._id : null,
@@ -252,8 +248,8 @@ function doAfterApproval(item, status) {
   switch (item.target.type) {
     case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
       return updateAttendance(item.target._id, status);
-    return;
   }
+  return;
 }
 
 function updateAttendance(audit_id, status) {

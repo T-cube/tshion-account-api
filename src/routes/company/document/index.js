@@ -53,9 +53,8 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   let condition = {
     [req.document.posKey]: req.document.posVal
   };
-  let dir_id = null;
   if (req.params.dir_id) {
-    condition._id = dir_id = ObjectId(req.params.dir_id);
+    condition._id = ObjectId(req.params.dir_id);
   } else {
     condition.parent_dir = null;
   }
@@ -92,9 +91,9 @@ api.get('/dir/:dir_id?', (req, res, next) => {
         } else {
           dir.dirCount = 0;
         }
-      })
+      });
+      res.json(doc);
     })
-    .then(() => res.json(doc))
   })
   .catch(next);
 });
@@ -479,7 +478,6 @@ function checkNameValid(req, name, parent_dir) {
       throw new ApiError(400, null, '父目录不存在');
     }
     let findDirName = null;
-    let findFileName = null;
     if (list.dirs && list.dirs.length) {
       findDirName = db.document.dir.count({
         _id: {
@@ -578,7 +576,6 @@ function createFile(req, data, dir_id) {
   .then(() => {
     return getFileNameListOfDir(dir_id)
     .then(filenamelist => {
-      console.log(filenamelist);
       data.forEach((item, i) => {
         data[i].name = getUniqFileName(filenamelist, data[i].name);
         filenamelist.push(data[i].name);
@@ -715,7 +712,6 @@ function checkMoveable(target_dir, dirs, files) {
     files: 1,
     dirs: 1,
   })
-
   .then(doc => {
     if (!doc) {
       throw new ApiError(404)

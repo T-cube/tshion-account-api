@@ -6,7 +6,7 @@ import Promise from 'bluebird';
 import db from 'lib/database';
 import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
-import C, { ENUMS } from 'lib/constants';
+import C from 'lib/constants';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { fetchUserInfo, indexObjectId } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -17,12 +17,10 @@ import {
   memberValidation,
   tagSanitization,
   tagValidation,
-  fileSanitization,
-  fileValidation,
 } from './schema';
 
 /* company collection */
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.use(oauthCheck());

@@ -6,15 +6,14 @@ import Promise from 'bluebird';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { defaultAvatar } from 'lib/upload';
-import Structure from 'models/structure';
-import C, { ENUMS } from 'lib/constants';
+import C from 'lib/constants';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
 import { checkUserType } from '../utils';
 import { isEmail, time } from 'lib/utils';
 
 /* company collection */
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.use((req, res, next) => {
@@ -36,7 +35,8 @@ api.get('/', (req, res, next) => {
       m.avatar = m.avatar || defaultAvatar('user');
     })
     res.json(members);
-  });
+  })
+  .catch(next);
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {

@@ -7,21 +7,16 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
-import { oauthCheck } from 'lib/middleware';
 import { uniqObjectId, fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 import {
   sanitization,
   validation,
   commentSanitization,
   commentValidation,
-  logSanitization,
-  logValidation,
 } from './schema';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
-
-api.use(oauthCheck());
 
 api.use((req, res, next) => {
   next();
@@ -145,7 +140,7 @@ api.get('/:_task_id', (req, res, next) => {
 });
 
 api.param('task_id', (req, res, next, id) => {
-  let taskId = ObjectId(req.params.task_id);
+  let taskId = ObjectId(id);
   db.task.findOne({
     _id: taskId,
     project_id: req.project._id,
@@ -466,18 +461,6 @@ function isMemberOfProject(userId, project_id) {
   .then(count => {
     if (count == 0) {
       throw new ApiError(400, null, 'user is not one of the project member')
-    }
-  });
-}
-
-function isMemberOfCompany(userId, company_id) {
-  return db.company.count({
-    _id: company_id,
-    'members._id': userId
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(400, null, 'user is not one of the company member')
     }
   });
 }

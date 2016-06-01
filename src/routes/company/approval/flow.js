@@ -1,12 +1,11 @@
 import _ from 'underscore';
 import express from 'express';
-import { oauthCheck } from 'lib/middleware';
 
 import db from 'lib/database';
 import C, { ENUMS } from 'lib/constants';
 import { mapObjectIdToData } from 'lib/utils';
 import Structure from 'models/structure';
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 const fetchItemFields = {

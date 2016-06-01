@@ -28,7 +28,6 @@ const BASIC_FIELDS = {
   birthdate: 1,
   local: 1,
   address: 1,
-  local: 1,
   timezone: 1,
   // settings
   date_join: 1,

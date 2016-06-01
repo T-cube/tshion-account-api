@@ -14,10 +14,9 @@ import {
   followSanitization,
   followValidation,
 } from './schema';
-import { oauthCheck, authCheck } from 'lib/middleware';
 import { fetchUserInfo } from 'lib/utils';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
