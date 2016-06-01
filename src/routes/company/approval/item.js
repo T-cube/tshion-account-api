@@ -130,6 +130,7 @@ api.put('/:item_id/status', (req, res, next) => {
       throw new ApiError(400, null, 'wrong approval status')
     }
     res.json({})
+    item = item.value
     return db.approval.template.findOne({
       _id: item.template
     }, {
