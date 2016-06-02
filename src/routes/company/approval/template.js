@@ -9,6 +9,7 @@ import { sanitization, validation, statusSanitization, statusValidation } from '
 import C from 'lib/constants';
 import Structure from 'models/structure';
 import Approval from 'models/approval';
+import { checkUserType } from '../utils';
 
 let api = express.Router();
 export default api;
@@ -51,12 +52,12 @@ api.get('/', (req, res, next) => {
         }
       });
       res.json(template);
-    })
+    });
   })
   .catch(next);
 });
 
-api.post('/', (req, res, next) => {
+api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
   data.steps.forEach(i => {
@@ -69,7 +70,7 @@ api.post('/', (req, res, next) => {
   data.status = C.APPROVAL_STATUS.UNUSED;
   Approval.createTemplate(data)
   .then(template => {
-    res.json(template)
+    res.json(template);
     // return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
     //   approval_template: template._id
     // });
@@ -77,7 +78,7 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:template_id', (req, res, next) => {
+api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
   sanitizeValidateObject(sanitization, validation, data);
@@ -102,15 +103,15 @@ api.put('/:template_id', (req, res, next) => {
   })
   .then(oldTpl => {
     if (!oldTpl) {
-      throw new ApiError(404, null, 'template is not exist')
+      throw new ApiError(404, null, 'template is not exist');
     }
     if (oldTpl.status != C.APPROVAL_STATUS.UNUSED) {
-      throw new ApiError(400, null, '启用中的模板不能编辑')
+      throw new ApiError(400, null, '启用中的模板不能编辑');
     }
     return Promise.all([
       db.approval.template.insert(data)
       .then(newTpl => {
-        res.json(newTpl)
+        res.json(newTpl);
         return db.approval.template.master.update({
           _id: oldTpl.master_id
         }, {
@@ -120,10 +121,10 @@ api.put('/:template_id', (req, res, next) => {
           $push: {
             reversions: newTpl._id
           }
-        })
+        });
       }),
       cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
-    ])
+    ]);
   })
   // .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
   //   approval_template: template_id
@@ -142,16 +143,16 @@ api.get('/:template_id', (req, res, next) => {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(404)
+      throw new ApiError(404);
     }
     let tree = new Structure(req.company.structure);
     doc.scope = doc.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
-    res.json(doc)
+    res.json(doc);
   })
   .catch(next);
 });
 
-api.put('/:template_id/status', (req, res, next) => {
+api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
   sanitizeValidateObject(statusSanitization, statusValidation, data);
@@ -165,22 +166,22 @@ api.put('/:template_id/status', (req, res, next) => {
     $set: data
   })
   .then(doc => {
-    res.json(doc)
+    res.json(doc);
     if (!doc.nModified) {
       return;
     }
     if (data.status == C.APPROVAL_STATUS.UNUSED) {
-      return cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
+      return cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
     } else {
       return addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
         approval_template: template_id
-      })
+      });
     }
   })
   .catch(next);
 });
 
-api.delete('/:template_id', (req, res, next) => {
+api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
   db.approval.template.findAndModify({
     query: {
@@ -198,7 +199,7 @@ api.delete('/:template_id', (req, res, next) => {
   })
   .then(template => {
     if (!template || !template.value) {
-      throw new ApiError(404)
+      throw new ApiError(404);
     }
     return Promise.all([
       db.approval.template.master.update({
@@ -212,7 +213,7 @@ api.delete('/:template_id', (req, res, next) => {
       addActivity(req, C.ACTIVITY_ACTION.DELETE, {
         approval_template: template_id
       })
-    ])
+    ]);
   })
   .then(() => res.json({}))
   .catch(next);
@@ -232,13 +233,13 @@ function cancelItemsUseTemplate(req, template_id) {
       target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
       company: req.company._id,
       from: req.user._id,
-    }
+    };
     return Promise.all(
       items.map(item => {
         req.model('notification').send(_.extend(notification, {
           to: item.from,
           approval_item: item._id,
-        }))
+        }));
       })
       .concat(db.approval.item.update({
         _id: {
@@ -250,8 +251,8 @@ function cancelItemsUseTemplate(req, template_id) {
           step: null,
         }
       }))
-    )
-  })
+    );
+  });
 }
 
 function addActivity(req, action, data) {

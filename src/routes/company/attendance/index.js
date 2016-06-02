@@ -23,7 +23,7 @@ import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.use(oauthCheck());
@@ -34,13 +34,13 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let now = new Date();
   _.extend(data, {
     date: now
-  })
+  });
   new Attendance(req.attendanceSetting).updateSign({
     data: [data],
     date: now,
   }, req.user._id, false)
   .then(doc => {
-    res.json(doc)
+    res.json(doc);
     return addActivity(req, C.ACTIVITY_ACTION.SIGN, {
       field: {
         type: data.type,
@@ -49,7 +49,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
     });
   })
   .catch(next);
-})
+});
 
 api.get('/sign/user/:user_id', (req, res, next) => {
   let user_id = ObjectId(req.params.user_id);
@@ -61,7 +61,7 @@ api.get('/sign/user/:user_id', (req, res, next) => {
     month = date.getMonth() + 1;
   }
   if (!user_id.equals(req.user._id) && !checkUserTypeFunc(req, C.COMPANY_MEMBER_TYPE.ADMIN)) {
-    throw new ApiError(403)
+    throw new ApiError(403);
   }
   db.attendance.sign.findOne({
     user: user_id,
@@ -69,8 +69,8 @@ api.get('/sign/user/:user_id', (req, res, next) => {
     month: month,
   })
   .then(doc => res.json(doc))
-  .catch(next)
-})
+  .catch(next);
+});
 
 api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) => {
   let department_id = ObjectId(req.params.department_id);
@@ -90,7 +90,7 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
   })
   .then(record => {
     if (record) {
-      return record.data
+      return record.data;
     }
     return db.attendance.sign.find({
       user: {
@@ -106,33 +106,33 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
       doc.forEach(sign => {
         signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
           user: sign.user
-        }))
-      })
-      return signRecord
-    })
+        }));
+      });
+      return signRecord;
+    });
   })
   .then(record => {
     record.forEach(item => {
-      item.user = _.find(req.company.members, member => member._id.equals(item.user))
-    })
-    res.json(record)
+      item.user = _.find(req.company.members, member => member._id.equals(item.user));
+    });
+    res.json(record);
   })
-  .catch(next)
-})
+  .catch(next);
+});
 
 api.put('/record', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(recordSanitization, recordValidation, data);
-  let condition = _.pick(data, 'year', 'month')
+  let condition = _.pick(data, 'year', 'month');
   delete data.year;
   delete data.month;
   _.extend(condition, {
     company: req.company._id,
-  })
+  });
   db.attendance.record.update(condition, data, {upsert: true})
   .then(doc => res.json(_.pick(doc, '_id')))
-  .catch(next)
-})
+  .catch(next);
+});
 
 api.post('/audit', (req, res, next) => {
   let data = req.body;
@@ -144,16 +144,16 @@ api.post('/audit', (req, res, next) => {
     company: company_id,
     date_create: new Date(),
     status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
-  })
+  });
   db.attendance.audit.insert(data)
   .then(audit => {
-    res.json(audit)
+    res.json(audit);
     let addAuditActivity = addActivity(req, C.ACTIVITY_ACTION.SIGN_AUDIT, {
       field: {
         date: data.date,
         data: data.data
       }
-    })
+    });
     let createApprovalItem = getApprovalTpl(company_id, '_id')
     .then(template => {
       let signInData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_IN);
@@ -181,13 +181,13 @@ api.post('/audit', (req, res, next) => {
         apply_date: new Date(),
         status: C.APPROVAL_ITEM_STATUS.PROCESSING,
         is_archived: false,
-      }
+      };
       return Approval.createItem(item, req);
-    })
-    return Promise.all([addAuditActivity, createApprovalItem])
+    });
+    return Promise.all([addAuditActivity, createApprovalItem]);
   })
-  .catch(next)
-})
+  .catch(next);
+});
 
 // api.get('/audit', (req, res, next) => {
 //   db.attendance.audit.find({
@@ -251,8 +251,8 @@ api.get('/setting', (req, res, next) => {
     company: req.company._id
   })
   .then(doc => res.json(doc || {}))
-  .catch(next)
-})
+  .catch(next);
+});
 
 api.put('/setting', (req, res, next) => {
   let data = req.body;
@@ -281,17 +281,17 @@ api.put('/setting', (req, res, next) => {
     if (!setting || !setting.value) {
       throw new ApiError(400, null, 'attendance is closed');
     }
-    res.json({})
+    res.json({});
     return db.attendance.setting.update({
       _id: setting.approval_template
     }, {
       $set: {
         'steps.$.approver': setting.auditor
       }
-    })
+    });
   })
   .catch(next);
-})
+});
 
 api.post('/setting', ensureSettingNotExist, (req, res, next) => {
   let data = req.body;
@@ -299,7 +299,7 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
   sanitizeValidateObject(settingSanitization, settingValidation, data);
   _.extend(data, {
     company: company_id
-  })
+  });
   db.attendance.setting.insert(data)
   .then(setting => {
     res.json(setting);
@@ -338,11 +338,11 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
         $set: {
           approval_template: template._id
         }
-      })
-    })
+      });
+    });
   })
   .catch(next);
-})
+});
 
 function getApprovalTpl(company_id) {
   return db.attendance.setting.findOne({
@@ -356,8 +356,8 @@ function getApprovalTpl(company_id) {
     }
     return db.approval.template.findOne({
       _id: setting.approval_template
-    })
-  })
+    });
+  });
 }
 
 function ensureFetchSetting(req, res, next) {
@@ -371,7 +371,7 @@ function ensureFetchSetting(req, res, next) {
     req.attendanceSetting = doc;
     next();
   })
-  .catch(e => next(e))
+  .catch(e => next(e));
 }
 
 function ensureFetchSettingOpened(req, res, next) {
@@ -385,7 +385,7 @@ function ensureFetchSettingOpened(req, res, next) {
     req.attendanceSetting = doc;
     next();
   })
-  .catch(e => next(e))
+  .catch(e => next(e));
 }
 
 function ensureSettingNotExist(req, res, next) {
@@ -398,7 +398,7 @@ function ensureSettingNotExist(req, res, next) {
     }
     next();
   })
-  .catch(e => next(e))
+  .catch(e => next(e));
 }
 
 function addActivity(req, action, data) {

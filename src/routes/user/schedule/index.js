@@ -29,7 +29,7 @@ api.post('/', (req, res, next) => {
     creator: req.user._id,
     date_create: new Date(),
     date_update: new Date(),
-  })
+  });
   db.schedule.insert(data)
   .then(doc => {
     res.json(doc);
@@ -79,7 +79,7 @@ api.get([
   })
   .then(doc => res.json(doc))
   .catch(next);
-})
+});
 
 api.get('/:schedule_id', (req, res, next) => {
   let schedule_id = ObjectId(req.params.schedule_id);
@@ -89,7 +89,7 @@ api.get('/:schedule_id', (req, res, next) => {
   })
   .then(doc => res.json(doc))
   .catch(next);
-})
+});
 
 api.put('/:schedule_id', (req, res, next) => {
   let schedule_id = ObjectId(req.params.schedule_id);
@@ -100,7 +100,7 @@ api.put('/:schedule_id', (req, res, next) => {
   console.log(cron_rule);
   _.extend(data, {
     date_update: new Date(),
-  })
+  });
   delete data.repeat;
   db.schedule.update({
     _id: schedule_id,
@@ -110,7 +110,7 @@ api.put('/:schedule_id', (req, res, next) => {
   })
   .then(doc => {
     res.json(doc);
-    return scheduleModel.removeReminding(schedule_id)
+    return scheduleModel.removeReminding(schedule_id);
   })
   .then(() => {
     return Promise.all([
@@ -119,10 +119,10 @@ api.put('/:schedule_id', (req, res, next) => {
       }),
       data.remind != 'none' &&
       scheduleModel.addReminding(schedule_id, cron_rule, data.repeat_end)
-    ])
+    ]);
   })
   .catch(next);
-})
+});
 
 api.delete('/:schedule_id', (req, res, next) => {
   let schedule_id = ObjectId(req.params.schedule_id);
@@ -138,10 +138,10 @@ api.delete('/:schedule_id', (req, res, next) => {
       }),
       doc.remind != 'none' &&
       (new ScheduleModel(db).removeReminding(schedule_id))
-    ])
+    ]);
   })
   .catch(next);
-})
+});
 
 function addActivity(req, action, data) {
   let info = {

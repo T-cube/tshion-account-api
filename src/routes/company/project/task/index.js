@@ -7,7 +7,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
-import { uniqObjectId, fetchUserInfo, mapObjectIdToData } from 'lib/utils';
+import { fetchUserInfo, mapObjectIdToData, indexObjectId } from 'lib/utils';
 import {
   sanitization,
   validation,
@@ -52,12 +52,12 @@ api.get('/', (req, res, next) => {
     }
   }
   if (keyword) {
-    condition['$text'] = { $search: keyword }
+    condition['$text'] = { $search: keyword };
   }
   let sortBy = { status: -1, date_update: 1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
     order = order == 'desc' ? -1 : 1;
-    sortBy = { [sort]: order }
+    sortBy = { [sort]: order };
   }
   // console.log('condition', condition);
   db.task.find(condition).sort(sortBy)
@@ -65,11 +65,11 @@ api.get('/', (req, res, next) => {
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
     });
-    return fetchUserInfo(list, 'assignee')
+    return fetchUserInfo(list, 'assignee');
   })
   .then(data => res.json(data))
   .catch(next);
-})
+});
 
 api.post('/', (req, res, next) => {
   let data = req.body;
@@ -116,7 +116,7 @@ api.post('/', (req, res, next) => {
             is_assignee: true
           }
         }
-      })
+      });
     })
     .then(() => res.json(doc));
   })
@@ -134,7 +134,7 @@ api.get('/:_task_id', (req, res, next) => {
       throw new ApiError(404, null, 'task not found!');
     }
     return fetchUserInfo(data, 'creator', 'assignee', 'followers')
-    .then(() => res.json(data))
+    .then(() => res.json(data));
   })
   .catch(next);
 });
@@ -152,20 +152,17 @@ api.param('task_id', (req, res, next, id) => {
     req.task = task;
     next();
   })
-  .catch(next)
-})
+  .catch(next);
+});
 
 api.delete('/:task_id', (req, res, next) => {
-  isMemberOfProject(req.user._id, req.project._id)
-  .then(() => {
-    return db.task.remove({
-      _id: req.task._id
-    })
+  db.task.remove({
+    _id: req.task._id
   })
   .then(() => {
+    res.json({});
     return logTask(req, C.ACTIVITY_ACTION.DELETE);
   })
-  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -184,13 +181,11 @@ api.put('/:task_id/date_due', updateField('date_due'));
 api.put('/:task_id/assignee', (req, res, next) => {
   let data = validField('assignee', req.body.assignee);
   let task_id = req.task._id;
-  isMemberOfProject(data.assignee, req.project._id)
-  .then(doc => {
-    return db.task.findOne({
-      _id: task_id
-    }, {
-      assignee: 1
-    });
+  ensureProjectMember(req.project, data.assignee);
+  return db.task.findOne({
+    _id: task_id
+  }, {
+    assignee: 1
   })
   .then(doc => {
     if (doc.assignee && doc.assignee.equals(data.assignee)) {
@@ -207,25 +202,25 @@ api.put('/:task_id/assignee', (req, res, next) => {
       }
     });
   })
-  .then(doc => {
+  .then(() => {
     return db.user.count({
-      _id: req.user._id,
+      _id: data.assignee,
       'task._id': task_id
-    })
+    });
   })
   .then(count => {
     if (count) {
       return db.user.update({
-        _id: req.user._id,
+        _id: data.assignee,
         'task._id': task_id
       }, {
         $set: {
           'task.$.is_assignee': true
         }
-      })
+      });
     }
     return db.user.update({
-      _id: req.user._id
+      _id: data.assignee
     }, {
       $push: {
         task: {
@@ -236,7 +231,7 @@ api.put('/:task_id/assignee', (req, res, next) => {
           is_assignee: true
         }
       }
-    })
+    });
   })
   .then(() => {
     return doUpdateField(req, 'assignee');
@@ -266,7 +261,7 @@ api.put('/:task_id/tag', (req, res, next) => {
       _id: req.task._id
     }, {
       $addToSet: data
-    })
+    });
   })
   .then(result => res.json(result))
   .catch(next);
@@ -285,8 +280,6 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
 });
 
 api.post('/:task_id/follow', (req, res, next) => {
-  const taskId = req.task._id;
-  const userId = req.user._id;
   taskFollow(req)
   .then(() => logTask(req, C.ACTIVITY_ACTION.FOLLOW))
   .then(() => res.json({
@@ -296,8 +289,6 @@ api.post('/:task_id/follow', (req, res, next) => {
 });
 
 api.post('/:task_id/unfollow', (req, res, next) => {
-  const taskId = req.task._id;
-  const userId = req.user._id;
   taskUnfollow(req)
   .then(() => logTask(req, C.ACTIVITY_ACTION.UNFOLLOW))
   .then(() => res.json({
@@ -311,7 +302,6 @@ api.put('/:task_id/followers', (req, res, next) => {
     throw new ApiError(400);
   }
   let userId = ObjectId(req.body._id);
-  let taskId = req.task._id;
   taskFollow(req, userId)
   .then(() => logTask(req, C.ACTIVITY_ACTION.ADD, {
     target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
@@ -361,7 +351,7 @@ api.post('/:task_id/comment', (req, res, next) => {
       }
     })
     .then(() => {
-      res.json(data)
+      res.json(data);
     })
     .catch(next);
   })
@@ -380,7 +370,7 @@ api.delete('/:task_id/comment/:comment_id', (req, res, next) => {
       $pull: {
         comments: comment_id
       }
-    })
+    });
   })
   .then(() => res.json({}))
   .catch(next);
@@ -401,7 +391,7 @@ function updateField(field) {
     doUpdateField(req, field)
     .then(data => res.json(data))
     .catch(() => next());
-  }
+  };
 }
 
 function logTask(req, action, data) {
@@ -424,7 +414,6 @@ function logTask(req, action, data) {
 
 function doUpdateField(req, field) {
   let data = validField(field, req.body[field]);
-  let taskId = req.task._id;
   return db.task.update({
     _id: req.task._id
   }, {
@@ -453,30 +442,22 @@ function validField(field, val) {
   return data;
 }
 
-function isMemberOfProject(userId, project_id) {
-  return db.project.count({
-    _id: project_id,
-    'members._id': userId
-  })
-  .then(count => {
-    if (count == 0) {
-      throw new ApiError(400, null, 'user is not one of the project member')
-    }
-  });
+function ensureProjectMember(project, user_id) {
+  if (indexObjectId(project.members.map(i => i._id), user_id) == -1) {
+    throw new ApiError(400, null, 'not the member of this project');
+  }
 }
 
 function taskFollow(req, userId) {
   const taskId = req.task._id;
   userId = userId || req.user._id;
-  return isMemberOfProject(userId, req.project._id)
-  .then(() => {
-    return db.task.update({
-      _id: taskId
-    }, {
-      $addToSet: {
-        followers: userId
-      }
-    });
+  ensureProjectMember(req.project, userId);
+  return db.task.update({
+    _id: taskId
+  }, {
+    $addToSet: {
+      followers: userId
+    }
   })
   .then(() => {
     db.user.count({
@@ -521,7 +502,7 @@ function taskUnfollow(req, userId) {
       $pull: {
         followers: userId
       }
-    })
+    });
   })
   .then(() => {
     return db.user.update({
@@ -532,6 +513,6 @@ function taskUnfollow(req, userId) {
           _id: taskId
         }
       }
-    })
+    });
   });
 }
