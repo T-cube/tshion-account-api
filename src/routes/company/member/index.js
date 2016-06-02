@@ -42,6 +42,7 @@ api.get('/', (req, res, next) => {
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
+  data.type = C.COMPANY_MEMBER_TYPE.NORMAL;
   let member = _.find(req.company.members, m => m.email == data.email);
   if (member) {
     throw new ApiError(400, null, 'member exists');
@@ -53,7 +54,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
     if (user) {
       // invite registered user;
       let member = _.find(req.company.members, m => {
-        m._id.equals(user._id)
+        m._id.equals(user._id);
       });
       if (member) {
         throw new ApiError(400, null, 'member exists');
@@ -137,8 +138,6 @@ api.get('/:member_id', (req, res, next) => {
 
 api.put('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
-  delete sanitization.type;
-  delete validation.type;
   sanitizeValidateObject(sanitization, validation, req.body);
   let data = {};
   _.each(req.body, (val, key) => {
@@ -150,7 +149,7 @@ api.put('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, ne
   }, {
     $set: data
   })
-  .then(doc => res.json({}))
+  .then(() => res.json({}))
   .catch(next);
 });
 

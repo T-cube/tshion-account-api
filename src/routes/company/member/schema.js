@@ -8,7 +8,7 @@ export let sanitization = {
   joindate: { type: 'date', def: '2012-12-20' },
   address: { type: 'string', def: '' },
   sex: { type: 'string', def: C.SEX.MALE },
-  type: { type: 'string', def: C.COMPANY_MEMBER_TYPE.NORMAL },
+  type: { type: 'string', optional: true },
 };
 
 export let validation = {
@@ -19,5 +19,5 @@ export let validation = {
   joindate: { type: 'date', optional: true },
   address: { type: 'string', optional: true },
   sex: { $enum: ENUMS.SEX, optional: true },
-  type: { $enum: ENUMS.COMPANY_MEMBER_TYPE },
+  type: { $enum: ENUMS.COMPANY_MEMBER_TYPE, optional: true },
 };
