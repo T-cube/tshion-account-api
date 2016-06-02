@@ -9,7 +9,7 @@ import { defaultAvatar } from 'lib/upload';
 import C from 'lib/constants';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
-import { checkUserType } from '../utils';
+import { checkUserType, checkUserTypeFunc } from '../utils';
 import { isEmail, time } from 'lib/utils';
 
 /* company collection */
@@ -136,8 +136,11 @@ api.get('/:member_id', (req, res, next) => {
   res.json(member);
 });
 
-api.put('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
+api.put('/:member_id', (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
+  if (!req.user._id.equals(member_id)) {
+    checkUserTypeFunc(req, C.COMPANY_MEMBER_TYPE.ADMIN);
+  }
   if (!req.body.type) {
     delete sanitization.type;
     delete validation.type;
