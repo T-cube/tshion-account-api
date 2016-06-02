@@ -6,7 +6,7 @@ import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
-import { getUniqName } from 'lib/utils';
+import { getUniqName, indexObjectId } from 'lib/utils';
 
 class Structure {
 
@@ -235,7 +235,7 @@ class Structure {
     }
     let nodeMembers = node.members.filter(i => i.title.equals(position_id)).map(j => j._id);
     if (nodeMembers) {
-      members = members.concat(nodeMembers)
+      members = members.concat(nodeMembers);
     }
     if (node.children) {
       for (let k in node.children) {
@@ -248,7 +248,22 @@ class Structure {
 
   findMemberByPosition(position_id) {
     position_id = ObjectId(position_id);
-    return this._findMemberByPosition(this.root, position_id, [])
+    return this._findMemberByPosition(this.root, position_id, []);
+  }
+
+  findMemberDepartments(member_id, node) {
+    let departments = [];
+    node = node || this.root;
+    let members = node.members;
+    if (indexObjectId(members, member_id) != -1) {
+      departments.push(node._id);
+    }
+    if (node.children && node.children.length) {
+      node.children.forEach(i => {
+        departments = departments.concat(this.findMemberDepartments(member_id, i._id));
+      });
+    }
+    return departments;
   }
 
   object() {
