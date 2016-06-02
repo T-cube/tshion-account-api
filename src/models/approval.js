@@ -190,6 +190,9 @@ export default class Approval {
   }
 
   static createTemplate(template) {
+    _.extend(template, {
+      date_update: new Date()
+    });
     return db.approval.template.insert(template)
     .then(template => {
       return db.approval.template.master.insert({

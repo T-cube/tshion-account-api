@@ -8,7 +8,7 @@ import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { fetchUserInfo, indexObjectId } from 'lib/utils';
+import { fetchUserInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
   projectSanitization,
@@ -194,30 +194,16 @@ api.put('/:project_id/logo/upload', upload({type: 'avatar'}).single('logo'),
 });
 
 api.get('/:project_id/member', (req, res, next) => {
-  let data = req.project;
-  let members = data.members;
+  let members = req.project.members || [];
   let memberIds = members.map(i => i._id);
-  db.user.find({
-   _id: {
-     $in: memberIds
-   }
-  }, {
-   name: 1,
-   avatar: 1,
-   email: 1,
-   mobile: 1,
-  })
+  mapObjectIdToData(memberIds, 'user', 'name,avatar,email,mobile')
   .then(memberInfo => {
     members.forEach(i => {
-     let info = _.find(memberInfo, j => i._id.equals(j._id));
-     if (info) {
-       i.name = info.name;
-       i.avatar = info.avatar;
-       i.email = info.email;
-       i.mobile = info.mobile;
-     }
+      let info = _.find(memberInfo, j => i._id.equals(j._id)) || {};
+      let companyMemberInfo = _.find(req.company.members, j => i._id.equals(j._id)) || {};
+      _.extend(i, info, companyMemberInfo);
     });
-    res.json(members || []);
+    res.json(members);
   })
   .catch(next);
 });
