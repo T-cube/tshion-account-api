@@ -26,13 +26,13 @@ api.get('/', (req, res, next) => {
   if (type && _.contains(['news', 'notice'], type)) {
     condition.type = type;
   }
-  getAnnouncementList(condition)
+  getAnnouncementList(req, condition)
   .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.get('/draft', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  getAnnouncementList({
+  getAnnouncementList(req, {
     company_id: req.company._id,
     is_published: false,
   })
@@ -46,30 +46,29 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   data.date_create = new Date();
   db.announcement.insert(data)
   .then(doc => {
-    res.json(doc)
+    res.json(doc);
     let addingNotification = null;
     let addingActivity = null;
     if (doc.is_published) {
       addingNotification = addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
         announcement: doc._id,
-      }, data.to)
+      }, data.to);
       addingActivity = addActivity(req, C.ACTIVITY_ACTION.RELEASE, {
         announcement: doc._id,
         company: req.company._id,
-      })
+      });
     } else {
       addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE, {
         announcement: doc._id,
-      })
+      });
     }
-    return Promise.all([addingActivity, addingNotification])
+    return Promise.all([addingActivity, addingNotification]);
   })
   .catch(next);
 });
 
 api.get('/:announcement_id', (req, res, next) => {
-  let announcement_id = ObjectId(req.params.announcement_id);
-  getAnnouncement(req.company._id, announcement_id, true)
+  getAnnouncement(req, true)
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -77,8 +76,7 @@ api.get('/:announcement_id', (req, res, next) => {
 api.get('/draft/:announcement_id',
   checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN),
   (req, res, next) => {
-  let announcement_id = ObjectId(req.params.announcement_id);
-  getAnnouncement(req.company._id, announcement_id, false)
+  getAnnouncement(req, false)
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -105,7 +103,7 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
       $set: data
     })
     .then(doc => {
-      res.json(doc)
+      res.json(doc);
       let addingNotification = null;
       let addingActivity = null;
       if (!announcement.is_published && data.is_published) {
@@ -115,14 +113,14 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
         addingActivity = addActivity(req, C.ACTIVITY_ACTION.RELEASE, {
           announcement: announcement_id,
           company: req.company._id,
-        })
+        });
       } else {
         addingActivity = addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
           announcement: announcement_id
-        })
+        });
       }
-      return Promise.all([addingActivity, addingNotification])
-    })
+      return Promise.all([addingActivity, addingNotification]);
+    });
   })
   .catch(next);
 });
@@ -137,13 +135,20 @@ api.delete('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
   .catch(next);
 });
 
-function getAnnouncementList(condition) {
+function getAnnouncementList(req, condition) {
   return db.announcement.find(condition, {
     content: 0
   })
   .then(announcements => {
-    return fetchUserInfo(announcements, 'from.creator');
-  })
+    let structure = new Structure(req.company.structure);
+    announcements.forEach(announcement => {
+      if (announcement.from.department) {
+        announcement.from.department = structure.findNodeById(announcement.from.department);
+      }
+    });
+    return fetchUserInfo(announcements, 'from.creator', 'to.member')
+    .then(announcements => announcements);
+  });
 }
 
 function fetchAnnouncementData(req) {
@@ -175,9 +180,10 @@ function fetchAnnouncementData(req) {
   return data;
 }
 
-function getAnnouncement(company_id, announcement_id, is_published) {
+function getAnnouncement(req, is_published) {
+  let announcement_id = ObjectId(req.params.announcement_id);
   return db.announcement.findOne({
-    company_id: company_id,
+    company_id: req.company._id,
     _id: announcement_id,
     is_published: is_published
   })
@@ -185,8 +191,12 @@ function getAnnouncement(company_id, announcement_id, is_published) {
     if (!announcement) {
       throw new ApiError(404);
     }
-    return fetchUserInfo(announcement, 'from.creator')
-  })
+    let structure = new Structure(req.company.structure);
+    if (announcement.from.department) {
+      announcement.from.department = structure.findNodeById(announcement.from.department);
+    }
+    return fetchUserInfo(announcement, 'from.creator');
+  });
 }
 
 function addActivity(req, action, data) {
@@ -220,10 +230,10 @@ function getNotifyUsers(req, to) {
     }
     if (to.department) {
       let structure = new Structure(req.company.structure);
-      users = users.concat(_.flatten(to.department.map(department => structure.findNodeById(department).members)))
+      users = users.concat(_.flatten(to.department.map(department => structure.findNodeById(department).members)));
     }
   } else {
     users = _.filter(req.company.members.map(member => member._id), id => id.equals(req.user._id));
   }
-  return uniqObjectId(users)
+  return uniqObjectId(users);
 }

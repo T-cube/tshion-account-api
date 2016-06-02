@@ -77,7 +77,7 @@ api.post('/', (req, res, next) => {
       }),
     ])
     .then(() => logProject(req, C.ACTIVITY_ACTION.CREATE))
-    .then(() => res.json(doc))
+    .then(() => res.json(doc));
   })
   .catch(next);
 });
@@ -109,7 +109,7 @@ api.get('/:project_id', (req, res, next) => {
     _.extend(data.owner, _.find(req.company.members, member => {
       return member._id.equals(owner);
     }));
-    res.json(data)
+    res.json(data);
   })
   .catch(next);
 });
@@ -220,7 +220,7 @@ api.post('/:project_id/member', (req, res, next) => {
     if (indexObjectId(req.project.members.map(i => i._id), item._id) != -1) {
       throw new ApiError(400, null, 'member is exists');
     }
-  })
+  });
   Promise.all([
     db.user.update({
       _id: {

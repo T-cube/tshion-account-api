@@ -55,7 +55,7 @@ api.get('/count', (req, res, next) => {
   ])
   .then(() => res.json(count))
   .catch(next);
-})
+});
 
 api.post('/', (req, res, next) => {
   let data = req.body;
@@ -143,7 +143,7 @@ api.post('/:discussion_id/comment', (req, res, next) => {
     discussion_id: discussion_id,
     creator: req.user._id,
     date_create: new Date(),
-  })
+  });
   db.discussion.comment.insert(data)
   .then(doc => {
     res.json(doc);
@@ -154,7 +154,7 @@ api.post('/:discussion_id/comment', (req, res, next) => {
       $push: {
         comments: doc._id
       }
-    })
+    });
   })
   .catch(next);
 });
@@ -180,7 +180,7 @@ api.get('/:discussion_id/comment', (req, res, next) => {
         $in: discussion.comments
       }
     })
-    .then(doc => res.json(doc))
+    .then(doc => res.json(doc));
   })
   .catch(next);
 });
@@ -200,7 +200,7 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
     return db.discussion.comment.remove({
       _id: comment_id,
       discussion_id: discussion_id,
-    })
+    });
   })
   .then(() => res.json({}))
   .catch(next);

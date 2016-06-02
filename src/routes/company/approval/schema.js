@@ -32,35 +32,35 @@ export let sanitization = {
   name: { type: 'string' },
   description: { type: 'string', optional: true },
   scope: {
-		type: 'array',
-		items: { $objectId: 1 }
-	},
+    type: 'array',
+    items: { $objectId: 1 }
+  },
   steps: {
-		type: 'array',
-		items: {
-			type: 'object',
-			properties: {
-		    approver: {
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        approver: {
           type: 'object',
-    			properties: {
+          properties: {
             _id: { $objectId: 1 },
             type: { type: 'string' }
           }
         },
-		    copy_to: {
+        copy_to: {
           type: 'array',
           items: {
             type: 'object',
             optional: true,
-      			properties: {
+            properties: {
               _id: { $objectId: 1 },
               type: { type: 'string' }
             }
           }
         }
-		  }
-		}
-	},
+      }
+    }
+  },
   forms: {
     type: 'array',
     optional: true,
@@ -69,40 +69,40 @@ export let sanitization = {
 };
 
 export let validation = {
-	name: { type: 'string' },
-	description: { type: 'string', optional: true },
-	scope: {
-		type: 'array',
-		items: { $objectId: 1 }
-	},
-	steps: {
-		type: 'array',
-		items: {
-			type: 'object',
-			properties: {
-				approver: {
+  name: { type: 'string' },
+  description: { type: 'string', optional: true },
+  scope: {
+    type: 'array',
+    items: { $objectId: 1 }
+  },
+  steps: {
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        approver: {
           type: 'object',
-    			properties: {
+          properties: {
             _id: { $objectId: 1 },
             type: { $enum: ENUMS.APPROVER_TYPE }
           }
         },
-				copy_to: {
+        copy_to: {
           type: 'array',
           optional: true,
           items: {
             type: 'object',
             optional: true,
-      			properties: {
+            properties: {
               _id: { $objectId: 1 },
               type: { $enum: ENUMS.APPROVER_TYPE }
             }
           }
         }
-			}
-		}
-	},
-	forms: {
+      }
+    }
+  },
+  forms: {
     type: 'array',
     optional: true,
     items: fieldValidation
@@ -110,12 +110,12 @@ export let validation = {
 };
 
 export let statusSanitization = {
-	status: { type: 'string' }
-}
+  status: { type: 'string' }
+};
 
 export let statusValidation = {
-	status: { $enum: ENUMS.APPROVAL_STATUS }
-}
+  status: { $enum: ENUMS.APPROVAL_STATUS }
+};
 
 export let itemSanitization = {
   template: { $objectId: 1 },

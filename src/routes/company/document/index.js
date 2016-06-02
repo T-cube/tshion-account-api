@@ -23,7 +23,7 @@ import { getUniqFileName, mapObjectIdToData, fetchUserInfo, generateToken, times
 import config from 'config';
 import C from 'lib/constants';
 
-let api = require('express').Router();
+let api = express.Router();
 export default api;
 
 api.use(oauthCheck());
@@ -69,7 +69,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
           total_size: 0
         });
         return db.document.dir.insert(condition)
-        .then(rootDir => res.json(rootDir))
+        .then(rootDir => res.json(rootDir));
       }
       throw new ApiError(404);
     }
@@ -81,7 +81,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       ]),
     ])
     .then(() => {
-      return fetchUserInfo(doc, 'updated_by', 'files.updated_by', 'dirs.updated_by')
+      return fetchUserInfo(doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
     })
     .then(() => {
       doc.dirs.forEach(dir => {
@@ -93,7 +93,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
         }
       });
       res.json(doc);
-    })
+    });
   })
   .catch(next);
 });
@@ -112,9 +112,7 @@ api.get('/tree', (req, res, next) => {
         total_size: 0,
       });
       return db.document.dir.insert(condition)
-      .then(rootDir => {
-        return [rootDir];
-      })
+      .then(rootDir => [rootDir]);
     }
     return dirs;
   })
@@ -135,7 +133,7 @@ api.post('/dir', (req, res, next) => {
     updated_by: req.user._id,
     date_update: new Date(),
     date_create: new Date(),
-  })
+  });
   checkNameValid(req, data.name, data.parent_dir)
   .then(() => {
     return getFullPath(data.parent_dir)
@@ -143,12 +141,12 @@ api.post('/dir', (req, res, next) => {
       if (path.length >= 5) {
         throw new ApiError(400, null, '最多只能创建5级目录');
       }
-    })
+    });
   })
   .then(() => {
     return db.document.dir.insert(data)
     .then(doc => {
-      res.json(doc)
+      res.json(doc);
       return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
         document_dir: doc._id,
         target_type: C.OBJECT_TYPE.DOCUMENT_DIR,
@@ -161,10 +159,10 @@ api.post('/dir', (req, res, next) => {
             $push: {
               dirs: doc._id
             }
-          })
+          });
         }
-      })
-    })
+      });
+    });
   })
   .catch(next);
 });
@@ -193,9 +191,9 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
         _id: dir_id
       }, {
         $set: data
-      })
-      .then(doc => res.json(doc))
+      });
     })
+    .then(doc => res.json(doc));
   })
   // .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
   //   document_dir: doc._id,
@@ -226,7 +224,7 @@ api.get('/file/:file_id', (req, res, next) => {
     }
     res.json(file);
   })
-  .catch(next)
+  .catch(next);
 });
 
 api.get('/file/:file_id/download', (req, res, next) => {
@@ -237,10 +235,10 @@ api.get('/file/:file_id/download', (req, res, next) => {
       user: req.user._id,
       file: file_id,
       expires: new Date(timestamp() + config.get('download.tokenExpires')),
-    })
+    });
     res.json({ token });
   })
-  .catch(next)
+  .catch(next);
 });
 
 api.post('/dir/:dir_id/create', (req, res, next) => {
@@ -261,7 +259,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   data = [data];
   createFile(req, data, dir_id)
   .then(doc => {
-    return fetchUserInfo(doc, 'updated_by')
+    return fetchUserInfo(doc, 'updated_by');
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -293,7 +291,7 @@ api.post('/dir/:dir_id/upload',
     doc.forEach(item => {
       delete item.path;
     });
-    return fetchUserInfo(doc, 'updated_by')
+    return fetchUserInfo(doc, 'updated_by');
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -316,7 +314,7 @@ api.put('/file/:file_id', (req, res, next) => {
   })
   .then(fileInfo => {
     if (!fileInfo) {
-      throw new ApiError(404)
+      throw new ApiError(404);
     }
     if (fileInfo.path) {
       if (fileInfo.name == data.name) {
@@ -335,11 +333,11 @@ api.put('/file/:file_id', (req, res, next) => {
         _id: file_id,
       }, {
         $set: data
-      })
-      .then(doc => res.json(doc))
+      });
     })
+    .then(doc => res.json(doc));
   })
-  .catch(next)
+  .catch(next);
 });
 
 api.put('/move', (req, res, next) => {
@@ -358,8 +356,8 @@ api.put('/move', (req, res, next) => {
         if (_.find(path, item => item._id.equals(dir))) {
           throw new ApiError(400, null, '不能移动文件夹到其子文件夹');
         }
-      })
-    })
+      });
+    });
   })
   .then(() => {
     if (!dirs || !dirs.length) {
@@ -408,8 +406,8 @@ api.put('/move', (req, res, next) => {
             }
           }
         })
-      ])
-    })
+      ]);
+    });
   })
   .then(() => {
     if (!files || !files.length) {
@@ -458,8 +456,8 @@ api.put('/move', (req, res, next) => {
             }
           }
         })
-      ])
-    })
+      ]);
+    });
   })
   .then(() => res.json({}))
   .catch(next);
@@ -489,7 +487,7 @@ function checkNameValid(req, name, parent_dir) {
         if (count) {
           throw new ApiError(400, null, '存在同名的目录');
         }
-      })
+      });
     }
     // if (list.files && list.files.length) {
     //   findFileName = db.document.dir.count({
@@ -506,7 +504,7 @@ function checkNameValid(req, name, parent_dir) {
     // }
     // return Promise.all([findDirName, findFileName]);
     return findDirName;
-  })
+  });
 }
 
 function checkDirExist(req, dir_id) {
@@ -521,7 +519,7 @@ function checkDirExist(req, dir_id) {
     if (!count) {
       throw new ApiError(404, null, '文件夹' + dir_id + '不存在');
     }
-  })
+  });
 }
 
 function getTotalSize(req) {
@@ -533,7 +531,7 @@ function getTotalSize(req) {
   })
   .then(doc => {
     return doc && doc.size ? doc.size : 0;
-  })
+  });
 }
 
 function getFullPath(dir_id, path) {
@@ -555,22 +553,22 @@ function getFullPath(dir_id, path) {
       }
     }
     return path;
-  })
+  });
 }
 
 function createFile(req, data, dir_id) {
   let total_size = 0;
   data.forEach(item => {
     if (item.size > req.document.max_file_size) {
-      throw new ApiError(400, null, '文件大小超过上限')
+      throw new ApiError(400, null, '文件大小超过上限');
     }
     total_size += parseFloat(item.size);
   });
   getTotalSize(req).then(curSize => {
     if ((curSize + total_size) > req.document.max_total_size) {
-      throw new ApiError(400, null, '您的文件存储空间不足')
+      throw new ApiError(400, null, '您的文件存储空间不足');
     }
-  })
+  });
 
   return checkDirExist(req, dir_id)
   .then(() => {
@@ -579,7 +577,7 @@ function createFile(req, data, dir_id) {
       data.forEach((item, i) => {
         data[i].name = getUniqFileName(filenamelist, data[i].name);
         filenamelist.push(data[i].name);
-      })
+      });
     })
     .then(() => {
       return db.document.file.insert(data)
@@ -603,10 +601,10 @@ function createFile(req, data, dir_id) {
             }
           })
         ])
-        .then(() => doc)
-      })
-    })
-  })
+        .then(() => doc);
+      });
+    });
+  });
 }
 
 function deleteDirs(req, dirs) {
@@ -635,10 +633,10 @@ function deleteDirs(req, dirs) {
       .then(() => {
         return db.document.dir.remove({
           _id: dir_id
-        })
-      })
-    })
-  }))
+        });
+      });
+    });
+  }));
 }
 
 function deleteFiles(req, files) {
@@ -672,14 +670,16 @@ function deleteFiles(req, files) {
               files: file_id
             }
           }),
-        ])
+        ]);
       })
       .then(() => {
         try {
           fs.unlinkSync(getUploadPath(fileInfo.path));
-        } catch (e) {}
-      })
-    })
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    });
   }))
   .then(() => {
     return db.document.dir.update({
@@ -689,8 +689,8 @@ function deleteFiles(req, files) {
       $inc: {
         total_size: incSize
       }
-    })
-  })
+    });
+  });
 }
 
 function getFileNameListOfDir(dir_id) {
@@ -701,8 +701,8 @@ function getFileNameListOfDir(dir_id) {
   })
   .then(dirInfo => {
     return mapObjectIdToData(dirInfo.files, 'document.file', 'name')
-    .then(files => files.map(file => file.name))
-  })
+    .then(files => files.map(file => file.name));
+  });
 }
 
 function checkMoveable(target_dir, dirs, files) {
@@ -714,7 +714,7 @@ function checkMoveable(target_dir, dirs, files) {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(404)
+      throw new ApiError(404);
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'dirs'],
@@ -736,7 +736,7 @@ function checkMoveable(target_dir, dirs, files) {
             if (_.find(dirNameList, dirInfo.name)) {
               throw new ApiError(400, null, '存在同名的文件或文件夹');
             }
-          })
+          });
         }),
         _.isArray(files) && files.length && db.document.file.find({
           _id: {
@@ -750,11 +750,11 @@ function checkMoveable(target_dir, dirs, files) {
             if (_.find(fileNameList, fileInfo.name)) {
               throw new ApiError(400, null, '存在同名的文件或文件夹');
             }
-          })
+          });
         })
-      ])
-    })
-  })
+      ]);
+    });
+  });
 }
 
 function addActivity(req, action, data) {

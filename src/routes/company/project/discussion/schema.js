@@ -1,5 +1,3 @@
-import _ from 'underscore';
-import { ENUMS } from 'lib/constants';
 
 export let discussionSanitization = {
   title: { type: 'string' },
@@ -7,7 +5,7 @@ export let discussionSanitization = {
 }
 
 export let discussionValidation = {
-  title: { type: 'string', minLength: 5 },
+  title: { type: 'string', minLength: 3, maxLength: 100 },
   content: { type: 'string' },
 }
 

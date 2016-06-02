@@ -24,7 +24,15 @@ export default class Approval {
         data.steps.push({
           _id: step._id,
           status: C.APPROVAL_ITEM_STATUS.PROCESSING
-        })
+        });
+      });
+      template.forms.forEach(form => {
+        if (form.required) {
+          let userForm = _.find(data.forms, userFormItem => form._id.equals(userFormItem._id));
+          if (!userForm || !userForm.value) {
+            throw new ApiError(400, null, '请填写必填的内容');
+          }
+        }
       });
       // data.forms.forEach(form => {
       //   form.title = (_.find(template.forms, tpl_form => tpl_form._id.equals(form._id))).title;
@@ -38,7 +46,7 @@ export default class Approval {
           target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
           company: req.company._id,
           creator: req.user._id,
-        })
+        });
         return db.approval.user.findOne({
           _id: data.from,
           'map.company_id': data.company_id
