@@ -106,5 +106,5 @@ module.exports = {
   },
   download: {
     tokenExpires: 30 * 60 * 1000, // half a hour
-  }
+  },
 };
