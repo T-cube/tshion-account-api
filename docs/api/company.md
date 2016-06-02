@@ -311,3 +311,7 @@ INPUT
 ### DELETE /company/:company_id/structure/:node_id/member/:member_id
 
 移除部门成员
+
+### POST /company/:company_id/exit
+
+退出公司

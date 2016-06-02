@@ -174,6 +174,27 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
   .catch(next);
 });
 
+api.post('/exit', (req, res, next) => {
+  const member_id = req.user._id;
+  if (req.company.owner.equals(member_id)) {
+    throw new ApiError(400, null, 'company owner can not exit');
+  }
+  return Promise.all([
+    db.company.update({
+      _id: req.company._id,
+    }, {
+      $pull: {members: {_id: member_id}}
+    }),
+    db.user.update({
+      _id: member_id,
+    }, {
+      $pull: {companies: req.company._id}
+    })
+  ])
+  .then(() => res.json({}))
+  .catch(next);
+});
+
 function addActivity(req, action, data) {
   let info = {
     action: action,
