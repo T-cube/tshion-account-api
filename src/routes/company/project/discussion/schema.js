@@ -7,7 +7,7 @@ export let discussionSanitization = {
 }
 
 export let discussionValidation = {
-  title: { type: 'string', minLength: 5 },
+  title: { type: 'string', minLength: 3, maxLength: 100 },
   content: { type: 'string' },
 }
 
