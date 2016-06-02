@@ -137,6 +137,8 @@ api.get('/:member_id', (req, res, next) => {
 
 api.put('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let member_id = ObjectId(req.params.member_id);
+  delete sanitization.type;
+  delete validation.type;
   sanitizeValidateObject(sanitization, validation, req.body);
   let data = {};
   _.each(req.body, (val, key) => {
