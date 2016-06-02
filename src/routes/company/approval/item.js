@@ -95,14 +95,14 @@ api.get('/:item_id', (req, res, next) => {
     })
     .then(data => {
       let tree = new Structure(req.company.structure);
-      data.from = _.find(req.company.members, member => member._id = data.from);
+      data.from = _.find(req.company.members, member => member._id.equals(data.from));
       data.steps.forEach(step => {
         if (step.approver) {
-          step.approver = _.find(req.company.members, member => member._id = step.approver);
+          step.approver = _.find(req.company.members, member => member._id.equals(step.approver));
         }
       });
       data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
-      data.department && (data.department = _.find(tree.findNodeById(data.department), '_id', 'name'));
+      data.department && (data.department = _.pick(tree.findNodeById(data.department), '_id', 'name'));
       res.json(data);
     })
   })
@@ -267,7 +267,7 @@ function updateAttendance(audit_id, status) {
   } else {
     status = C.ATTENDANCE_AUDIT_STATUS.REJECTED;
   }
-  return Attendance.audit(audit_id, status)
+  return Attendance.audit(audit_id, status);
 }
 
 function checkAprroverOfStepAndGetSteps(req, item) {
@@ -282,5 +282,5 @@ function checkAprroverOfStepAndGetSteps(req, item) {
       throw new ApiError(400, null, 'you have not permission to audit');
     }
     return template.steps;
-  })
+  });
 }

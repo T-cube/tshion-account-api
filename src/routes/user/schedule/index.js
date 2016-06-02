@@ -39,10 +39,10 @@ api.post('/', (req, res, next) => {
       }),
       data.remind != 'none' &&
       scheduleModel.addReminding(doc._id, cron_rule, data.repeat_end)
-    ])
+    ]);
   })
   .catch(next);
-})
+});
 
 api.get([
   '/year/:year',
