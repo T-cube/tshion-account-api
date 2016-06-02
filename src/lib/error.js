@@ -8,7 +8,7 @@
  */
 
 import util from 'util';
-import { ValidationError } from 'express-validation';
+import { ValidationError } from 'lib/inspector';
 // import DbError from '../models/db-error';
 
 //const VALIDATION_ERROR_MESSAGE = 'validation error';
@@ -63,14 +63,13 @@ export function apiErrorHandler(err, req, res, next) {
   //   err = ApiError(500, err.message, err.description, err);
   // }
   if (err instanceof ValidationError) {
-    res.status(err.status);
-    let _err = {
-      code: err.status,
-      error: err.message,
-      error_description: err.errors
+    res.status(400);
+    err = {
+      code: 400,
+      error: 'validation_error',
+      error_description: err.message,
     };
-    res.json(_err);
-    return;
+    res.json(err);
   } else {
     if (!(err instanceof ApiError)) {
       console.error(err.stack);
@@ -84,6 +83,5 @@ export function apiErrorHandler(err, req, res, next) {
     delete err.headers;
     res.status(err.code);
     res.json(err);
-    return;
   }
 }

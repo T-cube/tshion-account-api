@@ -78,6 +78,17 @@ let constants = {
     ATTENDANCE_AUDIT: 'attendance.audit',
   },
 
+  ATTENDANCE_SIGN_TYPE: {
+    SIGN_IN: 'sign_in',
+    SIGN_OUT: 'sign_out',
+  },
+
+  ATTENDANCE_AUDIT_STATUS: {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+  },
+
   COMPANY_MEMBER_STATUS: {
     BANNED: 'banned',
     PENDING: 'pending',
@@ -177,17 +188,6 @@ let constants = {
     EMAIL: 'email',
     MOBILE: 'mobile',
   },
-
-  ATTENDANCE_SIGN_TYPE: {
-    SIGN_IN: 'sign_in',
-    SIGN_OUT: 'sign_out',
-  },
-
-  ATTENDANCE_AUDIT_STATUS: {
-    PENDING: 'pending',
-    APPROVED: 'approved',
-    REJECTED: 'rejected',
-  }
 
 };
 

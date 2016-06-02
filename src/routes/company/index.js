@@ -5,7 +5,6 @@ import { ObjectId } from 'mongodb';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
-import i18n from 'lib/i18n';
 import upload, { randomAvatar, defaultAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { time } from 'lib/utils';
@@ -68,7 +67,7 @@ api.post('/', (req, res, next) => {
         name: data.name,
         positions: [{
           _id: position_id,
-          title: i18n.__('administrator'),
+          title: __('administrator'),
         }],
         members: [{
           _id: member._id,
