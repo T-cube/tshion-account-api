@@ -129,7 +129,7 @@ api.put('/:project_id', (req, res, next) => {
 });
 
 api.delete('/:project_id', authCheck(), (req, res, next) => {
-  let project_id = ObjectId(req.params._project_id);
+  let project_id = req.project._id;
   let data = req.project;
   if (!req.user._id.equals(data.owner)) {
     throw new ApiError(403);
