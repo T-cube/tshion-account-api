@@ -125,7 +125,6 @@ api.post('/check', (req, res, next) => {
 });
 
 api.get('/:member_id', (req, res, next) => {
-  console.log('bingo');
   let data = req.body;
   let member_id = ObjectId(req.params.member_id);
   let members = req.company.members || [];
