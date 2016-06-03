@@ -9,6 +9,3 @@ i18n.configure({
   indent: '  ',
   register: global,
 });
-
-console.log(getCatalog(), getLocale());
-console.log(__('invalid_password'));
