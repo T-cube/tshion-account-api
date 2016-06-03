@@ -7,7 +7,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
-import { fetchUserInfo, mapObjectIdToData, indexObjectId } from 'lib/utils';
+import { fetchCompanyMemberInfo, mapObjectIdToData, indexObjectId } from 'lib/utils';
 import {
   sanitization,
   validation,
@@ -65,7 +65,7 @@ api.get('/', (req, res, next) => {
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
     });
-    return fetchUserInfo(list, 'assignee');
+    return fetchCompanyMemberInfo(req.company.members, list, 'assignee');
   })
   .then(data => res.json(data))
   .catch(next);
@@ -133,7 +133,7 @@ api.get('/:_task_id', (req, res, next) => {
     if (!data) {
       throw new ApiError(404, null, 'task not found!');
     }
-    return fetchUserInfo(data, 'creator', 'assignee', 'followers')
+    return fetchCompanyMemberInfo(req.company.members, data, 'creator', 'assignee', 'followers')
     .then(() => res.json(data));
   })
   .catch(next);

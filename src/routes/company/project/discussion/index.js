@@ -14,7 +14,7 @@ import {
   followSanitization,
   followValidation,
 } from './schema';
-import { fetchUserInfo } from 'lib/utils';
+import { fetchCompanyMemberInfo } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -32,7 +32,7 @@ api.get('/', (req, res, next) => {
   }
   db.discussion.find(condition).sort({_id: -1})
   .then(doc => {
-    return fetchUserInfo(doc, 'followers').then(
+    return fetchCompanyMemberInfo(req.company.members, doc, 'followers').then(
       () => res.json(doc)
     );
   })
@@ -83,7 +83,7 @@ api.get('/:discussion_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    return fetchUserInfo(doc, 'followers').then(
+    return fetchCompanyMemberInfo(req.company.members, doc, 'followers').then(
       () => res.json(doc)
     );
   })

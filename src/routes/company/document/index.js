@@ -19,7 +19,7 @@ import {
 } from './schema';
 import { oauthCheck } from 'lib/middleware';
 import upload, { getUploadPath } from 'lib/upload';
-import { getUniqFileName, mapObjectIdToData, fetchUserInfo, generateToken, timestamp } from 'lib/utils';
+import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
 
@@ -81,7 +81,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       ]),
     ])
     .then(() => {
-      return fetchUserInfo(doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+      return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
     })
     .then(() => {
       doc.dirs.forEach(dir => {
@@ -259,7 +259,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   data = [data];
   createFile(req, data, dir_id)
   .then(doc => {
-    return fetchUserInfo(doc, 'updated_by');
+    return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -291,7 +291,7 @@ api.post('/dir/:dir_id/upload',
     doc.forEach(item => {
       delete item.path;
     });
-    return fetchUserInfo(doc, 'updated_by');
+    return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
   .catch(next);

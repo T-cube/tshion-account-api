@@ -145,13 +145,21 @@ export function indexObjectId(list, id) {
   return index;
 }
 
+export function fetchCompanyMemberInfo(companyMembers, data) {
+  let args = [].slice.call(arguments);
+  args.shift();
+  args.shift();
+  companyMembers = companyMembers.map(member => _.pick(member, '_id', 'name'));
+  return mapObjectIdToData(data, 'user', ['name', 'avatar'], args, companyMembers);
+}
+
 export function fetchUserInfo(data) {
   let args = [].slice.call(arguments);
   args.shift();
   return mapObjectIdToData(data, 'user', ['name', 'avatar'], args);
 }
 
-export function mapObjectIdToData(data, collection, fields, keys) {
+export function mapObjectIdToData(data, collection, fields, keys, mergeList) {
   let keyList = [];
   let isDataObjectId = ObjectId.isValid(data);
   if ((_.isArray(data) && data.length == 0) || !data) {
@@ -159,7 +167,8 @@ export function mapObjectIdToData(data, collection, fields, keys) {
   }
   if (_.isArray(collection)) {
     let mapList = collection;
-    return Promise.all(mapList.map(item => mapObjectIdToData(data, ...item)))
+    mergeList = fields;
+    return Promise.all(mapList.map(item => mapObjectIdToData(data, ...item, mergeList)))
     .then(() => data);
   }
   fields = fields || [];
@@ -181,13 +190,13 @@ export function mapObjectIdToData(data, collection, fields, keys) {
   }, _.object(fields, _.range(fields.length).map(() => 1)))
   .then(infoList => {
     _.forEach(keys, pos => {
-      _mapObjectIdToData(data, [], pos, infoList);
+      _mapObjectIdToData(data, [], pos, infoList, mergeList);
     });
     return isDataObjectId ? infoList[0] : data;
   });
 }
 
-function _mapObjectIdToData(data, k, pos, infoList) {
+function _mapObjectIdToData(data, k, pos, infoList, mergeList) {
   k = k || [];
   pos = pos.replace(/^\.+/, '');
   let posList = pos.split('.');
@@ -200,11 +209,11 @@ function _mapObjectIdToData(data, k, pos, infoList) {
     if (_.isArray(val)) {
       let tempLsit = [];
       for (var i in val) {
-        tempLsit = tempLsit.concat(_mapObjectIdToData(data, k.concat(i), newPos, infoList));
+        tempLsit = tempLsit.concat(_mapObjectIdToData(data, k.concat(i), newPos, infoList, mergeList));
       }
       return tempLsit;
     } else {
-      return _mapObjectIdToData(data, k, newPos, infoList);
+      return _mapObjectIdToData(data, k, newPos, infoList, mergeList);
     }
   }
   if (!ObjectId.isValid(val)) {
@@ -214,6 +223,8 @@ function _mapObjectIdToData(data, k, pos, infoList) {
   if (undefined === infoList) {
     return [val];
   } else {
-    objectPath.set(data, k, _.find(infoList, info => info._id.equals(val)));
+    let foundVal = _.find(infoList, info => info._id.equals(val));
+    let mergeVal = _.find(mergeList, info => info._id.equals(val));
+    objectPath.set(data, k, _.extend(foundVal, mergeVal));
   }
 }

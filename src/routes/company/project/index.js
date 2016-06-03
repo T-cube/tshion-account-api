@@ -8,7 +8,7 @@ import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { fetchUserInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
+import { fetchCompanyMemberInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
   projectSanitization,
@@ -104,7 +104,7 @@ api.get('/:project_id', (req, res, next) => {
   data.is_owner = owner.equals(req.user._id);
   let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
-  fetchUserInfo(data, 'owner')
+  fetchCompanyMemberInfo(req.company.members, data, 'owner')
   .then(data => {
     _.extend(data.owner, _.find(req.company.members, member => {
       return member._id.equals(owner);
@@ -151,7 +151,7 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
       }, {
         $pull: {projects: project_id}
       }),
-    ])
+    ]);
   })
   .then(() => {
     res.json({});
@@ -196,15 +196,11 @@ api.put('/:project_id/logo/upload', upload({type: 'avatar'}).single('logo'),
 api.get('/:project_id/member', (req, res, next) => {
   let members = req.project.members || [];
   let memberIds = members.map(i => i._id);
-  mapObjectIdToData(memberIds, 'user', 'name,avatar,email,mobile')
-  .then(memberInfo => {
-    members.forEach(i => {
-      let info = _.find(memberInfo, j => i._id.equals(j._id)) || {};
-      let companyMemberInfo = _.find(req.company.members, j => i._id.equals(j._id)) || {};
-      _.extend(i, info, companyMemberInfo);
-    });
-    res.json(members);
-  })
+  members = members.map(m => {
+    return _.extend(_.find(req.company.members, cm => cm._id.equals(m._id)), m);
+  });
+  mapObjectIdToData(memberIds, 'user', 'name,avatar,email,mobile', '', members)
+  .then(members => res.json(members))
   .catch(next);
 });
 
