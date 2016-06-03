@@ -59,8 +59,8 @@ api.get('/', (req, res, next) => {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order };
   }
-  // console.log('condition', condition);
-  db.task.find(condition).sort(sortBy)
+  db.task.find(condition)
+  .sort(sortBy)
   .then(list => {
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
@@ -74,7 +74,6 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
-  let assignee = data.assignee;
   _.extend(data, {
     creator: req.user._id,
     followers: [req.user._id],
@@ -87,40 +86,9 @@ api.post('/', (req, res, next) => {
   return db.task.insert(data)
   .then(doc => {
     req.task = doc;
-    db.user.update({
-      _id: req.user._id
-    }, {
-      $push: {
-        task: {
-          _id: doc._id,
-          company_id: req.company._id,
-          project_id: req.project._id,
-          is_creator: true,
-          is_assignee: assignee && assignee.equals(req.user._id) ? true : false
-        }
-      }
-    })
-    .then(() => {
-      if (assignee && assignee.equals(req.user._id)) {
-        return;
-      }
-      return db.user.update({
-        _id: assignee
-      }, {
-        $push: {
-          task: {
-            _id: doc._id,
-            company_id: req.company._id,
-            project_id: req.project._id,
-            is_creator: false,
-            is_assignee: true
-          }
-        }
-      });
-    })
-    .then(() => res.json(doc));
+    res.json(doc);
+    return logTask(req, C.ACTIVITY_ACTION.CREATE);
   })
-  .then(() => logTask(req, C.ACTIVITY_ACTION.CREATE))
   .catch(next);
 });
 
@@ -180,63 +148,12 @@ api.put('/:task_id/date_due', updateField('date_due'));
 
 api.put('/:task_id/assignee', (req, res, next) => {
   let data = validField('assignee', req.body.assignee);
-  let task_id = req.task._id;
   ensureProjectMember(req.project, data.assignee);
-  return db.task.findOne({
-    _id: task_id
-  }, {
-    assignee: 1
-  })
-  .then(doc => {
-    if (doc.assignee && doc.assignee.equals(data.assignee)) {
-      throw new ApiError(400, null, 'member is already assignee of the task');
-    } else if (!doc.assignee) {
-      return;
-    }
-    return db.user.update({
-      _id: doc.assignee,
-      'task._id': task_id
-    }, {
-      $set: {
-        'task.$.is_assignee': false
-      }
-    });
-  })
+  doUpdateField(req, 'assignee')
   .then(() => {
-    return db.user.count({
-      _id: data.assignee,
-      'task._id': task_id
-    });
+    res.json({});
+    return taskFollow(req, req.body.assignee);
   })
-  .then(count => {
-    if (count) {
-      return db.user.update({
-        _id: data.assignee,
-        'task._id': task_id
-      }, {
-        $set: {
-          'task.$.is_assignee': true
-        }
-      });
-    }
-    return db.user.update({
-      _id: data.assignee
-    }, {
-      $push: {
-        task: {
-          _id: task_id,
-          company_id: req.company._id,
-          project_id: req.project._id,
-          is_creator: false,
-          is_assignee: true
-        }
-      }
-    });
-  })
-  .then(() => {
-    return doUpdateField(req, 'assignee');
-  })
-  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -350,10 +267,7 @@ api.post('/:task_id/comment', (req, res, next) => {
         comments: data._id
       }
     })
-    .then(() => {
-      res.json(data);
-    })
-    .catch(next);
+    .then(() => res.json(data));
   })
   .catch(next);
 });
@@ -458,30 +372,6 @@ function taskFollow(req, userId) {
     $addToSet: {
       followers: userId
     }
-  })
-  .then(() => {
-    db.user.count({
-      _id: userId,
-      'task._id': taskId,
-    });
-  })
-  .then(count => {
-    if (count) {
-      return;
-    }
-    db.user.update({
-      _id: userId
-    }, {
-      $push: {
-        task: {
-          _id: taskId,
-          company_id: req.company._id,
-          project_id: req.project._id,
-          is_creator: false,
-          is_assignee: false
-        }
-      }
-    });
   });
 }
 
@@ -501,17 +391,6 @@ function taskUnfollow(req, userId) {
     }, {
       $pull: {
         followers: userId
-      }
-    });
-  })
-  .then(() => {
-    return db.user.update({
-      _id: userId
-    }, {
-      $pull: {
-        task: {
-          _id: taskId
-        }
       }
     });
   });

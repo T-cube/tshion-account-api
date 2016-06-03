@@ -34,7 +34,7 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
     }
     try {
       let filename = encodeURIComponent(fileInfo.name);
-      res.set('Content-disposition', 'attachment; filename=*=UTF-8\'\'' + filename);
+      res.set('Content-disposition', 'attachment; filename=' + filename);
       res.set('Content-type', fileInfo.mimetype);
       if (fileInfo.path) {
         fs.createReadStream(fileInfo.path).pipe(res);

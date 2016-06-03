@@ -105,7 +105,10 @@ export default class Approval {
         let flow_id = mapData ? mapData.map[0].flow_id : null;
         if (!mapData || !flow_id) {
           return db.approval.flow.insert({
-            approve: [item_id]
+            approve: [{
+              _id: item_id,
+              step: step_id
+            }]
           })
           .then(inserted => {
             return db.approval.user.update({

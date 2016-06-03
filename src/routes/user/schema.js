@@ -2,11 +2,12 @@ import { ENUMS } from 'lib/constants';
 
 export let infoSanitization = {
   name: { type: 'string' },
-  description: { type: 'string' },
-  birthdate: { type: 'date' },
-  sex: { type: 'string' },
+  description: { type: 'string', optional: true },
+  birthdate: { type: 'date', optional: true },
+  sex: { type: 'string', optional: true },
   address: {
     type: 'object',
+    optional: true,
     properties: {
       country: { type: 'string' },
       province: { type: 'string' },
@@ -18,11 +19,12 @@ export let infoSanitization = {
 
 export let infoValidation = {
   name: { type: 'string', minLength: 2, maxLength: 50 },
-  description: { type: 'string', maxLength: 500 },
-  birthdate: { type: 'date' },
-  sex: { $enum: ENUMS.SEX },
+  description: { type: 'string', maxLength: 500, optional: true },
+  birthdate: { type: 'date', optional: true },
+  sex: { $enum: ENUMS.SEX, optional: true },
   address: {
     type: 'object',
+    optional: true,
     properties: {
       country: { type: 'string' },
       province: { type: 'string' },
