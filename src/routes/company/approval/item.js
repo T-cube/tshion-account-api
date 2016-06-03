@@ -8,7 +8,14 @@ import { ApiError } from 'lib/error';
 import upload from 'lib/upload';
 import config from 'config';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { itemSanitization, itemValidation, stepSanitization, stepValidation } from './schema';
+import {
+  itemSanitization,
+  itemValidation,
+  stepSanitization,
+  stepValidation,
+  revokeSanitization,
+  revokeValidation,
+} from './schema';
 import Structure from 'models/structure';
 import C from 'lib/constants';
 import { mapObjectIdToData, indexObjectId } from 'lib/utils';
@@ -26,9 +33,9 @@ api.post('/', upload({type: 'attachment'}).array('files'), (req, res, next) => {
   if (req.files) {
     data.files = _.map(req.files, file => {
       if (config.get('upload.approval_attachment.max_file_size') < file.size) {
-        throw new ApiError(400, null, 'file is too large')
+        throw new ApiError(400, null, 'file is too large');
       }
-      return _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size')
+      return _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size');
     });
   }
   _.extend(data, {
@@ -108,11 +115,12 @@ api.get('/:item_id', (req, res, next) => {
 });
 
 api.put('/:item_id/status', (req, res, next) => {
-  let status = req.body.status;
+  let data = req.body;
+  sanitizeValidateObject(revokeSanitization, revokeValidation, data);
+  _.extend(data, {
+    step: null
+  });
   let item_id = ObjectId(req.params.item_id);
-  if (status != C.APPROVAL_ITEM_STATUS.REVOKED) {
-    throw new ApiError(400, null, 'wrong status');
-  }
   db.approval.item.findOne({
     _id: item_id,
     from: req.user._id,
@@ -129,10 +137,7 @@ api.put('/:item_id/status', (req, res, next) => {
       _id: item_id,
       from: req.user._id,
     }, {
-      $set: {
-        status: status,
-        step: null
-      }
+      $set: data
     })
     .then(() => {
       res.json({});
@@ -210,19 +215,19 @@ api.put('/:item_id/steps', (req, res, next) => {
             approval_item: item_id,
             to: item.from
           });
-          return doAfterApproval(item, data.status)
+          return doAfterApproval(item, data.status);
         }
-      })
-    })
+      });
+    });
   })
   .then(() => {
-    res.json({})
+    res.json({});
     let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
       ? C.ACTIVITY_ACTION.APPROVAL_REJECTED
       : C.ACTIVITY_ACTION.APPROVAL_APPROVED;
     return addActivity(req, activityAction, {
       approval_item: item_id
-    })
+    });
   })
   .catch(next);
 });

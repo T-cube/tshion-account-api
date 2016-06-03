@@ -165,16 +165,26 @@ export let itemValidation = {
       type: { $enum: ENUMS.APPROVAL_TARGET }
     }
   },
-}
+};
 
 export let stepSanitization = {
   _id: { $objectId: 1 },
   status: { type: 'string' },
   log: { type: 'string' },
-}
+};
 
 export let stepValidation = {
   _id: { $objectId: 1 },
   status: { $enum: [C.APPROVAL_ITEM_STATUS.APPROVED, C.APPROVAL_ITEM_STATUS.REJECTED] },
   log: { type: 'string' },
-}
+};
+
+export let revokeSanitization = {
+  status: { type: 'string' },
+  revoke_log: { type: 'string', optional: true }
+};
+
+export let revokeValidation = {
+  status: { $enum: [C.APPROVAL_ITEM_STATUS.REVOKED] },
+  revoke_log: { type: 'string', optional: true }
+};

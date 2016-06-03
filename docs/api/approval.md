@@ -195,7 +195,8 @@ INPUT:
 INPUT:
 ```javascript
 {
-  status: <String> // 'revoked'
+  status: <String> // 'revoked',
+  revoke_log: <String>,
 }
 ```
 

@@ -254,13 +254,13 @@ class Structure {
   findMemberDepartments(member_id, node) {
     let departments = [];
     node = node || this.root;
-    let members = node.members;
-    if (indexObjectId(members, member_id) != -1) {
+    let members = node.members || [];
+    if (indexObjectId(members.map(member => member._id), member_id) != -1) {
       departments.push(node._id);
     }
     if (node.children && node.children.length) {
       node.children.forEach(i => {
-        departments = departments.concat(this.findMemberDepartments(member_id, i._id));
+        departments = departments.concat(this.findMemberDepartments(member_id, i));
       });
     }
     return departments;
