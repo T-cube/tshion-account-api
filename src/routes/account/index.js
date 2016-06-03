@@ -18,37 +18,33 @@ import { ValidationError } from 'lib/inspector';
 let api = express.Router();
 export default api;
 
-function userExistsError(type) {
-  return new ApiError(400, null, [{
-    field: type,
-    messages: ['user account exists'],
-    types: ['custom validation'],
-  }]);
-}
-
-api.post('/check', validator(validation.check), (req, res, next) => {
+api.post('/check', (req, res, next) => {
+  let data = req.body;
   let { type } = req.body;
+  validate('register', data, ['type', type]);
   db.user.find({[type]: req.body[type]}).count()
   .then(count => {
     if (count > 0) {
-      throw userExistsError(type);
+      throw new ValidationError({
+        [type]: 'user_exists',
+      });
     }
     res.json({});
   }).catch(next);
 });
 
 api.post('/register', (req, res, next) => {
-  console.log(__('神马'));
   let data = req.body;
   validate('register', data);
-  return res.json({});
   let { type, password, code } = data;
   let id = data[type];
   data = _.pick(data, 'type', type, 'password', 'code');
   db.user.find({[type]: id}).count()
   .then(count => {
     if (count > 0) {
-      throw userExistsError(type);
+      throw new ValidationError({
+        [type]: 'user_exists',
+      });
     }
     if (type == 'email') {
       return req.model('account').sendConfirmEmail(id);
@@ -88,7 +84,7 @@ api.post('/register', (req, res, next) => {
       date_create: time(),
       current_company: null,
     };
-    return db.user.insert(data);
+    return db.user.insert(doc);
   })
   .then(() => res.json({
     type: type,

@@ -98,10 +98,6 @@ export function formatValidationError(error) {
   _.each(error, item => {
     let { code, message, property } = item;
     let key = property.replace('@.', '');
-    if (code !== null) {
-      console.log(code, __(code));
-      message = __(code);
-    }
     errorObject[key] = {
       code,
       message,
@@ -118,12 +114,16 @@ export class ValidationError {
 }
 
 export function buildValidator(schema) {
-  return function validate(type, data) {
+  return function validate(type, data, options) {
     if (!_.has(schema, type)) {
       throw new Error(`cannot find schema "${type}"`);
     }
-    const schemaData = schema[type];
-    const { sanitization, validation } = schemaData;
+    let schemaData = schema[type];
+    let { sanitization, validation } = schemaData;
+    if (_.isArray(options)) {
+      sanitization = _.pick(sanitization, options);
+      validation = _.pick(validation, options);
+    }
     sanitizeObject(sanitization, data);
     let result = validateObject(validation, data);
     if (!result.valid) {

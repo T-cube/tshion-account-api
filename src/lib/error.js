@@ -7,6 +7,7 @@
  * @author alvin_ma
  */
 
+import _ from 'underscore';
 import util from 'util';
 import { ValidationError } from 'lib/inspector';
 // import DbError from '../models/db-error';
@@ -64,24 +65,30 @@ export function apiErrorHandler(err, req, res, next) {
   // }
   if (err instanceof ValidationError) {
     res.status(400);
-    err = {
-      code: 400,
-      error: 'validation_error',
-      error_description: err.message,
-    };
-    res.json(err);
-  } else {
-    if (!(err instanceof ApiError)) {
-      console.error(err.stack);
-      err = new ApiError(500);
-    }
-    delete err.name;
-    delete err.message;
-    if (err.headers) {
-      res.set(err.headers);
-    }
-    delete err.headers;
-    res.status(err.code);
-    res.json(err);
+    let errors = _.mapObject(err.message, val => {
+      if (_.isString(val)) {
+        val = {
+          code: val
+        };
+      }
+      if (!_.isNull(val.code)) {
+        val.message = __(val.code);
+      }
+      return val;
+    });
+    err = new ApiError(400, 'validation_error', errors);
   }
+  if (!(err instanceof ApiError)) {
+    console.error(err.stack);
+    err = new ApiError(500);
+  }
+  delete err.name;
+  delete err.message;
+  if (err.headers) {
+    res.set(err.headers);
+  }
+  delete err.headers;
+  res.status(err.code);
+  res.json(err);
+  next();
 }
