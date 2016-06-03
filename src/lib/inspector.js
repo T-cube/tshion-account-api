@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import Promise from 'bluebird';
 import schemaInspector from 'schema-inspector';
 import { ObjectId } from 'mongodb';
 import { isEmail } from './utils';
@@ -90,6 +91,46 @@ export function sanitizeValidateObject(sanitizationSchema, validationSchema, dat
     throw new ApiError(400, null, result.error);
   }
   return result;
+}
+
+export function formatValidationError(error) {
+  let errorObject = {};
+  _.each(error, item => {
+    let { code, message, property } = item;
+    let key = property.replace('@.', '');
+    errorObject[key] = {
+      code,
+      message,
+    };
+    return errorObject;
+  });
+  return errorObject;
+}
+
+export class ValidationError {
+  constructor(error) {
+    this.message = error;
+  }
+}
+
+export function buildValidator(schema) {
+  return function validate(type, data, options) {
+    if (!_.has(schema, type)) {
+      throw new Error(`cannot find schema "${type}"`);
+    }
+    let schemaData = schema[type];
+    let { sanitization, validation } = schemaData;
+    if (_.isArray(options)) {
+      sanitization = _.pick(sanitization, options);
+      validation = _.pick(validation, options);
+    }
+    sanitizeObject(sanitization, data);
+    let result = validateObject(validation, data);
+    if (!result.valid) {
+      const error = formatValidationError(result.error);
+      throw new ValidationError(error);
+    }
+  };
 }
 
 export default schemaInspector;

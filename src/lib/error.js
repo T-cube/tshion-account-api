@@ -7,8 +7,9 @@
  * @author alvin_ma
  */
 
+import _ from 'underscore';
 import util from 'util';
-import { ValidationError } from 'express-validation';
+import { ValidationError } from 'lib/inspector';
 // import DbError from '../models/db-error';
 
 //const VALIDATION_ERROR_MESSAGE = 'validation error';
@@ -63,27 +64,31 @@ export function apiErrorHandler(err, req, res, next) {
   //   err = ApiError(500, err.message, err.description, err);
   // }
   if (err instanceof ValidationError) {
-    res.status(err.status);
-    let _err = {
-      code: err.status,
-      error: err.message,
-      error_description: err.errors
-    };
-    res.json(_err);
-    return;
-  } else {
-    if (!(err instanceof ApiError)) {
-      console.error(err.stack);
-      err = new ApiError(500);
-    }
-    delete err.name;
-    delete err.message;
-    if (err.headers) {
-      res.set(err.headers);
-    }
-    delete err.headers;
-    res.status(err.code);
-    res.json(err);
-    return;
+    res.status(400);
+    let errors = _.mapObject(err.message, val => {
+      if (_.isString(val)) {
+        val = {
+          code: val
+        };
+      }
+      if (!_.isNull(val.code)) {
+        val.message = __(val.code);
+      }
+      return val;
+    });
+    err = new ApiError(400, 'validation_error', errors);
   }
+  if (!(err instanceof ApiError)) {
+    console.error(err.stack);
+    err = new ApiError(500);
+  }
+  delete err.name;
+  delete err.message;
+  if (err.headers) {
+    res.set(err.headers);
+  }
+  delete err.headers;
+  res.status(err.code);
+  res.json(err);
+  next();
 }

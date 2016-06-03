@@ -3,10 +3,9 @@ import config from 'config';
 
 i18n.configure({
   locales: ['en', 'zh-CN'],
+  defaultLocale: config.get('locale'),
   directory: __dirname + '/../../locales',
+  updateFiles: false,
+  indent: '  ',
+  register: global,
 });
-
-let locale = config.get('locale');
-i18n.setLocale(locale);
-
-export default i18n;
