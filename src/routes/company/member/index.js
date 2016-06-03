@@ -141,10 +141,9 @@ api.put('/:member_id', (req, res, next) => {
   if (!req.user._id.equals(member_id)) {
     checkUserTypeFunc(req, C.COMPANY_MEMBER_TYPE.ADMIN);
   }
-  if (!req.body.type) {
-    delete sanitization.type;
-    delete validation.type;
-  }
+  let fields = _.keys(req.body);
+  sanitization = _.pick(sanitization, fields);
+  validation = _.pick(validation, fields);
   sanitizeValidateObject(sanitization, validation, req.body);
   let data = {};
   _.each(req.body, (val, key) => {
