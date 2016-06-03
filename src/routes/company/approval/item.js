@@ -78,7 +78,7 @@ api.get('/:item_id', (req, res, next) => {
         if (!flowInfo) {
           throw new ApiError(400, null, 'you have not permission to read');
         }
-        let approveInfo = _.find(flowInfo.approve, v => v._id.equals(item_id));
+        let approveInfo = _.find(flowInfo.approve, v => v._id && v._id.equals(item_id));
         let inApply = indexObjectId(flowInfo.apply, item_id) != -1;
         let inCopyto = indexObjectId(flowInfo.copy_to, item_id) != -1;
         if (!inApply && !inCopyto && !approveInfo) {
