@@ -142,9 +142,7 @@ api.put('/:member_id', (req, res, next) => {
     checkUserTypeFunc(req, C.COMPANY_MEMBER_TYPE.ADMIN);
   }
   let fields = _.keys(req.body);
-  sanitization = _.pick(sanitization, fields);
-  validation = _.pick(validation, fields);
-  sanitizeValidateObject(sanitization, validation, req.body);
+  sanitizeValidateObject(_.pick(sanitization, fields), _.pick(validation, fields), req.body);
   let data = {};
   _.each(req.body, (val, key) => {
     data['members.$.' + key] = val;
