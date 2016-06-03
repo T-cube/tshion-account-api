@@ -55,13 +55,6 @@
   // relations
   companies: [<ObjectId>...],
   projects: [<ObjectId>...],
-  task: [{
-    _id: <ObjectId>,
-    company_id: <ObjectId>,
-    project_id: <ObjectId>,
-    is_creator: <Boolean>,
-    is_assignee: <Boolean>,
-  }...],
   activiated: <Boolean>,
 }
 ```
@@ -498,6 +491,7 @@
   department: <ObjectId>,
   apply_date: <Date>,
   status: <ENUM:processing|approved|rejected|revoked>,
+  revoke_log: <String>, // 撤回的记录
   step: <ObjectId>,
   content: <String>,
   files: [<ObjectId>...], // 附件

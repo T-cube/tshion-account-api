@@ -1,12 +1,9 @@
-import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import Promise from 'bluebird';
 import fs from 'fs';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { oauthCheck, authCheck } from 'lib/middleware';
 import { timestamp } from 'lib/utils';
 
 let api = express.Router();
@@ -26,14 +23,20 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
     }
     return db.document.file.findOne({
       _id: file_id,
-    })
+    });
   })
   .then(fileInfo => {
     if (!fileInfo) {
       throw new ApiError(404);
     }
     try {
-      let filename = encodeURIComponent(fileInfo.name);
+      let filename = fileInfo.name;
+      let isFirefox = req.get('User-Agent').toLowerCase().indexOf('firefox') > -1;
+      if (isFirefox) {
+        filename = '=?UTF-8?B?' + new Buffer(filename).toString('base64') + '?=';
+      } else {
+        filename = encodeURIComponent(filename);
+      }
       res.set('Content-disposition', 'attachment; filename=' + filename);
       res.set('Content-type', fileInfo.mimetype);
       if (fileInfo.path) {
@@ -47,5 +50,5 @@ api.get('/file/:file_id/token/:token', (req, res, next) => {
       throw new ApiError(500);
     }
   })
-  .catch(next)
+  .catch(next);
 });
