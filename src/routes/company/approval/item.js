@@ -49,11 +49,6 @@ api.get('/:item_id', (req, res, next) => {
     _id: item_id
   })
   .then(data => {
-    return mapObjectIdToData(data, [
-      ['approval.template', 'name,steps,forms,status', 'template'],
-    ])
-  })
-  .then(data => {
     let user_id = req.user._id;
     let company_id = req.company._id;
     return db.approval.user.findOne({
@@ -67,20 +62,20 @@ api.get('/:item_id', (req, res, next) => {
       if (!mapData || !flow_id) {
         // data.is_processing = false;
         // return res.json(data);
-        throw new ApiError(400, null, 'you have not permission to read')
+        throw new ApiError(400, null, 'you have not permission to read');
       }
       return db.approval.flow.findOne({
         _id: flow_id,
       })
       .then(flowInfo => {
         if (!flowInfo) {
-          throw new ApiError(400, null, 'you have not permission to read')
+          throw new ApiError(400, null, 'you have not permission to read');
         }
         let approveInfo = _.find(flowInfo.approve, v => v._id.equals(item_id));
         let inApply = indexObjectId(flowInfo.apply, item_id) != -1;
         let inCopyto = indexObjectId(flowInfo.copy_to, item_id) != -1;
         if (!inApply && !inCopyto && !approveInfo) {
-          throw new ApiError(400, null, 'you have not permission to read')
+          throw new ApiError(400, null, 'you have not permission to read');
         }
         if (data.status == C.APPROVAL_ITEM_STATUS.PROCESSING
           && approveInfo
@@ -90,22 +85,25 @@ api.get('/:item_id', (req, res, next) => {
         } else {
           data.is_processing = false;
         }
+        let tree = new Structure(req.company.structure);
+        data.from = _.find(req.company.members, member => member._id.equals(data.from));
+        data.steps.forEach(step => {
+          if (step.approver) {
+            step.approver = _.find(req.company.members, member => member._id.equals(step.approver));
+          }
+        });
+        data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
+        data.department && (data.department = _.pick(tree.findNodeById(data.department), '_id', 'name'));
         return data;
-      })
-    })
-    .then(data => {
-      let tree = new Structure(req.company.structure);
-      data.from = _.find(req.company.members, member => member._id.equals(data.from));
-      data.steps.forEach(step => {
-        if (step.approver) {
-          step.approver = _.find(req.company.members, member => member._id.equals(step.approver));
-        }
       });
-      data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
-      data.department && (data.department = _.pick(tree.findNodeById(data.department), '_id', 'name'));
-      res.json(data);
-    })
+    });
   })
+  .then(data => {
+    return mapObjectIdToData(data, [
+      ['approval.template', 'name,steps,forms,status', 'template'],
+    ]);
+  })
+  .then(data => res.json(data))
   .catch(next);
 });
 
@@ -137,7 +135,7 @@ api.put('/:item_id/status', (req, res, next) => {
       }
     })
     .then(() => {
-      res.json({})
+      res.json({});
       return db.approval.template.findOne({
         _id: item.template
       }, {
@@ -153,9 +151,9 @@ api.put('/:item_id/status', (req, res, next) => {
             approval_item: item_id,
             to: approver.concat(copyto)
           })
-        ])
-      })
-    })
+        ]);
+      });
+    });
   })
   .catch(next);
 });
