@@ -1,4 +1,4 @@
-import _ from 'underscore'
+import _ from 'underscore';
 import express from 'express';
 import Promise from 'bluebird';
 import validator from 'express-validation';
@@ -10,9 +10,10 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { authoriseSanitization, authoriseValidation } from './schema';
+import { authoriseSanitization, authoriseValidation, validate } from './schema';
 import { randomAvatar } from 'lib/upload';
 import validation from './validation';
+import { ValidationError } from 'lib/inspector';
 
 let api = express.Router();
 export default api;
@@ -36,12 +37,14 @@ api.post('/check', validator(validation.check), (req, res, next) => {
   }).catch(next);
 });
 
-api.post('/register', validator(validation.register), (req, res, next) => {
-  let { type, password, code } = req.body;
-  if (!_.contains(['email', 'mobile'], type)) {
-    throw new ApiError(400, 'invalid_param', 'invalid account type');
-  }
-  let id = req.body[type];
+api.post('/register', (req, res, next) => {
+  console.log(__('神马'));
+  let data = req.body;
+  validate('register', data);
+  return res.json({});
+  let { type, password, code } = data;
+  let id = data[type];
+  data = _.pick(data, 'type', type, 'password', 'code');
   db.user.find({[type]: id}).count()
   .then(count => {
     if (count > 0) {
@@ -57,12 +60,12 @@ api.post('/register', validator(validation.register), (req, res, next) => {
     return hashPassword(password, 10);
   })
   .then(hash => {
-    let data = {
-      email: req.body.email || null,
+    let doc = {
+      email: data.email || null,
       email_verified: false,
-      mobile: req.body.mobile || null,
+      mobile: data.mobile || null,
       mobile_verified: type == C.USER_ID_TYPE.MOBILE,
-      name: type == C.USER_ID_TYPE.MOBILE ? req.body.mobile : getEmailName(req.body.email),
+      name: type == C.USER_ID_TYPE.MOBILE ? data.mobile : getEmailName(data.email),
       description: '',
       avatar: randomAvatar('user', 8),
       password: hash,
@@ -127,7 +130,7 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
     .then(result => {
       console.log(result);
       if (!result) {
-        throw new ApiError('401', 'invalid_password', 'password wrong')
+        throw new ApiError('401', 'invalid_password', 'password wrong');
       }
       return generateToken(48);
     });

@@ -26,4 +26,4 @@ export default {
   register: {
     body: _valid
   }
-}
+};

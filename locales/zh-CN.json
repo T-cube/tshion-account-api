@@ -1,4 +1,9 @@
 {
-	"Hello": "你好",
-	"administrator": "administrator"
+  "administrator": "管理员",
+  "invalid_account_type": "错误的帐户类型",
+  "invalid_email": "邮箱格式错误",
+  "invalid_mobile": "手机号码错误",
+  "invalid_sms_code": "短信验证码格式错误",
+  "invalid_password": "密码格式错误",
+  "magic horse": "神马"
 }
