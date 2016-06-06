@@ -247,7 +247,12 @@ api.post('/:company_id/exit', (req, res, next) => {
     db.user.update({
       _id: user_id,
     }, {
-      $pull: { companies: company_id, projects: {$in: projects} },
+      $pull: { companies: company_id },
+    }),
+    db.user.update({
+      _id: user_id,
+    }, {
+      $pull: { projects: {$in: projects} },
     }),
     db.company.update({
       _id: company_id,
@@ -259,6 +264,8 @@ api.post('/:company_id/exit', (req, res, next) => {
       _id: {$in: projects},
     }, {
       $pull: { members: {_id: user_id} },
+    }, {
+      multi: true,
     }),
   ])
   .then(() => res.json({}))
