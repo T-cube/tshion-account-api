@@ -55,7 +55,7 @@ api.get('/approve', (req, res, next) => {
       data.forEach(item => {
         item.from = _.find(req.company.members, member => member._id.equals(item.from));
         item.department && (item.department = tree.findNodeById(item.department));
-        let foundItem = _.find(approve, approveItem => approveItem._id.equals(item._id));
+        let foundItem = _.find(approve, approveItem => approveItem._id && approveItem._id.equals(item._id));
         if (foundItem
           && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING
           && foundItem.step

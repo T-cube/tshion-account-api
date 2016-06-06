@@ -36,7 +36,7 @@ api.get('/', (req, res, next) => {
         $ne: C.APPROVAL_STATUS.DELETED
       },
     };
-    let user = req.user._id;
+    let { user } = req.query;
     if (user && ObjectId.isValid(user)) {
       let structure = new Structure(req.company.structure);
       condition.scope = {

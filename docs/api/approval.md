@@ -136,7 +136,6 @@ INPUT:
 INPUT:
 ```javascript
 {
-  _id: <ObjectId>,
   template: <ObjectId>,
   department: <ObjectId>,
   content: <String>,
