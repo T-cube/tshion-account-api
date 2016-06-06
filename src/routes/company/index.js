@@ -244,7 +244,7 @@ api.post('/:company_id/exit', (req, res, next) => {
     db.user.update({
       _id: user_id,
     }, {
-      $pull: { company: company_id, projects: {$in: projects} },
+      $pull: { companies: company_id, projects: {$in: projects} },
     }),
     db.company.update({
       _id: company_id,
