@@ -233,6 +233,34 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
+api.post('/:company_id/exit', (req, res, next) => {
+  const company_id = req.company._id;
+  const projects = req.company.projects;
+  const user_id = req.user._id;
+  if (user_id.equals(req.company.owner)) {
+    throw new ApiError(400, null, 'owner cannot exit company');
+  }
+  Promise.all([
+    db.user.update({
+      _id: user_id,
+    }, {
+      $pull: { company: company_id, projects: {$in: projects} },
+    }),
+    db.company.update({
+      _id: company_id,
+    }, {
+      $pull: { members: {_id: user_id} },
+    }),
+    db.project.update({
+      _id: {$in: projects},
+    }, {
+      $pull: { members: {_id: user_id} },
+    }),
+  ])
+  .then(() => res.json({}))
+  .catch(next);
+});
+
 api.use('/:company_id/activity', require('./activity').default);
 api.use('/:company_id/announcement', require('./announcement').default);
 api.use('/:company_id/approval', require('./approval').default);
