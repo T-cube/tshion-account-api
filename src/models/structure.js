@@ -5,7 +5,6 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 
-import db from 'lib/database';
 import { getUniqName, indexObjectId } from 'lib/utils';
 
 class Structure {
@@ -18,7 +17,7 @@ class Structure {
   getNames(node, node_id) {
     let children = node.children || [];
     if (node_id) {
-      children = _.reject(node.children, _node => node_id.equals(_node._id) )
+      children = _.reject(node.children, _node => node_id.equals(_node._id) );
     }
     return _.pluck(children, 'name');
   }
@@ -90,7 +89,6 @@ class Structure {
     }
     if (node !== this.root) {
       let parent = this.findParent(node_id);
-      console.log(parent)
       data.name = getUniqName(this.getNames(parent, node_id), data.name);
     }
     _.extend(node, data);
@@ -189,7 +187,7 @@ class Structure {
     if (!node) {
       return false;
     }
-    this._deleteMember(node, member_id)
+    this._deleteMember(node, member_id);
     return true;
   }
 
