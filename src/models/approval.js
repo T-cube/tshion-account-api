@@ -84,9 +84,7 @@ export default class Approval {
             });
           }
         })
-        .then(() => {
-          return this.prepareNextStep(req, item_id, template.steps, data.step);
-        })
+        .then(() => this.prepareNextStep(req, item_id, template.steps, data.step))
         .then(() => item);
       });
     });
