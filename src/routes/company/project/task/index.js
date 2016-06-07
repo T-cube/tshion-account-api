@@ -24,7 +24,7 @@ api.use((req, res, next) => {
 
 // TODO page
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, assignee, creator, follower} = req.query;
+  let { keyword, sort, order, status, tag, assignee, creator, follower} = req.query;
   let condition = {
     company_id: req.company._id,
     project_id: req.project._id,
@@ -53,6 +53,9 @@ api.get('/', (req, res, next) => {
   }
   if (keyword) {
     condition['$text'] = { $search: keyword };
+  }
+  if (tag && ObjectId.isValid(tag)) {
+    condition['tags'] = ObjectId(tag);
   }
   let sortBy = { status: -1, date_update: 1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
