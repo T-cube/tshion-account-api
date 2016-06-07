@@ -299,20 +299,30 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
   if (!allowed) {
     throw new ApiError(403);
   }
-  return Promise.all([
-    db.user.update({
-      _id: member_id
-    }, {
-      $pull: {projects: project_id}
-    }),
-    db.project.update({
-      _id: project_id
-    }, {
-      $pull: {
-        members: { _id: member_id }
-      }
-    })
-  ])
+  db.task.count({
+    project_id: project_id,
+    assignee: member_id,
+    status: C.TASK_STATUS.PROCESSING
+  })
+  .then(count => {
+    if (count) {
+      throw new ApiError(400, null, '用户还有待处理的任务');
+    }
+    return Promise.all([
+      db.user.update({
+        _id: member_id
+      }, {
+        $pull: {projects: project_id}
+      }),
+      db.project.update({
+        _id: project_id
+      }, {
+        $pull: {
+          members: { _id: member_id }
+        }
+      })
+    ]);
+  })
   .then(() => res.json({}))
   .catch(next);
 });

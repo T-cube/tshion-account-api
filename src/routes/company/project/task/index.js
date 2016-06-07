@@ -26,7 +26,6 @@ api.use((req, res, next) => {
 api.get('/', (req, res, next) => {
   let { keyword, sort, order, status, tag, assignee, creator, follower} = req.query;
   let condition = {
-    company_id: req.company._id,
     project_id: req.project._id,
   };
   let idItems = _.pick(req.query, 'assignee', 'creator', 'followers');
@@ -71,6 +70,15 @@ api.get('/', (req, res, next) => {
     return fetchCompanyMemberInfo(req.company.members, list, 'assignee');
   })
   .then(data => res.json(data))
+  .catch(next);
+});
+
+api.get('/count', (req, res, next) => {
+  db.task.aggregate([
+    {$unwind: '$tags' },
+    {'$group' : {_id: '$tags', sum: {$sum: 1}}}
+  ])
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
