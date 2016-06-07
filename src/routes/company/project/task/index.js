@@ -152,7 +152,7 @@ api.put('/:task_id/assignee', (req, res, next) => {
   doUpdateField(req, 'assignee')
   .then(() => {
     res.json({});
-    return taskFollow(req, req.body.assignee);
+    return taskFollow(req, data.assignee);
   })
   .catch(next);
 });
@@ -318,6 +318,7 @@ function logTask(req, action, data) {
   let activity = _.extend({
     creator: req.user._id,
   }, info, data);
+  console.log(req.task.followers);
   let notification = _.extend({
     from: req.user._id,
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),

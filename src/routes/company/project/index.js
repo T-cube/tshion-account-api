@@ -139,7 +139,7 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
   return db.project.remove({
     _id: project_id
   })
-  .then(doc => {
+  .then(() => {
     return Promise.all([
       db.company.update({
         _id: req.company._id
@@ -371,7 +371,6 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
   Promise.all([
     db.project.update({
       _id: project_id,
-      company_id: req.company._id,
     }, {
       $pull: {
         tags: {
@@ -381,7 +380,6 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
     }),
     db.task.update({
       project_id: project_id,
-      company_id: req.company._id,
       'tags': tag_id
     }, {
       $pull: {
