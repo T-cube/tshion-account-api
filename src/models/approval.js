@@ -20,7 +20,7 @@ export default class Approval {
       }
       data.step = template.steps[0] ? template.steps[0]._id : null;
       data.steps = [];
-      data.title = template.title;
+      data.title = template.name;
       template.steps.forEach(step => {
         data.steps.push({
           _id: step._id,
