@@ -372,7 +372,18 @@ api.post('/:project_id/tag', (req, res, next) => {
 });
 
 api.get('/:project_id/tag', (req, res, next) => {
-  res.json(req.project.tags || []);
+  db.task.aggregate([
+    {$unwind: '$tags' },
+    {'$group' : {_id: '$tags', sum: {$sum: 1}}}
+  ])
+  .then(doc => {
+    req.project.tags.forEach(tag => {
+      let foundTag = _.find(doc, item => tag._id.equals(item._id));
+      tag.sum = foundTag ? foundTag.sum : 0;
+    });
+    res.json(req.project.tags);
+  })
+  .catch(next);
 });
 
 api.delete('/:project_id/tag/:tag_id', (req, res, next) => {

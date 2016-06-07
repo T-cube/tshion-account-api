@@ -73,15 +73,6 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/count', (req, res, next) => {
-  db.task.aggregate([
-    {$unwind: '$tags' },
-    {'$group' : {_id: '$tags', sum: {$sum: 1}}}
-  ])
-  .then(doc => res.json(doc))
-  .catch(next);
-});
-
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);

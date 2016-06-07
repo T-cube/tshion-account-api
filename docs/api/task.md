@@ -284,17 +284,6 @@ OUTPUT
 }]
 ```
 
-### GET /task/count
-
-OUTPUT
-
-```javascript
-[{
-  _id: <ObjectId>, // tag id
-  sum: <Int>,
-}...]
-```
-
 ## 挂载点
 
 * `/company/:company_id/task` 公司任务
