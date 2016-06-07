@@ -16,7 +16,7 @@ export let sanitization = {
       $objectId: 1
     }
   },
-}
+};
 
 export let validation = {
   parent_id: { $objectId: 1, optional: true },
@@ -34,12 +34,12 @@ export let validation = {
       $objectId: 1
     }
   },
-}
+};
 
 export let commentSanitization = {
   content: { type: 'string' }
-}
+};
 
 export let commentValidation = {
   content: { type: 'string', minLength: 3, maxLength: 500 }
-}
+};

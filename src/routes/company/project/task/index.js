@@ -74,6 +74,9 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
+  if (data.date_due < data.date_start) {
+    throw new ApiError(400, null, 'wrong date');
+  }
   _.extend(data, {
     creator: req.user._id,
     followers: [req.user._id],
