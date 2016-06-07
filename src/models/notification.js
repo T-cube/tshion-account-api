@@ -16,7 +16,7 @@ const extendedProps = [
   ['task', 'title,company_id,project_id', 'task'],
   ['request', 'type', 'request'],
   ['reminding', 'title,description', 'reminding'],
-  ['approval.item', 'company_id,apply_date,content', 'approval_item'],
+  ['approval.item', 'company_id,apply_date,title', 'approval_item'],
   ['announcement', 'title,is_published', 'announcement'],
 ];
 

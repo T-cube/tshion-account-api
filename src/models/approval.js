@@ -20,6 +20,7 @@ export default class Approval {
       }
       data.step = template.steps[0] ? template.steps[0]._id : null;
       data.steps = [];
+      data.title = template.title;
       template.steps.forEach(step => {
         data.steps.push({
           _id: step._id,
@@ -40,13 +41,13 @@ export default class Approval {
       return db.approval.item.insert(data)
       .then(item => {
         let item_id = item._id;
-        req.model('activity').insert({
-          approval_item: item_id,
-          action: C.ACTIVITY_ACTION.CREATE,
-          target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
-          company: req.company._id,
-          creator: req.user._id,
-        });
+        // req.model('activity').insert({
+        //   approval_item: item_id,
+        //   action: C.ACTIVITY_ACTION.CREATE,
+        //   target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+        //   company: req.company._id,
+        //   creator: req.user._id,
+        // });
         return db.approval.user.findOne({
           _id: data.from,
           'map.company_id': data.company_id
