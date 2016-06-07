@@ -26,6 +26,8 @@ import C from 'lib/constants';
 let api = express.Router();
 export default api;
 
+const max_dir_path_length = 5;
+
 api.use(oauthCheck());
 
 api.use((req, res, next) => {
@@ -138,8 +140,8 @@ api.post('/dir', (req, res, next) => {
   .then(() => {
     return getFullPath(data.parent_dir)
     .then(path => {
-      if (path.length >= 5) {
-        throw new ApiError(400, null, '最多只能创建5级目录');
+      if (path.length >= max_dir_path_length) {
+        throw new ApiError(400, null, '最多只能创建' + max_dir_path_length + '级目录');
       }
     });
   })
@@ -349,16 +351,6 @@ api.put('/move', (req, res, next) => {
   }
 
   return checkMoveable(target_dir, dirs, files)
-  .then(() => {
-    return getFullPath(target_dir)
-    .then(path => {
-      dirs.forEach(dir => {
-        if (_.find(path, item => item._id.equals(dir))) {
-          throw new ApiError(400, null, '不能移动文件夹到其子文件夹');
-        }
-      });
-    });
-  })
   .then(() => {
     if (!dirs || !dirs.length) {
       return null;
@@ -714,7 +706,7 @@ function checkMoveable(target_dir, dirs, files) {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(404);
+      throw new ApiError(400, null, 'target dir is not found');
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'dirs'],
@@ -724,36 +716,56 @@ function checkMoveable(target_dir, dirs, files) {
       let dirNameList = doc.dirs ? doc.dirs.map(item => item.name) : [];
       let fileNameList = doc.files ? doc.files.map(item => item.name) : [];
       return Promise.all([
-        _.isArray(dirs) && dirs.length && db.document.dir.find({
-          _id: {
-            $in: dirs
-          }
-        }, {
-          name: 1
-        })
+        dirNameList.length && mapObjectIdToData(dirs, 'document.dir', 'name')
         .then(dirsInfo => {
-          dirsInfo.forEach(dirInfo => {
-            if (_.find(dirNameList, dirInfo.name)) {
-              throw new ApiError(400, null, '存在同名的文件或文件夹');
+          dirsInfo.forEach(dir => {
+            if (_.find(dirNameList, dir.name)) {
+              throw new ApiError(400, null, '存在同名或文件夹');
             }
           });
         }),
-        _.isArray(files) && files.length && db.document.file.find({
-          _id: {
-            $in: files
-          }
-        }, {
-          name: 1
-        })
+        fileNameList.length && mapObjectIdToData(files, 'document.file', 'name')
         .then(filesInfo => {
-          filesInfo.forEach(fileInfo => {
-            if (_.find(fileNameList, fileInfo.name)) {
-              throw new ApiError(400, null, '存在同名的文件或文件夹');
+          filesInfo.forEach(file => {
+            if (_.find(fileNameList, file.name)) {
+              throw new ApiError(400, null, '存在同名的文件');
             }
           });
+        }),
+        dirs.length && getFullPath(target_dir)
+        .then(path => {
+          dirs.forEach(dir => {
+            if (_.find(path, item => item._id.equals(dir))) {
+              throw new ApiError(400, null, '不能移动文件夹到其子文件夹');
+            }
+          });
+          let length = max_dir_path_length - path.length;
+          return ensurePathLengthLessThan(dirs, length);
         })
       ]);
     });
+  });
+}
+
+function ensurePathLengthLessThan(dirs, length) {
+  if (!dirs) {
+    return;
+  }
+  if (length <= 0) {
+    throw new ApiError(400, null, 'wrong path length');
+  }
+  return db.document.dir.find({
+    _id: {
+      $in: dirs
+    }
+  }, {
+    dirs: 1
+  })
+  .then(dirsInfo => {
+    dirs = _.flatten(dirsInfo.map(dirInfo => dirInfo.dirs));
+    if (dirs.length) {
+      return ensurePathLengthLessThan(dirs, length - 1);
+    }
   });
 }
 
