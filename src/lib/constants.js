@@ -8,15 +8,20 @@ let constants = {
   ACTIVITY_ACTION: {
     // 常规操作
     ADD: 'add',            // 添加
-    REMOVE: 'remove',      // 添加
+    REMOVE: 'remove',      // 移除
     CREATE: 'create',      // 创建
     UPDATE: 'update',      // 更新（字段）
     DELETE: 'delete',      // 删除
     // 管理操作
     TRANSFER: 'tansfer',   // 转让
-    // 邀请
+    // 邀请、审批
     ACCEPT: 'accept',      // 接受
+    APPROVE: 'approve',    // 通过
     REJECT: 'reject',      // 拒绝
+    REVOKE: 'revoke',      // 撤回
+    SUBMIT: 'submit',      // 提交
+    COPY: 'copy',          // 抄送
+    CANCEL: 'cancel',      // 取消
     // 任务
     COMPLETE: 'complete',  // 关注
     REOPEN: 'reopen',      // 取消关注
@@ -29,15 +34,7 @@ let constants = {
 
     REMINDING: 'reminding', // 提醒
 
-    REVOKE_APPROVAL: 'approval.revoke', // 提醒
-
-    APPROVAL_APPERVER: 'approver', // 待审核的审批
-    APPROVAL_COPYTO: 'copyto',     // 抄送给我的审批
-    APPROVAL_APPROVED: 'approval.approved',
-    APPROVAL_REJECTED: 'approval.rejected',
-    APPROVAL_TEMPLATE_CHANGED: 'approval.template.change', // 审批模板修改或删除
-
-    SIGN: 'sign',         // 签到
+    SIGN: 'sign',          // 签到
     SIGN_AUDIT: 'sign.audit', // 补签
 
     RELEASE: 'release',   // 发布
@@ -110,27 +107,27 @@ let constants = {
 
   OBJECT_TYPE: {
     FIELD: 'field',
+    ANNOUNCEMENT: 'announcement',
+    APPROVAL_ITEM: 'approval.item',
+    APPROVAL_TEMPLATE: 'approval.template',
+    ATTENDANCE: 'attendance',
     COMPANY: 'company',
     COMPANY_MEMBER: 'company.member',
     COMPANY_DIR: 'company.dir',
     COMPANY_FILE: 'company.file',
+    DOCUMENT_DIR: 'document.dir',
+    DOCUMENT_FILE: 'dir.file',
     PROJECT: 'project',
     PROJECT_TAG: 'project.tag',
     PROJECT_MEMBER: 'project.member',
     PROJECT_DIR: 'project.dir',
     PROJECT_FILE: 'project.file',
+    REMINDING: 'reminding',
     REQUEST: 'request',
+    SCHEDULE: 'schedule',
     TASK: 'task',
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
-    REMINDING: 'reminding',
-    APPROVAL_ITEM: 'approval.item',
-    APPROVAL_TEMPLATE: 'approval.template',
-    DOCUMENT_DIR: 'document.dir',
-    DOCUMENT_FILE: 'dir.file',
-    SCHEDULE: 'schedule',
-    ATTENDANCE: 'attendance',
-    ANNOUNCEMENT: 'announcement',
   },
 
   PROJECT_MEMBER_TYPE: {

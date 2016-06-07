@@ -71,8 +71,8 @@ export default class Approval {
                 }
               }, {
                 upsert: true
-              })
-            })
+              });
+            });
           } else {
             return db.approval.flow.update({
               _id: flow_id
@@ -80,15 +80,15 @@ export default class Approval {
               $push: {
                 apply: item_id
               }
-            })
+            });
           }
         })
         .then(() => {
-          return this.prepareNextStep(req, item_id, template.steps, data.step)
+          return this.prepareNextStep(req, item_id, template.steps, data.step);
         })
-        .then(() => item)
-      })
-    })
+        .then(() => item);
+      });
+    });
   }
 
   static prepareNextStep(req, item_id, steps, step_id) {
@@ -122,8 +122,8 @@ export default class Approval {
               }
             }, {
               upsert: true
-            })
-          })
+            });
+          });
         } else {
           return db.approval.flow.update({
             _id: flow_id
@@ -134,9 +134,9 @@ export default class Approval {
                 step: step_id
               }
             }
-          })
+          });
         }
-      })
+      });
     });
     return Promise.all(addingApprover)
     .then(() => {
@@ -165,8 +165,8 @@ export default class Approval {
                 }
               }, {
                 upsert: true
-              })
-            })
+              });
+            });
           } else {
             return db.approval.flow.update({
               _id: flow_id
@@ -174,9 +174,9 @@ export default class Approval {
               $push: {
                 copy_to: item_id
               }
-            })
+            });
           }
-        })
+        });
       });
       return addingCopyto;
     })
@@ -186,18 +186,18 @@ export default class Approval {
         target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
         company: company._id,
         from: req.user._id,
-      }
+      };
       return Promise.all([
         approver.length && req.model('notification').send(_.extend(notification, {
-          action: C.ACTIVITY_ACTION.APPROVAL_APPERVER,
+          action: C.ACTIVITY_ACTION.SUBMIT,
           to: approver,
         })),
         // copyto.length && req.model('notification').send(_.extend(notification, {
-        //   action: C.ACTIVITY_ACTION.APPROVAL_COPYTO,
+        //   action: C.ACTIVITY_ACTION.COPY,
         //   to: copyto,
         // }))
-      ])
-    })
+      ]);
+    });
   }
 
   static createTemplate(template) {
@@ -218,10 +218,10 @@ export default class Approval {
           $set: {
             master_id: master._id
           }
-        })
+        });
       })
-      .then(() => template)
-    })
+      .then(() => template);
+    });
   }
 
   static getStepRelatedMembers(structure, steps, step_id) {
@@ -240,11 +240,11 @@ export default class Approval {
       } else {
         copyto = copyto.concat(i._id);
       }
-    })
+    });
     return {
       copyto: uniqObjectId(copyto),
       approver: uniqObjectId(approver)
-    }
+    };
   }
 
 }

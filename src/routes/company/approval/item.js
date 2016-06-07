@@ -149,10 +149,10 @@ api.put('/:item_id/status', (req, res, next) => {
       .then(template => {
         let { approver, copyto } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
         return Promise.all([
-          addActivity(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
+          addActivity(req, C.ACTIVITY_ACTION.REVOKE, {
             approval_item: item_id
           }),
-          addNotification(req, C.ACTIVITY_ACTION.REVOKE_APPROVAL, {
+          addNotification(req, C.ACTIVITY_ACTION.REVOKE, {
             approval_item: item_id,
             to: approver.concat(copyto)
           })
@@ -209,10 +209,10 @@ api.put('/:item_id/steps', (req, res, next) => {
         }
         if (!nextStep) {
           let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
-            ? C.ACTIVITY_ACTION.APPROVAL_REJECTED
-            : C.ACTIVITY_ACTION.APPROVAL_APPROVED;
+            ? C.ACTIVITY_ACTION.REJECT
+            : C.ACTIVITY_ACTION.APPROVE;
           addNotification(req, activityAction, {
-            approval_item: item_id,
+            'approval_item': item_id,
             to: item.from
           });
           return doAfterApproval(item, data.status);
@@ -223,8 +223,8 @@ api.put('/:item_id/steps', (req, res, next) => {
   .then(() => {
     res.json({});
     let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
-      ? C.ACTIVITY_ACTION.APPROVAL_REJECTED
-      : C.ACTIVITY_ACTION.APPROVAL_APPROVED;
+      ? C.ACTIVITY_ACTION.REJECT
+      : C.ACTIVITY_ACTION.APPROVE;
     return addActivity(req, activityAction, {
       approval_item: item_id
     });

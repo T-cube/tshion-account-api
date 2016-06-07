@@ -7,7 +7,7 @@ import config from 'config';
 
 import db from 'lib/database';
 import { validation } from './notification.schema';
-import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
+import { mapObjectIdToData } from 'lib/utils';
 
 const extendedProps = [
   ['user', 'name', 'from,user'],
@@ -16,7 +16,7 @@ const extendedProps = [
   ['task', 'title,company_id,project_id', 'task'],
   ['request', 'type', 'request'],
   ['reminding', 'title,description', 'reminding'],
-  ['approval.item', 'apply_date,content', 'approval_item'],
+  ['approval.item', 'company_id,apply_date,content', 'approval_item'],
   ['announcement', 'title,is_published', 'announcement'],
 ];
 
@@ -74,7 +74,7 @@ export default class Notification {
     if (last_id) {
       _.extend(query, {
         _id: {$lt: last_id},
-      })
+      });
     }
     return db.notification.find(query)
     .sort({is_read: 1, _id: -1}).limit(limit)
@@ -90,7 +90,7 @@ export default class Notification {
       };
     }
     if (!_.isUndefined(isRead)) {
-      query.is_read = isRead
+      query.is_read = isRead;
     }
     return db.notification.count(query)
     .then(count => ({
