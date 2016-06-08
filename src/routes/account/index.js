@@ -1,7 +1,5 @@
 import _ from 'underscore';
 import express from 'express';
-import Promise from 'bluebird';
-import validator from 'express-validation';
 import config from 'config';
 
 import db from 'lib/database';
@@ -12,7 +10,6 @@ import { oauthCheck } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { authoriseSanitization, authoriseValidation, validate } from './schema';
 import { randomAvatar } from 'lib/upload';
-import validation from './validation';
 import { ValidationError } from 'lib/inspector';
 
 let api = express.Router();
@@ -70,7 +67,7 @@ api.post('/register', (req, res, next) => {
         country: '中国',
         province: '',
         city: '',
-        address: ''
+        address: '',
       },
       sex: null,
       locale: 'zh-CN',

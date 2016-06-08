@@ -66,6 +66,7 @@ export default class Account {
           }, {
             $set: {
               activiated: true,
+              email_verified: true,
             }
           }),
           db.user.confirm.email.update({
