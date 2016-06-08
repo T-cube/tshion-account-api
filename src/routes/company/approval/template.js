@@ -121,7 +121,7 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
         }, {
           $set: data
         })
-        .then(newTpl => res.json(newTpl));
+        .then(() => res.json(_.extend(oldTpl, data)));
       } else {
         _.extend(data, {
           master_id: oldTpl.master_id,
