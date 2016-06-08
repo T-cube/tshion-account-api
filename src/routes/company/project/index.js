@@ -378,11 +378,12 @@ api.get('/:project_id/tag', (req, res, next) => {
     {'$group' : {_id: '$tags', sum: {$sum: 1}}}
   ])
   .then(doc => {
-    req.project.tags.forEach(tag => {
+    let tags = req.project.tags || [];
+    tags.forEach(tag => {
       let foundTag = _.find(doc, item => tag._id.equals(item._id));
       tag.sum = foundTag ? foundTag.sum : 0;
     });
-    res.json(req.project.tags);
+    res.json(tags);
   })
   .catch(next);
 });
