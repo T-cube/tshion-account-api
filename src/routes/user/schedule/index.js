@@ -37,7 +37,7 @@ api.post('/', (req, res, next) => {
       addActivity(req, C.ACTIVITY_ACTION.CREATE, {
         schedule: doc._id
       }),
-      data.remind != 'none' &&
+      data.remind.type != 'none' &&
       scheduleModel.addReminding(doc._id, cron_rule, data.repeat_end)
     ]);
   })

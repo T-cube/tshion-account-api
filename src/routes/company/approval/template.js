@@ -249,6 +249,9 @@ function cancelItemsUseTemplate(req, template_id) {
     from: 1
   })
   .then(items => {
+    if (!items.length) {
+      return;
+    }
     let itemIdList = items.map(item => item._id);
     let notification = {
       action: C.ACTIVITY_ACTION.CANCEL,
