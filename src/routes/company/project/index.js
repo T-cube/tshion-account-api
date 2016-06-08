@@ -373,7 +373,8 @@ api.post('/:project_id/tag', (req, res, next) => {
 
 api.get('/:project_id/tag', (req, res, next) => {
   db.task.aggregate([
-    {$unwind: '$tags' },
+    {$match: { project_id: req.project._id }},
+    {$unwind: '$tags'},
     {'$group' : {_id: '$tags', sum: {$sum: 1}}}
   ])
   .then(doc => {
