@@ -139,7 +139,7 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
   return db.project.remove({
     _id: project_id
   })
-  .then(doc => {
+  .then(() => {
     return Promise.all([
       db.company.update({
         _id: req.company._id
@@ -299,20 +299,30 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
   if (!allowed) {
     throw new ApiError(403);
   }
-  return Promise.all([
-    db.user.update({
-      _id: member_id
-    }, {
-      $pull: {projects: project_id}
-    }),
-    db.project.update({
-      _id: project_id
-    }, {
-      $pull: {
-        members: { _id: member_id }
-      }
-    })
-  ])
+  db.task.count({
+    project_id: project_id,
+    assignee: member_id,
+    status: C.TASK_STATUS.PROCESSING
+  })
+  .then(count => {
+    if (count) {
+      throw new ApiError(400, null, '用户还有待处理的任务');
+    }
+    return Promise.all([
+      db.user.update({
+        _id: member_id
+      }, {
+        $pull: {projects: project_id}
+      }),
+      db.project.update({
+        _id: project_id
+      }, {
+        $pull: {
+          members: { _id: member_id }
+        }
+      })
+    ]);
+  })
   .then(() => res.json({}))
   .catch(next);
 });
@@ -362,7 +372,20 @@ api.post('/:project_id/tag', (req, res, next) => {
 });
 
 api.get('/:project_id/tag', (req, res, next) => {
-  res.json(req.project.tags || []);
+  db.task.aggregate([
+    {$match: { project_id: req.project._id }},
+    {$unwind: '$tags'},
+    {'$group' : {_id: '$tags', sum: {$sum: 1}}}
+  ])
+  .then(doc => {
+    let tags = req.project.tags || [];
+    tags.forEach(tag => {
+      let foundTag = _.find(doc, item => tag._id.equals(item._id));
+      tag.sum = foundTag ? foundTag.sum : 0;
+    });
+    res.json(tags);
+  })
+  .catch(next);
 });
 
 api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
@@ -371,7 +394,6 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
   Promise.all([
     db.project.update({
       _id: project_id,
-      company_id: req.company._id,
     }, {
       $pull: {
         tags: {
@@ -381,7 +403,6 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
     }),
     db.task.update({
       project_id: project_id,
-      company_id: req.company._id,
       'tags': tag_id
     }, {
       $pull: {

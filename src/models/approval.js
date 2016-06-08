@@ -20,6 +20,7 @@ export default class Approval {
       }
       data.step = template.steps[0] ? template.steps[0]._id : null;
       data.steps = [];
+      data.title = template.name;
       template.steps.forEach(step => {
         data.steps.push({
           _id: step._id,
@@ -40,13 +41,13 @@ export default class Approval {
       return db.approval.item.insert(data)
       .then(item => {
         let item_id = item._id;
-        req.model('activity').insert({
-          approval_item: item_id,
-          action: C.ACTIVITY_ACTION.CREATE,
-          target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
-          company: req.company._id,
-          creator: req.user._id,
-        });
+        // req.model('activity').insert({
+        //   approval_item: item_id,
+        //   action: C.ACTIVITY_ACTION.CREATE,
+        //   target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+        //   company: req.company._id,
+        //   creator: req.user._id,
+        // });
         return db.approval.user.findOne({
           _id: data.from,
           'map.company_id': data.company_id
@@ -71,8 +72,8 @@ export default class Approval {
                 }
               }, {
                 upsert: true
-              })
-            })
+              });
+            });
           } else {
             return db.approval.flow.update({
               _id: flow_id
@@ -80,15 +81,13 @@ export default class Approval {
               $push: {
                 apply: item_id
               }
-            })
+            });
           }
         })
-        .then(() => {
-          return this.prepareNextStep(req, item_id, template.steps, data.step)
-        })
-        .then(() => item)
-      })
-    })
+        .then(() => this.prepareNextStep(req, item_id, template.steps, data.step))
+        .then(() => item);
+      });
+    });
   }
 
   static prepareNextStep(req, item_id, steps, step_id) {
@@ -122,8 +121,8 @@ export default class Approval {
               }
             }, {
               upsert: true
-            })
-          })
+            });
+          });
         } else {
           return db.approval.flow.update({
             _id: flow_id
@@ -134,9 +133,9 @@ export default class Approval {
                 step: step_id
               }
             }
-          })
+          });
         }
-      })
+      });
     });
     return Promise.all(addingApprover)
     .then(() => {
@@ -165,8 +164,8 @@ export default class Approval {
                 }
               }, {
                 upsert: true
-              })
-            })
+              });
+            });
           } else {
             return db.approval.flow.update({
               _id: flow_id
@@ -174,9 +173,9 @@ export default class Approval {
               $push: {
                 copy_to: item_id
               }
-            })
+            });
           }
-        })
+        });
       });
       return addingCopyto;
     })
@@ -186,18 +185,18 @@ export default class Approval {
         target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
         company: company._id,
         from: req.user._id,
-      }
+      };
       return Promise.all([
         approver.length && req.model('notification').send(_.extend(notification, {
-          action: C.ACTIVITY_ACTION.APPROVAL_APPERVER,
+          action: C.ACTIVITY_ACTION.SUBMIT,
           to: approver,
         })),
         // copyto.length && req.model('notification').send(_.extend(notification, {
-        //   action: C.ACTIVITY_ACTION.APPROVAL_COPYTO,
+        //   action: C.ACTIVITY_ACTION.COPY,
         //   to: copyto,
         // }))
-      ])
-    })
+      ]);
+    });
   }
 
   static createTemplate(template) {
@@ -218,10 +217,10 @@ export default class Approval {
           $set: {
             master_id: master._id
           }
-        })
+        });
       })
-      .then(() => template)
-    })
+      .then(() => template);
+    });
   }
 
   static getStepRelatedMembers(structure, steps, step_id) {
@@ -240,11 +239,11 @@ export default class Approval {
       } else {
         copyto = copyto.concat(i._id);
       }
-    })
+    });
     return {
       copyto: uniqObjectId(copyto),
       approver: uniqObjectId(approver)
-    }
+    };
   }
 
 }

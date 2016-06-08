@@ -93,8 +93,6 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
   data.forms && data.forms.forEach(i => {
     i._id = ObjectId();
   });
-  data.company_id = req.company._id;
-  data.status = C.APPROVAL_STATUS.UNUSED;
   let condition = {
     _id: template_id,
     company_id: req.company._id,
@@ -113,23 +111,42 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
     if (oldTpl.status != C.APPROVAL_STATUS.UNUSED) {
       throw new ApiError(400, null, '启用中的模板不能编辑');
     }
-    return Promise.all([
-      db.approval.template.insert(data)
-      .then(newTpl => {
-        res.json(newTpl);
-        return db.approval.template.master.update({
-          _id: oldTpl.master_id
+    return db.approval.item.count({
+      template: template_id,
+    })
+    .then(count => {
+      if (!count) {
+        return db.approval.template.update({
+          _id: template_id
         }, {
-          $set: {
-            current: newTpl._id
-          },
-          $push: {
-            reversions: newTpl._id
-          }
+          $set: data
+        })
+        .then(() => res.json(_.extend(oldTpl, data)));
+      } else {
+        _.extend(data, {
+          master_id: oldTpl.master_id,
+          company_id: req.company._id,
+          status: C.APPROVAL_STATUS.UNUSED,
         });
-      }),
-      cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
-    ]);
+        return Promise.all([
+          db.approval.template.insert(data)
+          .then(newTpl => {
+            res.json(newTpl);
+            return db.approval.template.master.update({
+              _id: oldTpl.master_id
+            }, {
+              $set: {
+                current: newTpl._id
+              },
+              $push: {
+                reversions: newTpl._id
+              }
+            });
+          }),
+          cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
+        ]);
+      }
+    });
   })
   // .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
   //   approval_template: template_id
@@ -234,7 +251,7 @@ function cancelItemsUseTemplate(req, template_id) {
   .then(items => {
     let itemIdList = items.map(item => item._id);
     let notification = {
-      action: C.ACTIVITY_ACTION.APPROVAL_TEMPLATE_CHANGED,
+      action: C.ACTIVITY_ACTION.CANCEL,
       target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
       company: req.company._id,
       from: req.user._id,

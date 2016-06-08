@@ -10,6 +10,7 @@ import { oauthCheck, authCheck } from 'lib/middleware';
 import { time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
+import Structure from 'models/structure';
 
 /* company collection */
 let api = express.Router();
@@ -229,6 +230,44 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
       })
     ]);
   })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.post('/:company_id/exit', (req, res, next) => {
+  const company_id = req.company._id;
+  const projects = req.company.projects;
+  const user_id = req.user._id;
+  if (user_id.equals(req.company.owner)) {
+    throw new ApiError(400, null, 'owner cannot exit company');
+  }
+  const tree = new Structure(req.company.structure);
+  tree.deleteMemberAll(user_id);
+  Promise.all([
+    db.user.update({
+      _id: user_id,
+    }, {
+      $pull: { companies: company_id },
+    }),
+    db.user.update({
+      _id: user_id,
+    }, {
+      $pull: { projects: {$in: projects} },
+    }),
+    db.company.update({
+      _id: company_id,
+    }, {
+      $pull: { members: {_id: user_id} },
+      $set: { structure: tree.object() },
+    }),
+    db.project.update({
+      _id: {$in: projects},
+    }, {
+      $pull: { members: {_id: user_id} },
+    }, {
+      multi: true,
+    }),
+  ])
   .then(() => res.json({}))
   .catch(next);
 });

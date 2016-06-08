@@ -76,7 +76,14 @@ export default {
       return callback(null, null);
     }
     query.activiated = true;
-    db.user.findOne(query, {_id: 1, name: 1, avatar: 1, email: 1, mobile: 1, password: 1})
+    db.user.findOne(query, {
+      name: 1,
+      avatar: 1,
+      email: 1,
+      mobile: 1,
+      password: 1,
+      options: 1,
+    })
     .then(doc => {
       if (!doc) {
         return callback(null, null);

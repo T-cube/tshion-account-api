@@ -134,6 +134,7 @@ INPUT
   _id: <ObjectId>,
   name: <String>,
   color: <String>,
+  sum: <Int>,
 }...]
 ```
 

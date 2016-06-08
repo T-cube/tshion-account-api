@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import express from 'express'
+import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
@@ -144,7 +144,7 @@ api.get('/project', (req, res, next) =>  {
     if (search) {
       condition['$text'] = {
         $search: search
-      }
+      };
     }
     if (company) {
       if (ObjectId.isValid(company)) {
@@ -163,9 +163,9 @@ api.get('/project', (req, res, next) =>  {
         search || (condition['is_archived'] = false);
     }
     return db.project.find(condition)
-    .then(data => res.json(data))
+    .then(data => res.json(data));
   })
-  .catch(next)
+  .catch(next);
 });
 
 api.get('/activity', (req, res, next) => {
@@ -180,7 +180,7 @@ api.get('/activity', (req, res, next) => {
     if (!userInfo.companies || !userInfo.companies.length) {
       condition = {
         creator: req.user._id,
-      }
+      };
     } else {
       condition = {
         $or: [{
@@ -190,12 +190,12 @@ api.get('/activity', (req, res, next) => {
         }, {
           creator: req.user._id,
         }]
-      }
+      };
     }
-    return req.model('activity').fetch(condition, last_id)
+    return req.model('activity').fetch(condition, last_id);
   })
   .then(list => res.json(list))
   .catch(next);
-})
+});
 
 api.use('/schedule', require('./schedule').default);

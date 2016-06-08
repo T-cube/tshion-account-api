@@ -24,9 +24,8 @@ api.use((req, res, next) => {
 
 // TODO page
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, assignee, creator, follower} = req.query;
+  let { keyword, sort, order, status, tag, assignee, creator, follower} = req.query;
   let condition = {
-    company_id: req.company._id,
     project_id: req.project._id,
   };
   let idItems = _.pick(req.query, 'assignee', 'creator', 'followers');
@@ -54,6 +53,9 @@ api.get('/', (req, res, next) => {
   if (keyword) {
     condition['$text'] = { $search: keyword };
   }
+  if (tag && ObjectId.isValid(tag)) {
+    condition['tags'] = ObjectId(tag);
+  }
   let sortBy = { status: -1, date_update: 1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
     order = order == 'desc' ? -1 : 1;
@@ -74,6 +76,9 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
+  if (data.date_due < data.date_start) {
+    throw new ApiError(400, null, 'wrong date');
+  }
   _.extend(data, {
     creator: req.user._id,
     followers: [req.user._id],
@@ -152,7 +157,7 @@ api.put('/:task_id/assignee', (req, res, next) => {
   doUpdateField(req, 'assignee')
   .then(() => {
     res.json({});
-    return taskFollow(req, req.body.assignee);
+    return taskFollow(req, data.assignee);
   })
   .catch(next);
 });
@@ -318,6 +323,7 @@ function logTask(req, action, data) {
   let activity = _.extend({
     creator: req.user._id,
   }, info, data);
+  console.log(req.task.followers);
   let notification = _.extend({
     from: req.user._id,
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),
