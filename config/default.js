@@ -23,12 +23,12 @@ module.exports = {
     accessTokenLifetime: 30 * 60,
     refreshTokenLifetime: 15 * 24 * 3600,
   },
-  userConfirm: {
+  userVerifyCode: {
     email: {
       codeLength: 24,
       expires: 2 * 24 * 60 * 60, // 2 days in seconds
     },
-    mobile: {
+    sms: {
       codeLength: 6,
       expires: 15 * 60, // 15 minutes in seconds
     }

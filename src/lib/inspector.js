@@ -6,7 +6,7 @@ import { isEmail } from './utils';
 import { ApiError } from './error';
 import moment from 'moment-timezone';
 
-let sanitizationCustom = {
+const sanitizationCustom = {
   objectId: function (schema, post) {
     if (/^[A-Fa-f0-9]{24}$/.test(post)) {
       this.report();
@@ -20,7 +20,7 @@ let sanitizationCustom = {
   },
 };
 
-let validationCustom = {
+const validationCustom = {
   objectId: function (schema, candidate) {
     if (!schema.$objectId) {
       return;
@@ -113,6 +113,33 @@ export class ValidationError {
   }
 }
 
+export function mapObjectAlias(object, aliases) {
+  let newSchema = {};
+  _.each(aliases, (key, alias) => {
+    if (object[key]) {
+      newSchema[alias] = object[key];
+    }
+  });
+  return newSchema;
+}
+
+export function selectRules(schema, options) {
+  if (_.isObject(options)) {
+    return mapObjectAlias(schema, options);
+  }
+  if (_.isArray(options)) {
+    let newSchema = {};
+    _.each(options, key => {
+      if (_.isString(key) && !_.isUndefined(schema[key])) {
+        newSchema[key] = schema[key];
+      } else if (_.isObject(key)) {
+        _.extend(newSchema, mapObjectAlias(schema, key));
+      }
+    });
+    return newSchema;
+  }
+}
+
 export function buildValidator(schema) {
   return function validate(type, data, options) {
     if (!_.has(schema, type)) {
@@ -121,8 +148,8 @@ export function buildValidator(schema) {
     let schemaData = schema[type];
     let { sanitization, validation } = schemaData;
     if (_.isArray(options)) {
-      sanitization = _.pick(sanitization, options);
-      validation = _.pick(validation, options);
+      sanitization = selectRules(sanitization, options);
+      validation = selectRules(validation, options);
     }
     sanitizeObject(sanitization, data);
     let result = validateObject(validation, data);

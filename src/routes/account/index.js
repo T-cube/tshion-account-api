@@ -1,7 +1,5 @@
 import _ from 'underscore';
 import express from 'express';
-import Promise from 'bluebird';
-import validator from 'express-validation';
 import config from 'config';
 
 import db from 'lib/database';
@@ -12,7 +10,6 @@ import { oauthCheck } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { authoriseSanitization, authoriseValidation, validate } from './schema';
 import { randomAvatar } from 'lib/upload';
-import validation from './validation';
 import { ValidationError } from 'lib/inspector';
 
 let api = express.Router();
@@ -35,21 +32,23 @@ api.post('/check', (req, res, next) => {
 
 api.post('/register', (req, res, next) => {
   let data = req.body;
-  validate('register', data);
-  let { type, password, code } = data;
+  let type = data.type || '__invalid_type__';
+  validate('register', data, ['type', type, 'code', 'password']);
+  let { password, code } = data;
   let id = data[type];
   data = _.pick(data, 'type', type, 'password', 'code');
   db.user.find({[type]: id}).count()
   .then(count => {
     if (count > 0) {
+      console.log(data);
       throw new ValidationError({
         [type]: 'user_exists',
       });
     }
     if (type == 'email') {
-      return req.model('account').sendConfirmEmail(id);
+      return req.model('account').sendRegisterEmail(id);
     } else {
-      return req.model('account').confirmSmsCode(id, code);
+      return req.model('account').sendSmsCode(id, code);
     }
   })
   .then(() => {
@@ -94,12 +93,12 @@ api.post('/register', (req, res, next) => {
 });
 
 api.post('/confirm', (req, res, next) => {
-  const { codeLength } = config.get('userConfirm.email');
+  const { codeLength } = config.get('userVerifyCode.email');
   const { code } = req.body;
   if (!code || !(/^[a-f0-9]+$/.test(code) && code.length == codeLength * 2 )) {
     throw new ApiError(400, null, 'invalid confirm code');
   }
-  req.model('account').confirmEmailCode(code)
+  req.model('account').confirmRegisterEmailCode(code)
   .then(data => res.json(data))
   .catch(next);
 });

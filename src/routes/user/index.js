@@ -2,18 +2,15 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
+import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import upload from 'lib/upload';
+import { comparePassword, hashPassword } from 'lib/utils';
 
-import { sanitizeValidateObject } from 'lib/inspector';
-import {
-  infoSanitization, infoValidation,
-  avatarSanitization, avatarValidation,
-  settingsSanitization, settingsValidation,
-  optionsSanitization, optionsValidation,
-} from './schema';
+import { validate } from './schema';
+import { validate as validateAccount } from '../account/schema';
 
 const BASIC_FIELDS = {
   _id: 1,
@@ -52,7 +49,7 @@ api.get('/info', (req, res, next) => {
 
 api.put('/info', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(infoSanitization, infoValidation, data);
+  validate('info', data);
   db.user.update({
     _id: req.user._id
   }, {
@@ -64,7 +61,7 @@ api.put('/info', (req, res, next) => {
 
 api.put('/settings', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(settingsSanitization, settingsValidation, data);
+  validate('settings', data);
   if (!_.keys(data).length) {
     throw new ApiError(400, null, 'no setting provided!');
   }
@@ -79,7 +76,7 @@ api.put('/settings', (req, res, next) => {
 
 api.put('/options', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(optionsSanitization, optionsValidation, data);
+  validate('options', data);
   if (!_.keys(data).length) {
     throw new ApiError(400, null, 'no option provided!');
   }
@@ -127,6 +124,93 @@ api.put('/avatar/upload', upload({type: 'avatar'}).single('avatar'),
   .catch(next);
 });
 
+api.post('/change-pass', (req, res, next) => {
+  let data = req.body;
+  let { old_password, new_password } = data;
+  comparePassword(old_password, req.user.password)
+  .then(result => {
+    if (!result) {
+      throw new ApiError(401, 'bad_password', 'password is not correct');
+    }
+    return hashPassword(new_password);
+  })
+  .then(password => {
+    return db.user.update({
+      _id: req.user._id,
+    }, {
+      password: password,
+    });
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.post('/account/verify', (req, res, next) => {
+  let data = req.body;
+  let type = data.type;
+  validateAccount('register', data, ['type', type]);
+  if (data[type] != req.user[type]) {
+    throw new ApiError(400, 'verify_fail');
+  }
+  res.json({});
+});
+
+api.post('/account/send-code', (req, res, next) => {
+  let data = req.body;
+  let type = data.type;
+  validateAccount('register', data, [
+    'type',
+    {
+      ['old_' + type]: type,
+      ['new_' + type]: type,
+    },
+  ]);
+  if (data['old_' + type] != req.user[type]) {
+    throw new ApiError(400, 'verify_fail');
+  }
+  let promise;
+  if (type === C.USER_ID_TYPE.EMAIL) {
+    promise = req.model('account').sendEmailCode(data.email);
+  } else {
+    promise = req.model('account').sendSmsCode(data.mobile);
+  }
+  promise.then(() => res.json({})).catch(next);
+});
+
+api.post('/account/change-account', (req, res, next) => {
+  let data = req.body;
+  let type = data.type;
+  validateAccount('register', data, [
+    'type',
+    'code',
+    {
+      ['old_' + type]: type,
+      ['new_' + type]: type,
+    },
+  ]);
+  if (data['old_' + type] != req.user[type]) {
+    throw new ApiError(400, 'verify_fail');
+  }
+  let code = data.code;
+  let promise;
+  if (type === C.USER_ID_TYPE.EMAIL) {
+    promise = req.model('account').verifyEmailCode(data.email, code);
+  } else {
+    promise = req.model('account').verifySmsCode(data.mobile, code);
+  }
+  promise.then(() => {
+    return db.user.update({
+      _id: req.user._id,
+    }, {
+      $set: {
+        [type]: data['new_' + type]
+      }
+    });
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
 api.get('/project', (req, res, next) =>  {
   db.user.findOne({
     _id: req.user._id
@@ -154,13 +238,15 @@ api.get('/project', (req, res, next) =>  {
       }
     }
     switch (type) {
-      case 'archived':
-        condition['is_archived'] = true;
-        break;
-      case 'mine':
-        condition['owner'] = req.user._id;
-      default:
-        search || (condition['is_archived'] = false);
+    case 'archived':
+      condition['is_archived'] = true;
+      break;
+    case 'mine':
+      condition['owner'] = req.user._id;
+      break;
+    }
+    if (!search) {
+      condition['is_archived'] = false;
     }
     return db.project.find(condition)
     .then(data => res.json(data));
