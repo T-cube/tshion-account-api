@@ -118,6 +118,17 @@ INPUT:
 }
 ```
 
+### POST /user/change-pass
+
+修改密码
+
+```javascript
+{
+  old_password: <String>,
+  new_password: <String>,
+}
+```
+
 ### GET /user/project
 
 获取用户关联项目列表

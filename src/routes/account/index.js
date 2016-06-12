@@ -69,7 +69,7 @@ api.post('/register', (req, res, next) => {
         country: '中国',
         province: '',
         city: '',
-        address: ''
+        address: '',
       },
       sex: null,
       locale: 'zh-CN',
