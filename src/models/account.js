@@ -92,7 +92,7 @@ export default class Account {
     .then(code => {
       let userName = getEmailName(email);
       return this.model('email')
-      .send('tlifang_email_verify', email, {
+      .send('tlifang_email_bind', email, {
         name: userName,
         email: email,
         code: code,

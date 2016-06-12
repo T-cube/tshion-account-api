@@ -12,6 +12,7 @@ module.exports = {
     // 每页默认显式条目数量
     listNum: 20,
   },
+  passwordHashRounds: 10,
   avatar: {
     count: {
       company: 10,
@@ -85,6 +86,9 @@ module.exports = {
           tlifang_email_active: {
             variables: ['name', 'email', 'url'],
           },
+          tlifang_email_bind: {
+            variables: ['name', 'email', 'code'],
+          },
         },
       },
       sms: {
@@ -94,6 +98,10 @@ module.exports = {
         templates: {
           tlifang_mobile_activite: {
             id: 1288,
+            variables: ['code'],
+          },
+          tlifang_mobile_bind: {
+            id: 1420,
             variables: ['code'],
           },
           tlifang_reset_pass: {

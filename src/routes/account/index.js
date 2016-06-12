@@ -52,7 +52,7 @@ api.post('/register', (req, res, next) => {
     }
   })
   .then(() => {
-    return hashPassword(password, 10);
+    return hashPassword(password);
   })
   .then(hash => {
     let doc = {

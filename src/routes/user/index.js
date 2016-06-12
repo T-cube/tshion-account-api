@@ -126,20 +126,38 @@ api.put('/avatar/upload', upload({type: 'avatar'}).single('avatar'),
 
 api.post('/change-pass', (req, res, next) => {
   let data = req.body;
+  console.log(data);
   let { old_password, new_password } = data;
-  comparePassword(old_password, req.user.password)
+  console.log(old_password, new_password);
+  db.user.findOne({
+    _id: req.user._id,
+  }, {
+    password: 1,
+  })
+  .then(user => {
+    console.log(old_password, user.password);
+    console.log('found user');
+    return comparePassword(old_password, user.password);
+  })
   .then(result => {
+    console.log('compare password', result);
     if (!result) {
       throw new ApiError(401, 'bad_password', 'password is not correct');
     }
     return hashPassword(new_password);
   })
   .then(password => {
-    return db.user.update({
-      _id: req.user._id,
-    }, {
-      password: password,
-    });
+    console.log('hash password', password);
+    return Promise.all([
+      db.user.update({
+        _id: req.user._id,
+      }, {
+        $set: {
+          password: password,
+        }
+      }),
+      // TODO logout current user
+    ]);
   })
   .then(() => res.json({}))
   .catch(next);
@@ -170,9 +188,9 @@ api.post('/account/send-code', (req, res, next) => {
   }
   let promise;
   if (type === C.USER_ID_TYPE.EMAIL) {
-    promise = req.model('account').sendEmailCode(data.email);
+    promise = req.model('account').sendEmailCode(data.new_email);
   } else {
-    promise = req.model('account').sendSmsCode(data.mobile);
+    promise = req.model('account').sendSmsCode(data.new_mobile);
   }
   promise.then(() => res.json({})).catch(next);
 });
@@ -194,9 +212,9 @@ api.post('/account/change-account', (req, res, next) => {
   let code = data.code;
   let promise;
   if (type === C.USER_ID_TYPE.EMAIL) {
-    promise = req.model('account').verifyEmailCode(data.email, code);
+    promise = req.model('account').verifyEmailCode(data.new_email, code);
   } else {
-    promise = req.model('account').verifySmsCode(data.mobile, code);
+    promise = req.model('account').verifySmsCode(data.new_mobile, code);
   }
   promise.then(() => {
     return db.user.update({
