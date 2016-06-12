@@ -121,7 +121,7 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
         }, {
           $set: data
         })
-        .then(newTpl => res.json(newTpl));
+        .then(() => res.json(_.extend(oldTpl, data)));
       } else {
         _.extend(data, {
           master_id: oldTpl.master_id,
@@ -249,6 +249,9 @@ function cancelItemsUseTemplate(req, template_id) {
     from: 1
   })
   .then(items => {
+    if (!items.length) {
+      return;
+    }
     let itemIdList = items.map(item => item._id);
     let notification = {
       action: C.ACTIVITY_ACTION.CANCEL,

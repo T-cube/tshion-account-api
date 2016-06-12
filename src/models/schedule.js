@@ -37,7 +37,7 @@ export default class Schedule {
         console.log('exit job');
         return;
       } else {
-        console.log(list.length);
+        console.log('job num: ', list.length);
       }
       let schedules = [];
       list.forEach(reminding => schedules.push(reminding.target_id));
@@ -66,6 +66,7 @@ export default class Schedule {
         endDate: repeat_end
       });
       nextRemindTime = interval.next().toDate();
+      nextRemindTime = nextRemindTime > (new Date()) ? nextRemindTime : null;
     } catch (e) {
       console.log(e.message);
     }
@@ -161,6 +162,8 @@ export default class Schedule {
         }
         cron_rule = cron_rule.concat(['*', '*', info]);
         break;
+      default:
+        cron_rule = cron_rule.concat(['*', '*', '*']);
       }
       return cron_rule.length == 5 ? cron_rule.join(' ') : null;
     } else {
