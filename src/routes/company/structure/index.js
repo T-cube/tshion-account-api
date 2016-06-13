@@ -81,6 +81,19 @@ api.delete('/:node_id', (req, res, next) => {
   .catch(next);
 });
 
+api.put('/:node_id/admin', (req, res, next) => {
+  let tree = req.structure;
+  let data = req.body;
+  let node_id = req.params.node_id;
+  let result = tree.setAdmin(data._id, node_id);
+  if (!result) {
+    throw new ApiError(404, 'node_not_found');
+  }
+  save(req)
+  .then(() => res.json({}))
+  .catch(next);
+});
+
 api.post('/:node_id/position', (req, res, next) => {
   let tree = req.structure;
   let data = req.body;
@@ -88,10 +101,10 @@ api.post('/:node_id/position', (req, res, next) => {
   let position = tree.addPosition(data.title, node_id);
   if (position) {
     save(req)
-    .then(doc => res.json(position))
+    .then(() => res.json(position))
     .catch(next);
   } else {
-    next(new ApiError(400, 'duplicated position name'));
+    throw new ApiError(400, 'duplicated position name');
   }
 });
 
@@ -102,13 +115,28 @@ api.get('/:node_id/position', (req, res, next) => {
   res.json(node.positions || []);
 });
 
+api.put('/:node_id/position/:position_id', (req, res, next) => {
+  let tree = req.structure;
+  let data = req.body;
+  let node_id = req.params.node_id;
+  let position_id = req.params.position_id;
+  let result = tree.updatePosition(data.title, position_id, node_id);
+  if (result) {
+    save(req)
+    .then(() => res.json({}))
+    .catch(next);
+  } else {
+    throw new ApiError(400, 'update failed');
+  }
+});
+
 api.delete('/:node_id/position/:position_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let position_id = req.params.position_id;
   if (tree.deletePosition(position_id, node_id)) {
     save(req)
-    .then(doc => res.json({}))
+    .then(() => res.json({}))
     .catch(next);
   } else {
     next(new ApiError(400, 'position not found'));
@@ -126,11 +154,10 @@ api.post('/:node_id/member', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
-  console.log(data,memberSanitization,memberValidation);
   sanitizeValidateObject(memberSanitization, memberValidation, data);
   let member = tree.addMember(data, node_id);
   save(req)
-  .then(doc => res.json(member))
+  .then(() => res.json(member))
   .catch(next);
 });
 

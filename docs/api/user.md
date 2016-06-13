@@ -143,6 +143,7 @@ OUTPUT:
 
 修改密码
 
+INPUT:
 ```javascript
 {
   old_password: <String>,
@@ -154,6 +155,7 @@ OUTPUT:
 
 校验当前登录账号全称（绑定新邮箱、手机号码前）
 
+INPUT:
 ```javascript
 {
   type: <String>,
@@ -165,6 +167,7 @@ OUTPUT:
 
 向需要绑定的邮箱、手机号码发送验证码
 
+INPUT:
 ```javascript
 {
   type: <String>,
@@ -177,6 +180,7 @@ OUTPUT:
 
 根据验证码修改账户绑定邮箱、手机号码
 
+INPUT:
 ```javascript
 {
   type: <String>,
