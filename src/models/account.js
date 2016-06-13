@@ -10,12 +10,12 @@ import { generateToken, getEmailName, expire, time } from 'lib/utils';
 export default class Account {
 
   getEmailCode() {
-    const { codeLength } = config.get('userConfirm.email');
+    const { codeLength } = config.get('userVerifyCode.email');
     return generateToken(codeLength);
   }
 
-  sendConfirmEmail(email) {
-    const { expires } = config.get('userConfirm.email');
+  sendRegisterEmail(email) {
+    const { expires } = config.get('userVerifyCode.email');
     return this.getEmailCode()
     .then(code => {
       let confirmUrl = config.get('webUrl') + 'account/confirm/' + code;
@@ -37,7 +37,7 @@ export default class Account {
     });
   }
 
-  confirmEmailCode(code) {
+  confirmRegisterEmailCode(code) {
     return db.user.confirm.email.findOne({
       code: code,
     })
@@ -86,15 +86,60 @@ export default class Account {
     });
   }
 
+  sendEmailCode(email) {
+    const { expires } = config.get('userVerifyCode.sms');
+    return this.genSmsCode()
+    .then(code => {
+      let userName = getEmailName(email);
+      return this.model('email')
+      .send('tlifang_email_bind', email, {
+        name: userName,
+        email: email,
+        code: code,
+      })
+      .then(() => {
+        return db.user.confirm.email.insert({
+          code: code,
+          email: email,
+          expires: expire(expires * 1000),
+          date_create: time(),
+        });
+      });
+    });
+  }
+
+  verifyEmailCode(email, code) {
+    return db.user.confirm.email.findOne({
+      email: email,
+      code: code,
+    })
+    .then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'verify_code_invalid', 'code is not valid');
+      }
+      if (time() > doc.expires) {
+        throw new ApiError(400, 'verify_code_expired', 'code has been expired');
+      }
+      return db.user.confirm.email.update({
+        _id: doc._id,
+      }, {
+        $set: {
+          expires: new Date(0),
+        },
+      });
+    })
+    .then(() => true);
+  }
+
   genSmsCode() {
-    const { codeLength } = config.get('userConfirm.mobile');
+    const { codeLength } = config.get('userVerifyCode.sms');
     let num = Math.pow(10, codeLength) - 1;
     let code = pad(Math.round(Math.random() * num) + '', 6, 'RIGHT', '0');
     return Promise.resolve(code);
   }
 
   sendSmsCode(mobile) {
-    const { expires } = config.get('userConfirm.mobile');
+    const { expires } = config.get('userVerifyCode.sms');
     return this.genSmsCode()
     .then(code => {
       return this.model('sms')
@@ -112,13 +157,12 @@ export default class Account {
     });
   }
 
-  confirmSmsCode(mobile, code) {
+  verifySmsCode(mobile, code) {
     return db.user.confirm.mobile.findOne({
       mobile: mobile,
       code: code,
     })
     .then(doc => {
-      console.log('confirmSmsCode:', doc);
       if (!doc) {
         throw new ApiError(400, 'sms_code_invalid', 'code is not valid');
       }

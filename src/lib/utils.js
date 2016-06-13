@@ -8,6 +8,7 @@ import path from 'path';
 import objectPath from 'object-path';
 
 import db from 'lib/database';
+import config from 'config';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
@@ -16,24 +17,30 @@ export function generateToken(length = 48) {
   .then(buffer => buffer.toString('hex'));
 }
 
-export let hashPassword = Promise.promisify(bcrypt.hash);
+export function hashPassword(password) {
+  const rounds = config.get('passwordHashRounds');
+  const genSalt = Promise.promisify(bcrypt.genSalt);
+  const hash = Promise.promisify(bcrypt.hash);
+  return genSalt(rounds)
+  .then(salt => {
+    return hash(password, salt);
+  });
+}
 
-export let comparePassword = Promise.promisify(bcrypt.compare);
+export const comparePassword = Promise.promisify(bcrypt.compare);
 
-export let fsStat = Promise.promisify(fs.stat);
-
-export let fsAccess = Promise.promisify(fs.access);
+const pfs = Promise.promisifyAll(fs);
 
 export function fileExists(path) {
-  return fsAccess(path, fs.F_OK)
-  .then(() => fsStat(path))
+  return pfs.access(path, fs.F_OK)
+  .then(() => pfs.state(path))
   .then(stat => stat.isFile())
   .catch(() => false);
 }
 
 export function dirExists(path) {
-  return fsAccess(path, fs.F_OK)
-  .then(() => fsStat(path))
+  return pfs.access(path, fs.F_OK)
+  .then(() => pfs.state(path))
   .then(stat => stat.isDirectory())
   .catch(() => false);
 }

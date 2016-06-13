@@ -32,25 +32,27 @@ api.post('/check', (req, res, next) => {
 
 api.post('/register', (req, res, next) => {
   let data = req.body;
-  validate('register', data);
-  let { type, password, code } = data;
+  let type = data.type || '__invalid_type__';
+  validate('register', data, ['type', type, 'code', 'password']);
+  let { password, code } = data;
   let id = data[type];
   data = _.pick(data, 'type', type, 'password', 'code');
   db.user.find({[type]: id}).count()
   .then(count => {
     if (count > 0) {
+      console.log(data);
       throw new ValidationError({
         [type]: 'user_exists',
       });
     }
     if (type == 'email') {
-      return req.model('account').sendConfirmEmail(id);
+      return req.model('account').sendRegisterEmail(id);
     } else {
-      return req.model('account').confirmSmsCode(id, code);
+      return req.model('account').sendSmsCode(id, code);
     }
   })
   .then(() => {
-    return hashPassword(password, 10);
+    return hashPassword(password);
   })
   .then(hash => {
     let doc = {
@@ -91,12 +93,12 @@ api.post('/register', (req, res, next) => {
 });
 
 api.post('/confirm', (req, res, next) => {
-  const { codeLength } = config.get('userConfirm.email');
+  const { codeLength } = config.get('userVerifyCode.email');
   const { code } = req.body;
   if (!code || !(/^[a-f0-9]+$/.test(code) && code.length == codeLength * 2 )) {
     throw new ApiError(400, null, 'invalid confirm code');
   }
-  req.model('account').confirmEmailCode(code)
+  req.model('account').confirmRegisterEmailCode(code)
   .then(data => res.json(data))
   .catch(next);
 });

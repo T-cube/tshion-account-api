@@ -10,11 +10,7 @@
 /
 ```
 
-## Table of Contents
-
-* [GET /user/project](#post-user-project)
-
-## API function
+## 基本信息获取、修改
 
 ### GET /user/info
 
@@ -118,17 +114,6 @@ INPUT:
 }
 ```
 
-### POST /user/change-pass
-
-修改密码
-
-```javascript
-{
-  old_password: <String>,
-  new_password: <String>,
-}
-```
-
 ### GET /user/project
 
 获取用户关联项目列表
@@ -150,4 +135,57 @@ OUTPUT:
   description: <String>,
   logo: <URL>,
 }...]
+```
+
+## 账号安全操作相关
+
+### POST /user/change-pass
+
+修改密码
+
+INPUT:
+```javascript
+{
+  old_password: <String>,
+  new_password: <String>,
+}
+```
+
+### POST /user/verify
+
+校验当前登录账号全称（绑定新邮箱、手机号码前）
+
+INPUT:
+```javascript
+{
+  type: <String>,
+  <type>: <String>,
+}
+```
+
+### POST /user/send-code
+
+向需要绑定的邮箱、手机号码发送验证码
+
+INPUT:
+```javascript
+{
+  type: <String>,
+  old_<type>: <String>,
+  new_<type>: <String>,
+}
+```
+
+### POST /user/change-account
+
+根据验证码修改账户绑定邮箱、手机号码
+
+INPUT:
+```javascript
+{
+  type: <String>,
+  code: <String>,
+  old_<type>: <String>,
+  new_<type>: <String>,
+}
 ```

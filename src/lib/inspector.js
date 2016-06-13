@@ -6,7 +6,7 @@ import { isEmail } from './utils';
 import { ApiError } from './error';
 import moment from 'moment-timezone';
 
-let sanitizationCustom = {
+const sanitizationCustom = {
   objectId: function (schema, post) {
     if (/^[A-Fa-f0-9]{24}$/.test(post)) {
       this.report();
@@ -20,7 +20,7 @@ let sanitizationCustom = {
   },
 };
 
-let validationCustom = {
+const validationCustom = {
   objectId: function (schema, candidate) {
     if (!schema.$objectId) {
       return;
@@ -113,6 +113,50 @@ export class ValidationError {
   }
 }
 
+export function mapObjectAlias(object, aliases) {
+  let newSchema = {};
+  _.each(aliases, (key, alias) => {
+    if (object[key]) {
+      newSchema[alias] = object[key];
+    }
+  });
+  return newSchema;
+}
+
+// options can be string, array, object:
+//   string: 'key1,key2,alias3 as key3'
+//   array: ['key1', 'key2', {alias3: key3}]
+//   object: {alias1: key1, alias2: key2}
+export function selectRules(schema, options) {
+  if (options == null) {
+    return schema;
+  }
+  if (_.isString(options)) {
+    options = options.split(/,\s?/);
+  }
+  if (_.isObject(options) && !_.isArray(options)) {
+    return mapObjectAlias(schema, options);
+  }
+  if (_.isArray(options)) {
+    let newSchema = {};
+    _.each(options, item => {
+      if (_.isString(item)) {
+        let [key, alias] = item.split(/ as /i);
+        if (!alias) {
+          alias = key;
+        }
+        if (schema[key]) {
+          newSchema[alias] = schema[key];
+        }
+      } else if (_.isObject(item)) {
+        _.extend(newSchema, mapObjectAlias(schema, item));
+      }
+    });
+    return newSchema;
+  }
+  throw new Error('invalid rule options');
+}
+
 export function buildValidator(schema) {
   return function validate(type, data, options) {
     if (!_.has(schema, type)) {
@@ -120,9 +164,9 @@ export function buildValidator(schema) {
     }
     let schemaData = schema[type];
     let { sanitization, validation } = schemaData;
-    if (_.isArray(options)) {
-      sanitization = _.pick(sanitization, options);
-      validation = _.pick(validation, options);
+    if (options) {
+      sanitization = selectRules(sanitization, options);
+      validation = selectRules(validation, options);
     }
     sanitizeObject(sanitization, data);
     let result = validateObject(validation, data);

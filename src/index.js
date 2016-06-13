@@ -29,7 +29,7 @@ console.log('Tlifang API service');
 console.log('--------------------------------------------------------------------------------');
 console.log('enviroment:', process.env.NODE_ENV);
 console.log('loaded config:');
-console.log(JSON.stringify(config, (key, value) => {
+console.log(JSON.stringify(_.pick(config, ['apiUrl', 'webUrl', 'server', 'database']), (key, value) => {
   return _.isArray(value) ? value.join(';') : value;
 }, 2));
 console.log('initializing service...');
