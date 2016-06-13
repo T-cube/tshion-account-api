@@ -151,32 +151,32 @@ INPUT:
 }
 ```
 
-### POST /user/verify
+### POST /user/account/verify
 
 校验当前登录账号全称（绑定新邮箱、手机号码前）
 
 INPUT:
 ```javascript
 {
-  type: <String>,
+  type: <String[Enum:email,mobile]>,
   <type>: <String>,
 }
 ```
 
-### POST /user/send-code
+### POST /user/account/send-code
 
 向需要绑定的邮箱、手机号码发送验证码
 
 INPUT:
 ```javascript
 {
-  type: <String>,
-  old_<type>: <String>,
+  type: <String[Enum:email,mobile]>,
+  old_<type>: <String[optional]>,
   new_<type>: <String>,
 }
 ```
 
-### POST /user/bind-account
+### POST /user/account/bind-account
 
 根据验证码修改账户绑定邮箱、手机号码
 

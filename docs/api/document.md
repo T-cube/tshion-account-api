@@ -49,6 +49,13 @@ INPUT
 
 获取目录名和子目录和文件
 
+QUERY:
+```javascript
+{
+  search: <String>
+}
+```
+
 OUTPUT:
 ```javascript
 {

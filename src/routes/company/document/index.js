@@ -18,7 +18,7 @@ import {
   delValidation,
 } from './schema';
 import { oauthCheck } from 'lib/middleware';
-import upload, { getUploadPath } from 'lib/upload';
+import upload from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
@@ -52,6 +52,7 @@ api.use((req, res, next) => {
 });
 
 api.get('/dir/:dir_id?', (req, res, next) => {
+  let { search } = req.query;
   let condition = {
     [req.document.posKey]: req.document.posVal
   };
@@ -64,16 +65,12 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   .then(doc => {
     if (!doc) {
       if (!condition._id && null == condition.parent_dir) {
-        _.extend(condition, {
-          name: '',
-          dirs: [],
-          files: [],
-          total_size: 0
-        });
-        return db.document.dir.insert(condition)
-        .then(rootDir => res.json(rootDir));
+        return createRootDir(condition);
       }
       throw new ApiError(404);
+    }
+    if (search) {
+      return searchByName(req, doc, search);
     }
     return Promise.all([
       getFullPath(doc.parent_dir).then(path => doc.path = path),
@@ -94,9 +91,10 @@ api.get('/dir/:dir_id?', (req, res, next) => {
           dir.dirCount = 0;
         }
       });
-      res.json(doc);
+      return doc;
     });
   })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -778,4 +776,26 @@ function addActivity(req, action, data) {
   req.params.project_id && (info.project = ObjectId(req.params.project_id));
   _.extend(info, data);
   return req.model('activity').insert(info);
+}
+
+function searchByName(req, dir, name) {
+  return req.model('document').queryItemInfoUnderDir(dir._id, name)
+  .then(doc => {
+    doc = _.extend(dir, doc);
+    return Promise.all([
+      getFullPath(doc.parent_dir).then(path => doc.path = path),
+      fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by'),
+    ])
+    .then(() => doc);
+  });
+}
+
+function createRootDir(condition) {
+  _.extend(condition, {
+    name: '',
+    dirs: [],
+    files: [],
+    total_size: 0
+  });
+  return db.document.dir.insert(condition);
 }

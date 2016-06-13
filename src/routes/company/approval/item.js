@@ -135,7 +135,6 @@ api.put('/:item_id/status', (req, res, next) => {
     }
     return db.approval.item.update({
       _id: item_id,
-      from: req.user._id,
     }, {
       $set: data
     })
