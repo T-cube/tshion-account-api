@@ -87,6 +87,22 @@ export function getEmailName(email) {
   }
 }
 
+export function maskEmail(email) {
+  let result = /^([\w\.]+)(@.+)$/.exec(email);
+  if (!result) {
+    return '***';
+  }
+  return result[1].substr(0,3) + '****' + result[2];
+}
+
+export function maskMobile(mobile) {
+  let result = /^(\d{3})\d{4}(\d{4})$/.exec(mobile);
+  if (!result) {
+    return '***';
+  }
+  return result[1] + '****' + result[2];
+}
+
 export function timestamp(t) {
   if (t) {
     return +new Date(t);

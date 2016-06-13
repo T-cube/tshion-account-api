@@ -7,7 +7,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import upload from 'lib/upload';
-import { comparePassword, hashPassword } from 'lib/utils';
+import { comparePassword, hashPassword, maskEmail, maskMobile } from 'lib/utils';
 
 import { validate } from './schema';
 import { validate as validateAccount } from '../account/schema';
@@ -43,8 +43,15 @@ api.get('/info', (req, res, next) => {
     _id: req.user._id
   }, BASIC_FIELDS)
   .then(data => {
+    if (data.email) {
+      data.email = maskEmail(data.email);
+    }
+    if (data.mobile) {
+      data.mobile = maskMobile(data.mobile);
+    }
     res.json(data);
-  });
+  })
+  .catch(next);
 });
 
 api.put('/info', (req, res, next) => {
@@ -176,52 +183,44 @@ api.post('/account/verify', (req, res, next) => {
 api.post('/account/send-code', (req, res, next) => {
   let data = req.body;
   let type = data.type;
-  validateAccount('register', data, [
-    'type',
-    {
-      ['old_' + type]: type,
-      ['new_' + type]: type,
-    },
-  ]);
-  if (data['old_' + type] != req.user[type]) {
+  let oldIdKey = 'old_' + type;
+  let newIdKey = 'new_' + type;
+  let schemaKeys = ['type', 'code', `${newIdKey} as ${type}`];
+  let binded = req.user[type] != null;
+  if (!binded) {
+    schemaKeys.push(`${oldIdKey} as ${type}`);
+  }
+  validateAccount('register', data, schemaKeys);
+  if (binded && data[oldIdKey] != req.user[type]) {
     throw new ApiError(400, 'verify_fail');
   }
-  let promise;
-  if (type === C.USER_ID_TYPE.EMAIL) {
-    promise = req.model('account').sendEmailCode(data.new_email);
-  } else {
-    promise = req.model('account').sendSmsCode(data.new_mobile);
-  }
-  promise.then(() => res.json({})).catch(next);
+  req.model('account').sendCode(type, data[newIdKey])
+  .then(() => res.json({}))
+  .catch(next);
 });
 
-api.post('/account/change-account', (req, res, next) => {
+api.post('/account/bind-account', (req, res, next) => {
   let data = req.body;
   let type = data.type;
-  validateAccount('register', data, [
-    'type',
-    'code',
-    {
-      ['old_' + type]: type,
-      ['new_' + type]: type,
-    },
-  ]);
-  if (data['old_' + type] != req.user[type]) {
+  let oldIdKey = 'old_' + type;
+  let newIdKey = 'new_' + type;
+  let schemaKeys = ['type', 'code', `${newIdKey} as ${type}`];
+  let binded = req.user[type] != null;
+  if (!binded) {
+    schemaKeys.push(`${oldIdKey} as ${type}`);
+  }
+  validateAccount('register', data, schemaKeys);
+  if (binded && data[oldIdKey] != req.user[type]) {
     throw new ApiError(400, 'verify_fail');
   }
-  let code = data.code;
-  let promise;
-  if (type === C.USER_ID_TYPE.EMAIL) {
-    promise = req.model('account').verifyEmailCode(data.new_email, code);
-  } else {
-    promise = req.model('account').verifySmsCode(data.new_mobile, code);
-  }
-  promise.then(() => {
+  req.model('account').verifyCode(type, data[newIdKey], data.code)
+  .then(() => {
     return db.user.update({
       _id: req.user._id,
     }, {
       $set: {
-        [type]: data['new_' + type]
+        [type]: data[newIdKey],
+        [type + '_verified']: true,
       }
     });
   })

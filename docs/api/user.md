@@ -176,16 +176,16 @@ INPUT:
 }
 ```
 
-### POST /user/change-account
+### POST /user/bind-account
 
 根据验证码修改账户绑定邮箱、手机号码
 
 INPUT:
 ```javascript
 {
-  type: <String>,
-  code: <String>,
-  old_<type>: <String>,
-  new_<type>: <String>,
+  type: <String[Enum:email,mobile]>,  // 账号类型             
+  code: <String>,                     // 验证码
+  old_<type>: <String[optional]>,     // 旧账号，当原来未绑定账号时不需要指定此项
+  new_<type>: <String>,               // 新账号
 }
 ```
