@@ -208,10 +208,12 @@ export default class Approval {
       $orderby: {
         number: -1
       },
+    }, {
+      number: 1
     })
     .then(lastTpl => {
       _.extend(template, {
-        number: this.generateNumber(lastTpl.number),
+        number: this.generateNumber(lastTpl && lastTpl.number),
         date_update: new Date(),
       });
       return db.approval.template.insert(template);
