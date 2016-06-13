@@ -42,6 +42,7 @@ export let sanitization = {
       properties: {
         approver: {
           type: 'object',
+          strict: true,
           properties: {
             _id: { $objectId: 1 },
             type: { type: 'string' }
@@ -52,6 +53,7 @@ export let sanitization = {
           items: {
             type: 'object',
             optional: true,
+            strict: true,
             properties: {
               _id: { $objectId: 1 },
               type: { type: 'string' }
@@ -84,7 +86,7 @@ export let validation = {
           type: 'object',
           properties: {
             _id: { $objectId: 1 },
-            type: { $enum: ENUMS.APPROVER_TYPE }
+            type: { $enum: ENUMS.APPROVER_TYPE },
           }
         },
         copy_to: {
@@ -95,7 +97,7 @@ export let validation = {
             optional: true,
             properties: {
               _id: { $objectId: 1 },
-              type: { $enum: ENUMS.APPROVER_TYPE }
+              type: { $enum: ENUMS.APPROVER_TYPE },
             }
           }
         }

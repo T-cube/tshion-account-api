@@ -168,9 +168,7 @@ api.get('/:template_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    let tree = new Structure(req.company.structure);
-    doc.scope = doc.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
-    res.json(doc);
+    res.json(mapCompanyInfo(req.company, doc));
   })
   .catch(next);
 });
@@ -290,4 +288,31 @@ function addActivity(req, action, data) {
   };
   _.extend(info, data);
   return req.model('activity').insert(info);
+}
+
+function mapCompanyInfo(company, data) {
+  let tree = new Structure(company.structure);
+  if (!_.isArray(data)) {
+    data = [data];
+  }
+  data.forEach(item => {
+    item.scope = item.scope && item.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
+    item.steps.forEach(step => {
+      if (step.approver.type == 'member') {
+        _.extend(step.approver, _.pick(_.find(company.members, member => member._id.equals(step.approver._id)), 'name'));
+      } else {
+        _.extend(step.approver, _.pick(tree.findNodeById(step.approver._id), '_id', 'name'));
+      }
+      if (step.copy_to && step.copy_to.length) {
+        step.copy_to.forEach(copyto => {
+          if (copyto.type == 'member') {
+            _.extend(copyto, _.pick(_.find(company.members, member => member._id.equals(copyto._id)), 'name'));
+          } else {
+            _.extend(copyto, _.pick(tree.findNodeById(copyto._id), '_id', 'name'));
+          }
+        });
+      }
+    });
+  });
+  return data;
 }
