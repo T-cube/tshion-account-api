@@ -158,7 +158,7 @@ INPUT:
 INPUT:
 ```javascript
 {
-  type: <String>,
+  type: <String[Enum:email,mobile]>,
   <type>: <String>,
 }
 ```
@@ -170,8 +170,8 @@ INPUT:
 INPUT:
 ```javascript
 {
-  type: <String>,
-  old_<type>: <String>,
+  type: <String[Enum:email,mobile]>,
+  old_<type>: <String[optional]>,
   new_<type>: <String>,
 }
 ```
