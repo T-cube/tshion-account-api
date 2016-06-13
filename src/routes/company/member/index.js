@@ -33,7 +33,7 @@ api.get('/', (req, res, next) => {
       let user = _.find(users, u => u._id.equals(m._id));
       _.extend(m, user);
       m.avatar = m.avatar || defaultAvatar('user');
-    })
+    });
     res.json(members);
   })
   .catch(next);
@@ -47,7 +47,6 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   if (member) {
     throw new ApiError(400, null, 'member exists');
   }
-
   db.user.findOne({email: data.email}, {_id: 1, name: 1})
   .then(user => {
     data.status = C.COMPANY_MEMBER_STATUS.PENDING;
@@ -81,7 +80,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
         request: request._id,
         company: req.company._id,
       });
-    })
+    });
     return db.company.update({
       _id: req.company._id,
     }, {
