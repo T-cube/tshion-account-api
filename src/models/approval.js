@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import moment from 'moment';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -200,10 +201,21 @@ export default class Approval {
   }
 
   static createTemplate(template) {
-    _.extend(template, {
-      date_update: new Date()
-    });
-    return db.approval.template.insert(template)
+    return db.approval.template.findOne({
+      $query: {
+        company_id: template.company_id
+      },
+      $orderby: {
+        number: -1
+      },
+    })
+    .then(lastTpl => {
+      _.extend(template, {
+        number: this.generateNumber(lastTpl.number),
+        date_update: new Date(),
+      });
+      return db.approval.template.insert(template);
+    })
     .then(template => {
       return db.approval.template.master.insert({
         company_id: template.company_id,
@@ -244,6 +256,14 @@ export default class Approval {
       copyto: uniqObjectId(copyto),
       approver: uniqObjectId(approver)
     };
+  }
+
+  static generateNumber(lastNum) {
+    let prefix = moment().format('YYMMDD');
+    if (!lastNum || !RegExp('^' + prefix).test(lastNum)) {
+      return prefix + '01';
+    }
+    return parseInt(lastNum) + 1 + '';
   }
 
 }

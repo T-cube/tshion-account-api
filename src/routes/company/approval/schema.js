@@ -140,7 +140,7 @@ export let itemSanitization = {
       type: { type: 'string' }
     }
   },
-}
+};
 
 export let itemValidation = {
   template: { $objectId: 1 },

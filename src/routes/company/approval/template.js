@@ -48,6 +48,7 @@ api.get('/', (req, res, next) => {
       description: 1,
       scope: 1,
       status: 1,
+      number: 1,
     })
     .then(template => {
       let tree = new Structure(req.company.structure);
