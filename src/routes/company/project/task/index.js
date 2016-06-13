@@ -24,7 +24,9 @@ api.use((req, res, next) => {
 
 // TODO page
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, tag, assignee, creator, follower} = req.query;
+  let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize } = req.query;
+  page = page || 1;
+  pagesize = pagesize || 20;
   let condition = {
     project_id: req.project._id,
   };
@@ -63,6 +65,8 @@ api.get('/', (req, res, next) => {
   }
   db.task.find(condition)
   .sort(sortBy)
+  .skip((page - 1) * pagesize)
+  .limit(pagesize)
   .then(list => {
     _.each(list, task => {
       task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
