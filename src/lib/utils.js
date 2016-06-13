@@ -29,18 +29,20 @@ export function hashPassword(password) {
 
 export const comparePassword = Promise.promisify(bcrypt.compare);
 
-const pfs = Promise.promisifyAll(fs);
+let fsStat = Promise.promisify(fs.stat);
+
+let fsAccess = Promise.promisify(fs.access);
 
 export function fileExists(path) {
-  return pfs.access(path, fs.F_OK)
-  .then(() => pfs.state(path))
+  return fsAccess(path, fs.F_OK)
+  .then(() => fsStat(path))
   .then(stat => stat.isFile())
   .catch(() => false);
 }
 
 export function dirExists(path) {
-  return pfs.access(path, fs.F_OK)
-  .then(() => pfs.state(path))
+  return fsAccess(path, fs.F_OK)
+  .then(() => fsStat(path))
   .then(stat => stat.isDirectory())
   .catch(() => false);
 }
