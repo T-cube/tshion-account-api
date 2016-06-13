@@ -244,7 +244,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
 function cancelItemsUseTemplate(req, template_id) {
   return db.approval.item.find({
     template: template_id,
-    status: C.APPROVAL_STATUS.NORMAL,
+    status: C.APPROVAL_ITEM_STATUS.PROCESSING,
   }, {
     from: 1
   })
@@ -261,7 +261,7 @@ function cancelItemsUseTemplate(req, template_id) {
     };
     return Promise.all(
       items.map(item => {
-        req.model('notification').send(_.extend(notification, {
+        return req.model('notification').send(_.extend(notification, {
           to: item.from,
           approval_item: item._id,
         }));
@@ -272,7 +272,7 @@ function cancelItemsUseTemplate(req, template_id) {
         }
       }, {
         $set: {
-          status: C.APPROVAL_STATUS.TEMPLATE_CHNAGED,
+          status: C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED,
           step: null,
         }
       }))

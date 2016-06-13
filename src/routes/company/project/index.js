@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
+import fs from 'fs';
 
 import db from 'lib/database';
 import upload, { randomAvatar } from 'lib/upload';
@@ -151,6 +152,13 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
       }, {
         $pull: {projects: project_id}
       }),
+      db.task.remove({
+        project_id
+      }),
+      db.discussion.remove({
+        project_id
+      }),
+      removeFilesUnderProject(project_id),
     ]);
   })
   .then(() => {
@@ -454,6 +462,70 @@ function ensureProjectAdmin(project, user_id) {
     .indexOf(_.find(project.members, member => member._id.equals(user_id)).type)) {
     throw new ApiError(400, null, 'user is not admin of the project');
   }
+}
+
+function removeFilesUnderProject(project_id) {
+  return db.document.dir.findOne({
+    project_id,
+    parent_dir: null,
+  }, {
+    _id: 1
+  })
+  .then(rootDir => {
+    if (!rootDir) {
+      return;
+    }
+    return fetchFilesUnderDir(rootDir._id)
+    .then(files => {
+      db.document.file.find({
+        _id: {
+          $in: files
+        }
+      }, {
+        path: 1
+      })
+      .then(fileInfo => {
+        return removeFiles(fileInfo.map(info => info.path));
+      })
+      .then(() => {
+        return db.document.file.remove({
+          _id: {
+            $in: files
+          }
+        });
+      });
+    });
+  });
+}
+
+function removeFiles(filePathList) {
+  try {
+    filePathList.forEach(path => fs.unlinkSync(path));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function fetchFilesUnderDir(dir, files) {
+  files = files || [];
+  dir = ObjectId.isValid(dir) ? [dir] : dir;
+  if (!dir || !dir.length) {
+    return Promise.resolve(files);
+  }
+  return db.document.dir.find({
+    _id: {
+      $in: dir
+    }
+  }, {
+    files: 1,
+    dirs: 1,
+  })
+  .then(doc => {
+    files = files.concat(_.flatten(doc.map(item => item.files)) || []);
+    let dirs = _.flatten(doc.map(item => item.dirs)).filter(i => ObjectId.isValid(i));
+    return fetchFilesUnderDir(dirs, files);
+  })
+  .then(files => files);
 }
 
 api.use('/:project_id/task', require('./task').default);

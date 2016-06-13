@@ -268,8 +268,8 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
 });
 
 api.post('/dir/:dir_id/upload',
-  upload({type: 'attachment'}).array('document'),
-  (req, res, next) => {
+upload({type: 'attachment'}).array('document'),
+(req, res, next) => {
   let data = req.body;
   let dir_id = ObjectId(req.params.dir_id);
   if (req.files) {
@@ -666,7 +666,7 @@ function deleteFiles(req, files) {
       })
       .then(() => {
         try {
-          fs.unlinkSync(getUploadPath(fileInfo.path));
+          fs.unlinkSync(fileInfo.path);
         } catch (e) {
           console.error(e);
         }
