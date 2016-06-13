@@ -1,13 +1,12 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, mapObjectIdToData, indexObjectId } from 'lib/utils';
+import { fetchCompanyMemberInfo, indexObjectId } from 'lib/utils';
 import {
   sanitization,
   validation,

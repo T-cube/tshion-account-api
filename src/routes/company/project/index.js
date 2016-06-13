@@ -472,7 +472,7 @@ function removeFilesUnderProject(project_id) {
     }
     return fetchFilesUnderDir(rootDir._id)
     .then(files => {
-      db.document.file.find({
+      return db.document.file.find({
         _id: {
           $in: files
         }
