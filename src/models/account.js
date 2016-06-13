@@ -3,6 +3,7 @@ import config from 'config';
 import pad from 'node-string-pad';
 import Promise from 'bluebird';
 
+import C, { ENUMS } from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { generateToken, getEmailName, expire, time } from 'lib/utils';
@@ -84,6 +85,28 @@ export default class Account {
         };
       });
     });
+  }
+
+  sendCode(type, account) {
+    if (!_.contains[ENUMS.USER_ID_TYPE], account) {
+      throw new Error('invalid account type');
+    }
+    if (type == C.USER_ID_TYPE.EMAIL) {
+      return this.sendEmailCode(account);
+    } else {
+      return this.sendSmsCode(account);
+    }
+  }
+
+  verifyCode(type, account, code) {
+    if (!_.contains[ENUMS.USER_ID_TYPE], account) {
+      throw new Error('invalid account type');
+    }
+    if (type == C.USER_ID_TYPE.EMAIL) {
+      return this.verifyEmailCode(account, code);
+    } else {
+      return this.verifySmsCode(account, code);
+    }
   }
 
   sendEmailCode(email) {

@@ -1,5 +1,5 @@
 {
-  "name": "tlifang-api",
+  "name": "tlf-api",
   "version": "0.3.0",
   "description": "Tlifang API server",
   "main": "index.js",
