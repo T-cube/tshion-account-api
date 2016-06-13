@@ -151,7 +151,7 @@ INPUT:
 }
 ```
 
-### POST /user/verify
+### POST /user/account/verify
 
 校验当前登录账号全称（绑定新邮箱、手机号码前）
 
@@ -163,7 +163,7 @@ INPUT:
 }
 ```
 
-### POST /user/send-code
+### POST /user/account/send-code
 
 向需要绑定的邮箱、手机号码发送验证码
 
@@ -176,7 +176,7 @@ INPUT:
 }
 ```
 
-### POST /user/bind-account
+### POST /user/account/bind-account
 
 根据验证码修改账户绑定邮箱、手机号码
 
