@@ -25,7 +25,7 @@ api.use((req, res, next) => {
 api.get('/', (req, res, next) => {
   let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize } = req.query;
   page = page || 1;
-  pagesize = pagesize || 20;
+  pagesize = pagesize || 10;
   let condition = {
     project_id: req.project._id,
   };
@@ -62,17 +62,27 @@ api.get('/', (req, res, next) => {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order };
   }
-  db.task.find(condition)
-  .sort(sortBy)
-  .skip((page - 1) * pagesize)
-  .limit(pagesize)
-  .then(list => {
-    _.each(list, task => {
-      task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
-    });
-    return fetchCompanyMemberInfo(req.company.members, list, 'assignee');
-  })
-  .then(data => res.json(data))
+  let data = {};
+  Promise.all([
+    db.task.count(condition)
+    .then(sum => {
+      data.totalpage = Math.round(sum / pagesize);
+      data.page = page;
+      data.pagesize = pagesize;
+    }),
+    db.task.find(condition)
+    .sort(sortBy)
+    .skip((page - 1) * pagesize)
+    .limit(pagesize)
+    .then(list => {
+      _.each(list, task => {
+        task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
+      });
+      data.list = list;
+      return fetchCompanyMemberInfo(req.company.members, data.list, 'assignee');
+    })
+  ])
+  .then(() => res.json(data))
   .catch(next);
 });
 
@@ -326,7 +336,6 @@ function logTask(req, action, data) {
   let activity = _.extend({
     creator: req.user._id,
   }, info, data);
-  console.log(req.task.followers);
   let notification = _.extend({
     from: req.user._id,
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),
