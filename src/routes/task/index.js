@@ -47,7 +47,7 @@ api.get('/', (req, res, next) => {
   Promise.all([
     db.task.count(condition)
     .then(sum => {
-      data.totalpage = Math.round(sum / pagesize);
+      data.totalrows = sum;
       data.page = page;
       data.pagesize = pagesize;
     }),
