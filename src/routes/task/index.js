@@ -13,7 +13,9 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, type} = req.query;
+  let { keyword, sort, order, status, type, page, pagesize} = req.query;
+  page = page || 1;
+  pagesize = pagesize || 10;
   let condition = {};
   if (req.company) {
     condition.company_id = req.company._id;
@@ -41,38 +43,33 @@ api.get('/', (req, res, next) => {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order };
   }
-  db.task.find(condition, {
-    followers: 0,
-    description: 0,
-  })
-  .sort(sortBy)
-  .then(list => {
-    _.each(list, task => {
-      task.is_following = !!_.find(task.followers, user_id => user_id
-        && user_id.equals(req.user._id));
-    });
-    return list;
-  })
-  .then(list => {
-    // return Promise.all([
-      // mapObjectIdToData(list, [
-      //   ['company', 'name', 'company_id'],
-      //   ['project', 'name,tags', 'project_id'],
-      // ]),
-    // ])
-    if (req.company) {
-      return fetchCompanyMemberInfo(req.company.members, list, 'assignee');
-    }
-    return fetchUserInfo(list, 'assignee');
-    // .then(() => {
-    //   list.forEach(task => {
-    //     task.tags = task.tags ? task.tags.map(tag_id => {
-    //       return _.find(task.project_id.tags, project_tag => project_tag._id && project_tag._id.equals(tag_id))
-    //     }) : [];
-    //     delete task.project_id.tags;
-    //   })
-    // });
-  })
-  .then(list => res.json(list))
+  let data = {};
+  Promise.all([
+    db.task.count(condition)
+    .then(sum => {
+      data.totalpage = Math.round(sum / pagesize);
+      data.page = page;
+      data.pagesize = pagesize;
+    }),
+    db.task.find(condition, {
+      followers: 0,
+      description: 0,
+    })
+    .sort(sortBy)
+    .skip((page - 1) * pagesize)
+    .limit(pagesize)
+    .then(list => {
+      _.each(list, task => {
+        task.is_following = !!_.find(task.followers, user_id => user_id
+          && user_id.equals(req.user._id));
+      });
+      if (req.company) {
+        return fetchCompanyMemberInfo(req.company.members, list, 'assignee');
+      }
+      return fetchUserInfo(list, 'assignee');
+    })
+    .then(list => data.list = list)
+  ])
+  .then(() => res.json(data))
   .catch(next);
 });
