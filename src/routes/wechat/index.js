@@ -1,10 +1,12 @@
 import express from 'express';
-import config from 'config';
+import oauthserver from 'oauth2-server';
 import wechatOAuth from 'wechat-oauth';
 import Promise from 'bluebird';
+import config from 'config';
 
 import { ApiError } from 'lib/error';
 import wUtil from 'lib/wechat-util.js';
+import WechatOAuthModel from 'lib/wechat-oauth-model.js';
 
 let api = express.Router();
 export default api;
@@ -18,6 +20,14 @@ const urls = {
     return `/${authCode}`;
   },
 };
+
+const wechatOauth = oauthserver({
+  model: WechatOAuthModel,
+  grants: ['wechat'],
+  debug: false,
+  accessTokenLifetime: 1800,
+  refreshTokenLifetime: 3600 * 24 * 15,
+});
 
 api.get('/entry', (req, res) => {
   const wechatOAuthClient = getOAuthClient();
@@ -84,6 +94,8 @@ api.get('/access', (req, res, next) => {
     .catch(next);
   });
 });
+
+api.get('/token', wechatOauth.grant());
 
 function getLoginUser(req) {
   return req.user;
