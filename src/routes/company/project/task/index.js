@@ -24,7 +24,7 @@ api.use((req, res, next) => {
 // TODO page
 api.get('/', (req, res, next) => {
   let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize } = req.query;
-  page = page || 1;
+  page = parseInt(page) || 1;
   pagesize = pagesize || 10;
   let condition = {
     project_id: req.project._id,
