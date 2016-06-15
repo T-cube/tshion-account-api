@@ -89,8 +89,10 @@ export default {
       if (!doc) {
         return callback(null, null);
       }
-      let result = comparePassword(password, doc.password);
-      callback(null, result ? doc : null);
+      return comparePassword(password, doc.password)
+      .then(result => {
+        callback(null, result ? doc : null);
+      });
     })
     .catch(e => callback(e));
   },
