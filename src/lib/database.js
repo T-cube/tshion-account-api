@@ -38,6 +38,8 @@ const collections = [
   'user',
   'user.confirm.email',
   'user.confirm.mobile',
+  'wechat.oauth',
+  'wechat.user',
   'wiki',
 ];
 
