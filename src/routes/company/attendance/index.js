@@ -26,8 +26,6 @@ import Approval from 'models/approval';
 let api = express.Router();
 export default api;
 
-api.use(oauthCheck());
-
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(signSanitization, signValidation, data);

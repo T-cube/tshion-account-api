@@ -17,7 +17,6 @@ import {
   delSanitization,
   delValidation,
 } from './schema';
-import { oauthCheck } from 'lib/middleware';
 import upload from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp } from 'lib/utils';
 import config from 'config';
@@ -27,8 +26,6 @@ let api = express.Router();
 export default api;
 
 const max_dir_path_length = 5;
-
-api.use(oauthCheck());
 
 api.use((req, res, next) => {
   let max_file_size = 0;

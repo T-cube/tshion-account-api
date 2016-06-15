@@ -15,8 +15,6 @@ import { checkUserType } from '../utils';
 let api = express.Router();
 export default api;
 
-api.use(oauthCheck());
-
 api.get('/', (req, res, next) => {
   let condition = {
     company_id: req.company._id,

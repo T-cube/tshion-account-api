@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import config from 'config';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -17,15 +18,11 @@ import {
 let api = express.Router();
 export default api;
 
-api.use((req, res, next) => {
-  next();
-});
-
-// TODO page
 api.get('/', (req, res, next) => {
   let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize } = req.query;
   page = parseInt(page) || 1;
-  pagesize = pagesize || 10;
+  pagesize = parseInt(pagesize);
+  pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? pagesize : config.get('view.taskListNum');
   let condition = {
     project_id: req.project._id,
   };

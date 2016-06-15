@@ -11,6 +11,8 @@ module.exports = {
   view: {
     // 每页默认显式条目数量
     listNum: 20,
+    taskListNum: 10,
+    maxListNum: 100,
   },
   passwordHashRounds: 10,
   avatar: {
@@ -115,4 +117,10 @@ module.exports = {
   download: {
     tokenExpires: 30 * 60 * 1000, // half a hour
   },
+  wechat: {
+    appid: 'wx0215f16935043abf',
+    appsecret: '33e3cc720d35830e154a5eab8bc853d3',
+    get_accesstoken_uri: 'http://tlf.findteachers.cn/wechat-oauth/access',
+    auth_code_lifetime: 60 * 5,
+  }
 };

@@ -8,7 +8,7 @@ import db from 'lib/database';
 import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
-import { oauthCheck, authCheck } from 'lib/middleware';
+import { authCheck } from 'lib/middleware';
 import { fetchCompanyMemberInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
@@ -23,8 +23,6 @@ import {
 /* company collection */
 let api = express.Router();
 export default api;
-
-api.use(oauthCheck());
 
 api.use((req, res, next) => {
   next();

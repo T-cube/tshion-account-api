@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import express from 'express';
+import config from 'config';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -14,8 +15,11 @@ api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
   let { keyword, sort, order, status, type, page, pagesize} = req.query;
-  page = page || 1;
-  pagesize = pagesize || 10;
+  page = parseInt(page) || 1;
+  pagesize = parseInt(pagesize);
+  pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
+    ? pagesize
+    : config.get('view.taskListNum');
   let condition = {};
   if (req.company) {
     condition.company_id = req.company._id;
