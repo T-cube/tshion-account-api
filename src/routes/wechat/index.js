@@ -14,10 +14,10 @@ export default api;
 const urls = {
   user: '/',
   reg: (id) => {
-    return `/id/${id}`;
+    return '/id/' + id;
   },
   token: (authCode) => {
-    return `/ac/${authCode}`;
+    return '/ac/' + authCode;
   },
 };
 

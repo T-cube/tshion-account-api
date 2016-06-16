@@ -45,6 +45,8 @@ export default {
     delete wechat.openid;
     return db.wechat.oauth.update({_id}, {
       $set: wechat
+    }, {
+      upsert: true
     });
   },
 
@@ -53,6 +55,8 @@ export default {
     delete wechatUser.openid;
     return db.wechat.user.update({_id}, {
       $set: wechatUser
+    }, {
+      upsert: true
     });
   },
 
