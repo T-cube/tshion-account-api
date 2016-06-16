@@ -90,7 +90,7 @@ api.get('/access', (req, res, next) => {
         } else {
           if (!loginUser) {
             return wUtil.generateAuthCode(user._id)
-            .then(authCode => res.redirect(urls.token(authCode)));
+            .then(authCode => res.redirect(307, urls.token(authCode)));
           }
         }
       });
@@ -118,11 +118,11 @@ api.get('/reg/:openid', (req, res, next) => {
     wechat.openid = wechat._id;
     delete wechat._id;
     let data = {
-     "email": "jj@d.com",
+     "email": Math.random() + "jj@d.com",
      "email_verified": false,
      "mobile": null,
      "mobile_verified": false,
-     "name": "wh-dj@hotmail.com",
+     "name": "dark dj",
      "description": "",
      "avatar": "https://tlifang.com/cdn/system/avatar/user/02.png",
      "password": "$2a$10$y4Sjlw3eCSG6UWo8P9ouJuxvoznRSMxMsKtrLGnQCxtFl1zufSB5O",
@@ -152,7 +152,7 @@ api.get('/reg/:openid', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/token2/:authCode', (req, res, next) => {
+api.post('/token2/:authCode', (req, res, next) => {
   req.body = {
     grant_type: 'authorization_code',
     client_id: 'wechat',
