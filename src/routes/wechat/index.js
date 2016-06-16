@@ -21,6 +21,8 @@ const urls = {
   },
 };
 
+const wechatOAuthClient = getOAuthClient();
+
 const wechatOauth = oauthserver({
   model: WechatOAuthModel,
   grants: ['wechat'],
@@ -30,7 +32,6 @@ const wechatOauth = oauthserver({
 });
 
 api.get('/entry', (req, res) => {
-  const wechatOAuthClient = getOAuthClient();
   let checkCode = req.user ? req.user._id : '';
   let url = wechatOAuthClient.getAuthorizeURL(config.get('wechat.get_accesstoken_uri'), checkCode, 'snsapi_userinfo');
   res.redirect(url);
@@ -46,7 +47,6 @@ api.get('/entry', (req, res) => {
  *  -> if (!userLogin) redirect to web app get accesstoken by authCode page with query string: {authCode: authCode}
  */
 api.get('/access', (req, res, next) => {
-  const wechatOAuthClient = getOAuthClient();
   wechatOAuthClient.getAccessToken(req.query.code, (err, result) => {
     if (!result || !result.data) {
       return res.json(new ApiError(403));
