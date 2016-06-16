@@ -165,6 +165,7 @@ api.get('/token2/:authCode', (req, res) => {
   .post('/wechat-oauth/token')
   .set('Content-Type', 'application/x-www-form-urlencoded')
   .type('form')
+  .set('Accept', /application\/json/)
   .send(data)
   .end((err, resonse) => {
     res.json(resonse);
