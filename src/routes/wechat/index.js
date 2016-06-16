@@ -159,7 +159,8 @@ api.get('/token2/:authCode', (req, res) => {
     client_id: 'wechat',
     code: req.params.authCode,
   };
-  request(api)
+  // return res.json(data);
+  request('http://tlf.findteachers.cn')
   .post('/wechat-oauth/token')
   .send(data)
   .end((err, resonse) => {
