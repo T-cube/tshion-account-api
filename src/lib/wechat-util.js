@@ -51,7 +51,7 @@ export default {
     });
   },
 
-  storeWechatUser: (wechatUser) => {
+  storeWechatUserinfo: (wechatUser) => {
     let _id = wechatUser.openid;
     delete wechatUser.openid;
     return db.wechat.user.update({_id}, {

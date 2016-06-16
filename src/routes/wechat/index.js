@@ -80,7 +80,7 @@ api.get('/access', (req, res, next) => {
                 console.log('fetch wechat userinfo:', wechat.openid);
                 return Promise.all([
                   wUtil.storeWechatOAuth(wechat),
-                  wUtil.storeWechatUser(userInfo),
+                  wUtil.storeWechatUserinfo(userInfo),
                 ])
                 .then(() => res.redirect(urls.reg(wechat.openid)))
                 .catch(next);
@@ -115,6 +115,8 @@ api.get('/reg/:openid', (req, res, next) => {
     if (!wechat) {
       throw new ApiError(400, null, 'invalid openid');
     }
+    wechat.openid = wechat._id;
+    delete wechat._id;
     let data = {
      "email": "jj@d.com",
      "email_verified": false,
