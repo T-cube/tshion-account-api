@@ -4,6 +4,7 @@ import wechatOAuth from 'wechat-oauth';
 import Promise from 'bluebird';
 import config from 'config';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
