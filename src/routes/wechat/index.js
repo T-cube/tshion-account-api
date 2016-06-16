@@ -48,6 +48,7 @@ api.get('/entry', (req, res) => {
  */
 api.get('/access', (req, res, next) => {
   wechatOAuthClient.getAccessToken(req.query.code, (err, result) => {
+    console.log(result);
     if (!result || !result.data) {
       return res.json(new ApiError(403));
     }
