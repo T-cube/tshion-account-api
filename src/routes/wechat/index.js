@@ -69,12 +69,14 @@ api.get('/access', (req, res, next) => {
             return wUtil.findWechatUserinfo(wechat.openid)
             .then(userInfo => {
               if (userInfo) {
+                console.log('fetched db userInfo: ', wechat.openid);
                 return res.redirect(urls.reg(wechat.openid));
               }
               wechatOAuthClient.getUser(wechat.openid, (err, userInfo) => {
                 if (err) {
                   throw new ApiError(503);
                 }
+                console.log('fetch wechat userinfo: ', wechat.openid);
                 return Promise.all([
                   wUtil.storeWechatOAuth(wechat),
                   wUtil.storeWechatUser(userInfo),
