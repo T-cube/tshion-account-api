@@ -100,7 +100,7 @@ api.get('/access', (req, res, next) => {
   });
 });
 
-api.get('/token', wechatOauth.grant());
+api.post('/token', wechatOauth.grant());
 
 // test below
 
