@@ -164,6 +164,7 @@ api.get('/token2/:authCode', (req, res) => {
   request('http://tlf.findteachers.cn')
   .post('/wechat-oauth/token')
   .set('Content-Type', 'application/x-www-form-urlencoded')
+  .type('form')
   .send(data)
   .end((err, resonse) => {
     res.json(resonse);
