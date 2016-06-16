@@ -47,6 +47,7 @@ export default {
   },
 
   grantTypeAllowed(clientId, grantType, callback) {
+    console.log('clientId', clientId);
     // console.log('in grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');
     if (grantType === 'password') {
       return callback(null, true);
