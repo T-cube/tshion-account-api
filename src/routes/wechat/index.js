@@ -14,10 +14,10 @@ export default api;
 const urls = {
   user: '/',
   reg: (id) => {
-    return '/id/' + id;
+    return '/wechat-oauth/reg/' + id;
   },
   token: (authCode) => {
-    return '/ac/' + authCode;
+    return '/wechat-oauth/token2/' + authCode;
   },
 };
 
@@ -69,14 +69,14 @@ api.get('/access', (req, res, next) => {
             return wUtil.findWechatUserinfo(wechat.openid)
             .then(userInfo => {
               if (userInfo) {
-                console.log('fetched db userInfo: ', wechat.openid);
+                console.log('fetched db userInfo:', wechat.openid);
                 return res.redirect(urls.reg(wechat.openid));
               }
               wechatOAuthClient.getUser(wechat.openid, (err, userInfo) => {
                 if (err) {
                   throw new ApiError(503);
                 }
-                console.log('fetch wechat userinfo: ', wechat.openid);
+                console.log('fetch wechat userinfo:', wechat.openid);
                 return Promise.all([
                   wUtil.storeWechatOAuth(wechat),
                   wUtil.storeWechatUser(userInfo),
@@ -99,6 +99,64 @@ api.get('/access', (req, res, next) => {
 });
 
 api.get('/token', wechatOauth.grant());
+
+// test below
+
+api.get('/reg/:openid', (req, res, next) => {
+  let openid = req.params.openid;
+  if (!openid) {
+    return res.json({error: 'empty openid'})
+  }
+  db.wechat.oauth.findOne({
+    _id: openid
+  })
+  .then(wechat => {
+    if (!wechat) {
+      throw new ApiError(400, null, 'invalid openid');
+    }
+    let data = {
+     "email": "jj@d.com",
+     "email_verified": false,
+     "mobile": null,
+     "mobile_verified": false,
+     "name": "wh-dj@hotmail.com",
+     "description": "",
+     "avatar": "https://tlifang.com/cdn/system/avatar/user/02.png",
+     "password": "$2a$10$y4Sjlw3eCSG6UWo8P9ouJuxvoznRSMxMsKtrLGnQCxtFl1zufSB5O",
+     "birthdate": ISODate("1993-01-24T01:12:44.313Z"),
+     "address": {
+         "country": "中国",
+         "province": "福建省",
+         "city": "厦门",
+         "address": "观音山"
+     },
+     "sex": "M",
+     "locale": "zh-CN",
+     "timezone": "Asia/Shanghai",
+     "options": {
+         "notice_request": true,
+         "notice_project": true
+     },
+     "activiated": true,
+     "date_join": ISODate("2016-06-02T01:09:06.093Z"),
+     "date_create": ISODate("2016-06-02T01:09:06.093Z"),
+     "current_company": null,
+     wechat: wechat,
+    };
+    return db.user.insert(data);
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.get('/token2/:authCode', (req, res, next) => {
+  req.body = {
+    grant_type: 'authorization_code',
+    client_id: 'wechat',
+    code: req.params.authCode,
+  };
+  wechatOauth.grant()(req, res, next);
+});
 
 function getLoginUser(req) {
   return req.user;

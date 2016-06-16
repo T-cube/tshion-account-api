@@ -1,5 +1,6 @@
 import config from 'config';
 import moment from 'moment';
+import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { generateToken } from 'lib/utils';
@@ -84,6 +85,9 @@ export default {
   },
 
   findUserByAuthCode: (authCode) => {
+    if (!authCode) {
+      return Promise.resolve(null);
+    }
     return db.user.findOne({
       'wechat.auth.code': authCode
     }, {
