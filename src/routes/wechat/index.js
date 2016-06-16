@@ -1,9 +1,13 @@
+import _ from 'underscore';
 import express from 'express';
 import oauthserver from 'oauth2-server';
 import wechatOAuth from 'wechat-oauth';
 import Promise from 'bluebird';
 import config from 'config';
+// import request from 'supertest';
+import bodyParser from 'body-parser';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
@@ -14,23 +18,26 @@ export default api;
 const urls = {
   user: '/',
   reg: (id) => {
-    return `/${id}`;
+    return '/wechat-oauth/reg/' + id;
   },
   token: (authCode) => {
-    return `/${authCode}`;
+    return '/wechat-oauth/token2/' + authCode;
   },
 };
 
+const wechatOAuthClient = getOAuthClient();
+
 const wechatOauth = oauthserver({
   model: WechatOAuthModel,
-  grants: ['wechat'],
+  grants: ['authorization_code'],
   debug: false,
   accessTokenLifetime: 1800,
   refreshTokenLifetime: 3600 * 24 * 15,
 });
 
+api.use(bodyParser.json());
+
 api.get('/entry', (req, res) => {
-  const wechatOAuthClient = getOAuthClient();
   let checkCode = req.user ? req.user._id : '';
   let url = wechatOAuthClient.getAuthorizeURL(config.get('wechat.get_accesstoken_uri'), checkCode, 'snsapi_userinfo');
   res.redirect(url);
@@ -46,8 +53,8 @@ api.get('/entry', (req, res) => {
  *  -> if (!userLogin) redirect to web app get accesstoken by authCode page with query string: {authCode: authCode}
  */
 api.get('/access', (req, res, next) => {
-  const wechatOAuthClient = getOAuthClient();
   wechatOAuthClient.getAccessToken(req.query.code, (err, result) => {
+    console.log(result);
     if (!result || !result.data) {
       return res.json(new ApiError(403));
     }
@@ -68,15 +75,17 @@ api.get('/access', (req, res, next) => {
             return wUtil.findWechatUserinfo(wechat.openid)
             .then(userInfo => {
               if (userInfo) {
+                console.log('fetched db userInfo:', wechat.openid);
                 return res.redirect(urls.reg(wechat.openid));
               }
               wechatOAuthClient.getUser(wechat.openid, (err, userInfo) => {
                 if (err) {
                   throw new ApiError(503);
                 }
+                console.log('fetch wechat userinfo:', wechat.openid);
                 return Promise.all([
                   wUtil.storeWechatOAuth(wechat),
-                  wUtil.storeWechatUser(userInfo),
+                  wUtil.storeWechatUserinfo(userInfo),
                 ])
                 .then(() => res.redirect(urls.reg(wechat.openid)))
                 .catch(next);
@@ -95,7 +104,84 @@ api.get('/access', (req, res, next) => {
   });
 });
 
-api.get('/token', wechatOauth.grant());
+api.post('/token/:authCode', (req, res, next) => {
+  _.extend(req.body, {
+    grant_type: 'authorization_code',
+    client_id: 'wechat',
+    client_secret: 'wechat',
+    code: req.params.authCode,
+  });
+  wechatOauth.grant()(req, res, next);
+});
+
+// test below
+
+api.get('/reg/:openid', (req, res, next) => {
+  let openid = req.params.openid;
+  if (!openid) {
+    return res.json({error: 'empty openid'})
+  }
+  db.wechat.oauth.findOne({
+    _id: openid
+  })
+  .then(wechat => {
+    if (!wechat) {
+      throw new ApiError(400, null, 'invalid openid');
+    }
+    wechat.openid = wechat._id;
+    delete wechat._id;
+    let data = {
+     "email": Math.random() + "jj@d.com",
+     "email_verified": false,
+     "mobile": null,
+     "mobile_verified": false,
+     "name": "dark dj",
+     "description": "",
+     "avatar": "https://tlifang.com/cdn/system/avatar/user/02.png",
+     "password": "$2a$10$y4Sjlw3eCSG6UWo8P9ouJuxvoznRSMxMsKtrLGnQCxtFl1zufSB5O",
+     "birthdate": new Date('1993-02-02'),
+     "address": {
+         "country": "中国",
+         "province": "福建省",
+         "city": "厦门",
+         "address": "观音山"
+     },
+     "sex": "M",
+     "locale": "zh-CN",
+     "timezone": "Asia/Shanghai",
+     "options": {
+         "notice_request": true,
+         "notice_project": true
+     },
+     "activiated": true,
+     "date_join": new Date(),
+     "date_create": new Date(),
+     "current_company": null,
+     wechat: wechat,
+    };
+    return db.user.insert(data);
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.get('/token2/:authCode', (req, res) => {
+  let data = {
+    grant_type: 'authorization_code',
+    client_id: 'wechat',
+    client_secret: 'wechat',
+    code: req.params.authCode,
+  };
+  // return res.json(data);
+  // request('http://tlf.findteachers.cn')
+  // .post('/wechat-oauth/token/' + req.params.authCode)
+  // .set('Content-Type', 'application/x-www-form-urlencoded')
+  // .send(data)
+  // .end((err, resonse) => {
+  //   res.json(resonse);
+  // });
+});
+
 
 function getLoginUser(req) {
   return req.user;

@@ -1,5 +1,6 @@
 import config from 'config';
 import moment from 'moment';
+import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { generateToken } from 'lib/utils';
@@ -45,14 +46,18 @@ export default {
     delete wechat.openid;
     return db.wechat.oauth.update({_id}, {
       $set: wechat
+    }, {
+      upsert: true
     });
   },
 
-  storeWechatUser: (wechatUser) => {
+  storeWechatUserinfo: (wechatUser) => {
     let _id = wechatUser.openid;
     delete wechatUser.openid;
     return db.wechat.user.update({_id}, {
       $set: wechatUser
+    }, {
+      upsert: true
     });
   },
 
@@ -80,6 +85,9 @@ export default {
   },
 
   findUserByAuthCode: (authCode) => {
+    if (!authCode) {
+      return Promise.resolve(null);
+    }
     return db.user.findOne({
       'wechat.auth.code': authCode
     }, {
@@ -88,6 +96,10 @@ export default {
       email: 1,
       mobile: 1,
       wechat: 1,
+    })
+    .then(user => {
+      console.log(user);
+      return user;
     });
   }
 
