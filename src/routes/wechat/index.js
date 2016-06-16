@@ -166,8 +166,6 @@ api.get('/token2/:authCode', (req, res) => {
   .set('Content-Type', 'application/x-www-form-urlencoded')
   .send(data)
   .end((err, resonse) => {
-    console.log('err', err);
-    console.log('res', resonse);
     res.json(resonse);
   });
 });
