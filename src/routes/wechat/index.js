@@ -124,7 +124,7 @@ api.get('/reg/:openid', (req, res, next) => {
      "description": "",
      "avatar": "https://tlifang.com/cdn/system/avatar/user/02.png",
      "password": "$2a$10$y4Sjlw3eCSG6UWo8P9ouJuxvoznRSMxMsKtrLGnQCxtFl1zufSB5O",
-     "birthdate": ISODate("1993-01-24T01:12:44.313Z"),
+     "birthdate": new Date('1993-02-02'),
      "address": {
          "country": "中国",
          "province": "福建省",
@@ -139,8 +139,8 @@ api.get('/reg/:openid', (req, res, next) => {
          "notice_project": true
      },
      "activiated": true,
-     "date_join": ISODate("2016-06-02T01:09:06.093Z"),
-     "date_create": ISODate("2016-06-02T01:09:06.093Z"),
+     "date_join": new Date(),
+     "date_create": new Date(),
      "current_company": null,
      wechat: wechat,
     };
