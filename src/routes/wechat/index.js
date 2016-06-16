@@ -157,6 +157,7 @@ api.get('/token2/:authCode', (req, res) => {
   let data = {
     grant_type: 'authorization_code',
     client_id: 'wechat',
+    client_secret: null,
     code: req.params.authCode,
   };
   // return res.json(data);
