@@ -160,7 +160,7 @@ api.get('/token2/:authCode', (req, res) => {
     code: req.params.authCode,
   };
   request(api)
-  .post('/token')
+  .post('/wechat-oauth/token')
   .send(data)
   .end((err, resonse) => {
     console.log('err', err);
