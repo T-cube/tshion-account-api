@@ -108,7 +108,7 @@ api.post('/token/:authCode', (req, res, next) => {
   _.extend(req.body, {
     grant_type: 'authorization_code',
     client_id: 'wechat',
-    client_secret: null,
+    client_secret: 'wechat',
     code: req.params.authCode,
   });
   wechatOauth.grant()(req, res, next);
