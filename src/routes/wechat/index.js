@@ -4,7 +4,7 @@ import oauthserver from 'oauth2-server';
 import wechatOAuth from 'wechat-oauth';
 import Promise from 'bluebird';
 import config from 'config';
-import request from 'supertest';
+// import request from 'supertest';
 import bodyParser from 'body-parser';
 
 import db from 'lib/database';
@@ -173,13 +173,13 @@ api.get('/token2/:authCode', (req, res) => {
     code: req.params.authCode,
   };
   // return res.json(data);
-  request('http://tlf.findteachers.cn')
-  .post('/wechat-oauth/token/' + req.params.authCode)
-  .set('Content-Type', 'application/x-www-form-urlencoded')
-  .send(data)
-  .end((err, resonse) => {
-    res.json(resonse);
-  });
+  // request('http://tlf.findteachers.cn')
+  // .post('/wechat-oauth/token/' + req.params.authCode)
+  // .set('Content-Type', 'application/x-www-form-urlencoded')
+  // .send(data)
+  // .end((err, resonse) => {
+  //   res.json(resonse);
+  // });
 });
 
 
