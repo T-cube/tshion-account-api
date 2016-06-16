@@ -4,6 +4,7 @@ import wechatOAuth from 'wechat-oauth';
 import Promise from 'bluebird';
 import config from 'config';
 import request from 'supertest';
+import bodyParser from 'body-parser';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -32,6 +33,8 @@ const wechatOauth = oauthserver({
   accessTokenLifetime: 1800,
   refreshTokenLifetime: 3600 * 24 * 15,
 });
+
+api.use(bodyParser.json());
 
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
@@ -165,7 +168,6 @@ api.get('/token2/:authCode', (req, res) => {
   .post('/wechat-oauth/token')
   .set('Content-Type', 'application/x-www-form-urlencoded')
   .type('form')
-  .set('Accept', /application\/json/)
   .send(data)
   .end((err, resonse) => {
     res.json(resonse);
