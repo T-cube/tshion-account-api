@@ -3,6 +3,7 @@ import oauthserver from 'oauth2-server';
 import wechatOAuth from 'wechat-oauth';
 import Promise from 'bluebird';
 import config from 'config';
+import request from 'supertest';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -90,7 +91,7 @@ api.get('/access', (req, res, next) => {
         } else {
           if (!loginUser) {
             return wUtil.generateAuthCode(user._id)
-            .then(authCode => res.redirect(307, urls.token(authCode)));
+            .then(authCode => res.redirect(urls.token(authCode)));
           }
         }
       });
@@ -152,14 +153,22 @@ api.get('/reg/:openid', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/token2/:authCode', (req, res, next) => {
-  req.body = {
+api.get('/token2/:authCode', (req, res) => {
+  let data = {
     grant_type: 'authorization_code',
     client_id: 'wechat',
     code: req.params.authCode,
   };
-  wechatOauth.grant()(req, res, next);
+  request(api)
+  .post('/token')
+  .send(data)
+  .end((err, resonse) => {
+    console.log('err', err);
+    console.log('res', resonse);
+    res.json(resonse);
+  });
 });
+
 
 function getLoginUser(req) {
   return req.user;
