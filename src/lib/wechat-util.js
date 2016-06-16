@@ -96,6 +96,10 @@ export default {
       email: 1,
       mobile: 1,
       wechat: 1,
+    })
+    .then(user => {
+      console.log(user);
+      return user;
     });
   }
 
