@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import express from 'express';
 import oauthserver from 'oauth2-server';
 import wechatOAuth from 'wechat-oauth';
@@ -103,7 +104,15 @@ api.get('/access', (req, res, next) => {
   });
 });
 
-api.post('/token', wechatOauth.grant());
+api.post('/token/:authCode', (req, res, next) => {
+  _.extend(req.body, {
+    grant_type: 'authorization_code',
+    client_id: 'wechat',
+    client_secret: null,
+    code: req.params.authCode,
+  });
+  wechatOauth.grant()(req, res, next);
+});
 
 // test below
 
@@ -165,7 +174,7 @@ api.get('/token2/:authCode', (req, res) => {
   };
   // return res.json(data);
   request('http://tlf.findteachers.cn')
-  .post('/wechat-oauth/token')
+  .post('/wechat-oauth/token/' + req.params.authCode)
   .set('Content-Type', 'application/x-www-form-urlencoded')
   .send(data)
   .end((err, resonse) => {
