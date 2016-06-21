@@ -747,7 +747,7 @@ function ensurePathLengthLessThan(dirs, length) {
     return;
   }
   if (length <= 0) {
-    throw new ApiError(400, null, 'wrong path length');
+    throw new ApiError(400, null, `路径长度过长，超过了${max_dir_path_length}级目录`);
   }
   return db.document.dir.find({
     _id: {
