@@ -33,46 +33,34 @@ class Document {
   }
 
   queryItemInfoUnderDir(dir, name) {
-    return this.fetchItemIdsUnderDir(dir)
-    .then(items => {
-      return Promise.all([
-        db.document.file.find({
-          _id: {
-            $in: items.files.map(file => file._id)
-          },
-          name: {
-            $regex: RegExp(name, 'i')
-          },
-        }, {
-          name: 1,
-          mimetype: 1,
-          size: 1,
-          date_update: 1,
-          updated_by: 1
-        })
-        .then(files => {
-          files.forEach(file => _.extend(file, _.find(items.files, v => v._id.equals(file._id))));
-          items.files = files;
-        }),
-        db.document.dir.find({
-          _id: {
-            $in: items.dirs.map(dir => dir._id)
-          },
-          name: {
-            $regex: RegExp(name, 'i')
-          },
-        }, {
-          name: 1,
-          date_update: 1,
-          updated_by: 1
-        })
-        .then(dirs => {
-          dirs.forEach(dir => _.extend(dir, _.find(items.dirs, v => v._id.equals(dir._id))));
-          items.dirs = dirs;
-        })
-      ])
-      .then(() => items);
-    });
+    let items = {};
+    return Promise.all([
+      db.document.file.find({
+        dir_path: dir,
+        name: {
+          $regex: RegExp(name, 'i')
+        },
+      }, {
+        name: 1,
+        mimetype: 1,
+        size: 1,
+        date_update: 1,
+        updated_by: 1
+      })
+      .then(files => items.files = files),
+      db.document.dir.find({
+        path: dir,
+        name: {
+          $regex: RegExp(name, 'i')
+        },
+      }, {
+        name: 1,
+        date_update: 1,
+        updated_by: 1
+      })
+      .then(dirs => items.dirs = dirs)
+    ])
+    .then(() => items);
   }
 
   /**

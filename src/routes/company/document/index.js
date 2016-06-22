@@ -18,7 +18,7 @@ import {
   delValidation,
 } from './schema';
 import upload from 'lib/upload';
-import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp } from 'lib/utils';
+import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp, indexObjectId } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
 
@@ -69,12 +69,10 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     if (search) {
       return searchByName(req, doc, search);
     }
-    return Promise.all([
-      getFullPath(doc.parent_dir).then(path => doc.path = path),
-      mapObjectIdToData(doc, [
-        ['document.dir', 'name,dirs,date_update,updated_by', 'dirs'],
-        ['document.file', 'name,mimetype,size,date_update,updated_by', 'files'],
-      ]),
+    return mapObjectIdToData(doc, [
+      ['document.dir', 'name', 'path'],
+      ['document.dir', 'name,dirs,date_update,updated_by', 'dirs'],
+      ['document.file', 'name,mimetype,size,date_update,updated_by', 'files'],
     ])
     .then(() => {
       return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
@@ -133,11 +131,12 @@ api.post('/dir', (req, res, next) => {
   });
   checkNameValid(req, data.name, data.parent_dir)
   .then(() => {
-    return getFullPath(data.parent_dir)
+    return getParentPaths(data.parent_dir)
     .then(path => {
-      if (path.length >= max_dir_path_length) {
+      if (path.length > max_dir_path_length) {
         throw new ApiError(400, null, '最多只能创建' + max_dir_path_length + '级目录');
       }
+      data.path = path;
     });
   })
   .then(() => {
@@ -244,7 +243,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   sanitizeValidateObject(fileSanitization, fileValidation, data);
   _.extend(data, {
     [req.document.posKey]: req.document.posVal,
-    name: data.name,
+    name: data.name + '.txt',
     dir_id: dir_id,
     author: req.user._id,
     date_update: new Date(),
@@ -253,8 +252,12 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     mimetype: 'text/pain',
     size: Buffer.byteLength(data.content, 'utf8'),
   });
-  data = [data];
-  createFile(req, data, dir_id)
+  getParentPaths(dir_id)
+  .then(path => {
+    data.path = path;
+    data = [data];
+    return createFile(req, data, dir_id);
+  })
   .then(doc => {
     return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
   })
@@ -267,7 +270,11 @@ upload({type: 'attachment'}).array('document'),
 (req, res, next) => {
   let data = req.body;
   let dir_id = ObjectId(req.params.dir_id);
-  if (req.files) {
+  if (!req.files) {
+    throw new ApiError(400, null, '文件未上传');
+  }
+  getParentPaths(dir_id)
+  .then(path => {
     data = _.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size');
       return _.extend(fileData, {
@@ -278,12 +285,11 @@ upload({type: 'attachment'}).array('document'),
         date_update: new Date(),
         date_create: new Date(),
         updated_by: req.user._id,
+        dir_path: path,
       });
     });
-  } else {
-    throw new ApiError(400, null, '文件未上传');
-  }
-  createFile(req, data, dir_id)
+    return createFile(req, data, dir_id);
+  })
   .then(doc => {
     doc.forEach(item => {
       delete item.path;
@@ -346,11 +352,9 @@ api.put('/move', (req, res, next) => {
   }
 
   return checkMoveable(target_dir, dirs, files)
-  .then(() => {
-    if (!dirs || !dirs.length) {
-      return null;
-    }
-    return db.document.dir.find({
+  .then(() => getParentPaths(target_dir))
+  .then(path => {
+    let movingDirs = dirs && dirs.length && db.document.dir.find({
       _id: {
         $in: dirs
       },
@@ -370,7 +374,8 @@ api.put('/move', (req, res, next) => {
           }
         }, {
           $set: {
-            parent_dir: target_dir
+            parent_dir: target_dir,
+            path,
           }
         }, {
           multi: true
@@ -395,12 +400,7 @@ api.put('/move', (req, res, next) => {
         })
       ]);
     });
-  })
-  .then(() => {
-    if (!files || !files.length) {
-      return null;
-    }
-    return db.document.file.find({
+    let movingFiles = files && files.length && db.document.file.find({
       _id: {
         $in: files
       },
@@ -420,7 +420,8 @@ api.put('/move', (req, res, next) => {
           }
         }, {
           $set: {
-            dir_id: target_dir
+            dir_id: target_dir,
+            dir_path: path,
           }
         }, {
           multi: true
@@ -445,7 +446,50 @@ api.put('/move', (req, res, next) => {
         })
       ]);
     });
+    return Promise.all([movingDirs, movingFiles]);
   })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.put('/init', (req, res, next) => {
+  let initDirs = db.document.dir.find({})
+  .then(dirs => {
+    Promise.all(dirs.map(dir => {
+      if (dir.path) {
+        return null;
+      }
+      return getParentPaths(dir._id)
+      .then(path => {
+        return db.document.dir.update({
+          _id: dir._id,
+        }, {
+          $set: {
+            path: path
+          }
+        });
+      });
+    }));
+  });
+  let initFiles = db.document.file.find({})
+  .then(files => {
+    return Promise.all(files.map(file => {
+      if (file.dir_path) {
+        return null;
+      }
+      return getParentPaths(file.dir_id)
+      .then(path => {
+        return db.document.file.update({
+          _id: file._id,
+        }, {
+          $set: {
+            dir_path: path
+          }
+        });
+      });
+    }));
+  });
+  return Promise.all([initDirs, initFiles])
   .then(() => res.json({}))
   .catch(next);
 });
@@ -476,20 +520,6 @@ function checkNameValid(req, name, parent_dir) {
         }
       });
     }
-    // if (list.files && list.files.length) {
-    //   findFileName = db.document.dir.count({
-    //     _id: {
-    //       $in: list.files
-    //     },
-    //     name: name
-    //   })
-    //   .then(count => {
-    //     if (count) {
-    //       throw new ApiError(400, null, '存在同名的文件');
-    //     }
-    //   })
-    // }
-    // return Promise.all([findDirName, findFileName]);
     return findDirName;
   });
 }
@@ -518,6 +548,28 @@ function getTotalSize(req) {
   })
   .then(doc => {
     return doc && doc.size ? doc.size : 0;
+  });
+}
+
+function getParentPaths(dir_id, path) {
+  if (dir_id == null) {
+    return Promise.resolve([]);
+  }
+  path = path || [];
+  return db.document.dir.findOne({
+    _id: dir_id
+  }, {
+    _id: 1,
+    parent_dir: 1,
+  })
+  .then(doc => {
+    if (doc) {
+      path.unshift(doc._id);
+      if (doc.parent_dir != null) {
+        return getParentPaths(doc.parent_dir, path);
+      }
+    }
+    return path;
   });
 }
 
@@ -727,10 +779,10 @@ function checkMoveable(target_dir, dirs, files) {
             }
           });
         }),
-        dirs.length && getFullPath(target_dir)
+        dirs.length && getParentPaths(target_dir)
         .then(path => {
           dirs.forEach(dir => {
-            if (_.find(path, item => item._id.equals(dir))) {
+            if (-1 != indexObjectId(path, dir)) {
               throw new ApiError(400, null, '不能移动文件夹到其子文件夹');
             }
           });
@@ -746,7 +798,7 @@ function ensurePathLengthLessThan(dirs, length) {
   if (!dirs) {
     return;
   }
-  if (length <= 0) {
+  if (length < 0) {
     throw new ApiError(400, null, `路径长度过长，超过了${max_dir_path_length}级目录`);
   }
   return db.document.dir.find({
@@ -780,7 +832,7 @@ function searchByName(req, dir, name) {
   .then(doc => {
     doc = _.extend(dir, doc);
     return Promise.all([
-      getFullPath(doc.parent_dir).then(path => doc.path = path),
+      mapObjectIdToData(doc, 'document.dir', 'name', 'path'),
       fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by'),
     ])
     .then(() => doc);
