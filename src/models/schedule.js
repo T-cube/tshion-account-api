@@ -205,7 +205,7 @@ export default class Schedule {
       target_type: C.OBJECT_TYPE.REMINDING,
       reminding: schedule._id,
     });
-    wUtil.getUserWechat.then(wechat => {
+    wUtil.getUserWechat(schedule.creator).then(wechat => {
       if (!wechat) {
         return;
       }
