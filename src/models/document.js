@@ -4,6 +4,7 @@
 
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+import config from 'config';
 
 import db from 'lib/database';
 
@@ -47,6 +48,7 @@ class Document {
         date_update: 1,
         updated_by: 1
       })
+      .limit(config.get('view.maxListNum'))
       .then(files => items.files = files),
       db.document.dir.find({
         path: dir,
@@ -58,6 +60,7 @@ class Document {
         date_update: 1,
         updated_by: 1
       })
+      .limit(config.get('view.maxListNum'))
       .then(dirs => items.dirs = dirs)
     ])
     .then(() => items);

@@ -45,6 +45,7 @@
     "schema-inspector": "^1.6.4",
     "socket.io": "^1.4.4",
     "underscore": "^1.8.3",
+    "wechat-api": "^1.28.0",
     "wechat-oauth": "^1.1.1"
   },
   "devDependencies": {

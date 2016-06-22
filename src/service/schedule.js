@@ -17,17 +17,17 @@ export default class ScheduleServer {
     this.jobs = {
       schedule_reminding: {
         init: ['*/5 * * * *', () => {
-          scheduleModel.remindingJob()
+          scheduleModel.remindingJob();
         }]
       }
-    }
+    };
   }
 
   doJobs() {
-    this.initJobs()
+    this.initJobs();
     _.each(this.jobs, job => {
-      job.worker = scheduleService.scheduleJob(...job.init)
-    })
+      job.worker = scheduleService.scheduleJob(...job.init);
+    });
   }
 
 }

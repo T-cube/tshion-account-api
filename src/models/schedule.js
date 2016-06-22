@@ -1,13 +1,17 @@
 import _ from 'underscore';
 import cronParser from 'cron-parser';
+import config from 'config';
+import WechatApi from 'wechat-api';
 
 import db from 'lib/database';
 import C from 'lib/constants';
+import wUtil from 'lib/wechat-util';
 
 export default class Schedule {
 
   constructor(notification) {
     this.notification = notification;
+    this.wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
   }
 
   remindingJob() {
@@ -200,6 +204,31 @@ export default class Schedule {
       action: C.ACTIVITY_ACTION.REMINDING,
       target_type: C.OBJECT_TYPE.REMINDING,
       reminding: schedule._id,
+    });
+    wUtil.getUserWechat.then(wechat => {
+      if (!wechat) {
+        return;
+      }
+      let url = '';
+      let data = {
+        'first': {
+          'value':'您好！',
+          'color':'#173177'
+        },
+        'keyword1': {
+          'value':'test',
+          'color':'#173177'
+        },
+        'keyword2': {
+          'value':'test',
+          'color':'#173177'
+        },
+        'remark':{
+          'value':'提醒',
+          'color':'#173177'
+        }
+      };
+      this.wechatApi.sendTemplate(wechat.openid, config.get('wechat.templates.reminding'), url, data);
     });
   }
 

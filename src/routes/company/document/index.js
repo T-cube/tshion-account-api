@@ -452,47 +452,48 @@ api.put('/move', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/init', (req, res, next) => {
-  let initDirs = db.document.dir.find({})
-  .then(dirs => {
-    Promise.all(dirs.map(dir => {
-      if (dir.path) {
-        return null;
-      }
-      return getParentPaths(dir._id)
-      .then(path => {
-        return db.document.dir.update({
-          _id: dir._id,
-        }, {
-          $set: {
-            path: path
-          }
-        });
-      });
-    }));
-  });
-  let initFiles = db.document.file.find({})
-  .then(files => {
-    return Promise.all(files.map(file => {
-      if (file.dir_path) {
-        return null;
-      }
-      return getParentPaths(file.dir_id)
-      .then(path => {
-        return db.document.file.update({
-          _id: file._id,
-        }, {
-          $set: {
-            dir_path: path
-          }
-        });
-      });
-    }));
-  });
-  return Promise.all([initDirs, initFiles])
-  .then(() => res.json({}))
-  .catch(next);
-});
+// 修复遗留的数据
+// api.put('/init', (req, res, next) => {
+//   let initDirs = db.document.dir.find({})
+//   .then(dirs => {
+//     Promise.all(dirs.map(dir => {
+//       if (dir.path) {
+//         return null;
+//       }
+//       return getParentPaths(dir._id)
+//       .then(path => {
+//         return db.document.dir.update({
+//           _id: dir._id,
+//         }, {
+//           $set: {
+//             path: path
+//           }
+//         });
+//       });
+//     }));
+//   });
+//   let initFiles = db.document.file.find({})
+//   .then(files => {
+//     return Promise.all(files.map(file => {
+//       if (file.dir_path) {
+//         return null;
+//       }
+//       return getParentPaths(file.dir_id)
+//       .then(path => {
+//         return db.document.file.update({
+//           _id: file._id,
+//         }, {
+//           $set: {
+//             dir_path: path
+//           }
+//         });
+//       });
+//     }));
+//   });
+//   return Promise.all([initDirs, initFiles])
+//   .then(() => res.json({}))
+//   .catch(next);
+// });
 
 function checkNameValid(req, name, parent_dir) {
   return db.document.dir.findOne({
