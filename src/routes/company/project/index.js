@@ -344,22 +344,12 @@ api.put('/:project_id/archived', (req, res, next) => {
 });
 
 api.post('/:project_id/tag', (req, res, next) => {
-  let project_id = req.project._id;
-  let data = req.body;
-  sanitizeValidateObject(tagSanitization, tagValidation, data);
-  db.project.count({
-    _id: project_id,
-    company_id: req.company._id,
-    'tags.name': data.name
-  })
-  .then(count => {
-    if (count != 0) {
-      throw new ApiError(400, null, 'tag is already exists');
-    }
-    data._id = ObjectId();
+  let newTagId;
+  fetchTagAndValidTag(req)
+  .then(data => {
+    data._id = newTagId = ObjectId();
     return db.project.update({
-      _id: project_id,
-      company_id: req.company._id,
+      _id: req.project._id,
     }, {
       $push: {
         tags: data
@@ -367,8 +357,26 @@ api.post('/:project_id/tag', (req, res, next) => {
     });
   })
   .then(() => res.json({
-    _id: data._id
+    _id: newTagId
   }))
+  .catch(next);
+});
+
+api.put('/:project_id/tag/:tag_id', (req, res, next) => {
+  let tag_id = ObjectId(req.params.tag_id);
+  fetchTagAndValidTag(req, tag_id)
+  .then(data => {
+    data._id = tag_id;
+    return db.project.update({
+      _id: req.project._id,
+      'tags._id': tag_id
+    }, {
+      $set: {
+        'tags.$': data
+      }
+    });
+  })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -455,6 +463,24 @@ function ensureProjectAdmin(project, user_id) {
     .indexOf(_.find(project.members, member => member._id.equals(user_id)).type)) {
     throw new ApiError(400, null, 'user is not admin of the project');
   }
+}
+
+function fetchTagAndValidTag(req, tag_id) {
+  let project_id = req.project._id;
+  let data = req.body;
+  sanitizeValidateObject(tagSanitization, tagValidation, data);
+  return db.project.findOne({
+    _id: project_id,
+    'tags.name': data.name
+  }, {
+    'tags.$._id': 1
+  })
+  .then(project => {
+    if (project && (!tag_id || !project.tags[0]._id.equals(tag_id))) {
+      throw new ApiError(400, null, 'tag is already exists');
+    }
+    return data;
+  });
 }
 
 function removeFilesUnderProject(project_id) {
