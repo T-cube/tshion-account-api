@@ -32,7 +32,7 @@ let constants = {
     RENAME: 'rename',      // 重命名
     UPLOAD: 'upload',      // 上传
 
-    REMINDING: 'reminding', // 提醒
+    SYSTEM_SET: 'system.set', // 提醒
 
     SIGN: 'sign',          // 签到
     SIGN_AUDIT: 'sign.audit', // 补签

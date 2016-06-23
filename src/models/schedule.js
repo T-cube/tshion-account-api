@@ -35,7 +35,6 @@ export default class Schedule {
     }
     db.reminding.find(condition)
     // .limit(limit)
-
     .then(list => {
       if (!list.length) {
         console.log('exit job');
@@ -201,7 +200,7 @@ export default class Schedule {
     this.notification.send({
       from: 0,
       to: schedule.creator,
-      action: C.ACTIVITY_ACTION.REMINDING,
+      action: C.ACTIVITY_ACTION.SYSTEM_SET,
       target_type: C.OBJECT_TYPE.REMINDING,
       reminding: schedule._id,
     });
