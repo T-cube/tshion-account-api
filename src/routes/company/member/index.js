@@ -11,6 +11,7 @@ import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
 import { checkUserType, checkUserTypeFunc } from '../utils';
 import { isEmail, time } from 'lib/utils';
+import Structure from 'models/structure';
 
 /* company collection */
 let api = express.Router();
@@ -173,6 +174,12 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
       $pull: {companies: req.company._id}
     })
   ])
+  .then(() => {
+    let tree = new Structure(req.company.structure);
+    tree.deleteMemberAll(member_id);
+    req.structure = tree;
+    return save(req);
+  })
   .then(() => res.json({}))
   .catch(next);
 });
@@ -219,4 +226,11 @@ function addNotification(req, action, data) {
   };
   _.extend(info, data);
   return req.model('notification').send(info);
+}
+
+function save(req) {
+  return db.company.update(
+    {_id: req.company._id},
+    {$set: {structure: req.structure.object()}}
+  );
 }
