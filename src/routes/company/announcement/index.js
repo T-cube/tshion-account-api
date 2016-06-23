@@ -72,8 +72,8 @@ api.get('/:announcement_id', (req, res, next) => {
 });
 
 api.get('/draft/:announcement_id',
-  checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN),
-  (req, res, next) => {
+checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN),
+(req, res, next) => {
   getAnnouncement(req, false)
   .then(doc => res.json(doc))
   .catch(next);
@@ -85,7 +85,7 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
     company_id: req.company._id,
     _id: announcement_id
   }, {
-    is_published: 1
+    is_published: 1,
   })
   .then(announcement => {
     if (!announcement) {
@@ -157,6 +157,9 @@ function fetchAnnouncementData(req) {
   let result = inspector.validate(validation, data);
   if (!result.valid) {
     throw new ApiError(400, null, result.error);
+  }
+  if (data.is_published && !data.date_publish) {
+    data.date_publish = new Date();
   }
   // validation of members and structure nodes
   let structure = new Structure(req.company.structure);

@@ -31,7 +31,7 @@ export let sanitization = {
     		},
       }
     },
-    date_publish: { type: "date" },
+    date_publish: { type: "date", optional: true },
   }
 };
 
@@ -65,6 +65,6 @@ export let validation = {
     		},
       }
     },
-    date_publish: { type: "date" },
+    date_publish: { type: "date", optional: true },
   }
 };
