@@ -162,6 +162,9 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
   if (member_id.equals(req.user._id)) {
     throw new ApiError(400, null, 'can not remove yourself');
   }
+  let tree = new Structure(req.company.structure);
+  tree.deleteMemberAll(member_id);
+  req.structure = tree;
   return Promise.all([
     db.company.update({
       _id: req.company._id,
@@ -172,14 +175,19 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
       _id: member_id,
     }, {
       $pull: {companies: req.company._id}
-    })
+    }),
+    db.project.update({
+      company_id: req.company._id,
+      'members._id': member_id,
+    }, {
+      $pull: {
+        members: {
+          _id: member_id
+        }
+      }
+    }),
+    save(req),
   ])
-  .then(() => {
-    let tree = new Structure(req.company.structure);
-    tree.deleteMemberAll(member_id);
-    req.structure = tree;
-    return save(req);
-  })
   .then(() => res.json({}))
   .catch(next);
 });

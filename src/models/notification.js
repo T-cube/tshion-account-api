@@ -17,7 +17,7 @@ const extendedProps = [
   ['request', 'type', 'request'],
   ['reminding', 'title,description', 'reminding'],
   ['approval.item', 'company_id,apply_date,title', 'approval_item'],
-  ['announcement', 'title,is_published', 'announcement'],
+  ['announcement', 'title,is_published,company_id,type', 'announcement'],
 ];
 
 export default class Notification {
