@@ -67,7 +67,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       throw new ApiError(404);
     }
     if (search) {
-      return searchByName(req, doc, search);
+      return searchByName(req, doc, decodeURIComponent(search));
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
@@ -374,154 +374,77 @@ api.put('/file/:file_id', (req, res, next) => {
 api.put('/move', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(moveSanitization, moveValidation, data);
-  let { files, dirs, origin_dir, target_dir } = data;
-  if (origin_dir.equals(target_dir)) {
-    return res.json({});
-  }
-
+  let { files, dirs, target_dir } = data;
   return checkMoveable(target_dir, dirs, files)
   .then(() => getParentPaths(target_dir))
   .then(path => {
-    let movingDirs = dirs && dirs.length && db.document.dir.find({
-      _id: {
-        $in: dirs
-      },
-      parent_dir: origin_dir
-    }, {
-      _id: 1
-    })
-    .then(list => {
-      list = list.map(item => item._id);
-      if (!list.length) {
-        return null;
-      }
-      return Promise.all([
-        db.document.dir.update({
-          _id: {
-            $in: list
-          }
-        }, {
-          $set: {
-            parent_dir: target_dir,
-            path,
-          }
-        }, {
-          multi: true
-        }),
-        db.document.dir.update({
-          _id: origin_dir
+    let updateDirs = dirs.map(_id => {
+      return db.document.dir.findOne({_id}, {
+        parent_dir: 1
+      })
+      .then(dir => {
+        return dir && dir.parent_dir && db.document.dir.update({
+          _id: dir.parent_dir
         }, {
           $pull: {
-            dirs: {
-              $in: list
-            }
+            dirs: _id
           }
-        }),
-        db.document.dir.update({
-          _id: target_dir
-        }, {
-          $push: {
-            dirs: {
-              $each: list
+        });
+      })
+      .then(() => {
+        return Promise.all([
+          db.document.dir.update({_id}, {
+            $set: {
+              parent_dir: target_dir,
+              path,
             }
-          }
-        })
-      ]);
+          }),
+          db.document.dir.update({
+            _id: target_dir
+          }, {
+            $push: {
+              dirs: _id
+            }
+          })
+        ]);
+      });
     });
-    let movingFiles = files && files.length && db.document.file.find({
-      _id: {
-        $in: files
-      },
-      dir_id: origin_dir
-    }, {
-      _id: 1
-    })
-    .then(list => {
-      list = list.map(item => item._id);
-      if (!list.length) {
-        return null;
-      }
-      return Promise.all([
-        db.document.file.update({
-          _id: {
-            $in: list
-          }
-        }, {
-          $set: {
-            dir_id: target_dir,
-            dir_path: path,
-          }
-        }, {
-          multi: true
-        }),
-        db.document.dir.update({
-          _id: origin_dir
+    let updateFiles = files.map(_id => {
+      return db.document.file.findOne({_id}, {
+        dir_id: 1
+      })
+      .then(file => {
+        return file && db.document.dir.update({
+          _id: file.dir_id
         }, {
           $pull: {
-            files: {
-              $in: list
-            }
+            files: _id
           }
-        }),
-        db.document.dir.update({
-          _id: target_dir
-        }, {
-          $push: {
-            files: {
-              $each: list
+        });
+      })
+      .then(() => {
+        return Promise.all([
+          db.document.file.update({_id}, {
+            $set: {
+              dir_id: target_dir,
+              dir_path: path,
             }
-          }
-        })
-      ]);
+          }),
+          db.document.dir.update({
+            _id: target_dir
+          }, {
+            $push: {
+              files: _id
+            }
+          })
+        ]);
+      });
     });
-    return Promise.all([movingDirs, movingFiles]);
+    return Promise.all([...updateDirs, ...updateFiles]);
   })
   .then(() => res.json({}))
   .catch(next);
 });
-
-// 修复遗留的数据
-// api.put('/init', (req, res, next) => {
-//   let initDirs = db.document.dir.find({})
-//   .then(dirs => {
-//     Promise.all(dirs.map(dir => {
-//       if (dir.path) {
-//         return null;
-//       }
-//       return getParentPaths(dir._id)
-//       .then(path => {
-//         return db.document.dir.update({
-//           _id: dir._id,
-//         }, {
-//           $set: {
-//             path: path
-//           }
-//         });
-//       });
-//     }));
-//   });
-//   let initFiles = db.document.file.find({})
-//   .then(files => {
-//     return Promise.all(files.map(file => {
-//       if (file.dir_path) {
-//         return null;
-//       }
-//       return getParentPaths(file.dir_id)
-//       .then(path => {
-//         return db.document.file.update({
-//           _id: file._id,
-//         }, {
-//           $set: {
-//             dir_path: path
-//           }
-//         });
-//       });
-//     }));
-//   });
-//   return Promise.all([initDirs, initFiles])
-//   .then(() => res.json({}))
-//   .catch(next);
-// });
 
 function checkNameValid(req, name, parent_dir) {
   return db.document.dir.findOne({

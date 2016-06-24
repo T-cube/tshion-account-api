@@ -178,6 +178,7 @@ function fetchAnnouncementData(req) {
       throw new ApiError(400, null, 'to member: ' + each + ' is not exists');
     }
   });
+  data.update = new Date();
   return data;
 }
 

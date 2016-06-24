@@ -71,7 +71,6 @@ export let moveSanitization = {
 			$objectId: 1
 		}
 	},
-	origin_dir: { $objectId: 1 },
 	target_dir: { $objectId: 1 },
 };
 
@@ -90,6 +89,5 @@ export let moveValidation = {
 			$objectId: 1
 		}
 	},
-	origin_dir: { $objectId: 1 },
 	target_dir: { $objectId: 1 },
 };
