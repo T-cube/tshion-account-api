@@ -254,7 +254,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   });
   getParentPaths(dir_id)
   .then(path => {
-    data.path = path;
+    data.dir_path = path;
     data = [data];
     return createFile(req, data, dir_id);
   })
@@ -287,34 +287,34 @@ upload({type: 'attachment'}).array('document'),
         updated_by: req.user._id,
         dir_path: path,
       });
-      if (fileData.mimetype == 'text/plain') {
-        return new Promise(function (resolve, reject) {
-          fs.readFile(fileData.path, 'utf8', (err, data) => {
+      if (fileData.mimetype != 'text/plain') {
+        return data.push(fileData);
+      }
+      return new Promise(function (resolve, reject) {
+        fs.readFile(fileData.path, 'utf8', (err, content) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(content);
+        });
+      }).then(content => {
+        let file_path = fileData.path;
+        _.extend(fileData, {
+          content,
+          path: null,
+          url: null,
+          relpath: null,
+        });
+        data.push(fileData);
+        new Promise(function (resolve, reject) {
+          fs.unlink(file_path, (err) => {
             if (err) {
               reject(err);
             }
-            resolve(data);
-          });
-        }).then(content => {
-          let file_path = fileData.path;
-          _.extend(fileData, {
-            content,
-            path: null,
-            url: null,
-            relpath: null,
-          });
-          data.push(fileData);
-          new Promise(function (resolve, reject) {
-            fs.unlink(file_path, (err) => {
-              if (err) {
-                reject(err);
-              }
-              resolve();
-            });
+            resolve();
           });
         });
-      }
-      data.push(fileData);
+      });
     });
   })
   .then(() => createFile(req, data, dir_id))
@@ -549,6 +549,9 @@ function getFullPath(dir_id, path) {
 
 function createFile(req, data, dir_id) {
   let total_size = 0;
+  if (!data.length) {
+    throw new ApiError(400, null, 'upload error, missing data');
+  }
   data.forEach(item => {
     if (item.size > req.document.max_file_size) {
       throw new ApiError(400, null, '文件大小超过上限');
