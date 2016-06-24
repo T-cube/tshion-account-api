@@ -46,7 +46,8 @@ class Document {
         mimetype: 1,
         size: 1,
         date_update: 1,
-        updated_by: 1
+        updated_by: 1,
+        path: 1,
       })
       .limit(config.get('view.maxListNum'))
       .then(files => items.files = files),
@@ -58,7 +59,8 @@ class Document {
       }, {
         name: 1,
         date_update: 1,
-        updated_by: 1
+        updated_by: 1,
+        path: 1,
       })
       .limit(config.get('view.maxListNum'))
       .then(dirs => items.dirs = dirs)

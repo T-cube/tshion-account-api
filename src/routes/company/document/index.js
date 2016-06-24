@@ -249,7 +249,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     date_update: new Date(),
     date_create: new Date(),
     updated_by: req.user._id,
-    mimetype: 'text/pain',
+    mimetype: 'text/plain',
     size: Buffer.byteLength(data.content, 'utf8'),
   });
   getParentPaths(dir_id)
@@ -268,16 +268,16 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
 api.post('/dir/:dir_id/upload',
 upload({type: 'attachment'}).array('document'),
 (req, res, next) => {
-  let data = req.body;
+  let data = [];
   let dir_id = ObjectId(req.params.dir_id);
   if (!req.files) {
     throw new ApiError(400, null, '文件未上传');
   }
   getParentPaths(dir_id)
   .then(path => {
-    data = _.map(req.files, file => {
+    return Promise.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size');
-      return _.extend(fileData, {
+      _.extend(fileData, {
         [req.document.posKey]: req.document.posVal,
         dir_id: dir_id,
         name: file.originalname,
@@ -287,9 +287,37 @@ upload({type: 'attachment'}).array('document'),
         updated_by: req.user._id,
         dir_path: path,
       });
+      if (fileData.mimetype == 'text/plain') {
+        return new Promise(function (resolve, reject) {
+          fs.readFile(fileData.path, 'utf8', (err, data) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(data);
+          });
+        }).then(content => {
+          let file_path = fileData.path;
+          _.extend(fileData, {
+            content,
+            path: null,
+            url: null,
+            relpath: null,
+          });
+          data.push(fileData);
+          new Promise(function (resolve, reject) {
+            fs.unlink(file_path, (err) => {
+              if (err) {
+                reject(err);
+              }
+              resolve();
+            });
+          });
+        });
+      }
+      data.push(fileData);
     });
-    return createFile(req, data, dir_id);
   })
+  .then(() => createFile(req, data, dir_id))
   .then(doc => {
     doc.forEach(item => {
       delete item.path;
@@ -713,11 +741,9 @@ function deleteFiles(req, files) {
         ]);
       })
       .then(() => {
-        try {
-          fs.unlinkSync(fileInfo.path);
-        } catch (e) {
-          console.error(e);
-        }
+        fileInfo.path && fs.unlink(fileInfo.path, (err) => {
+          console.error(err);
+        });
       });
     });
   }))
@@ -833,7 +859,7 @@ function searchByName(req, dir, name) {
   .then(doc => {
     doc = _.extend(dir, doc);
     return Promise.all([
-      mapObjectIdToData(doc, 'document.dir', 'name', 'path'),
+      mapObjectIdToData(doc, 'document.dir', 'name', 'path,dirs.path,files.path'),
       fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by'),
     ])
     .then(() => doc);
