@@ -47,10 +47,14 @@ class Document {
         size: 1,
         date_update: 1,
         updated_by: 1,
-        path: 1,
+        dir_path: 1,
       })
       .limit(config.get('view.maxListNum'))
-      .then(files => items.files = files),
+      .then(files => items.files = files.map(file => {
+        file.path = file.dir_path;
+        delete file.dir_path;
+        return file;
+      })),
       db.document.dir.find({
         path: dir,
         name: {
