@@ -21,7 +21,7 @@ const urls = {
     return '/wechat-oauth/reg/' + id;
   },
   token: (authCode) => {
-    return '/wechat-oauth/token2/' + authCode;
+    return 'http://tlf-m.findteachers.cn/account?wechat_oauth=' + authCode;
   },
 };
 
@@ -104,15 +104,7 @@ api.get('/access', (req, res, next) => {
   });
 });
 
-api.post('/token/:authCode', (req, res, next) => {
-  _.extend(req.body, {
-    grant_type: 'authorization_code',
-    client_id: 'wechat',
-    client_secret: 'wechat',
-    code: req.params.authCode,
-  });
-  wechatOauth.grant()(req, res, next);
-});
+api.post('/token', wechatOauth.grant());
 
 // test below
 
