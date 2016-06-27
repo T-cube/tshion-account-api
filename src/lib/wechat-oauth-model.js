@@ -8,14 +8,15 @@ export default _.extend({}, OAuthModel, {
     findUserByAuthCode(authCode)
     .then(user => {
       if (!user) {
-        callback(false);
+        callback(false, null);
       }
+      user.id = user._id;
       callback(false, {
         clientId: 'wechat',
         expires: user.wechat.auth.expired,
         user: user
       });
     })
-    .catch(() => callback(false));
+    .catch(e => callback(e));
   }
 });

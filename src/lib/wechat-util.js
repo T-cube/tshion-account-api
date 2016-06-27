@@ -98,7 +98,6 @@ export default {
       wechat: 1,
     })
     .then(user => {
-      console.log(user);
       return user;
     });
   }

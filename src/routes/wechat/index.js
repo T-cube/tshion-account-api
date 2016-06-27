@@ -11,6 +11,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
+import corsHandler from 'lib/cors';
 
 let api = express.Router();
 export default api;
@@ -21,7 +22,7 @@ const urls = {
     return '/wechat-oauth/reg/' + id;
   },
   token: (authCode) => {
-    return 'http://tlf-m.findteachers.cn/account/login?wechat_oauth=' + authCode;
+    return 'http://tlf-m.findteachers.cn/account/login?wechat_authcode=' + authCode;
   },
 };
 
@@ -35,7 +36,8 @@ const wechatOauth = oauthserver({
   refreshTokenLifetime: 3600 * 24 * 15,
 });
 
-api.use(bodyParser.json());
+api.use(corsHandler);
+api.use(bodyParser.urlencoded({ extended: true }));
 
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
