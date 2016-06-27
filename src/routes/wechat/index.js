@@ -21,7 +21,7 @@ const urls = {
     return '/wechat-oauth/reg/' + id;
   },
   token: (authCode) => {
-    return 'http://tlf-m.findteachers.cn/account?wechat_oauth=' + authCode;
+    return 'http://tlf-m.findteachers.cn/account/login?wechat_oauth=' + authCode;
   },
 };
 
