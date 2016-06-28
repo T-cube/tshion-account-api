@@ -41,7 +41,7 @@ const validationCustom = {
     if (!schema.$timezone) {
       return;
     }
-    if (!moment.tz.zone(candidate)) {
+    if (candidate && !moment.tz.zone(candidate)) {
       this.report('invalid timezone: ' + candidate);
     }
   },
