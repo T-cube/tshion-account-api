@@ -66,6 +66,20 @@ OUTPUT
 }
 ```
 
+### GET /company/:company_id/activity
+
+```javascript
+[{
+  _id: <ObjectId>,
+  creator: <ObjectId>,            // 作者
+  target_type: <String[Enum]>,    // 对象类型
+  action: <String[Enum]>,         // 动作类型
+  project: <ObjectId>,
+  company: <ObjectId>,
+  date_create: <Date>,
+}...]
+```
+
 ### POST /company
 
 增加公司

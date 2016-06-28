@@ -272,6 +272,19 @@ api.post('/:company_id/exit', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/:company_id/activity', (req, res, next) => {
+  const company_id = req.company._id;
+  const { last_id } = req.query;
+  req.model('activity').fetch({
+    $or: [
+      {company: company_id},
+      {project: {$in: req.company.projects}}
+    ]
+  }, last_id)
+  .then(list => res.json(list))
+  .catch(next);
+});
+
 api.use('/:company_id/activity', require('./activity').default);
 api.use('/:company_id/announcement', require('./announcement').default);
 api.use('/:company_id/approval', require('./approval').default);
