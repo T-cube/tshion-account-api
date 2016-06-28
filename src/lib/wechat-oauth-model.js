@@ -1,11 +1,11 @@
 import _ from 'underscore';
 
 import OAuthModel from './oauth-model.js';
-import { findUserByAuthCode } from 'lib/wechat-util.js';
+import wUtil from 'lib/wechat-util.js';
 
 export default _.extend({}, OAuthModel, {
   getAuthCode: function(authCode, callback) {
-    findUserByAuthCode(authCode)
+    wUtil.findUserByAuthCode(authCode)
     .then(user => {
       if (!user) {
         callback(false, null);
