@@ -32,7 +32,7 @@ api.get('/', (req, res, next) => {
     let timeLimit = new Date(parseInt(last_id));
     query.date_create = {
       $lt: timeLimit,
-    }
+    };
   }
   if (status) {
     if (!_.contains(ENUMS.REQUEST_STATUS, status)) {
