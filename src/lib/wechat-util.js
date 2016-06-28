@@ -114,12 +114,7 @@ export default {
       return Promise.resolve(null);
     }
     return db.user.findOne({
-      'wechat.auth': {
-        code: authCode,
-        expired: {
-          $gte: new Date()
-        }
-      }
+      'wechat.auth.code': authCode
     }, {
       name: 1,
       avatar: 1,
@@ -128,6 +123,9 @@ export default {
       wechat: 1,
     })
     .then(user => {
+      if (user.wechat.auth.expired < new Date()) {
+        return null;
+      }
       return user;
     });
   },

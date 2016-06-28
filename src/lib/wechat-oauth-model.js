@@ -8,7 +8,7 @@ export default _.extend({}, OAuthModel, {
     wUtil.findUserByAuthCode(authCode)
     .then(user => {
       if (!user) {
-        callback(false, null);
+        return callback(false, null);
       }
       user.id = user._id;
       callback(false, {
