@@ -11,6 +11,7 @@ import { ApiError } from 'lib/error';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
 import corsHandler from 'lib/cors';
+import { oauthCheck } from 'lib/middleware';
 
 let api = express.Router();
 export default api;
@@ -44,6 +45,12 @@ api.get('/entry', (req, res) => {
   res.redirect(url);
 });
 
+api.get('/access', access);
+
+api.get('/bind', oauthCheck(), access);
+
+api.post('/token', wechatOauth.grant());
+
 /**
  * if userLogin and wechat binded redirect to web app user page
  * getUserByOpenid (data.openid) -> user
@@ -53,7 +60,7 @@ api.get('/entry', (req, res) => {
  * else (user)
  *  -> if (!userLogin) redirect to web app get accesstoken by authCode page with query string: {authCode: authCode}
  */
-api.get('/access', (req, res, next) => {
+function access(req, res, next) {
   let gettingWechatOauth;
   let { code, random_token } = req.query;
   if (random_token) {
@@ -83,7 +90,7 @@ api.get('/access', (req, res, next) => {
         if (!user) {
           if (loginUser) {
             return wUtil.bindWechat(loginUser._id, wechat)
-            .then(() => res.redirect(urls.user));
+            .then(() => res.json({}));
           } else {
             return wUtil.storeWechatOAuthAndGetRandomToken(wechat)
             .then(oauthRandomToken => {
@@ -115,9 +122,7 @@ api.get('/access', (req, res, next) => {
     });
   })
   .catch(next);
-});
-
-api.post('/token', wechatOauth.grant());
+}
 
 function getLoginUser(req) {
   return req.user;

@@ -130,7 +130,7 @@ export default {
     });
   },
 
-  getBindWechatData: (wechat) =>{
+  getBindWechatData: (wechat) => {
     return _.pick(wechat, 'openid');
   }
 
