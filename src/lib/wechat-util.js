@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import config from 'config';
 import moment from 'moment';
 import Promise from 'bluebird';
@@ -33,7 +34,24 @@ export default {
     });
   },
 
+  findWechatByRandomToken: (random_token) => {
+    return db.wechat.oauth.findOne({
+      random_token
+    })
+    .then(wechat => {
+      if (!wechat) {
+        return null;
+      }
+      let { expires_in, create_at } = wechat;
+      if (new Date().getTime() > (parseInt(expires_in) * 1000 + parseInt(create_at))) {
+        return null;
+      }
+      return wechat;
+    });
+  },
+
   bindWechat: (user_id, wechat) => {
+    wechat = this.getBindWechatData(wechat);
     return db.user.update({
       _id: user_id
     }, {
@@ -41,13 +59,19 @@ export default {
     });
   },
 
-  storeWechatOAuth: (wechat) => {
+  storeWechatOAuthAndGetRandomToken: (wechat) => {
     let _id = wechat.openid;
     delete wechat.openid;
-    return db.wechat.oauth.update({_id}, {
-      $set: wechat
-    }, {
-      upsert: true
+    return generateToken(20)
+    .then(random_token => {
+      random_token += `_${_id}`;
+      wechat.random_token = random_token;
+      return db.wechat.oauth.update({_id}, {
+        $set: wechat
+      }, {
+        upsert: true
+      })
+      .then(() => random_token);
     });
   },
 
@@ -68,8 +92,9 @@ export default {
   },
 
   generateAuthCode: (user_id) => {
-    return generateToken(48)
+    return generateToken(20)
     .then(authCode => {
+      authCode += `_${user_id}`;
       return db.user.update({
         _id: user_id
       }, {
@@ -98,8 +123,15 @@ export default {
       wechat: 1,
     })
     .then(user => {
+      if (user.wechat.auth.expired < new Date()) {
+        return null;
+      }
       return user;
     });
+  },
+
+  getBindWechatData: (wechat) => {
+    return _.pick(wechat, 'openid');
   }
 
 };

@@ -6,7 +6,7 @@ import db from 'lib/database';
 import { time, timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
-import { oauthCheck } from 'lib/middleware';
+import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { authoriseSanitization, authoriseValidation, validate } from './schema';
 import { randomAvatar } from 'lib/upload';
@@ -30,7 +30,7 @@ api.post('/check', (req, res, next) => {
   }).catch(next);
 });
 
-api.post('/register', (req, res, next) => {
+api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type, 'code', 'password']);
@@ -83,6 +83,9 @@ api.post('/register', (req, res, next) => {
       date_create: time(),
       current_company: null,
     };
+    if (req.openUserinfo) {
+      _.extend(doc, req.openUserinfo);
+    }
     return db.user.insert(doc);
   })
   .then(() => res.json({
