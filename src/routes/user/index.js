@@ -262,7 +262,7 @@ api.get('/project', (req, res, next) =>  {
       condition['owner'] = req.user._id;
       break;
     }
-    if (!search) {
+    if (!search && !condition['is_archived']) {
       condition['is_archived'] = false;
     }
     return db.project.find(condition)
