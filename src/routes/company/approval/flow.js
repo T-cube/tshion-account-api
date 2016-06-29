@@ -49,7 +49,8 @@ api.get('/approve', (req, res, next) => {
       return Promise.all([
         mapObjectIdToData(data, 'approval.template', 'name,status', 'template'),
         fetchCompanyMemberInfo(req.company.members, data, 'from')
-      ]);
+      ])
+      .then(() => data);
     })
     .then(data => {
       let tree = new Structure(req.company.structure);
@@ -88,7 +89,8 @@ function findItems(req, res, next, type) {
       return Promise.all([
         mapObjectIdToData(data, 'approval.template', 'name,status', 'template'),
         fetchCompanyMemberInfo(req.company.members, data, 'from')
-      ]);
+      ])
+      .then(() => data);
     })
     .then(data => {
       let tree = new Structure(req.company.structure);
