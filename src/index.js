@@ -74,6 +74,7 @@ app.use('/oauth/revoke', oauthExtended.revokeToken);
 // app.use('/api', app.oauth.authorise());
 
 app.use('/wechat-oauth', wechatOAuthRoute);
+app.use('/api/wechat-oauth', wechatOAuthRoute);
 
 // app.use('/', express.static('./public'));
 

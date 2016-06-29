@@ -47,7 +47,7 @@ api.get('/entry', (req, res) => {
 
 api.get('/access', access);
 
-api.post('/bind', oauthCheck(), access);
+api.post('/bind', bodyParser.json(), oauthCheck(), access);
 
 api.post('/token', wechatOauth.grant());
 

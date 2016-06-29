@@ -28,7 +28,7 @@ export default class ScheduleServer {
         }]
       },
       task_expire: {
-        init: ['*/1 * * * *', () => {
+        init: ['*/10 * * * *', () => {
           console.log('task expire notification');
           db.task.find({
             status: C.TASK_STATUS.PROCESSING,
@@ -52,7 +52,7 @@ export default class ScheduleServer {
                 to: task.assignee,
                 action: C.ACTIVITY_ACTION.SYSTEM_SET,
                 target_type: C.OBJECT_TYPE.TASK_EXPIRE,
-                reminding: task._id,
+                task: task._id,
               }, C.NOTICE.TASK_EXPIRE);
               wUtil.sendTemplateMessage(task.assignee, config.get('wechat.templates.reminding'), {
                 'first': {
