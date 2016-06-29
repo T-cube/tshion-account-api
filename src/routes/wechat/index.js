@@ -47,7 +47,7 @@ api.get('/entry', (req, res) => {
 
 api.get('/access', access);
 
-api.get('/bind', oauthCheck(), access);
+api.post('/bind', oauthCheck(), access);
 
 api.post('/token', wechatOauth.grant());
 
@@ -62,7 +62,8 @@ api.post('/token', wechatOauth.grant());
  */
 function access(req, res, next) {
   let gettingWechatOauth;
-  let { code, random_token } = req.query;
+  let { code } = req.query;
+  let { random_token } = req.body;
   if (random_token) {
     gettingWechatOauth = wUtil.findWechatByRandomToken(random_token);
   } else if (code) {

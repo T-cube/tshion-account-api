@@ -2,9 +2,12 @@ import _ from 'underscore';
 import config from 'config';
 import moment from 'moment';
 import Promise from 'bluebird';
+import WechatApi from 'wechat-api';
 
 import db from 'lib/database';
 import { generateToken } from 'lib/utils';
+
+const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
 export default {
 
@@ -132,6 +135,16 @@ export default {
 
   getBindWechatData: (wechat) => {
     return _.pick(wechat, 'openid');
+  },
+
+  sendTemplateMessage: (user, template, data, url) => {
+    this.getUserWechat(user)
+    .then(wechat => {
+      if (!wechat) {
+        return;
+      }
+      wechatApi.sendTemplate(wechat.openid, template, url, data);
+    });
   }
 
 };
