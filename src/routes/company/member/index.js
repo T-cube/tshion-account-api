@@ -126,14 +126,26 @@ api.post('/check', (req, res, next) => {
 });
 
 api.get('/:member_id', (req, res, next) => {
-  let data = req.body;
   let member_id = ObjectId(req.params.member_id);
   let members = req.company.members || [];
   let member = _.find(members, m => member_id.equals(m._id));
   if (!member) {
-    next(ApiError(404));
+    throw new ApiError(404);
   }
-  res.json(member);
+  db.user.findOne({
+    _id: member._id
+  }, {
+    avatar: 1,
+  })
+  .then(user => {
+    if (!user) {
+      throw new ApiError(404);
+    }
+    member.avatar = user.avatar;
+    console.log(member);
+    res.json(member);
+  })
+  .catch(next);
 });
 
 api.put('/:member_id', (req, res, next) => {
