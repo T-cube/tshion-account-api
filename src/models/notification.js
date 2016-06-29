@@ -43,8 +43,7 @@ export default class Notification {
       from: this._from,
       to: this._to,
     }, data);
-    isNoticeOpen(messageType)
-    .then(open => {
+    return isNoticeOpen(messageType).then(open => {
       if (!open) {
         return;
       }
