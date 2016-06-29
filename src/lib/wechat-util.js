@@ -9,9 +9,9 @@ import { generateToken } from 'lib/utils';
 
 const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
-export default {
+export default class WechatUtil {
 
-  getUserWechat: (user_id) => {
+  static getUserWechat(user_id) {
     return db.user.findOne({
       _id: user_id
     }, {
@@ -23,9 +23,9 @@ export default {
       }
       return info.wechat;
     });
-  },
+  }
 
-  findUserByOpenid: (openid) => {
+  static findUserByOpenid(openid) {
     return db.user.findOne({
       'wechat.openid': openid
     }, {
@@ -35,9 +35,9 @@ export default {
       mobile: 1,
       wechat: 1,
     });
-  },
+  }
 
-  findWechatByRandomToken: (random_token) => {
+  static findWechatByRandomToken(random_token) {
     return db.wechat.oauth.findOne({
       random_token
     })
@@ -51,18 +51,18 @@ export default {
       }
       return wechat;
     });
-  },
+  }
 
-  bindWechat: (user_id, wechat) => {
+  static bindWechat(user_id, wechat) {
     wechat = this.getBindWechatData(wechat);
     return db.user.update({
       _id: user_id
     }, {
       $set: { wechat }
     });
-  },
+  }
 
-  storeWechatOAuthAndGetRandomToken: (wechat) => {
+  static storeWechatOAuthAndGetRandomToken(wechat) {
     let _id = wechat.openid;
     delete wechat.openid;
     return generateToken(20)
@@ -76,9 +76,9 @@ export default {
       })
       .then(() => random_token);
     });
-  },
+  }
 
-  storeWechatUserinfo: (wechatUser) => {
+  static storeWechatUserinfo(wechatUser) {
     let _id = wechatUser.openid;
     delete wechatUser.openid;
     return db.wechat.user.update({_id}, {
@@ -86,15 +86,15 @@ export default {
     }, {
       upsert: true
     });
-  },
+  }
 
-  findWechatUserinfo: (openid) => {
+  static findWechatUserinfo(openid) {
     return db.wechat.user.findOne({
       _id: openid
     });
-  },
+  }
 
-  generateAuthCode: (user_id) => {
+  static generateAuthCode(user_id) {
     return generateToken(20)
     .then(authCode => {
       authCode += `_${user_id}`;
@@ -110,9 +110,9 @@ export default {
       })
       .then(() => authCode);
     });
-  },
+  }
 
-  findUserByAuthCode: (authCode) => {
+  static findUserByAuthCode(authCode) {
     if (!authCode) {
       return Promise.resolve(null);
     }
@@ -131,13 +131,13 @@ export default {
       }
       return user;
     });
-  },
+  }
 
-  getBindWechatData: (wechat) => {
+  static getBindWechatData(wechat) {
     return _.pick(wechat, 'openid');
-  },
+  }
 
-  sendTemplateMessage: (user, template, data, url) => {
+  static sendTemplateMessage(user, template, data, url) {
     this.getUserWechat(user)
     .then(wechat => {
       if (!wechat) {
@@ -147,4 +147,4 @@ export default {
     });
   }
 
-};
+}
