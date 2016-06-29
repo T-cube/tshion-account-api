@@ -95,7 +95,6 @@ function findItems(req, res, next, type) {
     .then(data => {
       let tree = new Structure(req.company.structure);
       data.forEach(item => {
-        item.from = _.find(req.company.members, member => member._id.equals(item.from));
         item.department && (item.department = tree.findNodeById(item.department));
       });
       res.json(data);
