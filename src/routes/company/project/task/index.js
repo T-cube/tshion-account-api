@@ -74,6 +74,7 @@ api.get('/', (req, res, next) => {
     .then(list => {
       _.each(list, task => {
         task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
+        task.tags = task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
       });
       data.list = list;
       return fetchCompanyMemberInfo(req.company.members, data.list, 'assignee');
