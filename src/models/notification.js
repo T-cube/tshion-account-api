@@ -8,6 +8,7 @@ import config from 'config';
 import db from 'lib/database';
 import { validation } from './notification.schema';
 import { mapObjectIdToData } from 'lib/utils';
+import C from 'lib/constants';
 
 const extendedProps = [
   ['user', 'name', 'from,user'],
@@ -36,15 +37,48 @@ export default class Notification {
     return this;
   }
 
-  send(data) {
+  send(data, messageType) {
+    let self = this;
     data = _.extend({
       from: this._from,
       to: this._to,
     }, data);
-    if (_.isArray(data.to)) {
-      return this.sendToMany(data, data.to);
-    } else {
-      return this.sendToSingle(data, data.to);
+    return isNoticeOpen(messageType).then(open => {
+      if (!open) {
+        return;
+      }
+      if (_.isArray(data.to)) {
+        return self.sendToMany(data, data.to);
+      } else {
+        return self.sendToSingle(data, data.to);
+      }
+    })
+    .catch(e => {
+      console.error(e);
+    });
+
+    function isNoticeOpen(messageType) {
+      let noticeMap = {
+        [C.NOTICE.COMMON]: 'notice_request',
+        [C.NOTICE.TASK_EXPIRE]: 'notice_project',
+      };
+      switch (messageType) {
+      case C.NOTICE.COMMON:
+      case C.NOTICE.TASK_EXPIRE:
+        return db.user.findOne({
+          _id: data.to
+        }, {
+          options: 1
+        })
+        .then(doc => {
+          if (doc.options) {
+            return doc.options[noticeMap[messageType]];
+          }
+          return true;
+        });
+      default:
+        return Promise.resolve(true);
+      }
     }
   }
 

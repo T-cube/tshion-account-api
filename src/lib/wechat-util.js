@@ -2,13 +2,16 @@ import _ from 'underscore';
 import config from 'config';
 import moment from 'moment';
 import Promise from 'bluebird';
+import WechatApi from 'wechat-api';
 
 import db from 'lib/database';
 import { generateToken } from 'lib/utils';
 
-export default {
+const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
-  getUserWechat: (user_id) => {
+export default class WechatUtil {
+
+  static getUserWechat(user_id) {
     return db.user.findOne({
       _id: user_id
     }, {
@@ -20,9 +23,12 @@ export default {
       }
       return info.wechat;
     });
-  },
+  }
 
-  findUserByOpenid: (openid) => {
+  static findUserByOpenid(openid) {
+    if (!openid) {
+      return Promise.resolve(null);
+    }
     return db.user.findOne({
       'wechat.openid': openid
     }, {
@@ -32,9 +38,9 @@ export default {
       mobile: 1,
       wechat: 1,
     });
-  },
+  }
 
-  findWechatByRandomToken: (random_token) => {
+  static findWechatByRandomToken(random_token) {
     return db.wechat.oauth.findOne({
       random_token
     })
@@ -46,20 +52,21 @@ export default {
       if (new Date().getTime() > (parseInt(expires_in) * 1000 + parseInt(create_at))) {
         return null;
       }
+      wechat.openid = wechat._id;
       return wechat;
     });
-  },
+  }
 
-  bindWechat: (user_id, wechat) => {
+  static bindWechat(user_id, wechat) {
     wechat = this.getBindWechatData(wechat);
     return db.user.update({
       _id: user_id
     }, {
       $set: { wechat }
     });
-  },
+  }
 
-  storeWechatOAuthAndGetRandomToken: (wechat) => {
+  static storeWechatOAuthAndGetRandomToken(wechat) {
     let _id = wechat.openid;
     delete wechat.openid;
     return generateToken(20)
@@ -73,9 +80,9 @@ export default {
       })
       .then(() => random_token);
     });
-  },
+  }
 
-  storeWechatUserinfo: (wechatUser) => {
+  static storeWechatUserinfo(wechatUser) {
     let _id = wechatUser.openid;
     delete wechatUser.openid;
     return db.wechat.user.update({_id}, {
@@ -83,15 +90,15 @@ export default {
     }, {
       upsert: true
     });
-  },
+  }
 
-  findWechatUserinfo: (openid) => {
+  static findWechatUserinfo(openid) {
     return db.wechat.user.findOne({
       _id: openid
     });
-  },
+  }
 
-  generateAuthCode: (user_id) => {
+  static generateAuthCode(user_id) {
     return generateToken(20)
     .then(authCode => {
       authCode += `_${user_id}`;
@@ -107,9 +114,9 @@ export default {
       })
       .then(() => authCode);
     });
-  },
+  }
 
-  findUserByAuthCode: (authCode) => {
+  static findUserByAuthCode(authCode) {
     if (!authCode) {
       return Promise.resolve(null);
     }
@@ -128,10 +135,20 @@ export default {
       }
       return user;
     });
-  },
+  }
 
-  getBindWechatData: (wechat) => {
+  static getBindWechatData(wechat) {
     return _.pick(wechat, 'openid');
   }
 
-};
+  static sendTemplateMessage(user, template, data, url) {
+    this.getUserWechat(user)
+    .then(wechat => {
+      if (!wechat) {
+        return;
+      }
+      wechatApi.sendTemplate(wechat.openid, template, url, data);
+    });
+  }
+
+}

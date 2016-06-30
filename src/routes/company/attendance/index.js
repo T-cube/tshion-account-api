@@ -16,7 +16,6 @@ import {
   recordSanitization,
   recordValidation
 } from './schema';
-import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import { checkUserTypeFunc } from '../utils';
 import Structure from 'models/structure';

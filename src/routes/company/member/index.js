@@ -80,7 +80,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
         target_type: C.OBJECT_TYPE.REQUEST,
         request: request._id,
         company: req.company._id,
-      });
+      }, C.NOTICE.COMMON);
     });
     return db.company.update({
       _id: req.company._id,

@@ -221,7 +221,7 @@ function addNotification(req, action, data, to) {
     to: to
   };
   _.extend(info, data);
-  return req.model('notification').send(info);
+  return req.model('notification').send(info, C.NOTICE.COMMON);
 }
 
 function getNotifyUsers(req, to) {

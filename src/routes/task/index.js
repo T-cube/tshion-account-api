@@ -5,7 +5,7 @@ import config from 'config';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
-import { fetchUserInfo, fetchCompanyMemberInfo } from 'lib/utils';
+import { fetchUserInfo, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
 import { ENUMS } from 'lib/constants';
 
 let api = express.Router();
@@ -47,7 +47,7 @@ api.get('/', (req, res, next) => {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order };
   }
-  let data = {};
+  let data = {}, projects = [];
   Promise.all([
     db.task.count(condition)
     .then(sum => {
@@ -64,13 +64,31 @@ api.get('/', (req, res, next) => {
     .limit(pagesize)
     .then(list => {
       _.each(list, task => {
+        projects.push(task.project_id);
         task.is_following = !!_.find(task.followers, user_id => user_id
           && user_id.equals(req.user._id));
       });
+      projects = uniqObjectId(projects);
       if (req.company) {
         return fetchCompanyMemberInfo(req.company.members, list, 'assignee');
       }
       return fetchUserInfo(list, 'assignee');
+    })
+    .then(list => {
+      return db.project.find({
+        _id: {
+          $in: projects
+        }
+      }, {
+        tags: 1
+      })
+      .then(projects => {
+        let tags = _.flatten(projects.map(project => project.tags));
+        list.forEach(task => {
+          task.tags = task.tags && task.tags.map(_id => _.find(tags, tag => tag._id.equals(_id)));
+        });
+        return list;
+      });
     })
     .then(list => data.list = list)
   ])
