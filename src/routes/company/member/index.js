@@ -142,7 +142,6 @@ api.get('/:member_id', (req, res, next) => {
       throw new ApiError(404);
     }
     member.avatar = user.avatar;
-    console.log(member);
     res.json(member);
   })
   .catch(next);
