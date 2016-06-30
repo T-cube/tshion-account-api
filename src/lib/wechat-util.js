@@ -26,6 +26,9 @@ export default class WechatUtil {
   }
 
   static findUserByOpenid(openid) {
+    if (!openid) {
+      return Promise.resolve(null);
+    }
     return db.user.findOne({
       'wechat.openid': openid
     }, {
@@ -49,6 +52,7 @@ export default class WechatUtil {
       if (new Date().getTime() > (parseInt(expires_in) * 1000 + parseInt(create_at))) {
         return null;
       }
+      wechat.openid = wechat._id;
       return wechat;
     });
   }

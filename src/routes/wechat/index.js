@@ -64,21 +64,25 @@ function access(req, res, next) {
   let gettingWechatOauth;
   let { code } = req.query;
   let { random_token } = req.body;
+  let oauthInfoErr = new ApiError(400, null, 'can not get access_token from wechat server');
   if (random_token) {
     gettingWechatOauth = wUtil.findWechatByRandomToken(random_token);
   } else if (code) {
     gettingWechatOauth = new Promise((resolve, reject) => {
-      wechatOAuthClient.getAccessToken(req.query.code, (err, result) => {
+      wechatOAuthClient.getAccessToken(code, (err, result) => {
         if (!result || !result.data) {
-          reject(new ApiError(403, null, 'can not get access_token from wechat server'));
+          reject(oauthInfoErr);
         }
         resolve(result.data);
       });
     });
   } else {
-    next(new ApiError(400));
+    next(oauthInfoErr);
   }
   gettingWechatOauth.then(wechat => {
+    if (!wechat) {
+      throw oauthInfoErr;
+    }
     let { openid } = wechat;
     let loginUser = getLoginUser(req);
     let gettingUserWechat = loginUser ? wUtil.getUserWechat(loginUser._id) : Promise.resolve(null);
