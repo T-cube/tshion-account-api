@@ -64,6 +64,7 @@ api.get('/', (req, res, next) => {
     .limit(pagesize)
     .then(list => {
       _.each(list, task => {
+        task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
         task.is_following = !!_.find(task.followers, user_id => user_id
           && user_id.equals(req.user._id));
       });
