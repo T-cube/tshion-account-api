@@ -47,7 +47,7 @@ api.get('/', (req, res, next) => {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order };
   }
-  let data = {}, projects;
+  let data = {}, projects = [];
   Promise.all([
     db.task.count(condition)
     .then(sum => {
