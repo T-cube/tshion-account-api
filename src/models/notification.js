@@ -71,7 +71,10 @@ export default class Notification {
           options: 1
         })
         .then(doc => {
-          return (doc.options && doc.options[noticeMap[messageType]]) || true;
+          if (doc.options) {
+            return doc.options[noticeMap[messageType]];
+          }
+          return true;
         });
       default:
         return Promise.resolve(true);
