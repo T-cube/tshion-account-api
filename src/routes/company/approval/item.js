@@ -107,23 +107,21 @@ api.get('/:item_id', (req, res, next) => {
   })
   .then(data => {
     let { company } = req;
-    data.template.forEach(item => {
-      item.steps.forEach(step => {
-        if (step.approver.type == 'member') {
-          _.extend(step.approver, _.pick(_.find(company.members, member => member._id.equals(step.approver._id)), 'name'));
-        } else {
-          _.extend(step.approver, _.pick(tree.findNodeById(step.approver._id), '_id', 'name'));
-        }
-        if (step.copy_to && step.copy_to.length) {
-          step.copy_to.forEach(copyto => {
-            if (copyto.type == 'member') {
-              _.extend(copyto, _.pick(_.find(company.members, member => member._id.equals(copyto._id)), 'name'));
-            } else {
-              _.extend(copyto, _.pick(tree.findNodeById(copyto._id), '_id', 'name'));
-            }
-          });
-        }
-      });
+    data.template.steps.forEach(step => {
+      if (step.approver.type == 'member') {
+        _.extend(step.approver, _.pick(_.find(company.members, member => member._id.equals(step.approver._id)), 'name'));
+      } else {
+        _.extend(step.approver, _.pick(tree.findNodeById(step.approver._id), '_id', 'name'));
+      }
+      if (step.copy_to && step.copy_to.length) {
+        step.copy_to.forEach(copyto => {
+          if (copyto.type == 'member') {
+            _.extend(copyto, _.pick(_.find(company.members, member => member._id.equals(copyto._id)), 'name'));
+          } else {
+            _.extend(copyto, _.pick(tree.findNodeById(copyto._id), '_id', 'name'));
+          }
+        });
+      }
     });
     res.json(data);
   })
