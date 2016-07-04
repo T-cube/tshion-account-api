@@ -18,7 +18,7 @@ import {
 } from './schema';
 import Structure from 'models/structure';
 import C from 'lib/constants';
-import { mapObjectIdToData, indexObjectId } from 'lib/utils';
+import { mapObjectIdToData, indexObjectId, fetchCompanyMemberInfo } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 
@@ -52,6 +52,7 @@ api.post('/', upload({type: 'attachment'}).array('files'), (req, res, next) => {
 
 api.get('/:item_id', (req, res, next) => {
   let item_id = ObjectId(req.params.item_id);
+  let tree = new Structure(req.company.structure);
   db.approval.item.findOne({
     _id: item_id
   })
@@ -92,13 +93,7 @@ api.get('/:item_id', (req, res, next) => {
         } else {
           data.is_processing = false;
         }
-        let tree = new Structure(req.company.structure);
         data.from = _.find(req.company.members, member => member._id.equals(data.from));
-        data.steps.forEach(step => {
-          if (step.approver) {
-            step.approver = _.find(req.company.members, member => member._id.equals(step.approver));
-          }
-        });
         data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
         data.department && (data.department = _.pick(tree.findNodeById(data.department), '_id', 'name'));
         return data;
@@ -110,7 +105,28 @@ api.get('/:item_id', (req, res, next) => {
       ['approval.template', 'name,steps,forms,status', 'template'],
     ]);
   })
-  .then(data => res.json(data))
+  .then(data => {
+    let { company } = req;
+    data.template.forEach(item => {
+      item.steps.forEach(step => {
+        if (step.approver.type == 'member') {
+          _.extend(step.approver, _.pick(_.find(company.members, member => member._id.equals(step.approver._id)), 'name'));
+        } else {
+          _.extend(step.approver, _.pick(tree.findNodeById(step.approver._id), '_id', 'name'));
+        }
+        if (step.copy_to && step.copy_to.length) {
+          step.copy_to.forEach(copyto => {
+            if (copyto.type == 'member') {
+              _.extend(copyto, _.pick(_.find(company.members, member => member._id.equals(copyto._id)), 'name'));
+            } else {
+              _.extend(copyto, _.pick(tree.findNodeById(copyto._id), '_id', 'name'));
+            }
+          });
+        }
+      });
+    });
+    res.json(data);
+  })
   .catch(next);
 });
 

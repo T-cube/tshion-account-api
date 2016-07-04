@@ -168,7 +168,7 @@ api.get('/:template_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    res.json(mapCompanyInfo(req.company, doc));
+    res.json(mapCompanyInfo(req.company, doc)[0]);
   })
   .catch(next);
 });
