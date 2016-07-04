@@ -17,7 +17,7 @@ export let settingSanitization = {
       longitude: { type: 'number' },
     }
   },
-  maxDistance: { type: 'int' },
+  max_distance: { type: 'int' },
   white_list: {
     type: 'array',
     optional: true,
@@ -68,7 +68,7 @@ export let settingValidation = {
       longitude: { type: 'number' },
     }
   },
-  maxDistance: { type: 'int' },
+  max_distance: { type: 'int' },
   white_list: {
     type: 'array',
     optional: true,
