@@ -50,7 +50,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
           date: now,
         }
       });
-    })
+    });
   })
   .catch(next);
 });
@@ -251,10 +251,14 @@ api.post('/audit', (req, res, next) => {
 // })
 
 api.get('/setting', (req, res, next) => {
+  console.log('company_id', req.company._id);
   db.attendance.setting.findOne({
     _id: req.company._id
   })
-  .then(doc => fetchCompanyMemberInfo(req.company.members, doc, 'auditor'))
+  .then(doc => {
+    console.log('doc', doc);
+    return fetchCompanyMemberInfo(req.company.members, doc, 'auditor');
+  })
   .then(doc => res.json(doc || {
     is_open: true,
     time_start: '9:00',
