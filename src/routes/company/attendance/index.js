@@ -22,6 +22,7 @@ import { fetchCompanyMemberInfo } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
+import wUtil from 'lib/wechat-util.js';
 
 let api = express.Router();
 export default api;
@@ -33,6 +34,9 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   _.extend(data, {
     date: now
   });
+
+  checkUserLocation(req.company._id, req.user._id).then(isValid)
+
   new Attendance(req.attendanceSetting).updateSign({
     data: [data],
     date: now,
@@ -246,10 +250,20 @@ api.post('/audit', (req, res, next) => {
 
 api.get('/setting', (req, res, next) => {
   db.attendance.setting.findOne({
-    company: req.company._id
+    _id: req.company._id
   })
   .then(doc => fetchCompanyMemberInfo(req.company.members, doc, 'auditor'))
-  .then(doc => res.json(doc || {}))
+  .then(doc => res.json(doc || {
+    is_open: true,
+    time_start: '9:00',
+    time_end: '18:00',
+    ahead_time: 0,
+    workday: [1, 2, 3, 4, 5],
+    location: {
+      latitude: 39.998766,
+      longitude: 116.273938,
+    }
+  }))
   .catch(next);
 });
 
@@ -259,7 +273,7 @@ api.put('/setting', (req, res, next) => {
   sanitizeValidateObject(settingSanitization, settingValidation, data);
   db.attendance.setting.findAndModify({
     query: {
-      company: company_id
+      _id: company_id
     },
     update: {
       $set: data
@@ -286,7 +300,7 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
   _.extend(data, {
-    company: company_id
+    _id: company_id
   });
   db.attendance.setting.insert(data)
   .then(setting => {
@@ -334,7 +348,7 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
 
 function getApprovalTpl(company_id) {
   return db.attendance.setting.findOne({
-    company: company_id
+    _id: company_id
   }, {
     approval_template: 1
   })
@@ -350,7 +364,7 @@ function getApprovalTpl(company_id) {
 
 function ensureFetchSetting(req, res, next) {
   db.attendance.setting.findOne({
-    company: req.company._id,
+    _id: req.company._id,
   })
   .then(doc => {
     if (!doc) {
@@ -364,7 +378,7 @@ function ensureFetchSetting(req, res, next) {
 
 function ensureFetchSettingOpened(req, res, next) {
   db.attendance.setting.findOne({
-    company: req.company._id,
+    _id: req.company._id,
   })
   .then(doc => {
     if (!doc || !doc.is_open) {
@@ -378,7 +392,7 @@ function ensureFetchSettingOpened(req, res, next) {
 
 function ensureSettingNotExist(req, res, next) {
   db.attendance.setting.findOne({
-    company: req.company._id,
+    _id: req.company._id,
   })
   .then(doc => {
     if (doc) {
@@ -397,4 +411,17 @@ function addActivity(req, action, data) {
   };
   _.extend(info, data);
   return req.model('activity').insert(info);
+}
+
+function checkUserLocation(companyId, userId) {
+  db.attendance.setting.findOne({
+    _id: companyId
+  }, {
+    is_open: 1,
+    location: 1,
+    max_distance: 1,
+  })
+  .then(s => {
+    return wUtil.checkUserLocation(userId, s.location, s.max_distance);
+  });
 }

@@ -225,7 +225,7 @@ export default class Attendance {
       }
       audit = audit.value;
       return db.attendance.setting.findOne({
-        company: audit.company,
+        _id: audit.company,
         // is_open: true,
       })
       .then(setting => {
