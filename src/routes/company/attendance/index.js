@@ -34,21 +34,23 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   _.extend(data, {
     date: now
   });
-
-  checkUserLocation(req.company._id, req.user._id).then(isValid)
-
-  new Attendance(req.attendanceSetting).updateSign({
-    data: [data],
-    date: now,
-  }, req.user._id, false)
-  .then(doc => {
-    res.json(doc);
-    return addActivity(req, C.ACTIVITY_ACTION.SIGN, {
-      field: {
-        type: data.type,
-        date: now,
-      }
-    });
+  checkUserLocation(req.company._id, req.user._id).then(isValid => {
+    if (!isValid) {
+      throw new ApiError(400, null, 'invalid user location');
+    }
+    return new Attendance(req.attendanceSetting).updateSign({
+      data: [data],
+      date: now,
+    }, req.user._id, false)
+    .then(doc => {
+      res.json(doc);
+      return addActivity(req, C.ACTIVITY_ACTION.SIGN, {
+        field: {
+          type: data.type,
+          date: now,
+        }
+      });
+    })
   })
   .catch(next);
 });
