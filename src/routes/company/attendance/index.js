@@ -18,6 +18,7 @@ import {
 } from './schema';
 import C from 'lib/constants';
 import { checkUserTypeFunc } from '../utils';
+import { fetchCompanyMemberInfo } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
@@ -247,25 +248,15 @@ api.get('/setting', (req, res, next) => {
   db.attendance.setting.findOne({
     company: req.company._id
   })
+  .then(doc => fetchCompanyMemberInfo(req.company.members, doc, 'auditor'))
   .then(doc => res.json(doc || {}))
   .catch(next);
 });
 
 api.put('/setting', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(settingSanitization, settingValidation, data);
   let company_id = req.company._id;
-  // db.attendance.setting.findOne({
-  //   company: company_id
-  // }, {
-  //   approval_template: 1
-  // })
-  // .then(setting => {
-  //   if (!setting) {
-  //     throw new ApiError(404)
-  //   }
-  //
-  // })
+  sanitizeValidateObject(settingSanitization, settingValidation, data);
   db.attendance.setting.findAndModify({
     query: {
       company: company_id

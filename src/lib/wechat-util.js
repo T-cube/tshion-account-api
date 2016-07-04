@@ -3,6 +3,7 @@ import config from 'config';
 import moment from 'moment';
 import Promise from 'bluebird';
 import WechatApi from 'wechat-api';
+import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import { generateToken } from 'lib/utils';
@@ -142,12 +143,67 @@ export default class WechatUtil {
   }
 
   static sendTemplateMessage(user, template, data, url) {
+    if (!ObjectId.valid(user)) {
+      return wechatApi.sendTemplate(user, template, url, data);
+    }
     this.getUserWechat(user)
     .then(wechat => {
       if (!wechat) {
         return;
       }
       wechatApi.sendTemplate(wechat.openid, template, url, data);
+    });
+  }
+
+  static checkUserLocation(userId, location, maxDistance) {
+    return this.getUserLocations(userId).then(locations => {
+      if (!locations || !locations.length) {
+        return false;
+      }
+      locations.forEach(item => {
+        const TO_RAD = Math.PI / 180;
+        let distance = Math.round(
+            Math.acos(
+                Math.sin(
+                    item.latitude * TO_RAD
+                ) *
+                Math.sin(
+                    location.latitude * TO_RAD
+                ) +
+                Math.cos(
+                    item.latitude * TO_RAD
+                ) *
+                Math.cos(
+                    location.latitude * TO_RAD
+                ) *
+                Math.cos(
+                    location.longitude * TO_RAD - item.longitude * TO_RAD
+                )
+            ) * 6378137
+        );
+        if (distance < maxDistance) {
+          return true;
+        }
+      });
+      return false;
+    });
+  }
+
+  static getUserLocations(userId) {
+    return db.user.findOne({
+      _id: userId
+    }, {
+      wechat: 1
+    })
+    .then(user => {
+      if (!user || !user.wechat || !user.wechat.locations) {
+        return null;
+      }
+      let locations = user.wechat.locations;
+      locations.filter(location => {
+        return (new Date().toTime() - location.time.toTime()) < 1000 * 20; // 20s
+      });
+      return locations;
     });
   }
 
