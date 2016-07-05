@@ -185,6 +185,9 @@ export function fetchUserInfo(data) {
 }
 
 export function mapObjectIdToData(data, collection, fields, keys, mergeList) {
+  if (!data) {
+    return data;
+  }
   let keyList = [];
   let isDataObjectId = ObjectId.isValid(data);
   if ((_.isArray(data) && data.length == 0) || !data) {

@@ -630,8 +630,7 @@
 
 ```javascript
 {
-  _id: <ObjectId>,
-  company: <ObjectId>,
+  _id: <ObjectId>, // company_id
   is_open: <Boolean>,
   time_start: <String>,
   time_end: <String>,
