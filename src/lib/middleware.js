@@ -39,14 +39,14 @@ export function fetchRegUserinfoOfOpen(allowOpenType) {
     delete req.openUserinfo;
     let { from_open } = req.query;
     if (!from_open || (allowOpenType && -1 == allowOpenType.indexOf(from_open))) {
-      next();
+      return next();
     }
     switch(from_open) {
     case 'wechat':
       wUtil.findWechatByRandomToken(req.query.random_token)
       .then(wechat => {
         if (!wechat) {
-          next();
+          return next();
         }
         return wUtil.findWechatUserinfo(wechat.openid)
         .then(openUserinfo => {
@@ -61,7 +61,9 @@ export function fetchRegUserinfoOfOpen(allowOpenType) {
           next();
         });
       })
-      .catch(() => next('route'));
+      .catch((e) => {
+        throw e;
+      });
       break;
     default:
       next();

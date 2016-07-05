@@ -40,7 +40,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   db.user.find({[type]: id}).count()
   .then(count => {
     if (count > 0) {
-      console.log(data);
+      console.log(count);
       throw new ValidationError({
         [type]: 'user_exists',
       });
