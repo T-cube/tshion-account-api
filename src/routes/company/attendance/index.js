@@ -36,7 +36,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   });
   checkUserLocation(req.company._id, req.user._id).then(isValid => {
     if (!isValid) {
-      throw new ApiError(400, null, 'invalid user location');
+      // throw new ApiError(400, null, 'invalid user location');
     }
     return new Attendance(req.attendanceSetting).updateSign({
       data: [data],
@@ -73,6 +73,27 @@ api.get('/sign/user/:user_id', (req, res, next) => {
     month: month,
   })
   .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.get('/sign/today', (req, res, next) => {
+  let date = new Date();
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
+  let day = date.getDate();
+  let user_id = req.user._id;
+  db.attendance.sign.findOne({
+    user: user_id,
+    year: year,
+    month: month,
+  })
+  .then(doc => {
+    if (!doc) {
+      return {};
+    }
+    let sign = doc.data && _.find(doc.data, item => item.date == day);
+    res.json(sign || {});
+  })
   .catch(next);
 });
 
@@ -251,14 +272,10 @@ api.post('/audit', (req, res, next) => {
 // })
 
 api.get('/setting', (req, res, next) => {
-  console.log('company_id', req.company._id);
   db.attendance.setting.findOne({
     _id: req.company._id
   })
-  .then(doc => {
-    console.log('doc', doc);
-    return fetchCompanyMemberInfo(req.company.members, doc, 'auditor');
-  })
+  .then(doc => fetchCompanyMemberInfo(req.company.members, doc, 'auditor'))
   .then(doc => res.json(doc || {
     is_open: true,
     time_start: '9:00',
@@ -268,7 +285,8 @@ api.get('/setting', (req, res, next) => {
     location: {
       latitude: 39.998766,
       longitude: 116.273938,
-    }
+    },
+    max_distance: 500
   }))
   .catch(next);
 });
@@ -420,7 +438,7 @@ function addActivity(req, action, data) {
 }
 
 function checkUserLocation(companyId, userId) {
-  db.attendance.setting.findOne({
+  return db.attendance.setting.findOne({
     _id: companyId
   }, {
     is_open: 1,
