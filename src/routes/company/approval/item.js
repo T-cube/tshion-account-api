@@ -106,11 +106,12 @@ api.get('/:item_id', (req, res, next) => {
         ['approval.template', 'name,steps,forms,status', 'template'],
       ]),
       fetchCompanyMemberInfo(req.company.members, data, 'steps.approver')
-    ]);
+    ])
+    .then(() => data);
   })
   .then(data => {
     let { company } = req;
-    data.template.steps.forEach(step => {
+    data.template && data.template.steps.forEach(step => {
       if (step.approver.type == 'member') {
         _.extend(step.approver, _.pick(_.find(company.members, member => member._id.equals(step.approver._id)), 'name'));
       } else {
