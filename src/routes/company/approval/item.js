@@ -101,8 +101,11 @@ api.get('/:item_id', (req, res, next) => {
     });
   })
   .then(data => {
-    return mapObjectIdToData(data, [
-      ['approval.template', 'name,steps,forms,status', 'template'],
+    return Promise.all([
+      mapObjectIdToData(data, [
+        ['approval.template', 'name,steps,forms,status', 'template'],
+      ]),
+      fetchCompanyMemberInfo(data, 'steps.approver')
     ]);
   })
   .then(data => {
