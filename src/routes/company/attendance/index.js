@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
+import moment from 'moment';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -76,8 +77,11 @@ api.get('/sign/user/:user_id', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/sign/today', (req, res, next) => {
-  let date = new Date();
+api.get('/sign/date', (req, res, next) => {
+  let date = new Date(req.query.date);
+  if (!date.getTime()) {
+    date = new Date();
+  }
   let year = date.getFullYear();
   let month = date.getMonth() + 1;
   let day = date.getDate();
@@ -124,7 +128,6 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
       year: year,
       month: month,
     })
-
     .then(doc => {
       let signRecord = [];
       let setting = new Attendance(req.attendanceSetting);
@@ -192,10 +195,10 @@ api.post('/audit', (req, res, next) => {
           value: audit.date,
         }, {
           _id: template.forms[1]._id,
-          value: signInData ? signInData.date : '',
+          value: signInData ? moment(signInData.date).format('YYYY-MM-DD HH:mm') : '',
         }, {
           _id: template.forms[2]._id,
-          value: signOutData ? signOutData.date : '',
+          value: signOutData ? moment(signOutData.date).format('YYYY-MM-DD HH:mm') : '',
         }],
         target: {
           type: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
@@ -344,15 +347,15 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
       }],
       forms: [{
         _id: ObjectId(),
-        title: '补签日期',
+        label: '补签日期',
         type: 'text',
       }, {
         _id: ObjectId(),
-        title: '签到时间',
+        label: '签到时间',
         type: 'text',
       }, {
         _id: ObjectId(),
-        title: '签退时间',
+        label: '签退时间',
         type: 'text',
       }],
     };

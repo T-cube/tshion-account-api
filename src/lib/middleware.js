@@ -37,13 +37,13 @@ export function authCheck() {
 export function fetchRegUserinfoOfOpen(allowOpenType) {
   return (req, res, next) => {
     delete req.openUserinfo;
-    let { from_open } = req.query;
+    let { from_open, random_token } = req.query;
     if (!from_open || (allowOpenType && -1 == allowOpenType.indexOf(from_open))) {
       return next();
     }
     switch(from_open) {
     case 'wechat':
-      wUtil.findWechatByRandomToken(req.query.random_token)
+      wUtil.findWechatByRandomToken(random_token)
       .then(wechat => {
         if (!wechat) {
           return next();
@@ -61,7 +61,7 @@ export function fetchRegUserinfoOfOpen(allowOpenType) {
           next();
         });
       })
-      .catch((e) => {
+      .catch(e => {
         throw e;
       });
       break;
