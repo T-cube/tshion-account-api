@@ -104,6 +104,9 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
   db.approval.template.findOne(condition, {
     master_id: 1,
     status: 1,
+    for: 1,
+    forms_not_editable: 1,
+    forms: 1,
   })
   .then(oldTpl => {
     if (!oldTpl) {
@@ -111,6 +114,9 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
     }
     if (oldTpl.status != C.APPROVAL_STATUS.UNUSED) {
       throw new ApiError(400, null, '启用中的模板不能编辑');
+    }
+    if (oldTpl.forms_not_editable) {
+      data.forms = oldTpl.forms; // 不能修改表单
     }
     return db.approval.item.count({
       template: template_id,

@@ -24,7 +24,7 @@ import Notification from 'models/notification';
 import Account from 'models/account';
 import Document from 'models/document';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
-import wechatOAuthRoute from './routes/wechat';
+import wechatOAuthRoute from './routes/wechat-oauth';
 
 console.log('Tlifang API service');
 console.log('--------------------------------------------------------------------------------');

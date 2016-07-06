@@ -207,4 +207,25 @@ export default class WechatUtil {
     });
   }
 
+  static updateUserLocation(openid, location) {
+    return this.findUserByOpenid(openid)
+    .then(user => {
+      if (!user) {
+        return;
+      }
+      let locations = (user.wechat.locations || []).slice(-2);
+      locations.push({
+        time: new Date(),
+        pos: location
+      });
+      return db.user.update({
+        _id: user._id
+      }, {
+        $set: {
+          'wechat.locations': locations
+        }
+      });
+    });
+  }
+
 }

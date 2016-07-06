@@ -19,7 +19,7 @@ import {
 } from './schema';
 import C from 'lib/constants';
 import { checkUserTypeFunc } from '../utils';
-import { fetchCompanyMemberInfo } from 'lib/utils';
+import { fetchCompanyMemberInfo, mapObjectIdToData } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
@@ -170,52 +170,42 @@ api.post('/audit', (req, res, next) => {
   let company_id = req.company._id;
   let user_id = req.user._id;
   sanitizeValidateObject(auditSanitization, auditValidation, data);
-  _.extend(data, {
-    user: user_id,
-    company: company_id,
-    date_create: new Date(),
-    status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
-  });
-  db.attendance.audit.insert(data)
-  .then(audit => {
-    res.json(audit);
-    let addAuditActivity = addActivity(req, C.ACTIVITY_ACTION.SIGN_AUDIT, {
+
+  getApprovalTpl(company_id, '_id')
+  .then(template => {
+    let signInData = _.find(data.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_IN);
+    let signOutData = _.find(data.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_OUT);
+    let item = {
+      for: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
+      template: template._id,
+      department: '',
+      content: data.reason,
+      forms: [{
+        _id: template.forms[0]._id,
+        value: data.date,
+      }, {
+        _id: template.forms[1]._id,
+        value: signInData ? moment(signInData.date).toDate() : '',
+      }, {
+        _id: template.forms[2]._id,
+        value: signOutData ? moment(signOutData.date).toDate() : '',
+      }],
+      from: user_id,
+      company_id: company_id,
+      apply_date: new Date(),
+      status: C.APPROVAL_ITEM_STATUS.PROCESSING,
+      is_archived: false,
+    };
+    return Approval.createItem(item, req);
+  })
+  .then(() => {
+    res.json({});
+    return addActivity(req, C.ACTIVITY_ACTION.SIGN_AUDIT, {
       field: {
         date: data.date,
         data: data.data
       }
     });
-    let createApprovalItem = getApprovalTpl(company_id, '_id')
-    .then(template => {
-      let signInData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_IN);
-      let signOutData = _.find(audit.data, item => item.type == C.ATTENDANCE_SIGN_TYPE.SIGN_OUT);
-      let item = {
-        template: template._id,
-        department: '',
-        content: data.reason,
-        forms: [{
-          _id: template.forms[0]._id,
-          value: audit.date,
-        }, {
-          _id: template.forms[1]._id,
-          value: signInData ? moment(signInData.date).toDate() : '',
-        }, {
-          _id: template.forms[2]._id,
-          value: signOutData ? moment(signOutData.date).toDate() : '',
-        }],
-        target: {
-          type: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
-          _id: audit._id,
-        },
-        from: user_id,
-        company_id: company_id,
-        apply_date: new Date(),
-        status: C.APPROVAL_ITEM_STATUS.PROCESSING,
-        is_archived: false,
-      };
-      return Approval.createItem(item, req);
-    });
-    return Promise.all([addAuditActivity, createApprovalItem]);
   })
   .catch(next);
 });
@@ -281,19 +271,24 @@ api.get('/setting', (req, res, next) => {
   db.attendance.setting.findOne({
     _id: req.company._id
   })
-  .then(doc => fetchCompanyMemberInfo(req.company.members, doc, 'auditor'))
-  .then(doc => res.json(doc || {
-    is_open: true,
-    time_start: '9:00',
-    time_end: '18:00',
-    ahead_time: 0,
-    workday: [1, 2, 3, 4, 5],
-    location: {
-      latitude: 39.998766,
-      longitude: 116.273938,
-    },
-    max_distance: 500
-  }))
+  .then(doc => {
+    return Promise.all([
+      fetchCompanyMemberInfo(req.company.members, doc, 'auditor'),
+      mapObjectIdToData(doc, 'approval.template', 'name,status', 'approval_template'),
+    ])
+    .then(() => res.json(doc || {
+      is_open: true,
+      time_start: '9:00',
+      time_end: '18:00',
+      ahead_time: 0,
+      workday: [1, 2, 3, 4, 5],
+      location: {
+        // latitude: 39.998766,
+        // longitude: 116.273938,
+      },
+      max_distance: 500
+    }));
+  })
   .catch(next);
 });
 
@@ -301,85 +296,18 @@ api.put('/setting', (req, res, next) => {
   let data = req.body;
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
-  db.attendance.setting.findAndModify({
-    query: {
-      _id: company_id
-    },
-    update: {
-      $set: data
-    }
-  })
-  .then(setting => {
-    if (!setting || !setting.value) {
-      throw new ApiError(400, null, 'attendance is closed');
-    }
-    res.json({});
-    setting = setting.value;
-    if (setting.auditor == data.auditor) {
-      return;
-    }
-    return Promise.all([
-      db.approval.template.update({
-        _id: setting.approval_template
-      }, {
-        $set: {
-          'steps.0.approver': setting.auditor
-        }
-      }),
-      Approval.cancelItemsUseTemplate(req, setting.approval_template),
-    ]);
-  })
-  .catch(next);
-});
-
-api.post('/setting', ensureSettingNotExist, (req, res, next) => {
-  let data = req.body;
-  let company_id = req.company._id;
-  sanitizeValidateObject(settingSanitization, settingValidation, data);
-  _.extend(data, {
+  db.attendance.setting.update({
     _id: company_id
-  });
-  db.attendance.setting.insert(data)
+  }, {
+    $set: data
+  }, {
+    upsert: true
+  })
   .then(setting => {
     res.json(setting);
-    let template = {
-      name: '补签',
-      description: '',
-      scope: [req.company.structure._id],
-      company_id: company_id,
-      status: C.APPROVAL_STATUS.NORMAL,
-      steps: [{
-        _id: ObjectId(),
-        approver: {
-          _id: setting.auditor,
-          type: 'member',
-        }
-      }],
-      forms: [{
-        _id: ObjectId(),
-        label: '补签日期',
-        type: 'date',
-        required: true,
-      }, {
-        _id: ObjectId(),
-        label: '签到时间',
-        type: 'date',
-      }, {
-        _id: ObjectId(),
-        label: '签退时间',
-        type: 'date',
-      }],
-    };
-    return Approval.createTemplate(template)
-    .then(template => {
-      return db.attendance.setting.update({
-        _id: setting._id
-      }, {
-        $set: {
-          approval_template: template._id
-        }
-      });
-    });
+    if (setting && !setting.approval_template && data.auditor) {
+      return createApprovalTemplate(req, data.auditor);
+    }
   })
   .catch(next);
 });
@@ -461,5 +389,49 @@ function checkUserLocation(companyId, userId) {
   })
   .then(s => {
     return wUtil.checkUserLocation(userId, s.location, s.max_distance);
+  });
+}
+
+function createApprovalTemplate(req, auditor) {
+  let template = {
+    for: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
+    forms_not_editable: true,
+    name: '补签',
+    description: '',
+    scope: [req.company.structure._id],
+    company_id: req.company._id,
+    status: C.APPROVAL_STATUS.NORMAL,
+    steps: [{
+      _id: ObjectId(),
+      approver: {
+        _id: auditor,
+        type: 'member',
+      },
+      copy_to: []
+    }],
+    forms: [{
+      _id: ObjectId(),
+      label: '补签日期',
+      type: 'date',
+      required: true,
+    }, {
+      _id: ObjectId(),
+      label: '签到时间',
+      type: 'date',
+    }, {
+      _id: ObjectId(),
+      label: '签退时间',
+      type: 'date',
+    }],
+  };
+  return Approval.createTemplate(template)
+  .then(template => {
+    return db.attendance.setting.update({
+      _id: req.company._id,
+    }, {
+      $set: {
+        approval_template: template._id
+      }
+    });
   });
 }

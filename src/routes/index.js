@@ -30,6 +30,7 @@ let routes = [
   'task',
   'user',
   'tools',
+  'wechat-bootstrap',
 ];
 
 _.each(routes, route => {
