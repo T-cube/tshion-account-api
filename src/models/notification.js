@@ -111,7 +111,7 @@ export default class Notification {
       });
     }
     return db.notification.find(query)
-    .sort({is_read: 1, _id: -1}).limit(limit)
+    .sort({_id: -1}).limit(limit)
     .then(list => {
       return mapObjectIdToData(list, extendedProps);
     });

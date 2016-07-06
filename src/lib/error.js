@@ -49,7 +49,7 @@ export function ApiError(code, error, description, err) {
     };
     this.error = known_errors[code] || 'unknown_error';
   }
-  this.error_description = description || this.error;
+  this.error_description = description || __(this.error);
 }
 
 util.inherits(ApiError, Error);

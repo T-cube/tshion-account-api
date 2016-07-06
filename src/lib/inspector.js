@@ -46,12 +46,14 @@ const validationCustom = {
     }
   },
   email: function(schema, candidate) {
-    if (candidate && typeof candidate != 'string' || !isEmail(candidate)) {
+    if (!_.isString(candidate) ||
+      !/^[a-z0-9\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(candidate)) {
       this.report('invalid email: ' + candidate);
     }
   },
   mobile: function(schema, candidate) {
-    if (candidate && !/^1[3|4|5|7|8]\d{9}$/.test(candidate)) {
+    if (!_.isString(candidate) ||
+      !/^1[3|4|5|7|8]\d{9}$/.test(candidate)) {
       this.report('invalid mobile: ' + candidate);
     }
   }

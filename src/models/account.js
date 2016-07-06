@@ -187,10 +187,10 @@ export default class Account {
     })
     .then(doc => {
       if (!doc) {
-        throw new ApiError(400, 'sms_code_invalid', 'code is not valid');
+        throw new ApiError(400, 'invalid_sms_code');
       }
       if (time() > doc.expires) {
-        throw new ApiError(400, 'sms_code_expired', 'code has been expired');
+        throw new ApiError(400, 'sms_code_expired');
       }
       return db.user.confirm.mobile.update({
         _id: doc._id,

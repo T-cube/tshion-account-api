@@ -33,6 +33,7 @@ api.post('/check', (req, res, next) => {
 api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
   let type = data.type || '__invalid_type__';
+  console.log(data);
   validate('register', data, ['type', type, 'code', 'password']);
   let { password, code } = data;
   let id = data[type];
@@ -40,7 +41,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   db.user.find({[type]: id}).count()
   .then(count => {
     if (count > 0) {
-      console.log(data);
+      console.log(count);
       throw new ValidationError({
         [type]: 'user_exists',
       });
@@ -48,7 +49,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
     if (type == 'email') {
       return req.model('account').sendRegisterEmail(id);
     } else {
-      return req.model('account').sendSmsCode(id, code);
+      return req.model('account').verifySmsCode(id, code);
     }
   })
   .then(() => {
@@ -99,7 +100,7 @@ api.post('/confirm', (req, res, next) => {
   const { codeLength } = config.get('userVerifyCode.email');
   const { code } = req.body;
   if (!code || !(/^[a-f0-9]+$/.test(code) && code.length == codeLength * 2 )) {
-    throw new ApiError(400, null, 'invalid confirm code');
+    throw new ApiError(400, 'invalid_email_code');
   }
   req.model('account').confirmRegisterEmailCode(code)
   .then(data => res.json(data))
@@ -109,9 +110,15 @@ api.post('/confirm', (req, res, next) => {
 api.post('/send-sms', (req, res, next) => {
   const { mobile } = req.body;
   if (!mobile || !/^1[34578]\d{9}$/.test(mobile)) {
-    throw new ApiError(400, 'invalid_number', 'invalid mobile number');
+    throw new ApiError(400, 'invalid_mobile');
   }
-  req.model('account').sendSmsCode(mobile)
+  db.user.find({mobile: mobile}).count()
+  .then(count => {
+    if (count) {
+      throw new ApiError(400, 'user_exists');
+    }
+    req.model('account').sendSmsCode(mobile);
+  })
   .then(() => res.json({}))
   .catch(next);
 });
@@ -128,7 +135,7 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
     .then(result => {
       console.log(result);
       if (!result) {
-        throw new ApiError('401', 'invalid_password', 'password wrong');
+        throw new ApiError('401', 'invalid_password');
       }
       return generateToken(48);
     });
