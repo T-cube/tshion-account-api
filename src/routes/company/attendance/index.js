@@ -95,7 +95,7 @@ api.get('/sign/date', (req, res, next) => {
   })
   .then(doc => {
     if (!doc) {
-      return {};
+      return res.json({});
     }
     let sign = doc.data && _.find(doc.data, item => item.date == day);
     res.json(sign || {});
