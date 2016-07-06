@@ -268,4 +268,43 @@ export default class Approval {
     return parseInt(lastNum) + 1 + '';
   }
 
+  static cancelItemsUseTemplate(req, template_id) {
+    return db.approval.item.find({
+      template: template_id,
+      status: C.APPROVAL_ITEM_STATUS.PROCESSING,
+    }, {
+      from: 1
+    })
+    .then(items => {
+      if (!items.length) {
+        return;
+      }
+      let itemIdList = items.map(item => item._id);
+      let notification = {
+        action: C.ACTIVITY_ACTION.CANCEL,
+        target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
+        company: req.company._id,
+        from: req.user._id,
+      };
+      return Promise.all(
+        items.map(item => {
+          return req.model('notification').send(_.extend(notification, {
+            to: item.from,
+            approval_item: item._id,
+          }));
+        })
+        .concat(db.approval.item.update({
+          _id: {
+            $in: itemIdList
+          }
+        }, {
+          $set: {
+            status: C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED,
+            step: null,
+          }
+        }))
+      );
+    });
+  }
+
 }

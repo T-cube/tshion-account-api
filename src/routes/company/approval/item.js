@@ -80,15 +80,14 @@ api.get('/:item_id', (req, res, next) => {
           throw new ApiError(400, null, 'you have not permission to read');
         }
         let approveInfo = _.find(flowInfo.approve, v => v._id && v._id.equals(item_id));
+        let approveInfoCurStep = _.find(flowInfo.approve, v => v._id && v._id.equals(item_id) && v.step && v.step.equals(data.step));
         let inApply = indexObjectId(flowInfo.apply, item_id) != -1;
         let inCopyto = indexObjectId(flowInfo.copy_to, item_id) != -1;
         if (!inApply && !inCopyto && !approveInfo) {
           throw new ApiError(400, null, 'you have not permission to read');
         }
         if (data.status == C.APPROVAL_ITEM_STATUS.PROCESSING
-          && approveInfo
-          && approveInfo.step
-          && approveInfo.step.equals(data.step)) {
+          && approveInfoCurStep) {
           data.is_processing = true;
         } else {
           data.is_processing = false;
@@ -275,8 +274,8 @@ function doAfterApproval(item, status) {
     return;
   }
   switch (item.target.type) {
-    case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
-      return updateAttendance(item.target._id, status);
+  case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
+    return updateAttendance(item.target._id, status);
   }
   return;
 }

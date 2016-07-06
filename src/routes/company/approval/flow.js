@@ -56,11 +56,12 @@ api.get('/approve', (req, res, next) => {
       let tree = new Structure(req.company.structure);
       data.forEach(item => {
         item.department && (item.department = tree.findNodeById(item.department));
-        let foundItem = _.find(approve, approveItem => approveItem._id && approveItem._id.equals(item._id));
-        if (foundItem
-          && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING
-          && foundItem.step
-          && foundItem.step.equals(item.step)) {
+        let foundItemCurStep = _.find(
+          approve,
+          approveItem =>
+            approveItem._id && approveItem._id.equals(item._id) && approveItem.step && approveItem.step.equals(item.step)
+          );
+        if (foundItemCurStep && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING) {
           item.is_processing = true;
         } else {
           item.is_processing = false;

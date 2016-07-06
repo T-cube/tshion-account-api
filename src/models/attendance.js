@@ -23,6 +23,7 @@ export default class Attendance {
       year: year,
       month: month,
       'data.date': date,
+      company: this.setting._id,
     }, {
       time_start: 1,
       time_end: 1,

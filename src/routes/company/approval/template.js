@@ -144,7 +144,7 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
               }
             });
           }),
-          cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
+          Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
         ]);
       }
     });
@@ -192,7 +192,7 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
       return;
     }
     if (data.status == C.APPROVAL_STATUS.UNUSED) {
-      return cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
+      return Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
     } else {
       return addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
         approval_template: template_id
@@ -230,7 +230,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
           status: C.APPROVAL_STATUS.DELETED
         }
       }),
-      cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.DELETE),
+      Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.DELETE),
       addActivity(req, C.ACTIVITY_ACTION.DELETE, {
         approval_template: template_id
       })
@@ -239,45 +239,6 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
   .then(() => res.json({}))
   .catch(next);
 });
-
-function cancelItemsUseTemplate(req, template_id) {
-  return db.approval.item.find({
-    template: template_id,
-    status: C.APPROVAL_ITEM_STATUS.PROCESSING,
-  }, {
-    from: 1
-  })
-  .then(items => {
-    if (!items.length) {
-      return;
-    }
-    let itemIdList = items.map(item => item._id);
-    let notification = {
-      action: C.ACTIVITY_ACTION.CANCEL,
-      target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
-      company: req.company._id,
-      from: req.user._id,
-    };
-    return Promise.all(
-      items.map(item => {
-        return req.model('notification').send(_.extend(notification, {
-          to: item.from,
-          approval_item: item._id,
-        }));
-      })
-      .concat(db.approval.item.update({
-        _id: {
-          $in: itemIdList
-        }
-      }, {
-        $set: {
-          status: C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED,
-          step: null,
-        }
-      }))
-    );
-  });
-}
 
 function addActivity(req, action, data) {
   let info = {

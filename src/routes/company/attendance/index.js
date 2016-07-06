@@ -198,10 +198,10 @@ api.post('/audit', (req, res, next) => {
           value: audit.date,
         }, {
           _id: template.forms[1]._id,
-          value: signInData ? moment(signInData.date).format('YYYY-MM-DD HH:mm') : '',
+          value: signInData ? moment(signInData.date).toDate() : '',
         }, {
           _id: template.forms[2]._id,
-          value: signOutData ? moment(signOutData.date).format('YYYY-MM-DD HH:mm') : '',
+          value: signOutData ? moment(signOutData.date).toDate() : '',
         }],
         target: {
           type: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
@@ -314,13 +314,20 @@ api.put('/setting', (req, res, next) => {
       throw new ApiError(400, null, 'attendance is closed');
     }
     res.json({});
-    return db.attendance.setting.update({
-      _id: setting.approval_template
-    }, {
-      $set: {
-        'steps.$.approver': setting.auditor
-      }
-    });
+    setting = setting.value;
+    if (setting.auditor == data.auditor) {
+      return;
+    }
+    return Promise.all([
+      db.approval.template.update({
+        _id: setting.approval_template
+      }, {
+        $set: {
+          'steps.0.approver': setting.auditor
+        }
+      }),
+      Approval.cancelItemsUseTemplate(req, setting.approval_template),
+    ]);
   })
   .catch(next);
 });
