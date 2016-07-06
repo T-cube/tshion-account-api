@@ -37,8 +37,9 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   });
   checkUserLocation(req.company._id, req.user._id).then(isValid => {
     if (!isValid) {
-      // throw new ApiError(400, null, 'invalid user location');
+      throw new ApiError(400, null, 'invalid user location');
     }
+    return res.json({});
     return new Attendance(req.attendanceSetting).updateSign({
       data: [data],
       date: now,
