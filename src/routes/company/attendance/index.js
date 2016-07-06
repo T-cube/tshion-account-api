@@ -72,6 +72,7 @@ api.get('/sign/user/:user_id', (req, res, next) => {
     user: user_id,
     year: year,
     month: month,
+    company: req.company._id,
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -90,6 +91,7 @@ api.get('/sign/date', (req, res, next) => {
     user: user_id,
     year: year,
     month: month,
+    company: req.company._id,
   })
   .then(doc => {
     if (!doc) {
@@ -127,6 +129,7 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
       },
       year: year,
       month: month,
+      company: req.company._id,
     })
     .then(doc => {
       let signRecord = [];
@@ -348,15 +351,16 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
       forms: [{
         _id: ObjectId(),
         label: '补签日期',
-        type: 'text',
+        type: 'date',
+        required: true,
       }, {
         _id: ObjectId(),
         label: '签到时间',
-        type: 'text',
+        type: 'date',
       }, {
         _id: ObjectId(),
         label: '签退时间',
-        type: 'text',
+        type: 'date',
       }],
     };
     return Approval.createTemplate(template)

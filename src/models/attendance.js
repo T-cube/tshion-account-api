@@ -35,23 +35,22 @@ export default class Attendance {
           user: user_id,
           year: year,
           month: month,
+          company: this.setting._id,
         }, update, {
           upsert: true
-        })
+        });
       } else {
         data.forEach(item => {
           if (doc.data[0][item.type]) {
-            throw new ApiError(400, null, 'user has signed')
+            throw new ApiError(400, null, 'user has signed');
           }
-        })
+        });
         return db.attendance.sign.update({
-          user: user_id,
-          year: year,
-          month: month,
+          _id: doc._id,
           'data.date': date,
-        }, update)
+        }, update);
       }
-    })
+    });
   }
 
   _parseSignData(data, date, docExist, isPatch) {
@@ -68,29 +67,29 @@ export default class Attendance {
           recordType.push('leave_early');
         }
       }
-    })
+    });
     let patch = data.map(i => i.type);
     if (!docExist) {
       let update = {
         date: new Date(date).getDate(),
-      }
+      };
       data.forEach(item => {
         update[item.type] = item.date;
-      })
+      });
       isPatch && (update.patch = patch);
       recordType.forEach(type => update[type] = true);
       update = {
         $push: {
           data: update
         }
-      }
+      };
       return update;
     } else {
       let update = {};
       recordType.forEach(type => update['data.$.' + type] = true);
       data.forEach(item => {
         update['data.$.' + item.type] = item.date;
-      })
+      });
       if (isPatch) {
         let existPatch = docExist.data[0].patch;
         if (existPatch && existPatch.length) {
@@ -100,7 +99,7 @@ export default class Attendance {
       }
       update = {
         $set: update
-      }
+      };
       return update;
     }
   }
@@ -235,8 +234,8 @@ export default class Attendance {
         return new Attendance(setting).updateSign({
           data: audit.data,
           date: audit.date,
-        }, audit.user, true)
-      })
-    })
+        }, audit.user, true);
+      });
+    });
   }
 }
