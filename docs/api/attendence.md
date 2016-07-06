@@ -22,7 +22,7 @@
 
 ```javascript
 {
-  company_id: <ObjectId>,
+  _id: <ObjectId>,
   is_open: <Boolean>,
   time_start: <String>,
   time_end: <String>,

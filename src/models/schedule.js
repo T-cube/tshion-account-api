@@ -1,13 +1,17 @@
 import _ from 'underscore';
 import cronParser from 'cron-parser';
+import config from 'config';
+import WechatApi from 'wechat-api';
 
 import db from 'lib/database';
 import C from 'lib/constants';
+import wUtil from 'lib/wechat-util';
 
 export default class Schedule {
 
   constructor(notification) {
     this.notification = notification;
+    this.wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
   }
 
   remindingJob() {
@@ -31,13 +35,12 @@ export default class Schedule {
     }
     db.reminding.find(condition)
     // .limit(limit)
-
     .then(list => {
       if (!list.length) {
         console.log('exit job');
         return;
       } else {
-        console.log(list.length);
+        console.log('job num: ', list.length);
       }
       let schedules = [];
       list.forEach(reminding => schedules.push(reminding.target_id));
@@ -66,6 +69,7 @@ export default class Schedule {
         endDate: repeat_end
       });
       nextRemindTime = interval.next().toDate();
+      nextRemindTime = nextRemindTime > (new Date()) ? nextRemindTime : null;
     } catch (e) {
       console.log(e.message);
     }
@@ -161,6 +165,8 @@ export default class Schedule {
         }
         cron_rule = cron_rule.concat(['*', '*', info]);
         break;
+      default:
+        cron_rule = cron_rule.concat(['*', '*', '*']);
       }
       return cron_rule.length == 5 ? cron_rule.join(' ') : null;
     } else {
@@ -194,9 +200,34 @@ export default class Schedule {
     this.notification.send({
       from: 0,
       to: schedule.creator,
-      action: C.ACTIVITY_ACTION.REMINDING,
+      action: C.ACTIVITY_ACTION.SYSTEM_SET,
       target_type: C.OBJECT_TYPE.REMINDING,
       reminding: schedule._id,
+    });
+    wUtil.getUserWechat(schedule.creator).then(wechat => {
+      if (!wechat) {
+        return;
+      }
+      let url = '';
+      let data = {
+        'first': {
+          'value':'您好！',
+          'color':'#173177'
+        },
+        'keyword1': {
+          'value':'test',
+          'color':'#173177'
+        },
+        'keyword2': {
+          'value':'test',
+          'color':'#173177'
+        },
+        'remark':{
+          'value':'提醒',
+          'color':'#173177'
+        }
+      };
+      this.wechatApi.sendTemplate(wechat.openid, config.get('wechat.templates.reminding'), url, data);
     });
   }
 

@@ -48,6 +48,7 @@ api.get('/', (req, res, next) => {
       description: 1,
       scope: 1,
       status: 1,
+      number: 1,
     })
     .then(template => {
       let tree = new Structure(req.company.structure);
@@ -143,7 +144,7 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
               }
             });
           }),
-          cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
+          Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
         ]);
       }
     });
@@ -167,9 +168,7 @@ api.get('/:template_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    let tree = new Structure(req.company.structure);
-    doc.scope = doc.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
-    res.json(doc);
+    res.json(mapCompanyInfo(req.company, doc)[0]);
   })
   .catch(next);
 });
@@ -193,7 +192,7 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
       return;
     }
     if (data.status == C.APPROVAL_STATUS.UNUSED) {
-      return cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
+      return Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
     } else {
       return addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
         approval_template: template_id
@@ -231,7 +230,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
           status: C.APPROVAL_STATUS.DELETED
         }
       }),
-      cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.DELETE),
+      Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.DELETE),
       addActivity(req, C.ACTIVITY_ACTION.DELETE, {
         approval_template: template_id
       })
@@ -240,42 +239,6 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
   .then(() => res.json({}))
   .catch(next);
 });
-
-function cancelItemsUseTemplate(req, template_id) {
-  return db.approval.item.find({
-    template: template_id,
-    status: C.APPROVAL_STATUS.NORMAL,
-  }, {
-    from: 1
-  })
-  .then(items => {
-    let itemIdList = items.map(item => item._id);
-    let notification = {
-      action: C.ACTIVITY_ACTION.CANCEL,
-      target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
-      company: req.company._id,
-      from: req.user._id,
-    };
-    return Promise.all(
-      items.map(item => {
-        req.model('notification').send(_.extend(notification, {
-          to: item.from,
-          approval_item: item._id,
-        }));
-      })
-      .concat(db.approval.item.update({
-        _id: {
-          $in: itemIdList
-        }
-      }, {
-        $set: {
-          status: C.APPROVAL_STATUS.TEMPLATE_CHNAGED,
-          step: null,
-        }
-      }))
-    );
-  });
-}
 
 function addActivity(req, action, data) {
   let info = {
@@ -286,4 +249,31 @@ function addActivity(req, action, data) {
   };
   _.extend(info, data);
   return req.model('activity').insert(info);
+}
+
+function mapCompanyInfo(company, data) {
+  let tree = new Structure(company.structure);
+  if (!_.isArray(data)) {
+    data = [data];
+  }
+  data.forEach(item => {
+    item.scope = item.scope && item.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
+    item.steps.forEach(step => {
+      if (step.approver.type == 'member') {
+        _.extend(step.approver, _.pick(_.find(company.members, member => member._id.equals(step.approver._id)), 'name'));
+      } else {
+        _.extend(step.approver, _.pick(tree.findNodeById(step.approver._id), '_id', 'name'));
+      }
+      if (step.copy_to && step.copy_to.length) {
+        step.copy_to.forEach(copyto => {
+          if (copyto.type == 'member') {
+            _.extend(copyto, _.pick(_.find(company.members, member => member._id.equals(copyto._id)), 'name'));
+          } else {
+            _.extend(copyto, _.pick(tree.findNodeById(copyto._id), '_id', 'name'));
+          }
+        });
+      }
+    });
+  });
+  return data;
 }

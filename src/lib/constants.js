@@ -32,7 +32,7 @@ let constants = {
     RENAME: 'rename',      // 重命名
     UPLOAD: 'upload',      // 上传
 
-    REMINDING: 'reminding', // 提醒
+    SYSTEM_SET: 'system.set', // 提醒
 
     SIGN: 'sign',          // 签到
     SIGN_AUDIT: 'sign.audit', // 补签
@@ -128,6 +128,7 @@ let constants = {
     TASK: 'task',
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
+    TASK_EXPIRE: 'task.expire',
   },
 
   PROJECT_MEMBER_TYPE: {
@@ -154,7 +155,6 @@ let constants = {
   },
 
   TASK_STATUS: {
-    WAITING: 'pending',
     PROCESSING: 'processing',
     COMPLETED: 'completed',
     PAUSED: 'paused',
@@ -184,6 +184,11 @@ let constants = {
   USER_ID_TYPE: {
     EMAIL: 'email',
     MOBILE: 'mobile',
+  },
+
+  NOTICE: {
+    COMMON: 'common',
+    TASK_EXPIRE: 'task.expire',
   },
 
 };

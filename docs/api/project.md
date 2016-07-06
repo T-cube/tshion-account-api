@@ -124,6 +124,18 @@ INPUT
 }
 ```
 
+### PUT /project/:project_id/tag/:tag_id
+
+修改项目标签
+
+INPUT
+```javascript
+{
+  name: <String>,
+  color: <String>
+}
+```
+
 ### GET /project/:project_id/tag
 
 获取项目标签列表

@@ -11,7 +11,10 @@ module.exports = {
   view: {
     // 每页默认显式条目数量
     listNum: 20,
+    taskListNum: 10,
+    maxListNum: 100,
   },
+  passwordHashRounds: 10,
   avatar: {
     count: {
       company: 10,
@@ -23,12 +26,12 @@ module.exports = {
     accessTokenLifetime: 30 * 60,
     refreshTokenLifetime: 15 * 24 * 3600,
   },
-  userConfirm: {
+  userVerifyCode: {
     email: {
       codeLength: 24,
       expires: 2 * 24 * 60 * 60, // 2 days in seconds
     },
-    mobile: {
+    sms: {
       codeLength: 6,
       expires: 15 * 60, // 15 minutes in seconds
     }
@@ -85,6 +88,9 @@ module.exports = {
           tlifang_email_active: {
             variables: ['name', 'email', 'url'],
           },
+          tlifang_email_bind: {
+            variables: ['name', 'email', 'code'],
+          },
         },
       },
       sms: {
@@ -94,6 +100,10 @@ module.exports = {
         templates: {
           tlifang_mobile_activite: {
             id: 1288,
+            variables: ['code'],
+          },
+          tlifang_mobile_bind: {
+            id: 1420,
             variables: ['code'],
           },
           tlifang_reset_pass: {
@@ -107,4 +117,14 @@ module.exports = {
   download: {
     tokenExpires: 30 * 60 * 1000, // half a hour
   },
+  wechat: {
+    appid: 'wx0215f16935043abf',
+    appsecret: '33e3cc720d35830e154a5eab8bc853d3',
+    get_accesstoken_uri: 'http://tlf.findteachers.cn/wechat-oauth/access',
+    auth_code_lifetime: 60 * 5,
+    templates: {
+      task_expired: 'A3P5cDmtv7xKqeotk_0AQ5dJFvMXZOa32tqeyZ6AqTA',
+      reminding: 'M2le2CxHBAdHCHZkqP9JS410XZttonO9p05c9kenlLs',
+    }
+  }
 };

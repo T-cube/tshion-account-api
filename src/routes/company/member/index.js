@@ -11,6 +11,7 @@ import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
 import { checkUserType, checkUserTypeFunc } from '../utils';
 import { isEmail, time } from 'lib/utils';
+import Structure from 'models/structure';
 
 /* company collection */
 let api = express.Router();
@@ -33,7 +34,7 @@ api.get('/', (req, res, next) => {
       let user = _.find(users, u => u._id.equals(m._id));
       _.extend(m, user);
       m.avatar = m.avatar || defaultAvatar('user');
-    })
+    });
     res.json(members);
   })
   .catch(next);
@@ -47,7 +48,6 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   if (member) {
     throw new ApiError(400, null, 'member exists');
   }
-
   db.user.findOne({email: data.email}, {_id: 1, name: 1})
   .then(user => {
     data.status = C.COMPANY_MEMBER_STATUS.PENDING;
@@ -80,8 +80,8 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
         target_type: C.OBJECT_TYPE.REQUEST,
         request: request._id,
         company: req.company._id,
-      });
-    })
+      }, C.NOTICE.COMMON);
+    });
     return db.company.update({
       _id: req.company._id,
     }, {
@@ -126,14 +126,25 @@ api.post('/check', (req, res, next) => {
 });
 
 api.get('/:member_id', (req, res, next) => {
-  let data = req.body;
   let member_id = ObjectId(req.params.member_id);
   let members = req.company.members || [];
   let member = _.find(members, m => member_id.equals(m._id));
   if (!member) {
-    next(ApiError(404));
+    throw new ApiError(404);
   }
-  res.json(member);
+  db.user.findOne({
+    _id: member._id
+  }, {
+    avatar: 1,
+  })
+  .then(user => {
+    if (!user) {
+      throw new ApiError(404);
+    }
+    member.avatar = user.avatar;
+    res.json(member);
+  })
+  .catch(next);
 });
 
 api.put('/:member_id', (req, res, next) => {
@@ -162,6 +173,9 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
   if (member_id.equals(req.user._id)) {
     throw new ApiError(400, null, 'can not remove yourself');
   }
+  let tree = new Structure(req.company.structure);
+  tree.deleteMemberAll(member_id);
+  req.structure = tree;
   return Promise.all([
     db.company.update({
       _id: req.company._id,
@@ -172,7 +186,18 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
       _id: member_id,
     }, {
       $pull: {companies: req.company._id}
-    })
+    }),
+    db.project.update({
+      company_id: req.company._id,
+      'members._id': member_id,
+    }, {
+      $pull: {
+        members: {
+          _id: member_id
+        }
+      }
+    }),
+    save(req),
   ])
   .then(() => res.json({}))
   .catch(next);
@@ -220,4 +245,11 @@ function addNotification(req, action, data) {
   };
   _.extend(info, data);
   return req.model('notification').send(info);
+}
+
+function save(req) {
+  return db.company.update(
+    {_id: req.company._id},
+    {$set: {structure: req.structure.object()}}
+  );
 }

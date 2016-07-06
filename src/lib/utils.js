@@ -8,6 +8,7 @@ import path from 'path';
 import objectPath from 'object-path';
 
 import db from 'lib/database';
+import config from 'config';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
@@ -16,13 +17,21 @@ export function generateToken(length = 48) {
   .then(buffer => buffer.toString('hex'));
 }
 
-export let hashPassword = Promise.promisify(bcrypt.hash);
+export function hashPassword(password) {
+  const rounds = config.get('passwordHashRounds');
+  const genSalt = Promise.promisify(bcrypt.genSalt);
+  const hash = Promise.promisify(bcrypt.hash);
+  return genSalt(rounds)
+  .then(salt => {
+    return hash(password, salt);
+  });
+}
 
-export let comparePassword = Promise.promisify(bcrypt.compare);
+export const comparePassword = Promise.promisify(bcrypt.compare);
 
-export let fsStat = Promise.promisify(fs.stat);
+let fsStat = Promise.promisify(fs.stat);
 
-export let fsAccess = Promise.promisify(fs.access);
+let fsAccess = Promise.promisify(fs.access);
 
 export function fileExists(path) {
   return fsAccess(path, fs.F_OK)
@@ -80,6 +89,22 @@ export function getEmailName(email) {
   }
 }
 
+export function maskEmail(email) {
+  let result = /^([\w\.]+)(@.+)$/.exec(email);
+  if (!result) {
+    return '***';
+  }
+  return result[1].substr(0,3) + '****' + result[2];
+}
+
+export function maskMobile(mobile) {
+  let result = /^(\d{3})\d{4}(\d{4})$/.exec(mobile);
+  if (!result) {
+    return '***';
+  }
+  return result[1] + '****' + result[2];
+}
+
 export function timestamp(t) {
   if (t) {
     return +new Date(t);
@@ -101,7 +126,7 @@ export function expire(ms) {
 }
 
 export function isEmail(email) {
-  return /^[-a-z0-9~!$%^&*_=+}{\'?]+(\.[-a-z0-9~!$%^&*_=+}{\'?]+)*@([a-z0-9_][-a-z0-9_]*(\.[-a-z0-9_]+)*\.(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|travel|mobi|[a-z][a-z])|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?$/i.test(email);
+  return /^[a-z0-9\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(email);
 }
 
 export function uniqObjectId(list) {
@@ -160,6 +185,9 @@ export function fetchUserInfo(data) {
 }
 
 export function mapObjectIdToData(data, collection, fields, keys, mergeList) {
+  if (!data) {
+    return data;
+  }
   let keyList = [];
   let isDataObjectId = ObjectId.isValid(data);
   if ((_.isArray(data) && data.length == 0) || !data) {

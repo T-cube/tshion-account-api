@@ -1,18 +1,15 @@
 import _ from 'underscore';
 import express from 'express';
-import Promise from 'bluebird';
-import validator from 'express-validation';
 import config from 'config';
 
 import db from 'lib/database';
 import { time, timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
-import { oauthCheck } from 'lib/middleware';
+import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { authoriseSanitization, authoriseValidation, validate } from './schema';
 import { randomAvatar } from 'lib/upload';
-import validation from './validation';
 import { ValidationError } from 'lib/inspector';
 
 let api = express.Router();
@@ -33,27 +30,30 @@ api.post('/check', (req, res, next) => {
   }).catch(next);
 });
 
-api.post('/register', (req, res, next) => {
+api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
-  validate('register', data);
-  let { type, password, code } = data;
+  let type = data.type || '__invalid_type__';
+  console.log(data);
+  validate('register', data, ['type', type, 'code', 'password']);
+  let { password, code } = data;
   let id = data[type];
   data = _.pick(data, 'type', type, 'password', 'code');
   db.user.find({[type]: id}).count()
   .then(count => {
     if (count > 0) {
+      console.log(count);
       throw new ValidationError({
         [type]: 'user_exists',
       });
     }
     if (type == 'email') {
-      return req.model('account').sendConfirmEmail(id);
+      return req.model('account').sendRegisterEmail(id);
     } else {
-      return req.model('account').confirmSmsCode(id, code);
+      return req.model('account').verifySmsCode(id, code);
     }
   })
   .then(() => {
-    return hashPassword(password, 10);
+    return hashPassword(password);
   })
   .then(hash => {
     let doc = {
@@ -70,7 +70,7 @@ api.post('/register', (req, res, next) => {
         country: '中国',
         province: '',
         city: '',
-        address: ''
+        address: '',
       },
       sex: null,
       locale: 'zh-CN',
@@ -84,6 +84,9 @@ api.post('/register', (req, res, next) => {
       date_create: time(),
       current_company: null,
     };
+    if (req.openUserinfo) {
+      _.extend(doc, req.openUserinfo);
+    }
     return db.user.insert(doc);
   })
   .then(() => res.json({
@@ -94,12 +97,12 @@ api.post('/register', (req, res, next) => {
 });
 
 api.post('/confirm', (req, res, next) => {
-  const { codeLength } = config.get('userConfirm.email');
+  const { codeLength } = config.get('userVerifyCode.email');
   const { code } = req.body;
   if (!code || !(/^[a-f0-9]+$/.test(code) && code.length == codeLength * 2 )) {
-    throw new ApiError(400, null, 'invalid confirm code');
+    throw new ApiError(400, 'invalid_email_code');
   }
-  req.model('account').confirmEmailCode(code)
+  req.model('account').confirmRegisterEmailCode(code)
   .then(data => res.json(data))
   .catch(next);
 });
@@ -107,9 +110,15 @@ api.post('/confirm', (req, res, next) => {
 api.post('/send-sms', (req, res, next) => {
   const { mobile } = req.body;
   if (!mobile || !/^1[34578]\d{9}$/.test(mobile)) {
-    throw new ApiError(400, 'invalid_number', 'invalid mobile number');
+    throw new ApiError(400, 'invalid_mobile');
   }
-  req.model('account').sendSmsCode(mobile)
+  db.user.find({mobile: mobile}).count()
+  .then(count => {
+    if (count) {
+      throw new ApiError(400, 'user_exists');
+    }
+    req.model('account').sendSmsCode(mobile);
+  })
   .then(() => res.json({}))
   .catch(next);
 });
@@ -126,7 +135,7 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
     .then(result => {
       console.log(result);
       if (!result) {
-        throw new ApiError('401', 'invalid_password', 'password wrong');
+        throw new ApiError('401', 'invalid_password');
       }
       return generateToken(48);
     });

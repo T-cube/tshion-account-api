@@ -1,6 +1,7 @@
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { time } from 'lib/utils';
+import wUtil from 'lib/wechat-util.js';
 
 export function oauthCheck() {
   return (req, res, next) => {
@@ -30,5 +31,42 @@ export function authCheck() {
     })
     .then(() => next())
     .catch(() => next('route'));
+  };
+}
+
+export function fetchRegUserinfoOfOpen(allowOpenType) {
+  return (req, res, next) => {
+    delete req.openUserinfo;
+    let { from_open, random_token } = req.query;
+    if (!from_open || (allowOpenType && -1 == allowOpenType.indexOf(from_open))) {
+      return next();
+    }
+    switch(from_open) {
+    case 'wechat':
+      wUtil.findWechatByRandomToken(random_token)
+      .then(wechat => {
+        if (!wechat) {
+          return next();
+        }
+        return wUtil.findWechatUserinfo(wechat.openid)
+        .then(openUserinfo => {
+          if (openUserinfo) {
+            req.openUserinfo = {
+              name: openUserinfo.nickname,
+              sex: openUserinfo.sex,
+              avatar: openUserinfo.headimgurl,
+              wechat: wUtil.getBindWechatData(wechat)
+            };
+          }
+          next();
+        });
+      })
+      .catch(e => {
+        throw e;
+      });
+      break;
+    default:
+      next();
+    }
   };
 }

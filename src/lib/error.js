@@ -49,7 +49,7 @@ export function ApiError(code, error, description, err) {
     };
     this.error = known_errors[code] || 'unknown_error';
   }
-  this.error_description = description || this.error;
+  this.error_description = description || __(this.error);
 }
 
 util.inherits(ApiError, Error);
@@ -80,7 +80,11 @@ export function apiErrorHandler(err, req, res, next) {
   }
   if (!(err instanceof ApiError)) {
     console.error(err.stack);
-    err = new ApiError(500);
+    let error_message;
+    if (process.env.NODE_ENV !== 'production') {
+      error_message = err.stack.split('\n');
+    }
+    err = new ApiError(500, null, error_message);
   }
   delete err.name;
   delete err.message;

@@ -3,7 +3,7 @@ import express from 'express';
 
 import db from 'lib/database';
 import C, { ENUMS } from 'lib/constants';
-import { mapObjectIdToData } from 'lib/utils';
+import { mapObjectIdToData, fetchCompanyMemberInfo } from 'lib/utils';
 import Structure from 'models/structure';
 let api = express.Router();
 export default api;
@@ -46,20 +46,22 @@ api.get('/approve', (req, res, next) => {
     return db.approval.item.find(condition, fetchItemFields)
     .sort({_id: -1})
     .then(data => {
-      return mapObjectIdToData(data, [
-        ['approval.template', 'name,status', 'template'],
-      ]);
+      return Promise.all([
+        mapObjectIdToData(data, 'approval.template', 'name,status', 'template'),
+        fetchCompanyMemberInfo(req.company.members, data, 'from')
+      ])
+      .then(() => data);
     })
     .then(data => {
       let tree = new Structure(req.company.structure);
       data.forEach(item => {
-        item.from = _.find(req.company.members, member => member._id.equals(item.from));
         item.department && (item.department = tree.findNodeById(item.department));
-        let foundItem = _.find(approve, approveItem => approveItem._id && approveItem._id.equals(item._id));
-        if (foundItem
-          && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING
-          && foundItem.step
-          && foundItem.step.equals(item.step)) {
+        let foundItemCurStep = _.find(
+          approve,
+          approveItem =>
+            approveItem._id && approveItem._id.equals(item._id) && approveItem.step && approveItem.step.equals(item.step)
+          );
+        if (foundItemCurStep && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING) {
           item.is_processing = true;
         } else {
           item.is_processing = false;
@@ -85,12 +87,15 @@ function findItems(req, res, next, type) {
     _.extend(condition, getQueryCondition(req.query));
     return db.approval.item.find(condition, fetchItemFields).sort({_id: -1})
     .then(data => {
-      return mapObjectIdToData(data, 'approval.template', 'name,status', 'template');
+      return Promise.all([
+        mapObjectIdToData(data, 'approval.template', 'name,status', 'template'),
+        fetchCompanyMemberInfo(req.company.members, data, 'from')
+      ])
+      .then(() => data);
     })
     .then(data => {
       let tree = new Structure(req.company.structure);
       data.forEach(item => {
-        item.from = _.find(req.company.members, member => member._id.equals(item.from));
         item.department && (item.department = tree.findNodeById(item.department));
       });
       res.json(data);

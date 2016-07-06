@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
+import moment from 'moment';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -16,17 +17,16 @@ import {
   recordSanitization,
   recordValidation
 } from './schema';
-import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import { checkUserTypeFunc } from '../utils';
+import { fetchCompanyMemberInfo } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
+import wUtil from 'lib/wechat-util.js';
 
 let api = express.Router();
 export default api;
-
-api.use(oauthCheck());
 
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
@@ -35,17 +35,22 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   _.extend(data, {
     date: now
   });
-  new Attendance(req.attendanceSetting).updateSign({
-    data: [data],
-    date: now,
-  }, req.user._id, false)
-  .then(doc => {
-    res.json(doc);
-    return addActivity(req, C.ACTIVITY_ACTION.SIGN, {
-      field: {
-        type: data.type,
-        date: now,
-      }
+  checkUserLocation(req.company._id, req.user._id).then(isValid => {
+    if (!isValid) {
+      // throw new ApiError(400, null, 'invalid user location');
+    }
+    return new Attendance(req.attendanceSetting).updateSign({
+      data: [data],
+      date: now,
+    }, req.user._id, false)
+    .then(doc => {
+      res.json(doc);
+      return addActivity(req, C.ACTIVITY_ACTION.SIGN, {
+        field: {
+          type: data.type,
+          date: now,
+        }
+      });
     });
   })
   .catch(next);
@@ -67,8 +72,34 @@ api.get('/sign/user/:user_id', (req, res, next) => {
     user: user_id,
     year: year,
     month: month,
+    company: req.company._id,
   })
   .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.get('/sign/date', (req, res, next) => {
+  let date = new Date(req.query.date);
+  if (!date.getTime()) {
+    date = new Date();
+  }
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
+  let day = date.getDate();
+  let user_id = req.user._id;
+  db.attendance.sign.findOne({
+    user: user_id,
+    year: year,
+    month: month,
+    company: req.company._id,
+  })
+  .then(doc => {
+    if (!doc) {
+      return res.json({});
+    }
+    let sign = doc.data && _.find(doc.data, item => item.date == day);
+    res.json(sign || {});
+  })
   .catch(next);
 });
 
@@ -98,8 +129,8 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
       },
       year: year,
       month: month,
+      company: req.company._id,
     })
-
     .then(doc => {
       let signRecord = [];
       let setting = new Attendance(req.attendanceSetting);
@@ -167,10 +198,10 @@ api.post('/audit', (req, res, next) => {
           value: audit.date,
         }, {
           _id: template.forms[1]._id,
-          value: signInData ? signInData.date : '',
+          value: signInData ? moment(signInData.date).toDate() : '',
         }, {
           _id: template.forms[2]._id,
-          value: signOutData ? signOutData.date : '',
+          value: signOutData ? moment(signOutData.date).toDate() : '',
         }],
         target: {
           type: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
@@ -248,30 +279,31 @@ api.post('/audit', (req, res, next) => {
 
 api.get('/setting', (req, res, next) => {
   db.attendance.setting.findOne({
-    company: req.company._id
+    _id: req.company._id
   })
-  .then(doc => res.json(doc || {}))
+  .then(doc => fetchCompanyMemberInfo(req.company.members, doc, 'auditor'))
+  .then(doc => res.json(doc || {
+    is_open: true,
+    time_start: '9:00',
+    time_end: '18:00',
+    ahead_time: 0,
+    workday: [1, 2, 3, 4, 5],
+    location: {
+      latitude: 39.998766,
+      longitude: 116.273938,
+    },
+    max_distance: 500
+  }))
   .catch(next);
 });
 
 api.put('/setting', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(settingSanitization, settingValidation, data);
   let company_id = req.company._id;
-  // db.attendance.setting.findOne({
-  //   company: company_id
-  // }, {
-  //   approval_template: 1
-  // })
-  // .then(setting => {
-  //   if (!setting) {
-  //     throw new ApiError(404)
-  //   }
-  //
-  // })
+  sanitizeValidateObject(settingSanitization, settingValidation, data);
   db.attendance.setting.findAndModify({
     query: {
-      company: company_id
+      _id: company_id
     },
     update: {
       $set: data
@@ -282,13 +314,20 @@ api.put('/setting', (req, res, next) => {
       throw new ApiError(400, null, 'attendance is closed');
     }
     res.json({});
-    return db.attendance.setting.update({
-      _id: setting.approval_template
-    }, {
-      $set: {
-        'steps.$.approver': setting.auditor
-      }
-    });
+    setting = setting.value;
+    if (setting.auditor == data.auditor) {
+      return;
+    }
+    return Promise.all([
+      db.approval.template.update({
+        _id: setting.approval_template
+      }, {
+        $set: {
+          'steps.0.approver': setting.auditor
+        }
+      }),
+      Approval.cancelItemsUseTemplate(req, setting.approval_template),
+    ]);
   })
   .catch(next);
 });
@@ -298,7 +337,7 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
   _.extend(data, {
-    company: company_id
+    _id: company_id
   });
   db.attendance.setting.insert(data)
   .then(setting => {
@@ -318,16 +357,17 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
       }],
       forms: [{
         _id: ObjectId(),
-        title: '补签日期',
-        type: 'text',
+        label: '补签日期',
+        type: 'date',
+        required: true,
       }, {
         _id: ObjectId(),
-        title: '签到时间',
-        type: 'text',
+        label: '签到时间',
+        type: 'date',
       }, {
         _id: ObjectId(),
-        title: '签退时间',
-        type: 'text',
+        label: '签退时间',
+        type: 'date',
       }],
     };
     return Approval.createTemplate(template)
@@ -346,7 +386,7 @@ api.post('/setting', ensureSettingNotExist, (req, res, next) => {
 
 function getApprovalTpl(company_id) {
   return db.attendance.setting.findOne({
-    company: company_id
+    _id: company_id
   }, {
     approval_template: 1
   })
@@ -362,7 +402,7 @@ function getApprovalTpl(company_id) {
 
 function ensureFetchSetting(req, res, next) {
   db.attendance.setting.findOne({
-    company: req.company._id,
+    _id: req.company._id,
   })
   .then(doc => {
     if (!doc) {
@@ -376,7 +416,7 @@ function ensureFetchSetting(req, res, next) {
 
 function ensureFetchSettingOpened(req, res, next) {
   db.attendance.setting.findOne({
-    company: req.company._id,
+    _id: req.company._id,
   })
   .then(doc => {
     if (!doc || !doc.is_open) {
@@ -390,7 +430,7 @@ function ensureFetchSettingOpened(req, res, next) {
 
 function ensureSettingNotExist(req, res, next) {
   db.attendance.setting.findOne({
-    company: req.company._id,
+    _id: req.company._id,
   })
   .then(doc => {
     if (doc) {
@@ -409,4 +449,17 @@ function addActivity(req, action, data) {
   };
   _.extend(info, data);
   return req.model('activity').insert(info);
+}
+
+function checkUserLocation(companyId, userId) {
+  return db.attendance.setting.findOne({
+    _id: companyId
+  }, {
+    is_open: 1,
+    location: 1,
+    max_distance: 1,
+  })
+  .then(s => {
+    return wUtil.checkUserLocation(userId, s.location, s.max_distance);
+  });
 }

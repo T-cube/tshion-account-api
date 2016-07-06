@@ -24,12 +24,13 @@ import Notification from 'models/notification';
 import Account from 'models/account';
 import Document from 'models/document';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
+import wechatOAuthRoute from './routes/wechat';
 
 console.log('Tlifang API service');
 console.log('--------------------------------------------------------------------------------');
 console.log('enviroment:', process.env.NODE_ENV);
 console.log('loaded config:');
-console.log(JSON.stringify(config, (key, value) => {
+console.log(JSON.stringify(_.pick(config, ['apiUrl', 'webUrl', 'server', 'database']), (key, value) => {
   return _.isArray(value) ? value.join(';') : value;
 }, 2));
 console.log('initializing service...');
@@ -71,6 +72,9 @@ app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 app.all('/oauth/token', app.oauth.grant());
 app.use('/oauth/revoke', oauthExtended.revokeToken);
 // app.use('/api', app.oauth.authorise());
+
+app.use('/wechat-oauth', wechatOAuthRoute);
+app.use('/api/wechat-oauth', wechatOAuthRoute);
 
 // app.use('/', express.static('./public'));
 

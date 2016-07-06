@@ -4,6 +4,7 @@ import _ from 'underscore';
 import { camelCase } from 'change-case';
 
 import db from 'lib/database';
+import { comparePassword } from 'lib/utils';
 
 function camelCaseObjectKey(obj) {
   let _obj = {};
@@ -88,9 +89,12 @@ export default {
       if (!doc) {
         return callback(null, null);
       }
-      let result = bcrypt.compareSync(password, doc.password);
-      callback(null, result ? doc : null);
-    }).catch(e => callback(e));
+      return comparePassword(password, doc.password)
+      .then(result => {
+        callback(null, result ? doc : null);
+      });
+    })
+    .catch(e => callback(e));
   },
 
   saveRefreshToken(token, clientId, expires, user, callback) {

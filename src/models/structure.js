@@ -115,8 +115,22 @@ class Structure {
     return this._deleteNode(this.root, node_id);
   }
 
+  setAdmin(member_id, node_id) {
+    member_id = ObjectId(member_id);
+    node_id = ObjectId(node_id);
+    let node = this.findNodeById(node_id);
+    if (!node) {
+      return false;
+    }
+    node.admin = member_id;
+    return true;
+  }
+
   _getMember(node_id, all, level = 0) {
     let node = this.findNodeById(node_id);
+    if (!node) {
+      return false;
+    }
     let members = [];
     if (!node.members) {
       node.members = [];
@@ -194,20 +208,29 @@ class Structure {
   addPosition(title, node_id) {
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
-    if (!_.isArray(node.positions)) {
+    if (node.positions == null) {
       node.positions = [];
     }
-    if (!_.findWhere(node.positions, {title: title})) {
-      let _id = ObjectId();
-      let position = {
-        _id: _id,
-        title: title,
-      };
-      node.positions.push(position);
-      return position;
-    } else {
-      return false;
+    let titles = _.pluck(node.positions, 'title');
+    let position = {
+      _id: ObjectId(),
+      title: getUniqName(titles, title),
+    };
+    node.positions.push(position);
+    return position;
+  }
+
+  updatePosition(title, position_id, node_id) {
+    node_id = ObjectId(node_id);
+    position_id = ObjectId(position_id);
+    let node = this.findNodeById(node_id);
+    if (node.positions == null) {
+      node.positions = [];
     }
+    let position = _.find(node.positions, p => p._id.equals(position_id));
+    let titles = _.without(_.pluck(node.positions, 'title'), position.title);
+    position.title = getUniqName(titles, title);
+    return position;
   }
 
   deletePosition(position_id, node_id) {

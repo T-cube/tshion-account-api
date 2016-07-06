@@ -2,12 +2,13 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
+import fs from 'fs';
 
 import db from 'lib/database';
 import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
-import { oauthCheck, authCheck } from 'lib/middleware';
+import { authCheck } from 'lib/middleware';
 import { fetchCompanyMemberInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
@@ -22,8 +23,6 @@ import {
 /* company collection */
 let api = express.Router();
 export default api;
-
-api.use(oauthCheck());
 
 api.use((req, res, next) => {
   next();
@@ -105,12 +104,7 @@ api.get('/:project_id', (req, res, next) => {
   let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
   fetchCompanyMemberInfo(req.company.members, data, 'owner')
-  .then(data => {
-    _.extend(data.owner, _.find(req.company.members, member => {
-      return member._id.equals(owner);
-    }));
-    res.json(data);
-  })
+  .then(data => res.json(data))
   .catch(next);
 });
 
@@ -151,6 +145,13 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
       }, {
         $pull: {projects: project_id}
       }),
+      db.task.remove({
+        project_id
+      }),
+      db.discussion.remove({
+        project_id
+      }),
+      removeFilesUnderProject(project_id),
     ]);
   })
   .then(() => {
@@ -343,22 +344,12 @@ api.put('/:project_id/archived', (req, res, next) => {
 });
 
 api.post('/:project_id/tag', (req, res, next) => {
-  let project_id = req.project._id;
-  let data = req.body;
-  sanitizeValidateObject(tagSanitization, tagValidation, data);
-  db.project.count({
-    _id: project_id,
-    company_id: req.company._id,
-    'tags.name': data.name
-  })
-  .then(count => {
-    if (count != 0) {
-      throw new ApiError(400, null, 'tag is already exists');
-    }
-    data._id = ObjectId();
+  let newTagId;
+  fetchTagAndValidTag(req)
+  .then(data => {
+    data._id = newTagId = ObjectId();
     return db.project.update({
-      _id: project_id,
-      company_id: req.company._id,
+      _id: req.project._id,
     }, {
       $push: {
         tags: data
@@ -366,8 +357,26 @@ api.post('/:project_id/tag', (req, res, next) => {
     });
   })
   .then(() => res.json({
-    _id: data._id
+    _id: newTagId
   }))
+  .catch(next);
+});
+
+api.put('/:project_id/tag/:tag_id', (req, res, next) => {
+  let tag_id = ObjectId(req.params.tag_id);
+  fetchTagAndValidTag(req, tag_id)
+  .then(data => {
+    data._id = tag_id;
+    return db.project.update({
+      _id: req.project._id,
+      'tags._id': tag_id
+    }, {
+      $set: {
+        'tags.$': data
+      }
+    });
+  })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -417,8 +426,8 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
 });
 
 api.get('/:project_id/activity', (req, res, next) => {
-  let project_id = req.project._id;
-  let { last_id } = req.query;
+  const project_id = req.project._id;
+  const { last_id } = req.query;
   req.model('activity').fetch({
     project: project_id,
   }, last_id)
@@ -454,6 +463,88 @@ function ensureProjectAdmin(project, user_id) {
     .indexOf(_.find(project.members, member => member._id.equals(user_id)).type)) {
     throw new ApiError(400, null, 'user is not admin of the project');
   }
+}
+
+function fetchTagAndValidTag(req, tag_id) {
+  let project_id = req.project._id;
+  let data = req.body;
+  sanitizeValidateObject(tagSanitization, tagValidation, data);
+  return db.project.findOne({
+    _id: project_id,
+    'tags.name': data.name
+  }, {
+    'tags.$._id': 1
+  })
+  .then(project => {
+    if (project && (!tag_id || !project.tags[0]._id.equals(tag_id))) {
+      throw new ApiError(400, null, 'tag is already exists');
+    }
+    return data;
+  });
+}
+
+function removeFilesUnderProject(project_id) {
+  return db.document.dir.findOne({
+    project_id,
+    parent_dir: null,
+  }, {
+    _id: 1
+  })
+  .then(rootDir => {
+    if (!rootDir) {
+      return;
+    }
+    return fetchFilesUnderDir(rootDir._id)
+    .then(files => {
+      return db.document.file.find({
+        _id: {
+          $in: files
+        }
+      }, {
+        path: 1
+      })
+      .then(fileInfo => {
+        return removeFiles(fileInfo.map(info => info.path));
+      })
+      .then(() => {
+        return db.document.file.remove({
+          _id: {
+            $in: files
+          }
+        });
+      });
+    });
+  });
+}
+
+function removeFiles(filePathList) {
+  try {
+    filePathList.forEach(path => fs.unlinkSync(path));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function fetchFilesUnderDir(dir, files) {
+  files = files || [];
+  dir = ObjectId.isValid(dir) ? [dir] : dir;
+  if (!dir || !dir.length) {
+    return Promise.resolve(files);
+  }
+  return db.document.dir.find({
+    _id: {
+      $in: dir
+    }
+  }, {
+    files: 1,
+    dirs: 1,
+  })
+  .then(doc => {
+    files = files.concat(_.flatten(doc.map(item => item.files)) || []);
+    let dirs = _.flatten(doc.map(item => item.dirs)).filter(i => ObjectId.isValid(i));
+    return fetchFilesUnderDir(dirs, files);
+  })
+  .then(files => files);
 }
 
 api.use('/:project_id/task', require('./task').default);

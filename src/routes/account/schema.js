@@ -12,8 +12,8 @@ const schema = {
     },
     validation: {
       type: { $enum: ENUMS.USER_ID_TYPE, code: 'invalid_account_type' },
-      email: { $email: true, optional: true, code: 'invalid_email' },
-      mobile: { $mobile: {country: 'cn'}, optional: true, code: 'invalid_mobile' },
+      email: { $email: true, code: 'invalid_email' },
+      mobile: { $mobile: {country: 'cn'}, code: 'invalid_mobile' },
       password: { type: 'string', minLength: 6, maxLength: 20, code: 'invalid_password' },
       code: { type: 'string', pattern: /\d{6}/, optional: true, code: 'invalid_sms_code' },
     },
