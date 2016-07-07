@@ -28,7 +28,7 @@ export default class ScheduleServer {
         }]
       },
       task_expire: {
-        init: ['*/10 * * * *', () => {
+        init: ['0 9 * * *', () => {
           console.log('task expire notification');
           db.task.find({
             status: C.TASK_STATUS.PROCESSING,
