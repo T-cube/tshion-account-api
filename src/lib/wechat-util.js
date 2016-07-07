@@ -6,7 +6,7 @@ import WechatApi from 'wechat-api';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
-import { generateToken } from 'lib/utils';
+import { generateToken, timestamp } from 'lib/utils';
 
 const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
@@ -201,7 +201,7 @@ export default class WechatUtil {
       }
       let locations = user.wechat.locations;
       locations.filter(location => {
-        return (new Date().toTime() - location.time.toTime()) < 1000 * 20; // 20s
+        return (timestamp() - timestamp(location.time)) < 1000 * 20; // 20s
       });
       return locations;
     });

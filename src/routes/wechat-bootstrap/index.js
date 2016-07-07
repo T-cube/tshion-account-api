@@ -18,6 +18,7 @@ api.use(express.query());
 
 api.use('/', wechat(wechatConfig, function (req, res) {
   let message = req.weixin;
+  console.log(message);
   switch (message.MsgType) {
   case 'event': {
     if (message.Event != 'LOCATION') {
@@ -28,7 +29,6 @@ api.use('/', wechat(wechatConfig, function (req, res) {
     return res.reply();
   }
   default:
-    console.log(message);
     if (message.Content == 'oa') {
       return res.reply('http://tlf-m.findteachers.cn/account/login');
     }
