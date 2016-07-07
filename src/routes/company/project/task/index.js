@@ -54,7 +54,7 @@ api.get('/', (req, res, next) => {
   if (tag && ObjectId.isValid(tag)) {
     condition['tags'] = ObjectId(tag);
   }
-  let sortBy = { status: -1, date_update: 1 };
+  let sortBy = { status: -1, date_update: -1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order };

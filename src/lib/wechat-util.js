@@ -143,7 +143,7 @@ export default class WechatUtil {
   }
 
   static sendTemplateMessage(user, template, data, url) {
-    if (!ObjectId.valid(user)) {
+    if (!ObjectId.isValid(user)) {
       return wechatApi.sendTemplate(user, template, url, data);
     }
     this.getUserWechat(user)
