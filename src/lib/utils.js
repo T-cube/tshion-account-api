@@ -256,3 +256,27 @@ function _mapObjectIdToData(data, k, pos, infoList, mergeList) {
     objectPath.set(data, k, _.extend(foundVal, mergeVal));
   }
 }
+
+export function getGpsDistance(from, to) {
+  const TO_RAD = Math.PI / 180;
+  let distance = Math.round(
+    Math.acos(
+      Math.sin(
+        from.latitude * TO_RAD
+      ) *
+      Math.sin(
+        to.latitude * TO_RAD
+      ) +
+      Math.cos(
+        from.latitude * TO_RAD
+      ) *
+      Math.cos(
+        to.latitude * TO_RAD
+      ) *
+      Math.cos(
+        to.longitude * TO_RAD - from.longitude * TO_RAD
+      )
+    ) * 6378137
+  );
+  return distance;
+}

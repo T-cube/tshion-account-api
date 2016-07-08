@@ -25,7 +25,11 @@ api.use('/', wechat(wechatConfig, function (req, res) {
       return;
     }
     let openid = message.FromUserName;
-    wUtil.updateUserLocation(openid, _.pick(message, 'Latitude', 'Longitude', 'Precision'));
+    wUtil.updateUserLocation(openid, {
+      latitude: parseFloat(message.Latitude),
+      longitude: parseFloat(message.Longitude),
+      precision: parseFloat(message.Precision),
+    });
     return res.reply();
   }
   default:
