@@ -6,7 +6,6 @@ import config from 'config';
 // import request from 'supertest';
 import bodyParser from 'body-parser';
 
-import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
@@ -17,12 +16,12 @@ let api = express.Router();
 export default api;
 
 const urls = {
-  user: 'http://m.tlifang.com/',
+  user: config.get('mobileUrl') + 'oa/company',
   reg: token => {
-    return 'http://tlifang.com/account/login?from_open=wechat&random_token=' + token;
+    return config.get('mobileUrl') + 'account/login?from_open=wechat&random_token=' + token;
   },
   token: authCode => {
-    return 'http://m.tlifang.com/account/login?wechat_authcode=' + authCode;
+    return config.get('mobileUrl') + 'account/login?wechat_authcode=' + authCode;
   },
 };
 
