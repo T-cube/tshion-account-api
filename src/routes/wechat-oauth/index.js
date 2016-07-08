@@ -17,12 +17,12 @@ let api = express.Router();
 export default api;
 
 const urls = {
-  user: 'http://tlf-m.findteachers.cn/',
+  user: 'http://m.tlifang.com/',
   reg: token => {
-    return 'http://tlf-m.findteachers.cn/account/login?from_open=wechat&random_token=' + token;
+    return 'http://tlifang.com/account/login?from_open=wechat&random_token=' + token;
   },
   token: authCode => {
-    return 'http://tlf-m.findteachers.cn/account/login?wechat_authcode=' + authCode;
+    return 'http://m.tlifang.com/account/login?wechat_authcode=' + authCode;
   },
 };
 
@@ -41,7 +41,7 @@ api.use(bodyParser.urlencoded({ extended: true }));
 
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
-  let url = wechatOAuthClient.getAuthorizeURL(config.get('wechat.get_accesstoken_uri'), checkCode, 'snsapi_userinfo');
+  let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'wechat-oauth/access', checkCode, 'snsapi_userinfo');
   res.redirect(url);
 });
 
