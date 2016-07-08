@@ -156,6 +156,10 @@ export default class WechatUtil {
     });
   }
 
+  static createMenu(menu, callback) {
+    wechatApi.createMenu(menu, callback);
+  }
+
   static checkUserLocation(userId, location, maxDistance) {
     return this.getUserLocations(userId).then(locations => {
       if (!locations || !locations.length) {

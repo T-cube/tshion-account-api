@@ -39,3 +39,14 @@ api.use('/', wechat(wechatConfig, function (req, res) {
     return res.reply('haha');
   }
 }));
+
+api.use('/set-menu', (req, res, next) => {
+  wUtil.createMenu({
+    'button': [{
+      'type':'view',
+      'name':'工作台',
+      'url':'http://m.tlifang.com/oa/company'
+    }]
+  });
+  res.json({});
+});
