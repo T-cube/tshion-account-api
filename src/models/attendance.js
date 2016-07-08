@@ -30,8 +30,9 @@ export default class Attendance {
       'data.$.': 1
     })
     .then(doc => {
-      let update = this._parseSignData(data, `${year}-${month}-${date}`, doc, isPatch);
+      let update;
       if (!doc) {
+        update = this._parseSignData(data, `${year}-${month}-${date}`, doc, isPatch);
         return db.attendance.sign.update({
           user: user_id,
           year: year,
@@ -41,11 +42,17 @@ export default class Attendance {
           upsert: true
         });
       } else {
+        let newData = [];
         data.forEach(item => {
           if (doc.data[0][item.type]) {
-            throw new ApiError(400, null, 'user has signed');
+            if (!isPatch) {
+              throw new ApiError(400, null, 'user has signed');
+            }
+          } else {
+            newData.push(item);
           }
         });
+        update = this._parseSignData(newData, `${year}-${month}-${date}`, doc, isPatch);
         return db.attendance.sign.update({
           _id: doc._id,
           'data.date': date,
@@ -207,36 +214,40 @@ export default class Attendance {
     return this.setting.auditor && this.setting.auditor.equals(user_id);
   }
 
-  static audit(audit_id, status) {
-    return db.attendance.audit.findAndModify({
-      query: {
-        _id: audit_id,
-        status: C.ATTENDANCE_AUDIT_STATUS.PENDING,
-      },
-      update: {
-        $set: {
-          status: status
-        }
-      }
+  static audit(companyId, userId, data, status) {
+    if (status != C.ATTENDANCE_AUDIT_STATUS.APPROVED) {
+      return;
+    }
+    return db.attendance.setting.findOne({
+      _id: companyId,
+      // is_open: true,
     })
-    .then(audit => {
-      if (!audit || status != C.ATTENDANCE_AUDIT_STATUS.APPROVED) {
+    .then(setting => {
+      if (!setting) {
         return;
       }
-      audit = audit.value;
-      return db.attendance.setting.findOne({
-        _id: audit.company,
-        // is_open: true,
-      })
-      .then(setting => {
-        if (!setting) {
-          return;
+      let signData = [];
+      let date = new Date(data.date);
+      delete data.date;
+      for (let i in data) {
+        let _date = data[i];
+        if (_date) {
+          _date = new Date(_date);
+          if (_date.getTime()) {
+            signData.push({
+              type: i,
+              date: _date,
+            });
+          }
         }
-        return new Attendance(setting).updateSign({
-          data: audit.data,
-          date: audit.date,
-        }, audit.user, true);
-      });
+      }
+      if (!date.getTime() || !signData.length) {
+        return;
+      }
+      return new Attendance(setting).updateSign({
+        data: signData,
+        date: date,
+      }, userId, true);
     });
   }
 }

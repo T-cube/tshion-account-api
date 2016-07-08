@@ -98,6 +98,31 @@
 }...]
 ```
 
+### GET /attendence/sign/date
+
+获取当前用户指定日期的签到
+
+QUERY
+
+```javascript
+{
+  date: <String> // date YYYY-MM-DD
+}
+```
+
+OUT_PUT
+
+```javascript
+{
+  date: <Date>,
+  sign_in: <String>,
+  sign_out: <String>,
+  late: <Boolean>,
+  leave_early: <Boolean>,
+  patch: <Enum=[late|leave_early]>
+}
+```
+
 ### GET /attendence/sign/department/:department_id
 
 获取部门的签到信息

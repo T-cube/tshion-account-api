@@ -270,23 +270,30 @@ function addNotification(req, action, data) {
 }
 
 function doAfterApproval(item, status) {
-  if (!item.target) {
+  if (!item.for) {
     return;
   }
-  switch (item.target.type) {
+  switch (item.for) {
   case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
-    return updateAttendance(item.target._id, status);
+    return updateAttendance(item, status);
   }
   return;
 }
 
-function updateAttendance(audit_id, status) {
+function updateAttendance(item, status) {
+  let { company_id, forms } = item;
+  let userId = item.from;
   if (status == C.APPROVAL_ITEM_STATUS.APPROVED) {
     status = C.ATTENDANCE_AUDIT_STATUS.APPROVED;
   } else {
     status = C.ATTENDANCE_AUDIT_STATUS.REJECTED;
   }
-  return Attendance.audit(audit_id, status);
+  let data = {
+    date: forms[0].value,
+    sign_in: forms[1].value,
+    sign_out: forms[2].value,
+  };
+  return Attendance.audit(company_id, userId, data, status);
 }
 
 function checkAprroverOfStepAndGetSteps(req, item) {

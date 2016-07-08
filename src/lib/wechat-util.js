@@ -6,7 +6,8 @@ import WechatApi from 'wechat-api';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
-import { generateToken } from 'lib/utils';
+import { generateToken, timestamp, getGpsDistance } from 'lib/utils';
+import MarsGPS from 'lib/mars-gps.js';
 
 const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
@@ -143,7 +144,7 @@ export default class WechatUtil {
   }
 
   static sendTemplateMessage(user, template, data, url) {
-    if (!ObjectId.valid(user)) {
+    if (!ObjectId.isValid(user)) {
       return wechatApi.sendTemplate(user, template, url, data);
     }
     this.getUserWechat(user)
@@ -155,32 +156,20 @@ export default class WechatUtil {
     });
   }
 
+  static createMenu(menu, callback) {
+    wechatApi.createMenu(menu, callback);
+  }
+
   static checkUserLocation(userId, location, maxDistance) {
     return this.getUserLocations(userId).then(locations => {
       if (!locations || !locations.length) {
         return false;
       }
+      let marsGPS = new MarsGPS();
       locations.forEach(item => {
-        const TO_RAD = Math.PI / 180;
-        let distance = Math.round(
-            Math.acos(
-                Math.sin(
-                    item.latitude * TO_RAD
-                ) *
-                Math.sin(
-                    location.latitude * TO_RAD
-                ) +
-                Math.cos(
-                    item.latitude * TO_RAD
-                ) *
-                Math.cos(
-                    location.latitude * TO_RAD
-                ) *
-                Math.cos(
-                    location.longitude * TO_RAD - item.longitude * TO_RAD
-                )
-            ) * 6378137
-        );
+        let { pos } = item;
+        pos =  marsGPS.transform(pos.latitude, pos.longitude);
+        let distance = getGpsDistance(pos, location);
         if (distance < maxDistance) {
           return true;
         }
@@ -201,9 +190,30 @@ export default class WechatUtil {
       }
       let locations = user.wechat.locations;
       locations.filter(location => {
-        return (new Date().toTime() - location.time.toTime()) < 1000 * 20; // 20s
+        return (timestamp() - timestamp(location.time)) < 1000 * 30; // 30s
       });
       return locations;
+    });
+  }
+
+  static updateUserLocation(openid, location) {
+    return this.findUserByOpenid(openid)
+    .then(user => {
+      if (!user) {
+        return;
+      }
+      let locations = (user.wechat.locations || []).slice(-2);
+      locations.push({
+        time: new Date(),
+        pos: location
+      });
+      return db.user.update({
+        _id: user._id
+      }, {
+        $set: {
+          'wechat.locations': locations
+        }
+      });
     });
   }
 

@@ -6,7 +6,6 @@ import config from 'config';
 // import request from 'supertest';
 import bodyParser from 'body-parser';
 
-import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
@@ -17,12 +16,12 @@ let api = express.Router();
 export default api;
 
 const urls = {
-  user: 'http://tlf-m.findteachers.cn/',
+  user: config.get('mobileUrl') + 'oa/company',
   reg: token => {
-    return 'http://tlf-m.findteachers.cn/account/login?from_open=wechat&random_token=' + token;
+    return config.get('mobileUrl') + 'account/login?from_open=wechat&random_token=' + token;
   },
   token: authCode => {
-    return 'http://tlf-m.findteachers.cn/account/login?wechat_authcode=' + authCode;
+    return config.get('mobileUrl') + 'account/login?wechat_authcode=' + authCode;
   },
 };
 
@@ -41,7 +40,7 @@ api.use(bodyParser.urlencoded({ extended: true }));
 
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
-  let url = wechatOAuthClient.getAuthorizeURL(config.get('wechat.get_accesstoken_uri'), checkCode, 'snsapi_userinfo');
+  let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'wechat-oauth/access', checkCode, 'snsapi_userinfo');
   res.redirect(url);
 });
 

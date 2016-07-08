@@ -1,6 +1,7 @@
 module.exports = {
   apiUrl: 'http://tlifang.com/',
   webUrl: 'http://tlifang.com/',
+  mobileUrl: 'http://m.tlifang.com/',
   server: {
     //host: '127.0.0.1',
     port: 3000,
@@ -118,7 +119,9 @@ module.exports = {
     tokenExpires: 30 * 60 * 1000, // half a hour
   },
   wechat: {
+    token: 'wechat',
     appid: 'wx0215f16935043abf',
+    encodingAESKey: 'PuUMhTzz0JxYxV7bGw4aeNJdxXq3CIw2cTRVe56cTgP',
     appsecret: '33e3cc720d35830e154a5eab8bc853d3',
     get_accesstoken_uri: 'http://tlf.findteachers.cn/wechat-oauth/access',
     auth_code_lifetime: 60 * 5,
