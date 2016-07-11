@@ -39,7 +39,6 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
     if (!isValid) {
       throw new ApiError(400, null, 'invalid user location');
     }
-    return res.json({});
     return new Attendance(req.attendanceSetting).updateSign({
       data: [data],
       date: now,
@@ -287,7 +286,9 @@ api.get('/setting', (req, res, next) => {
         // latitude: 39.998766,
         // longitude: 116.273938,
       },
-      max_distance: 500
+      max_distance: 500,
+      workday_special: [],
+      holiday: [],
     }));
   })
   .catch(next);

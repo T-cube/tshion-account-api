@@ -21,7 +21,7 @@ export default class MarsGPS {
     let magic = Math.sin(radLat);
     magic = 1 - this.ee * magic * magic;
     let sqrtMagic = Math.sqrt(magic);
-    dLat = (dLat * 180.0) / ((this.a * (1 - this.ee)) / (magic * Math.sqrtMagic) * this.pi);
+    dLat = (dLat * 180.0) / ((this.a * (1 - this.ee)) / (magic * sqrtMagic) * this.pi);
     dLon = (dLon * 180.0) / (this.a / sqrtMagic * Math.cos(radLat) * this.pi);
     let mgLat = wgLat + dLat;
     let mgLon = wgLon + dLon;

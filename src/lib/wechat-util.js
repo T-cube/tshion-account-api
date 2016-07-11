@@ -166,15 +166,16 @@ export default class WechatUtil {
         return false;
       }
       let marsGPS = new MarsGPS();
+      let distanceOk = false;
       locations.forEach(item => {
         let { pos } = item;
         pos =  marsGPS.transform(pos.latitude, pos.longitude);
         let distance = getGpsDistance(pos, location);
         if (distance < maxDistance) {
-          return true;
+          distanceOk = true;
         }
       });
-      return false;
+      return distanceOk;
     });
   }
 
@@ -189,10 +190,9 @@ export default class WechatUtil {
         return null;
       }
       let locations = user.wechat.locations;
-      locations.filter(location => {
+      return locations.filter(location => {
         return (timestamp() - timestamp(location.time)) < 1000 * 30; // 30s
       });
-      return locations;
     });
   }
 

@@ -3,7 +3,6 @@ import oauthserver from 'oauth2-server';
 import wechatOAuth from 'wechat-oauth';
 import Promise from 'bluebird';
 import config from 'config';
-// import request from 'supertest';
 import bodyParser from 'body-parser';
 
 import { ApiError } from 'lib/error';
