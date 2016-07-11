@@ -503,7 +503,7 @@ function getTotalSize(req) {
   });
 }
 
-function getParentPaths(dir_id, path) {
+function getParentPaths(dir_id, path, isParentDir) {
   if (dir_id == null) {
     return Promise.resolve([]);
   }
@@ -516,9 +516,11 @@ function getParentPaths(dir_id, path) {
   })
   .then(doc => {
     if (doc) {
-      path.unshift(doc._id);
+      if (isParentDir) {
+        path.unshift(doc._id);
+      }
       if (doc.parent_dir != null) {
-        return getParentPaths(doc.parent_dir, path);
+        return getParentPaths(doc.parent_dir, path, true);
       }
     }
     return path;
