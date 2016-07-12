@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import express from 'express';
 import wechat from 'wechat';
 import config from 'config';
@@ -18,7 +17,6 @@ api.use(express.query());
 
 api.use('/', wechat(wechatConfig, function (req, res) {
   let message = req.weixin;
-  console.log(message);
   switch (message.MsgType) {
   case 'event': {
     if (message.Event != 'LOCATION') {
@@ -34,19 +32,20 @@ api.use('/', wechat(wechatConfig, function (req, res) {
   }
   default:
     if (message.Content == 'oa') {
-      return res.reply('http://tlf-m.findteachers.cn/account/login');
+      return res.reply('http://m.tlifang.com/account/login');
     }
     return res.reply('haha');
   }
 }));
 
-api.use('/set-menu', (req, res, next) => {
-  wUtil.createMenu({
-    'button': [{
-      'type':'view',
-      'name':'工作台',
-      'url':'http://m.tlifang.com/oa/company'
-    }]
-  });
-  res.json({});
-});
+// 创建微信菜单
+// api.use('/set-menu', (req, res, next) => {
+//   wUtil.createMenu({
+//     'button': [{
+//       'type':'view',
+//       'name':'工作台',
+//       'url':'http://m.tlifang.com/oa/company'
+//     }]
+//   });
+//   res.json({});
+// });

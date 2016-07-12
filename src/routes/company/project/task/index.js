@@ -116,13 +116,14 @@ api.get('/:_task_id', (req, res, next) => {
     _id: ObjectId(req.params._task_id),
     project_id: req.project._id,
   })
-  .then(data => {
-    if (!data) {
+  .then(task => {
+    if (!task) {
       throw new ApiError(404, null, 'task not found!');
     }
-    return fetchCompanyMemberInfo(req.company.members, data, 'creator', 'assignee', 'followers')
-    .then(() => res.json(data));
+    task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
+    return fetchCompanyMemberInfo(req.company.members, task, 'creator', 'assignee', 'followers');
   })
+  .then(task => res.json(task))
   .catch(next);
 });
 
