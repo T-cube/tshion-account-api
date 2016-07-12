@@ -40,7 +40,9 @@ api.get('/', (req, res, next) => {
     }
   }
   if (keyword) {
-    condition['$text'] = { $search: keyword };
+    condition['title'] = {
+      $regex: RegExp(keyword, 'i')
+    };
   }
   let sortBy = { status: -1, date_update: -1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {

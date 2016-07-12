@@ -49,7 +49,10 @@ api.get('/', (req, res, next) => {
     }
   }
   if (keyword) {
-    condition['$text'] = { $search: keyword };
+    // condition['$text'] = { $search: keyword };
+    condition['title'] = {
+      $regex: RegExp(keyword, 'i')
+    };
   }
   if (tag && ObjectId.isValid(tag)) {
     condition['tags'] = ObjectId(tag);
