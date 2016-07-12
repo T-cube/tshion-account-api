@@ -358,19 +358,6 @@ function ensureFetchSettingOpened(req, res, next) {
   .catch(e => next(e));
 }
 
-function ensureSettingNotExist(req, res, next) {
-  db.attendance.setting.findOne({
-    _id: req.company._id,
-  })
-  .then(doc => {
-    if (doc) {
-      throw new ApiError(400, null, 'can not create setting');
-    }
-    next();
-  })
-  .catch(e => next(e));
-}
-
 function addActivity(req, action, data) {
   let info = {
     action: action,
@@ -414,16 +401,16 @@ function createApprovalTemplate(req, auditor) {
     forms: [{
       _id: ObjectId(),
       label: '补签日期',
-      type: 'date',
+      type: 'datetime',
       required: true,
     }, {
       _id: ObjectId(),
       label: '签到时间',
-      type: 'date',
+      type: 'datetime',
     }, {
       _id: ObjectId(),
       label: '签退时间',
-      type: 'date',
+      type: 'datetime',
     }],
   };
   return Approval.createTemplate(template)
