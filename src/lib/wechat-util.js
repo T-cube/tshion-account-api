@@ -68,6 +68,16 @@ export default class WechatUtil {
     });
   }
 
+  static unbindWechat(user_id) {
+    return db.user.update({
+      _id: user_id
+    }, {
+      $unset: {
+        wechat: 1
+      }
+    });
+  }
+
   static storeWechatOAuthAndGetRandomToken(wechat) {
     let _id = wechat.openid;
     delete wechat.openid;
@@ -186,10 +196,18 @@ export default class WechatUtil {
       wechat: 1
     })
     .then(user => {
-      if (!user || !user.wechat || !user.wechat.locations) {
+      if (!user || !user.wechat || !user.wechat.openid) {
         return null;
       }
-      let locations = user.wechat.locations;
+      return db.wechat.location.findOne({
+        _id: user.wechat.openid
+      });
+    })
+    .then(doc => {
+      if (!doc) {
+        return [];
+      }
+      let locations = doc.locations;
       return locations.filter(location => {
         return (timestamp() - timestamp(location.time)) < 1000 * 30; // 30s
       });
@@ -197,22 +215,23 @@ export default class WechatUtil {
   }
 
   static updateUserLocation(openid, location) {
-    return this.findUserByOpenid(openid)
-    .then(user => {
-      if (!user) {
-        return;
-      }
-      let locations = (user.wechat.locations || []).slice(-2);
+    return db.wechat.location.findOne({
+      _id: openid
+    })
+    .then(doc => {
+      let locations = (doc && doc.locations || []).slice(-6);
       locations.push({
         time: new Date(),
         pos: location
       });
-      return db.user.update({
-        _id: user._id
+      return db.wechat.location.update({
+        _id: openid
       }, {
         $set: {
-          'wechat.locations': locations
+          locations: locations
         }
+      }, {
+        upsert: true
       });
     });
   }

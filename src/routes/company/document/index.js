@@ -243,7 +243,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   sanitizeValidateObject(fileSanitization, fileValidation, data);
   _.extend(data, {
     [req.document.posKey]: req.document.posVal,
-    name: data.name + '.txt',
+    name: data.name + '.html',
     dir_id: dir_id,
     author: req.user._id,
     date_update: new Date(),
