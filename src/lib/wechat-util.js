@@ -68,6 +68,16 @@ export default class WechatUtil {
     });
   }
 
+  static unbindWechat(user_id) {
+    return db.user.update({
+      _id: user_id
+    }, {
+      $unset: {
+        wechat: 1
+      }
+    });
+  }
+
   static storeWechatOAuthAndGetRandomToken(wechat) {
     let _id = wechat.openid;
     delete wechat.openid;
