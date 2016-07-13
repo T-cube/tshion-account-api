@@ -58,7 +58,6 @@ api.get('/', (req, res, next) => {
       data.pagesize = pagesize;
     }),
     db.task.find(condition, {
-      followers: 0,
       description: 0,
     })
     .sort(sortBy)
@@ -69,6 +68,7 @@ api.get('/', (req, res, next) => {
         projects.push(task.project_id);
         task.is_following = !!_.find(task.followers, user_id => user_id
           && user_id.equals(req.user._id));
+        delete task.followers;
       });
       projects = uniqObjectId(projects);
       if (req.company) {
