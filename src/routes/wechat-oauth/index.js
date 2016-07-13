@@ -14,13 +14,15 @@ import { oauthCheck } from 'lib/middleware';
 let api = express.Router();
 export default api;
 
+const mobileUrl = config.get('mobileUrl');
+
 const urls = {
-  user: config.get('mobileUrl') + 'oa/company',
+  user: mobileUrl + 'oa/company',
   reg: token => {
-    return config.get('mobileUrl') + 'account/login?from_open=wechat&random_token=' + token;
+    return mobileUrl + 'account/login?from_open=wechat&random_token=' + token;
   },
   token: authCode => {
-    return config.get('mobileUrl') + 'account/login?wechat_authcode=' + authCode;
+    return mobileUrl + 'account/login?wechat_authcode=' + authCode;
   },
 };
 
@@ -46,6 +48,12 @@ api.get('/entry', (req, res) => {
 api.get('/access', access);
 
 api.post('/bind', bodyParser.json(), oauthCheck(), access);
+
+api.get('/unbind', oauthCheck(), (req, res, next) => {
+  wUtil.unbindWechat(req.user._id)
+  .then(() => res.json({}))
+  .catch(next);
+});
 
 api.post('/token', wechatOauth.grant());
 
