@@ -61,7 +61,7 @@ app.use((req, res, next) => {
 //oauth开始
 app.oauth = oauthserver({
   model: oauthModel,
-  grants: ['password','refresh_token'],
+  grants: ['password','refresh_token','authorization_code'],
   debug: false,
   accessTokenLifetime: 1800,
   refreshTokenLifetime: 3600 * 24 * 15,
