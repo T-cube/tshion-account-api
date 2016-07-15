@@ -70,6 +70,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
         country: '中国',
         province: '',
         city: '',
+        district: '',
         address: '',
       },
       sex: null,

@@ -32,6 +32,7 @@ OUTPUT:
     country: <String>,
     province: <String>,
     city: <String>,
+    district: <String>,
     address: <String>,
   },
   date_join: <Date>,
@@ -58,6 +59,7 @@ INPUT:
     country: <String>,
     province: <String>,
     city: <String>,
+    district: <String>,
     address: <String>,
   },
 }
