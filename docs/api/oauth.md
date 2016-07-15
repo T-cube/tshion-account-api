@@ -16,15 +16,13 @@ QUERY_PARAMS:
   response_type: 'code',
   client_id: 'tlf-www',
   redirect_uri: '<redirect_uri>',
-  state: '<state>',
-  scope: '<optional>',
 }
 ```
 
 RESPONSE:
 ```
 HTTP 302 Redirct:
-<redirect_uri>?code=<code>&state=<state>
+<redirect_uri>?code=<code>
 ```
 
 ### POST /oauth/token

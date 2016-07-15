@@ -5,7 +5,7 @@ import Promise from 'bluebird';
 import http from 'http';
 import express from 'express';
 import socketio from 'socket.io';
-import oauthserver from 'oauth2-server';
+import oauthServer from 'oauth2-server';
 import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
@@ -26,9 +26,10 @@ import Document from 'models/document';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import wechatOAuthRoute from './routes/wechat-oauth';
 
-console.log('Tlifang API service');
 console.log('--------------------------------------------------------------------------------');
-console.log('enviroment:', process.env.NODE_ENV);
+console.log('Tlifang API Service');
+console.log('--------------------------------------------------------------------------------');
+console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('loaded config:');
 console.log(JSON.stringify(_.pick(config, ['apiUrl', 'webUrl', 'server', 'database']), (key, value) => {
   return _.isArray(value) ? value.join(';') : value;
@@ -59,7 +60,7 @@ app.use((req, res, next) => {
 });
 
 //oauth开始
-app.oauth = oauthserver({
+app.oauth = oauthServer({
   model: oauthModel,
   grants: ['password','refresh_token','authorization_code'],
   debug: false,
@@ -69,6 +70,12 @@ app.oauth = oauthserver({
 
 app.use('/oauth', corsHandler);
 app.use('/oauth', bodyParser.urlencoded({ extended: true }));
+app.post('/oauth/authorise', app.oauth.authCodeGrant(function (req, next) {
+  next(null);
+}));
+app.get('/oauth/authorise', app.oauth.authCodeGrant(function (req, next) {
+  next(null);
+}));
 app.all('/oauth/token', app.oauth.grant());
 app.use('/oauth/revoke', oauthExtended.revokeToken);
 // app.use('/api', app.oauth.authorise());
