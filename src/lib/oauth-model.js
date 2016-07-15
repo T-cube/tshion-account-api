@@ -4,7 +4,7 @@ import _ from 'underscore';
 import { camelCase } from 'change-case';
 
 import db from 'lib/database';
-import { comparePassword } from 'lib/utils';
+import { comparePassword, generateToken } from 'lib/utils';
 
 function camelCaseObjectKey(obj) {
   let _obj = {};
@@ -133,5 +133,30 @@ export default {
     db.oauth.refreshtoken.remove({refresh_token: refreshToken})
     .then(doc => callback(null, doc))
     .catch(e => callback(e));
-  }
+  },
+
+  getAuthCode(code, callback) {
+    db.oauth.code.findOne({code: code})
+    .then(authCode => {
+      if (!authCode) {
+        return callback(null, null);
+      }
+      callback(null, camelCaseObjectKey(authCode));
+    })
+    .catch(e => callback(e));
+  },
+
+  saveAuthCode(code, clientId, expires, user, callback) {
+    let data = {
+      code: code,
+      client_id: clientId,
+      expires: expires,
+      user_id: user._id,
+    };
+    db.oauth.code.insert(data)
+    .then(() => {
+      callback(null);
+    })
+    .catch(e => callback(e));
+  },
 };

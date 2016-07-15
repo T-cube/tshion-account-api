@@ -401,7 +401,7 @@ function createApprovalTemplate(req, auditor) {
     forms: [{
       _id: ObjectId(),
       label: '补签日期',
-      type: 'datetime',
+      type: 'date',
       required: true,
     }, {
       _id: ObjectId(),
