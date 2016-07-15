@@ -123,7 +123,6 @@ module.exports = {
     appid: 'wx0215f16935043abf',
     encodingAESKey: 'PuUMhTzz0JxYxV7bGw4aeNJdxXq3CIw2cTRVe56cTgP',
     appsecret: '33e3cc720d35830e154a5eab8bc853d3',
-    get_accesstoken_uri: 'http://tlf.findteachers.cn/wechat-oauth/access',
     auth_code_lifetime: 60 * 5,
     templates: {
       task_expired: 'A3P5cDmtv7xKqeotk_0AQ5dJFvMXZOa32tqeyZ6AqTA',
