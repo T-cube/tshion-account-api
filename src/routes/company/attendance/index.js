@@ -307,7 +307,7 @@ api.put('/setting', (req, res, next) => {
   })
   .then(setting => {
     res.json(setting);
-    if (setting && !setting.approval_template && data.auditor) {
+    if (data && !data.approval_template && data.auditor) {
       return createApprovalTemplate(req, data.auditor);
     }
   })
