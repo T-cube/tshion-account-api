@@ -11,8 +11,9 @@
     "compile": "babel src --out-dir app",
     "nodemon": "nodemon -i src ./app/index.js",
     "watch": "babel src --out-dir app --watch",
-    "dev": "npm run watch | npm run nodemon"
-  },
+    "dev": "npm run watch | npm run nodemon",
+    "tcli": "node ./app/cli/tcli \"$@\""
+},
   "author": "alphakevin <get.so.smart@gmail.com> (http://github.com/alphakevin)",
   "license": "commercial",
   "dependencies": {
