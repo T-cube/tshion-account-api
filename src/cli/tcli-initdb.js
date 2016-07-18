@@ -10,6 +10,10 @@ program
 
 console.log('database initialization');
 
+if (!program.oauth) {
+  program.outputHelp();
+}
+
 if (program.oauth) {
 
   db.oauth.clients.remove({})

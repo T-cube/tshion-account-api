@@ -49,7 +49,8 @@ export default {
   grantTypeAllowed(clientId, grantType, callback) {
     // console.log('in grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');
     if (grantType === 'password') {
-      return callback(null, true);
+      let valid = _.contains(['com_tlifang_web', 'com_tlifang_mobile'], clientId);
+      return callback(null, valid);
     }
     callback(null, true);
   },
