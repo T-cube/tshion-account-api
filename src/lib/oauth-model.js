@@ -36,7 +36,7 @@ export default {
   },
 
   getClient(clientId, clientSecret, callback) {
-    // console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
+    console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
     if (clientSecret === null) {
       return db.oauth.clients.findOne({client_id: clientId})
       .then(doc => callback(null, doc)).catch(e => callback(e));

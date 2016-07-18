@@ -20,19 +20,19 @@ if (program.oauth) {
         client_secret: '1234567890',
       },
       {
-        client_id: 'com.tlifang.web',
+        client_id: 'com_tlifang_web',
         client_secret: 'Y=tREBruba$+uXeZaya=eThaD3hukuwu',
       },
       {
-        client_id: 'com.tlifang.mobile',
+        client_id: 'com_tlifang_mobile',
         client_secret: 'zET@AdruTh5?3um38**Tec@ej#dR$8wu',
       },
       {
-        client_id: 'com.tlifang.wechat',
+        client_id: 'com_tlifang_wechat',
         client_secret: 'Kub8EjUYutaMA@agAruBaC+azUQAhUd_',
       },
       {
-        client_id: 'com.tlifang.www',
+        client_id: 'com_tlifang_www',
         client_secret: '5@xUphUBru=AyUbU@6BEJaZehus!p6Ma',
         redirect_uri: 'http://www.tlifang.com/oauth-login',
       },
