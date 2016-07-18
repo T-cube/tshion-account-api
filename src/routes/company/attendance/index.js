@@ -19,7 +19,7 @@ import {
 } from './schema';
 import C from 'lib/constants';
 import { checkUserTypeFunc } from '../utils';
-import { fetchCompanyMemberInfo, mapObjectIdToData } from 'lib/utils';
+import { fetchCompanyMemberInfo, mapObjectIdToData, diffObjectId } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
@@ -138,7 +138,15 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
         signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
           user: sign.user
         }));
+        members = diffObjectId(members, [sign.user]);
       });
+      if (members.length) {
+        members.forEach(user => {
+          signRecord.push(_.extend(setting.parseUserRecord([], year, month), {
+            user: user
+          }));
+        });
+      }
       return signRecord;
     });
   })
@@ -307,7 +315,7 @@ api.put('/setting', (req, res, next) => {
   })
   .then(setting => {
     res.json(setting);
-    if (setting && !setting.approval_template && data.auditor) {
+    if (data && !data.approval_template && data.auditor) {
       return createApprovalTemplate(req, data.auditor);
     }
   })
