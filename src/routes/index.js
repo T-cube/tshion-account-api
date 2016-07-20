@@ -25,11 +25,12 @@ let routes = [
   'company',
   'download',
   'notification',
+  'public',
   'relation',
   'request',
   'task',
-  'user',
   'tools',
+  'user',
   'wechat-bootstrap',
 ];
 
