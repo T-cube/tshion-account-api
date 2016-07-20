@@ -35,6 +35,7 @@ import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import wechatOAuthRoute from './routes/wechat-oauth';
 
 // welcome messages and output corre config
+console.log();
 console.log('--------------------------------------------------------------------------------');
 console.log('Tlifang API Service');
 console.log('--------------------------------------------------------------------------------');
@@ -84,6 +85,8 @@ app.use('/oauth', session({
   cookie: { path: '/oauth', httpOnly: true, secure: false, maxAge: null },
   name: 'tlf.sid',
   secret: 'the quick blue fish jumps over the lazy cat',
+  resave: false,
+  saveUninitialized: false,
 }));
 // use form to submit Oauth params
 app.use('/oauth', bodyParser.urlencoded({ extended: true }));
@@ -111,4 +114,5 @@ app.use(apiErrorHandler);
 // starting server
 server.listen(config.get('server'), () => {
   console.log('listening on ', server.address());
+  console.log('--------------------------------------------------------------------------------');
 });
