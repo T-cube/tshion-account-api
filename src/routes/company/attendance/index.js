@@ -31,17 +31,19 @@ export default api;
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(signSanitization, signValidation, data);
+  let from_pc = !!req.query.from_pc;
   let now = new Date();
   _.extend(data, {
     date: now
   });
   checkUserLocation(req.company._id, req.user._id).then(isValid => {
-    if (!isValid) {
+    if (!isValid && !from_pc) {
       throw new ApiError(400, null, 'invalid user location');
     }
     return new Attendance(req.attendanceSetting).updateSign({
       data: [data],
       date: now,
+      from_pc
     }, req.user._id, false)
     .then(doc => {
       res.json(doc);
@@ -74,7 +76,16 @@ api.get('/sign/user/:user_id', (req, res, next) => {
     month: month,
     company: req.company._id,
   })
-  .then(doc => res.json(doc))
+  .then(doc => {
+    if (!doc) {
+      doc = {
+        data: [],
+        year,
+        month
+      };
+    }
+    res.json(doc);
+  })
   .catch(next);
 });
 
