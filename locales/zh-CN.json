@@ -1,5 +1,6 @@
 {
   "administrator": "管理员",
+  "login_failed": "登录失败，请检查用户名及密码",
   "invalid_account_type": "错误的帐户类型",
   "invalid_email": "邮箱格式错误",
   "invalid_mobile": "手机号码错误",

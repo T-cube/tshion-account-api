@@ -1,18 +1,9 @@
 import bcrypt from 'bcrypt';
 import Joi from 'joi';
 import _ from 'underscore';
-import { camelCase } from 'change-case';
 
 import db from 'lib/database';
-import { comparePassword, generateToken } from 'lib/utils';
-
-function camelCaseObjectKey(obj) {
-  let _obj = {};
-  _.each(obj, (val, key) => {
-    _obj[camelCase(key)] = val;
-  });
-  return _obj;
-}
+import { comparePassword, camelCaseObjectKey } from 'lib/utils';
 
 export default {
   getAccessToken(bearerToken, callback) {
@@ -36,13 +27,16 @@ export default {
   },
 
   getClient(clientId, clientSecret, callback) {
-    console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
+    // console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
     if (clientSecret === null) {
       return db.oauth.clients.findOne({client_id: clientId})
-      .then(doc => callback(null, doc)).catch(e => callback(e));
+      .then(doc => {
+        callback(null, camelCaseObjectKey(doc));
+        console.log(doc);
+      }).catch(e => callback(e));
     }
     db.oauth.clients.findOne({client_id: clientId, client_secret: clientSecret})
-    .then(doc => callback(null, doc))
+    .then(doc => callback(null, camelCaseObjectKey(doc)))
     .catch(e => callback(e));
   },
 
@@ -148,6 +142,7 @@ export default {
   },
 
   saveAuthCode(code, clientId, expires, user, callback) {
+    console.log('saveAuthCode', user);
     let data = {
       code: code,
       client_id: clientId,

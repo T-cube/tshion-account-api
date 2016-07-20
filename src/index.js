@@ -1,3 +1,10 @@
+// TLifang API Services
+// including:
+//   * Oauth server
+//   * Oauth login pages
+//   * OA API server
+//   * User content redirecting for third party sites (e.g. avatars)
+
 // fix absolute path
 import './bootstrap';
 
@@ -9,12 +16,13 @@ import oauthServer from 'oauth2-server';
 import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
+import session from 'express-session';
 
 import 'lib/i18n';
 import bindLoader from 'lib/loader';
 import apiRouter from './routes';
-import oauthModel from 'lib/oauth-model.js';
-import oauthExtended from 'lib/oauth-extended.js';
+import oauthModel from 'lib/oauth-model';
+import * as oauthRoute from 'lib/oauth-routes';
 import { apiErrorHandler } from 'lib/error';
 import corsHandler from 'lib/cors';
 import SocketServer from 'service/socket';
@@ -26,6 +34,7 @@ import Document from 'models/document';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import wechatOAuthRoute from './routes/wechat-oauth';
 
+// welcome messages and output corre config
 console.log('--------------------------------------------------------------------------------');
 console.log('Tlifang API Service');
 console.log('--------------------------------------------------------------------------------');
@@ -54,12 +63,14 @@ app.loadModel('document', Document);
 app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
 
+// model loader
 app.use((req, res, next) => {
   app.bindLoader(req);
   next();
 });
 
-//oauth开始
+// Oauth 2.0 Authorization
+app.set('view engine', 'ejs');
 app.oauth = oauthServer({
   model: oauthModel,
   grants: ['password','refresh_token','authorization_code'],
@@ -69,28 +80,35 @@ app.oauth = oauthServer({
 });
 
 app.use('/oauth', corsHandler);
+app.use('/oauth', session({
+  cookie: { path: '/oauth', httpOnly: true, secure: false, maxAge: null },
+  name: 'tlf.sid',
+  secret: 'the quick blue fish jumps over the lazy cat',
+}));
+// use form to submit Oauth params
 app.use('/oauth', bodyParser.urlencoded({ extended: true }));
-app.post('/oauth/authorise', app.oauth.authCodeGrant(function (req, next) {
-  next(null);
-}));
-app.get('/oauth/authorise', app.oauth.authCodeGrant(function (req, next) {
-  next(null);
-}));
+// auth code grant type (for third party sites)
+app.use('/oauth/login', oauthRoute.login);
+app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
+// grant token
 app.all('/oauth/token', app.oauth.grant());
-app.use('/oauth/revoke', oauthExtended.revokeToken);
-// app.use('/api', app.oauth.authorise());
-
+app.use('/oauth/revoke', oauthRoute.revokeToken);
+// wechat login
 app.use('/wechat-oauth', wechatOAuthRoute);
+// wechat apis
 app.use('/api/wechat-oauth', wechatOAuthRoute);
 
+// use nginx for static resource
 // app.use('/', express.static('./public'));
 
+// api routes bind here
 app.use('/api', apiRouter);
 app.use(app.oauth.errorHandler());
 
 // global error handler
 app.use(apiErrorHandler);
 
+// starting server
 server.listen(config.get('server'), () => {
   console.log('listening on ', server.address());
 });

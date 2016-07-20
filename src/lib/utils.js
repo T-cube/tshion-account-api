@@ -6,11 +6,20 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import objectPath from 'object-path';
+import { camelCase } from 'change-case';
 
 import db from 'lib/database';
 import config from 'config';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
+
+export function camelCaseObjectKey(obj) {
+  let _obj = {};
+  _.each(obj, (val, key) => {
+    _obj[camelCase(key)] = val;
+  });
+  return _obj;
+}
 
 export function generateToken(length = 48) {
   return randomBytes(length)
