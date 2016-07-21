@@ -14,9 +14,10 @@ export default api;
 
 api.use(oauthCheck());
 
-api.post('/info', (req, res, next) => {
+api.get('/info', (req, res, next) => {
   const user = req.user;
   let data = {
+    id: user._id,
     email: user.email,
     avatar: user.avatar,
     name: user.name,
