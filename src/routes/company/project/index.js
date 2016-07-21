@@ -9,7 +9,7 @@ import upload, { randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { authCheck } from 'lib/middleware';
-import { fetchCompanyMemberInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
+import { time, fetchCompanyMemberInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
   projectSanitization,
@@ -436,6 +436,45 @@ api.get('/:project_id/activity', (req, res, next) => {
     project: project_id,
   }, last_id)
   .then(list => res.json(list))
+  .catch(next);
+});
+
+api.get('/:project_id/statistics', (req, res, next) => {
+  const project_id = req.project._id;
+  db.task.find({
+    project_id: project_id,
+  }, {
+    status: 1,
+    assignee: 1,
+    date_due: 1,
+  })
+  .then(list => {
+    const now = time();
+    const getStatus = item => {
+      if (item.status == C.TASK_STATUS.PROCESSING &&
+        item.date_due !== null && now > item.date_due) {
+        return 'overdue';
+      } else {
+        return item.status;
+      }
+    };
+    const stats = _.groupBy(list, item => item.assignee.valueOf());
+    let memberStats = _.map(stats, (items, assignee) => {
+      let member = _.find(req.company.members, m => assignee == m._id.valueOf());
+      let stats = _.countBy(items, getStatus);
+      stats.total = items.length;
+      return {
+        assignee: _.pick(member, '_id', 'name'),
+        count: stats,
+      };
+    });
+    let projectStats = _.countBy(list, getStatus);
+    projectStats.total = list.length;
+    res.json({
+      project: projectStats,
+      member: memberStats,
+    });
+  })
   .catch(next);
 });
 
