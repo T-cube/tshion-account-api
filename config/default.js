@@ -37,6 +37,26 @@ module.exports = {
       expires: 15 * 60, // 15 minutes in seconds
     }
   },
+  accountLevel: {
+    free: {
+      max_members: 100,
+      max_own_companies: 3,
+      store_max_total_size: 2 * 1024 * 1024 * 1024,
+      store_max_file_size: 20 * 1024 * 1024,
+    },
+    standard: {
+      max_members: 100,
+      max_own_companies: 3,
+      store_max_total_size: 2 * 1024 * 1024 * 1024,
+      store_max_file_size: 20 * 1024 * 1024,
+    },
+    pro: {
+      max_members: 100,
+      max_own_companies: 3,
+      store_max_total_size: 2 * 1024 * 1024 * 1024,
+      store_max_file_size: 20 * 1024 * 1024,
+    },
+  },
   upload: {
     path: 'public/cdn/',
     url: 'http://api.tlifang.com/cdn/',

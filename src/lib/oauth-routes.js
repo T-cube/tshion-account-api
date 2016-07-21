@@ -91,7 +91,7 @@ export function authCodeCheck(req, next) {
       options: 1,
     })
     .then(user => {
-      console.log();
+      user.id = user._id;
       next(null, true, user);
     })
     .catch(e => next(e));
