@@ -18,7 +18,7 @@ import {
   recordValidation
 } from './schema';
 import C from 'lib/constants';
-import { checkUserTypeFunc } from '../utils';
+import { checkUserTypeFunc, checkUserType } from '../utils';
 import { fetchCompanyMemberInfo, mapObjectIdToData, diffObjectId } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
@@ -114,7 +114,7 @@ api.get('/sign/date', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) => {
+api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), ensureFetchSetting, (req, res, next) => {
   let department_id = ObjectId(req.params.department_id);
   let tree = new Structure(req.company.structure);
   let members = tree.getMemberAll(department_id).map(member => member._id);
@@ -170,7 +170,7 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
   .catch(next);
 });
 
-api.put('/record', (req, res, next) => {
+api.put('/record', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(recordSanitization, recordValidation, data);
   let condition = _.pick(data, 'year', 'month');
@@ -313,7 +313,7 @@ api.get('/setting', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/setting', (req, res, next) => {
+api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);

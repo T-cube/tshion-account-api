@@ -76,7 +76,9 @@ app.post('/oauth/authorise', app.oauth.authCodeGrant(function (req, next) {
 app.get('/oauth/authorise', app.oauth.authCodeGrant(function (req, next) {
   next(null);
 }));
-app.all('/oauth/token', app.oauth.grant());
+app.all('/oauth/token', (req, res, next) => {
+  app.oauth.grant()(req, res, next);
+});
 app.use('/oauth/revoke', oauthExtended.revokeToken);
 // app.use('/api', app.oauth.authorise());
 
