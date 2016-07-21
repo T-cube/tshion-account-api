@@ -16,7 +16,11 @@ export default {
       return db.user.findOne({
         _id: token.user_id
       }, {
-        _id: 1, name: 1, email: 1, mobile: 1
+        _id: 1,
+        name: 1,
+        email: 1,
+        mobile: 1,
+        avatar: 1,
       })
       .then(user => {
         token.user = user;
