@@ -198,7 +198,7 @@ api.get('/:project_id/member', (req, res, next) => {
   let members = req.project.members || [];
   let memberIds = members.map(i => i._id);
   let mergedMembers = [];
-  members.each(m => {
+  _.each(members, m => {
     let memberInCompany = _.find(req.company.members, cm => cm._id.equals(m._id));
     if (memberInCompany) {
       mergedMembers.push(_.extend(memberInCompany, m));
