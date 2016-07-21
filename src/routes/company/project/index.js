@@ -197,10 +197,14 @@ api.put('/:project_id/logo/upload', upload({type: 'avatar'}).single('logo'),
 api.get('/:project_id/member', (req, res, next) => {
   let members = req.project.members || [];
   let memberIds = members.map(i => i._id);
-  members = members.map(m => {
-    return _.extend(_.find(req.company.members, cm => cm._id.equals(m._id)), m);
+  let mergedMembers = [];
+  _.each(members, m => {
+    let memberInCompany = _.find(req.company.members, cm => cm._id.equals(m._id));
+    if (memberInCompany) {
+      mergedMembers.push(_.extend(memberInCompany, m));
+    }
   });
-  mapObjectIdToData(memberIds, 'user', 'name,avatar,email,mobile', '', members)
+  mapObjectIdToData(memberIds, 'user', 'name,avatar,email,mobile', '', mergedMembers)
   .then(members => res.json(members))
   .catch(next);
 });

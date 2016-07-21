@@ -28,6 +28,7 @@ const collections = [
   'oauth.accesstoken',
   'oauth.clients',
   'oauth.refreshtoken',
+  'oauth.code',
   'project',
   'project.tags',
   'reminding',
