@@ -232,6 +232,32 @@ INPUT
 }
 ```
 
+### GET /project/:project_id/statistics
+
+项目进度统计
+
+INPUT
+```javascript
+{
+  project: {
+    <status>: <Int>,
+    ...
+  },
+  member: [{
+    assignee: {
+      _id: <ObjectId>,
+      name: <String>,
+    },
+    count: {
+      <status>: <Int>,
+      ...
+    },
+  } ...]
+}
+```
+
+`<status>` 包含 'completed', 'processing', 'overdue', 'total'
+
 ### GET /project/:project_id/activity
 
 ```javascript

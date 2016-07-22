@@ -57,7 +57,7 @@ export default {
     let data = {
       access_token: token,
       client_id: clientId,
-      user_id: user.id,
+      user_id: user.id || user._id,
       expires: expires
     };
     db.oauth.accesstoken.insert(data).
@@ -101,7 +101,7 @@ export default {
     let data = {
       refresh_token: token,
       client_id: clientId,
-      user_id: user._id,
+      user_id: user.id || user._id,
       expires: expires,
     };
     db.oauth.refreshtoken.insert(data).
