@@ -10,6 +10,15 @@ import { generateToken, getEmailName, expire, time } from 'lib/utils';
 
 export default class Account {
 
+  checkExistance(type, account) {
+    return db.user.find({[type]: account}).count()
+    .then(count => {
+      if (count > 0) {
+        throw new ApiError(400, 'account_exists');
+      }
+    });
+  }
+
   getEmailCode() {
     const { codeLength } = config.get('userVerifyCode.email');
     return generateToken(codeLength);

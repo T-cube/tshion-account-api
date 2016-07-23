@@ -221,11 +221,18 @@ api.post('/verify/new', oauthCheck(), (req, res, next) => {
     schemaKeys.push(`${type} as ${oldIdKey}`);
   }
   validate('register', data, schemaKeys);
-  if (binded && data[oldIdKey] != req.user[type]) {
-    throw new ApiError(400, 'invalid_email');
+  if (binded) {
+    if (data[oldIdKey] != req.user[type]) {
+      throw new ApiError(400, 'invalid_email');
+    } else if (data[oldIdKey] == data[newIdKey]) {
+      throw new ApiError(400, 'account_not_changed');
+    }
   }
-  console.log(data[newIdKey]);
-  req.model('account').sendCode(type, data[newIdKey])
+  let newAccount = data[newIdKey];
+  req.model('account').checkExistance(type, newAccount)
+  .then(() => {
+    return req.model('account').sendCode(type, newAccount);
+  })
   .then(() => res.json({}))
   .catch(next);
 });
@@ -242,10 +249,18 @@ api.post('/bind', oauthCheck(), (req, res, next) => {
     schemaKeys.push(`${type} as ${oldIdKey}`);
   }
   validate('register', data, schemaKeys);
-  if (binded && data[oldIdKey] != req.user[type]) {
-    throw new ApiError(400, 'invalid_email');
+  if (binded) {
+    if (data[oldIdKey] != req.user[type]) {
+      throw new ApiError(400, 'invalid_email');
+    } else if (data[oldIdKey] == data[newIdKey]) {
+      throw new ApiError(400, 'account_not_changed');
+    }
   }
-  req.model('account').verifyCode(type, data[newIdKey], data.code)
+  let newAccount = data[newIdKey];
+  req.model('account').checkExistance(type, newAccount)
+  .then(() => {
+    return req.model('account').verifyCode(type, newAccount, data.code);
+  })
   .then(() => {
     console.log('verifyCode OK!!!');
     return db.user.update({

@@ -9,5 +9,7 @@
   "invalid_email_code": "邮箱验证码错误",
   "invalid_password": "密码格式错误",
   "user_exists": "用户已存在",
+  "account_exists": "帐户已存在，请使用该帐户登录",
+  "account_not_changed": "帐户没有变化，请指定其他的帐户",
   "magic horse": "神马"
 }
