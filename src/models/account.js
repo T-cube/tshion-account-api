@@ -88,7 +88,7 @@ export default class Account {
   }
 
   sendCode(type, account) {
-    if (!_.contains[ENUMS.USER_ID_TYPE], account) {
+    if (!_.contains(ENUMS.USER_ID_TYPE, type)) {
       throw new Error('invalid account type');
     }
     if (type == C.USER_ID_TYPE.EMAIL) {
@@ -99,7 +99,7 @@ export default class Account {
   }
 
   verifyCode(type, account, code) {
-    if (!_.contains[ENUMS.USER_ID_TYPE], account) {
+    if (!_.contains(ENUMS.USER_ID_TYPE, type)) {
       throw new Error('invalid account type');
     }
     if (type == C.USER_ID_TYPE.EMAIL) {

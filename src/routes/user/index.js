@@ -10,7 +10,6 @@ import upload from 'lib/upload';
 import { comparePassword, hashPassword, maskEmail, maskMobile } from 'lib/utils';
 
 import { validate } from './schema';
-import { validate as validateAccount } from '../account/schema';
 
 const BASIC_FIELDS = {
   _id: 1,
@@ -128,103 +127,6 @@ api.put('/avatar/upload', upload({type: 'avatar'}).single('avatar'),
     $set: data
   })
   .then(() => res.json(data))
-  .catch(next);
-});
-
-api.post('/change-pass', (req, res, next) => {
-  let data = req.body;
-  console.log(data);
-  let { old_password, new_password } = data;
-  console.log(old_password, new_password);
-  db.user.findOne({
-    _id: req.user._id,
-  }, {
-    password: 1,
-  })
-  .then(user => {
-    console.log(old_password, user.password);
-    console.log('found user');
-    return comparePassword(old_password, user.password);
-  })
-  .then(result => {
-    console.log('compare password', result);
-    if (!result) {
-      throw new ApiError(401, 'bad_password', 'password is not correct');
-    }
-    return hashPassword(new_password);
-  })
-  .then(password => {
-    console.log('hash password', password);
-    return Promise.all([
-      db.user.update({
-        _id: req.user._id,
-      }, {
-        $set: {
-          password: password,
-        }
-      }),
-      // TODO logout current user
-    ]);
-  })
-  .then(() => res.json({}))
-  .catch(next);
-});
-
-api.post('/account/verify', (req, res, next) => {
-  let data = req.body;
-  let type = data.type;
-  validateAccount('register', data, ['type', type]);
-  if (data[type] != req.user[type]) {
-    throw new ApiError(400, 'verify_fail');
-  }
-  res.json({});
-});
-
-api.post('/account/send-code', (req, res, next) => {
-  let data = req.body;
-  let type = data.type;
-  let oldIdKey = 'old_' + type;
-  let newIdKey = 'new_' + type;
-  let schemaKeys = ['type', 'code', `${newIdKey} as ${type}`];
-  let binded = req.user[type] != null;
-  if (!binded) {
-    schemaKeys.push(`${oldIdKey} as ${type}`);
-  }
-  validateAccount('register', data, schemaKeys);
-  if (binded && data[oldIdKey] != req.user[type]) {
-    throw new ApiError(400, 'verify_fail');
-  }
-  req.model('account').sendCode(type, data[newIdKey])
-  .then(() => res.json({}))
-  .catch(next);
-});
-
-api.post('/account/bind-account', (req, res, next) => {
-  let data = req.body;
-  let type = data.type;
-  let oldIdKey = 'old_' + type;
-  let newIdKey = 'new_' + type;
-  let schemaKeys = ['type', 'code', `${newIdKey} as ${type}`];
-  let binded = req.user[type] != null;
-  if (!binded) {
-    schemaKeys.push(`${oldIdKey} as ${type}`);
-  }
-  validateAccount('register', data, schemaKeys);
-  if (binded && data[oldIdKey] != req.user[type]) {
-    throw new ApiError(400, 'verify_fail');
-  }
-  req.model('account').verifyCode(type, data[newIdKey], data.code)
-  .then(() => {
-    return db.user.update({
-      _id: req.user._id,
-    }, {
-      $set: {
-        [type]: data[newIdKey],
-        [type + '_verified']: true,
-      }
-    });
-  })
-  .then(() => res.json({}))
   .catch(next);
 });
 
