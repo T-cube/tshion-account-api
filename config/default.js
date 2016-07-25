@@ -93,6 +93,10 @@ module.exports = {
     },
   },
   vendor: {
+    officeweb365: {
+      iv: '71682864',
+      key: '53546824',
+    },
     qiniu: {
       ACCESS_KEY: 'Tre8EMtc8k5iEg7EmThib_6fGBucIqJYTRRh_Hqx',
       SECRET_KEY: 'U0uoDHEKE3MDEIF3jMoxb7f7G88NIblOd6CZeT_z',
