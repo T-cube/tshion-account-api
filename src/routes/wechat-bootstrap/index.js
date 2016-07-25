@@ -15,7 +15,7 @@ const wechatConfig = {
 
 api.use(express.query());
 
-api.use('/', wechat(wechatConfig, function (req, res) {
+api.get('/', wechat(wechatConfig, function (req, res) {
   let message = req.weixin;
   switch (message.MsgType) {
   case 'event': {
@@ -39,7 +39,7 @@ api.use('/', wechat(wechatConfig, function (req, res) {
 }));
 
 // 创建微信菜单
-api.use('/set-menu', (req, res, next) => {
+api.get('/set-menu', (req, res, next) => {
   wUtil.createMenu({
     'button': [{
       'type':'view',
