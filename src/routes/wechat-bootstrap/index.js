@@ -39,13 +39,13 @@ api.use('/', wechat(wechatConfig, function (req, res) {
 }));
 
 // 创建微信菜单
-// api.use('/set-menu', (req, res, next) => {
-//   wUtil.createMenu({
-//     'button': [{
-//       'type':'view',
-//       'name':'工作台',
-//       'url':'http://m.tlifang.com/oa/company'
-//     }]
-//   });
-//   res.json({});
-// });
+api.use('/set-menu', (req, res, next) => {
+  wUtil.createMenu({
+    'button': [{
+      'type':'view',
+      'name':'工作台',
+      'url':'http://m.tlifang.com/oa/company'
+    }]
+  });
+  res.json({});
+});
