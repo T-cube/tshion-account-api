@@ -7,8 +7,7 @@ import { time, timestamp, comparePassword, hashPassword, generateToken, getEmail
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
-import { sanitizeValidateObject } from 'lib/inspector';
-import { authoriseSanitization, authoriseValidation, validate } from './schema';
+import { validate } from './schema';
 import { randomAvatar } from 'lib/upload';
 import { ValidationError } from 'lib/inspector';
 
@@ -126,7 +125,7 @@ api.post('/send-sms', (req, res, next) => {
 
 api.post('/authorise', oauthCheck(), (req, res, next) => {
   let input = req.body;
-  sanitizeValidateObject(authoriseSanitization, authoriseValidation, input);
+  authorise(authorise, input);
   let password = input.password;
   let _token = null;
 
@@ -159,5 +158,120 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
       auth_check_token: _token,
     });
   })
+  .catch(next);
+});
+
+api.post('/change-pass', oauthCheck(), (req, res, next) => {
+  let data = req.body;
+  console.log(data);
+  let { old_password, new_password } = data;
+  console.log(old_password, new_password);
+  db.user.findOne({
+    _id: req.user._id,
+  }, {
+    password: 1,
+  })
+  .then(user => {
+    console.log(old_password, user.password);
+    console.log('found user');
+    return comparePassword(old_password, user.password);
+  })
+  .then(result => {
+    console.log('compare password', result);
+    if (!result) {
+      throw new ApiError(401, 'bad_password', 'password is not correct');
+    }
+    return hashPassword(new_password);
+  })
+  .then(password => {
+    console.log('hash password', password);
+    return Promise.all([
+      db.user.update({
+        _id: req.user._id,
+      }, {
+        $set: {
+          password: password,
+        }
+      }),
+      // TODO logout current user
+    ]);
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.post('/verify/current', oauthCheck(), (req, res, next) => {
+  let data = req.body;
+  let type = data.type;
+  validate('register', data, ['type', type]);
+  if (data[type] != req.user[type]) {
+    throw new ApiError(400, 'verify_fail');
+  }
+  res.json({});
+});
+
+api.post('/verify/new', oauthCheck(), (req, res, next) => {
+  let data = req.body;
+  let type = data.type;
+  let oldIdKey = 'old_' + type;
+  let newIdKey = 'new_' + type;
+  let schemaKeys = ['type', `${type} as ${newIdKey}`];
+  let binded = req.user[type] != null;
+  if (binded) {
+    schemaKeys.push(`${type} as ${oldIdKey}`);
+  }
+  validate('register', data, schemaKeys);
+  if (binded) {
+    if (data[oldIdKey] != req.user[type]) {
+      throw new ApiError(400, 'invalid_email');
+    } else if (data[oldIdKey] == data[newIdKey]) {
+      throw new ApiError(400, 'account_not_changed');
+    }
+  }
+  let newAccount = data[newIdKey];
+  req.model('account').checkExistance(type, newAccount)
+  .then(() => {
+    return req.model('account').sendCode(type, newAccount);
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.post('/bind', oauthCheck(), (req, res, next) => {
+  console.log('/account/bind OK!!!');
+  let data = req.body;
+  let type = data.type;
+  let oldIdKey = 'old_' + type;
+  let newIdKey = 'new_' + type;
+  let schemaKeys = ['type', 'code', `${type} as ${newIdKey}`];
+  let binded = req.user[type] != null;
+  if (binded) {
+    schemaKeys.push(`${type} as ${oldIdKey}`);
+  }
+  validate('register', data, schemaKeys);
+  if (binded) {
+    if (data[oldIdKey] != req.user[type]) {
+      throw new ApiError(400, 'invalid_email');
+    } else if (data[oldIdKey] == data[newIdKey]) {
+      throw new ApiError(400, 'account_not_changed');
+    }
+  }
+  let newAccount = data[newIdKey];
+  req.model('account').checkExistance(type, newAccount)
+  .then(() => {
+    return req.model('account').verifyCode(type, newAccount, data.code);
+  })
+  .then(() => {
+    console.log('verifyCode OK!!!');
+    return db.user.update({
+      _id: req.user._id,
+    }, {
+      $set: {
+        [type]: data[newIdKey],
+        [type + '_verified']: true,
+      }
+    });
+  })
+  .then(() => res.json({}))
   .catch(next);
 });

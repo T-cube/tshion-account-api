@@ -10,6 +10,15 @@ import { generateToken, getEmailName, expire, time } from 'lib/utils';
 
 export default class Account {
 
+  checkExistance(type, account) {
+    return db.user.find({[type]: account}).count()
+    .then(count => {
+      if (count > 0) {
+        throw new ApiError(400, 'account_exists');
+      }
+    });
+  }
+
   getEmailCode() {
     const { codeLength } = config.get('userVerifyCode.email');
     return generateToken(codeLength);
@@ -88,7 +97,7 @@ export default class Account {
   }
 
   sendCode(type, account) {
-    if (!_.contains[ENUMS.USER_ID_TYPE], account) {
+    if (!_.contains(ENUMS.USER_ID_TYPE, type)) {
       throw new Error('invalid account type');
     }
     if (type == C.USER_ID_TYPE.EMAIL) {
@@ -99,7 +108,7 @@ export default class Account {
   }
 
   verifyCode(type, account, code) {
-    if (!_.contains[ENUMS.USER_ID_TYPE], account) {
+    if (!_.contains(ENUMS.USER_ID_TYPE, type)) {
       throw new Error('invalid account type');
     }
     if (type == C.USER_ID_TYPE.EMAIL) {

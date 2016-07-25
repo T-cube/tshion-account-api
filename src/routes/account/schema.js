@@ -18,14 +18,14 @@ const schema = {
       code: { type: 'string', pattern: /\d{6}/, optional: true, code: 'invalid_sms_code' },
     },
   },
+  authorise: {
+    sanitization: {
+      password: { type: 'string' },
+    },
+    validation: {
+      password: { type: 'string', minLength: 6, maxLength: 20 },
+    },
+  }
 };
 
 export const validate = buildValidator(schema);
-
-export const authoriseSanitization = {
-  password: { type: 'string' },
-};
-
-export const authoriseValidation = {
-  password: { type: 'string', minLength: 6, maxLength: 20 },
-};
