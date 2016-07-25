@@ -1,0 +1,23 @@
+.auth-body {
+  margin-top: 20px;
+  max-width: 500px;
+}
+.auth-logo {
+  text-align: center;
+}
+.site-logo {
+  margin-top: -20px;
+  width: 72px;
+  vertical-align: middle;
+}
+.relation-icon {
+  margin: 20px;
+  font-size: 40px;
+}
+.login-form {
+  margin-top: 20px;
+}
+.error-message {
+  margin: 15px;
+  color: #ef4f4f;
+}

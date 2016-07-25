@@ -135,7 +135,8 @@ api.put('/:item_id/status', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(revokeSanitization, revokeValidation, data);
   _.extend(data, {
-    step: null
+    step: null,
+    revoke_time: new Date(),
   });
   let item_id = ObjectId(req.params.item_id);
   db.approval.item.findOne({

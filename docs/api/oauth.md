@@ -6,9 +6,38 @@ API身份认证
 
 ## OAuth
 
+### GET /oauth/login
+
+第三方向 TLifang 发起授权申请，并获取 code
+
+QUERY_PARAMS:
+```javascript
+{
+  response_type: 'code',
+  client_id: 'tlf-www',
+  redirect_uri: '<redirect_uri>',
+}
+```
+
+RESPONSE:
+`login page`
+
+WHEN user login ok through login page:
+```
+HTTP 302 Redirct:
+<redirect_uri>?code=<code>
+```
+
+ELSE:
+```
+HTTP 302 Redirct:
+/oauth/authorise?code=<http_status_code>&error=<oauth_error>&error_description=<error_description>
+```
+
 ### GET /oauth/authorize
 
 第三方向 TLifang 发起授权申请，并获取 code
+前提条件是已经通过`/oauth/login`登录成功
 
 QUERY_PARAMS:
 ```javascript

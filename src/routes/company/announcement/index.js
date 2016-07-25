@@ -212,6 +212,7 @@ function addActivity(req, action, data) {
 }
 
 function addNotification(req, action, data, to) {
+  console.log(action, data, to);
   to = getNotifyUsers(req, to);
   let info = {
     action: action,

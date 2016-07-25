@@ -18,7 +18,7 @@ import {
   recordValidation
 } from './schema';
 import C from 'lib/constants';
-import { checkUserTypeFunc } from '../utils';
+import { checkUserTypeFunc, checkUserType } from '../utils';
 import { fetchCompanyMemberInfo, mapObjectIdToData, diffObjectId } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
@@ -31,17 +31,19 @@ export default api;
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(signSanitization, signValidation, data);
+  let from_pc = !!req.query.from_pc;
   let now = new Date();
   _.extend(data, {
     date: now
   });
   checkUserLocation(req.company._id, req.user._id).then(isValid => {
-    if (!isValid) {
+    if (!isValid && !from_pc) {
       throw new ApiError(400, null, 'invalid user location');
     }
     return new Attendance(req.attendanceSetting).updateSign({
       data: [data],
       date: now,
+      from_pc
     }, req.user._id, false)
     .then(doc => {
       res.json(doc);
@@ -74,7 +76,16 @@ api.get('/sign/user/:user_id', (req, res, next) => {
     month: month,
     company: req.company._id,
   })
-  .then(doc => res.json(doc))
+  .then(doc => {
+    if (!doc) {
+      doc = {
+        data: [],
+        year,
+        month
+      };
+    }
+    res.json(doc);
+  })
   .catch(next);
 });
 
@@ -103,7 +114,7 @@ api.get('/sign/date', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) => {
+api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), ensureFetchSetting, (req, res, next) => {
   let department_id = ObjectId(req.params.department_id);
   let tree = new Structure(req.company.structure);
   let members = tree.getMemberAll(department_id).map(member => member._id);
@@ -159,7 +170,7 @@ api.get('/sign/department/:department_id', ensureFetchSetting, (req, res, next) 
   .catch(next);
 });
 
-api.put('/record', (req, res, next) => {
+api.put('/record', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(recordSanitization, recordValidation, data);
   let condition = _.pick(data, 'year', 'month');
@@ -302,7 +313,7 @@ api.get('/setting', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/setting', (req, res, next) => {
+api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);

@@ -15,6 +15,7 @@ export let settingSanitization = {
     properties: {
       latitude: { type: 'number' },
       longitude: { type: 'number' },
+      address: { type: 'string', optional: true },
     }
   },
   max_distance: { type: 'int' },

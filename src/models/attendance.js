@@ -12,7 +12,7 @@ export default class Attendance {
   }
 
   updateSign(data, user_id, isPatch) {
-    let { date } = data;
+    let { date, from_pc } = data;
     data = data.data;
     let now = date ? new Date(date) : new Date();
     date = now.getDate();
@@ -32,7 +32,7 @@ export default class Attendance {
     .then(doc => {
       let update;
       if (!doc) {
-        update = this._parseSignData(data, `${year}-${month}-${date}`, doc, isPatch);
+        update = this._parseSignData(data, `${year}-${month}-${date}`, doc, isPatch, from_pc);
         return db.attendance.sign.update({
           user: user_id,
           year: year,
@@ -61,7 +61,7 @@ export default class Attendance {
     });
   }
 
-  _parseSignData(data, date, docExist, isPatch) {
+  _parseSignData(data, date, docExist, isPatch, from_pc) {
     let settings = this.setting;
     let recordType = [];
     data.forEach(item => {
@@ -83,6 +83,7 @@ export default class Attendance {
       };
       data.forEach(item => {
         update[item.type] = item.date;
+        update['from_pc'] = from_pc;
       });
       isPatch && (update.patch = patch);
       recordType.forEach(type => update[type] = true);
@@ -97,6 +98,7 @@ export default class Attendance {
       recordType.forEach(type => update['data.$.' + type] = true);
       data.forEach(item => {
         update['data.$.' + item.type] = item.date;
+        update['data.$.from_pc'] = from_pc;
       });
       if (isPatch) {
         let existPatch = docExist.data[0].patch;

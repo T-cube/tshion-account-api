@@ -1,8 +1,8 @@
 module.exports = {
-  apiUrl: 'http://dev.tlifang.com/',
-  webUrl: 'http://dev.tlifang.com/',
+  apiUrl: 'http://web.tlf.alvin.local/',
+  webUrl: 'http://web.tlf.alvin.local/',
   database: '192.168.1.18/tlf_core',
   upload: {
-    url: 'http://dev.tlifang.com/cdn/',
+    url: 'http://web.tlf.test.local/cdn/',
   },
 };
