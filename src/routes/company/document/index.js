@@ -223,7 +223,7 @@ api.get('/file/:file_id', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/file/:file_id/download', (req, res, next) => {
+api.get('/file/:file_id/token', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   return generateToken(48).then(token => {
     db.document.token.insert({
