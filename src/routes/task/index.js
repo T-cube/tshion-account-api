@@ -76,22 +76,22 @@ api.get('/', (req, res, next) => {
       }
       return fetchUserInfo(list, 'assignee');
     })
-    .then(list => {
-      return db.project.find({
-        _id: {
-          $in: projects
-        }
-      }, {
-        tags: 1
-      })
-      .then(projects => {
-        let tags = _.flatten(projects.map(project => project.tags));
-        list.forEach(task => {
-          task.tags = task.tags && task.tags.map(_id => _.find(tags, tag => tag._id.equals(_id)));
-        });
-        return list;
-      });
-    })
+    // .then(list => {
+    //   return db.project.find({
+    //     _id: {
+    //       $in: projects
+    //     }
+    //   }, {
+    //     tags: 1
+    //   })
+    //   .then(projects => {
+    //     let tags = _.flatten(projects.map(project => project.tags));
+    //     list.forEach(task => {
+    //       task.tags = task.tags && task.tags.map(_id => _.find(tags, tag => tag._id.equals(_id)));
+    //     });
+    //     return list;
+    //   });
+    // })
     .then(list => data.list = list)
   ])
   .then(() => res.json(data))

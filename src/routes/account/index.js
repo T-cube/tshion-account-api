@@ -125,7 +125,7 @@ api.post('/send-sms', (req, res, next) => {
 
 api.post('/authorise', oauthCheck(), (req, res, next) => {
   let input = req.body;
-  authorise(authorise, input);
+  validate('authorise', input);
   let password = input.password;
   let _token = null;
 

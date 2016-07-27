@@ -77,7 +77,7 @@ api.get('/', (req, res, next) => {
     .then(list => {
       _.each(list, task => {
         task.is_following = !!_.find(task.followers, user_id => user_id.equals(req.user._id));
-        task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
+        // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
       });
       data.list = list;
       return fetchCompanyMemberInfo(req.company.members, data.list, 'assignee');
@@ -120,7 +120,7 @@ api.get('/:_task_id', (req, res, next) => {
     if (!task) {
       throw new ApiError(404, null, 'task not found!');
     }
-    task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
+    // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
     return fetchCompanyMemberInfo(req.company.members, task, 'creator', 'assignee');
   })
   .then(task => res.json(task))

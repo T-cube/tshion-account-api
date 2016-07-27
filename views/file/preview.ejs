@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title><%= file.name %> - 文件预览</title>
+    <link href="/cdn/preview/css/preview.css" rel="stylesheet">
+  </head>
+  <body>
+    <header class="oa-header">
+      <span class="logo"><img src="/cdn/common/img/logo.png" /></span>
+      <h1><i>文件预览：</i><%= file.name %></h1>
+      <span class="buttons">
+        <button class="btn" onclick="Doc.download('<%= downloadUrl %>')">下载</button>
+        <%# <button class="btn" onclick="Doc.close()">关闭</button>%>
+      </span>
+    </header>
+    <div id="previewer">
+      <iframe id="doc-preview-frame" src="<%= previewUrl %>"></iframe>
+    </div>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+    <script src="/cdn/preview/js/preview.js"></script>
+  </body>
+</html>
