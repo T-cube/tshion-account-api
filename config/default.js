@@ -1,6 +1,6 @@
 module.exports = {
-  apiUrl: 'http://tlifang.com/',
-  webUrl: 'http://tlifang.com/',
+  apiUrl: 'https://tlifang.com/',
+  webUrl: 'https://tlifang.com/',
   mobileUrl: 'http://m.tlifang.com/',
   server: {
     //host: '127.0.0.1',
@@ -94,8 +94,11 @@ module.exports = {
   },
   vendor: {
     officeweb365: {
-      iv: '71682864',
-      key: '53546824',
+      siteId: '10269',
+      encodeUrl: true,
+      cipherIv: '71682864',
+      cipherKey: '53546824',
+      deleteAfterView: true,
     },
     qiniu: {
       ACCESS_KEY: 'Tre8EMtc8k5iEg7EmThib_6fGBucIqJYTRRh_Hqx',

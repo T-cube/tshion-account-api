@@ -24,6 +24,7 @@ let routes = [
   'account',
   'company',
   'download',
+  'file',
   'notification',
   'public',
   'relation',
