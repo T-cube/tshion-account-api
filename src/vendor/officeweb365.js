@@ -39,7 +39,6 @@ export class OfficeWeb365 {
       ssl: options.enableSSL ? 1 : undefined,
       del: this.config.deleteAfterView ? 1 : undefined,
     };
-    console.log(fileUrl);
     let protocol = options.enableSSL ? 'https' : 'http';
     let previewUrl = protocol + '://ow365.cn/?' + qs.stringify(params);
     return previewUrl;

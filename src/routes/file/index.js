@@ -16,8 +16,10 @@ function getFileInfo(fileId, token) {
     token: token,
   })
   .then(doc => {
-    if (!doc || doc.tokenExpires < timestamp()) {
-      throw new ApiError(401);
+    if (!doc) {
+      throw new ApiError(403);
+    } else if (doc.expires < timestamp()) {
+      throw new ApiError(401, 'token_expired');
     }
     return db.document.file.findOne({
       _id: fileId,
@@ -49,8 +51,8 @@ api.get('/download/:file_id/token/:token', (req, res, next) => {
         } else {
           filename = encodeURIComponent(filename);
         }
-        res.set('Content-disposition', 'attachment; filename=' + filename);
-        res.set('Content-type', fileInfo.mimetype);
+        res.set('Content-Disposition', 'attachment; filename=' + filename);
+        res.set('Content-Type', fileInfo.mimetype);
         fs.createReadStream(fileInfo.path).pipe(res);
       });
     } else if (fileInfo.content) {
@@ -70,9 +72,9 @@ api.get('/preview/:file_id/token/:token', (req, res, next) => {
     const apiUrl = config.get('apiUrl');
     let data = {
       file: fileInfo,
+      downloadUrl: `${apiUrl}api/file/download/${fileId}/token/${token}`,
       previewUrl: `${apiUrl}api/file/preview/doc/${fileId}/token/${token}`,
     };
-    console.log(fileInfo);
     res.render('file/preview', data);
   })
   .catch(next);
@@ -89,8 +91,8 @@ api.get('/preview/doc/:file_id/token/:token', (req, res, next) => {
       enableSSL: /^https/.test(apiUrl),
     };
     let cryptedUrl = req.model('ow365').getPreviewUrl(downloadUrl, options);
-    res.send(cryptedUrl);
-    // res.redirect(cryptedUrl);
+    // res.send(cryptedUrl);
+    res.redirect(cryptedUrl);
   })
   .catch(next);
 });
