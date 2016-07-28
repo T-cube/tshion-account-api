@@ -33,7 +33,7 @@ const validationCustom = {
     if (!_.isArray(schema.$enum) || !schema.$enum.length) {
       return;
     }
-    if (-1 == schema.$enum.indexOf(candidate)) {
+    if (-1 == schema.$enum.indexOf(candidate) && true !== schema.optional) {
       this.report('invalid value: ' + candidate);
     }
   },
