@@ -7,34 +7,35 @@ let constants = {
 
   ACTIVITY_ACTION: {
     // 常规操作
-    ADD: 'add',            // 添加
-    REMOVE: 'remove',      // 移除
-    CREATE: 'create',      // 创建
-    UPDATE: 'update',      // 更新（字段）
-    DELETE: 'delete',      // 删除
+    ADD: 'add',               // 添加
+    REMOVE: 'remove',         // 移除
+    CREATE: 'create',         // 创建
+    UPDATE: 'update',         // 更新（字段）
+    DELETE: 'delete',         // 删除
     // 管理操作
-    TRANSFER: 'tansfer',   // 转让
+    TRANSFER: 'tansfer',      // 转让
     // 邀请、审批
-    ACCEPT: 'accept',      // 接受
-    APPROVE: 'approve',    // 通过
-    REJECT: 'reject',      // 拒绝
-    REVOKE: 'revoke',      // 撤回
-    SUBMIT: 'submit',      // 提交
-    COPY: 'copy',          // 抄送
-    CANCEL: 'cancel',      // 取消
+    ACCEPT: 'accept',         // 接受
+    APPROVE: 'approve',       // 通过
+    REJECT: 'reject',         // 拒绝
+    REVOKE: 'revoke',         // 撤回
+    SUBMIT: 'submit',         // 提交
+    COPY: 'copy',             // 抄送
+    CANCEL: 'cancel',         // 取消
     // 任务
-    COMPLETE: 'complete',  // 关注
-    REOPEN: 'reopen',      // 取消关注
+    COMPLETE: 'complete',     // 关注
+    REOPEN: 'reopen',         // 取消关注
     // 关注
-    FOLLOW: 'follow',      // 关注
-    UNFOLLOW: 'unfollow',  // 取消关注
+    FOLLOW: 'follow',         // 关注
+    UNFOLLOW: 'unfollow',     // 取消关注
     // 文件操作
-    RENAME: 'rename',      // 重命名
-    UPLOAD: 'upload',      // 上传
+    RENAME: 'rename',         // 重命名
+    UPLOAD: 'upload',         // 上传
 
     SYSTEM_SET: 'system.set', // 提醒
 
-    SIGN: 'sign',          // 签到
+    SIGN_IN: 'sign.in',       // 签到
+    SIGN_OUT: 'sign.out',     // 签到
     SIGN_AUDIT: 'sign.audit', // 补签
 
     RELEASE: 'release',   // 发布
@@ -111,6 +112,7 @@ let constants = {
     APPROVAL_ITEM: 'approval.item',
     APPROVAL_TEMPLATE: 'approval.template',
     ATTENDANCE: 'attendance',
+    ATTENDANCE_SIGN_DATA: 'attendance.sign.data',
     COMPANY: 'company',
     COMPANY_MEMBER: 'company.member',
     COMPANY_DIR: 'company.dir',

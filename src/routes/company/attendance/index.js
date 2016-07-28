@@ -46,14 +46,16 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
       from_pc
     }, req.user._id, false)
     .then(doc => {
-      res.json(doc);
-      return addActivity(req, C.ACTIVITY_ACTION.SIGN, {
-        field: {
-          type: data.type,
-          date: now,
-        }
-      });
-    });
+      let info = {
+        action: data.type == C.ATTENDANCE_SIGN_TYPE.SING_IN ?
+          C.ACTIVITY_ACTION.SIGN_IN :
+          C.ACTIVITY_ACTION.SING_OUT,
+        target_type: C.OBJECT_TYPE.ATTENDANCE_SIGN_DATA,
+        creator: req.user._id,
+      };
+      return req.model('activity').insert(info);
+    })
+    .then(() => res.json({}));
   })
   .catch(next);
 });

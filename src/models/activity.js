@@ -30,7 +30,7 @@ export default class Activity {
       last_id = ObjectId(last_id);
       query = _.extend({}, query, {
         _id: {$lt: last_id},
-      })
+      });
     }
     return db.activity.find(query).sort({_id: -1}).limit(limit)
     .then(list => {
@@ -43,7 +43,7 @@ export default class Activity {
         ['document.file', 'name', 'document_file'],
         ['approval.template', 'title', 'approval_template'],
         ['schedule', 'title', 'schedule'],
-        ['announcement', 'title,is_published', 'announcement'],
+        ['announcement', 'company_id,type,title,is_published', 'announcement'],
       ]);
     });
   }
