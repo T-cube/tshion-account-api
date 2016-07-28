@@ -16,4 +16,5 @@ export let validation = {
 	schedule: { $objectId: 1, optional: true },
 	field: { type: 'object', optional: true },
 	date_create: { type: 'date' },
+  sign_record: { type: 'object', optional: true },
 };
