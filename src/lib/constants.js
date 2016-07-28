@@ -33,6 +33,7 @@ let constants = {
     UPLOAD: 'upload',         // 上传
 
     SYSTEM_SET: 'system.set', // 提醒
+    SCHEDULE_REMIND: 'schedule.remind',      // 日程提醒
 
     SIGN_IN: 'sign.in',       // 签到
     SIGN_OUT: 'sign.out',     // 签到

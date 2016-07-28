@@ -97,7 +97,6 @@ api.put('/:schedule_id', (req, res, next) => {
   sanitizeValidateObject(sanitization, validation, data);
   let scheduleModel = new ScheduleModel(db);
   let cron_rule = scheduleModel.cronRule(data);
-  console.log(cron_rule);
   _.extend(data, {
     date_update: new Date(),
   });

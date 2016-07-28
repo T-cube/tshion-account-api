@@ -200,9 +200,9 @@ export default class Schedule {
     this.notification.send({
       from: 0,
       to: schedule.creator,
-      action: C.ACTIVITY_ACTION.SYSTEM_SET,
-      target_type: C.OBJECT_TYPE.REMINDING,
-      reminding: schedule._id,
+      action: C.ACTIVITY_ACTION.SCHEDULE_REMIND,
+      target_type: C.OBJECT_TYPE.SCHEDULE,
+      schedule: schedule._id,
     });
     wUtil.getUserWechat(schedule.creator).then(wechat => {
       if (!wechat) {
