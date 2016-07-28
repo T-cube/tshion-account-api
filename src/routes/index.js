@@ -33,6 +33,7 @@ let routes = [
   'tools',
   'user',
   'wechat-bootstrap',
+  'update-db'
 ];
 
 _.each(routes, route => {

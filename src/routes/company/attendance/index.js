@@ -19,7 +19,13 @@ import {
 } from './schema';
 import C from 'lib/constants';
 import { checkUserTypeFunc, checkUserType } from '../utils';
-import { fetchCompanyMemberInfo, mapObjectIdToData, diffObjectId } from 'lib/utils';
+import {
+  fetchCompanyMemberInfo,
+  mapObjectIdToData,
+  diffObjectId,
+  getClientIp,
+  indexObjectId,
+} from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
@@ -29,15 +35,16 @@ let api = express.Router();
 export default api;
 
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
-  let data = req.body;
-  sanitizeValidateObject(signSanitization, signValidation, data);
-  let from_pc = !!req.query.from_pc;
-  let now = new Date();
-  _.extend(data, {
-    date: now
-  });
   checkUserLocation(req.company._id, req.user._id).then(isValid => {
+    let data = req.body;
+    sanitizeValidateObject(signSanitization, signValidation, data);
+    let from_pc = !!req.query.from_pc && getClientIp(req);
+    let now = new Date();
+    _.extend(data, {
+      date: now
+    });
     if (!isValid && !from_pc) {
+      console.log('user location invalid, user:', req.user);
       throw new ApiError(400, null, 'invalid user location');
     }
     return new Attendance(req.attendanceSetting).updateSign({
@@ -45,13 +52,14 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
       date: now,
       from_pc
     }, req.user._id, false)
-    .then(doc => {
+    .then(record => {
       let info = {
         action: data.type == C.ATTENDANCE_SIGN_TYPE.SING_IN ?
           C.ACTIVITY_ACTION.SIGN_IN :
-          C.ACTIVITY_ACTION.SING_OUT,
+          C.ACTIVITY_ACTION.SIGN_OUT,
         target_type: C.OBJECT_TYPE.ATTENDANCE_SIGN_DATA,
         creator: req.user._id,
+        sign_record: record[data.type]
       };
       return req.model('activity').insert(info);
     })
@@ -134,7 +142,7 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
   })
   .then(record => {
     if (record) {
-      return record.data;
+      return record.data.filter(item => indexObjectId(members, item.user) > -1);
     }
     return db.attendance.sign.find({
       user: {
