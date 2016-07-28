@@ -336,14 +336,30 @@ api.put('/:project_id/archived', (req, res, next) => {
   let { archived } = req.body;
   archived = !!archived;
   db.project.update({
-    _id: ObjectId(req.params.project_id),
+    _id: req.project._id,
     company_id: req.company._id,
   }, {
     $set: {
       is_archived: archived
     }
   })
-  .then(doc => res.json(doc))
+  .then(() => {
+    res.json({});
+    let update = archived ? {
+      $set: {
+        project_archived: true
+      }
+    } : {
+      $unset: {
+        project_archived: 1
+      }
+    };
+    return db.task.update({
+      project_id: req.project._id,
+    }, update, {
+      multi: true
+    });
+  })
   .catch(next);
 });
 

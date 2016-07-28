@@ -20,7 +20,11 @@ api.get('/', (req, res, next) => {
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
     ? pagesize
     : config.get('view.taskListNum');
-  let condition = {};
+  let condition = {
+    project_archived: {
+      $ne: true
+    }
+  };
   if (req.company) {
     condition.company_id = req.company._id;
   }

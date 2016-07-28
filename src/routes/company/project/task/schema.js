@@ -6,8 +6,8 @@ export let sanitization = {
   title: { type: 'string' },              // 任务标题
   description: { type: 'string', optional: true },        // 任务详情
   assignee: { $objectId: 1, optional: true },             // 执行人
-  date_start: { type: 'date', optional: true },// 开始时间（optional）
-  date_due: { type: 'date', optional: true },  // 截止时间（optional）
+  date_start: { type: ['date', 'null'], optional: true },// 开始时间（optional）
+  date_due: { type: ['date', 'null'], optional: true },  // 截止时间（optional）
   priority: { type: 'int', optional: true },                // 优先级别
   tags: {
     type: 'array',
@@ -24,8 +24,8 @@ export let validation = {
   title: { type: 'string' },
   description: { type: 'string', optional: true },
   assignee: { $objectId: 1, optional: true },
-  date_start: { type: 'date', optional: true },
-  date_due: { type: 'date', optional: true },
+  date_start: { type: ['date', 'null'], optional: true },
+  date_due: { type: ['date', 'null'], optional: true },
   priority: { $enum: ENUMS.TASK_PRIORITY, optional: true },
   tags: {
     type: 'array',

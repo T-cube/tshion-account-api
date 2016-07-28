@@ -8,7 +8,7 @@ export let validation = {
   company: { $objectId: 1, optional: true },
   project: { $objectId: 1, optional: true },
   task: { $objectId: 1, optional: true },
-  reminding: { $objectId: 1, optional: true },
+  schedule: { $objectId: 1, optional: true },
   user: { $objectId: 1, optional: true },
   request: { $objectId: 1, optional: true },
 	approval_item: { $objectId: 1, optional: true },
@@ -17,4 +17,5 @@ export let validation = {
   field: { type: 'object', optional: true },
 	is_read: { type: 'boolean' },
 	date_create: { type: 'date' },
+  remind_time: { type: 'date', optional: true }
 };
