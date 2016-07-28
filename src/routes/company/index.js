@@ -51,7 +51,6 @@ api.post('/', (req, res, next) => {
     name: 1, email: 1, mobile: 1, birthdate: 1, sex: 1,
   })
   .then(member => {
-    console.log(member);
     // compose default data structure
     let position_id = ObjectId();
     _.extend(member, {
@@ -79,7 +78,6 @@ api.post('/', (req, res, next) => {
       projects: [],
       date_create: time(),
     });
-    // add company to user
     return db.company.insert(data);
   })
   .then(company => {
@@ -89,6 +87,7 @@ api.post('/', (req, res, next) => {
       target_type: C.OBJECT_TYPE.COMPANY,
       company: company._id
     });
+    // add company to user
     return db.user.update({
       _id: req.user._id
     }, {

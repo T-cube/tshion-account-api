@@ -103,7 +103,9 @@ export function maskEmail(email) {
   if (!result) {
     return '***';
   }
-  return result[1].substr(0,3) + '****' + result[2];
+  let str = result[1];
+  let len = str.length > 2 ? 2 : str.length - 1;
+  return str.substr(0, len) + '****' + result[2];
 }
 
 export function maskMobile(mobile) {
