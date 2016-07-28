@@ -51,7 +51,7 @@ export default class Schedule {
       })
       .then(schedules => {
         return Promise.all(schedules.map(schedule => {
-          this.sentMessage(schedule);
+          this.sentMessage(schedule, time);
           return this.updateReminding(schedule);
         }));
       });
@@ -195,7 +195,7 @@ export default class Schedule {
     return new Date(newDatetime);
   }
 
-  sentMessage(schedule) {
+  sentMessage(schedule, remind_time) {
     console.log('sendMessage');
     this.notification.send({
       from: 0,
@@ -203,6 +203,7 @@ export default class Schedule {
       action: C.ACTIVITY_ACTION.SCHEDULE_REMIND,
       target_type: C.OBJECT_TYPE.SCHEDULE,
       schedule: schedule._id,
+      remind_time,
     });
     wUtil.getUserWechat(schedule.creator).then(wechat => {
       if (!wechat) {

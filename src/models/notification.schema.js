@@ -17,4 +17,5 @@ export let validation = {
   field: { type: 'object', optional: true },
 	is_read: { type: 'boolean' },
 	date_create: { type: 'date' },
+  remind_time: { type: 'date', optional: true }
 };
