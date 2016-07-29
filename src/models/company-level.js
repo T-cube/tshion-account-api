@@ -106,30 +106,32 @@ export default class CompanyLevel {
       return Promise.resolve(true);
     }
     return this.getLevelInfo().then(info => {
+      if (target_type == 'company') {
+        return db.company.level.update({
+          _id: this.companyId,
+        }, {
+          $inc: {
+            'file.used_size': size,
+            'file.company.size': size
+          }
+        });
+      }
+      if (!target_type || !target_id) {
+        throw new ApiError('missing target_type or target_id');
+      }
 
-    });
-    if (target_type == 'company') {
+      if (info.file[target_type]) {
+        // if ()
+      }
       return db.company.level.update({
         _id: this.companyId,
+        [`file.${target_type}._id`]: ObjectId(target_id)
       }, {
         $inc: {
           'file.used_size': size,
-          'file.company.size': size
+          [`file.${target_type}.$.size`]: size
         }
       });
-    }
-    if (!target_type || !target_id) {
-      throw new ApiError('missing target_type or target_id');
-    }
-
-    return db.company.level.update({
-      _id: this.companyId,
-      [`file.${target_type}._id`]: ObjectId(target_id)
-    }, {
-      $inc: {
-        'file.used_size': size,
-        [`file.${target_type}.$.size`]: size
-      }
     });
   }
 
