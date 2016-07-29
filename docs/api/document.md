@@ -192,3 +192,25 @@ INPUT
   target_dir: <ObjectId>,
 }
 ```
+
+### GET /document/used-size
+
+获取公司和项目已使用的容量
+
+OUTPUT:
+```javascript
+{
+  usedSize: <Number>
+}
+```
+
+### GET /document/can-create
+
+获取公司是否可以上传文件
+
+OUTPUT:
+```javascript
+{
+  canCreate: <Boolean>
+}
+```

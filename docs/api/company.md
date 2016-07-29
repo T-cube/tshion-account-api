@@ -258,6 +258,17 @@ INPUT:
 }
 ```
 
+### PUT /company/:company_id/member/can-add
+
+公司是否可以添加成员
+
+OUTPUT:
+```javascript
+{
+  canAddmement: <Boolean>
+}
+```
+
 ### DELETE /company/:company_id/member/:member_id
 
 删除公司成员

@@ -434,6 +434,24 @@ api.put('/move', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/can-create', (req, res, next) => {
+  let companyLevel = new CompanyLevel(req.company);
+  return companyLevel.canUpload(0).then(info => {
+    res.json({
+      canCreate: info.ok
+    });
+  })
+  .catch(next);
+});
+
+api.get('/used-size', (req, res, next) => {
+  let companyLevel = new CompanyLevel(req.company);
+  return companyLevel.getUsedSize(req.document.posKey == 'company_id' ? 'knowledge' : 'project', req.document.posKey).then(usedSize => {
+    res.json({usedSize});
+  })
+  .catch(next);
+});
+
 function checkNameValid(req, name, parent_dir) {
   return db.document.dir.findOne({
     _id: parent_dir,

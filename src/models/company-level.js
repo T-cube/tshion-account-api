@@ -166,6 +166,26 @@ export default class CompanyLevel {
     });
   }
 
+  getUsedSize(target_type, target_id) {
+    if (!this.companyId) {
+      return this._rejectWhenMissingCompany();
+    }
+    return this.getLevelInfo().then(info => {
+      if (target_type == 'knowledge') {
+        return info.file.size || 0;
+      }
+      if (target_type == 'project') {
+        let existItems = info.file[target_type].map(item => item._id);
+        let index = indexObjectId(existItems, target_id);
+        if (index > -1) {
+          return info.file[target_type][index].size;
+        } else {
+          return 0;
+        }
+      }
+    });
+  }
+
   getLevel() {
     if (!this.company) {
       throw new ApiError(500, null, 'missing company');
