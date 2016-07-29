@@ -1,19 +1,23 @@
+#!/usr/bin/env node
+
+import '../bootstrap';
+import program from 'commander';
+import db from 'lib/database';
 import _ from 'underscore';
-import express from 'express';
-import { ObjectId } from 'mongodb';
-import Promise from 'bluebird';
 import moment from 'moment';
 
-import db from 'lib/database';
+program
+  .option('-o, --update', 'update user attendance sign')
+  .parse(process.argv);
 
-let api = express.Router();
-export default api;
+console.log('database updating');
 
-// update --------------------------
-api.get('/attendance-sign', (req, res, next) => {
-  if (req.query.code !== 'ymcococo') {
-    return res.json({ok:0});
-  }
+if (!program.update) {
+  program.outputHelp();
+}
+
+if (program.update) {
+
   db.attendance.sign.find({})
   .then(results => {
     return Promise.all(results.map(item => {
@@ -22,6 +26,9 @@ api.get('/attendance-sign', (req, res, next) => {
         let newRecord = {
           date: record.date
         };
+        if (moment(record.sign_in).isValid() || moment(record.sign_out).isValid()) {
+          return null;
+        }
         if (record.sign_in) {
           newRecord.sign_in = {
             time: record.sign_in,
@@ -49,6 +56,6 @@ api.get('/attendance-sign', (req, res, next) => {
       });
     }));
   })
-  .then(() => res.json({ok:1}))
-  .catch(next);
-});
+  .then(() => process.exit())
+  .catch(e => console.error(e));
+}
