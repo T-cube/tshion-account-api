@@ -18,6 +18,17 @@ const sanitizationCustom = {
     this.report();
     return [];
   },
+  date: function (schema, post) {
+    if (_.isNull(post)) {
+      return post;
+    } else if (moment(post).isValid()) {
+      this.report();
+      return new Date(post);
+    } else {
+      this.report();
+      return null;
+    }
+  },
 };
 
 const validationCustom = {
