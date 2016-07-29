@@ -107,6 +107,16 @@ let constants = {
     DATE: 'date',
   },
 
+  LEVEL_ERROR: {
+    OVER_STORE_MAX_FILE_SIZE: 1,
+    OVER_STORE_MAX_TOTAL_SIZE: 2,
+  },
+
+  NOTICE: {
+    COMMON: 'common',
+    TASK_EXPIRE: 'task.expire',
+  },
+
   OBJECT_TYPE: {
     FIELD: 'field',
     ANNOUNCEMENT: 'announcement',
@@ -187,11 +197,6 @@ let constants = {
   USER_ID_TYPE: {
     EMAIL: 'email',
     MOBILE: 'mobile',
-  },
-
-  NOTICE: {
-    COMMON: 'common',
-    TASK_EXPIRE: 'task.expire',
   },
 
 };

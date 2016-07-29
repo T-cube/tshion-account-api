@@ -19,6 +19,7 @@ const collections = [
   'attendance.record',
   'auth_check_token',
   'company',
+  'company.level',
   'discussion',
   'discussion.comment',
   'document.dir',

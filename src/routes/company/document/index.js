@@ -21,6 +21,7 @@ import upload from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp, indexObjectId } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
+import CompanyLevel from 'models/company-level';
 
 let api = express.Router();
 export default api;
@@ -28,22 +29,11 @@ export default api;
 const max_dir_path_length = 5;
 
 api.use((req, res, next) => {
-  let max_file_size = 0;
-  let max_total_size = 0;
   let posKey = req.project ? 'project_id' : 'company_id';
   let posVal = req.project ? req.project._id : req.company._id;
-  if (req.project) {
-    max_file_size = config.get('upload.document.project.max_file_size');
-    max_total_size = config.get('upload.document.project.max_total_size');
-  } else {
-    max_file_size = config.get('upload.document.company.max_file_size');
-    max_total_size = config.get('upload.document.company.max_total_size');
-  }
   req.document = {
     posKey: posKey,
-    posVal: posVal,
-    max_file_size: max_file_size,
-    max_total_size: max_total_size,
+    posVal: posVal
   };
   next();
 });
@@ -319,9 +309,7 @@ upload({type: 'attachment'}).array('document'),
   })
   .then(() => createFile(req, data, dir_id))
   .then(doc => {
-    doc.forEach(item => {
-      delete item.path;
-    });
+    doc.forEach(item => delete item.path);
     return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
@@ -491,18 +479,6 @@ function checkDirExist(req, dir_id) {
   });
 }
 
-function getTotalSize(req) {
-  return db.document.dir.count({
-    parent_dir: null,
-    [req.document.posKey]: req.document.posVal,
-  }, {
-    size: 1
-  })
-  .then(doc => {
-    return doc && doc.size ? doc.size : 0;
-  });
-}
-
 function getParentPaths(dir_id, path) {
   if (dir_id == null) {
     return Promise.resolve([]);
@@ -525,77 +501,64 @@ function getParentPaths(dir_id, path) {
   });
 }
 
-function getFullPath(dir_id, path) {
-  if (dir_id == null) {
-    return Promise.resolve([]);
-  }
-  path = path || [];
-  return db.document.dir.findOne({
-    _id: dir_id
-  }, {
-    name: 1,
-    parent_dir: 1
-  })
-  .then(doc => {
-    if (doc) {
-      path.unshift(doc);
-      if (doc.parent_dir != null) {
-        return getFullPath(doc.parent_dir, path);
-      }
-    }
-    return path;
-  });
-}
-
 function createFile(req, data, dir_id) {
-  let total_size = 0;
   if (!data.length) {
     throw new ApiError(400, null, 'upload error, missing data');
   }
+  let total_size = 0;
+  let sizes = data.map(item => parseFloat(item.size));
   data.forEach(item => {
-    if (item.size > req.document.max_file_size) {
-      throw new ApiError(400, null, '文件大小超过上限');
-    }
     total_size += parseFloat(item.size);
   });
-  getTotalSize(req).then(curSize => {
-    if ((curSize + total_size) > req.document.max_total_size) {
-      throw new ApiError(400, null, '您的文件存储空间不足');
+  let companyLevel = new CompanyLevel(req.company);
+  return companyLevel.canUpload(sizes).then(info => {
+    if (!info.ok) {
+      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
+        throw new ApiError(400, null, '您的文件存储空间不足');
+      }
+      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
+        throw new ApiError(400, null, '文件大小超过上限');
+      }
+      throw new ApiError(400);
     }
-  });
-
-  return checkDirExist(req, dir_id)
-  .then(() => {
-    return getFileNameListOfDir(dir_id)
-    .then(filenamelist => {
-      data.forEach((item, i) => {
-        data[i].name = getUniqFileName(filenamelist, data[i].name);
-        filenamelist.push(data[i].name);
-      });
-    })
+    return checkDirExist(req, dir_id)
     .then(() => {
-      return db.document.file.insert(data)
-      .then(doc => {
-        return Promise.all([
-          db.document.dir.update({
-            _id: dir_id,
-          }, {
-            $push: {
-              files: {
-                $each: doc.map(item => item._id)
+      return getFileNameListOfDir(dir_id)
+      .then(filenamelist => {
+        data.forEach((item, i) => {
+          data[i].name = getUniqFileName(filenamelist, data[i].name);
+          filenamelist.push(data[i].name);
+        });
+      })
+      .then(() => {
+        return db.document.file.insert(data)
+        .then(doc => {
+          return Promise.all([
+            db.document.dir.update({
+              _id: dir_id,
+            }, {
+              $push: {
+                files: {
+                  $each: doc.map(item => item._id)
+                }
               }
-            }
-          }),
-          db.document.dir.update({
-            [req.document.posKey]: req.document.posVal,
-            parent_dir: null
-          }, {
-            $inc: {
-              total_size: total_size
-            }
-          })
-        ])
-        .then(() => doc);
+            }),
+            db.document.dir.update({
+              [req.document.posKey]: req.document.posVal,
+              parent_dir: null
+            }, {
+              $inc: {
+                total_size: total_size
+              }
+            })
+          ])
+          .then(() => companyLevel.updateUpload({
+            size: total_size,
+            target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
+            target_id: req.document.posVal,
+          }))
+          .then(() => doc);
+        });
       });
     });
   });
@@ -634,10 +597,10 @@ function deleteDirs(req, dirs) {
 }
 
 function deleteFiles(req, files) {
-  let incSize = 0;
   if (!files || !files.length) {
     return null;
   }
+  let incSize = 0;
   return Promise.all(files.map(file_id => {
     return db.document.file.findOne({
       _id: file_id
@@ -665,6 +628,14 @@ function deleteFiles(req, files) {
             }
           }),
         ]);
+      })
+      .then(() => {
+        let companyLevel = new CompanyLevel(req.company);
+        return companyLevel.updateUpload({
+          size: incSize,
+          target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
+          target_id: req.document.posVal,
+        });
       })
       .then(() => {
         fileInfo.path && fs.unlink(fileInfo.path, (err) => {

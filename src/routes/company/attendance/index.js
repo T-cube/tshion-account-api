@@ -62,9 +62,9 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
         sign_record: record[data.type]
       };
       return req.model('activity').insert(info);
-    })
-    .then(() => res.json({}));
+    });
   })
+  .then(() => res.json({}))
   .catch(next);
 });
 
