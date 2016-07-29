@@ -309,9 +309,7 @@ upload({type: 'attachment'}).array('document'),
   })
   .then(() => createFile(req, data, dir_id))
   .then(doc => {
-    doc.forEach(item => {
-      delete item.path;
-    });
+    doc.forEach(item => delete item.path);
     return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
@@ -481,18 +479,6 @@ function checkDirExist(req, dir_id) {
   });
 }
 
-function getTotalSize(req) {
-  return db.document.dir.count({
-    parent_dir: null,
-    [req.document.posKey]: req.document.posVal,
-  }, {
-    size: 1
-  })
-  .then(doc => {
-    return doc && doc.size ? doc.size : 0;
-  });
-}
-
 function getParentPaths(dir_id, path) {
   if (dir_id == null) {
     return Promise.resolve([]);
@@ -509,28 +495,6 @@ function getParentPaths(dir_id, path) {
       path.unshift(doc._id);
       if (doc.parent_dir != null) {
         return getParentPaths(doc.parent_dir, path);
-      }
-    }
-    return path;
-  });
-}
-
-function getFullPath(dir_id, path) {
-  if (dir_id == null) {
-    return Promise.resolve([]);
-  }
-  path = path || [];
-  return db.document.dir.findOne({
-    _id: dir_id
-  }, {
-    name: 1,
-    parent_dir: 1
-  })
-  .then(doc => {
-    if (doc) {
-      path.unshift(doc);
-      if (doc.parent_dir != null) {
-        return getFullPath(doc.parent_dir, path);
       }
     }
     return path;
@@ -590,7 +554,7 @@ function createFile(req, data, dir_id) {
           ])
           .then(() => companyLevel.updateUpload({
             size: total_size,
-            target_type: req.document.posKey,
+            target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
             target_id: req.document.posVal,
           }))
           .then(() => doc);
@@ -633,10 +597,10 @@ function deleteDirs(req, dirs) {
 }
 
 function deleteFiles(req, files) {
-  let incSize = 0;
   if (!files || !files.length) {
     return null;
   }
+  let incSize = 0;
   return Promise.all(files.map(file_id => {
     return db.document.file.findOne({
       _id: file_id
@@ -664,6 +628,14 @@ function deleteFiles(req, files) {
             }
           }),
         ]);
+      })
+      .then(() => {
+        let companyLevel = new CompanyLevel(req.company);
+        return companyLevel.updateUpload({
+          size: incSize,
+          target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
+          target_id: req.document.posVal,
+        });
       })
       .then(() => {
         fileInfo.path && fs.unlink(fileInfo.path, (err) => {

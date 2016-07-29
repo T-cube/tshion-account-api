@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
 import db from 'lib/database';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
+import { indexObjectId } from 'lib/utils';
 
 export default class CompanyLevel {
 
@@ -50,8 +51,8 @@ export default class CompanyLevel {
       }
 
       return this.getLevelInfo().then(info => {
-        let used_size = info.file.used_size;
-        if ((used_size + total_size) > store_max_total_size) {
+        let size = info.file.size;
+        if ((size + total_size) > store_max_total_size) {
           return {
             ok: 0,
             code: C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE,
@@ -82,8 +83,8 @@ export default class CompanyLevel {
       info = {
         _id: this.company._id,
         file: {
-          used_size: 0,
-          company: {
+          size: 0,
+          knowledge: {
             size: 0
           },
           project: []
@@ -102,17 +103,18 @@ export default class CompanyLevel {
       return this._rejectWhenMissingCompany();
     }
     let { size, target_type, target_id } = args;
+    target_id = ObjectId(target_id);
     if (!size) {
       return Promise.resolve(true);
     }
     return this.getLevelInfo().then(info => {
-      if (target_type == 'company') {
+      if (target_type == 'knowledge') {
         return db.company.level.update({
           _id: this.companyId,
         }, {
           $inc: {
-            'file.used_size': size,
-            'file.company.size': size
+            'file.size': size,
+            [`file.${target_type}.size`]: size
           }
         });
       }
@@ -121,18 +123,39 @@ export default class CompanyLevel {
       }
 
       if (info.file[target_type]) {
-        // if ()
+        let existItems = info.file[target_type].map(item => item._id);
+        if (indexObjectId(existItems, target_id) > -1) {
+          return db.company.level.update({
+            _id: this.companyId,
+            [`file.${target_type}._id`]: target_id
+          }, {
+            $inc: {
+              'file.size': size,
+              [`file.${target_type}.$.size`]: size
+            }
+          });
+        }
       }
+
+      if (size < 0) {
+        return Promise.resolve(true);
+      }
+
       return db.company.level.update({
         _id: this.companyId,
-        [`file.${target_type}._id`]: ObjectId(target_id)
       }, {
+        $push: {
+          [`file.${target_type}`]: {
+            _id: target_id,
+            size: size
+          }
+        },
         $inc: {
-          'file.used_size': size,
-          [`file.${target_type}.$.size`]: size
+          'file.size': size,
         }
       });
-    });
+    })
+    .then(() => this.clearCachedLevelInfo());
   }
 
   canAddMember() {
