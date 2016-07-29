@@ -29,7 +29,6 @@ export default class ScheduleServer {
       },
       task_expire: {
         init: ['0 9 * * *', () => {
-          console.log('task expire notification');
           db.task.find({
             status: C.TASK_STATUS.PROCESSING,
             date_due: {
@@ -46,7 +45,6 @@ export default class ScheduleServer {
           })
           .then(tasks => {
             tasks.forEach(task => {
-              console.log('a task expire: ', task.title);
               notificationModel.send({
                 from: 0,
                 to: task.assignee,

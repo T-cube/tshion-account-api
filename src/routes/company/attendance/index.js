@@ -44,7 +44,6 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
       date: now
     });
     if (!isValid && !from_pc) {
-      console.log('user location invalid, user:', req.user);
       throw new ApiError(400, null, 'invalid user location');
     }
     return new Attendance(req.attendanceSetting).updateSign({
@@ -54,11 +53,12 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
     }, req.user._id, false)
     .then(record => {
       let info = {
-        action: data.type == C.ATTENDANCE_SIGN_TYPE.SING_IN ?
+        action: data.type == C.ATTENDANCE_SIGN_TYPE.SIGN_IN ?
           C.ACTIVITY_ACTION.SIGN_IN :
           C.ACTIVITY_ACTION.SIGN_OUT,
         target_type: C.OBJECT_TYPE.ATTENDANCE_SIGN_DATA,
         creator: req.user._id,
+        company: req.company._id,
         sign_record: record[data.type]
       };
       return req.model('activity').insert(info);

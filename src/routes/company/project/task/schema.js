@@ -6,8 +6,8 @@ export let sanitization = {
   title: { type: 'string' },              // 任务标题
   description: { type: 'string', optional: true },        // 任务详情
   assignee: { $objectId: 1, optional: true },             // 执行人
-  date_start: { type: ['date', 'null'], optional: true },// 开始时间（optional）
-  date_due: { type: ['date', 'null'], optional: true },  // 截止时间（optional）
+  date_start: { $date: 1, optional: true },// 开始时间（optional）
+  date_due: { $date: 1, optional: true },  // 截止时间（optional）
   priority: { type: 'int', optional: true },                // 优先级别
   tags: {
     type: 'array',

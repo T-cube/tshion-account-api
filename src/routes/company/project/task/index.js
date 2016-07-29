@@ -178,17 +178,10 @@ api.put('/:task_id/assignee', (req, res, next) => {
 });
 
 api.put('/:task_id/tag', (req, res, next) => {
-  let data = {
-    tags: req.body.tag
-  };
-  sanitizeValidateObject({
-    tags: { $objectId: 1 }
-  }, {
-    tags: { $objectId: 1 }
-  }, data);
+  let tagId = ObjectId(req.body.tag);
   db.project.count({
     _id: req.project._id,
-    'tags._id': data.tags
+    'tags._id': tagId
   })
   .then(count => {
     if (!count) {
@@ -197,22 +190,39 @@ api.put('/:task_id/tag', (req, res, next) => {
     return db.task.update({
       _id: req.task._id
     }, {
-      $addToSet: data
+      $addToSet: {
+        tags: tagId,
+      }
     });
   })
-  .then(result => res.json(result))
+  .then(() => {
+    let tagItem = _.find(req.project.tags, tag => tag._id.equals(tagId));
+    logTask(req, C.ACTIVITY_ACTION.ADD, {
+      target_type: C.OBJECT_TYPE.TASK_TAG,
+      tag: tagItem,
+    });
+  })
+  .then(() => res.json({}))
   .catch(next);
 });
 
 api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
+  let tagId = ObjectId(req.params.tag_id);
   db.task.update({
     _id: req.task._id
   }, {
     $pull: {
-      tags: ObjectId(req.params.tag_id)
+      tags: tagId,
     }
   })
-  .then(result => res.json(result))
+  .then(() => {
+    let tagItem = _.find(req.project.tags, tag => tag._id.equals(tagId));
+    logTask(req, C.ACTIVITY_ACTION.REMOVE, {
+      target_type: C.OBJECT_TYPE.TASK_TAG,
+      tag: tagItem,
+    });
+  })
+  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -342,6 +352,7 @@ function logTask(req, action, data) {
     from: req.user._id,
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),
   }, info, data);
+  console.log(activity);
   req.model('activity').insert(activity);
   req.model('notification').send(notification);
 }

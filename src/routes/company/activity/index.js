@@ -1,4 +1,4 @@
-import express from 'express'
+import express from 'express';
 
 // import { sanitizeValidateObject } from 'lib/inspector';
 // import { infoSanitization, infoValidation, avatarSanitization, avatarValidation } from './schema';
