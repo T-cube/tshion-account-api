@@ -433,22 +433,28 @@ api.put('/move', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next);
 });
+//
+// api.get('/can-create', (req, res, next) => {
+//   let companyLevel = new CompanyLevel(req.company);
+//   return companyLevel.canUpload(1).then(info => {
+//     res.json({
+//       canCreate: info.ok
+//     });
+//   })
+//   .catch(next);
+// });
 
-api.get('/can-create', (req, res, next) => {
+api.get('/storage', (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company);
-  return companyLevel.canUpload(0).then(info => {
-    res.json({
-      canCreate: info.ok
-    });
-  })
+  return companyLevel.getStorageInfo()
+  .then(storage => res.json(storage))
   .catch(next);
 });
 
 api.get('/used-size', (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company);
-  return companyLevel.getUsedSize(req.document.posKey == 'company_id' ? 'knowledge' : 'project', req.document.posKey).then(usedSize => {
-    res.json({usedSize});
-  })
+  return companyLevel.getUsedStorageSize(req.document.posKey == 'company_id' ? 'knowledge' : 'project', req.document.posKey)
+  .then(used_size => res.json({used_size}))
   .catch(next);
 });
 

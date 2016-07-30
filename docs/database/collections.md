@@ -750,3 +750,21 @@
   time: <Date>
 }
 ```
+
+### company.level
+
+```javascript
+{
+  _id: <ObjectId>, // company_id
+  file: {
+    size: <Number>,
+    knowledge: {
+        size: <Number>
+    },
+    project: [{
+      _id: <ObjectId>,
+      size: <Number>,
+    }...]
+  }
+}
+```

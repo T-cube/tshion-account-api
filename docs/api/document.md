@@ -195,22 +195,24 @@ INPUT
 
 ### GET /document/used-size
 
-获取公司和项目已使用的容量
+获取公司知识或项目已使用的容量
 
 OUTPUT:
 ```javascript
 {
-  usedSize: <Number>
+  used_size: <Number>
 }
 ```
 
-### GET /document/can-create
+### GET /document/storage
 
-获取公司是否可以上传文件
+获取公司文件信息
 
 OUTPUT:
 ```javascript
 {
-  canCreate: <Boolean>
+  store_max_file_size: <Number>,
+  store_max_total_size: <Number>,
+  used_size: <Number>,
 }
 ```

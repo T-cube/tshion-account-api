@@ -166,13 +166,27 @@ export default class CompanyLevel {
     });
   }
 
-  getUsedSize(target_type, target_id) {
-    if (!this.companyId) {
-      return this._rejectWhenMissingCompany();
-    }
+  getStorageInfo() {
+    return this.getCompanyInfo().then(() => {
+      let level = this.getLevel();
+
+      let store_max_file_size = config.get(`accountLevel.${level}.store_max_file_size`);
+      let store_max_total_size = config.get(`accountLevel.${level}.store_max_total_size`);
+
+      return this.getUsedStorageSize().then(used_size => {
+        return {store_max_file_size, store_max_total_size, used_size};
+      });
+    });
+
+  }
+
+  getUsedStorageSize(target_type, target_id) {
     return this.getLevelInfo().then(info => {
-      if (target_type == 'knowledge') {
+      if (!target_type) {
         return info.file.size || 0;
+      }
+      if (target_type == 'knowledge') {
+        return info.file.knowledge.size || 0;
       }
       if (target_type == 'project') {
         let existItems = info.file[target_type].map(item => item._id);
