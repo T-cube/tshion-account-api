@@ -159,10 +159,23 @@ export default class CompanyLevel {
   }
 
   canAddMember() {
+    return this.getMemberLevelInfo().then(info => {
+      let {
+        max_members,
+        member_num
+      } = info;
+      return max_members > member_num;
+    });
+  }
+
+  getMemberLevelInfo() {
     return this.getCompanyInfo().then(() => {
       let level = this.getLevel();
       let max_members = config.get(`accountLevel.${level}.max_members`);
-      return max_members > this.company.members.length;
+      return {
+        max_members,
+        member_num: this.company.members.length,
+      };
     });
   }
 

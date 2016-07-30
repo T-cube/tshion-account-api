@@ -41,16 +41,17 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/can-add', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  checkCanAddMember(req.company).then(canAddmement => {
-    return res.json({canAddmement});
+api.get('/level-info', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
+  let companyLevel = new CompanyLevel(req.company);
+  companyLevel.getMemberLevelInfo().then(info => {
+    return res.json(info);
   })
   .catch(next);
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-
-  checkCanAddMember(req.company).then(isCanAddmement => {
+  let companyLevel = new CompanyLevel(req.company);
+  companyLevel.canAddMember().then(isCanAddmement => {
     if (!isCanAddmement) {
       throw new ApiError(400, null, 'company can not add more member');
     }
@@ -239,11 +240,6 @@ api.post('/exit', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next);
 });
-
-function checkCanAddMember(company) {
-  let companyLevel = new CompanyLevel(company);
-  return companyLevel.canAddMember();
-}
 
 function addActivity(req, action, data) {
   let info = {

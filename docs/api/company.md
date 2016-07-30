@@ -258,14 +258,15 @@ INPUT:
 }
 ```
 
-### PUT /company/:company_id/member/can-add
+### GET /company/:company_id/member/level-info
 
 公司是否可以添加成员
 
 OUTPUT:
 ```javascript
 {
-  canAddmement: <Boolean>
+  max_members: <Number>,
+  member_num: <Number>,
 }
 ```
 

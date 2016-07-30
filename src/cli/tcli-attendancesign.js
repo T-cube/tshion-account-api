@@ -22,23 +22,27 @@ if (program.update) {
   .then(results => {
     return Promise.all(results.map(item => {
       let newData = [];
+      let needUpdate = true;
       item.data.forEach(record => {
+        let { date, sign_in, sign_out } = record;
         let newRecord = {
-          date: record.date
+          date: date
         };
-        if (moment(record.sign_in).isValid() || moment(record.sign_out).isValid()) {
+        if ((sign_in && sign_in.time) || (sign_out && sign_out.time)) {
+          needUpdate = false;
           return null;
         }
-        if (record.sign_in) {
+        console.log(sign_in, moment(sign_in).isValid());
+        if (sign_in) {
           newRecord.sign_in = {
-            time: record.sign_in,
-            setting: moment(record.sign_in).hour(9).minute(0).toDate()
+            time: sign_in,
+            setting: moment(sign_in).hour(9).minute(0).toDate()
           };
         }
-        if (record.sign_out) {
+        if (sign_out) {
           newRecord.sign_out = {
-            time: record.sign_out,
-            setting: moment(record.sign_in).hour(18).minute(0).toDate()
+            time: sign_out,
+            setting: moment(sign_in).hour(18).minute(0).toDate()
           };
         }
         if (record.patch && record.patch.length) {
@@ -47,6 +51,9 @@ if (program.update) {
         }
         newData.push(newRecord);
       });
+      if (!needUpdate) {
+        return null;
+      }
       return db.attendance.sign.update({
         _id: item._id
       }, {
