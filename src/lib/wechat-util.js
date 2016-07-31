@@ -167,7 +167,7 @@ export default class WechatUtil {
   }
 
   static createMenu(menu, callback) {
-    wechatApi.createMenu(menu, callback);
+    return wechatApi.createMenu(menu, callback);
   }
 
   static checkUserLocation(userId, location, maxDistance) {
