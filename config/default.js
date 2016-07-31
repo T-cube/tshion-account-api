@@ -119,6 +119,9 @@ module.exports = {
           tlifang_email_bind: {
             variables: ['name', 'email', 'code'],
           },
+          tlifang_password_recovery: {
+            variables: ['name', 'email', 'code'],
+          },
         },
       },
       sms: {

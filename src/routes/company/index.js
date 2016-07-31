@@ -11,6 +11,7 @@ import { time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
 import Structure from 'models/structure';
+import UserLevel from 'models/user-level';
 
 /* company collection */
 let api = express.Router();
@@ -42,16 +43,21 @@ api.get('/', (req, res, next) => {
 // Add new company
 api.post('/', (req, res, next) => {
   let data = req.body; // contains name, description only
-
   sanitizeValidateObject(companySanitization, companyValidation, data);
-  // get owner data
-  db.user.findOne({
-    _id: req.user._id
-  }, {
-    name: 1, email: 1, mobile: 1, birthdate: 1, sex: 1,
+
+  let userLevel = new UserLevel(req.user);
+  userLevel.canCreateCompany().then(canCreateCompany => {
+    console.log('canCreateCompany', canCreateCompany);
+    if (false == canCreateCompany) {
+      throw new ApiError(400, null, '创建公司数已达到了限制');
+    }
+    return db.user.findOne({
+      _id: req.user._id
+    }, {
+      name: 1, email: 1, mobile: 1, birthdate: 1, sex: 1,
+    });
   })
   .then(member => {
-    console.log(member);
     // compose default data structure
     let position_id = ObjectId();
     _.extend(member, {
@@ -79,7 +85,6 @@ api.post('/', (req, res, next) => {
       projects: [],
       date_create: time(),
     });
-    // add company to user
     return db.company.insert(data);
   })
   .then(company => {
@@ -89,6 +94,7 @@ api.post('/', (req, res, next) => {
       target_type: C.OBJECT_TYPE.COMPANY,
       company: company._id
     });
+    // add company to user
     return db.user.update({
       _id: req.user._id
     }, {
@@ -269,19 +275,6 @@ api.post('/:company_id/exit', (req, res, next) => {
     }),
   ])
   .then(() => res.json({}))
-  .catch(next);
-});
-
-api.get('/:company_id/activity', (req, res, next) => {
-  const company_id = req.company._id;
-  const { last_id } = req.query;
-  req.model('activity').fetch({
-    $or: [
-      {company: company_id},
-      {project: {$in: req.company.projects}}
-    ]
-  }, last_id)
-  .then(list => res.json(list))
   .catch(next);
 });
 

@@ -18,6 +18,17 @@ const sanitizationCustom = {
     this.report();
     return [];
   },
+  date: function (schema, post) {
+    if (_.isNull(post)) {
+      return post;
+    } else if (moment(post).isValid()) {
+      this.report();
+      return new Date(post);
+    } else {
+      this.report();
+      return null;
+    }
+  },
 };
 
 const validationCustom = {
@@ -33,7 +44,7 @@ const validationCustom = {
     if (!_.isArray(schema.$enum) || !schema.$enum.length) {
       return;
     }
-    if (-1 == schema.$enum.indexOf(candidate)) {
+    if (-1 == schema.$enum.indexOf(candidate) && true !== schema.optional) {
       this.report('invalid value: ' + candidate);
     }
   },
@@ -46,8 +57,8 @@ const validationCustom = {
     }
   },
   email: function(schema, candidate) {
-    if (!_.isString(candidate) ||
-      !/^[a-z0-9\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(candidate)) {
+    if (_.isString(candidate)  && candidate !== ''
+      && !/^[a-z0-9\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(candidate)) {
       this.report('invalid email: ' + candidate);
     }
   },
@@ -89,8 +100,8 @@ export function sanitizeValidateObject(sanitizationSchema, validationSchema, dat
   sanitizeObject(sanitizationSchema, data);
   let result = validateObject(validationSchema, data);
   if (!result.valid) {
-    console.error(result);
-    throw new ApiError(400, null, result.error);
+    const error = formatValidationError(result.error);
+    throw new ValidationError(error);
   }
   return result;
 }

@@ -13,7 +13,7 @@ export let sanitization = {
 
 export let validation = {
   name: { type: 'string', minLength: 2, maxLength: 50 },
-  email: { type: 'string', pattern: 'email' },
+  email: { type: 'string', $email: 1, optional: true },
   mobile: { type: 'string', optional: true },
   birthdate: { type: 'date', optional: true },
   joindate: { type: 'date', optional: true },

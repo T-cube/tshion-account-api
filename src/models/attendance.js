@@ -18,29 +18,27 @@ export default class Attendance {
     date = now.getDate();
     let month = now.getMonth() + 1;
     let year = now.getFullYear();
-    return db.attendance.sign.findOne({
+    let defaultCriteria = {
       user: user_id,
       year: year,
       month: month,
-      'data.date': date,
       company: this.setting._id,
-    }, {
+    };
+    return db.attendance.sign.findOne(_.extend({}, defaultCriteria, {
+      'data.date': date,
+    }), {
       time_start: 1,
       time_end: 1,
       'data.$.': 1
     })
     .then(doc => {
-      let update;
+      let parsedData;
       if (!doc) {
-        update = this._parseSignData(data, `${year}-${month}-${date}`, doc, isPatch, from_pc);
-        return db.attendance.sign.update({
-          user: user_id,
-          year: year,
-          month: month,
-          company: this.setting._id,
-        }, update, {
+        parsedData = this._parseSignFromUser(data, `${year}-${month}-${date}`, doc, isPatch, from_pc);
+        return db.attendance.sign.update(defaultCriteria, parsedData.update, {
           upsert: true
-        });
+        })
+        .then(() => parsedData.record);
       } else {
         let newData = [];
         data.forEach(item => {
@@ -52,13 +50,58 @@ export default class Attendance {
             newData.push(item);
           }
         });
-        update = this._parseSignData(newData, `${year}-${month}-${date}`, doc, isPatch);
+        parsedData = this._parseSignFromUser(newData, `${year}-${month}-${date}`, doc, isPatch, from_pc);
         return db.attendance.sign.update({
           _id: doc._id,
           'data.date': date,
-        }, update);
+        }, parsedData.update)
+        .then(() => parsedData.record);
       }
     });
+  }
+
+  _parseSignFromUser(data, date, docExist, isPatch, from_pc) {
+    let settings = this.setting;
+    let record = {};
+    data.forEach(item => {
+      record[item.type] = {
+        time: new Date(item.date)
+      };
+      if (from_pc) {
+        record[item.type]['from_pc'] = from_pc;
+      }
+      if (isPatch) {
+        record[item.type]['patch'] = true;
+      }
+      if (item.type == 'sign_in') {
+        record[item.type]['setting'] = new Date(`${date} ${settings.time_start}`);
+      } else {
+        record[item.type]['setting'] = new Date(`${date} ${settings.time_end}`);
+      }
+    });
+
+    if (!docExist) {
+      record.date = new Date(date).getDate();
+      return {
+        update: {
+          $push: {
+            data: record
+          }
+        },
+        record
+      };
+    } else {
+      return {
+        update: {
+          $set: _.object(Object.keys(record).map(key => `data.$.${key}`), _.values(record))
+        },
+        record
+      };
+    }
+  }
+
+  parseSignRecord(record) {
+
   }
 
   _parseSignData(data, date, docExist, isPatch, from_pc) {
@@ -190,23 +233,29 @@ export default class Attendance {
       no_sign_out: 0,
     };
     data.forEach(item => {
-      if (item.late) {
-        record.late += 1;
-      }
-      if (item.leave_early) {
-        record.leave_early += 1;
-      }
-      if (!item.sign_in) {
+      let tempRecord = _.clone(record);
+      if (item.sign_in) {
+        if (item.sign_in.time > item.sign_in.setting) {
+          record.late += 1;
+        }
+        if (item.sign_in.patch) {
+          record.patch += 1;
+        }
+      } else {
         record.no_sign_in += 1;
       }
-      if (!item.sign_out) {
+      if (item.sign_out) {
+        if (item.sign_out.time < item.sign_out.setting) {
+          record.leave_early += 1;
+        }
+        if (item.sign_in.patch) {
+          record.patch += 1;
+        }
+      } else {
         record.no_sign_out += 1;
       }
-      if (!item.late && !item.leave_early && item.sign_in && item.sign_out) {
+      if (_.isEqual(tempRecord, record)) {
         record.normal += 1;
-      }
-      if (item.patch && item.patch.length) {
-        record.patch += 1;
       }
     });
     return record;

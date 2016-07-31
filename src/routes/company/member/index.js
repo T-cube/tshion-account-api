@@ -12,6 +12,7 @@ import { sanitization, validation } from './schema';
 import { checkUserType, checkUserTypeFunc } from '../utils';
 import { isEmail, time } from 'lib/utils';
 import Structure from 'models/structure';
+import CompanyLevel from 'models/company-level';
 
 /* company collection */
 let api = express.Router();
@@ -40,55 +41,71 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  let data = req.body;
-  sanitizeValidateObject(sanitization, validation, data);
-  data.type = C.COMPANY_MEMBER_TYPE.NORMAL;
-  let member = _.find(req.company.members, m => m.email == data.email);
-  if (member) {
-    throw new ApiError(400, null, 'member exists');
-  }
-  db.user.findOne({email: data.email}, {_id: 1, name: 1})
-  .then(user => {
-    data.status = C.COMPANY_MEMBER_STATUS.PENDING;
-    if (user) {
-      // invite registered user;
-      let member = _.find(req.company.members, m => {
-        m._id.equals(user._id);
-      });
-      if (member) {
-        throw new ApiError(400, null, 'member exists');
-      }
-      data._id = user._id;
-    } else {
-      // invite new user throw email;
-      data._id = ObjectId();
-    }
-    db.request.insert({
-      from: req.user._id,
-      to: data._id,
-      type: C.REQUEST_TYPE.COMPANY,
-      object: req.company._id,
-      status: C.REQUEST_STATUS.PENDING,
-      date_create: time(),
-    })
-    .then(request => {
-      req.model('notification').send({
-        from: req.user._id,
-        to: user._id,
-        action: C.ACTIVITY_ACTION.CREATE,
-        target_type: C.OBJECT_TYPE.REQUEST,
-        request: request._id,
-        company: req.company._id,
-      }, C.NOTICE.COMMON);
-    });
-    return db.company.update({
-      _id: req.company._id,
-    }, {
-      $push: {members: data}
-    });
+api.get('/level-info', (req, res, next) => {
+  let companyLevel = new CompanyLevel(req.company);
+  companyLevel.getMemberLevelInfo().then(info => {
+    return res.json(info);
   })
-  .then(doc => res.json(data))
+  .catch(next);
+});
+
+api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
+  let companyLevel = new CompanyLevel(req.company);
+  companyLevel.canAddMember().then(isCanAddmement => {
+    if (!isCanAddmement) {
+      throw new ApiError(400, null, '公司人数已达到限制');
+    }
+  })
+  .then(() => {
+    let data = req.body;
+    sanitizeValidateObject(sanitization, validation, data);
+    data.type = C.COMPANY_MEMBER_TYPE.NORMAL;
+    let member = _.find(req.company.members, m => m.email == data.email);
+    if (member) {
+      throw new ApiError(400, null, 'member exists');
+    }
+    return db.user.findOne({email: data.email}, {_id: 1, name: 1})
+    .then(user => {
+      data.status = C.COMPANY_MEMBER_STATUS.PENDING;
+      if (user) {
+        // invite registered user;
+        let member = _.find(req.company.members, m => {
+          m._id.equals(user._id);
+        });
+        if (member) {
+          throw new ApiError(400, null, 'member exists');
+        }
+        data._id = user._id;
+      } else {
+        // invite new user throw email;
+        data._id = ObjectId();
+      }
+      db.request.insert({
+        from: req.user._id,
+        to: data._id,
+        type: C.REQUEST_TYPE.COMPANY,
+        object: req.company._id,
+        status: C.REQUEST_STATUS.PENDING,
+        date_create: time(),
+      })
+      .then(request => {
+        req.model('notification').send({
+          from: req.user._id,
+          to: user._id,
+          action: C.ACTIVITY_ACTION.CREATE,
+          target_type: C.OBJECT_TYPE.REQUEST,
+          request: request._id,
+          company: req.company._id,
+        }, C.NOTICE.COMMON);
+      });
+      return db.company.update({
+        _id: req.company._id,
+      }, {
+        $push: {members: data}
+      });
+    })
+    .then(() => res.json(data));
+  })
   .catch(next);
 });
 

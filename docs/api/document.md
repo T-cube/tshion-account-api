@@ -192,3 +192,34 @@ INPUT
   target_dir: <ObjectId>,
 }
 ```
+
+### GET /document/used-size
+
+获取公司知识或项目已使用的容量
+
+OUTPUT:
+```javascript
+{
+  used_size: <Number>
+}
+```
+
+### GET /document/storage
+
+获取公司文件信息
+
+OUTPUT:
+```javascript
+{
+  store_max_file_size: <Number>,
+  store_max_total_size: <Number>,
+  size: <Number>,
+  knowledge: {
+    size: <Number>,
+  },
+  project: [{
+    _id: <ObjectId>,
+    size: <Number>,
+  }...]
+}
+```

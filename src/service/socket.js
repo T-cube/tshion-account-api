@@ -81,7 +81,7 @@ export default class SocketServer extends EventEmitter {
       } else {
         socket.emit('sys.msg', { action: 'bind', ok: false, msg: 'invalid user' });
       }
-    })
+    });
   }
 
   getClient(object) {

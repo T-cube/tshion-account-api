@@ -258,6 +258,18 @@ INPUT:
 }
 ```
 
+### GET /company/:company_id/member/level-info
+
+公司是否可以添加成员
+
+OUTPUT:
+```javascript
+{
+  max_members: <Number>,
+  member_num: <Number>,
+}
+```
+
 ### DELETE /company/:company_id/member/:member_id
 
 删除公司成员

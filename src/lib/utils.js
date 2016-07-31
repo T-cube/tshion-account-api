@@ -103,7 +103,9 @@ export function maskEmail(email) {
   if (!result) {
     return '***';
   }
-  return result[1].substr(0,3) + '****' + result[2];
+  let str = result[1];
+  let len = str.length > 2 ? 2 : str.length - 1;
+  return str.substr(0, len) + '****' + result[2];
 }
 
 export function maskMobile(mobile) {
@@ -288,4 +290,11 @@ export function getGpsDistance(from, to) {
     ) * 6378137
   );
   return distance;
+}
+
+export function getClientIp(req) {
+  return req.headers['x-forwarded-for'] ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    req.connection.socket.remoteAddress;
 }
