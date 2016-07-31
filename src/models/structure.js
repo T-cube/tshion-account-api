@@ -5,7 +5,7 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 
-import { getUniqName, indexObjectId } from 'lib/utils';
+import { getUniqName, indexObjectId, uniqObjectId } from 'lib/utils';
 
 class Structure {
 
@@ -272,19 +272,21 @@ class Structure {
     return this._findMemberByPosition(this.root, position_id, []);
   }
 
-  findMemberDepartments(member_id, node) {
+  findMemberDepartments(member_id, node, path) {
     let departments = [];
     node = node || this.root;
+    path = path || [];
+    path.push(node._id);
     let members = node.members || [];
     if (indexObjectId(members.map(member => member._id), member_id) != -1) {
-      departments.push(node._id);
+      departments = departments.concat(node._id).concat(path);
     }
     if (node.children && node.children.length) {
       node.children.forEach(i => {
-        departments = departments.concat(this.findMemberDepartments(member_id, i));
+        departments = departments.concat(this.findMemberDepartments(member_id, i, path));
       });
     }
-    return departments;
+    return uniqObjectId(departments);
   }
 
   object() {

@@ -315,7 +315,7 @@ api.get('/setting', (req, res, next) => {
         // latitude: 39.998766,
         // longitude: 116.273938,
       },
-      max_distance: 500,
+      max_distance: 200,
       workday_special: [],
       holiday: [],
     }));

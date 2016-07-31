@@ -11,6 +11,7 @@ import { time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
 import Structure from 'models/structure';
+import UserLevel from 'models/user-level';
 
 /* company collection */
 let api = express.Router();
@@ -42,13 +43,19 @@ api.get('/', (req, res, next) => {
 // Add new company
 api.post('/', (req, res, next) => {
   let data = req.body; // contains name, description only
-
   sanitizeValidateObject(companySanitization, companyValidation, data);
-  // get owner data
-  db.user.findOne({
-    _id: req.user._id
-  }, {
-    name: 1, email: 1, mobile: 1, birthdate: 1, sex: 1,
+
+  let userLevel = new UserLevel(req.user);
+  userLevel.canCreateCompany().then(canCreateCompany => {
+    console.log('canCreateCompany', canCreateCompany);
+    if (false == canCreateCompany) {
+      throw new ApiError(400, null, '创建公司数已达到了限制');
+    }
+    return db.user.findOne({
+      _id: req.user._id
+    }, {
+      name: 1, email: 1, mobile: 1, birthdate: 1, sex: 1,
+    });
   })
   .then(member => {
     // compose default data structure

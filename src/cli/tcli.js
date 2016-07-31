@@ -8,6 +8,7 @@ program
   .command('initdb', 'init data after install')
   .command('companystorage', 'init data after install')
   .command('attendancesign', 'init data after install')
+  .command('wechatmenu', 'init data after install')
   .parse(process.argv);
 
 console.log('TLifang API Command Line Tool');

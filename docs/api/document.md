@@ -213,6 +213,13 @@ OUTPUT:
 {
   store_max_file_size: <Number>,
   store_max_total_size: <Number>,
-  used_size: <Number>,
+  size: <Number>,
+  knowledge: {
+    size: <Number>,
+  },
+  project: [{
+    _id: <ObjectId>,
+    size: <Number>,
+  }...]
 }
 ```
