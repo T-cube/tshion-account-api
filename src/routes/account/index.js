@@ -161,6 +161,8 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
 
 api.post('/change-pass', oauthCheck(), (req, res, next) => {
   let data = req.body;
+  validate('register', data, ['password as old_password', 'password as new_password']);
+  console.log(data);
   let { old_password, new_password } = data;
   db.user.findOne({
     _id: req.user._id,
