@@ -186,8 +186,11 @@ export default class CompanyLevel {
       let store_max_file_size = config.get(`accountLevel.${level}.store_max_file_size`);
       let store_max_total_size = config.get(`accountLevel.${level}.store_max_total_size`);
 
-      return this.getUsedStorageSize().then(used_size => {
-        return {store_max_file_size, store_max_total_size, used_size};
+      return this.getLevelInfo().then(levelInfo => {
+        return _.extend(levelInfo.file, {
+          store_max_file_size,
+          store_max_total_size,
+        });
       });
     });
 

@@ -41,7 +41,7 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/level-info', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
+api.get('/level-info', (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company);
   companyLevel.getMemberLevelInfo().then(info => {
     return res.json(info);
@@ -53,7 +53,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company);
   companyLevel.canAddMember().then(isCanAddmement => {
     if (!isCanAddmement) {
-      throw new ApiError(400, null, 'company can not add more member');
+      throw new ApiError(400, null, '公司人数已达到限制');
     }
   })
   .then(() => {
@@ -64,7 +64,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
     if (member) {
       throw new ApiError(400, null, 'member exists');
     }
-    db.user.findOne({email: data.email}, {_id: 1, name: 1})
+    return db.user.findOne({email: data.email}, {_id: 1, name: 1})
     .then(user => {
       data.status = C.COMPANY_MEMBER_STATUS.PENDING;
       if (user) {

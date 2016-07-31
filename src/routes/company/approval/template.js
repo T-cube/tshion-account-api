@@ -50,6 +50,9 @@ api.get('/', (req, res, next) => {
       status: 1,
       number: 1,
     })
+    .sort({
+      name: 1
+    })
     .then(template => {
       let tree = new Structure(req.company.structure);
       template.forEach(item => {
