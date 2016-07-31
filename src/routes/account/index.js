@@ -3,7 +3,7 @@ import express from 'express';
 import config from 'config';
 
 import db from 'lib/database';
-import { time, timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
+import { time, timestamp, expire, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
@@ -32,7 +32,6 @@ api.post('/check', (req, res, next) => {
 api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
   let type = data.type || '__invalid_type__';
-  console.log(data);
   validate('register', data, ['type', type, 'code', 'password']);
   let { password, code } = data;
   let id = data[type];
@@ -131,14 +130,13 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
 
   db.user.findOne({_id: req.user._id})
   .then(user => {
-    return comparePassword(password, user.password)
-    .then(result => {
-      console.log(result);
-      if (!result) {
-        throw new ApiError('401', 'invalid_password');
-      }
-      return generateToken(48);
-    });
+    return comparePassword(password, user.password);
+  })
+  .then(result => {
+    if (!result) {
+      throw new ApiError('401', 'invalid_password');
+    }
+    return generateToken(48);
   })
   .then(token => {
     _token = token;
@@ -163,28 +161,22 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
 
 api.post('/change-pass', oauthCheck(), (req, res, next) => {
   let data = req.body;
-  console.log(data);
   let { old_password, new_password } = data;
-  console.log(old_password, new_password);
   db.user.findOne({
     _id: req.user._id,
   }, {
     password: 1,
   })
   .then(user => {
-    console.log(old_password, user.password);
-    console.log('found user');
     return comparePassword(old_password, user.password);
   })
   .then(result => {
-    console.log('compare password', result);
     if (!result) {
       throw new ApiError(401, 'bad_password', 'password is not correct');
     }
     return hashPassword(new_password);
   })
   .then(password => {
-    console.log('hash password', password);
     return Promise.all([
       db.user.update({
         _id: req.user._id,
@@ -195,6 +187,54 @@ api.post('/change-pass', oauthCheck(), (req, res, next) => {
       }),
       // TODO logout current user
     ]);
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.post('/recover/send-code', (req, res, next) => {
+  let data = req.body;
+  let type = data.type || '__invalid_type__';
+  validate('register', data, ['type', type]);
+  let account = req.body[type];
+  req.model('account').checkExistance(type, account, true)
+  .then(() => {
+    return req.model('account').sendCode(type, account, 'reset_pass');
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.post('/recover/verify', (req, res, next) => {
+  let data = req.body;
+  let type = data.type || '__invalid_type__';
+  validate('register', data, ['type', type, 'code']);
+  let account = data[type];
+  req.model('account').checkExistance(type, account, true)
+  .then(() => {
+    return req.model('account').verifyCode(type, account, data.code);
+  })
+  .then(() => {
+    return req.model('account').getToken(type, account);
+  })
+  .then(token => res.json({token}))
+  .catch(next);
+});
+
+api.post('/recover/change-pass', (req, res, next) => {
+  const data = req.body;
+  const { token } = data;
+  let type = data.type || '__invalid_type__';
+  validate('register', data, ['type', type, 'code', 'password']);
+  let account = data[type];
+  req.model('account').verifyToken(type, account, token)
+  .then(userId => {
+    return hashPassword(data.password)
+    .then(hash => {
+      return db.user.update({_id: userId}, {$set: {
+        password: hash,
+      }});
+    });
   })
   .then(() => res.json({}))
   .catch(next);
@@ -229,7 +269,7 @@ api.post('/verify/new', oauthCheck(), (req, res, next) => {
     }
   }
   let newAccount = data[newIdKey];
-  req.model('account').checkExistance(type, newAccount)
+  req.model('account').checkExistance(type, newAccount, false)
   .then(() => {
     return req.model('account').sendCode(type, newAccount);
   })
@@ -238,7 +278,6 @@ api.post('/verify/new', oauthCheck(), (req, res, next) => {
 });
 
 api.post('/bind', oauthCheck(), (req, res, next) => {
-  console.log('/account/bind OK!!!');
   let data = req.body;
   let type = data.type;
   let oldIdKey = 'old_' + type;
@@ -257,7 +296,7 @@ api.post('/bind', oauthCheck(), (req, res, next) => {
     }
   }
   let newAccount = data[newIdKey];
-  req.model('account').checkExistance(type, newAccount)
+  req.model('account').checkExistance(type, newAccount, false)
   .then(() => {
     return req.model('account').verifyCode(type, newAccount, data.code);
   })
