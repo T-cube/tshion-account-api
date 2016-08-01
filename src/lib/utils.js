@@ -137,7 +137,7 @@ export function expire(ms) {
 }
 
 export function isEmail(email) {
-  return /^[a-z0-9\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(email);
+  return /^[a-z0-9-_\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(email);
 }
 
 export function uniqObjectId(list) {
