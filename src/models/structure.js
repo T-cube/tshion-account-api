@@ -275,15 +275,15 @@ class Structure {
   findMemberDepartments(member_id, node, path) {
     let departments = [];
     node = node || this.root;
-    path = path || [];
-    path.push(node._id);
+    let newPath = path ? _.clone(path) : [];
+    newPath.push(node._id);
     let members = node.members || [];
     if (indexObjectId(members.map(member => member._id), member_id) != -1) {
-      departments = departments.concat(node._id).concat(path);
+      departments = departments.concat(node._id).concat(newPath);
     }
     if (node.children && node.children.length) {
       node.children.forEach(i => {
-        departments = departments.concat(this.findMemberDepartments(member_id, i, path));
+        departments = departments.concat(this.findMemberDepartments(member_id, i, newPath));
       });
     }
     return uniqObjectId(departments);

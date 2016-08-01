@@ -32,7 +32,6 @@ if (program.update) {
           needUpdate = false;
           return null;
         }
-        console.log(sign_in, moment(sign_in).isValid());
         if (sign_in) {
           newRecord.sign_in = {
             time: sign_in,

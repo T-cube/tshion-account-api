@@ -31,7 +31,7 @@ api.post('/', wechat(wechatConfig, function (req, res) {
     if (message.Event == 'CLICK') {
       if (message.EventKey == 'contact_us') {
         return res.reply({
-          content: '欢迎联系我们：\nQQ: 502915668\nEmail: cs@tlifang.com\nTel:400 1166 323',
+          content: '欢迎联系我们：\nQQ: 502915668\nEmail: cs@tlifang.com\nTel: 400 1166 323',
           type: 'text',
         });
       }
@@ -42,18 +42,9 @@ api.post('/', wechat(wechatConfig, function (req, res) {
     if (message.Content == 'oa') {
       return res.reply('http://m.tlifang.com/account/login');
     }
-    return res.reply('haha');
+    return res.reply({
+      content: 'T立方 - 云工作平台',
+      type: 'text',
+    });
   }
 }));
-
-// 创建微信菜单
-api.get('/set-menu', (req, res, next) => {
-  wUtil.createMenu({
-    'button': [{
-      'type':'view',
-      'name':'工作台',
-      'url':'http://m.tlifang.com/oa/company'
-    }]
-  });
-  res.json({});
-});
