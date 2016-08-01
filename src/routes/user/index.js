@@ -8,6 +8,7 @@ import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import upload from 'lib/upload';
 import { comparePassword, hashPassword, maskEmail, maskMobile } from 'lib/utils';
+import UserLevel from 'models/user-level';
 
 import { validate } from './schema';
 
@@ -42,13 +43,17 @@ api.get('/info', (req, res, next) => {
     _id: req.user._id
   }, BASIC_FIELDS)
   .then(data => {
-    if (data.email) {
-      data.email = maskEmail(data.email);
-    }
-    if (data.mobile) {
-      data.mobile = maskMobile(data.mobile);
-    }
-    res.json(data);
+    return new UserLevel(data).getLevelInfo()
+    .then(levelInfo => {
+      data.level_info = levelInfo;
+      if (data.email) {
+        data.email = maskEmail(data.email);
+      }
+      if (data.mobile) {
+        data.mobile = maskMobile(data.mobile);
+      }
+      res.json(data);
+    });
   })
   .catch(next);
 });

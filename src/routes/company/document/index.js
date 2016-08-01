@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import fs from 'fs';
+var async = require('async');
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -537,13 +538,22 @@ function createFile(req, data, dir_id) {
   let companyLevel = new CompanyLevel(req.company);
   return companyLevel.canUpload(sizes).then(info => {
     if (!info.ok) {
+      let errorMsg;
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
-        throw new ApiError(400, null, '您的文件存储空间不足');
+        errorMsg = '您的文件存储空间不足';
       }
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
-        throw new ApiError(400, null, '文件大小超过上限');
+        errorMsg = '文件大小超过上限';
       }
-      throw new ApiError(400);
+      async.each(data, (item, cb) => {
+        fs.unlink(item.path, (e) => {
+          e && console.error(e);
+          cb();
+        });
+      }, (e) => {
+        e && console.error(e);
+      });
+      throw new ApiError(400, null, errorMsg);
     }
     return checkDirExist(req, dir_id)
     .then(() => {
@@ -567,14 +577,14 @@ function createFile(req, data, dir_id) {
                 }
               }
             }),
-            db.document.dir.update({
-              [req.document.posKey]: req.document.posVal,
-              parent_dir: null
-            }, {
-              $inc: {
-                total_size: total_size
-              }
-            })
+            // db.document.dir.update({
+            //   [req.document.posKey]: req.document.posVal,
+            //   parent_dir: null
+            // }, {
+            //   $inc: {
+            //     total_size: total_size
+            //   }
+            // })
           ])
           .then(() => companyLevel.updateUpload({
             size: total_size,
@@ -662,8 +672,8 @@ function deleteFiles(req, files) {
         });
       })
       .then(() => {
-        fileInfo.path && fs.unlink(fileInfo.path, (err) => {
-          console.error(err);
+        fileInfo.path && fs.unlink(fileInfo.path, (e) => {
+          e && console.error(e);
         });
       });
     });
