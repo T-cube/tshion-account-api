@@ -58,7 +58,7 @@ const validationCustom = {
   },
   email: function(schema, candidate) {
     if (_.isString(candidate)  && candidate !== ''
-      && !/^[a-z0-9\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(candidate)) {
+      && !/^[a-z0-9-_\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(candidate)) {
       this.report('invalid email: ' + candidate);
     }
   },
