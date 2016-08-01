@@ -31,7 +31,7 @@ api.post('/', wechat(wechatConfig, function (req, res) {
     if (message.Event == 'CLICK') {
       if (message.EventKey == 'contact_us') {
         return res.reply({
-          content: '欢迎联系我们：\nQQ: 502915668\nEmail: cs@tlifang.com\nTel:400 1166 323',
+          content: '欢迎联系我们：\nQQ: 502915668\nEmail: cs@tlifang.com\nTel: 400 1166 323',
           type: 'text',
         });
       }

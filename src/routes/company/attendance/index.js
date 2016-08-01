@@ -327,6 +327,9 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   let data = req.body;
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
+  if (!_.find(req.company.members, i => i._id.equals(data.auditor))) {
+    throw new ApiError(400, null, 'auditor is not the member of company');
+  }
   db.attendance.setting.update({
     _id: company_id
   }, {
