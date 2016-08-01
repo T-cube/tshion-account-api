@@ -24,18 +24,29 @@ export default class UserLevel {
     this.user = null;
   }
 
-  canCreateCompany() {
+  getLevelInfo() {
     if (!this.userId) {
       return this._rejectWhenMissingCompany();
     }
     return db.company.count({
       owner: this.userId
     })
-    .then(num => {
+    .then(own_companies => {
       return this.getLevel().then(level => {
         let max_own_companies = config.get(`accountLevel.${level}.max_own_companies`);
-        return num < max_own_companies;
+        return {
+          level,
+          max_own_companies,
+          own_companies,
+        };
       });
+    });
+  }
+
+  canCreateCompany() {
+    return this.getLevelInfo()
+    .then(info => {
+      return info.max_own_companies > info.own_companies;
     });
   }
 
