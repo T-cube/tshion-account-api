@@ -545,15 +545,14 @@ function createFile(req, data, dir_id) {
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
         errorMsg = '文件大小超过上限';
       }
-      console.log('files', data);
-      // async.each(data, (item, cb) => {
-      //   fs.unlink(item.path, (e) => {
-      //     e && console.error(e);
-      //     cb();
-      //   });
-      // }, (e) => {
-      //   e && console.error(e);
-      // });
+      async.each(data, (item, cb) => {
+        fs.unlink(item.path, (e) => {
+          e && console.error(e);
+          cb();
+        });
+      }, (e) => {
+        e && console.error(e);
+      });
       throw new ApiError(400, null, errorMsg);
     }
     return checkDirExist(req, dir_id)
