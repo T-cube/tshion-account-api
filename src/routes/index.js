@@ -23,7 +23,6 @@ api.use((req, res, next) => {
 let routes = [
   'account',
   'company',
-  'download',
   'file',
   'notification',
   'public',

@@ -6,16 +6,22 @@ import Promise from 'bluebird';
 import C, { ENUMS } from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
+import { ValidationError } from 'lib/inspector';
 import { generateToken, getEmailName, expire, time } from 'lib/utils';
 
 export default class Account {
 
-  checkExistance(type, account) {
-    return db.user.find({[type]: account}).count()
-    .then(count => {
-      if (count > 0) {
-        throw new ApiError(400, 'account_exists');
+  checkExistance(type, account, existsAsValid) {
+    return db.user.findOne({[type]: account}, {_id: 1, email: 1, mobile: 1})
+    .then(user => {
+      if (!_.isUndefined(existsAsValid)) {
+        if (user && !existsAsValid) {
+          throw new ApiError(400, 'account_exists');
+        } else if (!user && existsAsValid) {
+          throw new ApiError(400, 'account_not_exists');
+        }
       }
+      return user;
     });
   }
 
@@ -55,7 +61,6 @@ export default class Account {
       if (!doc) {
         throw new ApiError(400, 'activiate_code_invalid', 'code is not valid');
       }
-      console.log(doc);
       if (time() > doc.expires) {
         throw new ApiError(400, 'activiate_code_expired', 'code has been expired');
       }
@@ -66,7 +71,6 @@ export default class Account {
         activiated: 1,
       })
       .then(user => {
-        console.log(user);
         if (user.activiated) {
           throw new ApiError(400, 'already_activiated', 'the email has been activiated already');
         }
@@ -96,14 +100,14 @@ export default class Account {
     });
   }
 
-  sendCode(type, account) {
+  sendCode(type, account, template) {
     if (!_.contains(ENUMS.USER_ID_TYPE, type)) {
       throw new Error('invalid account type');
     }
     if (type == C.USER_ID_TYPE.EMAIL) {
-      return this.sendEmailCode(account);
+      return this.sendEmailCode(account, template);
     } else {
-      return this.sendSmsCode(account);
+      return this.sendSmsCode(account, template);
     }
   }
 
@@ -118,13 +122,17 @@ export default class Account {
     }
   }
 
-  sendEmailCode(email) {
+  sendEmailCode(email, template) {
     const { expires } = config.get('userVerifyCode.sms');
+    let templateName = 'tlifang_email_bind';
+    if (template == 'reset_pass') {
+      templateName = 'tlifang_password_recovery';
+    }
     return this.genSmsCode()
     .then(code => {
       let userName = getEmailName(email);
       return this.model('email')
-      .send('tlifang_email_bind', email, {
+      .send(templateName, email, {
         name: userName,
         email: email,
         code: code,
@@ -170,12 +178,16 @@ export default class Account {
     return Promise.resolve(code);
   }
 
-  sendSmsCode(mobile) {
+  sendSmsCode(mobile, template) {
     const { expires } = config.get('userVerifyCode.sms');
+    let templateName = 'tlifang_email_bind';
+    if (template == 'reset_pass') {
+      templateName = 'tlifang_reset_pass';
+    }
     return this.genSmsCode()
     .then(code => {
       return this.model('sms')
-      .send('tlifang_mobile_activite', mobile, {
+      .send(templateName, mobile, {
         code: code,
       })
       .then(() => {
@@ -210,4 +222,50 @@ export default class Account {
       });
     });
   }
+
+  getToken(type, account) {
+    return this.checkExistance(type, account, true)
+    .then(user => {
+      let userId = user._id;
+      return generateToken(48)
+      .then(token => {
+        let data = {
+          user_id: userId,
+          token: token,
+          expires: expire(60000),
+        };
+        return db.auth_check_token.update({
+          user_id: userId,
+        }, data, {
+          upsert: true,
+        })
+        .then(() => {
+          console.log(token);
+          return token;
+        });
+      });
+    });
+  }
+
+  verifyToken(type, account, token) {
+    console.log('1111111');
+    return this.checkExistance(type, account, true)
+    .then(user => {
+      let userId = user._id;
+      return db.auth_check_token.findOne({
+        user_id: userId,
+        token: token,
+      })
+      .then(doc => {
+        if (!doc) {
+          throw new ApiError('invalid_token');
+        }
+        if (time() > doc.expires) {
+          throw new ApiError('token_expired');
+        }
+        return userId;
+      });
+    });
+  }
+
 }
