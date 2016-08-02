@@ -100,7 +100,6 @@ export class SmsSender {
       pairs.push(key + '=' + params[key]);
     });
     let str = smsKey + '&' + pairs.join('&') + '&' + smsKey;
-    console.log(str);
     let hash = crypto.createHash('md5').update(str).digest('hex');
     return hash;
   }
