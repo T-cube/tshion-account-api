@@ -335,9 +335,10 @@ api.put('/file/:file_id', (req, res, next) => {
     if (!fileInfo) {
       throw new ApiError(404);
     }
-    return getFileNameListOfDir(fileInfo.dir_id)
-    .then(filenamelist => {
-      data.name = getUniqFileName(filenamelist, data.name);
+    return getFileListOfDir(fileInfo.dir_id)
+    .then(filelist => {
+      filelist = filelist.filter(i => !i._id.equals(file_id));
+      data.name = getUniqFileName(filelist.map(i => i.name), data.name);
       return db.document.file.update({
         _id: file_id,
       }, {
@@ -546,11 +547,14 @@ function createFile(req, data, dir_id) {
     }
     return checkDirExist(req, dir_id)
     .then(() => {
-      return getFileNameListOfDir(dir_id)
-      .then(filenamelist => {
+      return getFileListOfDir(dir_id)
+      .then(filelist => {
+        console.log('filelist', filelist);
         data.forEach((item, i) => {
-          data[i].name = getUniqFileName(filenamelist, data[i].name);
-          filenamelist.push(data[i].name);
+          data[i].name = getUniqFileName(filelist.map(i => i.name), data[i].name);
+          filelist.push({
+            name: data[i].name
+          });
         });
       })
       .then(() => {
@@ -679,16 +683,9 @@ function deleteFiles(req, files) {
   });
 }
 
-function getFileNameListOfDir(dir_id) {
-  return db.document.dir.findOne({
-    _id: dir_id
-  }, {
-    files: 1
-  })
-  .then(dirInfo => {
-    return mapObjectIdToData(dirInfo.files, 'document.file', 'name')
-    .then(files => files.map(file => file.name));
-  });
+function getFileListOfDir(dir_id) {
+  return mapObjectIdToData(dir_id, 'document.dir', 'files')
+  .then(dirInfo => mapObjectIdToData(dirInfo.files, 'document.file', 'name'));
 }
 
 function checkMoveable(target_dir, dirs, files) {
