@@ -231,10 +231,22 @@ INPUT:
 
 ### GET /approval/flow/apply
 
+QUERY
+
+```javascript
+{
+  status: <Emun:[processing|resolved]>
+}
+```
+
 OUTPUT
 ```javascript
-[{
-   _id: <ObjectId>,
+{
+  page: <Number>,
+  pagesize: <Number>,
+  totalrows: <Number>,
+  list: [{
+    _id: <ObjectId>,
     template: {
       _id: <ObjectId>,
       name: <String>,
@@ -251,33 +263,47 @@ OUTPUT
     status: <ENUM>,
     content: <String>,
     log: <String>
-}...]
+  }...]
+}
 ```
 
 ### GET /approval/flow/approve
 
+QUERY
+
+```javascript
+{
+  status: <Emun:[processing|resolved]>
+}
+```
+
 OUTPUT
 ```javascript
-[{
-   _id: <ObjectId>,
-   template: {
-     _id: <ObjectId>,
-     name: <String>,
-   },
-   from: {
-     _id: <ObjectId>,
-     name: <String>,
-   },
-   department: {
-     _id: <ObjectId>,
-     name: <String>,
-   },
+{
+  page: <Number>,
+  pagesize: <Number>,
+  totalrows: <Number>,
+  list: [{
+    _id: <ObjectId>,
+    template: {
+      _id: <ObjectId>,
+      name: <String>,
+    },
+    from: {
+      _id: <ObjectId>,
+      name: <String>,
+    },
+    department: {
+      _id: <ObjectId>,
+      name: <String>,
+    },
     apply_date: <Date>,
     status: <ENUM>,
     content: <String>,
     log: <String>,
     is_processing: <Boolean> // 是否可操作的
-}...]
+  }...]
+}
 ```
 
 ### GET /approval/flow/copyto
