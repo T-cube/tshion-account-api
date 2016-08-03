@@ -434,7 +434,7 @@ api.put('/move', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next);
 });
-//
+
 // api.get('/can-create', (req, res, next) => {
 //   let companyLevel = new CompanyLevel(req.company);
 //   return companyLevel.canUpload(1).then(info => {

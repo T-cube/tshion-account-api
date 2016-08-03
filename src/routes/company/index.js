@@ -47,7 +47,6 @@ api.post('/', (req, res, next) => {
 
   let userLevel = new UserLevel(req.user);
   userLevel.canCreateCompany().then(canCreateCompany => {
-    console.log('canCreateCompany', canCreateCompany);
     if (false == canCreateCompany) {
       throw new ApiError(400, null, '创建公司数已达到了限制');
     }
