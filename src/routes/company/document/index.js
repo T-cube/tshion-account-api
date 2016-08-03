@@ -328,7 +328,6 @@ api.put('/file/:file_id', (req, res, next) => {
   db.document.file.findOne({
     _id: file_id
   }, {
-    path: 1,
     name: 1,
     dir_id: 1,
   })
@@ -336,16 +335,6 @@ api.put('/file/:file_id', (req, res, next) => {
     if (!fileInfo) {
       throw new ApiError(404);
     }
-    if (fileInfo.path) {
-      if (fileInfo.name == data.name) {
-        return res.json({});
-      }
-      data = _.pick(data, 'name');
-    }
-    _.extend(data, {
-      date_update: new Date(),
-      updated_by: req.user._id,
-    });
     return getFileNameListOfDir(fileInfo.dir_id)
     .then(filenamelist => {
       data.name = getUniqFileName(filenamelist, data.name);
