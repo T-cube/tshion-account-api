@@ -80,12 +80,11 @@ export default function upload(options) {
     fileFilter(req, file, cb) {
       let allowed = config.get('upload.allowed')[options.type];
       let ext = path.extname(file.originalname);
-      allowed.forEach(type => {
-        if (new RegExp(`^${type}$`).test(ext)) {
-          cb(null, true);
-        }
-      });
-      cb(null, false);
+      if (_.contains(allowed, ext.toLowerCase())) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
     }
   });
   // return multer({storage: storage});
