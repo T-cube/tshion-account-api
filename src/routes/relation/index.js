@@ -164,9 +164,9 @@ api.post('/requests/:request_id/accept', (req, res, next) => {
   })
   .then(request => {
     if (!request) {
-      throw new ApiError(404)
+      throw new ApiError(404);
     } else if (request.accepted !== null) {
-      throw new ApiError(400, 'already_set')
+      throw new ApiError(400, 'already_set');
     }
     if (request.type == 'request' && request.object == 'friend') {
       // add friend relationship to each other

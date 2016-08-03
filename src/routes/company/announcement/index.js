@@ -92,7 +92,7 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
       throw new ApiError(404);
     }
     if (announcement.is_published) {
-      throw new ApiError(400, null, 'announcement can\'t be modified');
+      throw new ApiError(400, 'cannot_modify');
     }
     let data = fetchAnnouncementData(req);
     return db.announcement.update({
@@ -165,17 +165,17 @@ function fetchAnnouncementData(req) {
   let structure = new Structure(req.company.structure);
   data.from.creator = req.user._id;
   if (data.from.department && !structure.findNodeById(data.from.department)) {
-    throw new ApiError(400, null, 'from department is not exists');
+    throw new ApiError(400, 'department_not_exists');
   }
   data.to && data.to.department && data.to.department.forEach(i => {
     if (!structure.findNodeById(i)) {
-      throw new ApiError(400, null, 'to department: ' + i  + ' is not exists');
+      throw new ApiError(400, 'department_not_exists');
     }
   });
   let memberIds = req.company.members.map(i => i._id);
   data.to && data.to.member && data.to.member.forEach(each => {
     if (-1 == indexObjectId(memberIds, each)) {
-      throw new ApiError(400, null, 'to member: ' + each + ' is not exists');
+      throw new ApiError(400, 'member_not_exists');
     }
   });
   data.update = new Date();
@@ -212,7 +212,6 @@ function addActivity(req, action, data) {
 }
 
 function addNotification(req, action, data, to) {
-  console.log(action, data, to);
   to = getNotifyUsers(req, to);
   let info = {
     action: action,

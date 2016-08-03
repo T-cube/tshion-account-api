@@ -33,7 +33,7 @@ api.post('/', upload({type: 'attachment'}).array('files'), (req, res, next) => {
   if (req.files) {
     data.files = _.map(req.files, file => {
       if (config.get('upload.approval_attachment.max_file_size') < file.size) {
-        throw new ApiError(400, null, 'file is too large');
+        throw new ApiError(400, 'file_too_large');
       }
       return _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size');
     });
@@ -70,21 +70,21 @@ api.get('/:item_id', (req, res, next) => {
       if (!mapData || !flow_id) {
         // data.is_processing = false;
         // return res.json(data);
-        throw new ApiError(400, null, 'you have not permission to read');
+        throw new ApiError(400, 'forbidden');
       }
       return db.approval.flow.findOne({
         _id: flow_id,
       })
       .then(flowInfo => {
         if (!flowInfo) {
-          throw new ApiError(400, null, 'you have not permission to read');
+          throw new ApiError(400, 'forbidden');
         }
         let approveInfo = _.find(flowInfo.approve, v => v._id && v._id.equals(item_id));
         let approveInfoCurStep = _.find(flowInfo.approve, v => v._id && v._id.equals(item_id) && v.step && v.step.equals(data.step));
         let inApply = indexObjectId(flowInfo.apply, item_id) != -1;
         let inCopyto = indexObjectId(flowInfo.copy_to, item_id) != -1;
         if (!inApply && !inCopyto && !approveInfo) {
-          throw new ApiError(400, null, 'you have not permission to read');
+          throw new ApiError(400, 'forbidden');
         }
         if (data.status == C.APPROVAL_ITEM_STATUS.PROCESSING
           && approveInfoCurStep) {
@@ -149,7 +149,7 @@ api.put('/:item_id/status', (req, res, next) => {
   })
   .then(item => {
     if (!item || item.status != C.APPROVAL_ITEM_STATUS.PROCESSING) {
-      throw new ApiError(400, null, 'wrong approval status');
+      throw new ApiError(400, 'cannot_modify');
     }
     return db.approval.item.update({
       _id: item_id,
@@ -190,11 +190,11 @@ api.put('/:item_id/steps', (req, res, next) => {
   })
   .then(item => {
     if (!item) {
-      throw new ApiError(400, null, 'wrong approval status');
+      throw new ApiError(400, 'cannot_modify');
     }
     let { step, steps } = item;
     if (!step.equals(data._id)) {
-      throw new ApiError(400, null, 'you have not permission to audit');
+      throw new ApiError(400, 'forbidden');
     }
     return checkAprroverOfStepAndGetSteps(req, item)
     .then(templateSteps => {
@@ -306,7 +306,7 @@ function checkAprroverOfStepAndGetSteps(req, item) {
   .then(template => {
     let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
     if (-1 == indexObjectId(approver, req.user._id)) {
-      throw new ApiError(400, null, 'you have not permission to audit');
+      throw new ApiError(400, 'forbidden');
     }
     return template.steps;
   });

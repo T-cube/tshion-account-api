@@ -51,10 +51,10 @@ api.post('/:node_id', (req, res, next) => {
   sanitizeValidateObject(nodeSanitization, nodeValidation, data);
   let node = tree.addNode(data, node_id);
   if (!node) {
-    return next(new ApiError(404, null, 'node not exists'));
+    return next(new ApiError(404, 'department_not_exists'));
   }
   save(req)
-  .then(doc => res.json(node))
+  .then(() => res.json(node))
   .catch(next);
 });
 
@@ -65,7 +65,7 @@ api.put('/:node_id', (req, res, next) => {
   let node = tree.updateNode(data, node_id);
   if (node) {
     save(req)
-    .then(doc => res.json(node))
+    .then(() => res.json(node))
     .catch(next);
   } else {
     next(new ApiError(404));
@@ -104,7 +104,7 @@ api.post('/:node_id/position', (req, res, next) => {
     .then(() => res.json(position))
     .catch(next);
   } else {
-    throw new ApiError(400, 'duplicated position name');
+    throw new ApiError(400, 'position_exists');
   }
 });
 
@@ -126,7 +126,7 @@ api.put('/:node_id/position/:position_id', (req, res, next) => {
     .then(() => res.json({}))
     .catch(next);
   } else {
-    throw new ApiError(400, 'update failed');
+    throw new ApiError(400, 'update_failed');
   }
 });
 
@@ -139,7 +139,7 @@ api.delete('/:node_id/position/:position_id', (req, res, next) => {
     .then(() => res.json({}))
     .catch(next);
   } else {
-    next(new ApiError(400, 'position not found'));
+    next(new ApiError(400, 'position_not_exists'));
   }
 });
 
@@ -170,6 +170,6 @@ api.delete('/:node_id/member/:member_id', (req, res, next) => {
     .then(doc => res.json(doc))
     .catch(next);
   } else {
-    next(new ApiError(400, 'member not found'));
+    next(new ApiError(400, 'member_not_exists'));
   }
 });

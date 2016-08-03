@@ -91,7 +91,7 @@ api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
   if (data.date_due < data.date_start) {
-    throw new ApiError(400, null, 'wrong date');
+    throw new ApiError(400, 'invalid_date');
   }
   _.extend(data, {
     creator: req.user._id,
@@ -118,7 +118,7 @@ api.get('/:_task_id', (req, res, next) => {
   })
   .then(task => {
     if (!task) {
-      throw new ApiError(404, null, 'task not found!');
+      throw new ApiError(404);
     }
     // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
     return fetchCompanyMemberInfo(req.company.members, task, 'creator', 'assignee');
@@ -135,7 +135,7 @@ api.param('task_id', (req, res, next, id) => {
   })
   .then(task => {
     if (!task) {
-      throw new ApiError(404, null, 'task not found');
+      throw new ApiError(404);
     }
     req.task = task;
     next();
@@ -185,7 +185,7 @@ api.put('/:task_id/tag', (req, res, next) => {
   })
   .then(count => {
     if (!count) {
-      throw new ApiError(400, null, 'tag is not exists');
+      throw new ApiError(400, 'tag_not_exists');
     }
     return db.task.update({
       _id: req.task._id
@@ -389,7 +389,7 @@ function validField(field, val) {
 
 function ensureProjectMember(project, user_id) {
   if (indexObjectId(project.members.map(i => i._id), user_id) == -1) {
-    throw new ApiError(400, null, 'not the member of this project');
+    throw new ApiError(400, 'member_not_exists');
   }
 }
 
@@ -415,7 +415,7 @@ function taskUnfollow(req, userId) {
   })
   .then(count => {
     if (count) {
-      throw new ApiError(400, null, 'assignee and creator can not unfollow');
+      throw new ApiError(400, 'assignee_and_creator_can_not_unfollow');
     }
     return db.task.update({
       _id: taskId

@@ -53,7 +53,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company);
   companyLevel.canAddMember().then(isCanAddmement => {
     if (!isCanAddmement) {
-      throw new ApiError(400, null, '公司人数已达到限制');
+      throw new ApiError(400, 'over_member_num');
     }
   })
   .then(() => {
@@ -62,7 +62,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
     data.type = C.COMPANY_MEMBER_TYPE.NORMAL;
     let member = _.find(req.company.members, m => m.email == data.email);
     if (member) {
-      throw new ApiError(400, null, 'member exists');
+      throw new ApiError(400, 'member_exists');
     }
     return db.user.findOne({email: data.email}, {_id: 1, name: 1})
     .then(user => {
@@ -73,7 +73,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
           m._id.equals(user._id);
         });
         if (member) {
-          throw new ApiError(400, null, 'member exists');
+          throw new ApiError(400, 'member_exists');
         }
         data._id = user._id;
       } else {
@@ -188,7 +188,7 @@ api.put('/:member_id', (req, res, next) => {
 api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   const member_id = ObjectId(req.params.member_id);
   if (member_id.equals(req.user._id)) {
-    throw new ApiError(400, null, 'can not remove yourself');
+    throw new ApiError(400, 'can_not_remove_yourself');
   }
   let tree = new Structure(req.company.structure);
   tree.deleteMemberAll(member_id);
@@ -223,7 +223,7 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
 api.post('/exit', (req, res, next) => {
   const member_id = req.user._id;
   if (req.company.owner.equals(member_id)) {
-    throw new ApiError(400, null, 'company owner can not exit');
+    throw new ApiError(400, 'owner_can_not_exit');
   }
   return Promise.all([
     db.company.update({

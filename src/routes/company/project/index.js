@@ -126,7 +126,7 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
   let project_id = req.project._id;
   let data = req.project;
   if (!req.user._id.equals(data.owner)) {
-    throw new ApiError(403);
+    throw new ApiError(400, 'forbidden');
   }
   let projectMembers = [];
   data.members && (projectMembers = data.members.map(i => i._id));
@@ -179,7 +179,7 @@ api.put('/:project_id/logo', (req, res, next) => {
 api.put('/:project_id/logo/upload', upload({type: 'avatar'}).single('logo'),
 (req, res, next) => {
   if (!req.file) {
-    throw new ApiError(400, null, 'file type not allowed');
+    throw new ApiError(400, 'file_type_error');
   }
   let data = {
     logo: req.file.url
@@ -219,7 +219,7 @@ api.post('/:project_id/member', (req, res, next) => {
   ensureProjectAdmin(req.project, req.user._id);
   data.forEach(item => {
     if (indexObjectId(req.project.members.map(i => i._id), item._id) != -1) {
-      throw new ApiError(400, null, 'member is exists');
+      throw new ApiError(400, 'member_exists');
     }
   });
   Promise.all([
@@ -247,7 +247,7 @@ api.put('/:project_id/member/:member_id/type', (req, res, next) => {
   let project_id = req.project._id;
   let type = req.body.type;
   if (type != C.PROJECT_MEMBER_TYPE.ADMIN && type != C.PROJECT_MEMBER_TYPE.NORMAL) {
-    throw new ApiError(400, null, 'wrong type');
+    throw new ApiError(400, 'wrong_member_type');
   }
   ensureProjectOwner(req.project, req.user._id);
   ensureProjectMember(req.project, member_id);
@@ -302,7 +302,7 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
         || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
   }).length;
   if (!allowed) {
-    throw new ApiError(403);
+    throw new ApiError(400, 'forbidden');
   }
   db.task.count({
     project_id: project_id,
@@ -311,7 +311,7 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
   })
   .then(count => {
     if (count) {
-      throw new ApiError(400, null, '用户还有待处理的任务');
+      throw new ApiError(400, 'member_task_not_empty');
     }
     return Promise.all([
       db.user.update({
@@ -507,20 +507,20 @@ function logProject(req, action, data) {
 
 function ensureProjectOwner(project, user_id) {
   if (!project.owner.equals(user_id)) {
-    throw new ApiError(400, null, 'user is not owner of the project');
+    throw new ApiError(400, null, 'not_project_owner');
   }
 }
 
 function ensureProjectMember(project, user_id) {
   if (indexObjectId(project.members.map(i => i._id), user_id) == -1) {
-    throw new ApiError(400, null, 'not the member of this project');
+    throw new ApiError(400, 'not_project_member');
   }
 }
 
 function ensureProjectAdmin(project, user_id) {
   if (-1 == [C.PROJECT_MEMBER_TYPE.ADMIN, C.PROJECT_MEMBER_TYPE.OWNER]
     .indexOf(_.find(project.members, member => member._id.equals(user_id)).type)) {
-    throw new ApiError(400, null, 'user is not admin of the project');
+    throw new ApiError(400, 'not_project_admin');
   }
 }
 
@@ -536,7 +536,7 @@ function fetchTagAndValidTag(req, tag_id) {
   })
   .then(project => {
     if (project && (!tag_id || !project.tags[0]._id.equals(tag_id))) {
-      throw new ApiError(400, null, 'tag is already exists');
+      throw new ApiError(400, 'tag_exists');
     }
     return data;
   });

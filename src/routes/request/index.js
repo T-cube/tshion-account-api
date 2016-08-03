@@ -36,7 +36,7 @@ api.get('/', (req, res, next) => {
   }
   if (status) {
     if (!_.contains(ENUMS.REQUEST_STATUS, status)) {
-      throw ApiError(400, null, 'invalid request status: ' + status);
+      throw ApiError(400, 'invalid_request_status');
     }
     query.status = status;
   }
@@ -64,7 +64,7 @@ api.post('/:request_id/accept', (req, res, next) => {
       throw new ApiError(404, null, 'request not found');
     }
     if (request.status != C.REQUEST_STATUS.PENDING) {
-      throw new ApiError(400, null, 'request expired');
+      throw new ApiError(400, 'request_expired');
     }
     db.request.update({
       _id: requestId,
@@ -116,7 +116,7 @@ api.post('/:request_id/reject', (req, res, next) => {
       throw new ApiError(404, null, 'request not found');
     }
     if (request.status != C.REQUEST_STATUS.PENDING) {
-      throw new ApiError(400, null, 'request expired');
+      throw new ApiError(400, 'request_expired');
     }
     db.request.update({
       _id: requestId,
