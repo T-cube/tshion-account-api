@@ -261,7 +261,7 @@ upload({type: 'attachment'}).array('document'),
 (req, res, next) => {
   let data = [];
   let dir_id = ObjectId(req.params.dir_id);
-  if (!req.files) {
+  if (!req.files || !req.files.length) {
     throw new ApiError(400, null, '文件未上传');
   }
   getParentPaths(dir_id)
