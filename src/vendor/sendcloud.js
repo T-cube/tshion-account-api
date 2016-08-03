@@ -114,6 +114,7 @@ export class SmsSender {
   send(template, phone, data) {
     const { options } = this;
     let templateData = options.templates[template];
+    console.log(template, options.templates);
     if (!templateData) {
       throw new SendCloudError(`invalid sms template: ${template}`);
     }

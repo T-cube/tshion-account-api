@@ -180,7 +180,7 @@ export default class Account {
 
   sendSmsCode(mobile, template) {
     const { expires } = config.get('userVerifyCode.sms');
-    let templateName = 'tlifang_email_bind';
+    let templateName = 'tlifang_mobile_bind';
     if (template == 'reset_pass') {
       templateName = 'tlifang_reset_pass';
     }
