@@ -80,7 +80,7 @@ export default function upload(options) {
     fileFilter(req, file, cb) {
       let allowed = config.get('upload.allowed')[options.type];
       let ext = path.extname(file.originalname);
-      if (_.contains(allowed, ext)) {
+      if (_.contains(allowed, ext.toLowerCase())) {
         cb(null, true);
       } else {
         cb(null, false);
