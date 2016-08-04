@@ -23,7 +23,6 @@ import {
   fetchCompanyMemberInfo,
   mapObjectIdToData,
   diffObjectId,
-  getClientIp,
   indexObjectId,
 } from 'lib/utils';
 import Structure from 'models/structure';
@@ -38,7 +37,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   checkUserLocation(req.company._id, req.user._id).then(isValid => {
     let data = req.body;
     sanitizeValidateObject(signSanitization, signValidation, data);
-    let from_pc = !!req.query.from_pc && getClientIp(req);
+    let from_pc = !!req.query.from_pc && req.client.ip;
     let now = new Date();
     _.extend(data, {
       date: now

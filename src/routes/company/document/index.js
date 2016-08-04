@@ -549,7 +549,6 @@ function createFile(req, data, dir_id) {
     .then(() => {
       return getFileListOfDir(dir_id)
       .then(filelist => {
-        console.log('filelist', filelist);
         data.forEach((item, i) => {
           data[i].name = getUniqFileName(filelist.map(i => i.name), data[i].name);
           filelist.push({
