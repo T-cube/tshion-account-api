@@ -70,7 +70,7 @@ function access(req, res, next) {
   let gettingWechatOauth;
   let { code } = req.query;
   let { random_token } = req.body;
-  let oauthInfoErr = new ApiError(400, null, 'can not get access_token from wechat server');
+  let oauthInfoErr = new ApiError(500, null, 'can not get access_token from wechat server');
   if (random_token) {
     gettingWechatOauth = wUtil.findWechatByRandomToken(random_token);
   } else if (code) {

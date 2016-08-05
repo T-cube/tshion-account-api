@@ -31,7 +31,7 @@ api.post('/', wechat(wechatConfig, function (req, res) {
     if (message.Event == 'CLICK') {
       if (message.EventKey == 'contact_us') {
         return res.reply({
-          content: '欢迎联系我们：\nQQ: 502915668\n电话: 400 1166 323\n邮箱: cs@tlifang.com\n网址：www.tlifang.com',
+          content: '你好，如果遇到使用问题，可以先查看菜单栏「帮助手册」自助解决。\n若没有找到答案，或者关于T立方有什么意见和建议，可以通过以下方式联系我们，我们会及时给予答复。\nQQ：502915668\n电话：400 1166 323\n邮箱：cs@tlifang.com\n网址：www.tlifang.com',
           type: 'text',
         });
       }

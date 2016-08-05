@@ -21,7 +21,7 @@ api.post('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(sanitization, validation, data);
   if (data.time_end < data.time_start) {
-    throw new ApiError(400, null, 'wrong end time');
+    throw new ApiError(400, 'invalid_date');
   }
   let scheduleModel = new ScheduleModel(db);
   let cron_rule = scheduleModel.cronRule(data);
@@ -52,7 +52,7 @@ api.get([
   let { year, month, day } = req.params;
   let dateStart = new Date(`${year}-` + (month || 1) + '-' + (day || 1));
   if (dateStart.getFullYear() != year) {
-    throw new ApiError(400);
+    throw new ApiError(400, 'invalid_date');
   }
   let dateEnd;
   if (!month) {

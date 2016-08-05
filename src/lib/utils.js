@@ -294,6 +294,8 @@ export function getGpsDistance(from, to) {
 
 export function getClientIp(req) {
   return req.headers['x-forwarded-for'] ||
+    req.headers['x-real-ip'] ||
+    req.ip ||
     req.connection.remoteAddress ||
     req.socket.remoteAddress ||
     req.connection.socket.remoteAddress;

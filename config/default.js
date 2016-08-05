@@ -13,6 +13,7 @@ module.exports = {
     // 每页默认显式条目数量
     listNum: 20,
     taskListNum: 10,
+    approvalListNum: 10,
     maxListNum: 100,
   },
   passwordHashRounds: 10,

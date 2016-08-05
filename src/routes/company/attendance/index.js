@@ -23,8 +23,8 @@ import {
   fetchCompanyMemberInfo,
   mapObjectIdToData,
   diffObjectId,
-  getClientIp,
   indexObjectId,
+  getClientIp,
 } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
@@ -44,7 +44,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
       date: now
     });
     if (!isValid && !from_pc) {
-      throw new ApiError(400, null, 'invalid user location');
+      throw new ApiError(400, 'invalid_user_location');
     }
     return new Attendance(req.attendanceSetting).updateSign({
       data: [data],
@@ -78,7 +78,7 @@ api.get('/sign/user/:user_id', (req, res, next) => {
     month = date.getMonth() + 1;
   }
   if (!user_id.equals(req.user._id) && !checkUserTypeFunc(req, C.COMPANY_MEMBER_TYPE.ADMIN)) {
-    throw new ApiError(403);
+    throw new ApiError(400, 'forbidden');
   }
   db.attendance.sign.findOne({
     user: user_id,
@@ -328,7 +328,7 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
   if (!_.find(req.company.members, i => i._id.equals(data.auditor))) {
-    throw new ApiError(400, null, 'auditor is not the member of company');
+    throw new ApiError(400,'member_not_exists');
   }
   db.attendance.setting.update({
     _id: company_id
@@ -368,7 +368,7 @@ function ensureFetchSetting(req, res, next) {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(400, null, 'attendance is closed');
+      throw new ApiError(400, 'attendance_is_closed');
     }
     req.attendanceSetting = doc;
     next();
@@ -382,7 +382,7 @@ function ensureFetchSettingOpened(req, res, next) {
   })
   .then(doc => {
     if (!doc || !doc.is_open) {
-      throw new ApiError(400, null, 'attendance is closed');
+      throw new ApiError(400, 'attendance_is_closed');
     }
     req.attendanceSetting = doc;
     next();

@@ -113,10 +113,10 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
   })
   .then(oldTpl => {
     if (!oldTpl) {
-      throw new ApiError(404, null, 'template is not exist');
+      throw new ApiError(404, 'approval_template_not_exists');
     }
     if (oldTpl.status != C.APPROVAL_STATUS.UNUSED) {
-      throw new ApiError(400, null, '启用中的模板不能编辑');
+      throw new ApiError(400, 'cannot_modify');
     }
     if (oldTpl.forms_not_editable) {
       data.forms = oldTpl.forms; // 不能修改表单

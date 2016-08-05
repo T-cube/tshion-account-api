@@ -125,7 +125,7 @@ api.post('/dir', (req, res, next) => {
     return getParentPaths(data.parent_dir)
     .then(path => {
       if (path.length > max_dir_path_length) {
-        throw new ApiError(400, null, '最多只能创建' + max_dir_path_length + '级目录');
+        throw new ApiError(400, 'folder_path_too_long');
       }
       data.path = path;
     });
@@ -262,7 +262,7 @@ upload({type: 'attachment'}).array('document'),
   let data = [];
   let dir_id = ObjectId(req.params.dir_id);
   if (!req.files || !req.files.length) {
-    throw new ApiError(400, null, '文件未上传');
+    throw new ApiError(400, 'file_not_upload');
   }
   getParentPaths(dir_id)
   .then(path => {
@@ -328,7 +328,6 @@ api.put('/file/:file_id', (req, res, next) => {
   db.document.file.findOne({
     _id: file_id
   }, {
-    path: 1,
     name: 1,
     dir_id: 1,
   })
@@ -336,19 +335,10 @@ api.put('/file/:file_id', (req, res, next) => {
     if (!fileInfo) {
       throw new ApiError(404);
     }
-    if (fileInfo.path) {
-      if (fileInfo.name == data.name) {
-        return res.json({});
-      }
-      data = _.pick(data, 'name');
-    }
-    _.extend(data, {
-      date_update: new Date(),
-      updated_by: req.user._id,
-    });
-    return getFileNameListOfDir(fileInfo.dir_id)
-    .then(filenamelist => {
-      data.name = getUniqFileName(filenamelist, data.name);
+    return getFileListOfDir(fileInfo.dir_id)
+    .then(filelist => {
+      filelist = filelist.filter(i => !i._id.equals(file_id));
+      data.name = getUniqFileName(filelist.map(i => i.name), data.name);
       return db.document.file.update({
         _id: file_id,
       }, {
@@ -469,7 +459,7 @@ function checkNameValid(req, name, parent_dir) {
   })
   .then(list => {
     if (!list) {
-      throw new ApiError(400, null, '父目录不存在');
+      throw new ApiError(400, 'parent_folder_not_exists');
     }
     let findDirName = null;
     if (list.dirs && list.dirs.length) {
@@ -481,7 +471,7 @@ function checkNameValid(req, name, parent_dir) {
       })
       .then(count => {
         if (count) {
-          throw new ApiError(400, null, '存在同名的目录');
+          throw new ApiError(400, 'folder_name_exists');
         }
       });
     }
@@ -499,7 +489,7 @@ function checkDirExist(req, dir_id) {
   })
   .then(count => {
     if (!count) {
-      throw new ApiError(404, null, '文件夹' + dir_id + '不存在');
+      throw new ApiError(404, 'folder_not_exists');
     }
   });
 }
@@ -528,7 +518,7 @@ function getParentPaths(dir_id, path) {
 
 function createFile(req, data, dir_id) {
   if (!data.length) {
-    throw new ApiError(400, null, 'upload error, missing data');
+    throw new ApiError(400, 'file_not_upload');
   }
   let total_size = 0;
   let sizes = data.map(item => parseFloat(item.size));
@@ -540,10 +530,10 @@ function createFile(req, data, dir_id) {
     if (!info.ok) {
       let errorMsg;
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
-        errorMsg = '您的文件存储空间不足';
+        errorMsg = 'over_storage';
       }
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
-        errorMsg = '文件大小超过上限';
+        errorMsg = 'file_too_large';
       }
       async.each(data, (item, cb) => {
         fs.unlink(item.path, (e) => {
@@ -553,15 +543,17 @@ function createFile(req, data, dir_id) {
       }, (e) => {
         e && console.error(e);
       });
-      throw new ApiError(400, null, errorMsg);
+      throw new ApiError(400, errorMsg);
     }
     return checkDirExist(req, dir_id)
     .then(() => {
-      return getFileNameListOfDir(dir_id)
-      .then(filenamelist => {
+      return getFileListOfDir(dir_id)
+      .then(filelist => {
         data.forEach((item, i) => {
-          data[i].name = getUniqFileName(filenamelist, data[i].name);
-          filenamelist.push(data[i].name);
+          data[i].name = getUniqFileName(filelist.map(i => i.name), data[i].name);
+          filelist.push({
+            name: data[i].name
+          });
         });
       })
       .then(() => {
@@ -609,10 +601,10 @@ function deleteDirs(req, dirs) {
     })
     .then(doc => {
       if (!doc || doc.parent_dir == null) {
-        throw new ApiError(400, null, '未找到文件夹');
+        throw new ApiError(400, 'folder_not_exists');
       }
       if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
-        throw new ApiError(400, null, '请先删除或移动当前目录下的所有文件夹及文件');
+        throw new ApiError(400, 'folder_not_empty');
       }
       return db.document.dir.update({
         _id: doc.parent_dir
@@ -645,7 +637,7 @@ function deleteFiles(req, files) {
     })
     .then(fileInfo => {
       if (!fileInfo) {
-        throw new ApiError(400, null, '未找到文件');
+        throw new ApiError(400, 'file_not_exists');
       }
       incSize -= fileInfo.size;
       return checkDirExist(req, fileInfo.dir_id)
@@ -690,16 +682,9 @@ function deleteFiles(req, files) {
   });
 }
 
-function getFileNameListOfDir(dir_id) {
-  return db.document.dir.findOne({
-    _id: dir_id
-  }, {
-    files: 1
-  })
-  .then(dirInfo => {
-    return mapObjectIdToData(dirInfo.files, 'document.file', 'name')
-    .then(files => files.map(file => file.name));
-  });
+function getFileListOfDir(dir_id) {
+  return mapObjectIdToData(dir_id, 'document.dir', 'files')
+  .then(dirInfo => mapObjectIdToData(dirInfo.files, 'document.file', 'name'));
 }
 
 function checkMoveable(target_dir, dirs, files) {
@@ -711,7 +696,7 @@ function checkMoveable(target_dir, dirs, files) {
   })
   .then(doc => {
     if (!doc) {
-      throw new ApiError(400, null, 'target dir is not found');
+      throw new ApiError(400, 'folder_not_exists');
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'dirs'],
@@ -725,7 +710,7 @@ function checkMoveable(target_dir, dirs, files) {
         .then(dirsInfo => {
           dirsInfo.forEach(dir => {
             if (_.find(dirNameList, dir.name)) {
-              throw new ApiError(400, null, '存在同名或文件夹');
+              throw new ApiError(400, 'folder_name_exists');
             }
           });
         }),
@@ -733,7 +718,7 @@ function checkMoveable(target_dir, dirs, files) {
         .then(filesInfo => {
           filesInfo.forEach(file => {
             if (_.find(fileNameList, file.name)) {
-              throw new ApiError(400, null, '存在同名的文件');
+              throw new ApiError(400, 'file_name_exists');
             }
           });
         }),
@@ -741,7 +726,7 @@ function checkMoveable(target_dir, dirs, files) {
         .then(path => {
           dirs.forEach(dir => {
             if (-1 != indexObjectId(path, dir)) {
-              throw new ApiError(400, null, '不能移动文件夹到其子文件夹');
+              throw new ApiError(400, 'folder_path_error');
             }
           });
           let length = max_dir_path_length - path.length;
@@ -757,7 +742,7 @@ function ensurePathLengthLessThan(dirs, length) {
     return;
   }
   if (length < 0) {
-    throw new ApiError(400, null, `路径长度过长，超过了${max_dir_path_length}级目录`);
+    throw new ApiError(400, 'folder_path_too_long');
   }
   return db.document.dir.find({
     _id: {

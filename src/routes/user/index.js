@@ -121,7 +121,7 @@ api.put('/avatar', (req, res, next) => {
 api.put('/avatar/upload', upload({type: 'avatar'}).single('avatar'),
 (req, res, next) => {
   if (!req.file) {
-    throw new ApiError(400, null, 'file type not allowed');
+    throw new ApiError(400, 'file_type_error');
   }
   let data = {
     avatar: req.file.url

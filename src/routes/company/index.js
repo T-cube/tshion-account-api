@@ -48,7 +48,7 @@ api.post('/', (req, res, next) => {
   let userLevel = new UserLevel(req.user);
   userLevel.canCreateCompany().then(canCreateCompany => {
     if (false == canCreateCompany) {
-      throw new ApiError(400, null, '创建公司数已达到了限制');
+      throw new ApiError(400, 'over_company_num');
     }
     return db.user.findOne({
       _id: req.user._id
@@ -112,7 +112,7 @@ api.param('company_id', (req, res, next, id) => {
   })
   .then(company => {
     if (!company) {
-      throw new ApiError(404, null, 'company not found');
+      throw new ApiError(404);
     }
     req.company = company;
     next();
@@ -155,7 +155,7 @@ api.put('/:company_id', (req, res, next) => {
 api.delete('/:company_id', authCheck(), (req, res, next) => {
   let company = req.company;
   if (!req.user._id.equals(company.owner)) {
-    throw new ApiError(403, null, 'only owner can carry out this operation');
+    throw new ApiError(403);
   }
   // TODO remove related resources
   db.company.remove({
@@ -182,7 +182,7 @@ api.put('/:company_id/logo', (req, res, next) => {
 api.put('/:company_id/logo/upload', upload({type: 'avatar'}).single('logo'),
 (req, res, next) => {
   if (!req.file) {
-    throw new ApiError(400, null, 'file type not allowed');
+    throw new ApiError(400, 'file_type_error');
   }
   let data = {
     logo: req.file.url
@@ -200,7 +200,7 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   let user_id = ObjectId(req.body.user_id);
   let company = req.company;
   if (req.user._id.equals(user_id)) {
-    throw new ApiError(400, null, 'can not transfer to your self');
+    throw new ApiError(400, 'can_not_transfer_to_yourself');
   }
   if (!req.user._id.equals(company.owner)) {
     throw new ApiError(403, null, 'only owner can carry out this operation');
@@ -208,12 +208,12 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   let member = _.find(company.members, m => m._id.equals(user_id));
   console.log('user_id=', user_id, 'member=', member);
   if (!member) {
-    throw new ApiError(404, null, 'member not exists');
+    throw new ApiError(404, 'member_not_exists');
   }
   db.user.find({_id: user_id})
   .then(user => {
     if (!user) {
-      throw new ApiError(404, null, 'user not exists');
+      throw new ApiError(404, 'user_not_exists');
     }
     return Promise.all([
       db.company.update({
@@ -244,7 +244,7 @@ api.post('/:company_id/exit', (req, res, next) => {
   const projects = req.company.projects;
   const user_id = req.user._id;
   if (user_id.equals(req.company.owner)) {
-    throw new ApiError(400, null, 'owner cannot exit company');
+    throw new ApiError(400, 'owner_can_not_exit');
   }
   const tree = new Structure(req.company.structure);
   tree.deleteMemberAll(user_id);
