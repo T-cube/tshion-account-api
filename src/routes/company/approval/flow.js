@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import config from 'config';
+import Promise from 'bluebird';
 
 import db from 'lib/database';
 import C, { ENUMS } from 'lib/constants';
@@ -53,12 +54,19 @@ api.get('/approve', (req, res, next) => {
       condition.step = {
         $in: approve.map(item => item.step)
       };
+      condition.status = C.APPROVAL_ITEM_STATUS.PROCESSING;
     } else if (status == 'resolved') {
-      condition.step = {
-        $nin: approve.map(item => item.step)
-      };
+      condition['$or'] = [{
+        status: {
+          $ne: C.APPROVAL_ITEM_STATUS.PROCESSING
+        }
+      }, {
+        step: {
+          $nin: approve.map(item => item.step)
+        }
+      }];
     }
-    _.extend(condition, getQueryCondition(req.query));
+    _.extend(condition, getstatusCondition(req.query.status));
     let data = {};
     return Promise.all([
       db.approval.item.count(condition)
@@ -101,6 +109,34 @@ api.get('/approve', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/count', (req, res, next) => {
+  getFlowByType(req)
+  .then(flow => {
+    let apply = flow.apply || [];
+    let copyto = flow.copyto || [];
+    let approve = flow.approve || [];
+    let conditions = {
+      apply_processing: {_id: {$in: apply}, status: C.APPROVAL_ITEM_STATUS.PROCESSING},
+      // apply_resolved: {_id: {$in: apply}, status: {$ne: C.APPROVAL_ITEM_STATUS.PROCESSING}},
+      copyto_processing: {_id: {$in: copyto}, status: C.APPROVAL_ITEM_STATUS.PROCESSING},
+      // copyto_resolved: {_id: {$in: copyto}, status: {$ne: C.APPROVAL_ITEM_STATUS.PROCESSING}},
+      approve_processing: {_id: { $in: approve.map(i => i._id)}, step: {$in: approve.map(i => i.step)}, status: C.APPROVAL_ITEM_STATUS.PROCESSING},
+      // approve_resolved: {_id: { $in: approve.map(i => i._id)}, $or: [{step: {$nin: approve.map(i => i.step)}}, {status: {$ne: C.APPROVAL_ITEM_STATUS.PROCESSING}}]},
+    };
+    return Promise.map(_.values(conditions), condition => db.approval.item.count(condition))
+    .then(data => {
+      data = _.object(_.keys(conditions), data);
+      return _.extend(data, {
+        apply_resolved: apply.length - data.apply_processing,
+        copyto_resolved: copyto.length - data.copyto_processing,
+        approve_resolved: approve.length - data.approve_processing,
+      });
+    });
+  })
+  .then(data => res.json(data))
+  .catch(next);
+});
+
 function findItems(req, res, next, type) {
   let pageInfo = getPageInfo(req);
   let { page, pagesize } = pageInfo;
@@ -119,7 +155,7 @@ function findItems(req, res, next, type) {
         $in: flow[type]
       }
     };
-    _.extend(condition, getQueryCondition(req.query));
+    _.extend(condition, getstatusCondition(req.query));
     let data = {};
     return Promise.all([
       db.approval.item.count(condition)
@@ -166,16 +202,20 @@ function getFlowByType(req, type) {
     if (!mapData || !flow_id) {
       return null;
     }
+    if (type) {
+      return db.approval.flow.findOne({
+        _id: flow_id
+      }, {
+        [type]: 1
+      });
+    }
     return db.approval.flow.findOne({
       _id: flow_id
-    }, {
-      [type]: 1
     });
   });
 }
 
-function getQueryCondition(query) {
-  let { status } = query;
+function getstatusCondition(status) {
   if (status == 'processing') {
     return {
       status: C.APPROVAL_ITEM_STATUS.PROCESSING
