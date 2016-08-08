@@ -308,16 +308,16 @@ OUTPUT
 
 ### GET /approval/flow/copyto
 
-### GET /approval/flow/apply/count
+### GET /approval/flow/count
 
 OUTPUT
 ```javascript
-[{
-   _id: <ENUM>, // status
-   count: <Number>
-}...]
+{
+  apply_processing: <Number>,
+  copyto_processing: <Number>,
+  approve_processing: <Number>,
+  apply_resolved: <Number>,
+  copyto_resolved: <Number>,
+  approve_resolved: <Number>
+}
 ```
-
-### GET /approval/flow/approve/count
-
-### GET /approval/flow/copyto/count`

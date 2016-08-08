@@ -110,6 +110,7 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
     for: 1,
     forms_not_editable: 1,
     forms: 1,
+    number: 1,
   })
   .then(oldTpl => {
     if (!oldTpl) {
@@ -137,6 +138,7 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
           master_id: oldTpl.master_id,
           company_id: req.company._id,
           status: C.APPROVAL_STATUS.UNUSED,
+          number: oldTpl.number
         });
         return Promise.all([
           db.approval.template.insert(data)

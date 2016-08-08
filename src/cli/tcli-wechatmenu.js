@@ -20,11 +20,11 @@ if (program.create) {
     'button': [{
       'type':'view',
       'name':'工作台',
-      'url':'http://m.tlifang.com/oa/company'
+      'url':'https://m.tlifang.com/oa/company'
     }, {
       'type':'view',
       'name':'帮助手册',
-      'url':'http://www.tlifang.com/weixin-guide'
+      'url':'https://www.tlifang.com/weixin-guide'
     }, {
       'type':'click',
       'name':'联系客服',
