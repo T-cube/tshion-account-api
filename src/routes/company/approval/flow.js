@@ -192,12 +192,12 @@ function getQueryCondition(query) {
 }
 
 function getPageInfo(req) {
-  let { page, pagesize } = req;
+  let { page, pagesize } = req.query;
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
     ? pagesize
-    : config.get('view.listNum');
+    : config.get('view.approvalListNum');
   return {
     page,
     pagesize
