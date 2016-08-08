@@ -102,7 +102,7 @@ api.get('/:item_id', (req, res, next) => {
   .then(data => {
     return Promise.all([
       mapObjectIdToData(data, [
-        ['approval.template', 'name,steps,forms,status', 'template'],
+        ['approval.template', 'name,steps,forms,status,number', 'template'],
       ]),
       fetchCompanyMemberInfo(req.company.members, data, 'steps.approver')
     ])
