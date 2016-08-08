@@ -248,7 +248,7 @@ export default class Attendance {
         if (item.sign_out.time < item.sign_out.setting) {
           record.leave_early += 1;
         }
-        if (item.sign_in.patch) {
+        if (item.sign_out.patch) {
           record.patch += 1;
         }
       } else {
