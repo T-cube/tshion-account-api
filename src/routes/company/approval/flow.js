@@ -50,11 +50,11 @@ api.get('/approve', (req, res, next) => {
     };
     let { status } = req.query;
     if (status == 'processing') {
-      condition.steps = {
+      condition.step = {
         $in: approve.map(item => item.step)
       };
     } else if (status == 'resolved') {
-      condition.steps = {
+      condition.step = {
         $nin: approve.map(item => item.step)
       };
     }
