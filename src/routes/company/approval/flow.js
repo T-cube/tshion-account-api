@@ -155,7 +155,7 @@ function findItems(req, res, next, type) {
         $in: flow[type]
       }
     };
-    _.extend(condition, getstatusCondition(req.query));
+    _.extend(condition, getstatusCondition(req.query.status));
     let data = {};
     return Promise.all([
       db.approval.item.count(condition)
