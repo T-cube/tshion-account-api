@@ -112,6 +112,16 @@ api.get('/approve', (req, res, next) => {
 api.get('/count', (req, res, next) => {
   getFlowByType(req)
   .then(flow => {
+    if (!flow) {
+      return res.json({
+        apply_processing: 0,
+        copyto_processing: 0,
+        approve_processing: 0,
+        apply_resolved: 0,
+        copyto_resolved: 0,
+        approve_resolved: 0,
+      });
+    }
     let apply = flow.apply || [];
     let copyto = flow.copyto || [];
     let approve = flow.approve || [];
