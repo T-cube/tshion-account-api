@@ -65,15 +65,18 @@ module.exports = {
     defaultType: 'attachment',
     allowed: {
       avatar: [
-        '.png', '.jpg', '.gif',
+        '.png', '.jpg', '.jpeg', '.gif',
       ],
       attachment: [
         // images
-        '.png', '.jpg', '.gif',
+        '.png', '.jpg', '.jpeg', '.gif',
         // pdf
         '.pdf',
         // office
         '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+        // wps
+        '.wps', '.wpp', '.et',
+		// plan text
         '.txt',
         // achives
         '.zip', '.rar',
