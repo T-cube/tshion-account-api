@@ -100,7 +100,7 @@ api.put('/:schedule_id', (req, res, next) => {
   _.extend(data, {
     date_update: new Date(),
   });
-  delete data.repeat;
+  // delete data.repeat;
   db.schedule.update({
     _id: schedule_id,
     creator: req.user._id,

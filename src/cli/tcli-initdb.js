@@ -38,7 +38,7 @@ if (program.oauth) {
       {
         client_id: 'com_tlifang_www',
         client_secret: '5@xUphUBru=AyUbU@6BEJaZehus!p6Ma',
-        redirect_uri: 'http://www.tlifang.com/user/oauth',
+        redirect_uri: 'https://www.tlifang.com/user/oauth',
       },
     ]);
   })

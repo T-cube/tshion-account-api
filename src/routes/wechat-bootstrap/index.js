@@ -39,9 +39,6 @@ api.post('/', wechat(wechatConfig, function (req, res) {
     break;
   }
   default:
-    if (message.Content == 'oa') {
-      return res.reply('http://m.tlifang.com/account/login');
-    }
     return res.reply({
       content: 'T立方 - 云工作平台',
       type: 'text',
