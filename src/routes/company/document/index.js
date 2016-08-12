@@ -18,7 +18,7 @@ import {
   delSanitization,
   delValidation,
 } from './schema';
-import upload from 'lib/upload';
+import { upload, saveCdn } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp, indexObjectId } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
@@ -258,6 +258,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
 
 api.post('/dir/:dir_id/upload',
 upload({type: 'attachment'}).array('document'),
+saveCdn('cdn-file'),
 (req, res, next) => {
   let data = [];
   let dir_id = ObjectId(req.params.dir_id);

@@ -1,3 +1,4 @@
+import Promise from 'bluebird';
 import multer from 'multer';
 import uuid from 'uuid';
 import _ from 'underscore';
@@ -44,7 +45,7 @@ export function defaultAvatar(type) {
   return getUploadUrl(dir, filename);
 }
 
-export default function upload(options) {
+export function upload(options) {
   options = _.defaults({}, options, {
     type: config.get('upload.defaultType'),
   });
@@ -87,5 +88,33 @@ export default function upload(options) {
       }
     }
   });
+
   // return multer({storage: storage});
+}
+
+export function saveCdn(bucket) {
+  return (req, res, next) => {
+    const qiniu = req.model('qiniu').getInstance(bucket);
+    let promise;
+
+    function cdnUpload(file, key, path) {
+      return qiniu.upload(key, path).then(data => {
+        file.cdn_bucket = data.bucket;
+        file.cdn_key = key;
+        file.url = `${data.server_url}${key}`;
+      });
+    }
+
+    if (req.file) {
+      const { relpath, path } = req.file;
+      promise = cdnUpload(req.file, relpath, path);
+    } else if (req.files) {
+      promise = Promise.map(req.files, file => {
+        const { relpath, path } = file;
+        return cdnUpload(file, relpath, path);
+      });
+    }
+    promise.then(() => next())
+    .catch(next);
+  };
 }

@@ -1,11 +1,12 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import fs from 'fs';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
-import upload, { randomAvatar, defaultAvatar } from 'lib/upload';
+import { upload, saveCdn, randomAvatar, defaultAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -153,14 +154,81 @@ api.put('/:company_id', (req, res, next) => {
 });
 
 api.delete('/:company_id', authCheck(), (req, res, next) => {
-  let company = req.company;
+  const company = req.company;
+  const companyId = company._id;
   if (!req.user._id.equals(company.owner)) {
     throw new ApiError(403);
   }
-  // TODO remove related resources
-  db.company.remove({
-    _id: company._id
-  })
+  let query = {
+    company_id: companyId,
+  };
+  let projectQuery = {
+    project_id: {$in: req.compnay.projects},
+  };
+  let combinedQuery = {$or: [{
+    company: companyId,
+  }, {
+    project: {$in: req.compnay.projects},
+  }]};
+  // TODO do deletion in service
+  Promise.all([
+    db.activity.remove(combinedQuery),
+    db.announcement.remove(query),
+    db.approval.user.find({'map.company_id': companyId}, {'map.$': 1})
+    .then(list => {
+      let listIds = _.pluck(list, 'id');
+      let flowIds = _.map(list, item => item.map[0].flow_id);
+      return Promise.all([
+        db.approval.user.remove({id: {$in: listIds}}),
+        db.approval.flow.remove({id: {$in: flowIds}}),
+      ]);
+    }),
+    db.approval.item.remove(query),
+    db.approval.template.remove(query),
+    db.approval.template.master.remove(query),
+    db.attendance.setting.remove({_id: companyId}),
+    db.attendance.sign.remove({company: companyId}),
+    db.company.remove({_id: companyId}),
+    db.company.level.remove({_id: companyId}),
+    db.discussion.find(projectQuery)
+    .then(list => {
+      let listIds = _.pluck(list, 'id');
+      return Promise.all([
+        db.discussion.remove(projectQuery),
+        db.discussion.comments.remove({discussion_id: {$in: listIds}}),
+      ]);
+    }),
+    db.document.dir.remove(query),
+    db.document.files.find({$or: [query, projectQuery]}, {path: 1})
+    .then(list => {
+      let promises = [];
+      _.each(list, file => {
+        promises.push(db.document.files.remove({_id: file._id}));
+        fs.unlink(file.path, e => {
+          if (e) {
+            console.error('delete file failed: ' + file.path);
+          }
+        });
+      });
+      return Promise.all(promises);
+    }),
+    db.notification.remove(combinedQuery),
+    db.project.remove(query),
+    db.request.remove({type: 'company', object: companyId}),
+    db.task.find(query, {comments: 1})
+    .then(list => {
+      let commentIds = [];
+      _.each(list, item => {
+        commentIds = commentIds.concat(item.comments);
+      });
+      return Promise.all([
+        db.task.remove(query),
+        db.task.comment.remove({_id: {$in: commentIds}}),
+      ]);
+    }),
+    // remove current_company for user
+    db.user.update({current_company: companyId}, {$set: {current_company: null}}, {multi: true}),
+  ])
   .then(() => res.json({}))
   .catch(next);
 });
@@ -179,7 +247,9 @@ api.put('/:company_id/logo', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:company_id/logo/upload', upload({type: 'avatar'}).single('logo'),
+api.put('/:company_id/logo/upload',
+upload({type: 'avatar'}).single('logo'),
+saveCdn('cdn-public'),
 (req, res, next) => {
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');

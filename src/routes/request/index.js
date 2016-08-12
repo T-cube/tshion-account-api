@@ -6,7 +6,7 @@ import config from 'config';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
-import upload from 'lib/upload';
+import { upload, saveCdn } from 'lib/upload';
 import C, { ENUMS } from 'lib/constants';
 import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
 
