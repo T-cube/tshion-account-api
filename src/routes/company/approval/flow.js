@@ -83,7 +83,7 @@ api.get('/approve', (req, res, next) => {
         data.pagesize = pagesize;
       });
     }
-    if (!req.forDownload || !export_count || export_count == 'page') {
+    if (!export_count || export_count == 'page') {
       listing = db.approval.item.find(condition, req.fetchItemFields)
       .sort({_id: -1})
       .skip((page - 1) * pagesize)
@@ -191,17 +191,43 @@ function findItems(req, res, next, type) {
     };
     _.extend(condition, getQueryCondition(req.query));
     let data = {};
-    return Promise.all([
-      db.approval.item.count(condition)
+    let { export_count } = req.query;
+    let counting = null;
+    let listing = null;
+    if (!req.forDownload) {
+      counting = db.approval.item.count(condition)
       .then(sum => {
         data.totalrows = sum;
         data.page = page;
         data.pagesize = pagesize;
-      }),
-      db.approval.item.find(condition, req.fetchItemFields)
+      });
+    }
+    if (!export_count || export_count == 'page') {
+      listing = db.approval.item.find(condition, req.fetchItemFields)
       .sort({_id: -1})
       .skip((page - 1) * pagesize)
-      .limit(pagesize)
+      .limit(pagesize);
+    } else {
+      let apply_date;
+      if (export_count == 'this_month') {
+        apply_date = {
+          $gte: moment().date(1).minute(0).toDate(),
+          $lt: new Date(),
+        };
+      } else if (export_count == 'last_month') {
+        apply_date = {
+          $gte: moment().month(-1).date(1).minute(0).toDate(),
+          $lt: moment().date(1).minute(0).toDate(),
+        };
+      }
+      if (export_count != 'all') {
+        condition.apply_date = apply_date;
+      }
+      listing = db.approval.item.find(condition, req.fetchItemFields);
+    }
+    return Promise.all([
+      counting,
+      listing
       .then(list => {
         return Promise.all([
           mapObjectIdToData(list, 'approval.template', 'name,status,forms.label', 'template'),
