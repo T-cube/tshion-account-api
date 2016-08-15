@@ -65,15 +65,18 @@ module.exports = {
     defaultType: 'attachment',
     allowed: {
       avatar: [
-        '.png', '.jpg', '.gif',
+        '.png', '.jpg', '.jpeg', '.gif',
       ],
       attachment: [
         // images
-        '.png', '.jpg', '.gif',
+        '.png', '.jpg', '.jpeg', '.gif',
         // pdf
         '.pdf',
         // office
         '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+        // wps
+        '.wps', '.dps', '.et',
+		// plan text
         '.txt',
         // achives
         '.zip', '.rar',
@@ -102,9 +105,9 @@ module.exports = {
       deleteAfterView: true,
     },
     qiniu: {
-      ACCESS_KEY: 'Tre8EMtc8k5iEg7EmThib_6fGBucIqJYTRRh_Hqx',
-      SECRET_KEY: 'U0uoDHEKE3MDEIF3jMoxb7f7G88NIblOd6CZeT_z',
-      bucket: 'tlifang',
+      ACCESS_KEY: 'f_l5R_bNDR03QjAfqqGy7C3XRuaoMp2qpiHTfAOJ',
+      SECRET_KEY: 'Pp7fk2HmH2LUXa7VnUY1Av8FoUQCY_TPeSf_6Y_2',
+      buckets: ['cdn-public', 'cdn-file'],
     },
     sendcloud: {
       email: {

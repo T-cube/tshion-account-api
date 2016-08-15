@@ -2,6 +2,8 @@ import _ from 'underscore';
 import express from 'express';
 import config from 'config';
 import Promise from 'bluebird';
+import { ObjectId } from 'mongodb';
+import moment from 'moment';
 
 import db from 'lib/database';
 import C, { ENUMS } from 'lib/constants';
@@ -22,6 +24,18 @@ const fetchItemFields = {
   steps: 1,
 };
 
+api.use((req, res, next) => {
+  if (req.query.download) {
+    req.fetchItemFields = _.extend({}, fetchItemFields, {
+      forms: 1
+    });
+    req.forDownload = true;
+  } else {
+    req.fetchItemFields = fetchItemFields;
+  }
+  next();
+});
+
 api.get('/apply', (req, res, next) => {
   findItems(req, res, next, 'apply');
 });
@@ -37,51 +51,66 @@ api.get('/approve', (req, res, next) => {
   .then(flow => {
     let approve = flow && flow.approve;
     if (!flow || !approve || !approve.length) {
-      return res.json({
-        list: [],
-        totalrows: 0,
-        page,
-        pagesize,
-      });
+      return res.json(getEmptyData(pagesize, req.forDownload));
     }
     let condition = {
       _id: {
         $in: approve.map(item => item._id)
       }
     };
-    let { status } = req.query;
+    let { status, export_count, template } = req.query;
     if (status == 'processing') {
       condition.step = {
         $in: approve.map(item => item.step)
       };
       condition.status = C.APPROVAL_ITEM_STATUS.PROCESSING;
     } else if (status == 'resolved') {
-      condition['$or'] = [{
-        status: {
-          $ne: C.APPROVAL_ITEM_STATUS.PROCESSING
-        }
-      }, {
-        step: {
-          $nin: approve.map(item => item.step)
-        }
-      }];
+      condition.step = {
+        $nin: approve.map(item => item.step)
+      };
     }
-    _.extend(condition, getstatusCondition(req.query.status));
+    if (template) {
+      condition.template = ObjectId(template);
+    }
     let data = {};
-    return Promise.all([
-      db.approval.item.count(condition)
+    let counting = null;
+    let listing = null;
+    if (!req.forDownload) {
+      counting = db.approval.item.count(condition)
       .then(sum => {
         data.totalrows = sum;
         data.page = page;
         data.pagesize = pagesize;
-      }),
-      db.approval.item.find(condition, fetchItemFields)
+      });
+    }
+    if (!export_count || export_count == 'page') {
+      listing = db.approval.item.find(condition, req.fetchItemFields)
       .sort({_id: -1})
       .skip((page - 1) * pagesize)
-      .limit(pagesize)
-      .then(list => {
+      .limit(pagesize);
+    } else {
+      let apply_date;
+      if (export_count == 'this_month') {
+        apply_date = {
+          $gte: moment().date(1).minute(0).toDate(),
+          $lt: new Date(),
+        };
+      } else if (export_count == 'last_month') {
+        apply_date = {
+          $gte: moment().month(-1).date(1).minute(0).toDate(),
+          $lt: moment().date(1).minute(0).toDate(),
+        };
+      }
+      if (export_count != 'all') {
+        condition.apply_date = apply_date;
+      }
+      listing = db.approval.item.find(condition, req.fetchItemFields);
+    }
+    return Promise.all([
+      counting,
+      listing.then(list => {
         return Promise.all([
-          mapObjectIdToData(list, 'approval.template', 'name,status', 'template'),
+          mapObjectIdToData(list, 'approval.template', 'name,status,forms.label', 'template'),
           fetchCompanyMemberInfo(req.company.members, list, 'from')
         ])
         .then(() => list);
@@ -104,7 +133,7 @@ api.get('/approve', (req, res, next) => {
         data.list = list;
       })
     ])
-    .then(() => res.json(data));
+    .then(() => res.json(wrapResponseData(data, req.forDownload)));
   })
   .catch(next);
 });
@@ -153,34 +182,55 @@ function findItems(req, res, next, type) {
   getFlowByType(req, type)
   .then(flow => {
     if (!flow || !flow[type] || !flow[type].length) {
-      return res.json({
-        list: [],
-        totalrows: 0,
-        page,
-        pagesize,
-      });
+      return res.json(getEmptyData(pagesize, req.forDownload));
     }
     let condition = {
       _id: {
         $in: flow[type]
       }
     };
-    _.extend(condition, getstatusCondition(req.query.status));
+    _.extend(condition, getQueryCondition(req.query));
     let data = {};
-    return Promise.all([
-      db.approval.item.count(condition)
+    let { export_count } = req.query;
+    let counting = null;
+    let listing = null;
+    if (!req.forDownload) {
+      counting = db.approval.item.count(condition)
       .then(sum => {
         data.totalrows = sum;
         data.page = page;
         data.pagesize = pagesize;
-      }),
-      db.approval.item.find(condition, fetchItemFields)
+      });
+    }
+    if (!export_count || export_count == 'page') {
+      listing = db.approval.item.find(condition, req.fetchItemFields)
       .sort({_id: -1})
       .skip((page - 1) * pagesize)
-      .limit(pagesize)
+      .limit(pagesize);
+    } else {
+      let apply_date;
+      if (export_count == 'this_month') {
+        apply_date = {
+          $gte: moment().date(1).minute(0).toDate(),
+          $lt: new Date(),
+        };
+      } else if (export_count == 'last_month') {
+        apply_date = {
+          $gte: moment().month(-1).date(1).minute(0).toDate(),
+          $lt: moment().date(1).minute(0).toDate(),
+        };
+      }
+      if (export_count != 'all') {
+        condition.apply_date = apply_date;
+      }
+      listing = db.approval.item.find(condition, req.fetchItemFields);
+    }
+    return Promise.all([
+      counting,
+      listing
       .then(list => {
         return Promise.all([
-          mapObjectIdToData(list, 'approval.template', 'name,status', 'template'),
+          mapObjectIdToData(list, 'approval.template', 'name,status,forms.label', 'template'),
           fetchCompanyMemberInfo(req.company.members, list, 'from')
         ])
         .then(() => list);
@@ -193,7 +243,7 @@ function findItems(req, res, next, type) {
         data.list = list;
       })
     ])
-    .then(() => res.json(data));
+    .then(() => res.json(wrapResponseData(data, req.forDownload)));
   })
   .catch(next);
 }
@@ -225,20 +275,21 @@ function getFlowByType(req, type) {
   });
 }
 
-function getstatusCondition(status) {
+function getQueryCondition(query) {
+  let { status, template } = query;
+  let condition = {};
   if (status == 'processing') {
-    return {
-      status: C.APPROVAL_ITEM_STATUS.PROCESSING
-    };
+    condition.status = C.APPROVAL_ITEM_STATUS.PROCESSING;
   }
   if (status == 'resolved') {
-    return {
-      status: {
-        $ne: C.APPROVAL_ITEM_STATUS.PROCESSING
-      }
+    condition.status = {
+      $ne: C.APPROVAL_ITEM_STATUS.PROCESSING
     };
   }
-  return null;
+  if (template) {
+    condition.template = ObjectId(template);
+  }
+  return condition;
 }
 
 function getPageInfo(req) {
@@ -252,4 +303,38 @@ function getPageInfo(req) {
     page,
     pagesize
   };
+}
+
+function getEmptyData(pagesize, forDownload) {
+  return wrapResponseData({
+    list: [],
+    totalrows: 0,
+    page: 1,
+    pagesize,
+  }, forDownload);
+}
+
+function wrapResponseData(data, forDownload) {
+  if (!forDownload) {
+    return data;
+  }
+  return ['审批类型', '申请人', '申请时间', '内容'].concat(data.list[0] && data.list[0].template.forms.map(f => f.label)).filter(i => i).concat('状态').join(',')
+    + '\n' +
+    data.list
+    .map(i => {
+      let item = [
+        i.template.name,
+        i.from.name,
+        moment(i.apply_date).format('YYYY-MM-DD HH:mm'),
+        i.content,
+      ];
+      i.forms.forEach(f => item.push(f.value || ''));
+      if (i.is_processing) {
+        item.push(i.is_processing ? '待处理' : '已处理');
+      } else {
+        item.push(i.status == 'processing' ? '待处理' : '已处理');
+      }
+      return item.join(',');
+    })
+    .join('\n');
 }
