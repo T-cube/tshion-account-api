@@ -289,7 +289,6 @@ function getEmptyData(pagesize, forDownload) {
 }
 
 function wrapResponseData(data, forDownload) {
-  console.log('wrapResponseData', data);
   if (!forDownload) {
     return data;
   }
