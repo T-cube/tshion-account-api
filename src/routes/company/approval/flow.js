@@ -306,21 +306,21 @@ function wrapResponseData(data, forDownload) {
   if (!forDownload) {
     return data;
   }
-  return ['审批类型', '申请人', '申请时间', '内容'].concat(data.list[0] && data.list[0].template.forms.map(f => f.label)).filter(i => i).concat('状态').join(',')
-    + '\n' +
-    data.list
+  return ['"审批类型"', '"申请人"', '"申请时间"', '"内容"'].concat(data.list[0] && data.list[0].template.forms.map(f => f.label && `"${f.label}"`)).filter(i => i).concat('"状态"').join(',')
+    + '\n'
+    + data.list
     .map(i => {
       let item = [
-        i.template.name,
-        i.from.name,
-        moment(i.apply_date).format('YYYY-MM-DD HH:mm'),
-        i.content,
+        `"${i.template.name}"`,
+        `"${i.from.name}"`,
+        '"' + moment(i.apply_date).format('YYYY-MM-DD HH:mm') + '"',
+        '"' + i.content.replace(/"/g, '\\"') + '"',
       ];
-      i.forms.forEach(f => item.push(f.value || ''));
+      i.forms.forEach(f => item.push((f.value && '"' + f.value.replace(/"/g, '\\"')) || '""'));
       if (i.is_processing) {
-        item.push(i.is_processing ? '待处理' : '已处理');
+        item.push(i.is_processing ? '"待处理"' : '"已处理"');
       } else {
-        item.push(i.status == 'processing' ? '待处理' : '已处理');
+        item.push(i.status == 'processing' ? '"待处理"' : '"已处理"');
       }
       return item.join(',');
     })
