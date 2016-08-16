@@ -59,7 +59,7 @@ export function login(req, res, next) {
         redirect_uri,
       };
       if (!user) {
-        data.error = __('login_failed');
+        data.error = 'login_failed';
         res.render('oauth/login', data);
       } else {
         req.session.user = user;
