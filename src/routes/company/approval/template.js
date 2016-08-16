@@ -36,12 +36,21 @@ api.get('/', (req, res, next) => {
         $ne: C.APPROVAL_STATUS.DELETED
       },
     };
-    let { user } = req.query;
+    let { user, type } = req.query;
     if (user && ObjectId.isValid(user)) {
-      let structure = new Structure(req.company.structure);
-      condition.scope = {
-        $in: structure.findMemberDepartments(ObjectId(user))
-      };
+      user = ObjectId(user);
+      switch (type) {
+      case 'approver':
+        condition['steps.approver._id'] = user;
+        break;
+      case 'copy_to':
+        condition['steps.copy_to._id'] = user;
+        break;
+      default:
+        condition.scope = {
+          $in: new Structure(req.company.structure).findMemberDepartments(user)
+        };
+      }
     }
     return db.approval.template.find(condition, {
       name: 1,

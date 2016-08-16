@@ -305,6 +305,8 @@ export default class Approval {
             status: C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED,
             step: null,
           }
+        }, {
+          multi: true
         }))
       );
     });

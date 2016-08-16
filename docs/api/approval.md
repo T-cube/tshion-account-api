@@ -24,6 +24,7 @@ QUERY
 ```javascript
 {
   user: <ObjectId>, // 用户id
+  type: <String:Enum=[approver|copy_to|mine]>, // optinnal, default: 'mine'
 }
 ```
 
@@ -235,7 +236,9 @@ QUERY
 
 ```javascript
 {
-  status: <Emun:[processing|resolved]>
+  status: <Emun:[processing|resolved]>,
+  template: <ObjectId>,
+  page: <Int>,
 }
 ```
 
@@ -273,7 +276,9 @@ QUERY
 
 ```javascript
 {
-  status: <Emun:[processing|resolved]>
+  status: <Emun:[processing|resolved]>,
+  template: <ObjectId>,
+  page: <Int>,
 }
 ```
 
