@@ -33,6 +33,7 @@ function getFileInfo(fileId, token) {
   });
 }
 
+// TODO remove this interface, use CDN download url instead
 api.get('/download/:file_id/token/:token', (req, res, next) => {
   let fileId = ObjectId(req.params.file_id);
   let token = req.params.token;
@@ -68,11 +69,12 @@ api.get('/preview/:file_id/token/:token', (req, res, next) => {
   let fileId = ObjectId(req.params.file_id);
   const { file_id, token } = req.params;
   getFileInfo(fileId, token)
-  .then(fileInfo => {
+  .then(file => {
     const apiUrl = config.get('apiUrl');
+    const qiniu = req.model('qiniu').getInstance('cdn-file');
     let data = {
-      file: fileInfo,
-      downloadUrl: `${apiUrl}api/file/download/${fileId}/token/${token}`,
+      file: file,
+      downloadUrl: qiniu.makeLink(file.url, file.name),
       previewUrl: `${apiUrl}api/file/preview/doc/${fileId}/token/${token}`,
     };
     res.render('file/preview', data);
@@ -84,9 +86,10 @@ api.get('/preview/doc/:file_id/token/:token', (req, res, next) => {
   let fileId = ObjectId(req.params.file_id);
   const { file_id, token } = req.params;
   getFileInfo(fileId, token)
-  .then(fileInfo => {
+  .then(file => {
     const apiUrl = config.get('apiUrl');
-    let downloadUrl = `${apiUrl}api/file/download/${fileId}/token/${token}`;
+    const qiniu = req.model('qiniu').getInstance('cdn-file');
+    let downloadUrl = qiniu.makeLink(file.url, file.name);
     let options = {
       enableSSL: /^https/.test(apiUrl),
     };

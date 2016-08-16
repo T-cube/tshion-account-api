@@ -6,7 +6,7 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
-import upload from 'lib/upload';
+import { upload, saveCdn } from 'lib/upload';
 import { comparePassword, hashPassword, maskEmail, maskMobile } from 'lib/utils';
 import UserLevel from 'models/user-level';
 
@@ -118,7 +118,9 @@ api.put('/avatar', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/avatar/upload', upload({type: 'avatar'}).single('avatar'),
+api.put('/avatar/upload',
+upload({type: 'avatar'}).single('avatar'),
+saveCdn('cdn-public'),
 (req, res, next) => {
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');

@@ -5,7 +5,7 @@ import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import upload from 'lib/upload';
+import { upload, saveCdn } from 'lib/upload';
 import config from 'config';
 import { sanitizeValidateObject } from 'lib/inspector';
 import {
@@ -25,7 +25,10 @@ import Approval from 'models/approval';
 let api = express.Router();
 export default api;
 
-api.post('/', upload({type: 'attachment'}).array('files'), (req, res, next) => {
+api.post('/',
+//upload({type: 'attachment'}).array('files'),
+// TODO upload attachment;
+(req, res, next) => {
   let data = req.body;
   let user_id = req.user._id;
   let company_id = req.company._id;

@@ -18,7 +18,7 @@ import {
   delSanitization,
   delValidation,
 } from './schema';
-import upload from 'lib/upload';
+import { upload, saveCdn } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp, indexObjectId } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
@@ -209,6 +209,9 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
+    const qiniu = req.model('qiniu').getInstance('cdn-file');
+    file.url = qiniu.makeLink(file.url);
+    file.download_url = qiniu.makeLink(file.url, file.name);
     res.json(file);
   })
   .catch(next);
@@ -258,6 +261,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
 
 api.post('/dir/:dir_id/upload',
 upload({type: 'attachment'}).array('document'),
+saveCdn('cdn-file'),
 (req, res, next) => {
   let data = [];
   let dir_id = ObjectId(req.params.dir_id);
