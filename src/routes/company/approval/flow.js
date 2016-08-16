@@ -75,6 +75,7 @@ api.get('/approve', (req, res, next) => {
     let data = {};
     let counting = null;
     let listing = null;
+    _.extend(condition, getApplyDateCondition(export_count));
     if (!req.forDownload) {
       counting = db.approval.item.count(condition)
       .then(sum => {
@@ -83,27 +84,12 @@ api.get('/approve', (req, res, next) => {
         data.pagesize = pagesize;
       });
     }
-    if (!export_count || export_count == 'page') {
+    if (!req.forDownload || !export_count || export_count == 'page') {
       listing = db.approval.item.find(condition, req.fetchItemFields)
       .sort({_id: -1})
       .skip((page - 1) * pagesize)
       .limit(pagesize);
     } else {
-      let apply_date;
-      if (export_count == 'this_month') {
-        apply_date = {
-          $gte: moment().date(1).minute(0).toDate(),
-          $lt: new Date(),
-        };
-      } else if (export_count == 'last_month') {
-        apply_date = {
-          $gte: moment().month(-1).date(1).minute(0).toDate(),
-          $lt: moment().date(1).minute(0).toDate(),
-        };
-      }
-      if (export_count != 'all') {
-        condition.apply_date = apply_date;
-      }
       listing = db.approval.item.find(condition, req.fetchItemFields);
     }
     return Promise.all([
@@ -194,6 +180,7 @@ function findItems(req, res, next, type) {
     let { export_count } = req.query;
     let counting = null;
     let listing = null;
+    _.extend(condition, getApplyDateCondition(export_count));
     if (!req.forDownload) {
       counting = db.approval.item.count(condition)
       .then(sum => {
@@ -202,27 +189,12 @@ function findItems(req, res, next, type) {
         data.pagesize = pagesize;
       });
     }
-    if (!export_count || export_count == 'page') {
+    if (!req.forDownload || !export_count || export_count == 'page') {
       listing = db.approval.item.find(condition, req.fetchItemFields)
       .sort({_id: -1})
       .skip((page - 1) * pagesize)
       .limit(pagesize);
     } else {
-      let apply_date;
-      if (export_count == 'this_month') {
-        apply_date = {
-          $gte: moment().date(1).minute(0).toDate(),
-          $lt: new Date(),
-        };
-      } else if (export_count == 'last_month') {
-        apply_date = {
-          $gte: moment().month(-1).date(1).minute(0).toDate(),
-          $lt: moment().date(1).minute(0).toDate(),
-        };
-      }
-      if (export_count != 'all') {
-        condition.apply_date = apply_date;
-      }
       listing = db.approval.item.find(condition, req.fetchItemFields);
     }
     return Promise.all([
@@ -303,6 +275,22 @@ function getPageInfo(req) {
     page,
     pagesize
   };
+}
+
+function getApplyDateCondition(export_count) {
+  let apply_date;
+  if (export_count == 'this_month') {
+    apply_date = {
+      $gte: moment().date(1).minute(0).toDate(),
+      $lt: new Date(),
+    };
+  } else if (export_count == 'last_month') {
+    apply_date = {
+      $gte: moment().month(-1).date(1).minute(0).toDate(),
+      $lt: moment().date(1).minute(0).toDate(),
+    };
+  }
+  return apply_date ? {apply_date} : {};
 }
 
 function getEmptyData(pagesize, forDownload) {
