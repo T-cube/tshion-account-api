@@ -209,6 +209,9 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
+    const qiniu = req.model('qiniu').getInstance('cdn-file');
+    file.url = qiniu.makeLink(file.url);
+    file.download_url = qiniu.makeLink(file.url, file.name);
     res.json(file);
   })
   .catch(next);

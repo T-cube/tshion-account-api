@@ -85,7 +85,10 @@ export default class Qiniu {
   makeLink(key, deadTime, downloadName) {
     let self = this;
     // 构建私有空间的链接
-    let url = `${self.conf.SERVER_URL}${key}`;
+    if (typeof key !== 'string') {
+      return Promise.resolve(null);
+    }
+    let url = key.indexOf('http') == 0 ? key : `${self.conf.SERVER_URL}${key}`;
 
     // 检测链接失效时间参数
     (deadTime && isNaN(parseInt(deadTime))) && (downloadName = deadTime, deadTime = 0);
