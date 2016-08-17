@@ -15,12 +15,17 @@ let api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
-  db.approval.template.master.find({
+  let { user, type } = req.query;
+  let fetchAllTpl = user && type;
+  let masterQuery = {
     company_id: req.company._id,
-    status: {
+  };
+  if (!fetchAllTpl) {
+    masterQuery.status = {
       $ne: C.APPROVAL_STATUS.DELETED
-    },
-  }, {
+    };
+  }
+  db.approval.template.master.find(masterQuery, {
     current: 1
   })
   .then(masters => {
@@ -31,12 +36,13 @@ api.get('/', (req, res, next) => {
     let condition = {
       _id: {
         $in: masters
-      },
-      status: {
-        $ne: C.APPROVAL_STATUS.DELETED
-      },
+      }
     };
-    let { user, type } = req.query;
+    if (!fetchAllTpl) {
+      condition.status = {
+        $ne: C.APPROVAL_STATUS.DELETED
+      };
+    }
     if (user && ObjectId.isValid(user)) {
       user = ObjectId(user);
       switch (type) {

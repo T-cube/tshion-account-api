@@ -1,5 +1,4 @@
 import _ from 'underscore';
-import config from 'config';
 import express from 'express';
 import Promise from 'bluebird';
 

@@ -211,7 +211,9 @@ export default class ApprovalFlow {
     if (!this.forDownload) {
       return data;
     }
-
+    if (!data.list.length) {
+      return '';
+    }
     return json2csv({
       data: data.list
       .map(i => {
