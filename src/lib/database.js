@@ -8,6 +8,7 @@ const collections = [
   'activity',
   'approval.approve',
   'approval.copyto',
+  'approval.export',
   'approval.flow',
   'approval.item',
   'approval.template',
