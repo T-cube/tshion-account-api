@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -15,16 +16,13 @@ let api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
-  let { user, type } = req.query;
-  let fetchAllTpl = user && type;
+  let { user } = req.query;
   let masterQuery = {
     company_id: req.company._id,
-  };
-  if (!fetchAllTpl) {
-    masterQuery.status = {
+    status: {
       $ne: C.APPROVAL_STATUS.DELETED
-    };
-  }
+    }
+  };
   db.approval.template.master.find(masterQuery, {
     current: 1
   })
@@ -36,27 +34,16 @@ api.get('/', (req, res, next) => {
     let condition = {
       _id: {
         $in: masters
+      },
+      status: {
+        $ne: C.APPROVAL_STATUS.DELETED
       }
     };
-    if (!fetchAllTpl) {
-      condition.status = {
-        $ne: C.APPROVAL_STATUS.DELETED
-      };
-    }
     if (user && ObjectId.isValid(user)) {
       user = ObjectId(user);
-      switch (type) {
-      case 'approver':
-        condition['steps.approver._id'] = user;
-        break;
-      case 'copy_to':
-        condition['steps.copy_to._id'] = user;
-        break;
-      default:
-        condition.scope = {
-          $in: new Structure(req.company.structure).findMemberDepartments(user)
-        };
-      }
+      condition.scope = {
+        $in: new Structure(req.company.structure).findMemberDepartments(user)
+      };
     }
     return db.approval.template.find(condition, {
       name: 1,
@@ -78,6 +65,37 @@ api.get('/', (req, res, next) => {
       res.json(template);
     });
   })
+  .catch(next);
+});
+
+api.get('/related', (req, res, next) => {
+  let { type } = req.query;
+  let user = req.user._id;
+  let tplCondition = {};
+  let itemCondition = {};
+  let fields = {
+    name: 1,
+    status: 1,
+    number: 1,
+  };
+  switch (type) {
+  case 'approve':
+    tplCondition['steps.approver._id'] = user;
+    break;
+  case 'copyto':
+    tplCondition['steps.copy_to._id'] = user;
+    break;
+  default:
+    tplCondition.scope = {
+      $in: new Structure(req.company.structure).findMemberDepartments(user)
+    };
+    itemCondition.from = user;
+  }
+  db.approval.template.find(tplCondition, fields)
+  .then(tpls => Promise.filter(tpls, tpl => db.approval.item.count(_.extend({
+    template: tpl._id,
+  }, itemCondition))))
+  .then(tpls => res.json(tpls))
   .catch(next);
 });
 
