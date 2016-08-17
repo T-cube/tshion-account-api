@@ -76,7 +76,7 @@ module.exports = {
         '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
         // wps
         '.wps', '.dps', '.et',
-		// plan text
+        // plan text
         '.txt',
         // achives
         '.zip', '.rar',
@@ -107,7 +107,20 @@ module.exports = {
     qiniu: {
       ACCESS_KEY: 'f_l5R_bNDR03QjAfqqGy7C3XRuaoMp2qpiHTfAOJ',
       SECRET_KEY: 'Pp7fk2HmH2LUXa7VnUY1Av8FoUQCY_TPeSf_6Y_2',
-      buckets: ['cdn-public', 'cdn-file'],
+      buckets: {
+        'cdn-public': {
+          name: 'cdn-public-test',
+          domain: 'cdn-public-test.tlifang.com',
+          https: false,
+          private: false,
+        },
+        'cdn-file': {
+          name: 'cdn-file-test',
+          domain: 'cdn-file-test.tlifang.com',
+          https: false,
+          private: true,
+        }
+      }
     },
     sendcloud: {
       email: {
