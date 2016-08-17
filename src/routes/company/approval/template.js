@@ -167,11 +167,13 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
         })
         .then(() => res.json(_.extend(oldTpl, data)));
       } else {
+        let number = oldTpl.number.toString().split('-');
+        number[1] = (parseInt(number[1]) || 0) + 1;
         _.extend(data, {
           master_id: oldTpl.master_id,
           company_id: req.company._id,
           status: C.APPROVAL_STATUS.UNUSED,
-          number: oldTpl.number
+          number: `${number[0]}-${number[1]}`
         });
         return Promise.all([
           db.approval.template.insert(data)

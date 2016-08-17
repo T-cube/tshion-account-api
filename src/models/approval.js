@@ -265,10 +265,11 @@ export default class Approval {
 
   static generateNumber(lastNum) {
     let prefix = moment().format('YYMMDD');
+    lastNum = lastNum ? lastNum.toString().split('-')[0] : null;
     if (!lastNum || !RegExp('^' + prefix).test(lastNum)) {
-      return prefix + '01';
+      return prefix + '01-1';
     }
-    return parseInt(lastNum) + 1 + '';
+    return parseInt(lastNum) + 1 + '-1';
   }
 
   static cancelItemsUseTemplate(req, template_id) {
