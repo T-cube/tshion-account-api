@@ -32,3 +32,6 @@ runtime
 
 # User upload files
 public/cdn/upload
+
+# temp
+temp/*
