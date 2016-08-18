@@ -105,6 +105,7 @@ api.get('/preview/doc/:file_id/token/:token', (req, res, next) => {
 });
 
 api.get('/approval/:token', (req, res, next) => {
+  let filename;
   db.approval.export.findOne({
     token: req.params.token
   })
@@ -112,9 +113,14 @@ api.get('/approval/:token', (req, res, next) => {
     if (!exportApproval) {
       throw new ApiError(404);
     }
-    return mapObjectIdToData(exportApproval, 'company', 'members', 'company');
+    return mapObjectIdToData(exportApproval, [
+      ['company', 'members', 'company'],
+      ['approval.template', 'name', 'query.template'],
+    ]);
   })
   .then(info => {
+    filename = generateApprovalFileName(info);
+    info.query.template = info.query.template._id;
     return new ApprovalFlow({
       company: info.company,
       user_id: info.user,
@@ -126,8 +132,6 @@ api.get('/approval/:token', (req, res, next) => {
   })
   .then(csv => {
     let iconv = new Iconv('UTF-8', 'GBK');
-    let datetime = moment().format('YYYY-MM-DD HH-mm');
-    let filename = `导出的审批列表 - ${datetime}.csv`;
     let isFirefox = req.get('User-Agent').toLowerCase().indexOf('firefox') > -1;
     if (isFirefox) {
       filename = '=?UTF-8?B?' + new Buffer(filename).toString('base64') + '?=';
@@ -143,3 +147,31 @@ api.get('/approval/:token', (req, res, next) => {
   })
   .catch(next);
 });
+
+function generateApprovalFileName({type, query}) {
+  let datetime = moment();
+  let typeTxt = {
+    approve: '我的审批',
+    apply: '我的申请',
+    copyto: '抄送给我',
+  };
+  let pageTxt;
+  switch (query.export_count) {
+  case 'this_month':
+    pageTxt = (datetime.month() + 1) + '月';
+    break;
+  case 'last_month':
+    pageTxt = datetime.month() + '月';
+    break;
+  case 'all':
+    pageTxt = '全部';
+    break;
+  case 'page':
+    query.page = query.page || 1;
+    pageTxt = `第${query.page}页`;
+    break;
+  }
+  datetime = datetime.format('M月D日');
+  let filename = `审批-${typeTxt[type]}-${query.template.name}-${pageTxt}-${datetime}导出.csv`;
+  return filename;
+}
