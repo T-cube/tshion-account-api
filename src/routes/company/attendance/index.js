@@ -307,7 +307,7 @@ api.get('/setting', (req, res, next) => {
     ])
     .then(() => res.json(doc || {
       is_open: true,
-      time_start: '9:00',
+      time_start: '09:00',
       time_end: '18:00',
       ahead_time: 0,
       workday: [1, 2, 3, 4, 5],

@@ -24,7 +24,6 @@ QUERY
 ```javascript
 {
   user: <ObjectId>, // 用户id
-  type: <String:Enum=[approver|copy_to|mine]>, // optinnal, default: 'mine'
 }
 ```
 
@@ -36,6 +35,29 @@ OUTPUT:
     name: <String>,
     description: <String>,
     scope: [<ObjectId>...], // 适用部门
+  }
+  ...
+]
+```
+
+### GET /approval/template/related
+
+获取用户申请的、审批的、抄送的模板列表
+
+QUERY
+```javascript
+{
+  type: <String:Enum=[approve|copyto|apply]>, // optinnal, default: 'apply'
+}
+```
+
+OUTPUT:
+```javascript
+[
+  {
+    _id: <ObjectId>,
+    name: <String>,
+    number: <String>,
   }
   ...
 ]

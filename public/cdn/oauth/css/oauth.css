@@ -6,9 +6,10 @@
   text-align: center;
 }
 .logo-wrap {
-  margin-top: -20px;
+  margin-top: 20px;
   width: 80px;
-  display: inline-block;;
+  display: inline-block;
+  text-align: center;
 }
 .logo-title {
   font-size: 15px;
