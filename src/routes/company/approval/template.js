@@ -71,7 +71,9 @@ api.get('/', (req, res, next) => {
 api.get('/related', (req, res, next) => {
   let { type } = req.query;
   let user = req.user._id;
-  let tplCondition = {};
+  let tplCondition = {
+    company_id: req.company._id
+  };
   let itemCondition = {};
   let fields = {
     name: 1,
