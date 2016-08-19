@@ -164,10 +164,11 @@ function getUploadParams(filePath) {
   // let type = filePath.split('.').pop();
   // let key = 'images/' + crypto.createHmac('sha1', secret).update(filePath).digest('hex');
   // type && (key += `.${type}`);
-  let key = filePath.replace(/^.*public\\cdn\\/, '').replace(/\\/g, '/');
-  //console.log('  cdn_key:', key);
-  //console.log('file_path:', filePath);
-  //console.log();
+  let key = path.relative(BASE_PATH + 'public/cdn/', filePath).replace(/\\/g, '/');
+  console.log('  cdn_key:', key);
+  console.log('file_path:', filePath);
+  console.log();
+  process.exit();
   return {
     key,
     filePath,
