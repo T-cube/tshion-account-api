@@ -5,7 +5,7 @@ import Promise from 'bluebird';
 import fs from 'fs';
 
 import db from 'lib/database';
-import upload, { randomAvatar } from 'lib/upload';
+import { upload, saveCdn, randomAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { authCheck } from 'lib/middleware';
@@ -176,7 +176,9 @@ api.put('/:project_id/logo', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:project_id/logo/upload', upload({type: 'avatar'}).single('logo'),
+api.put('/:project_id/logo/upload',
+upload({type: 'avatar'}).single('logo'),
+saveCdn('cdn-public'),
 (req, res, next) => {
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');

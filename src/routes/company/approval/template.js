@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -15,12 +16,14 @@ let api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
-  db.approval.template.master.find({
+  let { user } = req.query;
+  let masterQuery = {
     company_id: req.company._id,
     status: {
       $ne: C.APPROVAL_STATUS.DELETED
-    },
-  }, {
+    }
+  };
+  db.approval.template.master.find(masterQuery, {
     current: 1
   })
   .then(masters => {
@@ -34,23 +37,13 @@ api.get('/', (req, res, next) => {
       },
       status: {
         $ne: C.APPROVAL_STATUS.DELETED
-      },
+      }
     };
-    let { user, type } = req.query;
     if (user && ObjectId.isValid(user)) {
       user = ObjectId(user);
-      switch (type) {
-      case 'approver':
-        condition['steps.approver._id'] = user;
-        break;
-      case 'copy_to':
-        condition['steps.copy_to._id'] = user;
-        break;
-      default:
-        condition.scope = {
-          $in: new Structure(req.company.structure).findMemberDepartments(user)
-        };
-      }
+      condition.scope = {
+        $in: new Structure(req.company.structure).findMemberDepartments(user)
+      };
     }
     return db.approval.template.find(condition, {
       name: 1,
@@ -72,6 +65,39 @@ api.get('/', (req, res, next) => {
       res.json(template);
     });
   })
+  .catch(next);
+});
+
+api.get('/related', (req, res, next) => {
+  let { type } = req.query;
+  let user = req.user._id;
+  let tplCondition = {
+    company_id: req.company._id
+  };
+  let itemCondition = {};
+  let fields = {
+    name: 1,
+    status: 1,
+    number: 1,
+  };
+  switch (type) {
+  case 'approve':
+    tplCondition['steps.approver._id'] = user;
+    break;
+  case 'copyto':
+    tplCondition['steps.copy_to._id'] = user;
+    break;
+  default:
+    tplCondition.scope = {
+      $in: new Structure(req.company.structure).findMemberDepartments(user)
+    };
+    itemCondition.from = user;
+  }
+  db.approval.template.find(tplCondition, fields)
+  .then(tpls => Promise.filter(tpls, tpl => db.approval.item.count(_.extend({
+    template: tpl._id,
+  }, itemCondition))))
+  .then(tpls => res.json(tpls))
   .catch(next);
 });
 
@@ -143,11 +169,13 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
         })
         .then(() => res.json(_.extend(oldTpl, data)));
       } else {
+        let number = oldTpl.number.toString().split('-');
+        number[1] = (parseInt(number[1]) || 0) + 1;
         _.extend(data, {
           master_id: oldTpl.master_id,
           company_id: req.company._id,
           status: C.APPROVAL_STATUS.UNUSED,
-          number: oldTpl.number
+          number: `${number[0]}-${number[1]}`
         });
         return Promise.all([
           db.approval.template.insert(data)

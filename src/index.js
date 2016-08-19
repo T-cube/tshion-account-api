@@ -32,6 +32,7 @@ import Notification from 'models/notification';
 import Account from 'models/account';
 import Document from 'models/document';
 import { OfficeWeb365 } from 'vendor/officeweb365';
+import { QiniuTools } from 'vendor/qiniu';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import wechatOAuthRoute from './routes/wechat-oauth';
 
@@ -55,6 +56,7 @@ const io = socketio(server, { path: '/api/socket' });
 bindLoader(app);
 
 // load models
+app.loadModel('qiniu', QiniuTools, config.get('vendor.qiniu'));
 app.loadModel('ow365', OfficeWeb365, config.get('vendor.officeweb365'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));

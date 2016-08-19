@@ -5,8 +5,18 @@
 .auth-logo {
   text-align: center;
 }
+.logo-wrap {
+  margin-top: 20px;
+  width: 80px;
+  display: inline-block;
+  text-align: center;
+}
+.logo-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #444;
+}
 .site-logo {
-  margin-top: -20px;
   width: 72px;
   vertical-align: middle;
 }
@@ -20,4 +30,10 @@
 .error-message {
   margin: 15px;
   color: #ef4f4f;
+}
+@media (min-width: 768px) {
+  .form-group {
+    margin-bottom: 1em;
+    overflow: hidden;
+  }
 }

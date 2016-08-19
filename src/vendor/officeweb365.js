@@ -2,8 +2,6 @@ import crypto from 'crypto';
 import _ from 'underscore';
 import qs from 'qs';
 
-import config from 'config';
-
 export class OfficeWeb365 {
 
   constructor(config) {
