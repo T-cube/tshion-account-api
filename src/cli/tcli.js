@@ -9,7 +9,7 @@ program
   .command('companystorage', 'update company storage statistics')
   .command('attendancesign', 'upgrade attendance data structure')
   .command('wechatmenu', 'update wechat menu')
-  .command('localstoragetoqiniu', 'upload local document files to cdn & update database')
+  .command('cdnupgrade', 'upload local files to qiniu cdn & update database')
   .parse(process.argv);
 
 console.log('TLifang API Command Line Tool');

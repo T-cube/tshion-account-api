@@ -98,10 +98,10 @@ module.exports = {
   },
   vendor: {
     officeweb365: {
-      siteId: '10269',
+      siteId: '10390',
       encodeUrl: true,
-      cipherIv: '71682864',
-      cipherKey: '53546824',
+      cipherIv: '48467919',
+      cipherKey: '20908463',
       deleteAfterView: true,
     },
     qiniu: {
