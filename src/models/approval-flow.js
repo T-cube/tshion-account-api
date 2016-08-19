@@ -72,8 +72,9 @@ export default class ApprovalFlow {
         counting,
         listing
         .then(list => {
+          let templateFields = this.forDownload ? 'name,status,forms' : 'name,status';
           return Promise.all([
-            mapObjectIdToData(list, 'approval.template', 'name,status,forms.label', 'template'),
+            mapObjectIdToData(list, 'approval.template', templateFields, 'template'),
             fetchCompanyMemberInfo(this.company.members, list, 'from')
           ])
           .then(() => list);
@@ -214,27 +215,43 @@ export default class ApprovalFlow {
     if (!data.list.length) {
       return '';
     }
-    return json2csv({
-      data: data.list
-      .map(i => {
-        let item = [
-          i.template.name,
-          i.from.name,
-          moment(i.apply_date).format('YYYY-MM-DD HH:mm'),
-          i.content,
-        ];
-        i.forms.forEach(f => item.push(f.value || ''));
-        if (i.is_processing) {
-          item.push(i.is_processing ? '待处理' : '已处理');
-        } else {
-          item.push(ApprovalFlow.getStatusText(i.status));
+    let parsedData = data.list.map(i => {
+      let item = [
+        moment(i.apply_date).format('YYYY-MM-DD HH:mm'),
+        i.template.name,
+        i.from.name,
+        i.content,
+      ];
+      i.forms.forEach(f => {
+        let templateForm = _.find(i.template.forms, tf => tf._id.equals(f._id));
+        if (templateForm) {
+          switch (templateForm.type) {
+          case 'date':
+            f.value = moment(f.value).format('YYYY-MM-DD');
+            break;
+          case 'datetime':
+            f.value = moment(f.value).format('YYYY-MM-DD HH:mm');
+            break;
+          }
         }
-        return item;
-      }),
-      fieldNames: ['审批类型', '申请人', '申请时间', '内容']
-        .concat(data.list[0] && data.list[0].template.forms.map(f => f.label))
+        item.push(f.value || '');
+      });
+      if (i.is_processing) {
+        item.push(i.is_processing ? __('processing') : __('processed'));
+      } else {
+        item.push(ApprovalFlow.getStatusText(i.status));
+      }
+      return item;
+    });
+    console.log([__('apply_time'), __('approval_type'), __('approval_applyer'), __('content')]
+      .concat(data.list[0] && data.list[0].template.forms.map(f => f.label || ''))
+      .concat(__('status')));
+    return json2csv({
+      data: parsedData,
+      fieldNames: [__('apply_time'), __('approval_type'), __('approval_applyer'), __('content')]
+        .concat(data.list[0] && data.list[0].template.forms.map(f => f.label || ''))
         .filter(i => i)
-        .concat('状态')
+        .concat(__('status'))
     });
   }
 
@@ -242,19 +259,19 @@ export default class ApprovalFlow {
     let info;
     switch (status) {
     case C.APPROVAL_ITEM_STATUS.PROCESSING:
-      info = '审批中';
+      info = __('approval_pressing');
       break;
     case C.APPROVAL_ITEM_STATUS.APPROVED:
-      info = '已同意';
+      info = __('approval_approved');
       break;
     case C.APPROVAL_ITEM_STATUS.REJECTED:
-      info = '已驳回';
+      info = __('approval_rejected');
       break;
     case C.APPROVAL_ITEM_STATUS.REVOKED:
-      info = '已撤回';
+      info = __('approval_revoked');
       break;
     case C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED:
-      info = '审批中断-该申请所使用的流程已变更';
+      info = __('approval_template_change');
       break;
     default:
       info = '';

@@ -10,9 +10,6 @@ import db from 'lib/database';
 
 class Document {
 
-  constructor() {
-  }
-
   getChildren(dirs, subDirIds) {
     return _.map(subDirIds, dirId => {
       let dir = _.find(dirs, d => d._id.equals(dirId));

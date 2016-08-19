@@ -243,7 +243,7 @@ export default class CompanyLevel {
   }
 
   _rejectWhenMissingCompany() {
-    return Promise.reject(new ApiError(400, null, 'missing company'));
+    return Promise.reject(new ApiError(500, null, 'missing company'));
   }
 
 }
