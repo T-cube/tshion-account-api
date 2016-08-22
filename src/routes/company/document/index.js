@@ -630,7 +630,9 @@ function deleteDirs(req, dirs) {
           ]);
         }),
         db.document.dir.remove({
-          _id: dir_id
+          _id: {
+            $in: (doc.dirs || []).concat(dir_id)
+          }
         })
       ]);
     });
