@@ -618,23 +618,25 @@ function deleteDirs(req, dirs) {
             dirs: dir_id
           }
         }),
-        doc.dirs && req.model('document').fetchItemIdsUnderDir(doc.dirs.map(_id => ({_id})))
+        doc.dirs && req.model('document').fetchItemIdsUnderDir(doc.dirs)
         .then(items => {
           return Promise.all([
-            deleteFiles(req, items.files.map(f => f._id).concat(doc.files)),
+            deleteFiles(req, items.files.concat(doc.files)),
             db.document.dir.remove({
               _id: {
-                $in: items.dirs.map(d => d._id)
+                $in: items.dirs
               }
             })
           ]);
-        }),
-        db.document.dir.remove({
+        })
+      ])
+      .then(() => {
+        return db.document.dir.remove({
           _id: {
             $in: (doc.dirs || []).concat(dir_id)
           }
-        })
-      ]);
+        });
+      });
     });
   }));
 }

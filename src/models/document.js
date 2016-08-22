@@ -70,36 +70,34 @@ class Document {
   }
 
   /**
-   * @return { files: [{_id: Objectid, path: file_path}...], dirs: [{_id: Objectid, path: dir_path}...] }
+   * @return { files: [Objectid...], dirs: [Objectid...] }
    */
-  fetchItemIdsUnderDir(searchDirs, items, isRoot = false) {
+  fetchItemIdsUnderDir(searchDirs, items) {
     items = items || {
       files: [],
       dirs: [],
     };
-    searchDirs = ObjectId.isValid(searchDirs) ? [{
-      _id: searchDirs,
-      path: [],
-    }] : searchDirs;
+    searchDirs = ObjectId.isValid(searchDirs) ? [ObjectId(searchDirs)] : searchDirs;
     if (!searchDirs || !searchDirs.length) {
       return Promise.resolve(items);
     }
     return db.document.dir.find({
       _id: {
-        $in: searchDirs.map(v => v._id)
+        $in: searchDirs
       }
     }, {
       files: 1,
       dirs: 1,
-      name: 1,
     })
     .then(doc => {
-      let childDirs = _.flatten(doc.map(item => item.dirs.map(_id => ({_id, path: isRoot ? [] : (_.find(searchDirs, v => v._id.equals(item._id)).path || []).concat(_.pick(item, '_id', 'name'))}))));
-      items.files = items.files.concat((_.flatten(doc.map(item => item.files.map(_id => ({_id, path: isRoot ? [] : (_.find(searchDirs, v => v._id.equals(item._id)).path || []).concat(_.pick(item, '_id', 'name'))}))))) || []);
-      items.dirs = items.dirs.concat(childDirs || []);
-      return this.fetchItemIdsUnderDir(childDirs, items);
-    })
-    .then(items => items);
+      let childDirs = _.flatten(doc.map(item => item.dirs)) || [];
+      items.files = items.files.concat(_.flatten(doc.map(item => item.files)) || []);
+      if (childDirs.length) {
+        items.dirs = items.dirs.concat(childDirs);
+        return this.fetchItemIdsUnderDir(childDirs, items);
+      }
+      return items;
+    });
   }
 
 }
