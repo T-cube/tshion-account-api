@@ -192,7 +192,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
 api.delete('/', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(delSanitization, delValidation, data);
-  Promise.all([deleteDirs(req, data.dirs), deleteFiles(req, data.files)])
+  Promise.all([deleteDirs(req, data.dirs), deleteFiles(req, data.files, true)])
   .then(() => res.json({}))
   .catch(next);
 });
@@ -607,26 +607,37 @@ function deleteDirs(req, dirs) {
       if (!doc || doc.parent_dir == null) {
         throw new ApiError(400, 'folder_not_exists');
       }
-      if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
-        throw new ApiError(400, 'folder_not_empty');
-      }
-      return db.document.dir.update({
-        _id: doc.parent_dir
-      }, {
-        $pull: {
-          dirs: dir_id
-        }
-      })
-      .then(() => {
-        return db.document.dir.remove({
+      // if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
+      //   throw new ApiError(400, 'folder_not_empty');
+      // }
+      return Promise.all([
+        db.document.dir.update({
+          _id: doc.parent_dir
+        }, {
+          $pull: {
+            dirs: dir_id
+          }
+        }),
+        doc.dirs && req.model('document').fetchItemIdsUnderDir(doc.dirs.map(_id => ({_id})))
+        .then(items => {
+          return Promise.all([
+            deleteFiles(req, items.files.map(f => f._id).concat(doc.files)),
+            db.document.dir.remove({
+              _id: {
+                $in: items.dirs.map(d => d._id)
+              }
+            })
+          ]);
+        }),
+        db.document.dir.remove({
           _id: dir_id
-        });
-      });
+        })
+      ]);
     });
   }));
 }
 
-function deleteFiles(req, files) {
+function deleteFiles(req, files, dirCheckAndPull) {
   if (!files || !files.length) {
     return null;
   }
@@ -644,36 +655,42 @@ function deleteFiles(req, files) {
       if (!fileInfo) {
         throw new ApiError(400, 'file_not_exists');
       }
-      incSize -= fileInfo.size;
-      return checkDirExist(req, fileInfo.dir_id)
-      .then(() => {
-        return Promise.all([
-          db.document.file.remove({
-            _id: file_id,
-          }),
-          db.document.dir.update({
-            _id: fileInfo.dir_id,
-          }, {
-            $pull: {
-              files: file_id
-            }
-          }),
-        ]);
-      })
-      .then(() => {
-        let companyLevel = new CompanyLevel(req.company);
-        return companyLevel.updateUpload({
-          size: incSize,
-          target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
-          target_id: req.document.posVal,
+      let removeFileFromDb;
+      if (dirCheckAndPull) {
+        removeFileFromDb = checkDirExist(req, fileInfo.dir_id).then(() => {
+          return Promise.all([
+            db.document.file.remove({
+              _id: file_id,
+            }),
+            db.document.dir.update({
+              _id: fileInfo.dir_id,
+            }, {
+              $pull: {
+                files: file_id
+              }
+            }),
+          ]);
         });
-      })
-      .then(() => {
+      } else {
+        removeFileFromDb = db.document.file.remove({
+          _id: file_id,
+        });
+      }
+      return removeFileFromDb.then(() => {
+        incSize -= fileInfo.size;
         fileInfo.path && fs.unlink(fileInfo.path, e => e && console.error(e));
         req.model('qiniu').getInstance('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
       });
     });
-  }));
+  }))
+  .then(() => {
+    let companyLevel = new CompanyLevel(req.company);
+    return companyLevel.updateUpload({
+      size: incSize,
+      target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
+      target_id: req.document.posVal,
+    });
+  });
   // .then(() => {
   //   return db.document.dir.update({
   //     [req.document.posKey]: req.document.posVal,

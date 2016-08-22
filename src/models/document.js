@@ -94,8 +94,8 @@ class Document {
       name: 1,
     })
     .then(doc => {
-      let childDirs = _.flatten(doc.map(item => item.dirs.map(_id => ({_id, path: isRoot ? [] : _.find(searchDirs, v => v._id.equals(item._id)).path.concat(_.pick(item, '_id', 'name'))}))));
-      items.files = items.files.concat((_.flatten(doc.map(item => item.files.map(_id => ({_id, path: isRoot ? [] : _.find(searchDirs, v => v._id.equals(item._id)).path.concat(_.pick(item, '_id', 'name'))}))))) || []);
+      let childDirs = _.flatten(doc.map(item => item.dirs.map(_id => ({_id, path: isRoot ? [] : (_.find(searchDirs, v => v._id.equals(item._id)).path || []).concat(_.pick(item, '_id', 'name'))}))));
+      items.files = items.files.concat((_.flatten(doc.map(item => item.files.map(_id => ({_id, path: isRoot ? [] : (_.find(searchDirs, v => v._id.equals(item._id)).path || []).concat(_.pick(item, '_id', 'name'))}))))) || []);
       items.dirs = items.dirs.concat(childDirs || []);
       return this.fetchItemIdsUnderDir(childDirs, items);
     })
