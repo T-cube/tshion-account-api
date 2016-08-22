@@ -670,7 +670,7 @@ function deleteFiles(req, files) {
       })
       .then(() => {
         fileInfo.path && fs.unlink(fileInfo.path, e => e && console.error(e));
-        req.model('qiniu').getInstance('cdn-file').delete(fileInfo.cdn_key).catch(e => e && console.error(e));
+        req.model('qiniu').getInstance('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
       });
     });
   }));

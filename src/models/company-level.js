@@ -218,7 +218,7 @@ export default class CompanyLevel {
 
   getLevel() {
     if (!this.company) {
-      throw new ApiError(500, null, 'missing company');
+      throw new Error('CompanyLevel: missing company');
     }
     return this.company.level || 'free';
   }
@@ -243,7 +243,7 @@ export default class CompanyLevel {
   }
 
   _rejectWhenMissingCompany() {
-    return Promise.reject(new ApiError(500, null, 'missing company'));
+    return Promise.reject(new Error('CompanyLevel: missing company'));
   }
 
 }
