@@ -243,9 +243,6 @@ export default class ApprovalFlow {
       }
       return item;
     });
-    console.log([__('apply_time'), __('approval_type'), __('approval_applyer'), __('content')]
-      .concat(data.list[0] && data.list[0].template.forms.map(f => f.label || ''))
-      .concat(__('status')));
     return json2csv({
       data: parsedData,
       fieldNames: [__('apply_time'), __('approval_type'), __('approval_applyer'), __('content')]

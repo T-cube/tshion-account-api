@@ -95,7 +95,7 @@ api.get('/tree', (req, res, next) => {
         name: '',
         dirs: [],
         files: [],
-        total_size: 0,
+        // total_size: 0,
       });
       return db.document.dir.insert(condition)
       .then(rootDir => [rootDir]);
@@ -271,7 +271,7 @@ saveCdn('cdn-file'),
   getParentPaths(dir_id)
   .then(path => {
     return Promise.map(req.files, file => {
-      let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size');
+      let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
       _.extend(fileData, {
         [req.document.posKey]: req.document.posVal,
         dir_id: dir_id,
@@ -637,7 +637,8 @@ function deleteFiles(req, files) {
     }, {
       size: 1,
       dir_id: 1,
-      path: 1
+      path: 1,
+      cdn_key: 1,
     })
     .then(fileInfo => {
       if (!fileInfo) {
@@ -668,22 +669,21 @@ function deleteFiles(req, files) {
         });
       })
       .then(() => {
-        fileInfo.path && fs.unlink(fileInfo.path, (e) => {
-          e && console.error(e);
-        });
+        fileInfo.path && fs.unlink(fileInfo.path, e => e && console.error(e));
+        req.model('qiniu').getInstance('cdn-file').delete(fileInfo.cdn_key).catch(e => e && console.error(e));
       });
     });
-  }))
-  .then(() => {
-    return db.document.dir.update({
-      [req.document.posKey]: req.document.posVal,
-      parent_dir: null
-    }, {
-      $inc: {
-        total_size: incSize
-      }
-    });
-  });
+  }));
+  // .then(() => {
+  //   return db.document.dir.update({
+  //     [req.document.posKey]: req.document.posVal,
+  //     parent_dir: null
+  //   }, {
+  //     $inc: {
+  //       total_size: incSize
+  //     }
+  //   });
+  // });
 }
 
 function getFileListOfDir(dir_id) {
@@ -791,7 +791,7 @@ function createRootDir(condition) {
     name: '',
     dirs: [],
     files: [],
-    total_size: 0
+    // total_size: 0
   });
   return db.document.dir.insert(condition);
 }
