@@ -8,7 +8,9 @@ export default class MarsGPS {
     this.ee = 0.00669342162296594323;
   }
 
-  transform(wgLat, wgLon) {
+  transform(pos) {
+    let wgLat = pos.longitude;
+    let wgLon = pos.latitude;
     if (this.outOfChina(wgLat, wgLon)) {
       return {
         latitude: wgLat,

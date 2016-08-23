@@ -2,7 +2,6 @@ import config from 'config';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
-import { ApiError } from 'lib/error';
 
 export default class UserLevel {
 
@@ -76,7 +75,7 @@ export default class UserLevel {
   }
 
   _rejectWhenMissingCompany() {
-    return Promise.reject(new ApiError(500, null, 'missing user'));
+    return Promise.reject(new Error('UserLevel: missing user'));
   }
 
 }

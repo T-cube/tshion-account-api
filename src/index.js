@@ -37,9 +37,10 @@ import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import wechatOAuthRoute from './routes/wechat-oauth';
 
 // welcome messages and output corre config
+const version = require('../package.json').version;
 console.log();
 console.log('--------------------------------------------------------------------------------');
-console.log('Tlifang API Service');
+console.log('Tlifang API Service v%s', version);
 console.log('--------------------------------------------------------------------------------');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('loaded config:');

@@ -8,7 +8,6 @@ import { indexObjectId, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
 import inspector from 'lib/inspector';
 import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
-import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import { checkUserType } from '../utils';
 

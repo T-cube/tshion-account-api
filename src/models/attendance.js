@@ -44,7 +44,7 @@ export default class Attendance {
         data.forEach(item => {
           if (doc.data[0][item.type]) {
             if (!isPatch) {
-              throw new ApiError(400, null, 'user has signed');
+              throw new ApiError(400, 'user_has_signed');
             }
           } else {
             newData.push(item);
@@ -98,10 +98,6 @@ export default class Attendance {
         record
       };
     }
-  }
-
-  parseSignRecord(record) {
-
   }
 
   _parseSignData(data, date, docExist, isPatch, from_pc) {

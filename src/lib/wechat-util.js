@@ -180,9 +180,9 @@ export default class WechatUtil {
       let distanceOk = false;
       locations.forEach(item => {
         let { pos } = item;
-        pos =  marsGPS.transform(pos.latitude, pos.longitude);
+        pos =  marsGPS.transform(pos);
         let distance = getGpsDistance(pos, location);
-        if (distance < maxDistance) {
+        if (distance <= maxDistance) {
           distanceOk = true;
         }
       });
@@ -210,7 +210,8 @@ export default class WechatUtil {
       }
       let locations = doc.locations;
       return locations.filter(location => {
-        return (timestamp() - timestamp(location.time)) < 1000 * 30; // 30s
+        return ((timestamp() - timestamp(location.time)) < 1000 * 30)
+          && location.precision < 100; // 30s
       });
     });
   }
