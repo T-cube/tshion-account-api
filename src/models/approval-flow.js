@@ -35,6 +35,9 @@ export default class ApprovalFlow {
     if (this.forDownload) {
       this.fetchItemFields.forms = 1;
     }
+    if (this.type == 'copyto') {
+      this.type = 'copy_to';
+    }
   }
 
   findItems() {
