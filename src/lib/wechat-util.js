@@ -211,7 +211,7 @@ export default class WechatUtil {
       let locations = doc.locations;
       return locations.filter(location => {
         return ((timestamp() - timestamp(location.time)) < 1000 * 30)
-          && location.precision < 100; // 30s
+          && location.pos.precision < 100; // 30s
       });
     });
   }

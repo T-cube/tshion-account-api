@@ -1,7 +1,3 @@
-// TLifang project
-// company structure class
-// by alphakevin <antmary@126.com>
-
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 import config from 'config';
