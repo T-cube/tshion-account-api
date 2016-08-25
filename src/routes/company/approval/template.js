@@ -79,6 +79,7 @@ api.get('/related', (req, res, next) => {
     name: 1,
     status: 1,
     number: 1,
+    master_id: 1,
   };
   switch (type) {
   case 'approve':
@@ -97,7 +98,21 @@ api.get('/related', (req, res, next) => {
   .then(tpls => Promise.filter(tpls, tpl => db.approval.item.count(_.extend({
     template: tpl._id,
   }, itemCondition))))
-  .then(tpls => res.json(tpls))
+  .then(tpls => {
+    // template used push ahead
+    let newTpls = [];
+    tpls.forEach(tpl => {
+      if (tpl.status == C.APPROVAL_STATUS.NORMAL) {
+        newTpls.push(tpl);
+      }
+    });
+    tpls.forEach(tpl => {
+      if (tpl.status != C.APPROVAL_STATUS.NORMAL) {
+        newTpls.push(tpl);
+      }
+    });
+    res.json(newTpls);
+  })
   .catch(next);
 });
 
