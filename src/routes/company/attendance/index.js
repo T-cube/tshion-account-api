@@ -406,7 +406,8 @@ function checkUserLocation(companyId, userId) {
     max_distance: 1,
   })
   .then(s => {
-    return wUtil.checkUserLocation(userId, s.location, s.max_distance);
+    // min 100m
+    return wUtil.checkUserLocation(userId, s.location, s.max_distance > 100 ? s.max_distance : 100);
   });
 }
 
