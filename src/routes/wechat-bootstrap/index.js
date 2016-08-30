@@ -1,8 +1,10 @@
 import express from 'express';
 import wechat from 'wechat';
 import config from 'config';
+import db from 'lib/database';
 
 import wUtil from 'lib/wechat-util.js';
+import { getClientIp } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -19,8 +21,8 @@ api.post('/', wechat(wechatConfig, function (req, res) {
   let message = req.weixin;
   switch (message.MsgType) {
   case 'event': {
+    let openid = message.FromUserName;
     if (message.Event == 'LOCATION') {
-      let openid = message.FromUserName;
       wUtil.updateUserLocation(openid, {
         latitude: parseFloat(message.Latitude),
         longitude: parseFloat(message.Longitude),
@@ -35,6 +37,20 @@ api.post('/', wechat(wechatConfig, function (req, res) {
           type: 'text',
         });
       }
+    }
+    if (message.Event == 'subscribe') {
+      if (message.EventKey && message.Ticket) {
+        let key = message.EventKey.replace('qrscene_', '');
+        db.wechat.from.insert({
+          openid,
+          key,
+          ua: req.headers['user-agent'] ,
+          ip: getClientIp(req),
+          date: new Date(),
+        })
+        .catch(e => console.error(e));
+      }
+      return res.reply('欢迎关注T立方');
     }
     break;
   }

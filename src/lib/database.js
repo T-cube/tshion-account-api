@@ -44,6 +44,8 @@ const collections = [
   'user.confirm.mobile',
   'wechat.location',
   'wechat.oauth',
+  'wechat.scan',
+  'wechat.from',
   'wechat.user',
   'wiki',
 ];
