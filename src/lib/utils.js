@@ -276,7 +276,6 @@ function _mapObjectIdToData(data, k, pos, infoList, mergeList) {
   } else {
     let foundVal = _.find(infoList, info => info._id.equals(val));
     let mergeVal = _.find(mergeList, info => info._id.equals(val));
-    console.log(_.extend(mergeVal));
     objectPath.set(data, k, _.extend(foundVal, mergeVal));
   }
 }

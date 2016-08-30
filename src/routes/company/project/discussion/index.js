@@ -145,6 +145,8 @@ api.post('/:discussion_id/comment', (req, res, next) => {
   });
   db.discussion.comment.insert(data)
   .then(doc => {
+    doc.creator = _.pick(req.user, '_id', 'avatar');
+    doc.creator.name = _.find(req.company.members, m => m._id.equals(req.user._id)).name;
     res.json(doc);
     return db.discussion.update({
       _id: discussion_id,
@@ -172,15 +174,16 @@ api.get('/:discussion_id/comment', (req, res, next) => {
       throw new ApiError(404);
     }
     if (!discussion.comments || !discussion.comments.length) {
-      return res.json([]);
+      return [];
     }
     return db.discussion.comment.find({
       _id: {
         $in: discussion.comments
       }
-    })
-    .then(doc => res.json(doc));
+    });
   })
+  .then(doc => fetchCompanyMemberInfo(req.company, doc, 'creator'))
+  .then(doc => res.json(doc))
   .catch(next);
 });
 

@@ -541,6 +541,7 @@ function createFile(req, data, dir_id) {
         errorMsg = 'file_too_large';
       }
       async.each(data, (item, cb) => {
+        item.cdn_key && req.model('qiniu').getInstance('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
         fs.unlink(item.path, (e) => {
           e && console.error(e);
           cb();
@@ -684,7 +685,7 @@ function deleteFiles(req, files, dirCheckAndPull) {
       return removeFileFromDb.then(() => {
         incSize -= fileInfo.size;
         fileInfo.path && fs.unlink(fileInfo.path, e => e && console.error(e));
-        req.model('qiniu').getInstance('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
+        fileInfo.cdn_key && req.model('qiniu').getInstance('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
       });
     });
   }))

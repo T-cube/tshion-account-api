@@ -466,7 +466,6 @@ api.get('/:project_id/statistics', (req, res, next) => {
     assignee: 1,
     date_due: 1,
   })
-  .then(list => fetchCompanyMemberInfo(req.company, list, 'assignee'))
   .then(list => {
     const now = time();
     const getStatus = item => {
@@ -477,7 +476,7 @@ api.get('/:project_id/statistics', (req, res, next) => {
         return item.status;
       }
     };
-    const stats = _.groupBy(list, item => item.assignee._id.valueOf());
+    const stats = _.groupBy(list, item => item.assignee.valueOf());
     let memberStats = _.map(stats, (items, assignee) => {
       let stats = _.countBy(items, getStatus);
       stats.total = items.length;
@@ -582,7 +581,7 @@ function removeFilesUnderProject(project_id) {
 
 function removeFiles(filePathList) {
   try {
-    filePathList.forEach(path => fs.unlinkSync(path));
+    filePathList.forEach(path => fs.unlink(path, e => e && console.error(e)));
   } catch (e) {
     console.error(e);
   }
