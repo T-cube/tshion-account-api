@@ -21,6 +21,7 @@ const collections = [
   'auth_check_token',
   'company',
   'company.level',
+  'company.member.old',
   'discussion',
   'discussion.comment',
   'document.dir',

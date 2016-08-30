@@ -66,7 +66,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       ['document.file', 'name,mimetype,size,date_update,updated_by', 'files'],
     ])
     .then(() => {
-      return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+      return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
     })
     .then(() => {
       doc.dirs.forEach(dir => {
@@ -253,7 +253,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     return createFile(req, data, dir_id);
   })
   .then(doc => {
-    return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
+    return fetchCompanyMemberInfo(req.company, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -315,7 +315,7 @@ saveCdn('cdn-file'),
   .then(() => createFile(req, data, dir_id))
   .then(doc => {
     doc.forEach(item => delete item.path);
-    return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
+    return fetchCompanyMemberInfo(req.company, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -801,7 +801,7 @@ function searchByName(req, dir, name) {
     doc = _.extend(dir, doc);
     return Promise.all([
       mapObjectIdToData(doc, 'document.dir', 'name', 'path,dirs.path,files.path'),
-      fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by'),
+      fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by'),
     ])
     .then(() => doc);
   });

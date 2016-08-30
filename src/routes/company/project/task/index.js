@@ -80,7 +80,7 @@ api.get('/', (req, res, next) => {
         // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
       });
       data.list = list;
-      return fetchCompanyMemberInfo(req.company.members, data.list, 'assignee');
+      return fetchCompanyMemberInfo(req.company, data.list, 'assignee');
     })
   ])
   .then(() => res.json(data))
@@ -121,7 +121,7 @@ api.get('/:_task_id', (req, res, next) => {
       throw new ApiError(404);
     }
     // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
-    return fetchCompanyMemberInfo(req.company.members, task, 'creator', 'assignee');
+    return fetchCompanyMemberInfo(req.company, task, 'creator', 'assignee');
   })
   .then(task => res.json(task))
   .catch(next);

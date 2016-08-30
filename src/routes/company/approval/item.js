@@ -107,7 +107,7 @@ api.get('/:item_id', (req, res, next) => {
       mapObjectIdToData(data, [
         ['approval.template', 'name,steps,forms,status,number', 'template'],
       ]),
-      fetchCompanyMemberInfo(req.company.members, data, 'steps.approver')
+      fetchCompanyMemberInfo(req.company, data, 'steps.approver')
     ])
     .then(() => data);
   })

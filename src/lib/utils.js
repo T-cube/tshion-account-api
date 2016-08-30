@@ -181,17 +181,35 @@ export function indexObjectId(list, id) {
   return index;
 }
 
-export function fetchCompanyMemberInfo(companyMembers, data) {
-  let args = [].slice.call(arguments);
-  args.shift();
-  args.shift();
-  companyMembers = companyMembers.map(member => _.pick(member, '_id', 'name'));
-  return mapObjectIdToData(data, 'user', ['name', 'avatar'], args, companyMembers);
+export function fetchCompanyMemberInfo(company, data, ...args) {
+  let companyMembers = company.members.map(m => _.pick(m, '_id', 'name'));
+  let keys = getKeysFromArgs(args);
+  let keyList = getListOfKeys(data, keys);
+  let companyMemberIds = companyMembers.map(m => m._id);
+  keyList = diffObjectId(keyList, companyMemberIds);
+  if (!keyList.length) {
+    return mapObjectIdToData(data, 'user', ['name', 'avatar'], keys, companyMembers);
+  }
+  return db.company.member.old.find({
+    company: company._id,
+    user: {
+      $in: keyList
+    }
+  }, {
+    user: 1,
+    name: 1
+  })
+  .then(companyMembersOld => {
+    companyMembersOld = companyMembersOld.filter(i => i).map(member => ({
+      _id: member.user,
+      name: member.name,
+      old_member: true,
+    }));
+    return mapObjectIdToData(data, 'user', ['name', 'avatar'], keys, companyMembers.concat(companyMembersOld));
+  });
 }
 
-export function fetchUserInfo(data) {
-  let args = [].slice.call(arguments);
-  args.shift();
+export function fetchUserInfo(data, ...args) {
   return mapObjectIdToData(data, 'user', ['name', 'avatar'], args);
 }
 
@@ -199,7 +217,6 @@ export function mapObjectIdToData(data, collection, fields, keys, mergeList) {
   if (!data) {
     return data;
   }
-  let keyList = [];
   let isDataObjectId = ObjectId.isValid(data);
   if ((_.isArray(data) && data.length == 0) || !data) {
     return Promise.resolve([]);
@@ -212,13 +229,8 @@ export function mapObjectIdToData(data, collection, fields, keys, mergeList) {
   }
   fields = fields || [];
   _.isString(fields) && (fields = fields.split(',')).map(field => field.trim());
-  _.isString(keys) && (keys = keys.split(',')).map(key => key.trim());
-  keys = keys && keys.length ? keys : [''];
-  _.forEach(keys, pos => {
-    let id = _mapObjectIdToData(data, [], pos);
-    keyList = keyList.concat(id);
-  });
-  keyList = keyList.filter(item => ObjectId.isValid(item));
+  keys = getKeysFromArgs(keys);
+  let keyList = getListOfKeys(data, keys);
   if (!keyList.length) {
     return Promise.resolve(isDataObjectId ? null : data);
   }
@@ -264,8 +276,26 @@ function _mapObjectIdToData(data, k, pos, infoList, mergeList) {
   } else {
     let foundVal = _.find(infoList, info => info._id.equals(val));
     let mergeVal = _.find(mergeList, info => info._id.equals(val));
+    console.log(_.extend(mergeVal));
     objectPath.set(data, k, _.extend(foundVal, mergeVal));
   }
+}
+
+function getListOfKeys(data, keys) {
+  let keyList = [];
+  _.forEach(keys, pos => {
+    let id = _mapObjectIdToData(data, [], pos);
+    keyList = keyList.concat(id);
+  });
+  keyList = keyList.filter(item => ObjectId.isValid(item));
+  return keyList;
+}
+
+function getKeysFromArgs(args) {
+  let keys = args;
+  _.isString(keys) && (keys = keys.split(',')).map(key => key.trim());
+  keys = keys && keys.length ? keys : [''];
+  return keys;
 }
 
 export function getGpsDistance(from, to) {

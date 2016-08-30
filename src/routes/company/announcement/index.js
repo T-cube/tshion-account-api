@@ -143,7 +143,7 @@ function getAnnouncementList(req, condition) {
         announcement.from.department = structure.findNodeById(announcement.from.department);
       }
     });
-    return fetchCompanyMemberInfo(req.company.members, announcements, 'from.creator', 'to.member')
+    return fetchCompanyMemberInfo(req.company, announcements, 'from.creator', 'to.member')
     .then(announcements => announcements);
   });
 }
@@ -196,7 +196,7 @@ function getAnnouncement(req, is_published) {
     if (announcement.from.department) {
       announcement.from.department = structure.findNodeById(announcement.from.department);
     }
-    return fetchCompanyMemberInfo(req.company.members, announcement, 'from.creator');
+    return fetchCompanyMemberInfo(req.company, announcement, 'from.creator');
   });
 }
 
