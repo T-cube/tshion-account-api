@@ -22,18 +22,28 @@ api.get('/scan', (req, res, next) => {
 api.post('/scan', (req, res, next) => {
   let data = req.body;
   validate('scan', data);
-  wechatApi.createLimitQRCode(data.key, (e, result) => {
-    if (e) {
-      throw e;
-    }
-    let ticket = result.ticket;
-    let url = wechatApi.showQRCodeURL(ticket);
-    data.ticket = ticket;
-    data.url = url;
-    db.wechat.scan.insert(data)
-    .then(doc => res.json(doc))
-    .catch(next);
-  });
+  db.wechat.scan.insert(data)
+  .then(doc => {
+    let scanId = doc._id;
+    wechatApi.createLimitQRCode(scanId, (e, result) => {
+      if (e) {
+        throw e;
+      }
+      let ticket = result.ticket;
+      let url = wechatApi.showQRCodeURL(ticket);
+      doc.ticket = ticket;
+      doc.url = url;
+      db.wechat.scan.update({
+        _id: scanId
+      }, {
+        $set: {ticket, url}
+      })
+      .then(() => res.json(doc))
+      .catch(next);
+    });
+  })
+  .catch(next);
+
 });
 
 api.delete('/scan/:scanId', (req, res, next) => {
