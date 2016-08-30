@@ -32,7 +32,7 @@ api.get('/', (req, res, next) => {
   }
   db.discussion.find(condition).sort({_id: -1})
   .then(doc => {
-    return fetchCompanyMemberInfo(req.company, doc, 'followers').then(
+    return fetchCompanyMemberInfo(req.company, doc, 'followers', 'creator').then(
       () => res.json(doc)
     );
   })
@@ -83,10 +83,9 @@ api.get('/:discussion_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    return fetchCompanyMemberInfo(req.company, doc, 'followers').then(
-      () => res.json(doc)
-    );
+    return fetchCompanyMemberInfo(req.company, doc, 'followers', 'creator');
   })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 

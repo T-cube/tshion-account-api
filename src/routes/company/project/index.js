@@ -466,6 +466,7 @@ api.get('/:project_id/statistics', (req, res, next) => {
     assignee: 1,
     date_due: 1,
   })
+  .then(list => fetchCompanyMemberInfo(req.company, list, 'assignee'))
   .then(list => {
     const now = time();
     const getStatus = item => {
@@ -476,23 +477,24 @@ api.get('/:project_id/statistics', (req, res, next) => {
         return item.status;
       }
     };
-    const stats = _.groupBy(list, item => item.assignee.valueOf());
+    const stats = _.groupBy(list, item => item.assignee._id.valueOf());
     let memberStats = _.map(stats, (items, assignee) => {
-      let member = _.find(req.company.members, m => assignee == m._id.valueOf());
       let stats = _.countBy(items, getStatus);
       stats.total = items.length;
       return {
-        assignee: _.pick(member, '_id', 'name'),
+        assignee: assignee,
         count: stats,
       };
     });
     let projectStats = _.countBy(list, getStatus);
     projectStats.total = list.length;
-    res.json({
+    return {
       project: projectStats,
       member: memberStats,
-    });
+    };
   })
+  .then(stats => fetchCompanyMemberInfo(req.company, stats, 'member.assignee'))
+  .then(stats => res.json(stats))
   .catch(next);
 });
 
