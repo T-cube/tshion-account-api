@@ -1,12 +1,10 @@
 import express from 'express';
 import config from 'config';
 import db from 'lib/database';
-import { ObjectId } from 'mongodb';
 import WechatApi from 'wechat-api';
 
 import { validate } from './schema.js';
-import { generateToken } from 'lib/utils';
-import { mapObjectIdToData } from 'lib/utils';
+import { generateToken, mapObjectIdToData } from 'lib/utils';
 
 const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
@@ -24,33 +22,49 @@ api.get('/scan', (req, res, next) => {
 api.post('/scan', (req, res, next) => {
   let data = req.body;
   validate('scan', data);
-  db.wechat.scan.insert(data)
-  .then(doc => {
-    let scanId = doc._id;
-    wechatApi.createLimitQRCode(scanId, (e, result) => {
-      if (e) {
-        throw e;
-      }
-      let ticket = result.ticket;
-      let url = wechatApi.showQRCodeURL(ticket);
-      doc.ticket = ticket;
-      doc.url = url;
-      db.wechat.scan.update({
-        _id: scanId
-      }, {
-        $set: {ticket, url}
-      })
-      .then(() => res.json(doc))
-      .catch(next);
+  db.wechat.scan.find({}, {
+    _id: 1
+  })
+  .sort({
+    _id: -1
+  })
+  .limit(1)
+  .then(scanList => {
+    let last = scanList[0];
+    let last_id;
+    if (!last) {
+      last_id = 0;
+    } else {
+      last_id = last._id + 1;
+    }
+    data._id = last_id;
+    return db.wechat.scan.insert(data)
+    .then(doc => {
+      let scanId = last_id;
+      wechatApi.createLimitQRCode(scanId, (e, result) => {
+        if (e) {
+          throw e;
+        }
+        let ticket = result.ticket;
+        let url = wechatApi.showQRCodeURL(ticket);
+        doc.ticket = ticket;
+        doc.url = url;
+        db.wechat.scan.update({
+          _id: scanId
+        }, {
+          $set: {ticket, url}
+        })
+        .then(() => res.json(doc))
+        .catch(next);
+      });
     });
   })
   .catch(next);
-
 });
 
 api.delete('/scan/:scanId', (req, res, next) => {
   db.wechat.scan.remove({
-    _id: ObjectId(req.params.scanId)
+    _id: req.params.scanId
   })
   .then(() => res.json({}))
   .catch(next);
@@ -62,7 +76,6 @@ api.get('/scan/from', (req, res, next) => {
     {'$group' : {_id: '$key', sum: {$sum: 1}}}
   ])
   .then(doc => {
-    console.log('scan summary', doc);
     res.json(doc);
   })
   .catch(next);
@@ -76,7 +89,7 @@ api.get('/scan/from/:scanId', (req, res, next) => {
     ? pagesize
     : config.get('view.listNum');
   let condition = {
-    key: ObjectId(req.params.scanId)
+    key: req.params.scanId
   };
   let data = {};
   Promise.all([
@@ -87,13 +100,25 @@ api.get('/scan/from/:scanId', (req, res, next) => {
       data.pagesize = pagesize;
     }),
     db.wechat.from.find(condition)
-    .sort('-_id')
+    .sort({
+      _id: -1
+    })
     .skip((page - 1) * pagesize)
     .limit(pagesize)
     .then(list => data.list = list)
   ])
-  .then(() => mapObjectIdToData(data.list, 'wechat.user', '*', 'openid'))
-  .then(() => mapObjectIdToData(data.list, 'user', 'name,avatar,email,mobile,birthdate,address', 'openid.user_id'))
+  .then(() => {
+    return Promise.all(data.list.map(i => {
+      return db.wechat.user.findOne({
+        _id: i.openid
+      })
+      .then(wechatInfo => {
+        i.wechat_info = wechatInfo;
+        i.user_info = wechatInfo && wechatInfo.user_id;
+      });
+    }));
+  })
+  .then(() => mapObjectIdToData(data.list, 'user', 'name,avatar,email,mobile,birthdate,address', 'user_info'))
   .then(() => res.json(data))
   .catch(next);
 });

@@ -2,10 +2,8 @@ import express from 'express';
 import wechat from 'wechat';
 import config from 'config';
 import db from 'lib/database';
-import { ObjectId } from 'mongodb';
 
 import wUtil from 'lib/wechat-util.js';
-import { getClientIp } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -18,7 +16,7 @@ const wechatConfig = {
 
 api.use(express.query());
 
-api.post('/', wechat(wechatConfig, function (req, res) {
+api.use('/', wechat(wechatConfig, function (req, res) {
   let message = req.weixin;
   switch (message.MsgType) {
   case 'event': {
@@ -43,7 +41,7 @@ api.post('/', wechat(wechatConfig, function (req, res) {
     }
     if (message.Event == 'subscribe') {
       if (message.EventKey && message.Ticket) {
-        let key = ObjectId(message.EventKey.replace('qrscene_', ''));
+        let key = message.EventKey.replace('qrscene_', '');
         db.wechat.from.insert({
           openid,
           key,

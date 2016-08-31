@@ -5,7 +5,6 @@ import Promise from 'bluebird';
 import config from 'config';
 import bodyParser from 'body-parser';
 
-import { ApiError } from 'lib/error';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
 import corsHandler from 'lib/cors';
