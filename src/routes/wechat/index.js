@@ -5,6 +5,8 @@ import { ObjectId } from 'mongodb';
 import WechatApi from 'wechat-api';
 
 import { validate } from './schema.js';
+import { generateToken } from 'lib/utils';
+import { mapObjectIdToData } from 'lib/utils';
 
 const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
@@ -90,10 +92,18 @@ api.get('/scan/from/:scanId', (req, res, next) => {
     .limit(pagesize)
     .then(list => data.list = list)
   ])
+  .then(() => mapObjectIdToData(data.list, 'wechat.user', '*', 'openid'))
+  .then(() => mapObjectIdToData(data.list, 'user', 'name,avatar,email,mobile,birthdate,address', 'openid.user_id'))
   .then(() => res.json(data))
   .catch(next);
 });
 
 api.get('/scan/origin/token', (req, res, next) => {
-
+  return generateToken(48).then(token => {
+    db.wechat_from.export.insert({
+      token: token,
+    });
+    res.json({ token });
+  })
+  .catch(next);
 });
