@@ -34,6 +34,10 @@ export class QiniuTools {
         SECRET_KEY: conf.SECRET_KEY,
         BUCKET: bucketConfig.name,
         SERVER_URL: bucketConfig.baseUrl,
+        TOKEN_EXPIRE: conf.TOKEN_EXPIRE,
+        TOKEN_CACHE_EXPIRE: conf.TOKEN_CACHE_EXPIRE,
+        isPrivate: bucketConfig.private,
+        redisStore: this.model('redis'),
       };
       if (!instances[bucket]) {
         instances[bucket] = {};

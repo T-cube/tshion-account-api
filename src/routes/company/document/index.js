@@ -3,23 +3,13 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import fs from 'fs';
-var async = require('async');
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { sanitizeValidateObject } from 'lib/inspector';
-import {
-  dirSanitization,
-  dirValidation,
-  fileSanitization,
-  fileValidation,
-  moveSanitization,
-  moveValidation,
-  delSanitization,
-  delValidation,
-} from './schema';
-import { upload, saveCdn } from 'lib/upload';
-import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp, indexObjectId } from 'lib/utils';
+import { validate } from './schema';
+import { upload, saveCdn, isImageFile ,getCdnThumbnail } from 'lib/upload';
+import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo,
+  generateToken, timestamp, indexObjectId } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
 import CompanyLevel from 'models/company-level';
@@ -62,23 +52,38 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
-      ['document.dir', 'name,dirs,date_update,updated_by', 'dirs'],
-      ['document.file', 'name,mimetype,size,date_update,updated_by', 'files'],
+      ['document.dir', 'name,date_update,updated_by', 'dirs'],
+      ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by', 'files'],
     ])
     .then(() => {
+      console.log(doc);
       return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
     })
     .then(() => {
-      doc.dirs.forEach(dir => {
-        if (dir.dirs) {
-          dir.dirCount = dir.dirs.length;
-          delete dir.dirs;
-        } else {
-          dir.dirCount = 0;
+      let qiniu = req.model('qiniu').getInstance('cdn-file');
+      return Promise.map(doc.files, file => {
+        if (!file.cdn_key) {
+          return Promise.resolve();
         }
+        let promises = [
+          qiniu.makeLink(file.cdn_key).then(link => {
+            file.preview_url = link;
+          }),
+          qiniu.makeLink(file.cdn_key, file.name).then(link => {
+            file.download_url = link;
+          }),
+        ];
+        if (isImageFile(file.name)) {
+          promises.push(
+            qiniu.getThumnailUrl(file.cdn_key, 32).then(link => {
+              file.thumbnail_url = link;
+            })
+          );
+        }
+        return Promise.all(promises);
       });
-      return doc;
-    });
+    })
+    .then(() => doc);
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -111,7 +116,7 @@ api.get('/tree', (req, res, next) => {
 
 api.post('/dir', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(dirSanitization, dirValidation, data);
+  validate('dir', data);
   _.extend(data, {
     files: [],
     dirs: [],
@@ -159,7 +164,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
     name: req.body.name
   };
   let dir_id = ObjectId(req.params.dir_id);
-  sanitizeValidateObject(_.pick(dirSanitization, 'name'), _.pick(dirValidation, 'name'), data);
+  validate('dir', data, ['name']);
   _.extend(data, {
     updated_by: req.user._id,
     date_update: new Date(),
@@ -191,7 +196,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
 
 api.delete('/', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(delSanitization, delValidation, data);
+  validate('del', data);
   Promise.all([deleteDirs(req, data.dirs), deleteFiles(req, data.files, true)])
   .then(() => res.json({}))
   .catch(next);
@@ -235,7 +240,7 @@ api.get('/file/:file_id/token', (req, res, next) => {
 api.post('/dir/:dir_id/create', (req, res, next) => {
   let data = req.body;
   let dir_id = ObjectId(req.params.dir_id);
-  sanitizeValidateObject(fileSanitization, fileValidation, data);
+  validate('file', data);
   _.extend(data, {
     [req.document.posKey]: req.document.posVal,
     name: data.name + '.html',
@@ -325,7 +330,7 @@ saveCdn('cdn-file'),
 api.put('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
   let data = req.body;
-  sanitizeValidateObject(fileSanitization, fileValidation, data);
+  validate('file', data);
   _.extend(data, {
     date_update: new Date(),
     updated_by: req.user._id,
@@ -357,7 +362,7 @@ api.put('/file/:file_id', (req, res, next) => {
 
 api.put('/move', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(moveSanitization, moveValidation, data);
+  validate('move', data);
   let { files, dirs, target_dir } = data;
   return checkMoveable(target_dir, dirs, files)
   .then(() => getParentPaths(target_dir))
@@ -429,16 +434,6 @@ api.put('/move', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next);
 });
-
-// api.get('/can-create', (req, res, next) => {
-//   let companyLevel = new CompanyLevel(req.company);
-//   return companyLevel.canUpload(1).then(info => {
-//     res.json({
-//       canCreate: info.ok
-//     });
-//   })
-//   .catch(next);
-// });
 
 api.get('/storage', (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company);
@@ -533,23 +528,20 @@ function createFile(req, data, dir_id) {
   let companyLevel = new CompanyLevel(req.company);
   return companyLevel.canUpload(sizes).then(info => {
     if (!info.ok) {
-      let errorMsg;
+      _.map(data, item => {
+        if (item.cdn_key) {
+          req.model('qiniu').getInstance('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
+        }
+        fs.unlink(item.path, e => {
+          e && console.error(e);
+        });
+      });
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
-        errorMsg = 'over_storage';
+        throw new ApiError(400, 'over_storage');
       }
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
-        errorMsg = 'file_too_large';
+        throw new ApiError(400, 'file_too_large');
       }
-      async.each(data, (item, cb) => {
-        item.cdn_key && req.model('qiniu').getInstance('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
-        fs.unlink(item.path, (e) => {
-          e && console.error(e);
-          cb();
-        });
-      }, (e) => {
-        e && console.error(e);
-      });
-      throw new ApiError(400, errorMsg);
     }
     return checkDirExist(req, dir_id)
     .then(() => {

@@ -46,6 +46,7 @@
     "pmongo": "^1.0.0",
     "qiniu": "^6.1.9",
     "qs": "^6.2.0",
+    "redis": "^2.6.2",
     "request": "^2.72.0",
     "request-promise": "^3.0.0",
     "schema-inspector": "^1.6.4",

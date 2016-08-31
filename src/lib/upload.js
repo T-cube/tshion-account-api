@@ -31,6 +31,14 @@ function checkTypes(type) {
   return _.contains(config.get('upload.types'), type);
 }
 
+export function isImageFile(name) {
+  if (!_.isString(name)) {
+    return false;
+  }
+  let ext = path.extname(name).replace('.', '');
+  return _.contains('jpeg,jpg,gif,png'.split(','), ext);
+}
+
 export function randomAvatar(type, size) {
   let index = _.random(1, size).toString();
   let num = ('0'+index).slice(-2);
