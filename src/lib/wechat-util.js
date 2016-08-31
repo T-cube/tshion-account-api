@@ -61,21 +61,37 @@ export default class WechatUtil {
 
   static bindWechat(user_id, wechat) {
     wechat = this.getBindWechatData(wechat);
-    return db.user.update({
-      _id: user_id
-    }, {
-      $set: { wechat }
-    });
+    return Promise.all([
+      db.user.update({
+        _id: user_id
+      }, {
+        $set: { wechat }
+      }),
+      db.wechat.user.update({
+        _id: wechat.openid
+      }, {
+        $set: { user_id }
+      })
+    ]);
   }
 
   static unbindWechat(user_id) {
-    return db.user.update({
-      _id: user_id
-    }, {
-      $unset: {
-        wechat: 1
-      }
-    });
+    return Promise.all([
+      db.user.update({
+        _id: user_id
+      }, {
+        $unset: {
+          wechat: 1
+        }
+      }),
+      db.wechat.user.update({
+        user_id 
+      }, {
+        $unset: {
+          user_id: 1
+        }
+      })
+    ]);
   }
 
   static storeWechatOAuthAndGetRandomToken(wechat) {
@@ -210,7 +226,7 @@ export default class WechatUtil {
       }
       let locations = doc.locations;
       return locations.filter(location => {
-        return ((timestamp() - timestamp(location.time)) < 1000 * 30)
+        return ((timestamp() - timestamp(location.time)) < 1000 * 60)
           && location.pos.precision < 100; // 30s
       });
     });
@@ -221,7 +237,7 @@ export default class WechatUtil {
       _id: openid
     })
     .then(doc => {
-      let locations = (doc && doc.locations || []).slice(-6);
+      let locations = (doc && doc.locations || []).slice(-12);
       locations.push({
         time: new Date(),
         pos: location
