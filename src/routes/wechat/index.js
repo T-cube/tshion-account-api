@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import express from 'express';
 import config from 'config';
 import db from 'lib/database';
@@ -13,12 +14,6 @@ let api = express.Router();
 export default api;
 
 api.use(express.query());
-
-api.get('/scan', (req, res, next) => {
-  db.wechat.scan.find({})
-  .then(data => res.json(data))
-  .catch(next);
-});
 
 api.post('/scan', (req, res, next) => {
   let data = req.body;
@@ -71,24 +66,25 @@ api.delete('/scan/:scanId', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/scan/from', (req, res, next) => {
-  db.wechat.from.aggregate([
-    {$unwind: '$key'},
-    {'$group' : {_id: '$key', sum: {$sum: 1}}}
-  ])
-  .then(doc => {
-    return Promise.map(doc, item => {
-      db.wechat.scan.find({
-        _id: item._id
-      })
-      .then(scan => item.scan = scan);
-    })
-    .then(() => res.json(doc));
+api.get('/scan', (req, res, next) => {
+  db.wechat.scan.find({})
+  .then(scanList => {
+    return db.wechat.from.aggregate([
+      {$unwind: '$key'},
+      {'$group' : {_id: '$key', sum: {$sum: 1}}}
+    ])
+    .then(countList => {
+      scanList.forEach(scan => {
+        let item = _.find(countList, count => count._id == scan._id);
+        scan.count = item ? item.sum : 0;
+      });
+      res.json(scanList);
+    });
   })
   .catch(next);
 });
 
-api.get('/scan/from/:scanId', (req, res, next) => {
+api.get('/scan/:scanId', (req, res, next) => {
   let { page, pagesize} = req.query;
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
@@ -127,15 +123,5 @@ api.get('/scan/from/:scanId', (req, res, next) => {
   })
   .then(() => mapObjectIdToData(data.list, 'user', 'name,avatar,email,mobile,birthdate,address', 'user_info'))
   .then(() => res.json(data))
-  .catch(next);
-});
-
-api.get('/scan/origin/token', (req, res, next) => {
-  return generateToken(48).then(token => {
-    db.wechat_from.export.insert({
-      token: token,
-    });
-    res.json({ token });
-  })
   .catch(next);
 });
