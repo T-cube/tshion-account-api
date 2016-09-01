@@ -83,7 +83,7 @@ api.put('/:discussion_id', (req, res, next) => {
     $set: data
   })
   .then(doc => {
-    if (doc.nMatched) {
+    if (!doc.nMatched || !doc.nModified) {
       throw new ApiError(400, 'update_failed');
     }
     res.json({});
