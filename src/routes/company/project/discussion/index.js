@@ -72,6 +72,25 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
+api.put('/:discussion_id', (req, res, next) => {
+  let data = req.body;
+  let discussion_id = ObjectId(req.params.discussion_id);
+  sanitizeValidateObject(discussionSanitization, discussionValidation, data);
+  db.discussion.update({
+    _id: discussion_id,
+    creator: req.user._id
+  }, {
+    $set: data
+  })
+  .then(doc => {
+    if (doc.nMatched) {
+      throw new ApiError(400, 'update_failed');
+    }
+    res.json({});
+  })
+  .catch(next);
+});
+
 api.get('/:discussion_id', (req, res, next) => {
   let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
