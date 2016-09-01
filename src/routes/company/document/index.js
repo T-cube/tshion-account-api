@@ -30,7 +30,7 @@ api.use((req, res, next) => {
 });
 
 api.get('/dir/:dir_id?', (req, res, next) => {
-  let { search } = req.query;
+  let { search, thumb_size } = req.query;
   let condition = {
     [req.document.posKey]: req.document.posVal
   };
@@ -63,7 +63,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
         if (!file.cdn_key) {
           return Promise.resolve();
         }
-        return attachFileUrls(req, file);
+        return attachFileUrls(req, file, thumb_size);
       });
     })
     .then(() => doc);
@@ -187,6 +187,7 @@ api.delete('/', (req, res, next) => {
 
 api.get('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
+  let { thumb_size } = req.query;
   db.document.file.findOne({
     _id: file_id,
     [req.document.posKey]: req.document.posVal,
@@ -197,7 +198,7 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
-    return attachFileUrls(req, file).then(() => {
+    return attachFileUrls(req, file, thumb_size).then(() => {
       res.json(file);
     });
   })
@@ -250,6 +251,7 @@ api.post('/dir/:dir_id/upload',
 upload({type: 'attachment'}).array('document'),
 saveCdn('cdn-file'),
 (req, res, next) => {
+  let { thumb_size } = req.query;
   let data = [];
   let dir_id = ObjectId(req.params.dir_id);
   if (!req.files || !req.files.length) {
@@ -268,32 +270,37 @@ saveCdn('cdn-file'),
         date_create: new Date(),
         updated_by: req.user._id,
         dir_path: path,
+        path: undefined,
       });
-      if (fileData.mimetype != 'text/plain') {
-        return data.push(fileData);
-      }
-      return new Promise(function (resolve, reject) {
-        fs.readFile(fileData.path, 'utf8', (err, content) => {
-          if (err) {
-            reject(err);
-          }
-          resolve(content);
-        });
-      }).then(content => {
-        let file_path = fileData.path;
-        _.extend(fileData, {
-          content,
-          path: null,
-          url: null,
-          relpath: null,
-        });
-        data.push(fileData);
-        new Promise(function (resolve, reject) {
-          fs.unlink(file_path, (err) => {
+      return attachFileUrls(req, fileData, thumb_size)
+      .then(() => {
+        if (fileData.mimetype != 'text/plain') {
+          return data.push(fileData);
+        }
+        return new Promise(function (resolve, reject) {
+          fs.readFile(fileData.path, 'utf8', (err, content) => {
             if (err) {
               reject(err);
             }
-            resolve();
+            resolve(content);
+          });
+        })
+        .then(content => {
+          let file_path = fileData.path;
+          _.extend(fileData, {
+            content,
+            path: null,
+            url: null,
+            relpath: null,
+          });
+          data.push(fileData);
+          new Promise(function (resolve, reject) {
+            fs.unlink(file_path, (err) => {
+              if (err) {
+                reject(err);
+              }
+              resolve();
+            });
           });
         });
       });
@@ -301,7 +308,6 @@ saveCdn('cdn-file'),
   })
   .then(() => createFile(req, data, dir_id))
   .then(doc => {
-    doc.forEach(item => delete item.path);
     return fetchCompanyMemberInfo(req.company, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
@@ -792,8 +798,13 @@ function createRootDir(condition) {
   return db.document.dir.insert(condition);
 }
 
-function attachFileUrls(req, file) {
+function attachFileUrls(req, file, thumb_size) {
   const qiniu = req.model('qiniu').bucket('cdn-file');
+  const sizes = [16, 32, 48, 128];
+  let size = sizes[1];
+  if (_.contains(sizes), thumb_size) {
+    size = thumb_size;
+  }
   let promises = [
     qiniu.makeLink(file.cdn_key).then(link => {
       file.preview_url = link;
@@ -804,7 +815,7 @@ function attachFileUrls(req, file) {
   ];
   if (isImageFile(file.name)) {
     promises.push(
-      qiniu.getThumnailUrl(file.cdn_key, 32).then(link => {
+      qiniu.getThumnailUrl(file.cdn_key, size).then(link => {
         file.thumbnail_url = link;
       })
     );

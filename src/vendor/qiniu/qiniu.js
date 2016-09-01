@@ -106,6 +106,17 @@ export default class Qiniu {
   // 生成下载链接
   makeLink(key, deadTime, delay, downloadName) {
     let self = this;
+    // 检测链接失效时间参数和延迟时间
+    if (typeof deadTime !== 'number') {
+      downloadName = deadTime;
+      deadTime = self.conf.TOKEN_EXPIRE;
+      delay = self.conf.TOKEN_CACHE_EXPIRE;
+    }
+    if (typeof delay !== 'number') {
+      downloadName = delay;
+      delay = deadTime - 10;
+    }
+        
     return new Promise((resolve, reject) => {
       // 如果启用redis
       if (self.redis) {
@@ -143,15 +154,6 @@ export default class Qiniu {
 
     // 构建私有空间的链接
     let url = key.indexOf('http') == 0 ? key : `${self.conf.SERVER_URL}${key}`;
-    // 检测链接失效时间参数和延迟时间
-    typeof deadTime == 'number' ?
-      typeof delay == 'number' ?
-      true :
-      (downloadName = delay,
-        delay = deadTime - 10) :
-      (downloadName = deadTime,
-        deadTime = self.conf.TOKEN_EXPIRE,
-        delay = self.conf.TOKEN_CACHE_EXPIRE);
 
     // 命名下载资源名
     downloadName && (url += `?download/${encodeURIComponent(downloadName)}`);
