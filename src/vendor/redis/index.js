@@ -27,6 +27,7 @@ export default class Redis {
 
   // 为存储内容设置过期时间
   expire(key, delay) {
+    console.log(key, delay);
     this.client.expire(key, delay);
   }
 

@@ -105,7 +105,6 @@ export default class Qiniu {
 
   // 生成下载链接
   makeLink(key, deadTime, delay, downloadName) {
-    console.log('makeLink:', key, deadTime, delay, downloadName);
     let self = this;
     return new Promise((resolve, reject) => {
       // 如果启用redis
@@ -114,7 +113,6 @@ export default class Qiniu {
         let sha1 = crypto.createHash('sha1');
         // let REDIS_KEY = `CDN_URL:${self.conf.BUCKET}:${key}`;
         let REDIS_KEY = 'cdn_url:' + sha1.update(`${self.conf.BUCKET}:${key}:${downloadName||''}`).digest('hex');
-        console.log(REDIS_KEY);
         self.redis.get(REDIS_KEY, (err, res) => {
           if (err) {
             reject(err);
@@ -128,7 +126,6 @@ export default class Qiniu {
             let downloadUrl = self.generateLink.call(self, key, deadTime, delay, downloadName);
             // redis缓存这个链接
             self.redis.set(REDIS_KEY, downloadUrl, (err, obj) => {
-              console.log(delay);
               self.redis.expire(REDIS_KEY, delay);
               err ? reject(err) : resolve(downloadUrl);
             });
@@ -251,8 +248,8 @@ export default class Qiniu {
       scope: `${app.conf.BUCKET}:${key}`,
       deadline: Math.floor(+new Date) + 3600,
     };
-    console.log(putPolicy);
-      // 对putOolicy进行加密签名
+    // console.log(putPolicy);
+    // 对putOolicy进行加密签名
     let encodedPutPolicy = util.base64ToUrlSafe(new Buffer(JSON.stringify(putPolicy)).toString('base64'));
     let sign = util.hmacSha1(encodedPutPolicy, app.conf.SECRET_KEY);
     let encodedSign = util.base64ToUrlSafe(sign);

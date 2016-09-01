@@ -23,7 +23,7 @@ export class QiniuTools {
     return _.extend({}, config, {baseUrl});
   }
 
-  getInstance(bucket, https = true) {
+  bucket(bucket, https = true) {
     const conf = this.conf;
     const instances = this.instances;
     let protocol = https ? 'https' : 'http';

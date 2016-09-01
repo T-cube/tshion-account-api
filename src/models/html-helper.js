@@ -40,7 +40,7 @@ export default class HtmlHelper {
   }
 
   prepare(html) {
-    const qiniu = this.model('qiniu').getInstance('cdn-file');
+    const qiniu = this.model('qiniu').bucket('cdn-file');
     let promises = [];
     _.each(this.cdnUrlPatterns, pattern => {
       let match = pattern.exec(html);

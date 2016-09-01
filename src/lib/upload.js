@@ -102,7 +102,7 @@ export function upload(options) {
 
 export function saveCdn(bucket) {
   return (req, res, next) => {
-    const qiniu = req.model('qiniu').getInstance(bucket);
+    const qiniu = req.model('qiniu').bucket(bucket);
     let promise;
 
     function cdnUpload(file, key, path) {

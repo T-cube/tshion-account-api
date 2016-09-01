@@ -56,7 +56,6 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by', 'files'],
     ])
     .then(() => {
-      console.log(doc);
       return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
     })
     .then(() => {
@@ -512,7 +511,7 @@ function createFile(req, data, dir_id) {
     if (!info.ok) {
       _.map(data, item => {
         if (item.cdn_key) {
-          req.model('qiniu').getInstance('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
+          req.model('qiniu').bucket('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
         }
         fs.unlink(item.path, e => {
           e && console.error(e);
@@ -659,7 +658,7 @@ function deleteFiles(req, files, dirCheckAndPull) {
       return removeFileFromDb.then(() => {
         incSize -= fileInfo.size;
         fileInfo.path && fs.unlink(fileInfo.path, e => e && console.error(e));
-        fileInfo.cdn_key && req.model('qiniu').getInstance('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
+        fileInfo.cdn_key && req.model('qiniu').bucket('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
       });
     });
   }))
@@ -794,7 +793,7 @@ function createRootDir(condition) {
 }
 
 function attachFileUrls(req, file) {
-  const qiniu = req.model('qiniu').getInstance('cdn-file');
+  const qiniu = req.model('qiniu').bucket('cdn-file');
   let promises = [
     qiniu.makeLink(file.cdn_key).then(link => {
       file.preview_url = link;
