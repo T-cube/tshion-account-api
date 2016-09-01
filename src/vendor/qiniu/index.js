@@ -37,7 +37,7 @@ export class QiniuTools {
         TOKEN_EXPIRE: conf.TOKEN_EXPIRE,
         TOKEN_CACHE_EXPIRE: conf.TOKEN_CACHE_EXPIRE,
         isPrivate: bucketConfig.private,
-        redisStore: this.model('redis'),
+        redis: this.model('redis'),
       };
       if (!instances[bucket]) {
         instances[bucket] = {};

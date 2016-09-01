@@ -60,27 +60,11 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
     })
     .then(() => {
-      let qiniu = req.model('qiniu').getInstance('cdn-file');
       return Promise.map(doc.files, file => {
         if (!file.cdn_key) {
           return Promise.resolve();
         }
-        let promises = [
-          qiniu.makeLink(file.cdn_key).then(link => {
-            file.preview_url = link;
-          }),
-          qiniu.makeLink(file.cdn_key, file.name).then(link => {
-            file.download_url = link;
-          }),
-        ];
-        if (isImageFile(file.name)) {
-          promises.push(
-            qiniu.getThumnailUrl(file.cdn_key, 32).then(link => {
-              file.thumbnail_url = link;
-            })
-          );
-        }
-        return Promise.all(promises);
+        return attachFileUrls(req, file);
       });
     })
     .then(() => doc);
@@ -214,11 +198,9 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
-    const qiniu = req.model('qiniu').getInstance('cdn-file');
-    let url = file.url;
-    file.url = qiniu.makeLink(url);
-    file.download_url = qiniu.makeLink(url, file.name);
-    res.json(file);
+    return attachFileUrls(req, file).then(() => {
+      res.json(file);
+    });
   })
   .catch(next);
 });
@@ -809,4 +791,24 @@ function createRootDir(condition) {
     // total_size: 0
   });
   return db.document.dir.insert(condition);
+}
+
+function attachFileUrls(req, file) {
+  const qiniu = req.model('qiniu').getInstance('cdn-file');
+  let promises = [
+    qiniu.makeLink(file.cdn_key).then(link => {
+      file.preview_url = link;
+    }),
+    qiniu.makeLink(file.cdn_key, file.name).then(link => {
+      file.download_url = link;
+    }),
+  ];
+  if (isImageFile(file.name)) {
+    promises.push(
+      qiniu.getThumnailUrl(file.cdn_key, 32).then(link => {
+        file.thumbnail_url = link;
+      })
+    );
+  }
+  return Promise.all(promises);
 }

@@ -38,28 +38,30 @@ api.get('/draft', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) =
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  let data = fetchAnnouncementData(req);
-  data.company_id = req.company._id;
-  data.date_create = new Date();
-  db.announcement.insert(data)
-  .then(doc => {
-    res.json(doc);
-    let addingNotification = null;
-    let addingActivity = null;
-    if (doc.is_published) {
-      addingNotification = addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
-        announcement: doc._id,
-      }, data.to);
-      addingActivity = addActivity(req, C.ACTIVITY_ACTION.RELEASE, {
-        announcement: doc._id,
-        company: req.company._id,
-      });
-    } else {
-      addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-        announcement: doc._id,
-      });
-    }
-    return Promise.all([addingActivity, addingNotification]);
+  fetchAnnouncementData(req)
+  .then(data => {
+    data.company_id = req.company._id;
+    data.date_create = new Date();
+    db.announcement.insert(data)
+    .then(doc => {
+      res.json(doc);
+      let addingNotification = null;
+      let addingActivity = null;
+      if (doc.is_published) {
+        addingNotification = addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
+          announcement: doc._id,
+        }, data.to);
+        addingActivity = addActivity(req, C.ACTIVITY_ACTION.RELEASE, {
+          announcement: doc._id,
+          company: req.company._id,
+        });
+      } else {
+        addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+          announcement: doc._id,
+        });
+      }
+      return Promise.all([addingActivity, addingNotification]);
+    });
   })
   .catch(next);
 });
@@ -93,30 +95,32 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
     if (announcement.is_published) {
       throw new ApiError(400, 'cannot_modify');
     }
-    let data = fetchAnnouncementData(req);
-    return db.announcement.update({
-      _id: announcement_id
-    }, {
-      $set: data
-    })
-    .then(doc => {
-      res.json(doc);
-      let addingNotification = null;
-      let addingActivity = null;
-      if (!announcement.is_published && data.is_published) {
-        addingNotification = addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
-          announcement: announcement_id,
-        }, data.to);
-        addingActivity = addActivity(req, C.ACTIVITY_ACTION.RELEASE, {
-          announcement: announcement_id,
-          company: req.company._id,
-        });
-      } else {
-        addingActivity = addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
-          announcement: announcement_id
-        });
-      }
-      return Promise.all([addingActivity, addingNotification]);
+    fetchAnnouncementData(req)
+    .then(data => {
+      return db.announcement.update({
+        _id: announcement_id
+      }, {
+        $set: data
+      })
+      .then(doc => {
+        res.json(doc);
+        let addingNotification = null;
+        let addingActivity = null;
+        if (!announcement.is_published && data.is_published) {
+          addingNotification = addNotification(req, C.ACTIVITY_ACTION.RELEASE, {
+            announcement: announcement_id,
+          }, data.to);
+          addingActivity = addActivity(req, C.ACTIVITY_ACTION.RELEASE, {
+            announcement: announcement_id,
+            company: req.company._id,
+          });
+        } else {
+          addingActivity = addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+            announcement: announcement_id
+          });
+        }
+        return Promise.all([addingActivity, addingNotification]);
+      });
     });
   })
   .catch(next);
@@ -160,25 +164,29 @@ function fetchAnnouncementData(req) {
   if (data.is_published && !data.date_publish) {
     data.date_publish = new Date();
   }
-  // validation of members and structure nodes
-  let structure = new Structure(req.company.structure);
-  data.from.creator = req.user._id;
-  if (data.from.department && !structure.findNodeById(data.from.department)) {
-    throw new ApiError(400, 'department_not_exists');
-  }
-  data.to && data.to.department && data.to.department.forEach(i => {
-    if (!structure.findNodeById(i)) {
+  return req.model('html-helper').sanitize(data.content)
+  .then(content => {
+    data.content = content;
+    // validation of members and structure nodes
+    let structure = new Structure(req.company.structure);
+    data.from.creator = req.user._id;
+    if (data.from.department && !structure.findNodeById(data.from.department)) {
       throw new ApiError(400, 'department_not_exists');
     }
+    data.to && data.to.department && data.to.department.forEach(i => {
+      if (!structure.findNodeById(i)) {
+        throw new ApiError(400, 'department_not_exists');
+      }
+    });
+    let memberIds = req.company.members.map(i => i._id);
+    data.to && data.to.member && data.to.member.forEach(each => {
+      if (-1 == indexObjectId(memberIds, each)) {
+        throw new ApiError(400, 'member_not_exists');
+      }
+    });
+    data.update = new Date();
+    return data;
   });
-  let memberIds = req.company.members.map(i => i._id);
-  data.to && data.to.member && data.to.member.forEach(each => {
-    if (-1 == indexObjectId(memberIds, each)) {
-      throw new ApiError(400, 'member_not_exists');
-    }
-  });
-  data.update = new Date();
-  return data;
 }
 
 function getAnnouncement(req, is_published) {
@@ -196,7 +204,11 @@ function getAnnouncement(req, is_published) {
     if (announcement.from.department) {
       announcement.from.department = structure.findNodeById(announcement.from.department);
     }
-    return fetchCompanyMemberInfo(req.company, announcement, 'from.creator');
+    return req.model('html-helper').prepare(announcement.content)
+    .then(content => {
+      announcement.content = content;
+      return fetchCompanyMemberInfo(req.company, announcement, 'from.creator');
+    });
   });
 }
 
