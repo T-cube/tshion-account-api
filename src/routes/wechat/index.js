@@ -2,6 +2,7 @@ import express from 'express';
 import config from 'config';
 import db from 'lib/database';
 import WechatApi from 'wechat-api';
+import Promise from 'bluebird';
 
 import { validate } from './schema.js';
 import { generateToken, mapObjectIdToData } from 'lib/utils';
@@ -76,7 +77,13 @@ api.get('/scan/from', (req, res, next) => {
     {'$group' : {_id: '$key', sum: {$sum: 1}}}
   ])
   .then(doc => {
-    res.json(doc);
+    return Promise.map(doc, item => {
+      db.wechat.scan.find({
+        _id: item._id
+      })
+      .then(scan => item.scan = scan);
+    })
+    .then(() => res.json(doc));
   })
   .catch(next);
 });
