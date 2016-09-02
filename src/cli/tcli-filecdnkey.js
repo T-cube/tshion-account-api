@@ -5,12 +5,12 @@ import program from 'commander';
 import db from 'lib/database';
 
 program
-  .option('-o, --update', 'update document file cdn_key')
+  .option('-u, --update', 'update document file cdn_key')
   .parse(process.argv);
 
 console.log('document file updating');
 
-if (!program.oauth) {
+if (!program.update) {
   program.outputHelp();
 }
 
