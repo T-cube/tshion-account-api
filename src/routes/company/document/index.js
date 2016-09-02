@@ -198,6 +198,7 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
+    console.log(file);
     return attachFileUrls(req, file, thumb_size).then(() => {
       res.json(file);
     });
@@ -272,45 +273,46 @@ saveCdn('cdn-file'),
         dir_path: path,
         path: undefined,
       });
-      return attachFileUrls(req, fileData, thumb_size)
-      .then(() => {
-        if (fileData.mimetype != 'text/plain') {
-          return data.push(fileData);
-        }
-        return new Promise(function (resolve, reject) {
-          fs.readFile(fileData.path, 'utf8', (err, content) => {
+      if (fileData.mimetype != 'text/plain') {
+        data.push(fileData);
+        return;
+      }
+      return new Promise(function (resolve, reject) {
+        fs.readFile(fileData.path, 'utf8', (err, content) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(content);
+        });
+      })
+      .then(content => {
+        let file_path = fileData.path;
+        _.extend(fileData, {
+          content,
+          path: null,
+          url: null,
+          relpath: null,
+        });
+        data.push(fileData);
+        new Promise(function (resolve, reject) {
+          fs.unlink(file_path, (err) => {
             if (err) {
               reject(err);
             }
-            resolve(content);
-          });
-        })
-        .then(content => {
-          let file_path = fileData.path;
-          _.extend(fileData, {
-            content,
-            path: null,
-            url: null,
-            relpath: null,
-          });
-          data.push(fileData);
-          new Promise(function (resolve, reject) {
-            fs.unlink(file_path, (err) => {
-              if (err) {
-                reject(err);
-              }
-              resolve();
-            });
+            resolve();
           });
         });
       });
     });
   })
   .then(() => createFile(req, data, dir_id))
-  .then(doc => {
-    return fetchCompanyMemberInfo(req.company, doc, 'updated_by');
+  .then(files => {
+    return Promise.map(files, file => attachFileUrls(req, file, thumb_size))
+    .then(() => {
+      return fetchCompanyMemberInfo(req.company, files, 'updated_by');
+    });
   })
-  .then(doc => res.json(doc))
+  .then(files => res.json(files))
   .catch(next);
 });
 
@@ -804,6 +806,9 @@ function attachFileUrls(req, file, thumb_size) {
   let size = sizes[1];
   if (_.contains(sizes), thumb_size) {
     size = thumb_size;
+  }
+  if (!file.cdn_key) {
+    return Promise.resolve();
   }
   let promises = [
     qiniu.makeLink(file.cdn_key).then(link => {

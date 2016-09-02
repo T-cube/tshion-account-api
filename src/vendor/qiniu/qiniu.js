@@ -116,13 +116,12 @@ export default class Qiniu {
       downloadName = delay;
       delay = deadTime - 10;
     }
-        
+
     return new Promise((resolve, reject) => {
       // 如果启用redis
       if (self.redis) {
         // 检查redis缓存中是否存在
         let sha1 = crypto.createHash('sha1');
-        // let REDIS_KEY = `CDN_URL:${self.conf.BUCKET}:${key}`;
         let REDIS_KEY = 'cdn_url:' + sha1.update(`${self.conf.BUCKET}:${key}:${downloadName||''}`).digest('hex');
         self.redis.get(REDIS_KEY, (err, res) => {
           if (err) {
@@ -134,7 +133,12 @@ export default class Qiniu {
             resolve(res);
           } else {
             // redis中不存在链接，创建新链接
-            let downloadUrl = self.generateLink.call(self, key, deadTime, delay, downloadName);
+            let downloadUrl;
+            try {
+              downloadUrl = self.generateLink.call(self, key, deadTime, delay, downloadName);
+            } catch(e) {
+              reject(e);
+            }
             // redis缓存这个链接
             self.redis.set(REDIS_KEY, downloadUrl, (err, obj) => {
               self.redis.expire(REDIS_KEY, delay);
@@ -151,6 +155,9 @@ export default class Qiniu {
 
   generateLink(key, deadTime, delay, downloadName) {
     let self = this;
+    if (!key) {
+      throw new Error('generateLink: undefined cdn key');
+    }
 
     // 构建私有空间的链接
     let url = key.indexOf('http') == 0 ? key : `${self.conf.SERVER_URL}${key}`;
