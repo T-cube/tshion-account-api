@@ -230,6 +230,7 @@ service redis restart   # 重启
 
 redis的配置（配置文件路径/etc/redis.conf）:
 ```
+appendonly no # 持久化策略，no为不启用持久化
 maxmemory 100000000 # 内存限制，单位byte，此处为100M
 requirepass password # 密码
 ...
