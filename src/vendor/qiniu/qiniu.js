@@ -2,7 +2,7 @@ import qiniu from 'qiniu';
 import request from 'request';
 import _ from 'underscore';
 import Promise from 'bluebird';
-
+import crypto from 'crypto';
 const util = qiniu.util;
 
 export default class Qiniu {
@@ -18,6 +18,7 @@ export default class Qiniu {
       TOKEN_EXPIRE: 600,
       TOKEN_CACHE_EXPIRE: 590,
     });
+    this.redis = options.redis;
     qiniu.conf.ACCESS_KEY = options.ACCESS_KEY;
     qiniu.conf.SECRET_KEY = options.SECRET_KEY;
     // 构建七牛bucketManager对象
@@ -104,15 +105,25 @@ export default class Qiniu {
 
   // 生成下载链接
   makeLink(key, deadTime, delay, downloadName) {
-    console.log('makeLink:', key, deadTime, delay, downloadName);
     let self = this;
+    // 检测链接失效时间参数和延迟时间
+    if (typeof deadTime !== 'number') {
+      downloadName = deadTime;
+      deadTime = self.conf.TOKEN_EXPIRE;
+      delay = self.conf.TOKEN_CACHE_EXPIRE;
+    }
+    if (typeof delay !== 'number') {
+      downloadName = delay;
+      delay = deadTime - 10;
+    }
+
     return new Promise((resolve, reject) => {
       // 如果启用redis
-      const redis = this.redisStore;
-      if (redis) {
+      if (self.redis) {
         // 检查redis缓存中是否存在
-        let REDIS_KEY = `${self.conf.BUCKET}:${key}`;
-        redis.get(REDIS_KEY, (err, res) => {
+        let sha1 = crypto.createHash('sha1');
+        let REDIS_KEY = 'cdn_url:' + sha1.update(`${self.conf.BUCKET}:${key}:${downloadName||''}`).digest('hex');
+        self.redis.get(REDIS_KEY, (err, res) => {
           if (err) {
             reject(err);
             return;
@@ -122,9 +133,14 @@ export default class Qiniu {
             resolve(res);
           } else {
             // redis中不存在链接，创建新链接
-            let downloadUrl = self.generateLink.call(self, key, deadTime, delay, downloadName);
+            let downloadUrl;
+            try {
+              downloadUrl = self.generateLink.call(self, key, deadTime, delay, downloadName);
+            } catch(e) {
+              reject(e);
+            }
             // redis缓存这个链接
-            redis.set(REDIS_KEY, downloadUrl, (err, obj) => {
+            self.redis.set(REDIS_KEY, downloadUrl, (err, obj) => {
               self.redis.expire(REDIS_KEY, delay);
               err ? reject(err) : resolve(downloadUrl);
             });
@@ -139,19 +155,12 @@ export default class Qiniu {
 
   generateLink(key, deadTime, delay, downloadName) {
     let self = this;
+    if (!key) {
+      throw new Error('generateLink: undefined cdn key');
+    }
 
     // 构建私有空间的链接
-    let url = key.indexOf('http') == 0 ? key : `${self.conf.SERVER_URL}${encodeURIComponent(key)}`;
-
-    // 检测链接失效时间参数和延迟时间
-    typeof deadTime == 'number' ?
-      typeof delay == 'number' ?
-      true :
-      (downloadName = delay,
-        delay = deadTime - 10) :
-      (downloadName = deadTime,
-        deadTime = self.conf.TOKEN_EXPIRE,
-        delay = self.conf.TOKEN_CACHE_EXPIRE);
+    let url = key.indexOf('http') == 0 ? key : `${self.conf.SERVER_URL}${key}`;
 
     // 命名下载资源名
     downloadName && (url += `?download/${encodeURIComponent(downloadName)}`);
@@ -248,8 +257,8 @@ export default class Qiniu {
       scope: `${app.conf.BUCKET}:${key}`,
       deadline: Math.floor(+new Date) + 3600,
     };
-    console.log(putPolicy);
-      // 对putOolicy进行加密签名
+    // console.log(putPolicy);
+    // 对putOolicy进行加密签名
     let encodedPutPolicy = util.base64ToUrlSafe(new Buffer(JSON.stringify(putPolicy)).toString('base64'));
     let sign = util.hmacSha1(encodedPutPolicy, app.conf.SECRET_KEY);
     let encodedSign = util.base64ToUrlSafe(sign);

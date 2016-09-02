@@ -29,11 +29,11 @@ function getFileInfo(fileId, token) {
       _id: fileId,
     });
   })
-  .then(fileInfo => {
-    if (!fileInfo) {
+  .then(file => {
+    if (!file) {
       throw new ApiError(404);
     }
-    return fileInfo;
+    return file;
   });
 }
 
@@ -42,14 +42,14 @@ api.get('/download/:file_id/token/:token', (req, res, next) => {
   let fileId = ObjectId(req.params.file_id);
   let token = req.params.token;
   getFileInfo(fileId, token)
-  .then(fileInfo => {
-    if (fileInfo.path) {
-      return fileExists(fileInfo.path)
+  .then(file => {
+    if (file.path) {
+      return fileExists(file.path)
       .then(exists => {
         if (!exists) {
           throw new ApiError(404);
         }
-        let filename = fileInfo.name;
+        let filename = file.name;
         let isFirefox = req.get('User-Agent').toLowerCase().indexOf('firefox') > -1;
         if (isFirefox) {
           filename = '=?UTF-8?B?' + new Buffer(filename).toString('base64') + '?=';
@@ -57,11 +57,11 @@ api.get('/download/:file_id/token/:token', (req, res, next) => {
           filename = encodeURIComponent(filename);
         }
         res.set('Content-Disposition', 'attachment; filename=' + filename);
-        res.set('Content-Type', fileInfo.mimetype);
-        fs.createReadStream(fileInfo.path).pipe(res);
+        res.set('Content-Type', file.mimetype);
+        fs.createReadStream(file.path).pipe(res);
       });
-    } else if (fileInfo.content) {
-      res.send(fileInfo.content);
+    } else if (file.content) {
+      res.send(file.content);
     } else {
       throw new ApiError(404);
     }
@@ -71,35 +71,40 @@ api.get('/download/:file_id/token/:token', (req, res, next) => {
 
 api.get('/preview/:file_id/token/:token', (req, res, next) => {
   let fileId = ObjectId(req.params.file_id);
-  const { file_id, token } = req.params;
+  const { token } = req.params;
   getFileInfo(fileId, token)
   .then(file => {
-    const apiUrl = config.get('apiUrl');
-    const qiniu = req.model('qiniu').getInstance('cdn-file');
+    const qiniu = req.model('qiniu').bucket('cdn-file');
     let data = {
       file: file,
-      downloadUrl: qiniu.makeLink(file.url, file.name),
-      previewUrl: `${apiUrl}api/file/preview/doc/${fileId}/token/${token}`,
     };
-    res.render('file/preview', data);
+    return qiniu.makeLink(file.url)
+    .then(link => {
+      data.download_url = link;
+      let options = {
+        enableSSL: /^https/.test(link),
+      };
+      data.preview_url = req.model('ow365').getPreviewUrl(link, options);
+      res.render('file/preview', data);
+    });
   })
   .catch(next);
 });
 
 api.get('/preview/doc/:file_id/token/:token', (req, res, next) => {
   let fileId = ObjectId(req.params.file_id);
-  const { file_id, token } = req.params;
+  const { token } = req.params;
   getFileInfo(fileId, token)
   .then(file => {
-    const apiUrl = config.get('apiUrl');
-    const qiniu = req.model('qiniu').getInstance('cdn-file');
-    let downloadUrl = qiniu.makeLink(file.url, file.name);
-    let options = {
-      enableSSL: /^https/.test(apiUrl),
-    };
-    let cryptedUrl = req.model('ow365').getPreviewUrl(downloadUrl, options);
-    // res.send(cryptedUrl);
-    res.redirect(cryptedUrl);
+    const qiniu = req.model('qiniu').bucket('cdn-file');
+    return qiniu.makeLink(file.url)
+    .then(link => {
+      let options = {
+        enableSSL: /^https/.test(link),
+      };
+      let preview_url = req.model('ow365').getPreviewUrl(link, options);
+      res.redirect(preview_url);
+    });
   })
   .catch(next);
 });

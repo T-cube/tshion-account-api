@@ -27,8 +27,8 @@ export default class Redis {
 
   // 为存储内容设置过期时间
   expire(key, delay) {
-    let self = this;
-    self.client.expire.call(self.client, key, delay);
+    console.log(key, delay);
+    this.client.expire(key, delay);
   }
 
   // 键值对集合存储，存储的是一个集合，而不是每个单独的key-value
