@@ -3,6 +3,7 @@
 import '../bootstrap';
 import program from 'commander';
 import db from 'lib/database';
+import Promise from 'bluebird';
 
 program
   .option('-u, --update', 'update document file cdn_key')
@@ -39,6 +40,10 @@ if (program.update) {
   })
   .then(() => {
     console.log('update successed!');
+    process.exit();
+  })
+  .catch(e => {
+    console.log(e);
     process.exit();
   });
 
