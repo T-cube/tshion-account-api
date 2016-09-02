@@ -3,14 +3,15 @@
 import '../bootstrap';
 import program from 'commander';
 import db from 'lib/database';
+import Promise from 'bluebird';
 
 program
-  .option('-o, --update', 'update document file cdn_key')
+  .option('-u, --update', 'update document file cdn_key')
   .parse(process.argv);
 
 console.log('document file updating');
 
-if (!program.oauth) {
+if (!program.update) {
   program.outputHelp();
 }
 
@@ -39,6 +40,10 @@ if (program.update) {
   })
   .then(() => {
     console.log('update successed!');
+    process.exit();
+  })
+  .catch(e => {
+    console.log(e);
     process.exit();
   });
 
