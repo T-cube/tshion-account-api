@@ -198,10 +198,60 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
-    console.log(file);
-    return attachFileUrls(req, file, thumb_size).then(() => {
-      res.json(file);
+    let promise = Promise.resolve();
+    if (file.content) {
+      promise = req.model('html-helper').prepare(file.content)
+      .then(content => {
+        file.content = content;
+      });
+    }
+    promise.then(() => {
+      return attachFileUrls(req, file, thumb_size).then(() => {
+        res.json(file);
+      });
     });
+  })
+  .catch(next);
+});
+
+api.put('/file/:file_id', (req, res, next) => {
+  let file_id = ObjectId(req.params.file_id);
+  let data = req.body;
+  validate('file', data);
+  _.extend(data, {
+    date_update: new Date(),
+    updated_by: req.user._id,
+  });
+  db.document.file.findOne({
+    _id: file_id
+  }, {
+    name: 1,
+    dir_id: 1,
+  })
+  .then(fileInfo => {
+    if (!fileInfo) {
+      throw new ApiError(404);
+    }
+    return getFileListOfDir(fileInfo.dir_id)
+    .then(filelist => {
+      filelist = filelist.filter(i => !i._id.equals(file_id));
+      data.name = getUniqFileName(filelist.map(i => i.name), data.name);
+      let promise = Promise.resolve();
+      if (data.content) {
+        promise = req.model('html-helper').sanitize(data.content)
+        .then(content => {
+          data.content = content;
+        });
+      }
+      return promise.then(() => {
+        return db.document.file.update({
+          _id: file_id,
+        }, {
+          $set: data
+        });
+      });
+    })
+    .then(doc => res.json(doc));
   })
   .catch(next);
 });
@@ -235,7 +285,11 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     mimetype: 'text/plain',
     size: Buffer.byteLength(data.content, 'utf8'),
   });
-  getParentPaths(dir_id)
+  return req.model('html-helper').sanitize(data.content)
+  .then(content => {
+    data.content = content;
+    return getParentPaths(dir_id);
+  })
   .then(path => {
     data.dir_path = path;
     data = [data];
@@ -313,39 +367,6 @@ saveCdn('cdn-file'),
     });
   })
   .then(files => res.json(files))
-  .catch(next);
-});
-
-api.put('/file/:file_id', (req, res, next) => {
-  let file_id = ObjectId(req.params.file_id);
-  let data = req.body;
-  validate('file', data);
-  _.extend(data, {
-    date_update: new Date(),
-    updated_by: req.user._id,
-  });
-  db.document.file.findOne({
-    _id: file_id
-  }, {
-    name: 1,
-    dir_id: 1,
-  })
-  .then(fileInfo => {
-    if (!fileInfo) {
-      throw new ApiError(404);
-    }
-    return getFileListOfDir(fileInfo.dir_id)
-    .then(filelist => {
-      filelist = filelist.filter(i => !i._id.equals(file_id));
-      data.name = getUniqFileName(filelist.map(i => i.name), data.name);
-      return db.document.file.update({
-        _id: file_id,
-      }, {
-        $set: data
-      });
-    })
-    .then(doc => res.json(doc));
-  })
   .catch(next);
 });
 

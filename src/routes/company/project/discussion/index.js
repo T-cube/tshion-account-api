@@ -67,7 +67,11 @@ api.post('/', (req, res, next) => {
     followers: [req.user._id],
     date_create: new Date(),
   });
-  db.discussion.insert(data)
+  req.model('html-helper').sanitize(data.content)
+  .then(content => {
+    data.content = content;
+    return db.discussion.insert(data);
+  })
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -76,11 +80,17 @@ api.put('/:discussion_id', (req, res, next) => {
   let data = req.body;
   let discussion_id = ObjectId(req.params.discussion_id);
   sanitizeValidateObject(discussionSanitization, discussionValidation, data);
-  db.discussion.update({
-    _id: discussion_id,
-    creator: req.user._id
-  }, {
-    $set: data
+  req.model('html-helper').sanitize(data.content)
+  .then(content => {
+    data.content = content;
+  })
+  .then(() => {
+    return db.discussion.update({
+      _id: discussion_id,
+      creator: req.user._id
+    }, {
+      $set: data
+    });
   })
   .then(doc => {
     if (!doc.ok) {
@@ -102,7 +112,11 @@ api.get('/:discussion_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    return fetchCompanyMemberInfo(req.company, doc, 'followers', 'creator');
+    return req.model('html-helper').prepare(doc.content)
+    .then(content => {
+      doc.content = content;
+      return fetchCompanyMemberInfo(req.company, doc, 'followers', 'creator');
+    });
   })
   .then(doc => res.json(doc))
   .catch(next);
