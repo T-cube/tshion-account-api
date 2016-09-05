@@ -10,6 +10,7 @@
 * [用nvm安装nodejs](#用nvm安装nodejs)
 * [安装mongodb](#安装mongodb)
 * [安装nginx](#安装nginx)
+* [Centos上安装redis](#Centos上安装redis)
 * [代码部署及运行署](#代码部署及运行)
 
 
@@ -203,8 +204,36 @@ enabled=1
 
 ```
 
+
 ```
 sudo yum install -y nginx
+```
+
+## Centos上安装redis
+
+安装命令:
+```
+$ yum install redis
+```
+
+命令行中进入redis:
+```
+$ redis-cli
+```
+
+相关命令:
+```
+service redis start     # 启动
+service redis stop      # 停止
+service redis restart   # 重启
+```
+
+redis的配置（配置文件路径/etc/redis.conf）:
+```
+appendonly no # 持久化策略，no为不启用持久化
+maxmemory 100000000 # 内存限制，单位byte，此处为100M
+requirepass password # 密码
+...
 ```
 
 ## 代码部署及运行
