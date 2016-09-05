@@ -299,7 +299,7 @@ api.get('/setting', (req, res, next) => {
   })
   .then(doc => {
     return Promise.all([
-      fetchCompanyMemberInfo(req.company.members, doc, 'auditor'),
+      fetchCompanyMemberInfo(req.company, doc, 'auditor'),
       mapObjectIdToData(doc, 'approval.template', 'name,status', 'approval_template'),
     ])
     .then(() => res.json(doc || {

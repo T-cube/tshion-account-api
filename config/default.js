@@ -97,6 +97,14 @@ module.exports = {
     },
   },
   vendor: {
+    redis: {
+      host: '127.0.0.1',
+      port: 6379,
+      db: 3,
+      auth: null,
+      retry_max_value: 5,
+      prefix: 'tlf_',
+    },
     officeweb365: {
       siteId: '10390',
       encodeUrl: true,
@@ -105,6 +113,8 @@ module.exports = {
       deleteAfterView: true,
     },
     qiniu: {
+      TOKEN_EXPIRE: 3600,
+      TOKEN_CACHE_EXPIRE: 3000,
       ACCESS_KEY: 'f_l5R_bNDR03QjAfqqGy7C3XRuaoMp2qpiHTfAOJ',
       SECRET_KEY: 'Pp7fk2HmH2LUXa7VnUY1Av8FoUQCY_TPeSf_6Y_2',
       buckets: {

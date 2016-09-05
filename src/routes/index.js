@@ -31,6 +31,7 @@ let routes = [
   'task',
   'tools',
   'user',
+  'wechat',
   'wechat-bootstrap',
 ];
 

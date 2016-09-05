@@ -23,7 +23,7 @@ export class QiniuTools {
     return _.extend({}, config, {baseUrl});
   }
 
-  getInstance(bucket, https = true) {
+  bucket(bucket, https = true) {
     const conf = this.conf;
     const instances = this.instances;
     let protocol = https ? 'https' : 'http';
@@ -34,6 +34,10 @@ export class QiniuTools {
         SECRET_KEY: conf.SECRET_KEY,
         BUCKET: bucketConfig.name,
         SERVER_URL: bucketConfig.baseUrl,
+        TOKEN_EXPIRE: conf.TOKEN_EXPIRE,
+        TOKEN_CACHE_EXPIRE: conf.TOKEN_CACHE_EXPIRE,
+        isPrivate: bucketConfig.private,
+        redis: this.model('redis'),
       };
       if (!instances[bucket]) {
         instances[bucket] = {};

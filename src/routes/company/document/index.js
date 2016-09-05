@@ -3,23 +3,13 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import fs from 'fs';
-var async = require('async');
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { sanitizeValidateObject } from 'lib/inspector';
-import {
-  dirSanitization,
-  dirValidation,
-  fileSanitization,
-  fileValidation,
-  moveSanitization,
-  moveValidation,
-  delSanitization,
-  delValidation,
-} from './schema';
-import { upload, saveCdn } from 'lib/upload';
-import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo, generateToken, timestamp, indexObjectId } from 'lib/utils';
+import { validate } from './schema';
+import { upload, saveCdn, isImageFile ,getCdnThumbnail } from 'lib/upload';
+import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo,
+  generateToken, timestamp, indexObjectId } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
 import CompanyLevel from 'models/company-level';
@@ -40,7 +30,7 @@ api.use((req, res, next) => {
 });
 
 api.get('/dir/:dir_id?', (req, res, next) => {
-  let { search } = req.query;
+  let { search, thumb_size } = req.query;
   let condition = {
     [req.document.posKey]: req.document.posVal
   };
@@ -62,23 +52,21 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
-      ['document.dir', 'name,dirs,date_update,updated_by', 'dirs'],
-      ['document.file', 'name,mimetype,size,date_update,updated_by', 'files'],
+      ['document.dir', 'name,date_update,updated_by', 'dirs'],
+      ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by', 'files'],
     ])
     .then(() => {
-      return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+      return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
     })
     .then(() => {
-      doc.dirs.forEach(dir => {
-        if (dir.dirs) {
-          dir.dirCount = dir.dirs.length;
-          delete dir.dirs;
-        } else {
-          dir.dirCount = 0;
+      return Promise.map(doc.files, file => {
+        if (!file.cdn_key) {
+          return Promise.resolve();
         }
+        return attachFileUrls(req, file, thumb_size);
       });
-      return doc;
-    });
+    })
+    .then(() => doc);
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -111,7 +99,7 @@ api.get('/tree', (req, res, next) => {
 
 api.post('/dir', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(dirSanitization, dirValidation, data);
+  validate('dir', data);
   _.extend(data, {
     files: [],
     dirs: [],
@@ -159,7 +147,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
     name: req.body.name
   };
   let dir_id = ObjectId(req.params.dir_id);
-  sanitizeValidateObject(_.pick(dirSanitization, 'name'), _.pick(dirValidation, 'name'), data);
+  validate('dir', data, ['name']);
   _.extend(data, {
     updated_by: req.user._id,
     date_update: new Date(),
@@ -191,7 +179,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
 
 api.delete('/', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(delSanitization, delValidation, data);
+  validate('del', data);
   Promise.all([deleteDirs(req, data.dirs), deleteFiles(req, data.files, true)])
   .then(() => res.json({}))
   .catch(next);
@@ -199,6 +187,7 @@ api.delete('/', (req, res, next) => {
 
 api.get('/file/:file_id', (req, res, next) => {
   let file_id = ObjectId(req.params.file_id);
+  let { thumb_size } = req.query;
   db.document.file.findOne({
     _id: file_id,
     [req.document.posKey]: req.document.posVal,
@@ -209,10 +198,60 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
-    const qiniu = req.model('qiniu').getInstance('cdn-file');
-    file.url = qiniu.makeLink(file.url);
-    file.download_url = qiniu.makeLink(file.url, file.name);
-    res.json(file);
+    let promise = Promise.resolve();
+    if (file.content) {
+      promise = req.model('html-helper').prepare(file.content)
+      .then(content => {
+        file.content = content;
+      });
+    }
+    promise.then(() => {
+      return attachFileUrls(req, file, thumb_size).then(() => {
+        res.json(file);
+      });
+    });
+  })
+  .catch(next);
+});
+
+api.put('/file/:file_id', (req, res, next) => {
+  let file_id = ObjectId(req.params.file_id);
+  let data = req.body;
+  validate('file', data);
+  _.extend(data, {
+    date_update: new Date(),
+    updated_by: req.user._id,
+  });
+  db.document.file.findOne({
+    _id: file_id
+  }, {
+    name: 1,
+    dir_id: 1,
+  })
+  .then(fileInfo => {
+    if (!fileInfo) {
+      throw new ApiError(404);
+    }
+    return getFileListOfDir(fileInfo.dir_id)
+    .then(filelist => {
+      filelist = filelist.filter(i => !i._id.equals(file_id));
+      data.name = getUniqFileName(filelist.map(i => i.name), data.name);
+      let promise = Promise.resolve();
+      if (data.content) {
+        promise = req.model('html-helper').sanitize(data.content)
+        .then(content => {
+          data.content = content;
+        });
+      }
+      return promise.then(() => {
+        return db.document.file.update({
+          _id: file_id,
+        }, {
+          $set: data
+        });
+      });
+    })
+    .then(doc => res.json(doc));
   })
   .catch(next);
 });
@@ -234,7 +273,7 @@ api.get('/file/:file_id/token', (req, res, next) => {
 api.post('/dir/:dir_id/create', (req, res, next) => {
   let data = req.body;
   let dir_id = ObjectId(req.params.dir_id);
-  sanitizeValidateObject(fileSanitization, fileValidation, data);
+  validate('file', data);
   _.extend(data, {
     [req.document.posKey]: req.document.posVal,
     name: data.name + '.html',
@@ -246,14 +285,18 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     mimetype: 'text/plain',
     size: Buffer.byteLength(data.content, 'utf8'),
   });
-  getParentPaths(dir_id)
+  return req.model('html-helper').sanitize(data.content)
+  .then(content => {
+    data.content = content;
+    return getParentPaths(dir_id);
+  })
   .then(path => {
     data.dir_path = path;
     data = [data];
     return createFile(req, data, dir_id);
   })
   .then(doc => {
-    return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
+    return fetchCompanyMemberInfo(req.company, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -263,6 +306,7 @@ api.post('/dir/:dir_id/upload',
 upload({type: 'attachment'}).array('document'),
 saveCdn('cdn-file'),
 (req, res, next) => {
+  let { thumb_size } = req.query;
   let data = [];
   let dir_id = ObjectId(req.params.dir_id);
   if (!req.files || !req.files.length) {
@@ -281,9 +325,11 @@ saveCdn('cdn-file'),
         date_create: new Date(),
         updated_by: req.user._id,
         dir_path: path,
+        path: undefined,
       });
       if (fileData.mimetype != 'text/plain') {
-        return data.push(fileData);
+        data.push(fileData);
+        return;
       }
       return new Promise(function (resolve, reject) {
         fs.readFile(fileData.path, 'utf8', (err, content) => {
@@ -292,7 +338,8 @@ saveCdn('cdn-file'),
           }
           resolve(content);
         });
-      }).then(content => {
+      })
+      .then(content => {
         let file_path = fileData.path;
         _.extend(fileData, {
           content,
@@ -313,50 +360,19 @@ saveCdn('cdn-file'),
     });
   })
   .then(() => createFile(req, data, dir_id))
-  .then(doc => {
-    doc.forEach(item => delete item.path);
-    return fetchCompanyMemberInfo(req.company.members, doc, 'updated_by');
+  .then(files => {
+    return Promise.map(files, file => attachFileUrls(req, file, thumb_size))
+    .then(() => {
+      return fetchCompanyMemberInfo(req.company, files, 'updated_by');
+    });
   })
-  .then(doc => res.json(doc))
-  .catch(next);
-});
-
-api.put('/file/:file_id', (req, res, next) => {
-  let file_id = ObjectId(req.params.file_id);
-  let data = req.body;
-  sanitizeValidateObject(fileSanitization, fileValidation, data);
-  _.extend(data, {
-    date_update: new Date(),
-    updated_by: req.user._id,
-  });
-  db.document.file.findOne({
-    _id: file_id
-  }, {
-    name: 1,
-    dir_id: 1,
-  })
-  .then(fileInfo => {
-    if (!fileInfo) {
-      throw new ApiError(404);
-    }
-    return getFileListOfDir(fileInfo.dir_id)
-    .then(filelist => {
-      filelist = filelist.filter(i => !i._id.equals(file_id));
-      data.name = getUniqFileName(filelist.map(i => i.name), data.name);
-      return db.document.file.update({
-        _id: file_id,
-      }, {
-        $set: data
-      });
-    })
-    .then(doc => res.json(doc));
-  })
+  .then(files => res.json(files))
   .catch(next);
 });
 
 api.put('/move', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(moveSanitization, moveValidation, data);
+  validate('move', data);
   let { files, dirs, target_dir } = data;
   return checkMoveable(target_dir, dirs, files)
   .then(() => getParentPaths(target_dir))
@@ -428,16 +444,6 @@ api.put('/move', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next);
 });
-
-// api.get('/can-create', (req, res, next) => {
-//   let companyLevel = new CompanyLevel(req.company);
-//   return companyLevel.canUpload(1).then(info => {
-//     res.json({
-//       canCreate: info.ok
-//     });
-//   })
-//   .catch(next);
-// });
 
 api.get('/storage', (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company);
@@ -532,22 +538,20 @@ function createFile(req, data, dir_id) {
   let companyLevel = new CompanyLevel(req.company);
   return companyLevel.canUpload(sizes).then(info => {
     if (!info.ok) {
-      let errorMsg;
+      _.map(data, item => {
+        if (item.cdn_key) {
+          req.model('qiniu').bucket('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
+        }
+        fs.unlink(item.path, e => {
+          e && console.error(e);
+        });
+      });
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
-        errorMsg = 'over_storage';
+        throw new ApiError(400, 'over_storage');
       }
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
-        errorMsg = 'file_too_large';
+        throw new ApiError(400, 'file_too_large');
       }
-      async.each(data, (item, cb) => {
-        fs.unlink(item.path, (e) => {
-          e && console.error(e);
-          cb();
-        });
-      }, (e) => {
-        e && console.error(e);
-      });
-      throw new ApiError(400, errorMsg);
     }
     return checkDirExist(req, dir_id)
     .then(() => {
@@ -683,7 +687,7 @@ function deleteFiles(req, files, dirCheckAndPull) {
       return removeFileFromDb.then(() => {
         incSize -= fileInfo.size;
         fileInfo.path && fs.unlink(fileInfo.path, e => e && console.error(e));
-        req.model('qiniu').getInstance('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
+        fileInfo.cdn_key && req.model('qiniu').bucket('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
       });
     });
   }))
@@ -801,7 +805,7 @@ function searchByName(req, dir, name) {
     doc = _.extend(dir, doc);
     return Promise.all([
       mapObjectIdToData(doc, 'document.dir', 'name', 'path,dirs.path,files.path'),
-      fetchCompanyMemberInfo(req.company.members, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by'),
+      fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by'),
     ])
     .then(() => doc);
   });
@@ -815,4 +819,32 @@ function createRootDir(condition) {
     // total_size: 0
   });
   return db.document.dir.insert(condition);
+}
+
+function attachFileUrls(req, file, thumb_size) {
+  const qiniu = req.model('qiniu').bucket('cdn-file');
+  const sizes = [16, 32, 48, 128];
+  let size = sizes[1];
+  if (_.contains(sizes), thumb_size) {
+    size = thumb_size;
+  }
+  if (!file.cdn_key) {
+    return Promise.resolve();
+  }
+  let promises = [
+    qiniu.makeLink(file.cdn_key).then(link => {
+      file.preview_url = link;
+    }),
+    qiniu.makeLink(file.cdn_key, file.name).then(link => {
+      file.download_url = link;
+    }),
+  ];
+  if (isImageFile(file.name)) {
+    promises.push(
+      qiniu.getThumnailUrl(file.cdn_key, size).then(link => {
+        file.thumbnail_url = link;
+      })
+    );
+  }
+  return Promise.all(promises);
 }

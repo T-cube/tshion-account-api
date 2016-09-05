@@ -76,7 +76,7 @@ api.get('/', (req, res, next) => {
       });
       projects = uniqObjectId(projects);
       if (req.company) {
-        return fetchCompanyMemberInfo(req.company.members, list, 'assignee');
+        return fetchCompanyMemberInfo(req.company, list, 'assignee');
       }
       return fetchUserInfo(list, 'assignee');
     })

@@ -191,6 +191,8 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
     throw new ApiError(400, 'can_not_remove_yourself');
   }
   let tree = new Structure(req.company.structure);
+  let thisMember = _.find(req.company.members, m => m._id.equals(member_id));
+  thisMember && delete thisMember._id;
   tree.deleteMemberAll(member_id);
   req.structure = tree;
   return Promise.all([
@@ -203,6 +205,14 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
       _id: member_id,
     }, {
       $pull: {companies: req.company._id}
+    }),
+    thisMember && db.company.member.old.update({
+      user: member_id,
+      company: req.company._id,
+    }, {
+      $set: thisMember
+    }, {
+      upsert: true
     }),
     db.project.update({
       company_id: req.company._id,
@@ -225,6 +235,8 @@ api.post('/exit', (req, res, next) => {
   if (req.company.owner.equals(member_id)) {
     throw new ApiError(400, 'owner_can_not_exit');
   }
+  let thisMember = _.find(req.company.members, m => m._id.equals(member_id));
+  thisMember && delete thisMember._id;
   return Promise.all([
     db.company.update({
       _id: req.company._id,
@@ -235,7 +247,15 @@ api.post('/exit', (req, res, next) => {
       _id: member_id,
     }, {
       $pull: {companies: req.company._id}
-    })
+    }),
+    thisMember && db.company.member.old.update({
+      user: member_id,
+      company: req.company._id,
+    }, {
+      $set: thisMember
+    }, {
+      upsert: true
+    }),
   ])
   .then(() => res.json({}))
   .catch(next);

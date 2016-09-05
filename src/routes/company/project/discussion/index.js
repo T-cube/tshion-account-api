@@ -32,7 +32,7 @@ api.get('/', (req, res, next) => {
   }
   db.discussion.find(condition).sort({_id: -1})
   .then(doc => {
-    return fetchCompanyMemberInfo(req.company.members, doc, 'followers').then(
+    return fetchCompanyMemberInfo(req.company, doc, 'followers', 'creator').then(
       () => res.json(doc)
     );
   })
@@ -67,8 +67,37 @@ api.post('/', (req, res, next) => {
     followers: [req.user._id],
     date_create: new Date(),
   });
-  db.discussion.insert(data)
+  req.model('html-helper').sanitize(data.content)
+  .then(content => {
+    data.content = content;
+    return db.discussion.insert(data);
+  })
   .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.put('/:discussion_id', (req, res, next) => {
+  let data = req.body;
+  let discussion_id = ObjectId(req.params.discussion_id);
+  sanitizeValidateObject(discussionSanitization, discussionValidation, data);
+  req.model('html-helper').sanitize(data.content)
+  .then(content => {
+    data.content = content;
+  })
+  .then(() => {
+    return db.discussion.update({
+      _id: discussion_id,
+      creator: req.user._id
+    }, {
+      $set: data
+    });
+  })
+  .then(doc => {
+    if (!doc.ok) {
+      throw new ApiError(400, 'update_failed');
+    }
+    res.json({});
+  })
   .catch(next);
 });
 
@@ -83,10 +112,13 @@ api.get('/:discussion_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    return fetchCompanyMemberInfo(req.company.members, doc, 'followers').then(
-      () => res.json(doc)
-    );
+    return req.model('html-helper').prepare(doc.content)
+    .then(content => {
+      doc.content = content;
+      return fetchCompanyMemberInfo(req.company, doc, 'followers', 'creator');
+    });
   })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -146,6 +178,8 @@ api.post('/:discussion_id/comment', (req, res, next) => {
   });
   db.discussion.comment.insert(data)
   .then(doc => {
+    doc.creator = _.pick(req.user, '_id', 'avatar');
+    doc.creator.name = _.find(req.company.members, m => m._id.equals(req.user._id)).name;
     res.json(doc);
     return db.discussion.update({
       _id: discussion_id,
@@ -173,15 +207,16 @@ api.get('/:discussion_id/comment', (req, res, next) => {
       throw new ApiError(404);
     }
     if (!discussion.comments || !discussion.comments.length) {
-      return res.json([]);
+      return [];
     }
     return db.discussion.comment.find({
       _id: {
         $in: discussion.comments
       }
-    })
-    .then(doc => res.json(doc));
+    });
   })
+  .then(doc => fetchCompanyMemberInfo(req.company, doc, 'creator'))
+  .then(doc => res.json(doc))
   .catch(next);
 });
 

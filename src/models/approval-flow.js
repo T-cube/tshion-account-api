@@ -35,6 +35,9 @@ export default class ApprovalFlow {
     if (this.forDownload) {
       this.fetchItemFields.forms = 1;
     }
+    if (this.type == 'copyto') {
+      this.type = 'copy_to';
+    }
   }
 
   findItems() {
@@ -75,7 +78,7 @@ export default class ApprovalFlow {
           let templateFields = this.forDownload ? 'name,status,forms' : 'name,status';
           return Promise.all([
             mapObjectIdToData(list, 'approval.template', templateFields, 'template'),
-            fetchCompanyMemberInfo(this.company.members, list, 'from')
+            fetchCompanyMemberInfo(this.company, list, 'from')
           ])
           .then(() => list);
         })

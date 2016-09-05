@@ -103,7 +103,7 @@ api.get('/:project_id', (req, res, next) => {
   data.is_owner = owner.equals(req.user._id);
   let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
-  fetchCompanyMemberInfo(req.company.members, data, 'owner')
+  fetchCompanyMemberInfo(req.company, data, 'owner')
   .then(data => res.json(data))
   .catch(next);
 });
@@ -478,21 +478,22 @@ api.get('/:project_id/statistics', (req, res, next) => {
     };
     const stats = _.groupBy(list, item => item.assignee.valueOf());
     let memberStats = _.map(stats, (items, assignee) => {
-      let member = _.find(req.company.members, m => assignee == m._id.valueOf());
       let stats = _.countBy(items, getStatus);
       stats.total = items.length;
       return {
-        assignee: _.pick(member, '_id', 'name'),
+        assignee: assignee,
         count: stats,
       };
     });
     let projectStats = _.countBy(list, getStatus);
     projectStats.total = list.length;
-    res.json({
+    return {
       project: projectStats,
       member: memberStats,
-    });
+    };
   })
+  .then(stats => fetchCompanyMemberInfo(req.company, stats, 'member.assignee'))
+  .then(stats => res.json(stats))
   .catch(next);
 });
 
@@ -580,7 +581,7 @@ function removeFilesUnderProject(project_id) {
 
 function removeFiles(filePathList) {
   try {
-    filePathList.forEach(path => fs.unlinkSync(path));
+    filePathList.forEach(path => fs.unlink(path, e => e && console.error(e)));
   } catch (e) {
     console.error(e);
   }

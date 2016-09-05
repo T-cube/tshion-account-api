@@ -43,14 +43,14 @@ api.get('/count', (req, res, next) => {
   .getFlowByType(req.company._id, req.user._id)
   .then(flow => {
     if (!flow) {
-      return res.json({
+      return {
         apply_processing: 0,
         copyto_processing: 0,
         approve_processing: 0,
         apply_resolved: 0,
         copyto_resolved: 0,
         approve_resolved: 0,
-      });
+      };
     }
     let apply = flow.apply || [];
     let copyto = flow.copyto || [];
