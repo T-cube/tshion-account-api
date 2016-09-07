@@ -48,8 +48,9 @@ export default class HtmlHelper {
   }
 
   sanitize(html) {
+    console.log(html);
     if (!_.isString(html)) {
-      return '';
+      return Promise.resolve('');
     }
     _.each(this.cdnUrlPatterns, pattern => {
       html = html.replace(pattern, '$1');

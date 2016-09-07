@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import fs from 'fs';
+import path from 'path';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -60,9 +61,6 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     })
     .then(() => {
       return Promise.map(doc.files, file => {
-        if (!file.cdn_key) {
-          return Promise.resolve();
-        }
         return attachFileUrls(req, file, thumb_size);
       });
     })
@@ -198,10 +196,60 @@ api.get('/file/:file_id', (req, res, next) => {
     if (!file) {
       throw new ApiError(404);
     }
-    console.log(file);
-    return attachFileUrls(req, file, thumb_size).then(() => {
-      res.json(file);
+    let promise = Promise.resolve();
+    if (file.content) {
+      promise = req.model('html-helper').prepare(file.content)
+      .then(content => {
+        file.content = content;
+      });
+    }
+    promise.then(() => {
+      return attachFileUrls(req, file, thumb_size).then(() => {
+        res.json(file);
+      });
     });
+  })
+  .catch(next);
+});
+
+api.put('/file/:file_id', (req, res, next) => {
+  let file_id = ObjectId(req.params.file_id);
+  let data = req.body;
+  validate('file', data);
+  _.extend(data, {
+    date_update: new Date(),
+    updated_by: req.user._id,
+  });
+  db.document.file.findOne({
+    _id: file_id
+  }, {
+    name: 1,
+    dir_id: 1,
+  })
+  .then(fileInfo => {
+    if (!fileInfo) {
+      throw new ApiError(404);
+    }
+    return getFileListOfDir(fileInfo.dir_id)
+    .then(filelist => {
+      filelist = filelist.filter(i => !i._id.equals(file_id));
+      data.name = getUniqFileName(filelist.map(i => i.name), data.name);
+      let promise = Promise.resolve();
+      if (data.content) {
+        promise = req.model('html-helper').sanitize(data.content)
+        .then(content => {
+          data.content = content;
+        });
+      }
+      return promise.then(() => {
+        return db.document.file.update({
+          _id: file_id,
+        }, {
+          $set: data
+        });
+      });
+    })
+    .then(doc => res.json(doc));
   })
   .catch(next);
 });
@@ -235,7 +283,11 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     mimetype: 'text/plain',
     size: Buffer.byteLength(data.content, 'utf8'),
   });
-  getParentPaths(dir_id)
+  return req.model('html-helper').sanitize(data.content)
+  .then(content => {
+    data.content = content;
+    return getParentPaths(dir_id);
+  })
   .then(path => {
     data.dir_path = path;
     data = [data];
@@ -313,39 +365,6 @@ saveCdn('cdn-file'),
     });
   })
   .then(files => res.json(files))
-  .catch(next);
-});
-
-api.put('/file/:file_id', (req, res, next) => {
-  let file_id = ObjectId(req.params.file_id);
-  let data = req.body;
-  validate('file', data);
-  _.extend(data, {
-    date_update: new Date(),
-    updated_by: req.user._id,
-  });
-  db.document.file.findOne({
-    _id: file_id
-  }, {
-    name: 1,
-    dir_id: 1,
-  })
-  .then(fileInfo => {
-    if (!fileInfo) {
-      throw new ApiError(404);
-    }
-    return getFileListOfDir(fileInfo.dir_id)
-    .then(filelist => {
-      filelist = filelist.filter(i => !i._id.equals(file_id));
-      data.name = getUniqFileName(filelist.map(i => i.name), data.name);
-      return db.document.file.update({
-        _id: file_id,
-      }, {
-        $set: data
-      });
-    })
-    .then(doc => res.json(doc));
-  })
   .catch(next);
 });
 
@@ -800,6 +819,17 @@ function createRootDir(condition) {
   return db.document.dir.insert(condition);
 }
 
+function generateFileToken(user_id, file_id) {
+  return generateToken(48).then(token => {
+    return db.document.token.insert({
+      token: token,
+      user: user_id,
+      file: file_id,
+      expires: new Date(timestamp() + config.get('download.tokenExpires')),
+    });
+  });
+}
+
 function attachFileUrls(req, file, thumb_size) {
   const qiniu = req.model('qiniu').bucket('cdn-file');
   const sizes = [16, 32, 48, 128];
@@ -807,8 +837,16 @@ function attachFileUrls(req, file, thumb_size) {
   if (_.contains(sizes), thumb_size) {
     size = thumb_size;
   }
+  console.log(file);
   if (!file.cdn_key) {
-    return Promise.resolve();
+    if (path.extname(file.name) == '.html') {
+      return generateFileToken(req.user._id, file._id)
+      .then(token => {
+        file.download_url = `${config.get('apiUrl')}api/file/download/${file._id}/token/${token.token}`;
+      });
+    } else {
+      return Promise.resolve();
+    }
   }
   let promises = [
     qiniu.makeLink(file.cdn_key).then(link => {

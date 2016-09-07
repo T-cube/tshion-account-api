@@ -163,14 +163,16 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
     company_id: companyId,
   };
   let projectQuery = {
-    project_id: {$in: req.compnay.projects},
+    project_id: {$in: req.company.projects},
   };
   let combinedQuery = {$or: [{
     company: companyId,
   }, {
-    project: {$in: req.compnay.projects},
+    project: {$in: req.company.projects},
   }]};
   // TODO do deletion in service
+  let members = req.company.members;
+  let memberIds = _.pluck(members, '_id');
   Promise.all([
     db.activity.remove(combinedQuery),
     db.announcement.remove(query),
@@ -195,11 +197,11 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
       let listIds = _.pluck(list, 'id');
       return Promise.all([
         db.discussion.remove(projectQuery),
-        db.discussion.comments.remove({discussion_id: {$in: listIds}}),
+        db.discussion.comment.remove({discussion_id: {$in: listIds}}),
       ]);
     }),
     db.document.dir.remove(query),
-    db.document.files.find({$or: [query, projectQuery]}, {path: 1})
+    db.document.file.find({$or: [query, projectQuery]}, {path: 1})
     .then(list => {
       let promises = [];
       _.each(list, file => {
@@ -223,11 +225,13 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
       });
       return Promise.all([
         db.task.remove(query),
-        db.task.comment.remove({_id: {$in: commentIds}}),
+        db.task.comments.remove({_id: {$in: commentIds}}),
       ]);
     }),
     // remove current_company for user
     db.user.update({current_company: companyId}, {$set: {current_company: null}}, {multi: true}),
+    // remove company from user
+    db.user.update({_id: {$in: memberIds}}, {$pull: {companies: companyId}}, {multi: true}),
   ])
   .then(() => res.json({}))
   .catch(next);

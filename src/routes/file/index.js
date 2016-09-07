@@ -49,25 +49,34 @@ api.get('/download/:file_id/token/:token', (req, res, next) => {
         if (!exists) {
           throw new ApiError(404);
         }
-        let filename = file.name;
-        let isFirefox = req.get('User-Agent').toLowerCase().indexOf('firefox') > -1;
-        if (isFirefox) {
-          filename = '=?UTF-8?B?' + new Buffer(filename).toString('base64') + '?=';
-        } else {
-          filename = encodeURIComponent(filename);
-        }
-        res.set('Content-Disposition', 'attachment; filename=' + filename);
-        res.set('Content-Type', file.mimetype);
+        setFileDownloadHeader(req, res, file);
         fs.createReadStream(file.path).pipe(res);
       });
     } else if (file.content) {
-      res.send(file.content);
+      setFileDownloadHeader(req, res, file);
+      req.model('html-helper').prepare(file.content)
+      .then(content => {
+        res.send(content);
+      });
     } else {
       throw new ApiError(404);
     }
   })
   .catch(next);
 });
+
+function setFileDownloadHeader(req, res, file) {
+  let filename = file.name;
+  let isFirefox = req.get('User-Agent').toLowerCase().indexOf('firefox') > -1;
+  if (isFirefox) {
+    filename = '=?UTF-8?B?' + new Buffer(filename).toString('base64') + '?=';
+  } else {
+    filename = encodeURIComponent(filename);
+  }
+  res.set('Content-Disposition', 'attachment; filename=' + filename);
+  res.set('Content-Type', file.mimetype);
+
+}
 
 api.get('/preview/:file_id/token/:token', (req, res, next) => {
   let fileId = ObjectId(req.params.file_id);
