@@ -2,6 +2,7 @@ import _ from 'underscore';
 import moment from 'moment';
 import config from 'config';
 import json2csv from 'json2csv';
+import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
@@ -45,65 +46,67 @@ export default class ApprovalFlow {
     return ApprovalFlow
     .getFlowByType(this.company_id, this.user_id, type)
     .then(flow => {
+      let { page, pagesize } = this.getPageInfo();
       if (!flow || !flow[type] || !flow[type].length) {
         return this.getEmptyData(pagesize);
       }
-      let condition = this.getQueryCondition(flow[type]);
-      let data = {};
-      let { page, pagesize } = this.getPageInfo();
-      let { export_count } = this.query;
-      let counting = null;
-      let listing = null;
-      _.extend(condition, this.getApplyDateCondition());
-      if (!this.forDownload) {
-        counting = db.approval.item.count(condition)
-        .then(sum => {
-          data.totalrows = sum;
-          data.page = page;
-          data.pagesize = pagesize;
-        });
-      }
-      if (!this.forDownload || !export_count || export_count == 'page') {
-        listing = db.approval.item.find(condition, this.fetchItemFields)
-        .sort({_id: -1})
-        .skip((page - 1) * pagesize)
-        .limit(pagesize);
-      } else {
-        listing = db.approval.item.find(condition, this.fetchItemFields);
-      }
-      return Promise.all([
-        counting,
-        listing
-        .then(list => {
-          let templateFields = this.forDownload ? 'name,status,forms' : 'name,status';
-          return Promise.all([
-            mapObjectIdToData(list, 'approval.template', templateFields, 'template'),
-            fetchCompanyMemberInfo(this.company, list, 'from')
-          ])
-          .then(() => list);
-        })
-        .then(list => {
-          // let tree = new Structure(this.company.structure);
-          list.forEach(item => {
-            // item.department && (item.department = tree.findNodeById(item.department));
-            if (this.type == 'approve') {
-              let approve = flow[type];
-              let foundItemCurStep = _.find(
-                approve,
-                approveItem =>
-                  approveItem._id && approveItem._id.equals(item._id) && approveItem.step && approveItem.step.equals(item.step)
-                );
-              if (foundItemCurStep && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING) {
-                item.is_processing = true;
-              } else {
-                item.is_processing = false;
-              }
-            }
+      return this.getQueryCondition(flow[type])
+      .then(condition => {
+        let data = {};
+        let { export_count } = this.query;
+        let counting = null;
+        let listing = null;
+        _.extend(condition, this.getApplyDateCondition());
+        if (!this.forDownload) {
+          counting = db.approval.item.count(condition)
+          .then(sum => {
+            data.totalrows = sum;
+            data.page = page;
+            data.pagesize = pagesize;
           });
-          data.list = list;
-        })
-      ])
-      .then(() => this.wrapResponseData(data, this.forDownload));
+        }
+        if (!this.forDownload || !export_count || export_count == 'page') {
+          listing = db.approval.item.find(condition, this.fetchItemFields)
+          .sort({_id: -1})
+          .skip((page - 1) * pagesize)
+          .limit(pagesize);
+        } else {
+          listing = db.approval.item.find(condition, this.fetchItemFields);
+        }
+        return Promise.all([
+          counting,
+          listing
+          .then(list => {
+            let templateFields = this.forDownload ? 'name,status,forms' : 'name,status';
+            return Promise.all([
+              mapObjectIdToData(list, 'approval.template', templateFields, 'template'),
+              fetchCompanyMemberInfo(this.company, list, 'from')
+            ])
+            .then(() => list);
+          })
+          .then(list => {
+            // let tree = new Structure(this.company.structure);
+            list.forEach(item => {
+              // item.department && (item.department = tree.findNodeById(item.department));
+              if (this.type == 'approve') {
+                let approve = flow[type];
+                let foundItemCurStep = _.find(
+                  approve,
+                  approveItem =>
+                    approveItem._id && approveItem._id.equals(item._id) && approveItem.step && approveItem.step.equals(item.step)
+                  );
+                if (foundItemCurStep && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING) {
+                  item.is_processing = true;
+                } else {
+                  item.is_processing = false;
+                }
+              }
+            });
+            data.list = list;
+          })
+        ])
+        .then(() => data);
+      });
     });
   }
 
@@ -167,9 +170,25 @@ export default class ApprovalFlow {
       }
     }
     if (template) {
-      condition.template = ObjectId(template);
+      let match = /master_id-(\w+)/.exec(template);
+      if (match && ObjectId.isValid(match[1])) {
+        return db.approval.template.find({
+          master_id: ObjectId(match[1])
+        }, {
+          _id: 1
+        })
+        .then(tpls => {
+          condition.template = {
+            $in: tpls.map(tpl => tpl._id)
+          };
+          return condition;
+        });
+      }
+      if (ObjectId.isValid(template)) {
+        condition.template = ObjectId(template);
+      }
     }
-    return condition;
+    return Promise.resolve(condition);
   }
 
   getPageInfo() {
@@ -203,21 +222,22 @@ export default class ApprovalFlow {
   }
 
   getEmptyData(pagesize) {
-    return this.wrapResponseData({
+    return {
       list: [],
       totalrows: 0,
       page: 1,
       pagesize,
-    }, this.forDownload);
+    };
   }
 
-  wrapResponseData(data) {
+  wrapCsvData(data) {
     if (!this.forDownload) {
       return data;
     }
     if (!data.list.length) {
       return '';
     }
+    let formFields = _.uniq(_.flatten(data.list.map(i => i.template.forms && i.template.forms.map(f => f.label)).filter(i => i)));
     let parsedData = data.list.map(i => {
       let item = [
         moment(i.apply_date).format('YYYY-MM-DD HH:mm'),
@@ -225,19 +245,26 @@ export default class ApprovalFlow {
         i.from.name,
         i.content,
       ];
-      i.forms.forEach(f => {
-        let templateForm = _.find(i.template.forms, tf => tf._id.equals(f._id));
-        if (templateForm) {
-          switch (templateForm.type) {
-          case 'date':
-            f.value = moment(f.value).format('YYYY-MM-DD');
-            break;
-          case 'datetime':
-            f.value = moment(f.value).format('YYYY-MM-DD HH:mm');
-            break;
-          }
+      formFields.forEach(ff => {
+        let itf = _.find(i.template.forms, itfitem => itfitem.label == ff);
+        if (itf) {
+          i.forms.forEach(f => {
+            let templateForm = _.find(i.template.forms, tf => tf._id.equals(itf._id) && tf._id.equals(f._id));
+            if (templateForm) {
+              switch (templateForm.type) {
+              case 'date':
+                f.value = moment(f.value).format('YYYY-MM-DD');
+                break;
+              case 'datetime':
+                f.value = moment(f.value).format('YYYY-MM-DD HH:mm');
+                break;
+              }
+              item.push(f.value || '');
+            }
+          });
+        } else {
+          item.push('');
         }
-        item.push(f.value || '');
       });
       if (i.is_processing) {
         item.push(i.is_processing ? __('processing') : __('processed'));
@@ -246,11 +273,11 @@ export default class ApprovalFlow {
       }
       return item;
     });
+    console.log(parsedData);
     return json2csv({
       data: parsedData,
       fieldNames: [__('apply_time'), __('approval_type'), __('approval_applyer'), __('content')]
-        .concat(data.list[0] && data.list[0].template.forms.map(f => f.label || ''))
-        .filter(i => i)
+        .concat(formFields)
         .concat(__('status'))
     });
   }
