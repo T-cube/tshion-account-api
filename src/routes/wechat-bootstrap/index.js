@@ -49,7 +49,9 @@ api.use('/', wechat(wechatConfig, function (req, res) {
         })
         .catch(e => console.error(e));
       }
-      return res.reply('欢迎关注T立方');
+      return res.reply('Hello，欢迎关注T立方！\n\n'
+        + '点击菜单「工作台」，即刻开启协作办公之旅。有问题可以直接留言，我们有问必答！\n\n'
+        + '想体验更多更强大的功能，请登录tlifang.com。');
     }
     break;
   }
