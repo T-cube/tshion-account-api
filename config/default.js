@@ -27,6 +27,7 @@ module.exports = {
   oauth: {
     accessTokenLifetime: 30 * 60,
     refreshTokenLifetime: 15 * 24 * 3600,
+    wechat_client_id: 'com_tlifang_wechat'
   },
   userVerifyCode: {
     email: {
