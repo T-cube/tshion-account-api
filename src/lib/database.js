@@ -37,6 +37,7 @@ const collections = [
   'reminding',
   'request',
   'schedule',
+  'short.url',
   'task',
   'task.comments',
   'user',
