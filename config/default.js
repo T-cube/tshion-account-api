@@ -27,6 +27,7 @@ module.exports = {
   oauth: {
     accessTokenLifetime: 30 * 60,
     refreshTokenLifetime: 15 * 24 * 3600,
+    wechat_client_id: 'com_tlifang_wechat'
   },
   userVerifyCode: {
     email: {
@@ -97,6 +98,13 @@ module.exports = {
     },
   },
   vendor: {
+    sessionRedis: {
+      host: '127.0.0.1',
+      port: 6379,
+      db: 1,
+      prefix: 'sess_',
+      ttl: 21600,
+    },
     redis: {
       host: '127.0.0.1',
       port: 6379,

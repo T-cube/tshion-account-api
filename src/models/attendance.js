@@ -156,12 +156,12 @@ export default class Attendance {
   isWorkDay(date) {
     date = new Date(date);
     let weekday = date.getDay();
-    date = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
     let setting = this.setting;
-    if (_.contains(setting.workday_special, date)) {
+    date = moment(date).format('YYYY-MM-DD');
+    if (_.contains(setting.workday_special.map(i => moment(i.date).format('YYYY-MM-DD')), date)) {
       return true;
     }
-    if (_.contains(setting.holiday, date)) {
+    if (_.contains(setting.holiday.map(i => moment(i.date).format('YYYY-MM-DD')), date)) {
       return false;
     }
     if (setting.workday && setting.workday.length) {

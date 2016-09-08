@@ -17,6 +17,7 @@ import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
 import session from 'express-session';
+const sessionRedis = require('connect-redis')(session);
 
 import 'lib/i18n';
 import bindLoader from 'lib/loader';
@@ -83,16 +84,18 @@ app.use((req, res, next) => {
 app.set('view engine', 'ejs');
 app.oauth = oauthServer({
   model: oauthModel,
-  grants: ['password','refresh_token','authorization_code'],
+  grants: ['password', 'refresh_token', 'authorization_code'],
   debug: false,
   accessTokenLifetime: 1800,
   refreshTokenLifetime: 3600 * 24 * 15,
 });
 
 app.use('/oauth', corsHandler);
+
 app.use('/oauth', session({
-  cookie: { path: '/oauth', httpOnly: true, secure: false, maxAge: null },
-  name: 'tlf.sid',
+  store: new sessionRedis(config.get('vendor.sessionRedis')),
+  // cookie: { path: '/oauth', httpOnly: true, secure: false, maxAge: null },
+  // name: 'tlf.sid',
   secret: 'the quick blue fish jumps over the lazy cat',
   resave: false,
   saveUninitialized: false,

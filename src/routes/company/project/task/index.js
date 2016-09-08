@@ -82,6 +82,9 @@ api.get('/', (req, res, next) => {
       data.list = list;
       return fetchCompanyMemberInfo(req.company, data.list, 'assignee');
     })
+    .then(() => {
+      data.list.forEach(task => task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id)));
+    })
   ])
   .then(() => res.json(data))
   .catch(next);
@@ -123,7 +126,10 @@ api.get('/:_task_id', (req, res, next) => {
     // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
     return fetchCompanyMemberInfo(req.company, task, 'creator', 'assignee');
   })
-  .then(task => res.json(task))
+  .then(task => {
+    task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
+    res.json(task);
+  })
   .catch(next);
 });
 

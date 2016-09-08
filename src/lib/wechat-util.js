@@ -85,7 +85,7 @@ export default class WechatUtil {
         }
       }),
       db.wechat.user.update({
-        user_id 
+        user_id
       }, {
         $unset: {
           user_id: 1

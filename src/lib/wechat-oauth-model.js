@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import config from 'config';
 
 import OAuthModel from './oauth-model.js';
 import wUtil from 'lib/wechat-util.js';
@@ -12,7 +13,7 @@ export default _.extend({}, OAuthModel, {
       }
       user.id = user._id;
       callback(false, {
-        clientId: 'wechat',
+        clientId: config.get('oauth.wechat_client_id'),
         expires: user.wechat.auth.expired,
         user: user
       });
