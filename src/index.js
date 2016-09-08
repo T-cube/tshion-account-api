@@ -97,8 +97,8 @@ app.use('/oauth', session({
   // cookie: { path: '/oauth', httpOnly: true, secure: false, maxAge: null },
   // name: 'tlf.sid',
   secret: 'the quick blue fish jumps over the lazy cat',
-  // resave: false,
-  // saveUninitialized: false,
+  resave: false,
+  saveUninitialized: false,
 }));
 
 // use form to submit Oauth params
