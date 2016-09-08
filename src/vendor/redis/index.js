@@ -16,11 +16,9 @@ export default class Redis {
     // 抛出异常
     self.client.on('connect', () => {
       console.log('redis server connected!');
-      self.hmset('test', {a:1}).then((data) => {
-        console.log('value saved', data);
-      });
     });
     self.client.on('error', function(err) {
+      console.error('redis errored!');
       throw err;
     });
   }
