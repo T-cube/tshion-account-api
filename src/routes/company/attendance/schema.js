@@ -3,7 +3,7 @@ import { ENUMS } from 'lib/constants';
 export let settingSanitization = {
   is_open: { type: 'boolean' },
   time_start: { type: 'string' },
-  time_end: { type: 'string', optional: true },
+  time_end: { type: 'string' },
   ahead_time: { type: 'string', optional: true },
   auditor: { $objectId: 1 },
   workday: {
@@ -18,7 +18,7 @@ export let settingSanitization = {
       address: { type: 'string', optional: true },
     }
   },
-  max_distance: { type: 'int' },
+  max_distance: { type: 'number', gt: 0 },
   white_list: {
     type: 'array',
     optional: true,
@@ -30,7 +30,7 @@ export let settingSanitization = {
     items: {
       type: 'object',
       properties: {
-        date: { type: 'string' },
+        date: { type: 'date' },
         title: { type: 'string' },
       }
     }
@@ -41,7 +41,7 @@ export let settingSanitization = {
     items: {
       type: 'object',
       properties: {
-        date: { type: 'string' },
+        date: { type: 'date' },
         title: { type: 'string' },
       }
     }
@@ -51,8 +51,8 @@ export let settingSanitization = {
 
 export let settingValidation = {
   is_open: { type: 'boolean' },
-  time_start: { type: 'string' },
-  time_end: { type: 'string', optional: true },
+  time_start: { type: 'string', pattern: /^(([1-9])|([1|0]\d)|(2[0-3])):[0-6]?\d$/ },
+  time_end: { type: 'string', pattern: /^(([1-9])|([0|1]\d)|(2[0-3])):[0-6]?\d$/ },
   ahead_time: { type: 'string', optional: true },
   auditor: { $objectId: 1 },
   workday: {
@@ -61,15 +61,17 @@ export let settingValidation = {
       $enum: [0, 1, 2, 3, 4, 5, 6]
     },
     uniqueness: true,
+    maxLength: 7,
   },
   location: {
     type: 'object',
     properties: {
-      latitude: { type: 'number' },
-      longitude: { type: 'number' },
+      latitude: { type: 'number', gte: -90, lte: 90 },
+      longitude: { type: 'number', gte: -180, lte: 180 },
+      address: { type: 'string', optional: true, maxLength: 200 },
     }
   },
-  max_distance: { type: 'int' },
+  max_distance: { type: 'number', gt: 0 },
   white_list: {
     type: 'array',
     optional: true,
@@ -81,8 +83,8 @@ export let settingValidation = {
     items: {
       type: 'object',
       properties: {
-        date: { type: 'string' },
-        title: { type: 'string' },
+        date: { type: 'date' },
+        title: { type: 'string', maxLength: 200 },
       }
     }
   },
@@ -92,8 +94,8 @@ export let settingValidation = {
     items: {
       type: 'object',
       properties: {
-        date: { type: 'string' },
-        title: { type: 'string' },
+        date: { type: 'date' },
+        title: { type: 'string', maxLength: 200 },
       }
     }
   },

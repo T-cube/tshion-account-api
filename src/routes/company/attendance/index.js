@@ -405,10 +405,7 @@ function checkUserLocation(companyId, userId) {
     location: 1,
     max_distance: 1,
   })
-  .then(s => {
-    // min 100m
-    return wUtil.checkUserLocation(userId, s.location, s.max_distance > 100 ? s.max_distance : 100);
-  });
+  .then(s => wUtil.checkUserLocation(userId, s.location, s.max_distance));
 }
 
 function createApprovalTemplate(req, auditor) {
