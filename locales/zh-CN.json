@@ -32,6 +32,7 @@
   "file_not_upload": "文件上传失败",
   "file_not_exists": "文件不存在",
   "file_type_error": "文件类型错误",
+  "form_label_unique": "表单项的标题须唯一",
   "forbidden": "您没有权限操作",
   "login_failed": "登录失败，请检查用户名及密码",
   "invalid_account_type": "错误的帐户类型",

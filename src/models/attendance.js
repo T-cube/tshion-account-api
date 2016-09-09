@@ -9,6 +9,8 @@ export default class Attendance {
 
   constructor(attendanceSetting) {
     this.setting = attendanceSetting;
+    this.setting.holiday = this.setting.holiday.map(i => moment(new Date(i.date)).format('YYYY-MM-DD'));
+    this.setting.workday_special = this.setting.workday_special.map(i => moment(new Date(i.date)).format('YYYY-MM-DD'));
   }
 
   updateSign(data, user_id, isPatch) {
@@ -158,10 +160,10 @@ export default class Attendance {
     let weekday = date.getDay();
     let setting = this.setting;
     date = moment(date).format('YYYY-MM-DD');
-    if (_.contains(setting.workday_special.map(i => moment(i.date).format('YYYY-MM-DD')), date)) {
+    if (_.contains(setting.workday_special, date)) {
       return true;
     }
-    if (_.contains(setting.holiday.map(i => moment(i.date).format('YYYY-MM-DD')), date)) {
+    if (_.contains(setting.holiday, date)) {
       return false;
     }
     if (setting.workday && setting.workday.length) {

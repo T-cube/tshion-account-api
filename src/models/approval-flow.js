@@ -67,11 +67,12 @@ export default class ApprovalFlow {
         }
         if (!this.forDownload || !export_count || export_count == 'page') {
           listing = db.approval.item.find(condition, this.fetchItemFields)
-          .sort({_id: -1})
-          .skip((page - 1) * pagesize)
-          .limit(pagesize);
+            .sort({_id: -1})
+            .skip((page - 1) * pagesize)
+            .limit(pagesize);
         } else {
-          listing = db.approval.item.find(condition, this.fetchItemFields);
+          listing = db.approval.item.find(condition, this.fetchItemFields)
+            .sort({_id: -1});
         }
         return Promise.all([
           counting,
@@ -273,7 +274,6 @@ export default class ApprovalFlow {
       }
       return item;
     });
-    console.log(parsedData);
     return json2csv({
       data: parsedData,
       fieldNames: [__('apply_time'), __('approval_type'), __('approval_applyer'), __('content')]
