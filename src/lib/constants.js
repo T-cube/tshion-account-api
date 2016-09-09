@@ -66,6 +66,7 @@ let constants = {
     NORMAL: 'normal',
     UNUSED: 'unused',
     DELETED: 'deleted',
+    OLD_VERSION: 'old_version',
   },
 
   APPROVER_TYPE: {

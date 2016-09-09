@@ -1,4 +1,4 @@
 module.exports = {
-  database: '192.168.1.18/tlf_core',
+  database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
 };
