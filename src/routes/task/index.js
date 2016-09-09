@@ -3,7 +3,6 @@ import express from 'express';
 import config from 'config';
 
 import db from 'lib/database';
-import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import { fetchUserInfo, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
 import { ENUMS } from 'lib/constants';
@@ -23,7 +22,7 @@ api.get('/', (req, res, next) => {
   let condition = {
     project_archived: {
       $ne: true
-    }
+    },
   };
   if (req.company) {
     condition.company_id = req.company._id;
@@ -54,50 +53,60 @@ api.get('/', (req, res, next) => {
     sortBy = { [sort]: order };
   }
   let data = {}, projects = [];
-  Promise.all([
-    db.task.count(condition)
-    .then(sum => {
-      data.totalrows = sum;
-      data.page = page;
-      data.pagesize = pagesize;
-    }),
-    db.task.find(condition, {
-      description: 0,
-    })
-    .sort(sortBy)
-    .skip((page - 1) * pagesize)
-    .limit(pagesize)
-    .then(list => {
-      _.each(list, task => {
-        projects.push(task.project_id);
-        task.is_following = !!_.find(task.followers, user_id => user_id
-          && user_id.equals(req.user._id));
-        delete task.followers;
-      });
-      projects = uniqObjectId(projects);
-      if (req.company) {
-        return fetchCompanyMemberInfo(req.company, list, 'assignee');
-      }
-      return fetchUserInfo(list, 'assignee');
-    })
-    // .then(list => {
-    //   return db.project.find({
-    //     _id: {
-    //       $in: projects
-    //     }
-    //   }, {
-    //     tags: 1
-    //   })
-    //   .then(projects => {
-    //     let tags = _.flatten(projects.map(project => project.tags));
-    //     list.forEach(task => {
-    //       task.tags = task.tags && task.tags.map(_id => _.find(tags, tag => tag._id.equals(_id)));
-    //     });
-    //     return list;
-    //   });
-    // })
-    .then(list => data.list = list)
-  ])
+  db.user.findOne({
+    _id: req.user._id
+  }, {
+    projects: 1
+  })
+  .then(user => {
+    condition.project_id = {
+      $in: user.projects
+    };
+    return Promise.all([
+      db.task.count(condition)
+      .then(sum => {
+        data.totalrows = sum;
+        data.page = page;
+        data.pagesize = pagesize;
+      }),
+      db.task.find(condition, {
+        description: 0,
+      })
+      .sort(sortBy)
+      .skip((page - 1) * pagesize)
+      .limit(pagesize)
+      .then(list => {
+        _.each(list, task => {
+          projects.push(task.project_id);
+          task.is_following = !!_.find(task.followers, user_id => user_id
+            && user_id.equals(req.user._id));
+          delete task.followers;
+        });
+        projects = uniqObjectId(projects);
+        if (req.company) {
+          return fetchCompanyMemberInfo(req.company, list, 'assignee');
+        }
+        return fetchUserInfo(list, 'assignee');
+      })
+      // .then(list => {
+      //   return db.project.find({
+      //     _id: {
+      //       $in: projects
+      //     }
+      //   }, {
+      //     tags: 1
+      //   })
+      //   .then(projects => {
+      //     let tags = _.flatten(projects.map(project => project.tags));
+      //     list.forEach(task => {
+      //       task.tags = task.tags && task.tags.map(_id => _.find(tags, tag => tag._id.equals(_id)));
+      //     });
+      //     return list;
+      //   });
+      // })
+      .then(list => data.list = list)
+    ]);
+  })
   .then(() => res.json(data))
   .catch(next);
 });
