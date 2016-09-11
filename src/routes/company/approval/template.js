@@ -122,9 +122,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   data.steps.forEach(i => {
     i._id = ObjectId();
   });
-  data.forms && data.forms.forEach(i => {
-    i._id = ObjectId();
-  });
+  checkAndInitForms(data.forms);
   data.company_id = req.company._id;
   data.status = C.APPROVAL_STATUS.UNUSED;
   Approval.createTemplate(data)
@@ -144,14 +142,12 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
   data.steps.forEach(i => {
     i._id = ObjectId();
   });
-  data.forms && data.forms.forEach(i => {
-    i._id = ObjectId();
-  });
+  checkAndInitForms(data.forms);
   let condition = {
     _id: template_id,
     company_id: req.company._id,
     status: {
-      $ne: C.APPROVAL_STATUS.DELETED
+      $nin: [C.APPROVAL_STATUS.DELETED, C.APPROVAL_STATUS.OLD_VERSION]
     }
   };
   db.approval.template.findOne(condition, {
@@ -207,7 +203,14 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
               }
             });
           }),
-          Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE)
+          Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE),
+          db.approval.template.update({
+            _id: template_id
+          }, {
+            $set: {
+              status: C.APPROVAL_STATUS.OLD_VERSION
+            }
+          })
         ]);
       }
     });
@@ -222,16 +225,36 @@ api.get('/:template_id', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
   db.approval.template.findOne({
     _id: template_id,
-    company_id: req.company._id,
-    status: {
-      $ne: C.APPROVAL_STATUS.DELETED
-    }
+    company_id: req.company._id
   })
   .then(doc => {
     if (!doc) {
       throw new ApiError(404);
     }
     res.json(mapCompanyInfo(req.company, doc)[0]);
+  })
+  .catch(next);
+});
+
+api.get('/:template_id/versions', (req, res, next) => {
+  let template_id = ObjectId(req.params.template_id);
+  db.approval.template.findOne({
+    _id: template_id,
+    company_id: req.company._id,
+  }, {
+    master_id: 1
+  })
+  .then(template => {
+    return db.approval.template.find({
+      master_id: template.master_id
+    }, {
+      name: 1,
+      number: 1
+    })
+    .sort({
+      _id: -1
+    })
+    .then(versions => res.json(versions));
   })
   .catch(next);
 });
@@ -339,4 +362,15 @@ function mapCompanyInfo(company, data) {
     });
   });
   return data;
+}
+
+function checkAndInitForms(forms) {
+  if (forms && forms.length) {
+    forms.forEach(i => {
+      i._id = ObjectId();
+    });
+    if (forms.length != _.uniq(forms.map(f => f.label)).length) {
+      throw new ApiError(400, 'form_label_unique');
+    }
+  }
 }

@@ -128,21 +128,22 @@ api.get('/approval/:token', (req, res, next) => {
       throw new ApiError(404);
     }
     return mapObjectIdToData(exportApproval, [
-      ['company', 'members', 'company'],
-      ['approval.template', 'name', 'query.template'],
+      ['company', 'members', 'company']
     ]);
   })
   .then(info => {
-    filename = generateApprovalFileName(info);
-    info.query.template = info.query.template._id;
-    return new ApprovalFlow({
+    let approvalFlow = new ApprovalFlow({
       company: info.company,
       user_id: info.user,
       type: info.type,
       query: info.query,
       forDownload: true
-    })
-    .findItems();
+    });
+    return approvalFlow.findItems()
+    .then(data => {
+      filename = generateApprovalFileName(info, data.list && data.list[0] && data.list[0].template.name);
+      return approvalFlow.wrapCsvData(data);
+    });
   })
   .then(csv => {
     let iconv = new Iconv('UTF-8', 'GBK');
@@ -162,7 +163,7 @@ api.get('/approval/:token', (req, res, next) => {
   .catch(next);
 });
 
-function generateApprovalFileName({type, query}) {
+function generateApprovalFileName({type, query}, tplName) {
   let datetime = moment();
   let typeTxt = {
     approve: '我的审批',
@@ -184,8 +185,10 @@ function generateApprovalFileName({type, query}) {
     query.page = query.page || 1;
     pageTxt = `第${query.page}页`;
     break;
+  default:
+    pageTxt = '';
   }
   datetime = datetime.format('M月D日');
-  let filename = `审批-${typeTxt[type]}-${query.template.name}-${pageTxt}-${datetime}导出.csv`;
+  let filename = `审批-${typeTxt[type]}-${tplName}-${pageTxt}-${datetime}导出.csv`;
   return filename;
 }
