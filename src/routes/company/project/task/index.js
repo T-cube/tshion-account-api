@@ -13,13 +13,14 @@ import {
   validation,
   commentSanitization,
   commentValidation,
+  validate,
 } from './schema';
 
 let api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize } = req.query;
+  let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize, is_expired } = req.query;
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? pagesize : config.get('view.taskListNum');
@@ -56,6 +57,21 @@ api.get('/', (req, res, next) => {
   }
   if (tag && ObjectId.isValid(tag)) {
     condition['tags'] = ObjectId(tag);
+  }
+  is_expired += '';
+  if (is_expired === '1') {
+    condition['status'] = C.TASK_STATUS.PROCESSING;
+    condition['date_due'] = {
+      $lt: new Date()
+    };
+  } else if (is_expired === '0') {
+    condition['$or'] = [{
+      date_due: {
+        $gte: new Date()
+      }
+    }, {
+      status: C.TASK_STATUS.COMPLETED
+    }];
   }
   let sortBy = { status: -1, date_update: -1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
@@ -103,12 +119,12 @@ api.post('/', (req, res, next) => {
     project_id: req.project._id,
     date_create: new Date(),
     date_update: new Date(),
-    subtask: []
   });
+  data.subtask = data.subtask ? data.subtask.map(subtask => initSubtask(subtask)) : [];
   return db.task.insert(data)
   .then(doc => {
-    req.task = doc;
     res.json(doc);
+    req.task = doc;
     return logTask(req, C.ACTIVITY_ACTION.CREATE);
   })
   .catch(next);
@@ -336,6 +352,63 @@ api.get('/:task_id/activity', (req, res, next) => {
   .catch(next);
 });
 
+api.post('/:task_id/subtask', (req, res, next) => {
+  let subtask = req.body;
+  validate('subtask', subtask, ['title']);
+  subtask = initSubtask(subtask.title);
+  db.task.update({
+    _id: req.task._id
+  }, {
+    $push: {
+      subtask: subtask
+    }
+  })
+  .then(doc => res.json(subtask))
+  .catch(next);
+});
+
+api.delete('/:task_id/subtask/:subtask', (req, res, next) => {
+  let subtask_id = ObjectId(req.params.subtask);
+  db.task.update({
+    _id: req.task._id
+  }, {
+    $pull: {
+      subtask: {
+        _id: subtask_id
+      }
+    }
+  })
+  .then(doc => res.json({}))
+  .catch(next);
+});
+
+api.put('/:task_id/subtask/:subtask', (req, res, next) => {
+  let subtask_id = ObjectId(req.params.subtask);
+  let update = {};
+  let subtask1 = req.body;
+  let subtask2 = _.clone(subtask1);
+  if (subtask1.title) {
+    validate('subtask', subtask1, ['title']);
+    update['subtask.$.title'] = subtask1.title;
+  }
+  if (subtask2.status) {
+    validate('subtask', subtask2, ['status']);
+    update['subtask.$.status'] = subtask2.status;
+  }
+  if (_.isEmpty(update)) {
+    throw new ApiError(400, 'update_failed');
+  }
+  update['subtask.$.date_update'] = new Date();
+  db.task.update({
+    _id: req.task._id,
+    'subtask._id': subtask_id
+  }, {
+    $set: update
+  })
+  .then(doc => res.json({}))
+  .catch(next);
+});
+
 function updateField(field) {
   return (req, res, next) => {
     doUpdateField(req, field)
@@ -358,7 +431,6 @@ function logTask(req, action, data) {
     from: req.user._id,
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),
   }, info, data);
-  console.log(activity);
   req.model('activity').insert(activity);
   req.model('notification').send(notification);
 }
@@ -431,4 +503,14 @@ function taskUnfollow(req, userId) {
       }
     });
   });
+}
+
+function initSubtask(subtask) {
+  return {
+    _id: ObjectId(),
+    title: subtask,
+    status: C.TASK_STATUS.PROCESSING,
+    date_create: new Date(),
+    date_update: new Date(),
+  };
 }

@@ -29,7 +29,7 @@ INPUT
 ```javascript
 {
   title:<String>,
-  status: <String[Enum:pending,processing,completed,paused,trashed]> //任务状态
+  status: <String[Enum:processing,completed,paused,trashed]> //任务状态
   title: <String>,                // 任务标题
   description: <String>,          // 任务详情
   creator: <ObjectId>,          // 创建人
@@ -38,7 +38,7 @@ INPUT
   date_start: <date>,          // 开始时间（optional）
   date_due: <date>,            // 截止时间（optional）
   priority: <0,1,2,3>,         // 优先级别
-  //subtask: [<ObjectId>, ...], // 子任务
+  subtask: [<String>, ...],    // 子任务
   tags: [<ObjectId>, ...],        // 标签
 }
 ```
@@ -182,6 +182,7 @@ QUERY
 | assignee | list | user list |
 | creator | list | user list |
 | follower | list | user list |
+| is_expired | int | 0 / 1 |
 
 OUTPUT
 ```javascript
@@ -227,12 +228,18 @@ OUTPUT
   date_start: <date>,          // 开始时间（optional）
   date_due: <date>,            // 截止时间（optional）
   priority: <0,1,2,3>,         // 优先级别
-  subtask: [<ObjectId>, ...],   // 子任务
   tag: [{
     _id: <ObjectId>,
     name: <String>,
     color: <String>
-  }, ...],                       // 标签
+  }, ...],                        // 标签
+  subtask: [{                    // 子任务
+    _id: <ObjectId>,
+    title: <String>,
+    status: <String[Enum:processing,completed]>,
+    date_create: <Date>,
+    date_update: <Date>,
+  }...]
 }
 ```
 
@@ -284,6 +291,47 @@ OUTPUT
 }]
 ```
 
+添加子任务
+
+### POST /task/{task_id}/subtask
+
+INPUT
+
+```javascript
+{
+  title: <String>
+}
+```
+
+OUTPUT
+
+```javascript
+{
+  _id: <ObjectId>,
+  title: <String>,
+  status: <String:processing>,
+  date_create: <Date>,
+  date_update: <Date>,
+}
+```
+
+删除子任务
+
+### DELETE /task/{task_id}/subtask/{subtask_id}
+
+
+修改子任务状态
+
+### PUT /task/{task_id}/subtask/{subtask_id}
+
+INPUT
+
+```javascript
+{
+  status: <String[Enum:processing,completed]>
+}
+```
+
 ## 挂载点
 
 * `/company/:company_id/task` 公司任务
@@ -304,6 +352,7 @@ QUERY
 | order | [asc,desc] | sort method |
 | status | list | comma separated list |
 | type | string | assignee / creator / follower |
+| is_expired | int | 0 / 1 |
 
 OUTPUT
 ```javascript

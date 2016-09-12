@@ -24,10 +24,6 @@ import {
 let api = express.Router();
 export default api;
 
-api.use((req, res, next) => {
-  next();
-});
-
 api.get('/', (req, res, next) => {
   db.project.find({
     company_id: req.company._id,
@@ -38,9 +34,6 @@ api.get('/', (req, res, next) => {
   })
   .then(doc => res.json(doc))
   .catch(next);
-  // let projects = req.company.projects || [];
-  // db.project.find({_id:{$in: projects}})
-  // .then(list => res.json(list));
 });
 
 api.post('/', (req, res, next) => {

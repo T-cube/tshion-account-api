@@ -1,4 +1,22 @@
-import { ENUMS } from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
+import { buildValidator } from 'lib/inspector';
+
+let schema = {
+  subtask: {
+    sanitization: {
+      title: { type: 'string' },
+      status: { type: 'string' },
+    },
+    validation: {
+      title: {
+        type: 'string',
+        minLength: 3,
+        maxLength: 200
+      },
+      status: { $enum: [C.TASK_STATUS.PROCESSING, C.TASK_STATUS.COMPLETED] },
+    },
+  }
+};
 
 export let sanitization = {
   parent_id: { $objectId: 1, optional: true },
@@ -15,6 +33,11 @@ export let sanitization = {
     items: {
       $objectId: 1
     }
+  },
+  subtask: {
+    type: 'array',
+    optional: true,
+    items: schema.subtask.sanitization.title
   },
 };
 
@@ -34,6 +57,11 @@ export let validation = {
       $objectId: 1
     }
   },
+  subtask: {
+    type: 'array',
+    optional: true,
+    items: schema.subtask.validation.title
+  },
 };
 
 export let commentSanitization = {
@@ -43,3 +71,5 @@ export let commentSanitization = {
 export let commentValidation = {
   content: { type: 'string', minLength: 3, maxLength: 500 }
 };
+
+export const validate = buildValidator(schema);
