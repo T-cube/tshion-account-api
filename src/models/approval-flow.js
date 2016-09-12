@@ -207,16 +207,17 @@ export default class ApprovalFlow {
 
   getApplyDateCondition() {
     let { export_count } = this.query;
+    let thisMonth = moment().month();
     let apply_date;
     if (export_count == 'this_month') {
       apply_date = {
-        $gte: moment().date(1).minute(0).toDate(),
+        $gte: moment(thisMonth).toDate(),
         $lt: new Date(),
       };
     } else if (export_count == 'last_month') {
       apply_date = {
-        $gte: moment().month(-1).date(1).minute(0).toDate(),
-        $lt: moment().date(1).minute(0).toDate(),
+        $gte: moment(thisMonth -1, 'MM').toDate(),
+        $lt: moment(thisMonth, 'MM').toDate(),
       };
     }
     return apply_date ? {apply_date} : {};
