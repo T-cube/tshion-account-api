@@ -140,7 +140,7 @@ api.get('/:_task_id', (req, res, next) => {
       throw new ApiError(404);
     }
     // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
-    return fetchCompanyMemberInfo(req.company, task, 'creator', 'assignee');
+    return fetchCompanyMemberInfo(req.company, task, 'creator', 'assignee', 'checker');
   })
   .then(task => {
     task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
@@ -176,8 +176,6 @@ api.delete('/:task_id', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:task_id/status', updateField('status'));
-
 api.put('/:task_id/title', updateField('title'));
 
 api.put('/:task_id/description', updateField('description'));
@@ -187,6 +185,55 @@ api.put('/:task_id/priority', updateField('priority'));
 api.put('/:task_id/date_start', updateField('date_start'));
 
 api.put('/:task_id/date_due', updateField('date_due'));
+
+api.put('/:task_id/checker', (req, res, next) => {
+  let checker = req.body.checker;
+  if (checker && ObjectId.isValid(checker)) {
+    checker = ObjectId(checker);
+    ensureProjectMember(req.project, checker);
+  }
+  next();
+}, updateField('checker'));
+
+api.put('/:task_id/loop', (req, res, next) => {
+  doUpdateField(req, 'loop')
+  .then(data => {
+    res.json(data);
+    if (req.body.loop) {
+      console.log('loop');
+    } else {
+      console.log('no loop');
+    }
+  })
+  .catch(() => next());
+});
+
+api.put('/:task_id/status', (req, res, next) => {
+  let data = validField('status', req.body.status);
+  if (req.task.checker && !req.task.checker.equals(req.user._id) && data.status == C.TASK_STATUS.COMPLETED) {
+    data.status = C.TASK_STATUS.CHECKING;
+  }
+  return db.task.update({
+    _id: req.task._id
+  }, {
+    $set: data,
+  })
+  .then(() => {
+    res.json(data);
+    switch (data.status) {
+    case C.TASK_STATUS.COMPLETED:
+      logTask(req, C.ACTIVITY_ACTION.COMPLETE);
+      break;
+    case C.TASK_STATUS.PROCESSING:
+      logTask(req, C.ACTIVITY_ACTION.REOPEN);
+      break;
+    case C.TASK_STATUS.CHECKING:
+      logTask(req, C.ACTIVITY_ACTION.REOPEN); // TODO
+      break;
+    }
+  })
+  .catch(next);
+});
 
 api.put('/:task_id/assignee', (req, res, next) => {
   let data = validField('assignee', req.body.assignee);

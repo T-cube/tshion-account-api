@@ -332,6 +332,28 @@ INPUT
 }
 ```
 
+### PUT /task/:task_id/loop
+
+更新循环任务
+
+INPUT
+```javascript
+{
+  loop: <String[Enum:null,day,weekday,month,year]
+}
+```
+
+### PUT /task/:task_id/checker
+
+更新任务审核人
+
+INPUT
+```javascript
+{
+  checker: <ObjectId>
+}
+```
+
 ## 挂载点
 
 * `/company/:company_id/task` 公司任务

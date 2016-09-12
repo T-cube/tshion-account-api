@@ -34,10 +34,18 @@ export let sanitization = {
       $objectId: 1
     }
   },
-  subtask: {
+  subtask: {                                          // 子任务
     type: 'array',
     optional: true,
     items: schema.subtask.sanitization.title
+  },
+  loop: {                                             // 是否为循环任务
+    type: 'string',
+    optional: true,
+  },
+  checker: {
+    $objectId: 1,
+    optional: true,
   },
 };
 
@@ -61,6 +69,14 @@ export let validation = {
     type: 'array',
     optional: true,
     items: schema.subtask.validation.title
+  },
+  loop: {
+    $enum: [null, 'day', 'weekday', 'month', 'year'],
+    optional: true,
+  },
+  checker: {
+    $objectId: 1,
+    optional: true,
   },
 };
 
