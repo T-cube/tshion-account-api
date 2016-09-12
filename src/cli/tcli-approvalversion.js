@@ -19,6 +19,8 @@ if (!program.update) {
 
 if (program.update) {
 
+  let updated = false;
+
   db.approval.template.master.find({})
   .then(list => {
     return Promise.map(list, item => {
@@ -39,6 +41,7 @@ if (program.update) {
           if (!tpls.length) {
             return null;
           }
+          updated = true;
           console.log('update templates:', tpls.map(tpl => tpl._id).join(','));
           return db.approval.template.update({
             _id: {
@@ -56,7 +59,7 @@ if (program.update) {
     });
   })
   .then(() => {
-    console.log('status updated');
+    updated ? console.log('status updated') : console.log('nothing to updated, done');
     process.exit();
   })
   .catch(e => console.error(e));
