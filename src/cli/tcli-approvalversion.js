@@ -27,16 +27,30 @@ if (program.update) {
         if (!templateNeedUpdate.length) {
           return;
         }
-        console.log('update templates:', templateNeedUpdate.join(','));
-        db.approval.template.update({
+        return db.approval.template.find({
           _id: {
             $in: templateNeedUpdate
           },
           status: C.APPROVAL_STATUS.UNUSED
         }, {
-          $set: {
-            status: C.APPROVAL_STATUS.OLD_VERSION
+          _id: 1
+        })
+        .then(tpls => {
+          if (!tpls.length) {
+            return null;
           }
+          console.log('update templates:', tpls.map(tpl => tpl._id).join(','));
+          return db.approval.template.update({
+            _id: {
+              $in: tpls.map(tpl => tpl._id)
+            }
+          }, {
+            $set: {
+              status: C.APPROVAL_STATUS.OLD_VERSION
+            }
+          }, {
+            multi: true
+          });
         });
       }
     });
