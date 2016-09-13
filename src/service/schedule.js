@@ -25,7 +25,7 @@ export default class ScheduleServer {
     let taskLoop = new TaskLoop({
       rows_fetch_once: 100
     });
-    
+
     this.jobs = {
       schedule_reminding: {
         init: ['*/5 * * * *', () => scheduleModel.remindingJob()]
