@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import compare from 'node-version-compare';
 
 import C from 'lib/constants';
 import db from 'lib/database';
@@ -11,6 +12,8 @@ import { comparePassword, hashPassword, maskEmail, maskMobile } from 'lib/utils'
 import UserLevel from 'models/user-level';
 
 import { validate } from './schema';
+
+const version = require('../../../package.json').version;
 
 const BASIC_FIELDS = {
   _id: 1,
@@ -207,6 +210,63 @@ api.get('/activity', (req, res, next) => {
     return req.model('activity').fetch(condition, last_id);
   })
   .then(list => res.json(list))
+  .catch(next);
+});
+
+api.get('/guide', (req, res, next) => {
+  db.user.guide.findOne({
+    _id: req.user._id
+  })
+  .then(user_guide => {
+    let new_user, guide;
+    if (!guide) {
+      new_user = 1;
+      guide = 1;
+    } else {
+      new_user = 0;
+      guide = compare(version, user_guide.version);
+    }
+    return res.json({
+      version,
+      new_user,
+      guide,
+    });
+  })
+  .catch(next);
+});
+
+api.put('/guide', (req, res, next) => {
+  db.user.guide.update({
+    _id: req.user._id,
+  }, {
+    $set: {version}
+  }, {
+    upsert: true
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.get('/guide/new', (req, res, next) => {
+  db.guide.get({
+    version: 0
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.get('/guide/version/:version', (req, res, next) => {
+  db.guide.get({
+    version: req.params.version
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.post('/guide', (req, res, next) => {
+  let data = req.body;
+  db.guide.insert(data)
+  .then(() => res.json({}))
   .catch(next);
 });
 
