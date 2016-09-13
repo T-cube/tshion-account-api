@@ -4,6 +4,7 @@ import moment from 'moment';
 import config from 'config';
 
 import ScheduleModel from 'models/schedule';
+import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import C from 'lib/constants';
 import wUtil from 'lib/wechat-util';
@@ -21,11 +22,16 @@ export default class ScheduleServer {
   initJobs() {
     let notificationModel = this.model('notification');
     let scheduleModel = new ScheduleModel(notificationModel);
+    let taskLoop = new TaskLoop({
+      rows_fetch_once: 100
+    });
+    
     this.jobs = {
       schedule_reminding: {
-        init: ['*/5 * * * *', () => {
-          scheduleModel.remindingJob();
-        }]
+        init: ['*/5 * * * *', () => scheduleModel.remindingJob()]
+      },
+      task_loop: {
+        init: ['0 0 * * *', () => taskLoop.generateTasks()]
       },
       // task_expire: {
       //   init: ['0 9 * * *', () => {

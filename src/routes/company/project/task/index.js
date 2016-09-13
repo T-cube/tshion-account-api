@@ -1,8 +1,10 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
 import config from 'config';
 
+import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -122,10 +124,13 @@ api.post('/', (req, res, next) => {
   });
   data.subtask = data.subtask ? data.subtask.map(subtask => initSubtask(subtask)) : [];
   return db.task.insert(data)
-  .then(doc => {
-    res.json(doc);
-    req.task = doc;
-    return logTask(req, C.ACTIVITY_ACTION.CREATE);
+  .then(task => {
+    res.json(task);
+    req.task = task;
+    return Promise.all([
+      task.loop && TaskLoop.updateLoop(task),
+      logTask(req, C.ACTIVITY_ACTION.CREATE)
+    ]);
   })
   .catch(next);
 });
@@ -199,13 +204,12 @@ api.put('/:task_id/loop', (req, res, next) => {
   doUpdateField(req, 'loop')
   .then(data => {
     res.json(data);
-    if (req.body.loop) {
-      console.log('loop');
-    } else {
-      console.log('no loop');
-    }
+    return TaskLoop.updateLoop({
+      _id: req.task._id,
+      loop: data.loop
+    });
   })
-  .catch(() => next());
+  .catch(next);
 });
 
 api.put('/:task_id/status', (req, res, next) => {
