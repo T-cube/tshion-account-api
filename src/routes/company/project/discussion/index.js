@@ -66,6 +66,7 @@ api.post('/', (req, res, next) => {
     creator: req.user._id,
     followers: [req.user._id],
     date_create: new Date(),
+    date_update: new Date(),
   });
   req.model('html-helper').sanitize(data.content)
   .then(content => {
@@ -80,6 +81,7 @@ api.put('/:discussion_id', (req, res, next) => {
   let data = req.body;
   let discussion_id = ObjectId(req.params.discussion_id);
   sanitizeValidateObject(discussionSanitization, discussionValidation, data);
+  data.date_update = new Date();
   req.model('html-helper').sanitize(data.content)
   .then(content => {
     data.content = content;

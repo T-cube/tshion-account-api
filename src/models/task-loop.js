@@ -1,7 +1,6 @@
 import _ from 'underscore';
 import moment from 'moment';
 import Promise from 'bluebird';
-import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import db from 'lib/database';
@@ -122,7 +121,10 @@ export default class TaskLoop {
       };
     }
     return db.task.loop.find(criteria)
-    .limit(this.setting.rows_fetch_once);
+    .limit(this.setting.rows_fetch_once)
+    .order({
+      _id: 1
+    });
   }
 
   static updateLoop(task, lastDate) {
