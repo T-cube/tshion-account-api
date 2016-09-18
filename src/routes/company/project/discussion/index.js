@@ -73,7 +73,10 @@ api.post('/', (req, res, next) => {
     data.content = content;
     return db.discussion.insert(data);
   })
-  .then(doc => res.json(doc))
+  .then(doc => {
+    doc.creator = _.pick(req.user, '_id', 'name', 'avatar');
+    res.json(doc);
+  })
   .catch(next);
 });
 
