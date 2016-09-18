@@ -5,6 +5,7 @@ import Promise from 'bluebird';
 import config from 'config';
 import bodyParser from 'body-parser';
 
+import Redis from 'vendor/redis';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
 import corsHandler from 'lib/cors';
@@ -13,43 +14,19 @@ import { oauthCheck } from 'lib/middleware';
 let api = express.Router();
 export default api;
 
-class Urls {
-  constructor(req, res) {
-    this.xhr = req.xhr;
-    this.res = res;
-    this.mobileUrl = config.get('mobileUrl');
-  }
-  sns(url) {
-    if (this.xhr) {
-      this.res.json({url});
-    } else {
-      this.res.redirect(url);
-    }
-  }
-  user() {
-    if (this.xhr) {
-      this.res.json({});
-    } else {
-      this.res.redirect(this.mobileUrl + 'oa/company');
-    }
-  }
-  reg(random_token) {
-    if (this.xhr) {
-      this.res.json({random_token});
-    } else {
-      this.res.redirect(this.mobileUrl + 'account/login?from_open=wechat&random_token=' + random_token);
-    }
-  }
-  token(wechat_authcode) {
-    if (this.xhr) {
-      this.res.json({wechat_authcode});
-    } else {
-      this.res.redirect(this.mobileUrl + 'account/login?wechat_authcode=' + wechat_authcode);
-    }
-  }
-}
+const mobileUrl = config.get('mobileUrl');
 
-const wechatOAuthClient = getOAuthClient();
+const urls = {
+  user: mobileUrl + 'oa/company',
+  reg: token => {
+    return mobileUrl + 'account/login?from_open=wechat&random_token=' + token;
+  },
+  token: authCode => {
+    return mobileUrl + 'account/login?wechat_authcode=' + authCode;
+  },
+};
+
+const wechatOAuthClient = getOAuthClient(api.redis);
 
 const wechatOauth = oauthserver({
   model: WechatOAuthModel,
@@ -65,7 +42,7 @@ api.use(bodyParser.urlencoded({ extended: true }));
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
   let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'wechat-oauth/access', checkCode, 'snsapi_userinfo');
-  new Urls(req, res).sns(url);
+  res.redirect(url);
 });
 
 api.get('/access', access);
@@ -115,10 +92,9 @@ function access(req, res, next) {
     let { openid } = wechat;
     let loginUser = getLoginUser(req);
     let gettingUserWechat = loginUser ? wUtil.getUserWechat(loginUser._id) : Promise.resolve(null);
-    let urls = new Urls(req, res);
     return gettingUserWechat.then(loginUserWechat => {
       if (loginUserWechat) {
-        return urls.user();
+        return res.redirect(urls.user);
       }
       return wUtil.findUserByOpenid(openid)
       .then(user => {
@@ -132,7 +108,7 @@ function access(req, res, next) {
               return wUtil.findWechatUserinfo(openid)
               .then(userInfo => {
                 if (userInfo) {
-                  return urls.reg(oauthRandomToken);
+                  return res.redirect(urls.reg(oauthRandomToken));
                 }
                 return new Promise((resolve, reject) => {
                   wechatOAuthClient.getUser(openid, (err, userInfo) => {
@@ -143,14 +119,14 @@ function access(req, res, next) {
                   });
                 })
                 .then(userInfo => wUtil.storeWechatUserinfo(userInfo))
-                .then(() => urls.reg(oauthRandomToken));
+                .then(() => res.redirect(urls.reg(oauthRandomToken)));
               });
             });
           }
         } else {
           if (!loginUser) {
             return wUtil.generateAuthCode(user._id)
-            .then(authCode => urls.token(authCode));
+            .then(authCode => res.redirect(urls.token(authCode)));
           }
         }
       });
@@ -163,6 +139,22 @@ function getLoginUser(req) {
   return req.user;
 }
 
-function getOAuthClient() {
-  return new wechatOAuth(config.get('wechat.appid'), config.get('wechat.appsecret'));
+function getOAuthClient(redis) {
+  return new wechatOAuth(
+    config.get('wechat.appid'),
+    config.get('wechat.appsecret'),
+    (openid, callback) => {
+      redis.get(`oauth-token:${openid}`)
+      .then(token => callback(token))
+      .catch(e => console.error(e));
+    },
+    (openid, token, callback) => {
+      redis.set(`oauth-token:${openid}`, token)
+      .then(() => {
+        redis.expire(`oauth-token:${openid}`, 1000);
+        callback();
+      })
+      .catch(e => console.error(e));
+    }
+  );
 }
