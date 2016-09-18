@@ -11,7 +11,7 @@ export default class TaskLoop {
     let setting = {
       rows_fetch_once: Number.POSITIVE_INFINITY,
     };
-    this.setting = _.extend(setting, opts);
+    this.settings = _.extend(setting, opts);
   }
 
   generateTasks() {
@@ -33,7 +33,7 @@ export default class TaskLoop {
       this.updateTargetsNext(targets, tasks),
     ]))
     .then(() => {
-      if (target_length == this.setting.rows_fetch_once) {
+      if (target_length == this.settings.rows_fetch_once) {
         return this.doGenerateTasks(next_last_id);
       } else {
         console.log('all tasks generated');
@@ -121,8 +121,8 @@ export default class TaskLoop {
       };
     }
     return db.task.loop.find(criteria)
-    .limit(this.setting.rows_fetch_once)
-    .order({
+    .limit(this.settings.rows_fetch_once)
+    .sort({
       _id: 1
     });
   }
