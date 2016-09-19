@@ -4,6 +4,7 @@ import Promise from 'bluebird';
 
 import C from 'lib/constants';
 import db from 'lib/database';
+import CronRule from 'lib/cron-rule';
 
 export default class TaskLoop {
 
@@ -20,62 +21,32 @@ export default class TaskLoop {
   }
 
   doGenerateTasks(last_id) {
-    let target_length, next_last_id, targets;
     return this.fetchTargets(last_id)
-    .then(list => {
-      targets = list;
-      target_length = targets.length;
-      next_last_id = target_length && targets[target_length - 1]._id;
-      return this.fetchTasks(targets);
-    })
-    .then(tasks => Promise.all([
-      this.addLoopTasks(tasks),
-      this.updateTargetsNext(targets, tasks),
-    ]))
-    .then(() => {
-      if (target_length == this.settings.rows_fetch_once) {
-        return this.doGenerateTasks(next_last_id);
-      } else {
-        console.log('all tasks generated');
-      }
+    .then(tasks => {
+      return Promise.all([
+        this.addLoopTasks(tasks),
+        this.updateTargetsNext(tasks),
+      ])
+      .then(() => {
+        let next_last_id = tasks.length && tasks[tasks.length - 1]._id;
+        if (tasks.length == this.settings.rows_fetch_once) {
+          return this.doGenerateTasks(next_last_id);
+        } else {
+          console.log('all tasks generated');
+        }
+      });
     });
   }
 
-  updateTargetsNext(targets, tasks) {
+  updateTargetsNext(targets) {
     return Promise.map(targets, target => {
-      let task = _.find(tasks, task => task._id.equals(target.task));
-      if (task) {
-        return TaskLoop.updateLoop(task, target.next);
-      } else {
-        return db.task.loop.remove({
-          _id: target._id
-        });
-      }
+      return TaskLoop.updateLoop(target, target.next);
     });
   }
 
   static getTaskNext(task, lastDate) {
-    if (!task) {
-      return null;
-    }
-    let param;
-    switch (task.loop) {
-    case 'day':
-      param = 'd';
-      break;
-    case 'weekday':
-      param = 'w';
-      break;
-    case 'month':
-      param = 'M';
-      break;
-    case 'year':
-      param = 'y';
-      break;
-    default:
-      return null;
-    }
-    return moment(lastDate || new Date()).add(1, param).toDate();
+    let rule = CronRule.transToRule(task.loop);
+    return rule && CronRule.getNextTime(rule, lastDate || new Date());
   }
 
   addLoopTasks(tasks) {
@@ -92,23 +63,9 @@ export default class TaskLoop {
     return newTasks.length && db.task.insert(newTasks);
   }
 
-  fetchTasks(targets) {
-    return db.task.find({
-      _id: {
-        $in: targets.map(t => t.task)
-      }
-    }, {
-      status: 0,
-      date_create: 0,
-      date_update: 0,
-      date_start: 0,
-      date_due: 0,
-    });
-  }
-
   fetchTargets(last_id) {
     let criteria = {
-      next: {
+      'loop.next': {
         $gte: moment().startOf('day').toDate(),
         $lt: moment().add(1, 'd').startOf('day').toDate(),
       }
@@ -120,7 +77,7 @@ export default class TaskLoop {
         }
       };
     }
-    return db.task.loop.find(criteria)
+    return db.task.find(criteria)
     .limit(this.settings.rows_fetch_once)
     .sort({
       _id: 1
@@ -129,20 +86,23 @@ export default class TaskLoop {
 
   static updateLoop(task, lastDate) {
     let taskNext = TaskLoop.getTaskNext(task, lastDate);
+    let update;
     if (!taskNext) {
-      return db.task.loop.remove({
-        task: task._id
-      });
+      update = {
+        $unset: {
+          'loop.next': 1
+        }
+      };
+    } else {
+      update = {
+        $set: {
+          'loop.next': taskNext
+        }
+      };
     }
-    return db.task.loop.update({
-      task: task._id
-    }, {
-      $set: {
-        next: taskNext
-      }
-    }, {
-      upsert: true
-    });
+    return db.task.update({
+      _id: task._id
+    }, update);
   }
 
 }

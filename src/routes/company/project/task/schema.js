@@ -40,8 +40,12 @@ export let sanitization = {
     items: schema.subtask.sanitization.title
   },
   loop: {                                             // 是否为循环任务
-    type: 'string',
+    type: 'object',
     optional: true,
+    properties: {
+      type: { type: ['string', null] },
+      info: { type: 'array', optional: true },
+    }
   },
   checker: {
     $objectId: 1,
@@ -71,8 +75,12 @@ export let validation = {
     items: schema.subtask.validation.title
   },
   loop: {
-    $enum: [null, 'day', 'weekday', 'month', 'year'],
+    type: 'object',
     optional: true,
+    properties: {
+      type: { $enum: [null, 'day', 'weekday', 'month', 'year'] },
+      info: { type: 'array', optional: true },
+    }
   },
   checker: {
     $objectId: 1,

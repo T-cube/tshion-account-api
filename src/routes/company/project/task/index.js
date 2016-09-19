@@ -201,13 +201,21 @@ api.put('/:task_id/checker', (req, res, next) => {
 }, updateField('checker'));
 
 api.put('/:task_id/loop', (req, res, next) => {
-  doUpdateField(req, 'loop')
-  .then(data => {
+  let data = validField('loop', req.body['loop']);
+  let nextLoop = TaskLoop.getTaskNext(data);
+  nextLoop && (data.next = nextLoop);
+  return db.task.update({
+    _id: req.task._id
+  }, {
+    $set: data,
+  })
+  .then(() => {
     res.json(data);
-    return TaskLoop.updateLoop({
-      _id: req.task._id,
-      loop: data.loop
-    });
+    logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: {
+      loop: {
+        type: data.loop.type
+      }
+    }});
   })
   .catch(next);
 });
@@ -494,16 +502,9 @@ function doUpdateField(req, field) {
     $set: data,
   })
   .then(() => {
-    if (data.status) {
-      if (data.status == C.TASK_STATUS.COMPLETED) {
-        return logTask(req, C.ACTIVITY_ACTION.COMPLETE);
-      } else if (data.status == C.TASK_STATUS.PROCESSING) {
-        return logTask(req, C.ACTIVITY_ACTION.REOPEN);
-      }
-    }
-    return logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
-  })
-  .then(() => data);
+    logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
+    return data;
+  });
 }
 
 function validField(field, val) {
