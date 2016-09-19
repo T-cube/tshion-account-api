@@ -172,6 +172,7 @@ let constants = {
     PROCESSING: 'processing',
     COMPLETED: 'completed',
     PAUSED: 'paused',
+    CHECKING: 'checking',
     DELETED: 'deleted',
   },
 
