@@ -340,8 +340,13 @@ INPUT
 ```javascript
 {
   loop: {
-    type: <String[Enum:null,day,weekday,month,year],
-    info: [Number...] // type == weekday then number: 1-7, type == month then number: 0-30(0为1号), 
+    type: null|<String[Enum:day,weekday,month,year]>,
+    info: [Number...], // type == weekday then number: 1-7, type == month then number: 0-30(0为1号),
+    end: {
+      type: null|<String[Enum:date,times]>,
+      date: Date,     // type == date 有该字段
+      times: Number,  // type == times 有该字段
+    }
   }
 }
 ```
