@@ -30,7 +30,7 @@ const wechatOAuthClient = getOAuthClient(api.redis);
 
 const wechatOauth = oauthserver({
   model: WechatOAuthModel,
-  grants: ['authorization_code'],
+  grants: ['authorization_code', 'refresh_token'],
   debug: false,
   accessTokenLifetime: 1800,
   refreshTokenLifetime: 3600 * 24 * 15,
