@@ -45,8 +45,23 @@ export default class TaskLoop {
   }
 
   static getTaskNext(task, lastDate) {
-    let rule = CronRule.transToRule(task.loop);
-    return rule && CronRule.getNextTime(rule, lastDate || new Date());
+    let { loop } = task;
+    if (loop.end && loop.end.type == 'times') {
+      if (loop.end.times && loop.end.times <= loop.end.times_already) {
+        return null;
+      }
+    }
+    let rule = CronRule.transToRule(loop);
+    if (!rule) {
+      return null;
+    }
+    let nextTime = CronRule.getNextTime(rule, lastDate || new Date());
+    if (loop.end && loop.end.type == 'date') {
+      if (loop.end.date && loop.end.date < nextTime) {
+        return null;
+      }
+    }
+    return nextTime;
   }
 
   addLoopTasks(tasks) {
@@ -99,6 +114,10 @@ export default class TaskLoop {
           'loop.next': taskNext
         }
       };
+      if (task.loop.end && task.loop.end.type == 'times') {
+        let times_already = (task.loop.end.times_already || 0) + 1;
+        update['$set'].end = {times_already};
+      }
     }
     return db.task.update({
       _id: task._id

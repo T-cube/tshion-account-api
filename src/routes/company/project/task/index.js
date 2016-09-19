@@ -128,7 +128,7 @@ api.post('/', (req, res, next) => {
     res.json(task);
     req.task = task;
     return Promise.all([
-      task.loop && TaskLoop.updateLoop(task),
+      data && TaskLoop.updateLoop(task),
       logTask(req, C.ACTIVITY_ACTION.CREATE)
     ]);
   })
@@ -201,23 +201,35 @@ api.put('/:task_id/checker', (req, res, next) => {
 }, updateField('checker'));
 
 api.put('/:task_id/loop', (req, res, next) => {
-  let data = validField('loop', req.body['loop']);
-  let nextLoop = TaskLoop.getTaskNext(data);
-  nextLoop && (data.next = nextLoop);
-  return db.task.update({
-    _id: req.task._id
-  }, {
-    $set: data,
-  })
-  .then(() => {
+  return doUpdateField(req, 'loop')
+  .then(data => {
     res.json(data);
-    logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: {
-      loop: {
-        type: data.loop.type
-      }
-    }});
+    return TaskLoop.updateLoop({
+      _id: req.task._id,
+      loop: data.loop
+    });
   })
   .catch(next);
+  // let data = validField('loop', req.body['loop']);
+  // let nextLoop = TaskLoop.getTaskNext(data);
+  // nextLoop && (data.loop.next = nextLoop);
+  // if (data.loop && data.loop.end && data.loop.end.type == 'times') {
+  //   data.loop.end.times_already = 1;
+  // }
+  // return db.task.update({
+  //   _id: req.task._id
+  // }, {
+  //   $set: data,
+  // })
+  // .then(() => {
+  //   res.json(data);
+  //   logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: {
+  //     loop: {
+  //       type: data.loop.type
+  //     }
+  //   }});
+  // })
+  // .catch(next);
 });
 
 api.put('/:task_id/status', (req, res, next) => {

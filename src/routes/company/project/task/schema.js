@@ -45,6 +45,15 @@ export let sanitization = {
     properties: {
       type: { type: ['string', null] },
       info: { type: 'array', optional: true },
+      end: {
+        type: 'object',
+        optional: true,
+        properties: {
+          type: { type: ['string', null] },
+          date: { $date: 1, optional: true },
+          times: { type: 'int', optional: true },
+        }
+      }
     }
   },
   checker: {
@@ -80,6 +89,15 @@ export let validation = {
     properties: {
       type: { $enum: [null, 'day', 'weekday', 'month', 'year'] },
       info: { type: 'array', optional: true },
+      end: {
+        type: 'object',
+        optional: true,
+        properties: {
+          type: { $enum: ['date', 'times', null] },
+          date: { $date: 1, optional: true },
+          times: { type: 'int', min: 1, optional: true },
+        }
+      }
     }
   },
   checker: {

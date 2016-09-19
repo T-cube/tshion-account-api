@@ -19,7 +19,7 @@ const sanitizationCustom = {
     return [];
   },
   date: function (schema, post) {
-    if (_.isNull(post)) {
+    if (post === null || post === undefined) {
       return post;
     } else if (moment(post).isValid()) {
       this.report();
