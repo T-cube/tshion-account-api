@@ -43,6 +43,8 @@ const collections = [
   'user',
   'user.confirm.email',
   'user.confirm.mobile',
+  'user.guide',
+  'guide',
   'wechat.location',
   'wechat.oauth',
   'wechat.scan',

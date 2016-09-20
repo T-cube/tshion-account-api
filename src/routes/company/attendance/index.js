@@ -25,23 +25,24 @@ import {
   diffObjectId,
   indexObjectId,
   getClientIp,
+  getGpsDistance,
 } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
-import wUtil from 'lib/wechat-util.js';
+import MarsGPS from 'lib/mars-gps.js';
 
 let api = express.Router();
 export default api;
 
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
-  checkUserLocation(req.company._id, req.user._id).then(isValid => {
+  let data = req.body;
+  sanitizeValidateObject(signSanitization, signValidation, data);
+  checkUserLocation(req.company._id, data.location).then(isValid => {
     let from_pc = !!req.query.from_pc && getClientIp(req);
     if (!isValid && !from_pc) {
       throw new ApiError(400, 'invalid_user_location');
     }
-    let data = req.body;
-    sanitizeValidateObject(signSanitization, signValidation, data);
     let now = new Date();
     _.extend(data, {
       date: now
@@ -397,7 +398,10 @@ function addActivity(req, action, data) {
   return req.model('activity').insert(info);
 }
 
-function checkUserLocation(companyId, userId) {
+function checkUserLocation(companyId, pos) {
+  if (!pos) {
+    return Promise.resolve(false);
+  }
   return db.attendance.setting.findOne({
     _id: companyId
   }, {
@@ -405,7 +409,14 @@ function checkUserLocation(companyId, userId) {
     location: 1,
     max_distance: 1,
   })
-  .then(s => wUtil.checkUserLocation(userId, s.location, s.max_distance));
+  .then(s => {
+    pos = new MarsGPS().transform(pos);
+    let distance = getGpsDistance(pos, s.location);
+    if (distance <= s.max_distance) {
+      return true;
+    }
+    return false;
+  });
 }
 
 function createApprovalTemplate(req, auditor) {

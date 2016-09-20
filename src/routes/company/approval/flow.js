@@ -5,38 +5,48 @@ import Promise from 'bluebird';
 import db from 'lib/database';
 import C from 'lib/constants';
 import { generateToken } from 'lib/utils';
+import { ApiError } from 'lib/error';
 import ApprovalFlow from 'models/approval-flow';
 
 let api = express.Router();
 export default api;
 
-api.get(/^\/(apply|copyto|approve)$/, findItems);
-
-function findItems(req, res, next) {
-  new ApprovalFlow({
-    company: req.company,
-    user_id: req.user._id,
-    type: req.params[0],
-    query: req.query,
-  })
-  .findItems()
+api.get(/^\/(apply|copyto|approve)$/, (req, res, next) => {
+  findItems(req)
   .then(data => res.json(data))
   .catch(next);
-}
+});
 
 api.get(/^\/(apply|copyto|approve)\/token$/, (req, res, next) => {
-  return generateToken(48).then(token => {
-    db.approval.export.insert({
+  findItems(req)
+  .then(data => {
+    if (!data.list.length) {
+      throw new ApiError(400, 'nothing_to_export');
+    }
+    return generateToken(48);
+  })
+  .then(token => {
+    res.json({ token });
+    return db.approval.export.insert({
       token: token,
       user: req.user._id,
       company: req.company._id,
       type: req.params[0],
       query: _.pick(req.query, 'page', 'pagesize', 'status', 'template', 'export_count'),
     });
-    res.json({ token });
   })
   .catch(next);
 });
+
+function findItems(req) {
+  return new ApprovalFlow({
+    company: req.company,
+    user_id: req.user._id,
+    type: req.params[0],
+    query: req.query,
+  })
+  .findItems();
+}
 
 api.get('/count', (req, res, next) => {
   ApprovalFlow

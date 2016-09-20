@@ -62,7 +62,14 @@ if (program.update) {
             size: parseFloat(knowledge_stroage.size) || 0
           };
           let size = knowledge_stroage.size + _.reduce(project_stroage.map(item => item.size), (memo, num) => (memo + num), 0);
-          db.company.level.update({
+          console.log(company_id, {
+            file: {
+              size,
+              knowledge: knowledge_stroage,
+              project: project_stroage
+            }
+          });
+          return db.company.level.update({
             _id: company_id
           }, {
             $set: {

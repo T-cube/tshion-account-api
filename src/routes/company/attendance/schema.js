@@ -12,6 +12,7 @@ export let settingSanitization = {
   },
   location: {
     type: 'object',
+    optional: true,
     properties: {
       latitude: { type: 'number' },
       longitude: { type: 'number' },
@@ -37,7 +38,6 @@ export let settingSanitization = {
   },
   holiday: {
     type: 'array',
-    optional: true,
     items: {
       type: 'object',
       properties: {
@@ -68,7 +68,7 @@ export let settingValidation = {
     properties: {
       latitude: { type: 'number', gte: -90, lte: 90 },
       longitude: { type: 'number', gte: -180, lte: 180 },
-      address: { type: 'string', optional: true, maxLength: 200 },
+      address: { type: 'string', optional: true, maxLength: 500 },
     }
   },
   max_distance: { type: 'number', gt: 0 },
@@ -104,10 +104,26 @@ export let settingValidation = {
 
 export let signSanitization = {
   type: { type: 'string' },
+  location: {
+    type: 'object',
+    optional: true,
+    properties: {
+      latitude: { type: 'number' },
+      longitude: { type: 'number' },
+    }
+  }
 };
 
 export let signValidation = {
   type: { $enum: ENUMS.ATTENDANCE_SIGN_TYPE },
+  location: {
+    type: 'object',
+    optional: true,
+    properties: {
+      latitude: { type: 'number', gte: -90, lte: 90 },
+      longitude: { type: 'number', gte: -180, lte: 180 },
+    }
+  }
 };
 
 export let auditSanitization = {

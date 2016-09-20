@@ -1,8 +1,10 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
 import config from 'config';
 
+import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -13,13 +15,14 @@ import {
   validation,
   commentSanitization,
   commentValidation,
+  validate,
 } from './schema';
 
 let api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize } = req.query;
+  let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize, is_expired } = req.query;
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? pagesize : config.get('view.taskListNum');
@@ -56,6 +59,21 @@ api.get('/', (req, res, next) => {
   }
   if (tag && ObjectId.isValid(tag)) {
     condition['tags'] = ObjectId(tag);
+  }
+  is_expired += '';
+  if (is_expired === '1') {
+    condition['status'] = C.TASK_STATUS.PROCESSING;
+    condition['date_due'] = {
+      $lt: new Date()
+    };
+  } else if (is_expired === '0') {
+    condition['$or'] = [{
+      date_due: {
+        $gte: new Date()
+      }
+    }, {
+      status: C.TASK_STATUS.COMPLETED
+    }];
   }
   let sortBy = { status: -1, date_update: -1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
@@ -103,13 +121,16 @@ api.post('/', (req, res, next) => {
     project_id: req.project._id,
     date_create: new Date(),
     date_update: new Date(),
-    subtask: []
   });
+  data.subtask = data.subtask ? data.subtask.map(subtask => initSubtask(subtask)) : [];
   return db.task.insert(data)
-  .then(doc => {
-    req.task = doc;
-    res.json(doc);
-    return logTask(req, C.ACTIVITY_ACTION.CREATE);
+  .then(task => {
+    res.json(task);
+    req.task = task;
+    return Promise.all([
+      data && TaskLoop.updateLoop(task),
+      logTask(req, C.ACTIVITY_ACTION.CREATE)
+    ]);
   })
   .catch(next);
 });
@@ -124,7 +145,7 @@ api.get('/:_task_id', (req, res, next) => {
       throw new ApiError(404);
     }
     // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
-    return fetchCompanyMemberInfo(req.company, task, 'creator', 'assignee');
+    return fetchCompanyMemberInfo(req.company, task, 'creator', 'assignee', 'checker');
   })
   .then(task => {
     task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
@@ -160,8 +181,6 @@ api.delete('/:task_id', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/:task_id/status', updateField('status'));
-
 api.put('/:task_id/title', updateField('title'));
 
 api.put('/:task_id/description', updateField('description'));
@@ -171,6 +190,74 @@ api.put('/:task_id/priority', updateField('priority'));
 api.put('/:task_id/date_start', updateField('date_start'));
 
 api.put('/:task_id/date_due', updateField('date_due'));
+
+api.put('/:task_id/checker', (req, res, next) => {
+  let checker = req.body.checker;
+  if (checker && ObjectId.isValid(checker)) {
+    checker = ObjectId(checker);
+    ensureProjectMember(req.project, checker);
+  }
+  next();
+}, updateField('checker'));
+
+api.put('/:task_id/loop', (req, res, next) => {
+  return doUpdateField(req, 'loop')
+  .then(data => {
+    res.json(data);
+    return TaskLoop.updateLoop({
+      _id: req.task._id,
+      loop: data.loop
+    });
+  })
+  .catch(next);
+  // let data = validField('loop', req.body['loop']);
+  // let nextLoop = TaskLoop.getTaskNext(data);
+  // nextLoop && (data.loop.next = nextLoop);
+  // if (data.loop && data.loop.end && data.loop.end.type == 'times') {
+  //   data.loop.end.times_already = 1;
+  // }
+  // return db.task.update({
+  //   _id: req.task._id
+  // }, {
+  //   $set: data,
+  // })
+  // .then(() => {
+  //   res.json(data);
+  //   logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: {
+  //     loop: {
+  //       type: data.loop.type
+  //     }
+  //   }});
+  // })
+  // .catch(next);
+});
+
+api.put('/:task_id/status', (req, res, next) => {
+  let data = validField('status', req.body.status);
+  if (req.task.checker && !req.task.checker.equals(req.user._id) && data.status == C.TASK_STATUS.COMPLETED) {
+    data.status = C.TASK_STATUS.CHECKING;
+  }
+  return db.task.update({
+    _id: req.task._id
+  }, {
+    $set: data,
+  })
+  .then(() => {
+    res.json(data);
+    switch (data.status) {
+    case C.TASK_STATUS.COMPLETED:
+      logTask(req, C.ACTIVITY_ACTION.COMPLETE);
+      break;
+    case C.TASK_STATUS.PROCESSING:
+      logTask(req, C.ACTIVITY_ACTION.REOPEN);
+      break;
+    case C.TASK_STATUS.CHECKING:
+      logTask(req, C.ACTIVITY_ACTION.REOPEN); // TODO
+      break;
+    }
+  })
+  .catch(next);
+});
 
 api.put('/:task_id/assignee', (req, res, next) => {
   let data = validField('assignee', req.body.assignee);
@@ -336,6 +423,63 @@ api.get('/:task_id/activity', (req, res, next) => {
   .catch(next);
 });
 
+api.post('/:task_id/subtask', (req, res, next) => {
+  let subtask = req.body;
+  validate('subtask', subtask, ['title']);
+  subtask = initSubtask(subtask.title);
+  db.task.update({
+    _id: req.task._id
+  }, {
+    $push: {
+      subtask: subtask
+    }
+  })
+  .then(doc => res.json(subtask))
+  .catch(next);
+});
+
+api.delete('/:task_id/subtask/:subtask', (req, res, next) => {
+  let subtask_id = ObjectId(req.params.subtask);
+  db.task.update({
+    _id: req.task._id
+  }, {
+    $pull: {
+      subtask: {
+        _id: subtask_id
+      }
+    }
+  })
+  .then(doc => res.json({}))
+  .catch(next);
+});
+
+api.put('/:task_id/subtask/:subtask', (req, res, next) => {
+  let subtask_id = ObjectId(req.params.subtask);
+  let update = {};
+  let subtask1 = req.body;
+  let subtask2 = _.clone(subtask1);
+  if (subtask1.title) {
+    validate('subtask', subtask1, ['title']);
+    update['subtask.$.title'] = subtask1.title;
+  }
+  if (subtask2.status) {
+    validate('subtask', subtask2, ['status']);
+    update['subtask.$.status'] = subtask2.status;
+  }
+  if (_.isEmpty(update)) {
+    throw new ApiError(400, 'update_failed');
+  }
+  update['subtask.$.date_update'] = new Date();
+  db.task.update({
+    _id: req.task._id,
+    'subtask._id': subtask_id
+  }, {
+    $set: update
+  })
+  .then(doc => res.json({}))
+  .catch(next);
+});
+
 function updateField(field) {
   return (req, res, next) => {
     doUpdateField(req, field)
@@ -358,7 +502,6 @@ function logTask(req, action, data) {
     from: req.user._id,
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),
   }, info, data);
-  console.log(activity);
   req.model('activity').insert(activity);
   req.model('notification').send(notification);
 }
@@ -371,16 +514,9 @@ function doUpdateField(req, field) {
     $set: data,
   })
   .then(() => {
-    if (data.status) {
-      if (data.status == C.TASK_STATUS.COMPLETED) {
-        return logTask(req, C.ACTIVITY_ACTION.COMPLETE);
-      } else if (data.status == C.TASK_STATUS.PROCESSING) {
-        return logTask(req, C.ACTIVITY_ACTION.REOPEN);
-      }
-    }
-    return logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
-  })
-  .then(() => data);
+    logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
+    return data;
+  });
 }
 
 function validField(field, val) {
@@ -431,4 +567,14 @@ function taskUnfollow(req, userId) {
       }
     });
   });
+}
+
+function initSubtask(subtask) {
+  return {
+    _id: ObjectId(),
+    title: subtask,
+    status: C.TASK_STATUS.PROCESSING,
+    date_create: new Date(),
+    date_update: new Date(),
+  };
 }

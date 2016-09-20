@@ -71,7 +71,7 @@ export default class Schedule {
       nextRemindTime = interval.next().toDate();
       nextRemindTime = nextRemindTime > (new Date()) ? nextRemindTime : null;
     } catch (e) {
-      console.log(e.message);
+      console.error(e.message);
     }
     return nextRemindTime;
   }

@@ -51,6 +51,7 @@
   "not_project_owner": "不是项目的所有者",
   "not_project_admin": "不是项目的管理员",
   "not_project_member": "不是项目的成员",
+  "nothing_to_export": "没有可以导出的数据",
   "owner_can_not_exit": "所有者不能退出",
   "over_storage": "您的文件存储空间不足",
   "over_member_num": "公司人数已达到限制",
