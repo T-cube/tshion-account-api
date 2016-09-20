@@ -75,7 +75,6 @@ function setFileDownloadHeader(req, res, file) {
   }
   res.set('Content-Disposition', 'attachment; filename=' + filename);
   res.set('Content-Type', file.mimetype);
-
 }
 
 api.get('/preview/:file_id/token/:token', (req, res, next) => {
@@ -87,7 +86,7 @@ api.get('/preview/:file_id/token/:token', (req, res, next) => {
     let data = {
       file: file,
     };
-    return qiniu.makeLink(file.url)
+    return qiniu.makeLink(file.cdn_key, file.name)
     .then(link => {
       data.download_url = link;
       let options = {
