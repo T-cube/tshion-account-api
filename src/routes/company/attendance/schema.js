@@ -110,6 +110,7 @@ export let signSanitization = {
     properties: {
       latitude: { type: 'number' },
       longitude: { type: 'number' },
+      accuracy: { type: 'number' },
     }
   }
 };
@@ -122,6 +123,7 @@ export let signValidation = {
     properties: {
       latitude: { type: 'number', gte: -90, lte: 90 },
       longitude: { type: 'number', gte: -180, lte: 180 },
+      accuracy: { type: 'number', gte: 0 },
     }
   }
 };
