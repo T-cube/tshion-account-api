@@ -410,9 +410,10 @@ function checkUserLocation(companyId, pos) {
     max_distance: 1,
   })
   .then(s => {
+    let accuracy = pos.accuracy;
     pos = new MarsGPS().transform(pos);
     let distance = getGpsDistance(pos, s.location);
-    if (distance <= s.max_distance) {
+    if ((distance + accuracy * .5) <= s.max_distance) {
       return true;
     }
     return false;
