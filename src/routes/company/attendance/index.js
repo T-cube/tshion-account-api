@@ -325,6 +325,9 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   let data = req.body;
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
+  if (checkDupliDate(data.workday_special) || checkDupliDate(data.holiday)) {
+    throw new ApiError(400, 'validation_error');
+  }
   if (!_.find(req.company.members, i => i._id.equals(data.auditor))) {
     throw new ApiError(400,'member_not_exists');
   }
@@ -343,6 +346,19 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   })
   .catch(next);
 });
+
+function checkDupliDate(list) {
+  let newList = _.clone(list);
+  let dupli = false;
+  list.reverse().forEach(item => {
+    if (_.find(newList, i => i.date == item.date)) {
+      dupli = true;
+    } else {
+      newList.pop();
+    }
+  });
+  return dupli;
+}
 
 function getApprovalTpl(company_id) {
   return db.attendance.setting.findOne({
