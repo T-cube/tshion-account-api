@@ -71,7 +71,7 @@ export let settingValidation = {
       address: { type: 'string', optional: true, maxLength: 500 },
     }
   },
-  max_distance: { type: 'number', gt: 50 },
+  max_distance: { type: 'number', gte: 50 },
   white_list: {
     type: 'array',
     optional: true,
