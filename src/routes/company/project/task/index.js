@@ -110,7 +110,8 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(sanitization, validation, data);
+  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title'];
+  sanitizeValidateObject(_.pick(sanitization, ...fields), _.pick(validation, ...fields), data);
   if (data.date_due < data.date_start) {
     throw new ApiError(400, 'invalid_date');
   }
@@ -119,6 +120,7 @@ api.post('/', (req, res, next) => {
     followers: [req.user._id],
     company_id: req.company._id,
     project_id: req.project._id,
+    status: C.TASK_STATUS.PROCESSING,
     date_create: new Date(),
     date_update: new Date(),
   });
