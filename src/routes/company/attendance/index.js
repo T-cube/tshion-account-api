@@ -351,10 +351,9 @@ function checkDupliDate(list) {
   let newList = _.clone(list);
   let dupli = false;
   list.reverse().forEach(item => {
+    newList.pop();
     if (_.find(newList, i => i.date == item.date)) {
       dupli = true;
-    } else {
-      newList.pop();
     }
   });
   return dupli;
