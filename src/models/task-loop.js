@@ -32,7 +32,7 @@ export default class TaskLoop {
         if (tasks.length == this.settings.rows_fetch_once) {
           return this.doGenerateTasks(next_last_id);
         } else {
-          console.log('all tasks generated');
+          console.log('all loop tasks generated');
         }
       });
     });
@@ -71,8 +71,11 @@ export default class TaskLoop {
       newTask.loop_task = true;
       newTask.status = C.TASK_STATUS.PROCESSING;
       newTask.date_create = date_create;
+      newTask.date_update = date_create;
       delete newTask._id;
       delete newTask.loop;
+      delete newTask.date_start;
+      delete newTask.date_due;
       return newTask;
     });
     return newTasks.length && db.task.insert(newTasks);
@@ -116,7 +119,7 @@ export default class TaskLoop {
       };
       if (task.loop.end && task.loop.end.type == 'times') {
         let times_already = (task.loop.end.times_already || 0) + 1;
-        update['$set'].end = {times_already};
+        update['$set']['loop.end.times_already'] = times_already;
       }
     }
     return db.task.update({
