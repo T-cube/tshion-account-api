@@ -26,6 +26,7 @@ import {
   indexObjectId,
   getClientIp,
   getGpsDistance,
+  generateToken,
 } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
@@ -39,7 +40,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(signSanitization, signValidation, data);
   checkUserLocation(req.company._id, data.location).then(isValid => {
-    let from_pc = !!req.query.from_pc && getClientIp(req);
+    let from_pc = !!req.query.from_pc && !req.headers['user-agent'].toLowerCase().match(/(iphone|ipod|ipad|android)/) && getClientIp(req);
     if (!isValid && !from_pc) {
       throw new ApiError(400, 'invalid_user_location');
     }
@@ -172,8 +173,23 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
   .then(record => {
     record.forEach(item => {
       item.user = _.find(req.company.members, member => member._id.equals(item.user));
+      item.user = item.user && _.pick(item.user, '_id', 'name');
     });
     res.json(record);
+  })
+  .catch(next);
+});
+
+api.get('/sign/department/:department_id/export', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
+  return generateToken(48)
+  .then(token => {
+    return db.attendance.export.insert({
+      token,
+      user: req.user._id,
+      company: req.company._id,
+      department_id: req.params.department_id,
+    })
+    .then(() => res.json({token}));
   })
   .catch(next);
 });
@@ -340,7 +356,7 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   })
   .then(setting => {
     res.json(setting);
-    if (data && !data.approval_template && data.auditor) {
+    if (!data.approval_template && data.auditor) {
       return createApprovalTemplate(req, data.auditor);
     }
   })

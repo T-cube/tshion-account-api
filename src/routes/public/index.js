@@ -32,7 +32,7 @@ api.get('/user-avatar/:user_id', (req, res, next) => {
     if (!user) {
       throw new ApiError(404);
     }
-    res.redirect(user.avatar + '?' + qs.stringify(req.query));
+    res.redirect(user.avatar + '?' + req._parsedUrl.search);
   })
   .catch(next);
 });
