@@ -6,6 +6,13 @@ module.exports = {
     //host: '127.0.0.1',
     port: 3000,
   },
+  rpc: {
+    protocol: 'http',
+    hostname: '127.0.0.1',
+    port: 2001,
+    username: 'tlf-api',
+    password: 'Z#cref=EswuPH=#UHEtRaf+Efa&A7uma',
+  },
   database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
   // 前端展示配置

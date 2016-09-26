@@ -109,8 +109,6 @@ app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
 app.all('/oauth/token', app.oauth.grant());
 app.use('/oauth/revoke', oauthRoute.revokeToken);
-
-wechatOAuthRoute.redis = app.model('redis');
 // wechat login
 app.use('/wechat-oauth', wechatOAuthRoute);
 // wechat apis

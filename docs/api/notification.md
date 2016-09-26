@@ -23,7 +23,7 @@
 }...]
 ```
 
-### GET /notification/unread_count
+### GET /notification/unread-count
 
 获取未读消息数目
 
