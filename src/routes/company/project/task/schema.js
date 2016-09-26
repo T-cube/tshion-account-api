@@ -88,7 +88,7 @@ export let validation = {
     optional: true,
     properties: {
       type: { $enum: [null, 'day', 'weekday', 'month', 'year'] },
-      info: { type: 'array', optional: true },
+      info: { type: 'array', optional: true, maxLength: 31 },
       end: {
         type: 'object',
         optional: true,

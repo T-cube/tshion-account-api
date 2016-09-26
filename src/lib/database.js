@@ -18,6 +18,7 @@ const collections = [
   'attendance.sign',
   'attendance.audit',
   'attendance.record',
+  'attendance.export',
   'auth_check_token',
   'company',
   'company.level',

@@ -209,7 +209,7 @@ export default class Attendance {
     let isCurrentMonth = now.getMonth() == (month - 1);
     let lastDateOfMonth = isCurrentMonth
       ? now.getDate()
-      : moment([year, month, 1]).subtract(1, 'day').getDate();
+      : moment([year, month, 1]).subtract(1, 'day').toDate().getDate();
     // let firstWeekday = moment([year, month - 1, 1]).toDate().getDay();
     return _.range(1, lastDateOfMonth + 1);
   }
