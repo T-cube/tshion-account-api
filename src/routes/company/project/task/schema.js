@@ -26,7 +26,7 @@ export let sanitization = {
   assignee: { $objectId: 1, optional: true },             // 执行人
   date_start: { $date: 1, optional: true },// 开始时间（optional）
   date_due: { $date: 1, optional: true },  // 截止时间（optional）
-  priority: { type: 'int', optional: true },                // 优先级别
+  priority: { type: 'integer', optional: true },                // 优先级别
   tags: {
     type: 'array',
     optional: true,
@@ -51,7 +51,7 @@ export let sanitization = {
         properties: {
           type: { type: ['string', null] },
           date: { $date: 1, optional: true },
-          times: { type: 'int', optional: true },
+          times: { type: 'integer', min: 0, optional: true },
         }
       }
     }
@@ -95,7 +95,7 @@ export let validation = {
         properties: {
           type: { $enum: ['date', 'times', null] },
           date: { $date: 1, optional: true },
-          times: { type: 'int', min: 1, optional: true },
+          times: { type: 'integer', optional: true },
         }
       }
     }

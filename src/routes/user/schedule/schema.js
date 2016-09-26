@@ -5,7 +5,7 @@ export let sanitization = {
   time_end: { type: 'date' },
 	is_full_day: { type: 'boolean' },
   repeat_end: { type: 'date', optional: true },
-	type: { type: 'int', optional: true },
+	type: { type: 'integer', optional: true },
   repeat: {
 		type: 'object',
 		properties: {
@@ -17,7 +17,7 @@ export let sanitization = {
 		type: 'object',
 		properties: {
 			type: { type: 'string' },
-	    num: { type: 'int' },
+	    num: { type: 'integer' },
 		}
   }
 };
@@ -41,7 +41,7 @@ export let validation = {
 		type: 'object',
 		properties: {
 			type: { type: 'string' },
-	    num: { type: 'int' },
+	    num: { type: 'integer' },
 		}
   }
 };

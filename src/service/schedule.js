@@ -31,7 +31,7 @@ export default class ScheduleServer {
         init: ['*/5 * * * *', () => scheduleModel.remindingJob()]
       },
       task_loop: {
-        init: ['0 0 * * *', () => taskLoop.generateTasks()]
+        init: ['*/1 * * * *', () => taskLoop.generateTasks()]
       },
       // task_expire: {
       //   init: ['0 9 * * *', () => {

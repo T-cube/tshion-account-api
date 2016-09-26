@@ -47,7 +47,7 @@ export default class TaskLoop {
   static getTaskNext(task, lastDate) {
     let { loop } = task;
     if (loop.end && loop.end.type == 'times') {
-      if (loop.end.times && loop.end.times <= loop.end.times_already) {
+      if (1 >= loop.end.times) {
         return null;
       }
     }
@@ -102,7 +102,10 @@ export default class TaskLoop {
     });
   }
 
-  static updateLoop(task, lastDate) {
+  static updateLoop(task, lastDate, noUpdateTimes) {
+    if (task.loop.end && task.loop.end.times) {
+      task.loop.end.times += 1;
+    }
     let taskNext = TaskLoop.getTaskNext(task, lastDate);
     let update;
     if (!taskNext) {
@@ -111,15 +114,19 @@ export default class TaskLoop {
           'loop.next': 1
         }
       };
+      if (task.loop.end && task.loop.end.type == 'times') {
+        update['$set']['loop.end.times'] = 0;
+      }
     } else {
       update = {
         $set: {
           'loop.next': taskNext
         }
       };
-      if (task.loop.end && task.loop.end.type == 'times') {
-        let times_already = (task.loop.end.times_already || 0) + 1;
-        update['$set']['loop.end.times_already'] = times_already;
+      if (task.loop.end && task.loop.end.type == 'times' && !noUpdateTimes) {
+        update['$inc'] = {
+          'loop.end.times': -1
+        };
       }
     }
     return db.task.update({
