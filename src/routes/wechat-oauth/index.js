@@ -5,6 +5,7 @@ import Promise from 'bluebird';
 import config from 'config';
 import bodyParser from 'body-parser';
 
+import Redis from 'vendor/redis';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
 import corsHandler from 'lib/cors';
@@ -25,11 +26,11 @@ const urls = {
   },
 };
 
-const wechatOAuthClient = getOAuthClient();
+const wechatOAuthClient = getOAuthClient(api.redis);
 
 const wechatOauth = oauthserver({
   model: WechatOAuthModel,
-  grants: ['authorization_code'],
+  grants: ['authorization_code', 'refresh_token'],
   debug: false,
   accessTokenLifetime: 1800,
   refreshTokenLifetime: 3600 * 24 * 15,
@@ -138,6 +139,22 @@ function getLoginUser(req) {
   return req.user;
 }
 
-function getOAuthClient() {
-  return new wechatOAuth(config.get('wechat.appid'), config.get('wechat.appsecret'));
+function getOAuthClient(redis) {
+  return new wechatOAuth(
+    config.get('wechat.appid'),
+    config.get('wechat.appsecret'),
+    (openid, callback) => {
+      redis.get(`oauth-token:${openid}`)
+      .then(token => callback(token))
+      .catch(e => console.error(e));
+    },
+    (openid, token, callback) => {
+      redis.set(`oauth-token:${openid}`, token)
+      .then(() => {
+        redis.expire(`oauth-token:${openid}`, 1000);
+        callback();
+      })
+      .catch(e => console.error(e));
+    }
+  );
 }

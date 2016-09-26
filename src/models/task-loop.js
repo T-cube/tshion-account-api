@@ -1,10 +1,10 @@
 import _ from 'underscore';
 import moment from 'moment';
 import Promise from 'bluebird';
-import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import db from 'lib/database';
+import CronRule from 'lib/cron-rule';
 
 export default class TaskLoop {
 
@@ -12,7 +12,7 @@ export default class TaskLoop {
     let setting = {
       rows_fetch_once: Number.POSITIVE_INFINITY,
     };
-    this.setting = _.extend(setting, opts);
+    this.settings = _.extend(setting, opts);
   }
 
   generateTasks() {
@@ -21,62 +21,47 @@ export default class TaskLoop {
   }
 
   doGenerateTasks(last_id) {
-    let target_length, next_last_id, targets;
     return this.fetchTargets(last_id)
-    .then(list => {
-      targets = list;
-      target_length = targets.length;
-      next_last_id = target_length && targets[target_length - 1]._id;
-      return this.fetchTasks(targets);
-    })
-    .then(tasks => Promise.all([
-      this.addLoopTasks(tasks),
-      this.updateTargetsNext(targets, tasks),
-    ]))
-    .then(() => {
-      if (target_length == this.setting.rows_fetch_once) {
-        return this.doGenerateTasks(next_last_id);
-      } else {
-        console.log('all tasks generated');
-      }
+    .then(tasks => {
+      return Promise.all([
+        this.addLoopTasks(tasks),
+        this.updateTargetsNext(tasks),
+      ])
+      .then(() => {
+        let next_last_id = tasks.length && tasks[tasks.length - 1]._id;
+        if (tasks.length == this.settings.rows_fetch_once) {
+          return this.doGenerateTasks(next_last_id);
+        } else {
+          console.log('all loop tasks generated');
+        }
+      });
     });
   }
 
-  updateTargetsNext(targets, tasks) {
+  updateTargetsNext(targets) {
     return Promise.map(targets, target => {
-      let task = _.find(tasks, task => task._id.equals(target.task));
-      if (task) {
-        return TaskLoop.updateLoop(task, target.next);
-      } else {
-        return db.task.loop.remove({
-          _id: target._id
-        });
-      }
+      return TaskLoop.updateLoop(target, target.next);
     });
   }
 
   static getTaskNext(task, lastDate) {
-    if (!task) {
+    let { loop } = task;
+    if (loop.end && loop.end.type == 'times') {
+      if (loop.end.times && loop.end.times <= loop.end.times_already) {
+        return null;
+      }
+    }
+    let rule = CronRule.transToRule(loop);
+    if (!rule) {
       return null;
     }
-    let param;
-    switch (task.loop) {
-    case 'day':
-      param = 'd';
-      break;
-    case 'weekday':
-      param = 'w';
-      break;
-    case 'month':
-      param = 'M';
-      break;
-    case 'year':
-      param = 'y';
-      break;
-    default:
-      return null;
+    let nextTime = CronRule.getNextTime(rule, lastDate || new Date());
+    if (loop.end && loop.end.type == 'date') {
+      if (loop.end.date && loop.end.date < nextTime) {
+        return null;
+      }
     }
-    return moment(lastDate || new Date()).add(1, param).toDate();
+    return nextTime;
   }
 
   addLoopTasks(tasks) {
@@ -86,30 +71,19 @@ export default class TaskLoop {
       newTask.loop_task = true;
       newTask.status = C.TASK_STATUS.PROCESSING;
       newTask.date_create = date_create;
+      newTask.date_update = date_create;
       delete newTask._id;
       delete newTask.loop;
+      delete newTask.date_start;
+      delete newTask.date_due;
       return newTask;
     });
     return newTasks.length && db.task.insert(newTasks);
   }
 
-  fetchTasks(targets) {
-    return db.task.find({
-      _id: {
-        $in: targets.map(t => t.task)
-      }
-    }, {
-      status: 0,
-      date_create: 0,
-      date_update: 0,
-      date_start: 0,
-      date_due: 0,
-    });
-  }
-
   fetchTargets(last_id) {
     let criteria = {
-      next: {
+      'loop.next': {
         $gte: moment().startOf('day').toDate(),
         $lt: moment().add(1, 'd').startOf('day').toDate(),
       }
@@ -121,26 +95,36 @@ export default class TaskLoop {
         }
       };
     }
-    return db.task.loop.find(criteria)
-    .limit(this.setting.rows_fetch_once);
+    return db.task.find(criteria)
+    .limit(this.settings.rows_fetch_once)
+    .sort({
+      _id: 1
+    });
   }
 
   static updateLoop(task, lastDate) {
     let taskNext = TaskLoop.getTaskNext(task, lastDate);
+    let update;
     if (!taskNext) {
-      return db.task.loop.remove({
-        task: task._id
-      });
-    }
-    return db.task.loop.update({
-      task: task._id
-    }, {
-      $set: {
-        next: taskNext
+      update = {
+        $unset: {
+          'loop.next': 1
+        }
+      };
+    } else {
+      update = {
+        $set: {
+          'loop.next': taskNext
+        }
+      };
+      if (task.loop.end && task.loop.end.type == 'times') {
+        let times_already = (task.loop.end.times_already || 0) + 1;
+        update['$set']['loop.end.times_already'] = times_already;
       }
-    }, {
-      upsert: true
-    });
+    }
+    return db.task.update({
+      _id: task._id
+    }, update);
   }
 
 }

@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import fs from 'fs';
 import config from 'config';
 import moment from 'moment';
+// import Excel from 'exceljs';
 import { Iconv } from 'iconv';
 
 import db from 'lib/database';
@@ -192,3 +193,22 @@ function generateApprovalFileName({type, query}, tplName) {
   let filename = `审批-${typeTxt[type]}-${tplName}-${pageTxt}-${datetime}导出.csv`;
   return filename;
 }
+
+// api.get('/attendance/:token', (req, res, next) => {
+//   db.attendance.export.findOne({
+//     token: req.params.token
+//   })
+//   .then(exportAttend => {
+//     if (!exportAttend) {
+//       throw new ApiError(404);
+//     }
+//     let {
+//       company,
+//       department_id,
+//     } = exportAttend;
+//     // let workbook = new Excel.Workbook();
+//     // let sheet = workbook.addWorksheet('My Sheet', {properties:{tabColor:{argb:'FFC0000'}}});
+//
+//   })
+//   .catch(next);
+// });

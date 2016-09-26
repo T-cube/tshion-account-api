@@ -25,23 +25,25 @@ import {
   diffObjectId,
   indexObjectId,
   getClientIp,
+  getGpsDistance,
+  generateToken,
 } from 'lib/utils';
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
-import wUtil from 'lib/wechat-util.js';
+import MarsGPS from 'lib/mars-gps.js';
 
 let api = express.Router();
 export default api;
 
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
-  checkUserLocation(req.company._id, req.user._id).then(isValid => {
-    let from_pc = !!req.query.from_pc && getClientIp(req);
+  let data = req.body;
+  sanitizeValidateObject(signSanitization, signValidation, data);
+  checkUserLocation(req.company._id, data.location).then(isValid => {
+    let from_pc = !!req.query.from_pc && !req.headers['user-agent'].toLowerCase().match(/(iphone|ipod|ipad|android)/) && getClientIp(req);
     if (!isValid && !from_pc) {
       throw new ApiError(400, 'invalid_user_location');
     }
-    let data = req.body;
-    sanitizeValidateObject(signSanitization, signValidation, data);
     let now = new Date();
     _.extend(data, {
       date: now
@@ -171,8 +173,23 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
   .then(record => {
     record.forEach(item => {
       item.user = _.find(req.company.members, member => member._id.equals(item.user));
+      item.user = item.user && _.pick(item.user, '_id', 'name');
     });
     res.json(record);
+  })
+  .catch(next);
+});
+
+api.get('/sign/department/:department_id/export', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
+  return generateToken(48)
+  .then(token => {
+    return db.attendance.export.insert({
+      token,
+      user: req.user._id,
+      company: req.company._id,
+      department_id: req.params.department_id,
+    })
+    .then(() => res.json({token}));
   })
   .catch(next);
 });
@@ -324,6 +341,9 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   let data = req.body;
   let company_id = req.company._id;
   sanitizeValidateObject(settingSanitization, settingValidation, data);
+  if (checkDupliDate(data.workday_special) || checkDupliDate(data.holiday)) {
+    throw new ApiError(400, 'validation_error');
+  }
   if (!_.find(req.company.members, i => i._id.equals(data.auditor))) {
     throw new ApiError(400,'member_not_exists');
   }
@@ -336,12 +356,24 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   })
   .then(setting => {
     res.json(setting);
-    if (data && !data.approval_template && data.auditor) {
+    if (!data.approval_template && data.auditor) {
       return createApprovalTemplate(req, data.auditor);
     }
   })
   .catch(next);
 });
+
+function checkDupliDate(list) {
+  let newList = _.clone(list);
+  let dupli = false;
+  list.reverse().forEach(item => {
+    newList.pop();
+    if (_.find(newList, i => i.date == item.date)) {
+      dupli = true;
+    }
+  });
+  return dupli;
+}
 
 function getApprovalTpl(company_id) {
   return db.attendance.setting.findOne({
@@ -397,7 +429,10 @@ function addActivity(req, action, data) {
   return req.model('activity').insert(info);
 }
 
-function checkUserLocation(companyId, userId) {
+function checkUserLocation(companyId, pos) {
+  if (!pos) {
+    return Promise.resolve(false);
+  }
   return db.attendance.setting.findOne({
     _id: companyId
   }, {
@@ -405,7 +440,15 @@ function checkUserLocation(companyId, userId) {
     location: 1,
     max_distance: 1,
   })
-  .then(s => wUtil.checkUserLocation(userId, s.location, s.max_distance));
+  .then(s => {
+    let accuracy = pos.accuracy;
+    pos = new MarsGPS().transform(pos);
+    let distance = getGpsDistance(pos, s.location);
+    if ((distance + accuracy * .5) <= s.max_distance) {
+      return true;
+    }
+    return false;
+  });
 }
 
 function createApprovalTemplate(req, auditor) {
