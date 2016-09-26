@@ -87,14 +87,11 @@ export default class Qiniu {
     if (!/^\d+$/.test(size)) {
       throw new Error('getThumnailUrl: invalid thumbnail size');
     }
-    let find = /\/thumbnail\/\d+/;
-    let replace = `/thumbnail/${size}`;
+    let find = /\?.+/;
+    let replace = `?imageView2/1/w/${size}/h/${size}`;
     if (find.test(url)) {
       url = url.replace(find, replace);
     } else {
-      if (!/\?/.test(url)) {
-        url += '?imageMogr2';
-      }
       url += replace;
     }
     if (this.conf.isPrivate) {
