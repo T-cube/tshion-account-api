@@ -339,7 +339,15 @@ INPUT
 INPUT
 ```javascript
 {
-  loop: <String[Enum:null,day,weekday,month,year]
+  loop: {
+    type: null|<String[Enum:day,weekday,month,year]>,
+    info: [Number...], // type == weekday then number: 0,6, type == month then number: 0-30(0为1号),
+    end: {
+      type: null|<String[Enum:date,times]>,
+      date: Date,     // type == date 有该字段
+      times: Number,  // type == times 有该字段
+    }
+  }
 }
 ```
 

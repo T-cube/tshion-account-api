@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import config from 'config';
 import { ObjectId } from 'mongodb';
+import qs from 'qs';
 
 import db from 'lib/database';
 import { time, timestamp, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
@@ -31,7 +32,7 @@ api.get('/user-avatar/:user_id', (req, res, next) => {
     if (!user) {
       throw new ApiError(404);
     }
-    res.redirect(user.avatar);
+    res.redirect(user.avatar + '?' + req._parsedUrl.search);
   })
   .catch(next);
 });

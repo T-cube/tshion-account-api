@@ -110,7 +110,8 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(sanitization, validation, data);
+  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title'];
+  sanitizeValidateObject(_.pick(sanitization, ...fields), _.pick(validation, ...fields), data);
   if (data.date_due < data.date_start) {
     throw new ApiError(400, 'invalid_date');
   }
@@ -119,6 +120,7 @@ api.post('/', (req, res, next) => {
     followers: [req.user._id],
     company_id: req.company._id,
     project_id: req.project._id,
+    status: C.TASK_STATUS.PROCESSING,
     date_create: new Date(),
     date_update: new Date(),
   });
@@ -128,7 +130,7 @@ api.post('/', (req, res, next) => {
     res.json(task);
     req.task = task;
     return Promise.all([
-      task.loop && TaskLoop.updateLoop(task),
+      data && TaskLoop.updateLoop(task),
       logTask(req, C.ACTIVITY_ACTION.CREATE)
     ]);
   })
@@ -201,7 +203,7 @@ api.put('/:task_id/checker', (req, res, next) => {
 }, updateField('checker'));
 
 api.put('/:task_id/loop', (req, res, next) => {
-  doUpdateField(req, 'loop')
+  return doUpdateField(req, 'loop')
   .then(data => {
     res.json(data);
     return TaskLoop.updateLoop({
@@ -210,6 +212,26 @@ api.put('/:task_id/loop', (req, res, next) => {
     });
   })
   .catch(next);
+  // let data = validField('loop', req.body['loop']);
+  // let nextLoop = TaskLoop.getTaskNext(data);
+  // nextLoop && (data.loop.next = nextLoop);
+  // if (data.loop && data.loop.end && data.loop.end.type == 'times') {
+  //   data.loop.end.times_already = 1;
+  // }
+  // return db.task.update({
+  //   _id: req.task._id
+  // }, {
+  //   $set: data,
+  // })
+  // .then(() => {
+  //   res.json(data);
+  //   logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: {
+  //     loop: {
+  //       type: data.loop.type
+  //     }
+  //   }});
+  // })
+  // .catch(next);
 });
 
 api.put('/:task_id/status', (req, res, next) => {
@@ -494,16 +516,9 @@ function doUpdateField(req, field) {
     $set: data,
   })
   .then(() => {
-    if (data.status) {
-      if (data.status == C.TASK_STATUS.COMPLETED) {
-        return logTask(req, C.ACTIVITY_ACTION.COMPLETE);
-      } else if (data.status == C.TASK_STATUS.PROCESSING) {
-        return logTask(req, C.ACTIVITY_ACTION.REOPEN);
-      }
-    }
-    return logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
-  })
-  .then(() => data);
+    logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
+    return data;
+  });
 }
 
 function validField(field, val) {
