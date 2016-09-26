@@ -103,7 +103,7 @@ export default class TaskLoop {
   }
 
   static updateLoop(task, lastDate, noUpdateTimes) {
-    if (task.loop.end && task.loop.end.times) {
+    if (task.loop.end && task.loop.end.times && noUpdateTimes) {
       task.loop.end.times += 1;
     }
     let taskNext = TaskLoop.getTaskNext(task, lastDate);
@@ -115,7 +115,9 @@ export default class TaskLoop {
         }
       };
       if (task.loop.end && task.loop.end.type == 'times') {
-        update['$set']['loop.end.times'] = 0;
+        update['$set'] = {
+          'loop.end.times': 0
+        };
       }
     } else {
       update = {
