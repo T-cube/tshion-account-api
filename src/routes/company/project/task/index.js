@@ -209,7 +209,7 @@ api.put('/:task_id/loop', (req, res, next) => {
     return TaskLoop.updateLoop({
       _id: req.task._id,
       loop: data.loop
-    });
+    }, null, true);
   })
   .catch(next);
   // let data = validField('loop', req.body['loop']);

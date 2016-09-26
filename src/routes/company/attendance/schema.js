@@ -8,7 +8,7 @@ export let settingSanitization = {
   auditor: { $objectId: 1 },
   workday: {
     type: 'array',
-    items: { type: 'int' },
+    items: { type: 'integer' },
   },
   location: {
     type: 'object',
@@ -169,45 +169,45 @@ export let auditCheckValidation = {
 };
 
 export let recordSanitization = {
-  yaer: { type: 'int' },
-  month: { type: 'int' },
+  yaer: { type: 'integer' },
+  month: { type: 'integer' },
   data: {
     type: 'object',
     properties: {
       member: { $objectId: 1 },
-      normal: { type: 'int' },
-      late: { type: 'int' },
-      leave_early: { type: 'int' },
-      absent: { type: 'int' },
-      patch: { type: 'int' },
-      business_trip: { type: 'int' },
-      paid_vacation: { type: 'int' },
-      nopaid_vacation: { type: 'int' },
-      extra_work: { type: 'int' },
-      workday_all: { type: 'int' },
-      workday_real: { type: 'int' },
+      normal: { type: 'integer' },
+      late: { type: 'integer' },
+      leave_early: { type: 'integer' },
+      absent: { type: 'integer' },
+      patch: { type: 'integer' },
+      business_trip: { type: 'integer' },
+      paid_vacation: { type: 'integer' },
+      nopaid_vacation: { type: 'integer' },
+      extra_work: { type: 'integer' },
+      workday_all: { type: 'integer' },
+      workday_real: { type: 'integer' },
     }
   }
 };
 
 export let recordValidation = {
-  yaer: { type: 'int' },
-  month: { type: 'int' },
+  yaer: { type: 'integer' },
+  month: { type: 'integer' },
   data: {
     type: 'object',
     properties: {
       member: { $objectId: 1 },
-      normal: { type: 'int' },
-      late: { type: 'int' },
-      leave_early: { type: 'int' },
-      absent: { type: 'int' },
-      patch: { type: 'int' },
-      business_trip: { type: 'int' },
-      paid_vacation: { type: 'int' },
-      nopaid_vacation: { type: 'int' },
-      extra_work: { type: 'int' },
-      workday_all: { type: 'int' },
-      workday_real: { type: 'int' },
+      normal: { type: 'integer' },
+      late: { type: 'integer' },
+      leave_early: { type: 'integer' },
+      absent: { type: 'integer' },
+      patch: { type: 'integer' },
+      business_trip: { type: 'integer' },
+      paid_vacation: { type: 'integer' },
+      nopaid_vacation: { type: 'integer' },
+      extra_work: { type: 'integer' },
+      workday_all: { type: 'integer' },
+      workday_real: { type: 'integer' },
     }
   }
 };
