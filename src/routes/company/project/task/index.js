@@ -22,7 +22,7 @@ let api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize, is_expired } = req.query;
+  let { keyword, sort, order, status, tag, assignee, creator, follower, page, pagesize, is_expired, is_loop, p_id } = req.query;
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? pagesize : config.get('view.taskListNum');
@@ -60,7 +60,6 @@ api.get('/', (req, res, next) => {
   if (tag && ObjectId.isValid(tag)) {
     condition['tags'] = ObjectId(tag);
   }
-  is_expired += '';
   if (is_expired === '1') {
     condition['status'] = C.TASK_STATUS.PROCESSING;
     condition['date_due'] = {
@@ -73,6 +72,18 @@ api.get('/', (req, res, next) => {
       }
     }, {
       status: C.TASK_STATUS.COMPLETED
+    }];
+  }
+  if (p_id) {
+    condition['p_id'] = ObjectId(p_id);
+  } else if (is_loop) {
+    condition['$and'] = [{
+      loop: {
+        $exists: true
+      },
+      'loop.type': {
+        $ne: null
+      }
     }];
   }
   let sortBy = { status: -1, date_update: -1 };

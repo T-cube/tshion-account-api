@@ -183,6 +183,8 @@ QUERY
 | creator | list | user list |
 | follower | list | user list |
 | is_expired | int | 0 / 1 |
+| is_loop | int | 0 / 1 |
+| p_id | ObjectId | |
 
 OUTPUT
 ```javascript
@@ -383,6 +385,8 @@ QUERY
 | status | list | comma separated list |
 | type | string | assignee / creator / follower |
 | is_expired | int | 0 / 1 |
+| is_loop | int | 0 / 1 |
+| p_id | ObjectId | |
 
 OUTPUT
 ```javascript

@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import fs from 'fs';
 import config from 'config';
 import moment from 'moment';
-// import Excel from 'exceljs';
+import Excel from 'exceljs';
 import { Iconv } from 'iconv';
 
 import db from 'lib/database';
@@ -211,4 +211,59 @@ function generateApprovalFileName({type, query}, tplName) {
 //
 //   })
 //   .catch(next);
+// });
+//
+// let workbook = new Excel.Workbook();
+// let sheet = workbook.addWorksheet('My Sheet', {properties:{tabColor:{argb:'FFC0000'}}});
+// sheet.columns = [
+//     { header: 'Id', key: 'id', width: 10 },
+//     { header: 'Name', key: 'name', width: 32 },
+//     { header: 'D.O.B.', key: 'dob', width: 10 }
+// ];
+// sheet.addRow({id: 1, name: 'John Doe', dob: new Date(1970,1,1)});
+// sheet.addRow([3, 'Sam', new Date()]);
+//
+// var dobCol = sheet.getColumn(3);
+//
+// // set column properties
+//
+// // Note: will overwrite cell value C1
+// dobCol.header = 'Date of Birth';
+//
+// // Note: this will overwrite cell values C1:C2
+// dobCol.header = ['Date of Birth', 'A.K.A. D.O.B.'];
+//
+// // from this point on, this column will be indexed by 'dob' and not 'DOB'
+// dobCol.key = 'dob';
+//
+// dobCol.width = 15;
+// sheet.mergeCells('A1:B2');
+//
+// let sheet2 = workbook.addWorksheet('My Sheet Too', {properties:{tabColor:{argb:'FFC0000'}}});
+// sheet2.columns = [
+//     { header: 'Id', key: 'id', width: 10, style: { font: { name: 'Arial Black' } } },
+//     { header: 'Name', key: 'name', width: 32 },
+//     { header: 'D.O.B.', key: 'dob', width: 10, outlineLevel: 1 }
+// ];
+// sheet2.addRow({id: 1, name: 'John Doe', dob: new Date(1970,1,1)});
+// sheet2.addRow([3, 'Sam', new Date()]);
+// var row = sheet2.lastRow;
+// row.height = 42.5;
+// sheet2.getCell('A1').value = {
+//   'richText': [
+//      {'font': {'size': 12,'color': {'theme': 0},'name': 'Calibri','family': 2,'scheme': 'minor'},'text': 'This is '},
+//      {'font': {'italic': true,'size': 12,'color': {'theme': 0},'name': 'Calibri','scheme': 'minor'},'text': 'a'},
+//      {'font': {'size': 12,'color': {'theme': 1},'name': 'Calibri','family': 2,'scheme': 'minor'},'text': ' '},
+//      {'font': {'size': 12,'color': {'argb': 'FFFF6600'},'name': 'Calibri','scheme': 'minor'},'text': 'colorful'},
+//      {'font': {'size': 12,'color': {'theme': 1},'name': 'Calibri','family': 2,'scheme': 'minor'},'text': ' text '},
+//      {'font': {'size': 12,'color': {'argb': 'FFCCFFCC'},'name': 'Calibri','scheme': 'minor'},'text': 'with'},
+//      {'font': {'size': 12,'color': {'theme': 1},'name': 'Calibri','family': 2,'scheme': 'minor'},'text': ' in-cell '},
+//      {'font': {'bold': true,'size': 12,'color': {'theme': 1},'name': 'Calibri','family': 2,'scheme': 'minor'},'text': 'format'}
+//   ]
+// };
+//
+// workbook.xlsx.writeFile('./excel.xlsx')
+// .then(function() {
+//   // done
+//   console.log('dump xlsx file successful');
 // });

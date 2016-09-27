@@ -5,7 +5,7 @@ import config from 'config';
 import db from 'lib/database';
 import { oauthCheck } from 'lib/middleware';
 import { fetchUserInfo, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
-import { ENUMS } from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
 
 let api = express.Router();
 export default api;
@@ -13,7 +13,7 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, type, page, pagesize} = req.query;
+  let { keyword, sort, order, status, type, page, pagesize, is_expired, p_id, is_loop } = req.query;
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
@@ -46,6 +46,32 @@ api.get('/', (req, res, next) => {
     condition['title'] = {
       $regex: RegExp(keyword, 'i')
     };
+  }
+  if (is_expired === '1') {
+    condition['status'] = C.TASK_STATUS.PROCESSING;
+    condition['date_due'] = {
+      $lt: new Date()
+    };
+  } else if (is_expired === '0') {
+    condition['$or'] = [{
+      date_due: {
+        $gte: new Date()
+      }
+    }, {
+      status: C.TASK_STATUS.COMPLETED
+    }];
+  }
+  if (p_id) {
+    condition['p_id'] = ObjectId(p_id);
+  } else if (is_loop) {
+    condition['$and'] = [{
+      loop: {
+        $exists: true
+      },
+      'loop.type': {
+        $ne: null
+      }
+    }];
   }
   let sortBy = { status: -1, date_update: -1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {
