@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import config from 'config';
+import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import { oauthCheck } from 'lib/middleware';
