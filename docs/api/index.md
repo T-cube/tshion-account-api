@@ -51,11 +51,14 @@ HTTP/1.1 400 Bad Request
 Content-Type: application/json
 
 {
-  "errno":{errno},
-  "errmsg":"{errmsg}",
-  "data":{result}
+  "code": {http_status_code},
+  "error": "{error}",
+  "error_description":{error_description}
 }
 ```
+
+`error` 为系统约定的错误常量，通常与`code`有关
+`error_description` 可为字符串描述（可读的）或数组、对象
 
 ## API List
 
