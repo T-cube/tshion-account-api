@@ -442,9 +442,9 @@ function checkUserLocation(companyId, pos) {
   })
   .then(s => {
     let accuracy = pos.accuracy;
-    pos = new MarsGPS().transform(pos);
+    // pos = new MarsGPS().transform(pos);
     let distance = getGpsDistance(pos, s.location);
-    if ((distance + accuracy * 0.2) <= s.max_distance) {
+    if ((distance + accuracy * 0.1) <= s.max_distance) {
       return true;
     }
     return false;
