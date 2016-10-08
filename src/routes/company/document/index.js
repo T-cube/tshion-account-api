@@ -24,8 +24,8 @@ api.use((req, res, next) => {
   let posKey = req.project ? 'project_id' : 'company_id';
   let posVal = req.project ? req.project._id : req.company._id;
   req.document = {
-    posKey: posKey,
-    posVal: posVal
+    posKey,
+    posVal
   };
   next();
 });
@@ -120,21 +120,22 @@ api.post('/dir', (req, res, next) => {
     return db.document.dir.insert(data)
     .then(doc => {
       res.json(doc);
-      return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+      addActivity(req, C.ACTIVITY_ACTION.CREATE, {
         document_dir: doc._id,
         target_type: C.OBJECT_TYPE.DOCUMENT_DIR,
-      })
-      .then(() => {
-        if (data.parent_dir) {
-          return db.document.dir.update({
-            _id: data.parent_dir
-          }, {
-            $push: {
-              dirs: doc._id
-            }
-          });
+        field: {
+          name: data.name
         }
       });
+      if (data.parent_dir) {
+        return db.document.dir.update({
+          _id: data.parent_dir
+        }, {
+          $push: {
+            dirs: doc._id
+          }
+        });
+      }
     });
   })
   .catch(next);
@@ -166,12 +167,17 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
         $set: data
       });
     })
-    .then(doc => res.json(doc));
+    .then(doc => {
+      res.json(doc);
+      addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+        document_dir: dir_id,
+        target_type: C.OBJECT_TYPE.DOCUMENT_DIR,
+        field: {
+          name: data.name
+        }
+      });
+    });
   })
-  // .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
-  //   document_dir: doc._id,
-  //   target_type: C.OBJECT_TYPE.DOCUMENT_DIR)
-  // })
   .catch(next);
 });
 
@@ -179,7 +185,14 @@ api.delete('/', (req, res, next) => {
   let data = req.body;
   validate('del', data);
   Promise.all([deleteDirs(req, data.dirs), deleteFiles(req, data.files, true)])
-  .then(() => res.json({}))
+  .then(document => {
+    res.json({});
+    addActivity(req, C.ACTIVITY_ACTION.DELETE, {
+      document_dirs: document[0],
+      document_files: document[1],
+      target_type: C.OBJECT_TYPE.DOCUMENT
+    });
+  })
   .catch(next);
 });
 
@@ -249,7 +262,20 @@ api.put('/file/:file_id', (req, res, next) => {
         });
       });
     })
-    .then(doc => res.json(doc));
+    .then(doc => {
+      res.json(doc);
+      let field = {
+        name: data.name
+      };
+      if (fileInfo.name != data.name) {
+        field['old_name'] = fileInfo.name;
+      }
+      addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+        document_file: file_id,
+        target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
+        field
+      });
+    });
   })
   .catch(next);
 });
@@ -290,10 +316,16 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   })
   .then(path => {
     data.dir_path = path;
-    data = [data];
-    return createFile(req, data, dir_id);
+    return createFile(req, [data], dir_id);
   })
   .then(doc => {
+    addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+      document_file: doc[0]._id,
+      target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
+      field: {
+        name: doc[0].name
+      }
+    });
     return fetchCompanyMemberInfo(req.company, doc, 'updated_by');
   })
   .then(doc => res.json(doc))
@@ -359,6 +391,10 @@ saveCdn('cdn-file'),
   })
   .then(() => createFile(req, data, dir_id))
   .then(files => {
+    addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
+      document_files: files.map(file => _.pick(file, '_id', 'name')),
+      target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
+    });
     return Promise.map(files, file => attachFileUrls(req, file, thumb_size))
     .then(() => {
       return fetchCompanyMemberInfo(req.company, files, 'updated_by');
@@ -439,7 +475,15 @@ api.put('/move', (req, res, next) => {
     });
     return Promise.all([...updateDirs, ...updateFiles]);
   })
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    addActivity(req, C.ACTIVITY_ACTION.MOVE, {
+      document_files: files,
+      document_dirs: dirs,
+      field: {target_dir},
+      target_type: C.OBJECT_TYPE.DOCUMENT,
+    });
+  })
   .catch(next);
 });
 
@@ -565,25 +609,15 @@ function createFile(req, data, dir_id) {
       .then(() => {
         return db.document.file.insert(data)
         .then(doc => {
-          return Promise.all([
-            db.document.dir.update({
-              _id: dir_id,
-            }, {
-              $push: {
-                files: {
-                  $each: doc.map(item => item._id)
-                }
+          return db.document.dir.update({
+            _id: dir_id,
+          }, {
+            $push: {
+              files: {
+                $each: doc.map(item => item._id)
               }
-            }),
-            // db.document.dir.update({
-            //   [req.document.posKey]: req.document.posVal,
-            //   parent_dir: null
-            // }, {
-            //   $inc: {
-            //     total_size: total_size
-            //   }
-            // })
-          ])
+            }
+          })
           .then(() => companyLevel.updateUpload({
             size: total_size,
             target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
@@ -600,6 +634,7 @@ function deleteDirs(req, dirs) {
   if (!dirs || !dirs.length) {
     return null;
   }
+  let dirsDeleted = [];
   return Promise.all(dirs.map(dir_id => {
     return db.document.dir.findOne({
       _id: dir_id,
@@ -607,8 +642,9 @@ function deleteDirs(req, dirs) {
     })
     .then(doc => {
       if (!doc || doc.parent_dir == null) {
-        throw new ApiError(400, 'folder_not_exists');
+        return null;
       }
+      dirsDeleted.push(_.pick(doc, '_id', 'name'));
       // if ((doc.dirs && doc.dirs.length) || (doc.files && doc.files.length)) {
       //   throw new ApiError(400, 'folder_not_empty');
       // }
@@ -640,7 +676,8 @@ function deleteDirs(req, dirs) {
         });
       });
     });
-  }));
+  }))
+  .then(() => dirsDeleted);
 }
 
 function deleteFiles(req, files, dirCheckAndPull) {
@@ -648,10 +685,12 @@ function deleteFiles(req, files, dirCheckAndPull) {
     return null;
   }
   let incSize = 0;
+  let filesDeleted = [];
   return Promise.all(files.map(file_id => {
     return db.document.file.findOne({
       _id: file_id
     }, {
+      name: 1,
       size: 1,
       dir_id: 1,
       path: 1,
@@ -659,8 +698,9 @@ function deleteFiles(req, files, dirCheckAndPull) {
     })
     .then(fileInfo => {
       if (!fileInfo) {
-        throw new ApiError(400, 'file_not_exists');
+        return null;
       }
+      filesDeleted.push(_.pick(fileInfo, '_id', 'name'));
       let removeFileFromDb;
       if (dirCheckAndPull) {
         removeFileFromDb = checkDirExist(req, fileInfo.dir_id).then(() => {
@@ -696,7 +736,8 @@ function deleteFiles(req, files, dirCheckAndPull) {
       target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
       target_id: req.document.posVal,
     });
-  });
+  })
+  .then(() => filesDeleted);
   // .then(() => {
   //   return db.document.dir.update({
   //     [req.document.posKey]: req.document.posVal,
@@ -789,10 +830,13 @@ function ensurePathLengthLessThan(dirs, length) {
 function addActivity(req, action, data) {
   let info = {
     action: action,
-    company: req.company._id,
     creator: req.user._id,
   };
-  req.params.project_id && (info.project = ObjectId(req.params.project_id));
+  if (req.project) {
+    info.project = req.project._id;
+  } else {
+    info.company = req.company._id;
+  }
   _.extend(info, data);
   return req.model('activity').insert(info);
 }

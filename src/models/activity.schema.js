@@ -13,6 +13,8 @@ export let validation = {
   approval_template: { $objectId: 1, optional: true },
   document_dir: { $objectId: 1, optional: true },
   document_file: { $objectId: 1, optional: true },
+  document_dirs: { type: 'array', optional: true },
+  document_files: { type: 'array', optional: true },
   announcement: { $objectId: 1, optional: true },
   schedule: { $objectId: 1, optional: true },
   field: { type: 'object', optional: true },

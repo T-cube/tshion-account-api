@@ -141,7 +141,7 @@ api.post('/', (req, res, next) => {
     res.json(task);
     req.task = task;
     return Promise.all([
-      data && TaskLoop.updateLoop(task),
+      data.loop && TaskLoop.updateLoop(task),
       logTask(req, C.ACTIVITY_ACTION.CREATE)
     ]);
   })
@@ -189,9 +189,10 @@ api.delete('/:task_id', (req, res, next) => {
   })
   .then(() => {
     res.json({});
-    return logTask(req, C.ACTIVITY_ACTION.DELETE, {
-      task_title: req.task.title
-    });
+    let field = {
+      title: req.task.title
+    };
+    return logTask(req, C.ACTIVITY_ACTION.DELETE, {field});
   })
   .catch(next);
 });
@@ -523,17 +524,22 @@ function logTask(req, action, data) {
 
 function doUpdateField(req, field) {
   let data = validField(field, req.body[field]);
+  if (data[field] == req.task[field]) {
+    return Promise.resolve(data);
+  }
   return db.task.update({
     _id: req.task._id
   }, {
     $set: data,
   })
   .then(() => {
-    let ext = {field: data};
+    let ext = _.clone(data);
     if (field == 'title') {
       ext.old_title = req.task.title;
     }
-    logTask(req, C.ACTIVITY_ACTION.UPDATE, ext);
+    logTask(req, C.ACTIVITY_ACTION.UPDATE, {
+      field: ext
+    });
     return data;
   });
 }

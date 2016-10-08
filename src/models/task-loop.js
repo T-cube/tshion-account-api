@@ -46,6 +46,9 @@ export default class TaskLoop {
 
   static getTaskNext(task, lastDate) {
     let { loop } = task;
+    if (!loop) {
+      return null;
+    }
     if (loop.end && loop.end.type == 'times') {
       if (1 >= loop.end.times) {
         return null;

@@ -33,6 +33,7 @@ let constants = {
     // 文件操作
     RENAME: 'rename',         // 重命名
     UPLOAD: 'upload',         // 上传
+    MOVE: 'move',             // 移动
 
     SYSTEM_SET: 'system.set', // 提醒
     SCHEDULE_REMIND: 'schedule.remind',      // 日程提醒
@@ -131,6 +132,7 @@ let constants = {
     COMPANY_MEMBER: 'company.member',
     COMPANY_DIR: 'company.dir',
     COMPANY_FILE: 'company.file',
+    DOCUMENT: 'document',
     DOCUMENT_DIR: 'document.dir',
     DOCUMENT_FILE: 'dir.file',
     PROJECT: 'project',
