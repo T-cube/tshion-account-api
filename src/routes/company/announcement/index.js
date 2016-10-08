@@ -56,7 +56,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
           company: req.company._id,
         });
       } else {
-        addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+        addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE_DRAFT, {
           announcement: doc._id,
         });
       }

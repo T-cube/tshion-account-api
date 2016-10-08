@@ -10,10 +10,14 @@ let constants = {
     ADD: 'add',               // 添加
     REMOVE: 'remove',         // 移除
     CREATE: 'create',         // 创建
+    CREATE_DRAFT: 'create.draft',         // 创建草稿
     UPDATE: 'update',         // 更新（字段）
     DELETE: 'delete',         // 删除
     QUIT: 'quit',             // 退出
-    REPLY: 'reply',             // 回复
+    REPLY: 'reply',           // 回复
+    // 成员
+    JOIN: 'join',             // 加入
+    EXIT: 'exit',             // 退出
     // 管理操作
     TRANSFER: 'tansfer',      // 转让
     // 邀请、审批
@@ -24,6 +28,8 @@ let constants = {
     SUBMIT: 'submit',         // 提交
     COPY: 'copy',             // 抄送
     CANCEL: 'cancel',         // 取消
+    ENABLE: 'enable',         // 取消
+    DISABLE: 'disable',         // 取消
     // 任务
     COMPLETE: 'complete',     // 关注
     REOPEN: 'reopen',         // 取消关注

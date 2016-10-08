@@ -309,7 +309,18 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
       })
     ]);
   })
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    req.model('activity').insert({
+      creator: req.user._id,
+      company: company._id,
+      action: C.ACTIVITY_ACTION.TRANSFER,
+      target_type: C.OBJECT_TYPE.COMPANY,
+      field: {
+        to: user_id
+      }
+    });
+  })
   .catch(next);
 });
 

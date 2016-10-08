@@ -170,10 +170,12 @@ api.put('/:item_id/status', (req, res, next) => {
         let { approver, copyto } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
         return Promise.all([
           addActivity(req, C.ACTIVITY_ACTION.REVOKE, {
-            approval_item: item_id
+            approval_item: item_id,
+            approval_template: item.template,
           }),
           addNotification(req, C.ACTIVITY_ACTION.REVOKE, {
             approval_item: item_id,
+            approval_template: item.template,
             to: approver.concat(copyto)
           })
         ]);
@@ -186,6 +188,7 @@ api.put('/:item_id/status', (req, res, next) => {
 api.put('/:item_id/steps', (req, res, next) => {
   let item_id = ObjectId(req.params.item_id);
   let data = req.body;
+  let approval_template;
   sanitizeValidateObject(stepSanitization, stepValidation, data);
   db.approval.item.findOne({
     _id: item_id,
@@ -195,6 +198,7 @@ api.put('/:item_id/steps', (req, res, next) => {
     if (!item) {
       throw new ApiError(400, 'cannot_modify');
     }
+    approval_template = item.template;
     let { step, steps } = item;
     if (!step.equals(data._id)) {
       throw new ApiError(400, 'forbidden');
@@ -232,8 +236,9 @@ api.put('/:item_id/steps', (req, res, next) => {
             ? C.ACTIVITY_ACTION.REJECT
             : C.ACTIVITY_ACTION.APPROVE;
           addNotification(req, activityAction, {
-            'approval_item': item_id,
-            to: item.from
+            approval_item: item_id,
+            to: item.from,
+            approval_template,
           });
           return doAfterApproval(item, data.status);
         }
@@ -246,7 +251,8 @@ api.put('/:item_id/steps', (req, res, next) => {
       ? C.ACTIVITY_ACTION.REJECT
       : C.ACTIVITY_ACTION.APPROVE;
     return addActivity(req, activityAction, {
-      approval_item: item_id
+      approval_item: item_id,
+      approval_template,
     });
   })
   .catch(next);

@@ -226,7 +226,15 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
     }),
     save(req),
   ])
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    addActivity(req, C.ACTIVITY_ACTION.REMOVE, {
+      field: {
+        _id: member_id,
+        name: thisMember.name
+      }
+    });
+  })
   .catch(next);
 });
 
@@ -257,7 +265,14 @@ api.post('/exit', (req, res, next) => {
       upsert: true
     }),
   ])
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    addActivity(req, C.ACTIVITY_ACTION.EXIT, {
+      field: {
+        name: thisMember.name
+      }
+    });
+  })
   .catch(next);
 });
 
