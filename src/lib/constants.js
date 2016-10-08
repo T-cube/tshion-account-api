@@ -12,6 +12,8 @@ let constants = {
     CREATE: 'create',         // 创建
     UPDATE: 'update',         // 更新（字段）
     DELETE: 'delete',         // 删除
+    QUIT: 'quit',             // 退出
+    REPLY: 'reply',             // 回复
     // 管理操作
     TRANSFER: 'tansfer',      // 转让
     // 邀请、审批
@@ -134,8 +136,10 @@ let constants = {
     PROJECT: 'project',
     PROJECT_TAG: 'project.tag',
     PROJECT_MEMBER: 'project.member',
+    PROJECT_ADMIN: 'project.admin',
     PROJECT_DIR: 'project.dir',
     PROJECT_FILE: 'project.file',
+    PROJECT_DISCUSSION: 'project.discussion',
     REMINDING: 'reminding',
     REQUEST: 'request',
     SCHEDULE: 'schedule',

@@ -189,7 +189,9 @@ api.delete('/:task_id', (req, res, next) => {
   })
   .then(() => {
     res.json({});
-    return logTask(req, C.ACTIVITY_ACTION.DELETE);
+    return logTask(req, C.ACTIVITY_ACTION.DELETE, {
+      task_title: req.task.title
+    });
   })
   .catch(next);
 });
@@ -527,7 +529,11 @@ function doUpdateField(req, field) {
     $set: data,
   })
   .then(() => {
-    logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
+    let ext = {field: data};
+    if (field == 'title') {
+      ext.old_title = req.task.title;
+    }
+    logTask(req, C.ACTIVITY_ACTION.UPDATE, ext);
     return data;
   });
 }

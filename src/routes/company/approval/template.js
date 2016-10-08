@@ -310,7 +310,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
     }
     return Promise.all([
       db.approval.template.master.update({
-        _id: template.master_id
+        _id: template.value.master_id
       }, {
         $set: {
           status: C.APPROVAL_STATUS.DELETED
