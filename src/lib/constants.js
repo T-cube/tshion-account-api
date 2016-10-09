@@ -16,6 +16,7 @@ let constants = {
     QUIT: 'quit',             // 退出
     REPLY: 'reply',           // 回复
     RENAME: 'rename',         // 重命名
+    COMMENT: 'comment',       // 评论
     // 成员
     JOIN: 'join',             // 加入
     EXIT: 'exit',             // 退出

@@ -252,7 +252,7 @@ api.post('/:project_id/member', (req, res, next) => {
     res.json({});
     logProject(req, C.ACTIVITY_ACTION.ADD, {
       target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
-      user: members,
+      project_member: members,
     });
     let notification = {
       action: C.ACTIVITY_ACTION.ADD,
@@ -301,7 +301,7 @@ api.put('/:project_id/member/:member_id/type', (req, res, next) => {
       action: activityAction,
     });
     logProject(req, activityAction, {
-      user: member_id,
+      project_member: member_id,
     });
     req.model('notification').send(notification);
   })
@@ -335,10 +335,11 @@ api.post('/:project_id/transfer', authCheck(), (req, res, next) => {
   .then(() => {
     res.json({});
     logProject(req, C.ACTIVITY_ACTION.TRANSFER, {
-      user: member_id
+      project_member: member_id
     });
     let notification = {
       action: C.ACTIVITY_ACTION.TRANSFER,
+      target_type: C.OBJECT_TYPE.PROJECT,
       project: project_id,
       from: req.user._id,
       to: member_id
@@ -391,7 +392,7 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
     if (self) {
       logProject(req, C.ACTIVITY_ACTION.QUIT, {
         target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
-        user: member_id
+        project_member: member_id
       });
       // let notification = {
       //   action: C.ACTIVITY_ACTION.QUIT,
@@ -404,7 +405,7 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
     } else {
       logProject(req, C.ACTIVITY_ACTION.REMOVE, {
         target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
-        user: member_id
+        project_member: member_id
       });
       let notification = {
         action: C.ACTIVITY_ACTION.REMOVE,

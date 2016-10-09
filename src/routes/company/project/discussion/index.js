@@ -78,7 +78,8 @@ api.post('/', (req, res, next) => {
     doc.creator = _.pick(req.user, '_id', 'name', 'avatar');
     res.json(doc);
     req.project_discussion = {
-      _id: doc._id
+      _id: doc._id,
+      title: doc.title
     };
     logProject(req, C.ACTIVITY_ACTION.CREATE);
   })
@@ -95,21 +96,30 @@ api.put('/:discussion_id', (req, res, next) => {
     data.content = content;
   })
   .then(() => {
-    return db.discussion.update({
-      _id: discussion_id,
-      creator: req.user._id
-    }, {
-      $set: data
+    return db.discussion.findAndModify({
+      query: {
+        _id: discussion_id,
+        creator: req.user._id
+      },
+      update: {
+        $set: data
+      }
     });
   })
   .then(doc => {
-    if (!doc.ok) {
+    let discussion = doc.value;
+    if (!discussion) {
       throw new ApiError(400, 'update_failed');
     }
     res.json({});
+    req.project_discussion = discussion.followers;
     req.project_discussion = {
-      _id: discussion_id
+      _id: discussion_id,
+      title: discussion.title
     };
+    if (doc.value.title != data.title) {
+      req.project_discussion.new_title = data.title;
+    }
     logProject(req, C.ACTIVITY_ACTION.UPDATE);
   })
   .catch(next);
@@ -142,7 +152,8 @@ api.delete('/:discussion_id', (req, res, next) => {
   db.discussion.findOne({
     _id: discussion_id
   }, {
-    title: 1
+    title: 1,
+    followers: 1,
   })
   .then(discussion => {
     return db.discussion.remove({
@@ -152,12 +163,12 @@ api.delete('/:discussion_id', (req, res, next) => {
     .then(doc => {
       res.json({});
       if (doc.ok) {
+        req.project_discussion_followers = discussion.followers;
         req.project_discussion = {
-          _id: discussion_id
+          _id: discussion_id,
+          title: discussion.title
         };
-        logProject(req, C.ACTIVITY_ACTION.UPDATE, {
-          discussion_title: discussion.title
-        });
+        logProject(req, C.ACTIVITY_ACTION.DELETE);
       }
     });
   })
@@ -210,7 +221,8 @@ api.post('/:discussion_id/comment', (req, res, next) => {
   db.discussion.findOne({
     _id: discussion_id
   }, {
-    followers: 1
+    name: 1,
+    followers: 1,
   })
   .then(discussion => {
     if (!discussion) {
@@ -235,9 +247,9 @@ api.post('/:discussion_id/comment', (req, res, next) => {
         action: C.ACTIVITY_ACTION.REPLY,
         target_type: C.OBJECT_TYPE.PROJECT_DISCUSSION,
         project: project_id,
-        project_discussion: discussion_id,
+        project_discussion: _.pick(discussion, '_id', 'name'),
         from: req.user._id,
-        to: discussion.followers
+        to: discussion.followers.filter(follower => !follower.equals(req.user._id))
       };
       req.model('notification').send(notification);
     });
@@ -298,9 +310,18 @@ function logProject(req, action, data) {
     action: action,
     target_type: C.OBJECT_TYPE.PROJECT_DISCUSSION,
     project: req.project._id,
-    creator: req.user._id,
-    project_discussion: req.project_discussion._id,
+    project_discussion: req.project_discussion,
   };
-  let activity = _.extend(info, data);
+  info = _.extend(info, data);
+  let activity = _.extend({}, info, {
+    creator: req.user._id,
+  });
   req.model('activity').insert(activity);
+  if (req.project_discussion_followers) {
+    let notification = _.extend({}, info, {
+      from: req.user._id,
+      to: req.project_discussion_followers.filter(follower => !follower.equals(req.user._id))
+    });
+    req.model('notification').send(notification);
+  }
 }

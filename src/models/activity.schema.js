@@ -6,7 +6,9 @@ export let validation = {
   target_type: { $enum: ENUMS.OBJECT_TYPE },
   company: { $objectId: 1, optional: true },
   project: { $objectId: 1, optional: true },
-  task: { $objectId: 1, optional: true },
+  project_discussion: { type: 'object', optional: true },
+  project_member: { optional: true },
+  task: { type: 'object', optional: true },
   user: { $objectId: 1, optional: true },
   tag: { type: 'object', optional: true },
   approval_item: { $objectId: 1, optional: true },
@@ -17,6 +19,7 @@ export let validation = {
   announcement: { $objectId: 1, optional: true },
   schedule: { $objectId: 1, optional: true },
   field: { type: 'object', optional: true },
+  update_fields: { type: 'array', optional: true },
   date_create: { type: 'date' },
   sign_record: { type: 'object', optional: true },
 };

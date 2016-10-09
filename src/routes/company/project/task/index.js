@@ -189,10 +189,8 @@ api.delete('/:task_id', (req, res, next) => {
   })
   .then(() => {
     res.json({});
-    let field = {
-      title: req.task.title
-    };
-    return logTask(req, C.ACTIVITY_ACTION.DELETE, {field});
+    let task = _.pick(req.task, '_id', 'title');
+    logTask(req, C.ACTIVITY_ACTION.DELETE, {task});
   })
   .catch(next);
 });
@@ -508,7 +506,7 @@ function logTask(req, action, data) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.TASK,
-    task: req.task._id,
+    task: _.pick(req.task, '_id', 'title'),
     project: req.project._id,
   };
   let activity = _.extend({
@@ -533,13 +531,17 @@ function doUpdateField(req, field) {
     $set: data,
   })
   .then(() => {
-    let ext = _.clone(data);
+    let action = C.ACTIVITY_ACTION.UPDATE;
+    let ext = {};
     if (field == 'title') {
-      ext.old_title = req.task.title;
+      ext.task = _.extend(_.pick(req.task, '_id', 'title'), {
+        new_title: data.title
+      });
+      action = C.ACTIVITY_ACTION.RENAME;
+    } else {
+      ext.update_fields = [field];
     }
-    logTask(req, C.ACTIVITY_ACTION.UPDATE, {
-      field: ext
-    });
+    logTask(req, action, ext);
     return data;
   });
 }
