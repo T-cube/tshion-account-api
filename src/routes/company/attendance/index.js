@@ -31,7 +31,6 @@ import {
 import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
-import MarsGPS from 'lib/mars-gps.js';
 
 let api = express.Router();
 export default api;
@@ -123,7 +122,10 @@ api.get('/sign/date', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), ensureFetchSetting, (req, res, next) => {
+api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), fetchSetting, (req, res, next) => {
+  if (!req.attendanceSetting) {
+    return res.json([]);
+  }
   let department_id = ObjectId(req.params.department_id);
   let tree = new Structure(req.company.structure);
   let members = tree.getMemberAll(department_id).map(member => member._id);
@@ -391,14 +393,11 @@ function getApprovalTpl(company_id) {
   });
 }
 
-function ensureFetchSetting(req, res, next) {
+function fetchSetting(req, res, next) {
   db.attendance.setting.findOne({
     _id: req.company._id,
   })
   .then(doc => {
-    if (!doc) {
-      throw new ApiError(400, 'attendance_is_closed');
-    }
     req.attendanceSetting = doc;
     next();
   })

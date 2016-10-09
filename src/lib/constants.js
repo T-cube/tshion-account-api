@@ -15,6 +15,7 @@ let constants = {
     DELETE: 'delete',         // 删除
     QUIT: 'quit',             // 退出
     REPLY: 'reply',           // 回复
+    RENAME: 'rename',         // 重命名
     // 成员
     JOIN: 'join',             // 加入
     EXIT: 'exit',             // 退出
@@ -37,7 +38,6 @@ let constants = {
     FOLLOW: 'follow',         // 关注
     UNFOLLOW: 'unfollow',     // 取消关注
     // 文件操作
-    RENAME: 'rename',         // 重命名
     UPLOAD: 'upload',         // 上传
     MOVE: 'move',             // 移动
 
@@ -140,7 +140,7 @@ let constants = {
     COMPANY_FILE: 'company.file',
     DOCUMENT: 'document',
     DOCUMENT_DIR: 'document.dir',
-    DOCUMENT_FILE: 'dir.file',
+    DOCUMENT_FILE: 'document.file',
     PROJECT: 'project',
     PROJECT_TAG: 'project.tag',
     PROJECT_MEMBER: 'project.member',
