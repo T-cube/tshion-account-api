@@ -112,11 +112,11 @@ api.put('/:discussion_id', (req, res, next) => {
       throw new ApiError(400, 'update_failed');
     }
     res.json({});
-    req.project_discussion = discussion.followers;
     req.project_discussion = {
       _id: discussion_id,
       title: discussion.title
     };
+    req.project_discussion_followers = discussion.followers;
     if (doc.value.title != data.title) {
       req.project_discussion.new_title = data.title;
     }
@@ -306,6 +306,11 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
 });
 
 function logProject(req, action, data) {
+  let exts = {
+    company_id: req.company._id,
+    project_id: req.project._id,
+  };
+  _.extend(req.project_discussion, exts);
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.PROJECT_DISCUSSION,

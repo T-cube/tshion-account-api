@@ -76,7 +76,8 @@ api.get('/', (req, res, next) => {
   }
   if (p_id) {
     condition['p_id'] = ObjectId(p_id);
-  } else if (is_loop) {
+  }
+  if (is_loop) {
     condition['$and'] = [{
       loop: {
         $exists: true

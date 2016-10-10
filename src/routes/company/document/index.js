@@ -272,10 +272,7 @@ api.put('/file/:file_id', (req, res, next) => {
     })
     .then(doc => {
       res.json(doc);
-      let document_file = {
-        _id: file_id,
-        name: fileInfo.name
-      };
+      let document_file = _.pick(fileInfo, '_id', 'name', 'dir_id');
       if (fileInfo.name != data.name) {
         document_file['new_name'] = data.name;
       }
@@ -329,7 +326,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   })
   .then(doc => {
     addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-      document_file: _.pick(doc, '_id', 'name'),
+      document_file: _.pick(doc, '_id', 'name', 'dir_id'),
       target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
     });
     return fetchCompanyMemberInfo(req.company, doc, 'updated_by');
@@ -398,7 +395,7 @@ saveCdn('cdn-file'),
   .then(() => createFile(req, data, dir_id))
   .then(files => {
     addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
-      document_file: files.map(file => _.pick(file, '_id', 'name')),
+      document_file: files.map(file => _.pick(file, '_id', 'name', 'dir_id')),
       target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
     });
     return Promise.map(files, file => attachFileUrls(req, file, thumb_size))
@@ -499,7 +496,7 @@ api.put('/move', (req, res, next) => {
     let activityExt = {
       target_dir: _.pick(moveInfo.target_dir, '_id', 'name'),
       document_dir: moveInfo.dirs.map(dir => _.pick(dir, '_id', 'name')),
-      document_file: moveInfo.files.map(file => _.pick(file, '_id', 'name')),
+      document_file: moveInfo.files.map(file => _.pick(file, '_id', 'name', 'dir_id')),
       target_type,
     };
     addActivity(req, C.ACTIVITY_ACTION.MOVE, activityExt);
@@ -723,7 +720,7 @@ function deleteFiles(req, files, dirCheckAndPull) {
       if (!fileInfo) {
         return null;
       }
-      filesDeleted.push(_.pick(fileInfo, '_id', 'name'));
+      filesDeleted.push(_.pick(fileInfo, '_id', 'name', 'dir_id'));
       let removeFileFromDb;
       if (dirCheckAndPull) {
         removeFileFromDb = checkDirExist(req, fileInfo.dir_id).then(() => {
@@ -837,6 +834,22 @@ function addActivity(req, action, data) {
     info.company = req.company._id;
   }
   _.extend(info, data);
+  let exts = {};
+  if (req.company) {
+    exts.company_id = req.company._id;
+  }
+  if (req.project) {
+    exts.project_id = req.project._id;
+  }
+  ['document_dir', 'document_file'].forEach(key => {
+    if (info[key]) {
+      if (_.isArray(info[key])) {
+        info[key] = info[key].map(i => _.extend({}, exts, i));
+      } else {
+        info[key] = _.extend({}, exts, info[key]);
+      }
+    }
+  });
   return req.model('activity').insert(info);
 }
 

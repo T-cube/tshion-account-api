@@ -71,7 +71,6 @@ export default class TaskLoop {
     let date_create = new Date();
     let newTasks = tasks.map(task => {
       let newTask = _.clone(task);
-      newTask.loop_task = true;
       newTask.p_id = newTask._id;
       newTask.status = C.TASK_STATUS.PROCESSING;
       newTask.date_create = date_create;
