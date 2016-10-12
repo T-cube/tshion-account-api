@@ -104,7 +104,8 @@ api.post('/:request_id/accept', (req, res, next) => {
           action: C.ACTIVITY_ACTION.JOIN,
           target_type: C.OBJECT_TYPE.COMPANY,
           request: requestId,
-        })
+        }),
+        disableAllRequests(request.to, companyId),
       ]);
     }
   })
@@ -156,3 +157,16 @@ api.post('/:request_id/reject', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next);
 });
+
+function disableAllRequests(userId, companyId) {
+  return db.request.update({
+    object: companyId,
+    to: userId,
+  }, {
+    $set: {
+      status: C.REQUEST_STATUS.EXPIRED,
+    }
+  }, {
+    multi: true
+  });
+}

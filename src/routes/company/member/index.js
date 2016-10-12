@@ -226,6 +226,16 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
         }
       }
     }),
+    db.request.update({
+      object: req.company._id,
+      to: member_id,
+    }, {
+      $set: {
+        status: C.REQUEST_STATUS.EXPIRED,
+      }
+    }, {
+      multi: true
+    }),
     save(req),
   ])
   .then(() => {

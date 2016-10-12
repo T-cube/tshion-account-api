@@ -174,6 +174,7 @@ let constants = {
     PENDING: 'pending',
     ACCEPTED: 'accepted',
     REJECTED: 'rejected',
+    EXPIRED: 'expired',
   },
 
   SEX: {

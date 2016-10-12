@@ -8,7 +8,7 @@ export let validation = {
   company: { $objectId: 1, optional: true },
   project: { $objectId: 1, optional: true },
   project_discussion: { type: 'object', optional: true },
-  task: { $objectId: 1, optional: true },
+  task: { type: 'object', optional: true },
   tag: { type: 'object', optional: true },
   schedule: { $objectId: 1, optional: true },
   user: { $objectId: 1, optional: true },
