@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import express from 'express'
+import express from 'express';
 import { ObjectId } from 'mongodb';
 import config from 'config';
 
