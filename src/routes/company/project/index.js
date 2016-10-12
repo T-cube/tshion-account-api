@@ -155,6 +155,12 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
       db.discussion.remove({
         project_id
       }),
+      db.activity.remove({
+        project: project_id
+      }),
+      db.notification.remove({
+        project: project_id
+      }),
       removeFilesUnderProject(project_id),
     ]);
   })
