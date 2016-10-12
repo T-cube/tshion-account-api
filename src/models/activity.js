@@ -40,6 +40,7 @@ export default class Activity {
         ['project', 'name,company_id', 'project'],
         ['task', 'title,company_id,project_id', 'task'],
         ['approval.template', 'name,company_id', 'approval_template'],
+        ['approval.item', 'title,company_id', 'approval_item'],
         ['schedule', 'title', 'schedule'],
         ['announcement', 'company_id,type,title,is_published', 'announcement,announcement_draft'],
       ]);
