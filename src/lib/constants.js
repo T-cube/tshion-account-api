@@ -10,7 +10,6 @@ let constants = {
     ADD: 'add',               // 添加
     REMOVE: 'remove',         // 移除
     CREATE: 'create',         // 创建
-    CREATE_DRAFT: 'create.draft',         // 创建草稿
     UPDATE: 'update',         // 更新（字段）
     DELETE: 'delete',         // 删除
     QUIT: 'quit',             // 退出
@@ -30,8 +29,8 @@ let constants = {
     SUBMIT: 'submit',         // 提交
     COPY: 'copy',             // 抄送
     CANCEL: 'cancel',         // 取消
-    ENABLE: 'enable',         // 取消
-    DISABLE: 'disable',         // 取消
+    ENABLE_APPROVAL_TPL: 'enable_approval_tpl',         // 启用审批模板
+    DISABLE_APPROVAL_TPL: 'disable_approval_tpl',         // 禁用审批模板
     // 任务
     COMPLETE: 'complete',     // 关注
     REOPEN: 'reopen',         // 取消关注
@@ -131,6 +130,7 @@ let constants = {
   OBJECT_TYPE: {
     FIELD: 'field',
     ANNOUNCEMENT: 'announcement',
+    ANNOUNCEMENT_DRAFT: 'announcement.draft',
     APPROVAL_ITEM: 'approval.item',
     APPROVAL_TEMPLATE: 'approval.template',
     ATTENDANCE: 'attendance',

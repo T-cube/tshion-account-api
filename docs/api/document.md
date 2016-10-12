@@ -189,7 +189,7 @@ INPUT
 {
   files: [<ObjectId>..],
   dirs: [<ObjectId>..],
-  target_dir: <ObjectId>,
+  dest_dir: <ObjectId>,
 }
 ```
 

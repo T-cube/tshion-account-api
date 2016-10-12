@@ -279,12 +279,12 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
       return;
     }
     if (data.status == C.APPROVAL_STATUS.UNUSED) {
-      addActivity(req, C.ACTIVITY_ACTION.DISABLE, {
+      addActivity(req, C.ACTIVITY_ACTION.DISABLE_APPROVAL_TPL, {
         approval_template: template_id
       });
       return Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
     } else {
-      return addActivity(req, C.ACTIVITY_ACTION.ENABLE, {
+      return addActivity(req, C.ACTIVITY_ACTION.ENABLE_APPROVAL_TPL, {
         approval_template: template_id
       });
     }

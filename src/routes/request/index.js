@@ -102,7 +102,7 @@ api.post('/:request_id/accept', (req, res, next) => {
           creator: request.to,
           company: companyId,
           action: C.ACTIVITY_ACTION.JOIN,
-          target_type: C.OBJECT_TYPE.MEMBER,
+          target_type: C.OBJECT_TYPE.COMPANY,
           request: requestId,
         })
       ]);

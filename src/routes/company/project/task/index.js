@@ -506,7 +506,7 @@ function logTask(req, action, data) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.TASK,
-    task: _.pick(req.task, '_id', 'title', 'company_id', 'project_id'),
+    task: _.pick(req.task, '_id', 'title', 'company_id'),
     project: req.project._id,
   };
   let activity = _.extend({
@@ -534,7 +534,7 @@ function doUpdateField(req, field) {
     let action = C.ACTIVITY_ACTION.UPDATE;
     let ext = {};
     if (field == 'title') {
-      ext.task = _.extend(_.pick(req.task, '_id', 'title', 'company_id', 'project_id'), {
+      ext.task = _.extend(_.pick(req.task, '_id', 'title', 'company_id'), {
         new_title: data.title
       });
       action = C.ACTIVITY_ACTION.RENAME;

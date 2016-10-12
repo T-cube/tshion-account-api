@@ -113,16 +113,15 @@ api.put('/:project_id', (req, res, next) => {
   })
   .then(doc => res.json(doc))
   .then(() => {
-    if (data.name == req.project.name) {
-      logProject(req, C.ACTIVITY_ACTION.UPDATE, {
-        field: 'name',
-        old_name: req.project.name,
-      });
-    } else if (data.description != req.project.description) {
-      logProject(req, C.ACTIVITY_ACTION.UPDATE, {
-        field: 'description'
-      });
-    }
+    let update_fields = [];
+    ['name', 'description'].forEach(key => {
+      if (data[key] != req.project[key]) {
+        update_fields.push(key);
+      }
+    });
+    logProject(req, C.ACTIVITY_ACTION.UPDATE, {
+      update_fields
+    });
   })
   .catch(next);
 });
@@ -384,7 +383,16 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
         $pull: {
           members: { _id: member_id }
         }
-      })
+      }),
+      db.discussion.update({
+        project_id
+      }, {
+        $pull: {
+          followers: member_id
+        }
+      }, {
+        multi: true
+      }),
     ]);
   })
   .then(() => {

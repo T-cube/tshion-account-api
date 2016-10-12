@@ -74,7 +74,7 @@ const schema = {
           $objectId: 1
         }
       },
-      target_dir: { $objectId: 1 },
+      dest_dir: { $objectId: 1 },
     },
     validation: {
       files: {
@@ -91,7 +91,7 @@ const schema = {
           $objectId: 1
         }
       },
-      target_dir: { $objectId: 1 },
+      dest_dir: { $objectId: 1 },
     },
   }
 };

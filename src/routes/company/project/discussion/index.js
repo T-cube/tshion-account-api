@@ -77,10 +77,7 @@ api.post('/', (req, res, next) => {
   .then(doc => {
     doc.creator = _.pick(req.user, '_id', 'name', 'avatar');
     res.json(doc);
-    req.project_discussion = {
-      _id: doc._id,
-      title: doc.title
-    };
+    req.project_discussion = req.project_discussion = _.pick(doc, '_id', 'title');
     logProject(req, C.ACTIVITY_ACTION.CREATE);
   })
   .catch(next);
@@ -112,10 +109,7 @@ api.put('/:discussion_id', (req, res, next) => {
       throw new ApiError(400, 'update_failed');
     }
     res.json({});
-    req.project_discussion = {
-      _id: discussion_id,
-      title: discussion.title
-    };
+    req.project_discussion = _.pick(discussion, '_id', 'title');
     req.project_discussion_followers = discussion.followers;
     if (doc.value.title != data.title) {
       req.project_discussion.new_title = data.title;
@@ -164,10 +158,7 @@ api.delete('/:discussion_id', (req, res, next) => {
       res.json({});
       if (doc.ok) {
         req.project_discussion_followers = discussion.followers;
-        req.project_discussion = {
-          _id: discussion_id,
-          title: discussion.title
-        };
+        req.project_discussion = req.project_discussion = _.pick(discussion, '_id', 'title');
         logProject(req, C.ACTIVITY_ACTION.DELETE);
       }
     });
@@ -221,7 +212,7 @@ api.post('/:discussion_id/comment', (req, res, next) => {
   db.discussion.findOne({
     _id: discussion_id
   }, {
-    name: 1,
+    title: 1,
     followers: 1,
   })
   .then(discussion => {
@@ -243,15 +234,9 @@ api.post('/:discussion_id/comment', (req, res, next) => {
       });
     })
     .then(() => {
-      let notification = {
-        action: C.ACTIVITY_ACTION.REPLY,
-        target_type: C.OBJECT_TYPE.PROJECT_DISCUSSION,
-        project: project_id,
-        project_discussion: _.pick(discussion, '_id', 'name'),
-        from: req.user._id,
-        to: discussion.followers.filter(follower => !follower.equals(req.user._id))
-      };
-      req.model('notification').send(notification);
+      req.project_discussion = _.pick(discussion, '_id', 'title');
+      req.project_discussion_followers = discussion.followers;
+      logProject(req, C.ACTIVITY_ACTION.REPLY);
     });
   })
   .catch(next);
@@ -306,17 +291,13 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
 });
 
 function logProject(req, action, data) {
-  let exts = {
-    company_id: req.company._id,
-    project_id: req.project._id,
-  };
-  _.extend(req.project_discussion, exts);
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.PROJECT_DISCUSSION,
     project: req.project._id,
     project_discussion: req.project_discussion,
   };
+  info.project_discussion.company_id = req.company._id;
   info = _.extend(info, data);
   let activity = _.extend({}, info, {
     creator: req.user._id,
