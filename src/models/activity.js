@@ -35,15 +35,14 @@ export default class Activity {
     return db.activity.find(query).sort({_id: -1}).limit(limit)
     .then(list => {
       return mapObjectIdToData(list, [
-        ['user', 'name', 'creator,user'],
+        ['user', 'name', 'creator,user,project_member'],
         ['company', 'name', 'company'],
         ['project', 'name,company_id', 'project'],
         ['task', 'title,company_id,project_id', 'task'],
-        ['document.dir', 'name', 'document_dir'],
-        ['document.file', 'name', 'document_file'],
-        ['approval.template', 'title', 'approval_template'],
+        ['approval.template', 'name,company_id', 'approval_template'],
+        ['approval.item', 'title,company_id', 'approval_item'],
         ['schedule', 'title', 'schedule'],
-        ['announcement', 'company_id,type,title,is_published', 'announcement'],
+        ['announcement', 'company_id,type,title,is_published', 'announcement,announcement_draft'],
       ]);
     });
   }

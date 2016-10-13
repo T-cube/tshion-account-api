@@ -12,6 +12,13 @@ let constants = {
     CREATE: 'create',         // 创建
     UPDATE: 'update',         // 更新（字段）
     DELETE: 'delete',         // 删除
+    QUIT: 'quit',             // 退出
+    REPLY: 'reply',           // 回复
+    RENAME: 'rename',         // 重命名
+    COMMENT: 'comment',       // 评论
+    // 成员
+    JOIN: 'join',             // 加入
+    EXIT: 'exit',             // 退出
     // 管理操作
     TRANSFER: 'tansfer',      // 转让
     // 邀请、审批
@@ -22,6 +29,8 @@ let constants = {
     SUBMIT: 'submit',         // 提交
     COPY: 'copy',             // 抄送
     CANCEL: 'cancel',         // 取消
+    ENABLE_APPROVAL_TPL: 'enable_approval_tpl',         // 启用审批模板
+    DISABLE_APPROVAL_TPL: 'disable_approval_tpl',         // 禁用审批模板
     // 任务
     COMPLETE: 'complete',     // 关注
     REOPEN: 'reopen',         // 取消关注
@@ -29,8 +38,8 @@ let constants = {
     FOLLOW: 'follow',         // 关注
     UNFOLLOW: 'unfollow',     // 取消关注
     // 文件操作
-    RENAME: 'rename',         // 重命名
     UPLOAD: 'upload',         // 上传
+    MOVE: 'move',             // 移动
 
     SYSTEM_SET: 'system.set', // 提醒
     SCHEDULE_REMIND: 'schedule.remind',      // 日程提醒
@@ -121,6 +130,7 @@ let constants = {
   OBJECT_TYPE: {
     FIELD: 'field',
     ANNOUNCEMENT: 'announcement',
+    ANNOUNCEMENT_DRAFT: 'announcement.draft',
     APPROVAL_ITEM: 'approval.item',
     APPROVAL_TEMPLATE: 'approval.template',
     ATTENDANCE: 'attendance',
@@ -129,13 +139,16 @@ let constants = {
     COMPANY_MEMBER: 'company.member',
     COMPANY_DIR: 'company.dir',
     COMPANY_FILE: 'company.file',
+    DOCUMENT: 'document',
     DOCUMENT_DIR: 'document.dir',
-    DOCUMENT_FILE: 'dir.file',
+    DOCUMENT_FILE: 'document.file',
     PROJECT: 'project',
     PROJECT_TAG: 'project.tag',
     PROJECT_MEMBER: 'project.member',
+    PROJECT_ADMIN: 'project.admin',
     PROJECT_DIR: 'project.dir',
     PROJECT_FILE: 'project.file',
+    PROJECT_DISCUSSION: 'project.discussion',
     REMINDING: 'reminding',
     REQUEST: 'request',
     SCHEDULE: 'schedule',
@@ -161,6 +174,7 @@ let constants = {
     PENDING: 'pending',
     ACCEPTED: 'accepted',
     REJECTED: 'rejected',
+    EXPIRED: 'expired',
   },
 
   SEX: {

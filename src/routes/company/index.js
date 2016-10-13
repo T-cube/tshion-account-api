@@ -309,7 +309,18 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
       })
     ]);
   })
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    req.model('activity').insert({
+      creator: req.user._id,
+      company: company._id,
+      action: C.ACTIVITY_ACTION.TRANSFER,
+      target_type: C.OBJECT_TYPE.COMPANY,
+      field: {
+        to: user_id
+      }
+    });
+  })
   .catch(next);
 });
 
@@ -347,7 +358,21 @@ api.post('/:company_id/exit', (req, res, next) => {
       multi: true,
     }),
   ])
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    let info = {
+      company: company_id,
+      action: C.ACTIVITY_ACTION.EXIT,
+      target_type: C.OBJECT_TYPE.COMPANY
+    };
+    req.model('activity').insert(_.extend({}, info, {
+      creator: user_id,
+    }));
+    req.model('activity').insert(_.extend({}, info, {
+      from: user_id,
+      to: req.company.owner,
+    }));
+  })
   .catch(next);
 });
 

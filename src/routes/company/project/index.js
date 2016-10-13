@@ -104,6 +104,7 @@ api.get('/:project_id', (req, res, next) => {
 api.put('/:project_id', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(projectSanitization, projectValidation, data);
+
   db.project.update({
     _id: ObjectId(req.params.project_id),
     company_id: req.company._id,
@@ -111,7 +112,17 @@ api.put('/:project_id', (req, res, next) => {
     $set: data
   })
   .then(doc => res.json(doc))
-  .then(() => logProject(req, C.ACTIVITY_ACTION.UPDATE))
+  .then(() => {
+    let update_fields = [];
+    ['name', 'description'].forEach(key => {
+      if (data[key] != req.project[key]) {
+        update_fields.push(key);
+      }
+    });
+    logProject(req, C.ACTIVITY_ACTION.UPDATE, {
+      update_fields
+    });
+  })
   .catch(next);
 });
 
@@ -144,12 +155,20 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
       db.discussion.remove({
         project_id
       }),
+      db.activity.remove({
+        project: project_id
+      }),
+      db.notification.remove({
+        project: project_id
+      }),
       removeFilesUnderProject(project_id),
     ]);
   })
   .then(() => {
     res.json({});
-    logProject(req, C.ACTIVITY_ACTION.DELETE);
+    logProject(req, C.ACTIVITY_ACTION.DELETE, {
+      project_name: req.project.name
+    });
   })
   .catch(next);
 });
@@ -211,6 +230,7 @@ api.post('/:project_id/member', (req, res, next) => {
     sanitizeValidateObject(memberSanitization, memberValidation, item);
     item.type = C.PROJECT_MEMBER_TYPE.NORMAL;
   });
+  let members = data.map(item => item._id);
   ensureProjectAdmin(req.project, req.user._id);
   data.forEach(item => {
     if (indexObjectId(req.project.members.map(i => i._id), item._id) != -1) {
@@ -233,7 +253,21 @@ api.post('/:project_id/member', (req, res, next) => {
       $push: { members: {$each: data} }
     })
   ])
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    logProject(req, C.ACTIVITY_ACTION.ADD, {
+      target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
+      project_member: members,
+    });
+    let notification = {
+      action: C.ACTIVITY_ACTION.ADD,
+      target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
+      project: project_id,
+      from: req.user._id,
+      to: members
+    };
+    req.model('notification').send(notification);
+  })
   .catch(next);
 });
 
@@ -254,7 +288,28 @@ api.put('/:project_id/member/:member_id/type', (req, res, next) => {
       'members.$.type': type
     }
   })
-  .then(doc => res.json(doc))
+  .then(doc => {
+    res.json(doc);
+    let notification = {
+      target_type: C.OBJECT_TYPE.PROJECT_ADMIN,
+      project: project_id,
+      from: req.user._id,
+      to: member_id
+    };
+    let activityAction;
+    if (type == C.PROJECT_MEMBER_TYPE.ADMIN) {
+      activityAction = C.ACTIVITY_ACTION.ADD;
+    } else {
+      activityAction = C.ACTIVITY_ACTION.REMOVE;
+    }
+    _.extend(notification, {
+      action: activityAction,
+    });
+    logProject(req, activityAction, {
+      project_member: member_id,
+    });
+    req.model('notification').send(notification);
+  })
   .catch(next);
 });
 
@@ -282,7 +337,20 @@ api.post('/:project_id/transfer', authCheck(), (req, res, next) => {
       }
     })
   ])
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    logProject(req, C.ACTIVITY_ACTION.TRANSFER, {
+      project_member: member_id
+    });
+    let notification = {
+      action: C.ACTIVITY_ACTION.TRANSFER,
+      target_type: C.OBJECT_TYPE.PROJECT,
+      project: project_id,
+      from: req.user._id,
+      to: member_id
+    };
+    req.model('notification').send(notification);
+  })
   .catch(next);
 });
 
@@ -291,12 +359,13 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
   let project_id = req.project._id;
   ensureProjectMember(req.project, member_id);
   let { members } = req.project;
-  let allowed = member_id.equals(req.user._id) || members.filter(member => {
+  let self = member_id.equals(req.user._id);
+  let admin = members.filter(member => {
     return member._id.equals(req.user._id)
       && (member.type == C.PROJECT_MEMBER_TYPE.OWNER
         || member.type == C.PROJECT_MEMBER_TYPE.ADMIN);
   }).length;
-  if (!allowed) {
+  if (!self && !admin) {
     throw new ApiError(400, 'forbidden');
   }
   db.task.count({
@@ -320,10 +389,48 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
         $pull: {
           members: { _id: member_id }
         }
-      })
+      }),
+      db.discussion.update({
+        project_id
+      }, {
+        $pull: {
+          followers: member_id
+        }
+      }, {
+        multi: true
+      }),
     ]);
   })
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    if (self) {
+      logProject(req, C.ACTIVITY_ACTION.QUIT, {
+        target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
+        project_member: member_id
+      });
+      // let notification = {
+      //   action: C.ACTIVITY_ACTION.QUIT,
+      //   target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
+      //   project: project_id,
+      //   from: req.user._id,
+      //   to: members
+      // };
+      // req.model('notification').send(notification);
+    } else {
+      logProject(req, C.ACTIVITY_ACTION.REMOVE, {
+        target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
+        project_member: member_id
+      });
+      let notification = {
+        action: C.ACTIVITY_ACTION.REMOVE,
+        target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
+        project: project_id,
+        from: req.user._id,
+        to: member_id
+      };
+      req.model('notification').send(notification);
+    }
+  })
   .catch(next);
 });
 

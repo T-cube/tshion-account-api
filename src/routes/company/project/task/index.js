@@ -76,7 +76,8 @@ api.get('/', (req, res, next) => {
   }
   if (p_id) {
     condition['p_id'] = ObjectId(p_id);
-  } else if (is_loop) {
+  }
+  if (is_loop) {
     condition['$and'] = [{
       loop: {
         $exists: true
@@ -141,7 +142,7 @@ api.post('/', (req, res, next) => {
     res.json(task);
     req.task = task;
     return Promise.all([
-      data && TaskLoop.updateLoop(task),
+      data.loop && TaskLoop.updateLoop(task),
       logTask(req, C.ACTIVITY_ACTION.CREATE)
     ]);
   })
@@ -189,7 +190,7 @@ api.delete('/:task_id', (req, res, next) => {
   })
   .then(() => {
     res.json({});
-    return logTask(req, C.ACTIVITY_ACTION.DELETE);
+    logTask(req, C.ACTIVITY_ACTION.DELETE);
   })
   .catch(next);
 });
@@ -403,7 +404,10 @@ api.post('/:task_id/comment', (req, res, next) => {
         comments: data._id
       }
     })
-    .then(() => res.json(data));
+    .then(() => {
+      res.json(data);
+      sendNotification(req, C.ACTIVITY_ACTION.REPLY);
+    });
   })
   .catch(next);
 });
@@ -422,7 +426,9 @@ api.delete('/:task_id/comment/:comment_id', (req, res, next) => {
       }
     });
   })
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+  })
   .catch(next);
 });
 
@@ -502,32 +508,59 @@ function updateField(field) {
 }
 
 function logTask(req, action, data) {
+  return Promise.all([
+    addActivity(req, action, data),
+    sendNotification(req, action, data)
+  ]);
+}
+
+function addActivity(req, action, data) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.TASK,
-    task: req.task._id,
+    task: _.pick(req.task, '_id', 'title', 'company_id'),
     project: req.project._id,
-  };
-  let activity = _.extend({
     creator: req.user._id,
-  }, info, data);
-  let notification = _.extend({
+  };
+  let activity = _.extend({}, info, data);
+  return req.model('activity').insert(activity);
+}
+
+function sendNotification(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.TASK,
+    task: _.pick(req.task, '_id', 'title', 'company_id'),
+    project: req.project._id,
     from: req.user._id,
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),
-  }, info, data);
-  req.model('activity').insert(activity);
-  req.model('notification').send(notification);
+  };
+  let notification = _.extend({}, info, data);
+  return req.model('notification').send(notification);
 }
 
 function doUpdateField(req, field) {
   let data = validField(field, req.body[field]);
+  if (data[field] == req.task[field]) {
+    return Promise.resolve(data);
+  }
   return db.task.update({
     _id: req.task._id
   }, {
     $set: data,
   })
   .then(() => {
-    logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: data});
+    let action = C.ACTIVITY_ACTION.UPDATE;
+    let ext = {};
+    if (field == 'title') {
+      ext.task = _.extend(_.pick(req.task, '_id', 'title', 'company_id'), {
+        new_title: data.title
+      });
+      action = C.ACTIVITY_ACTION.RENAME;
+    } else {
+      ext.update_fields = [field];
+    }
+    logTask(req, action, ext);
     return data;
   });
 }

@@ -128,9 +128,10 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   Approval.createTemplate(data)
   .then(template => {
     res.json(template);
-    // return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-    //   approval_template: template._id
-    // });
+    return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+      approval_template: template._id,
+      company: null
+    });
   })
   .catch(next);
 });
@@ -215,9 +216,9 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
       }
     });
   })
-  // .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
-  //   approval_template: template_id
-  // }))
+  .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+    approval_template: template_id
+  }))
   .catch(next);
 });
 
@@ -278,9 +279,12 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
       return;
     }
     if (data.status == C.APPROVAL_STATUS.UNUSED) {
+      addActivity(req, C.ACTIVITY_ACTION.DISABLE_APPROVAL_TPL, {
+        approval_template: template_id
+      });
       return Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
     } else {
-      return addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+      return addActivity(req, C.ACTIVITY_ACTION.ENABLE_APPROVAL_TPL, {
         approval_template: template_id
       });
     }
@@ -310,7 +314,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
     }
     return Promise.all([
       db.approval.template.master.update({
-        _id: template.master_id
+        _id: template.value.master_id
       }, {
         $set: {
           status: C.APPROVAL_STATUS.DELETED

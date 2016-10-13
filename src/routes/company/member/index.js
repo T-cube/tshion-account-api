@@ -80,29 +80,31 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
         // invite new user throw email;
         data._id = ObjectId();
       }
-      db.request.insert({
-        from: req.user._id,
-        to: data._id,
-        type: C.REQUEST_TYPE.COMPANY,
-        object: req.company._id,
-        status: C.REQUEST_STATUS.PENDING,
-        date_create: time(),
-      })
-      .then(request => {
-        req.model('notification').send({
+      return Promise.all([
+        db.request.insert({
           from: req.user._id,
-          to: user._id,
-          action: C.ACTIVITY_ACTION.CREATE,
-          target_type: C.OBJECT_TYPE.REQUEST,
-          request: request._id,
-          company: req.company._id,
-        }, C.NOTICE.COMMON);
-      });
-      return db.company.update({
-        _id: req.company._id,
-      }, {
-        $push: {members: data}
-      });
+          to: data._id,
+          type: C.REQUEST_TYPE.COMPANY,
+          object: req.company._id,
+          status: C.REQUEST_STATUS.PENDING,
+          date_create: time(),
+        })
+        .then(request => {
+          return req.model('notification').send({
+            from: req.user._id,
+            to: data._id,
+            action: C.ACTIVITY_ACTION.CREATE,
+            target_type: C.OBJECT_TYPE.REQUEST,
+            request: request._id,
+            company: req.company._id,
+          }, C.NOTICE.COMMON);
+        }),
+        db.company.update({
+          _id: req.company._id,
+        }, {
+          $push: {members: data}
+        })
+      ]);
     })
     .then(() => res.json(data));
   })
@@ -224,9 +226,27 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
         }
       }
     }),
+    db.request.update({
+      object: req.company._id,
+      to: member_id,
+    }, {
+      $set: {
+        status: C.REQUEST_STATUS.EXPIRED,
+      }
+    }, {
+      multi: true
+    }),
     save(req),
   ])
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    addActivity(req, C.ACTIVITY_ACTION.REMOVE, {
+      company_member: {
+        _id: member_id,
+        name: thisMember.name
+      }
+    });
+  })
   .catch(next);
 });
 
@@ -257,31 +277,27 @@ api.post('/exit', (req, res, next) => {
       upsert: true
     }),
   ])
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    addActivity(req, C.ACTIVITY_ACTION.EXIT, {
+      company_member: {
+        _id: req.user._id,
+        name: thisMember.name
+      }
+    });
+  })
   .catch(next);
 });
 
 function addActivity(req, action, data) {
   let info = {
     action: action,
-    target_type: C.OBJECT_TYPE.MEMBER,
+    target_type: C.OBJECT_TYPE.COMPANY_MEMBER,
     company: req.company._id,
     creator: req.user._id,
   };
   _.extend(info, data);
   return req.model('activity').insert(info);
-}
-
-function addNotification(req, action, data) {
-  let info = {
-    action: action,
-    target_type: C.OBJECT_TYPE.MEMBER,
-    company: req.company._id,
-    from: req.user._id,
-    to: _.filter(req.company.members.map(member => member._id), id => id.equals(req.user._id))
-  };
-  _.extend(info, data);
-  return req.model('notification').send(info);
 }
 
 function save(req) {

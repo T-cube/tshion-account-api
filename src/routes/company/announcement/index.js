@@ -57,7 +57,8 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
         });
       } else {
         addingActivity = addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-          announcement: doc._id,
+          announcement_draft: doc._id,
+          target_type: C.OBJECT_TYPE.ANNOUNCEMENT_DRAFT,
         });
       }
       return Promise.all([addingActivity, addingNotification]);

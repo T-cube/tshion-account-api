@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
+import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -76,6 +77,8 @@ api.post('/', (req, res, next) => {
   .then(doc => {
     doc.creator = _.pick(req.user, '_id', 'name', 'avatar');
     res.json(doc);
+    req.project_discussion = req.project_discussion = _.pick(doc, '_id', 'title');
+    logProject(req, C.ACTIVITY_ACTION.CREATE);
   })
   .catch(next);
 });
@@ -90,18 +93,28 @@ api.put('/:discussion_id', (req, res, next) => {
     data.content = content;
   })
   .then(() => {
-    return db.discussion.update({
-      _id: discussion_id,
-      creator: req.user._id
-    }, {
-      $set: data
+    return db.discussion.findAndModify({
+      query: {
+        _id: discussion_id,
+        creator: req.user._id
+      },
+      update: {
+        $set: data
+      }
     });
   })
   .then(doc => {
-    if (!doc.ok) {
+    let discussion = doc.value;
+    if (!discussion) {
       throw new ApiError(400, 'update_failed');
     }
     res.json({});
+    req.project_discussion = _.pick(discussion, '_id', 'title');
+    req.project_discussion_followers = discussion.followers;
+    if (doc.value.title != data.title) {
+      req.project_discussion.new_title = data.title;
+    }
+    logProject(req, C.ACTIVITY_ACTION.UPDATE);
   })
   .catch(next);
 });
@@ -130,11 +143,26 @@ api.get('/:discussion_id', (req, res, next) => {
 api.delete('/:discussion_id', (req, res, next) => {
   let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
-  db.discussion.remove({
-    _id: discussion_id,
-    project_id: project_id,
+  db.discussion.findOne({
+    _id: discussion_id
+  }, {
+    title: 1,
+    followers: 1,
   })
-  .then(() => res.json({}))
+  .then(discussion => {
+    return db.discussion.remove({
+      _id: discussion_id,
+      project_id: project_id,
+    })
+    .then(doc => {
+      res.json({});
+      if (doc.ok) {
+        req.project_discussion_followers = discussion.followers;
+        req.project_discussion = req.project_discussion = _.pick(discussion, '_id', 'title');
+        logProject(req, C.ACTIVITY_ACTION.DELETE);
+      }
+    });
+  })
   .catch(next);
 });
 
@@ -181,18 +209,34 @@ api.post('/:discussion_id/comment', (req, res, next) => {
     creator: req.user._id,
     date_create: new Date(),
   });
-  db.discussion.comment.insert(data)
-  .then(doc => {
-    doc.creator = _.pick(req.user, '_id', 'avatar');
-    doc.creator.name = _.find(req.company.members, m => m._id.equals(req.user._id)).name;
-    res.json(doc);
-    return db.discussion.update({
-      _id: discussion_id,
-      project_id: project_id,
-    }, {
-      $push: {
-        comments: doc._id
-      }
+  db.discussion.findOne({
+    _id: discussion_id
+  }, {
+    title: 1,
+    followers: 1,
+  })
+  .then(discussion => {
+    if (!discussion) {
+      throw new ApiError(404);
+    }
+    return db.discussion.comment.insert(data)
+    .then(doc => {
+      doc.creator = _.pick(req.user, '_id', 'avatar');
+      doc.creator.name = _.find(req.company.members, m => m._id.equals(req.user._id)).name;
+      res.json(doc);
+      return db.discussion.update({
+        _id: discussion_id,
+        project_id: project_id,
+      }, {
+        $push: {
+          comments: doc._id
+        }
+      });
+    })
+    .then(() => {
+      req.project_discussion = _.pick(discussion, '_id', 'title');
+      req.project_discussion_followers = discussion.followers;
+      logProject(req, C.ACTIVITY_ACTION.REPLY);
     });
   })
   .catch(next);
@@ -245,3 +289,25 @@ api.delete('/:discussion_id/comment/:comment_id', (req, res, next) =>  {
   .then(() => res.json({}))
   .catch(next);
 });
+
+function logProject(req, action, data) {
+  let info = {
+    action: action,
+    target_type: C.OBJECT_TYPE.PROJECT_DISCUSSION,
+    project: req.project._id,
+    project_discussion: req.project_discussion,
+  };
+  info.project_discussion.company_id = req.company._id;
+  info = _.extend(info, data);
+  let activity = _.extend({}, info, {
+    creator: req.user._id,
+  });
+  req.model('activity').insert(activity);
+  if (req.project_discussion_followers) {
+    let notification = _.extend({}, info, {
+      from: req.user._id,
+      to: req.project_discussion_followers.filter(follower => !follower.equals(req.user._id))
+    });
+    req.model('notification').send(notification);
+  }
+}
