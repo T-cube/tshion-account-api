@@ -6,6 +6,7 @@ export let validation = {
   action: { $enum: ENUMS.ACTIVITY_ACTION },
   target_type: { $enum: ENUMS.OBJECT_TYPE },
   company: { $objectId: 1, optional: true },
+  company_member: { type: 'object', optional: true },
   project: { $objectId: 1, optional: true },
   project_discussion: { type: 'object', optional: true },
   task: { type: 'object', optional: true },
@@ -19,5 +20,6 @@ export let validation = {
   field: { type: 'object', optional: true },
   is_read: { type: 'boolean' },
   date_create: { type: 'date' },
-  remind_time: { type: 'date', optional: true }
+  remind_time: { type: 'date', optional: true },
+  position: { type: 'object', optional: true },
 };

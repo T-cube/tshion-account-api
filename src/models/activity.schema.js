@@ -26,4 +26,5 @@ export let validation = {
   update_fields: { type: 'array', optional: true },
   date_create: { type: 'date' },
   sign_record: { type: 'object', optional: true },
+  position: { type: 'object', optional: true },
 };

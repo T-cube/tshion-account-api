@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
+import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import Structure from 'models/structure';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -157,17 +158,61 @@ api.post('/:node_id/member', (req, res, next) => {
   sanitizeValidateObject(memberSanitization, memberValidation, data);
   let member = tree.addMember(data, node_id);
   save(req)
-  .then(() => res.json(member))
+  .then(() => {
+    res.json(member);
+    let position = tree.findPositionInfo(data.position) || {};
+    req.model('activity').insert({
+      company: req.company._id,
+      action: C.ACTIVITY_ACTION.ADD_POSITION,
+      target_type: C.OBJECT_TYPE.USER,
+      creator: req.user._id,
+      user: data._id,
+      position,
+    });
+    if (!req.user._id.equals(data._id)) {
+      req.model('notification').send({
+        company: req.company._id,
+        action: C.ACTIVITY_ACTION.ADD_POSITION,
+        target_type: C.OBJECT_TYPE.USER,
+        from: req.user._id,
+        to: ObjectId(data._id),
+        position,
+      });
+    }
+  })
   .catch(next);
 });
 
 api.delete('/:node_id/member/:member_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
-  let member_id = req.params.member_id;
+  let member_id = ObjectId(req.params.member_id);
+  let members = tree.getMember(node_id);
   if (tree.deleteMember(member_id, node_id)) {
     save(req)
-    .then(doc => res.json(doc))
+    .then(doc => {
+      res.json(doc);
+      let memberInfo = _.find(members, member => member._id.equals(member_id));
+      let position = memberInfo ? (tree.findPositionInfo(memberInfo.position) || {}) : {};
+      req.model('activity').insert({
+        company: req.company._id,
+        action: C.ACTIVITY_ACTION.REMOVE_POSITION,
+        target_type: C.OBJECT_TYPE.USER,
+        creator: req.user._id,
+        user: member_id,
+        position,
+      });
+      if (!req.user._id.equals(member_id)) {
+        req.model('notification').send({
+          company: req.company._id,
+          action: C.ACTIVITY_ACTION.REMOVE_POSITION,
+          target_type: C.OBJECT_TYPE.USER,
+          from: req.user._id,
+          to: member_id,
+          position,
+        });
+      }
+    })
     .catch(next);
   } else {
     next(new ApiError(400, 'member_not_exists'));

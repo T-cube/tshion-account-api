@@ -149,7 +149,22 @@ api.put('/:company_id', (req, res, next) => {
     {_id: ObjectId(req.params.company_id)},
     {$set: data}
   )
-  .then(doc => res.json(doc))
+  .then(doc => {
+    res.json(doc);
+    let update_fields = [];
+    ['name', 'description'].forEach(key => {
+      if (data[key] != req.company[key]) {
+        update_fields.push([key]);
+      }
+    });
+    req.model('activity').insert({
+      creator: req.user._id,
+      action: C.ACTIVITY_ACTION.UPDATE,
+      target_type: C.OBJECT_TYPE.COMPANY,
+      company: req.company._id,
+      update_fields,
+    });
+  })
   .catch(next);
 });
 
@@ -316,9 +331,7 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
       company: company._id,
       action: C.ACTIVITY_ACTION.TRANSFER,
       target_type: C.OBJECT_TYPE.COMPANY,
-      field: {
-        to: user_id
-      }
+      user: user_id,
     });
   })
   .catch(next);
