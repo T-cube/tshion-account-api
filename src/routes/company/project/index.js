@@ -405,17 +405,16 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
     res.json({});
     if (self) {
       logProject(req, C.ACTIVITY_ACTION.QUIT, {
-        target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
-        project_member: member_id
+        target_type: C.OBJECT_TYPE.PROJECT,
       });
-      // let notification = {
-      //   action: C.ACTIVITY_ACTION.QUIT,
-      //   target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
-      //   project: project_id,
-      //   from: req.user._id,
-      //   to: members
-      // };
-      // req.model('notification').send(notification);
+      let notification = {
+        action: C.ACTIVITY_ACTION.QUIT,
+        target_type: C.OBJECT_TYPE.PROJECT,
+        project: project_id,
+        from: req.user._id,
+        to: members.map(member => member._id).filter(member => !member.equals(req.user._id))
+      };
+      req.model('notification').send(notification);
     } else {
       logProject(req, C.ACTIVITY_ACTION.REMOVE, {
         target_type: C.OBJECT_TYPE.PROJECT_MEMBER,

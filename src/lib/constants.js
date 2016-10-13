@@ -16,11 +16,14 @@ let constants = {
     REPLY: 'reply',           // 回复
     RENAME: 'rename',         // 重命名
     COMMENT: 'comment',       // 评论
+    DOWNLOAD: 'download',     // 下载
     // 成员
     JOIN: 'join',             // 加入
     EXIT: 'exit',             // 退出
+    ADD_POSITION: 'add_position',             // 添加职位
+    REMOVE_POSITION: 'remove_position',       // 移除职位
     // 管理操作
-    TRANSFER: 'tansfer',      // 转让
+    TRANSFER: 'transfer',      // 转让
     // 邀请、审批
     ACCEPT: 'accept',         // 接受
     APPROVE: 'approve',       // 通过
@@ -156,6 +159,7 @@ let constants = {
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
     TASK_EXPIRE: 'task.expire',
+    USER: 'user'
   },
 
   PROJECT_MEMBER_TYPE: {
