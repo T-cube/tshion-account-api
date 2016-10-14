@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import config from 'config';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -138,9 +139,15 @@ api.delete('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
 });
 
 function getAnnouncementList(req, condition) {
+  let { page, pagesize } = req;
+  page = parseInt(page) || 1;
+  pagesize = parseInt(pagesize);
+  pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? pagesize : config.get('view.listNum');
   return db.announcement.find(condition, {
     content: 0
   })
+  .skip((page - 1) * pagesize)
+  .limit(pagesize)
   .then(announcements => {
     let structure = new Structure(req.company.structure);
     announcements.forEach(announcement => {
