@@ -143,21 +143,34 @@ function getAnnouncementList(req, condition) {
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? pagesize : config.get('view.listNum');
-  return db.announcement.find(condition, {
-    content: 0
-  })
-  .skip((page - 1) * pagesize)
-  .limit(pagesize)
-  .then(announcements => {
-    let structure = new Structure(req.company.structure);
-    announcements.forEach(announcement => {
-      if (announcement.from.department) {
-        announcement.from.department = structure.findNodeById(announcement.from.department);
-      }
-    });
-    return fetchCompanyMemberInfo(req.company, announcements, 'from.creator', 'to.member')
-    .then(announcements => announcements);
-  });
+  let data = {};
+  return Promise.all([
+    db.announcement.count(condition)
+    .then(sum => {
+      data.totalrows = sum;
+      data.page = page;
+      data.pagesize = pagesize;
+    }),
+    db.announcement.find(condition, {
+      content: 0
+    })
+    .skip((page - 1) * pagesize)
+    .limit(pagesize)
+    .sort({
+      date_publish: -1
+    })
+    .then(announcements => {
+      let structure = new Structure(req.company.structure);
+      announcements.forEach(announcement => {
+        if (announcement.from.department) {
+          announcement.from.department = structure.findNodeById(announcement.from.department);
+        }
+      });
+      return fetchCompanyMemberInfo(req.company, announcements, 'from.creator', 'to.member');
+    })
+    .then(announcements => data.list = announcements)
+  ])
+  .then(() => data);
 }
 
 function fetchAnnouncementData(req) {
