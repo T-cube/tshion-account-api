@@ -26,8 +26,6 @@ const urls = {
   },
 };
 
-const wechatOAuthClient = getOAuthClient(api.redis);
-
 const wechatOauth = oauthserver({
   model: WechatOAuthModel,
   grants: ['authorization_code', 'refresh_token'],
@@ -41,6 +39,7 @@ api.use(bodyParser.urlencoded({ extended: true }));
 
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
+  let wechatOAuthClient = getOAuthClient(req.model('redis'));
   let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'wechat-oauth/access', checkCode, 'snsapi_userinfo');
   res.redirect(url);
 });
@@ -70,6 +69,7 @@ function access(req, res, next) {
   let gettingWechatOauth;
   let { code } = req.query;
   let { random_token } = req.body;
+  let wechatOAuthClient = getOAuthClient(req.model('redis'));
   let oauthInfoErr = new Error('can not get access_token from wechat server');
   if (random_token) {
     gettingWechatOauth = wUtil.findWechatByRandomToken(random_token);
