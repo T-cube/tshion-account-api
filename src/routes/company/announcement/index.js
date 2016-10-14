@@ -139,7 +139,7 @@ api.delete('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
 });
 
 function getAnnouncementList(req, condition) {
-  let { page, pagesize } = req;
+  let { page, pagesize } = req.query;
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? pagesize : config.get('view.listNum');
