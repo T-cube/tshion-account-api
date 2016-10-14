@@ -151,7 +151,7 @@ function getOAuthClient(redis) {
     (openid, token, callback) => {
       redis.set(`oauth-token:${openid}`, token)
       .then(() => {
-        redis.expire(`oauth-token:${openid}`, 1000);
+        redis.expire(`oauth-token:${openid}`, 7200);
         callback();
       })
       .catch(e => console.error(e));
