@@ -16,7 +16,6 @@ export default class TaskLoop {
   }
 
   generateTasks() {
-    console.log('generate loop tasks', new Date());
     this.doGenerateTasks().catch(e => console.error(e));
   }
 
@@ -31,8 +30,6 @@ export default class TaskLoop {
         let next_last_id = tasks.length && tasks[tasks.length - 1]._id;
         if (tasks.length == this.settings.rows_fetch_once) {
           return this.doGenerateTasks(next_last_id);
-        } else {
-          console.log('all loop tasks generated');
         }
       });
     });

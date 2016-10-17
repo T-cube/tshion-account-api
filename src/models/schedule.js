@@ -22,8 +22,6 @@ export default class Schedule {
   }
 
   doRemindingJob(time, limit, last_id) {
-    console.log('dojob');
-    console.log(time);
     limit = limit || 1;
     let condition = {
       time: time
@@ -37,10 +35,7 @@ export default class Schedule {
     // .limit(limit)
     .then(list => {
       if (!list.length) {
-        console.log('exit job');
         return;
-      } else {
-        console.log('job num: ', list.length);
       }
       let schedules = [];
       list.forEach(reminding => schedules.push(reminding.target_id));
@@ -58,7 +53,7 @@ export default class Schedule {
       // .then(() => doJob(db, time, limit, list[list.length - 1]._id))
     })
     .catch(e => {
-      console.log(e);
+      console.error(e);
     });
   }
 
@@ -196,7 +191,6 @@ export default class Schedule {
   }
 
   sentMessage(schedule, remind_time) {
-    console.log('sendMessage');
     this.notification.send({
       from: 0,
       to: schedule.creator,
@@ -233,7 +227,6 @@ export default class Schedule {
   }
 
   updateReminding(schedule) {
-    console.log('updateReminding');
     let nextRemindTime = this.getNextRemindTime(this.cronRule(schedule), schedule.repeat_end);
     if (!nextRemindTime) {
       return this.removeReminding(schedule._id);
