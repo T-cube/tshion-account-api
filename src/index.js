@@ -32,10 +32,11 @@ import ScheduleServer from 'service/schedule';
 import Notification from 'models/notification';
 import Account from 'models/account';
 import Document from 'models/document';
+import WechatAccess from 'models/wechat-access';
 import HtmlHelper from 'models/html-helper';
 import { OfficeWeb365 } from 'vendor/officeweb365';
 import { QiniuTools } from 'vendor/qiniu';
-import Redis from 'vendor/redis';
+import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import wechatOAuthRoute from './routes/wechat-oauth';
 
@@ -69,6 +70,7 @@ app.loadModel('html-helper', HtmlHelper);
 app.loadModel('notification', Notification);
 app.loadModel('account', Account);
 app.loadModel('document', Document);
+app.loadModel('wechat-access', WechatAccess, app.model('redis'));
 
 // load services;
 app.loadModel('schedule', ScheduleServer);
