@@ -21,5 +21,6 @@ export let validation = {
   is_read: { type: 'boolean' },
   date_create: { type: 'date' },
   remind_time: { type: 'date', optional: true },
+  update_fields: { type: 'array', optional: true },
   position: { type: 'object', optional: true },
 };
