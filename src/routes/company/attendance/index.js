@@ -37,7 +37,7 @@ let api = express.Router();
 export default api;
 
 api.get('/jsapi', (req, res, next) => {
-  req.model('wechat-access').getJsApiSignature(config.get('apiUrl') + `oa/company/${req.company._id}/feature/attend/mine`)
+  req.model('wechat-access').getJsApiSignature(config.get('mobileUrl') + `oa/company/${req.company._id}/feature/attend/mine`)
   .then(jsapiInfo => {
     console.log('jsapiInfo', jsapiInfo);
     res.json(jsapiInfo);

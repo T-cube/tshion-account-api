@@ -1,7 +1,7 @@
 module.exports = {
-  apiUrl: 'https://tlf.findteachers.cn/',
-  webUrl: 'https://findteachers.cn/',
-  mobileUrl: 'https://mtlf.findteachers.cn/',
+  apiUrl: 'http://tlf.findteachers.cn/',
+  webUrl: 'http://mtlf.findteachers.cn/',
+  mobileUrl: 'http://mtlf.findteachers.cn/',
   server: {
     //host: '127.0.0.1',
     port: 3000,
