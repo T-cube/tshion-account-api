@@ -4,7 +4,6 @@ import crypto from 'crypto';
 
 import { timestamp } from 'lib/utils';
 
-let sha1 = crypto.createHash('sha1');
 let appId = config.get('wechat.appid');
 let secret = config.get('wechat.appsecret');
 const wechatApiUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${secret}`;
@@ -41,7 +40,7 @@ export default class WechatAccess {
         let nonceStr = +new Date();
         let _timestamp = parseInt((timestamp() + '').substr(0, 10));
         let str = `jsapi_ticket=${jsapi_ticket}&noncestr=${nonceStr}&timestamp=${_timestamp}&url=${url}`;
-        let signature = sha1.update(str).digest('hex');
+        let signature = crypto.createHash('sha1').update(str).digest('hex');
         let data = {
           nonceStr,
           timestamp: _timestamp,
