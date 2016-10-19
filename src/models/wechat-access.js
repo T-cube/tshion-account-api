@@ -33,7 +33,7 @@ export default class WechatAccess {
       if (signatureInfo) {
         return JSON.parse(signatureInfo);
       }
-      this.getJsApiTicket()
+      return this.getJsApiTicket()
       .then(jsapi_ticket => {
         if (!jsapi_ticket) {
           return null;
@@ -51,11 +51,11 @@ export default class WechatAccess {
         };
         try {
           signatureInfo = JSON.stringify(data);
+          this.redis.hmset(signatureKey, [url, signatureInfo]);
         } catch(e) {
           console.error(e);
           return null;
         }
-        this.redis.hmset(signatureKey, [url, signatureInfo]);
         return data;
       });
     });
