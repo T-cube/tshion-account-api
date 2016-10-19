@@ -28,13 +28,14 @@ class Loader {
     return object;
   }
 
-  loadModel(name, constructor) {
-    let args = Array.prototype.slice.call(arguments, 2);
-    function F() {
-      return constructor.apply(this, args);
-    }
-    F.prototype = constructor.prototype;
-    let object = new F();
+  loadModel(name, constructor, ...args) {
+    // let args = Array.prototype.slice.call(arguments, 2);
+    // function F() {
+    //   return constructor.apply(this, args);
+    // }
+    // F.prototype = constructor.prototype;
+    // let object = new F();
+    let object = new constructor(...args);
     this.bindModel(name, object);
     if ('init' in object) {
       object.init();

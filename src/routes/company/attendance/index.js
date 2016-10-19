@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import moment from 'moment';
+import config from 'config';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -34,6 +35,15 @@ import Approval from 'models/approval';
 
 let api = express.Router();
 export default api;
+
+api.get('/jsapi', (req, res, next) => {
+  req.model('wechat-access').getJsApiSignature(config.get('apiUrl') + `oa/company/${req.company._id}/feature/attend/mine`)
+  .then(jsapiInfo => {
+    console.log('jsapiInfo', jsapiInfo);
+    res.json(jsapiInfo);
+  })
+  .catch(next);
+});
 
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;

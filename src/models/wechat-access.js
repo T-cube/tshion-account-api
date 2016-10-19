@@ -10,12 +10,13 @@ let secret = config.get('wechat.appsecret');
 const wechatApiUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appid}&secret=${secret}`;
 const accessTokenKey = 'wechat-access-token';
 const jsapiTicketKey = 'wechat-jsapi-ticket';
-const signatureKey = 'wechat-js-api-signature';
+const signatureKey = 'wechat-jsapi-signature';
 
 export default class WechatAccess {
 
   constructor(redis) {
     this.redis = redis;
+    this.tryRefresh();
   }
 
   getAccessToken() {
@@ -45,7 +46,8 @@ export default class WechatAccess {
           noncestr,
           timestamp: _timestamp,
           url,
-          signature
+          signature,
+          appid,
         };
         try {
           signatureInfo = JSON.stringify(data);
@@ -53,26 +55,21 @@ export default class WechatAccess {
           console.error(e);
           return null;
         }
-        this.redis.hmset(signatureKey, {url: signatureInfo});
+        this.redis.hmset(signatureKey, [url, signatureInfo]);
         return data;
       });
     });
   }
 
-  refresh() {
+  tryRefresh() {
     this.getAccessToken()
     .then(access_token => {
-      console.log('access_token', access_token);
-      access_token || this.doRefreshToken();
-    });
-    this.getJsApiSignature('aaa').then(signature => {
-      console.log('signature', signature);
+      access_token || this.refresh();
     })
     .catch(e => console.error(e));
-    return this.doRefreshToken;
   }
 
-  doRefreshToken(count) {
+  refresh(count) {
     request(wechatApiUrl, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         let data = JSON.parse(body);
@@ -85,7 +82,7 @@ export default class WechatAccess {
         console.error(error || body);
         count = count || 0;
         if (count < 10) {
-          let cb = (() => this.doRefreshToken(count++)).bind(this);
+          let cb = (() => this.refresh(count++)).bind(this);
           setTimeout(cb, 1000);
         }
       }

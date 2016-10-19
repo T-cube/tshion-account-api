@@ -22,7 +22,7 @@ export default class ScheduleServer {
   initJobs() {
     let notificationModel = this.model('notification');
     let scheduleModel = new ScheduleModel(notificationModel);
-    let refreshWechatAccessToken = this.model('wechat-access').refresh();
+    let wechatAccess = this.model('wechat-access');
     let taskLoop = new TaskLoop({
       rows_fetch_once: 100
     });
@@ -35,7 +35,7 @@ export default class ScheduleServer {
         init: ['0 0 * * *', () => taskLoop.generateTasks()]
       },
       wechat_access_token: {
-        init: ['* */1 * * *', () => refreshWechatAccessToken()]
+        init: ['0 */1 * * *', () => wechatAccess.refresh()]
       }
       // task_expire: {
       //   init: ['0 9 * * *', () => {
