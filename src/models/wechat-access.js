@@ -38,12 +38,12 @@ export default class WechatAccess {
         if (!jsapi_ticket) {
           return null;
         }
-        let noncestr = +new Date();
+        let nonceStr = +new Date();
         let _timestamp = parseInt((timestamp() + '').substr(0, 10));
-        let str = `jsapi_ticket=${jsapi_ticket}&noncestr=${noncestr}&timestamp=${_timestamp}&url=${url}`;
+        let str = `jsapi_ticket=${jsapi_ticket}&noncestr=${nonceStr}&timestamp=${_timestamp}&url=${url}`;
         let signature = sha1.update(str).digest('hex');
         let data = {
-          noncestr,
+          nonceStr,
           timestamp: _timestamp,
           url,
           signature,
