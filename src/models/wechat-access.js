@@ -39,7 +39,7 @@ export default class WechatAccess {
           return null;
         }
         let noncestr = +new Date();
-        let _timestamp = timestamp();
+        let _timestamp = parseInt((timestamp() + '').substr(0, 10));
         let str = `jsapi_ticket=${jsapi_ticket}&noncestr=${noncestr}&timestamp=${_timestamp}&url=${url}`;
         let signature = sha1.update(str).digest('hex');
         let data = {
@@ -47,7 +47,7 @@ export default class WechatAccess {
           timestamp: _timestamp,
           url,
           signature,
-          appid,
+          appid
         };
         try {
           signatureInfo = JSON.stringify(data);
