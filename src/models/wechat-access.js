@@ -5,9 +5,9 @@ import crypto from 'crypto';
 import { timestamp } from 'lib/utils';
 
 let sha1 = crypto.createHash('sha1');
-let appid = config.get('wechat.appid');
+let appId = config.get('wechat.appid');
 let secret = config.get('wechat.appsecret');
-const wechatApiUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appid}&secret=${secret}`;
+const wechatApiUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${secret}`;
 const accessTokenKey = 'wechat-access-token';
 const jsapiTicketKey = 'wechat-jsapi-ticket';
 const signatureKey = 'wechat-jsapi-signature';
@@ -47,7 +47,7 @@ export default class WechatAccess {
           timestamp: _timestamp,
           url,
           signature,
-          appid
+          appId
         };
         try {
           signatureInfo = JSON.stringify(data);
