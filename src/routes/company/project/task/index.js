@@ -436,7 +436,11 @@ api.get('/:task_id/activity', (req, res, next) => {
   let taskId = req.task._id;
   let { last_id } = req.query;
   req.model('activity').fetch({
-    task: taskId,
+    $or: [{
+      task: taskId
+    }, {
+      'task._id': taskId
+    }],
   }, last_id)
   .then(list => res.json(list))
   .catch(next);
