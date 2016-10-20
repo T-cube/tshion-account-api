@@ -197,6 +197,7 @@ module.exports = {
     appsecret: '372eb0308edc5a06d437bc3d0a321737',
     auth_code_lifetime: 60 * 5,
     templates: {
+      approval_result: 'gsYoVNFkxSi7Q9dFeSikaSqHsg5pHURwc-da8RxGghg',
       task_expired: 'A3P5cDmtv7xKqeotk_0AQ5dJFvMXZOa32tqeyZ6AqTA',
       reminding: 'M2le2CxHBAdHCHZkqP9JS410XZttonO9p05c9kenlLs',
     }

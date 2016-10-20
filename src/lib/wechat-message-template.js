@@ -1,9 +1,11 @@
+import config from 'config';
+
 /**
  * 微信模板消息
  */
 export let templates = {
   approval_result: {
-    id: '5SDcb0I1fEPbjpw0KRPzy0-xqmi92jNe5gajq3p32gk',
+    id: config.get('wechat.templates.approval_result'), 
     title: '审批结果提醒',
     data: '{{first.DATA}}' +
           '审批事项：{{keyword1.DATA}}' +
