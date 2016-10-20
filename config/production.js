@@ -1,6 +1,4 @@
 module.exports = {
-  apiUrl: 'http://tlf.findteachers.cn/',
-  webUrl: 'http://findteachers.cn/',
   database: '127.0.0.1/tlf_core',
   upload: {
     url: 'https://tlifang.com/cdn/',
