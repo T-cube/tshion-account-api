@@ -38,10 +38,7 @@ export default api;
 
 api.get('/jsapi', (req, res, next) => {
   req.model('wechat-access').getJsApiSignature(config.get('mobileUrl') + `oa/company/${req.company._id}/feature/attend/mine`)
-  .then(jsapiInfo => {
-    console.log('jsapiInfo', jsapiInfo);
-    res.json(jsapiInfo);
-  })
+  .then(jsapiInfo => res.json(jsapiInfo))
   .catch(next);
 });
 

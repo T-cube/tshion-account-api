@@ -24,7 +24,6 @@ api.use((req, res, next) => {
 });
 
 api.get('/', (req, res, next) => {
-  console.log('aaa');
   res.json(req.structure.object());
 });
 

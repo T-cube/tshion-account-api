@@ -8,6 +8,7 @@ import { ObjectId } from 'mongodb';
 import db from 'lib/database';
 import { generateToken, timestamp, getGpsDistance } from 'lib/utils';
 import MarsGPS from 'lib/mars-gps.js';
+import getTemplate from './wechat-message-template';
 
 const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
@@ -169,17 +170,20 @@ export default class WechatUtil {
     return _.pick(wechat, 'openid');
   }
 
-  static sendTemplateMessage(user, template, data, url) {
-    template = config.get(`wechat.templates.${template}`);
-    if (!ObjectId.isValid(user)) {
-      return wechatApi.sendTemplate(user, template, url, data);
+  static sendTemplateMessage(user, templateName, url, data) {
+    let template = getTemplate(templateName);
+    if (!template) {
+      throw new Error(`template ${templateName} not exists`);
     }
-    this.getUserWechat(user)
-    .then(wechat => {
-      if (!wechat) {
-        return;
-      }
-      wechatApi.sendTemplate(wechat.openid, template, url, data);
+    let getOpenid;
+    if (!ObjectId.isValid(user)) {
+      getOpenid = Promise.resolve(user);
+    } else {
+      getOpenid = this.getUserWechat(user)
+      .then(wechat => wechat && wechat.openid);
+    }
+    getOpenid.then(openid => {
+      openid && wechatApi.sendTemplate(openid, template, url, data);
     });
   }
 

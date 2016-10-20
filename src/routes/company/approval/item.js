@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
+import moment from 'moment';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -21,6 +22,7 @@ import C from 'lib/constants';
 import { mapObjectIdToData, indexObjectId, fetchCompanyMemberInfo } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
+import wUtil from 'lib/wechat-util';
 
 let api = express.Router();
 export default api;
@@ -239,6 +241,25 @@ api.put('/:item_id/steps', (req, res, next) => {
             approval_item: item_id,
             to: item.from,
             approval_template,
+          });
+          let url = config.get('mobileUrl') + `oa/company/${req.company._id}/feature/approval/detail/${item_id}`;
+          wUtil.sendTemplateMessage(item.from, 'approval_result', url, {
+            'first': {
+              'value': '您好！',
+              'color': '#173177'
+            },
+            'keyword1': {
+              'value': `『${item.title}』 ${item.content}`,
+              'color': '#173177'
+            },
+            'keyword2': {
+              'value': data.status == C.APPROVAL_ITEM_STATUS.REJECTED ? '驳回' : '通过',
+              'color':'#173177'
+            },
+            'remark': {
+              'value': moment().format('YYYY/MM/DD HH:mm'),
+              // 'color': '#173177'
+            }
           });
           return doAfterApproval(item, data.status);
         }
