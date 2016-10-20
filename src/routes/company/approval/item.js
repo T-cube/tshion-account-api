@@ -234,7 +234,8 @@ api.put('/:item_id/steps', (req, res, next) => {
           return Approval.prepareNextStep(req, item_id, templateSteps, nextStep._id);
         }
         if (!nextStep) {
-          let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
+          let isApproved = data.status == C.APPROVAL_ITEM_STATUS.REJECTED;
+          let activityAction = isApproved
             ? C.ACTIVITY_ACTION.REJECT
             : C.ACTIVITY_ACTION.APPROVE;
           addNotification(req, activityAction, {
@@ -253,12 +254,11 @@ api.put('/:item_id/steps', (req, res, next) => {
               'color': '#173177'
             },
             'keyword2': {
-              'value': data.status == C.APPROVAL_ITEM_STATUS.REJECTED ? '驳回' : '通过',
-              'color':'#173177'
+              'value': isApproved ? '驳回' : '通过',
+              'color': isApproved ? 'green' : 'orange'
             },
             'remark': {
               'value': moment().format('YYYY/MM/DD HH:mm'),
-              // 'color': '#173177'
             }
           });
           return doAfterApproval(item, data.status);
