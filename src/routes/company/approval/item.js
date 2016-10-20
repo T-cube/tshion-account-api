@@ -234,7 +234,7 @@ api.put('/:item_id/steps', (req, res, next) => {
           return Approval.prepareNextStep(req, item_id, templateSteps, nextStep._id);
         }
         if (!nextStep) {
-          let isApproved = data.status == C.APPROVAL_ITEM_STATUS.REJECTED;
+          let isApproved = data.status != C.APPROVAL_ITEM_STATUS.REJECTED;
           let activityAction = isApproved
             ? C.ACTIVITY_ACTION.REJECT
             : C.ACTIVITY_ACTION.APPROVE;
@@ -254,7 +254,7 @@ api.put('/:item_id/steps', (req, res, next) => {
               'color': '#173177'
             },
             'keyword2': {
-              'value': isApproved ? '驳回' : '通过',
+              'value': isApproved ? '通过' : '驳回',
               'color': isApproved ? '#419641' : '#ef4f4f'
             },
             'remark': {
