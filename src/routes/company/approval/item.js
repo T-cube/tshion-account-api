@@ -255,7 +255,7 @@ api.put('/:item_id/steps', (req, res, next) => {
             },
             'keyword2': {
               'value': isApproved ? '驳回' : '通过',
-              'color': isApproved ? 'green' : 'orange'
+              'color': isApproved ? '#419641' : '#ef4f4f'
             },
             'remark': {
               'value': moment().format('YYYY/MM/DD HH:mm'),
