@@ -37,7 +37,7 @@ export default class WechatAccess {
         if (!jsapi_ticket) {
           return null;
         }
-        let nonceStr = +new Date();
+        let nonceStr = Math.random().toString(36).substr(2, 15);
         let _timestamp = parseInt((timestamp() + '').substr(0, 10));
         let str = `jsapi_ticket=${jsapi_ticket}&noncestr=${nonceStr}&timestamp=${_timestamp}&url=${url}`;
         let signature = crypto.createHash('sha1').update(str).digest('hex');
@@ -74,7 +74,7 @@ export default class WechatAccess {
         let data = JSON.parse(body);
         if (data.access_token) {
           this.redis.set(accessTokenKey, data.access_token);
-          this.redis.expire(accessTokenKey, 3600000);
+          this.redis.expire(accessTokenKey, 7200000);
           this.doRefreshJsApiTicket(data.access_token, 0);
         }
       } else {
@@ -96,7 +96,7 @@ export default class WechatAccess {
         if (data.ticket) {
           this.redis.set(jsapiTicketKey, data.ticket);
           this.redis.expire(jsapiTicketKey, 7200000);
-          // this.redis.delete(signatureKey); // TODO ???
+          this.redis.delete(signatureKey);
         }
       } else {
         console.error(error || body);
