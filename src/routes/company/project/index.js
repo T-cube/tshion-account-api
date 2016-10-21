@@ -298,9 +298,9 @@ api.put('/:project_id/member/:member_id/type', (req, res, next) => {
     };
     let activityAction;
     if (type == C.PROJECT_MEMBER_TYPE.ADMIN) {
-      activityAction = C.ACTIVITY_ACTION.ADD;
+      activityAction = C.ACTIVITY_ACTION.SET_ADMIN;
     } else {
-      activityAction = C.ACTIVITY_ACTION.REMOVE;
+      activityAction = C.ACTIVITY_ACTION.REMOVE_ADMIN;
     }
     _.extend(notification, {
       action: activityAction,

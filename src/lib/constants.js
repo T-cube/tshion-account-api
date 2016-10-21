@@ -22,6 +22,8 @@ let constants = {
     EXIT: 'exit',             // 退出
     ADD_POSITION: 'add_position',             // 添加职位
     REMOVE_POSITION: 'remove_position',       // 移除职位
+    SET_ADMIN: 'add_admin',             // 设为管理员
+    REMOVE_ADMIN: 'remove_admin',       // 取消管理员
     // 管理操作
     TRANSFER: 'transfer',      // 转让
     // 邀请、审批

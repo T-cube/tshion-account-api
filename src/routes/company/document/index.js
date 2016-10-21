@@ -123,11 +123,11 @@ api.post('/dir', (req, res, next) => {
     .then(doc => {
       res.json(doc);
       addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-        document_dir: _.pick(doc, '_id', 'name'),
+        document_dir: _.pick(doc, '_id', 'name', 'path'),
         target_type: C.OBJECT_TYPE.DOCUMENT_DIR
       });
       if (data.parent_dir) {
-        return db.document.dir.update({
+        db.document.dir.update({
           _id: data.parent_dir
         }, {
           $push: {
@@ -156,6 +156,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
   }, {
     parent_dir: 1,
     name: 1,
+    path: 1,
   })
   .then(dirInfo => {
     if (!dirInfo) {
@@ -175,6 +176,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
         document_dir: {
           _id: dir_id,
           name: dirInfo.name,
+          path: dirInfo.path,
           new_name: data.name,
         },
         target_type: C.OBJECT_TYPE.DOCUMENT_DIR,
@@ -246,6 +248,7 @@ api.put('/file/:file_id', (req, res, next) => {
   }, {
     name: 1,
     dir_id: 1,
+    dir_path: 1,
   })
   .then(fileInfo => {
     if (!fileInfo) {
@@ -272,7 +275,7 @@ api.put('/file/:file_id', (req, res, next) => {
     })
     .then(doc => {
       res.json(doc);
-      let document_file = _.pick(fileInfo, '_id', 'name');
+      let document_file = _.pick(fileInfo, '_id', 'name', 'dir_path');
       if (fileInfo.name != data.name) {
         document_file['new_name'] = data.name;
       }
@@ -326,7 +329,7 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   })
   .then(doc => {
     addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-      document_file: _.pick(doc, '_id', 'name'),
+      document_file: _.pick(doc, '_id', 'name', 'dir_path'),
       target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
     });
     return fetchCompanyMemberInfo(req.company, doc, 'updated_by');
@@ -395,7 +398,7 @@ saveCdn('cdn-file'),
   .then(() => createFile(req, data, dir_id))
   .then(files => {
     addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
-      document_file: files.map(file => _.pick(file, '_id', 'name')),
+      document_file: files.map(file => _.pick(file, '_id', 'name', 'dir_path')),
       target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
     });
     return Promise.map(files, file => attachFileUrls(req, file, thumb_size))
@@ -413,8 +416,8 @@ api.put('/move', (req, res, next) => {
   let { files, dirs, dest_dir } = data;
   let moveInfo = _.clone(data);
   mapObjectIdToData(moveInfo, [
+    ['document.dir', 'name,files,dirs,project_id,company_id,path', 'dest_dir'],
     ['document.dir', 'name,parent_dir,project_id,company_id', 'dirs'],
-    ['document.dir', 'name,files,dirs,project_id,company_id', 'dest_dir'],
     ['document.file', 'name,dir_id,project_id,company_id', 'files'],
   ])
   .then(() => {
@@ -494,9 +497,9 @@ api.put('/move', (req, res, next) => {
     moveInfo.dirs.length && (target_type = C.OBJECT_TYPE.DOCUMENT_DIR);
     moveInfo.files.length && (target_type = target_type ? C.OBJECT_TYPE.DOCUMENT : C.OBJECT_TYPE.DOCUMENT_FILE);
     let activityExt = {
-      dest_dir: _.pick(moveInfo.dest_dir, '_id', 'name'),
-      document_dir: moveInfo.dirs.map(dir => _.pick(dir, '_id', 'name')),
-      document_file: moveInfo.files.map(file => _.pick(file, '_id', 'name')),
+      dest_dir: _.pick(moveInfo.dest_dir, '_id', 'name', 'path'),
+      document_dir: moveInfo.dirs.map(dir => _.pick(dir, '_id', 'name', 'path')),
+      document_file: moveInfo.files.map(file => _.pick(file, '_id', 'name', 'dir_path')),
       target_type,
     };
     addActivity(req, C.ACTIVITY_ACTION.MOVE, activityExt);
@@ -848,7 +851,8 @@ function addActivity(req, action, data) {
       }
     });
   }
-  return req.model('activity').insert(info);
+  return mapObjectIdToData(info, 'document.dir', 'name', 'document_path,document_dir.path,document_file.dir_path,dest_dir.path')
+  .then(() => req.model('activity').insert(info));
 }
 
 function searchByName(req, dir, name) {

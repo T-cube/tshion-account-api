@@ -522,7 +522,8 @@ function addActivity(req, action, data) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.TASK,
-    task: _.pick(req.task, '_id', 'title', 'company_id'),
+    task: req.task._id,
+    ori_task: _.pick(req.task, '_id', 'title', 'company_id'),
     project: req.project._id,
     creator: req.user._id,
   };
