@@ -38,7 +38,7 @@ export default class Activity {
         ['user', 'name', 'creator,user,project_member'],
         ['company', 'name', 'company'],
         ['project', 'name,company_id', 'project'],
-        ['task', 'title,company_id,project_id', 'task'],
+        // ['task', 'title,company_id,project_id', 'task'],
         ['approval.template', 'name,company_id', 'approval_template'],
         ['approval.item', 'title,company_id', 'approval_item'],
         ['schedule', 'title', 'schedule'],

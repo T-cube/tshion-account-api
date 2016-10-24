@@ -19,7 +19,7 @@ import {
 } from './schema';
 import Structure from 'models/structure';
 import C from 'lib/constants';
-import { mapObjectIdToData, indexObjectId, fetchCompanyMemberInfo } from 'lib/utils';
+import { mapObjectIdToData, indexObjectId, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 import wUtil from 'lib/wechat-util';
@@ -169,7 +169,7 @@ api.put('/:item_id/status', (req, res, next) => {
         steps: 1
       })
       .then(template => {
-        let { approver, copyto } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
+        let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
         return Promise.all([
           addActivity(req, C.ACTIVITY_ACTION.REVOKE, {
             approval_item: item_id,
@@ -178,7 +178,7 @@ api.put('/:item_id/status', (req, res, next) => {
           addNotification(req, C.ACTIVITY_ACTION.REVOKE, {
             approval_item: item_id,
             approval_template: item.template,
-            to: approver.concat(copyto)
+            to: approver
           })
         ]);
       });
@@ -236,8 +236,8 @@ api.put('/:item_id/steps', (req, res, next) => {
         if (!nextStep) {
           let isApproved = data.status != C.APPROVAL_ITEM_STATUS.REJECTED;
           let activityAction = isApproved
-            ? C.ACTIVITY_ACTION.REJECT
-            : C.ACTIVITY_ACTION.APPROVE;
+            ? C.ACTIVITY_ACTION.APPROVE
+            : C.ACTIVITY_ACTION.REJECT;
           addNotification(req, activityAction, {
             approval_item: item_id,
             to: item.from,

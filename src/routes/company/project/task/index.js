@@ -555,14 +555,15 @@ function doUpdateField(req, field) {
     $set: data,
   })
   .then(() => {
-    let action = C.ACTIVITY_ACTION.UPDATE;
+    let action;
     let ext = {};
     if (field == 'title') {
-      ext.task = _.extend(_.pick(req.task, '_id', 'title', 'company_id'), {
-        new_title: data.title
-      });
       action = C.ACTIVITY_ACTION.RENAME;
+      ext.field = {
+        title: data.title
+      };
     } else {
+      action = C.ACTIVITY_ACTION.UPDATE;
       ext.update_fields = [field];
     }
     logTask(req, action, ext);

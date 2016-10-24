@@ -10,7 +10,7 @@ import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import { upload, saveCdn, isImageFile ,getCdnThumbnail } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo,
-  generateToken, timestamp, indexObjectId } from 'lib/utils';
+  generateToken, timestamp, indexObjectId, uniqObjectId } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
 import CompanyLevel from 'models/company-level';
@@ -83,7 +83,6 @@ api.get('/tree', (req, res, next) => {
         name: '',
         dirs: [],
         files: [],
-        // total_size: 0,
       });
       return db.document.dir.insert(condition)
       .then(rootDir => [rootDir]);
@@ -189,15 +188,34 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
 api.delete('/', (req, res, next) => {
   let data = req.body;
   validate('del', data);
-  Promise.all([deleteDirs(req, data.dirs), deleteFiles(req, data.files, true)])
+  mapObjectIdToData(data, [
+    ['document.dir', '', 'dirs'],
+    ['document.file', `${req.document.posKey},name,size,dir_id,path,cdn_key`, 'files'],
+  ])
+  .then(() => {
+    data.dirs = data.dirs.filter(dir => dir && dir[req.document.posKey].equals(req.document.posVal));
+    data.files = data.files.filter(file => file && file[req.document.posKey].equals(req.document.posVal));
+    let parent_dir = uniqObjectId(data.dirs.map(dir => dir.parent_dir).concat(data.files.map(file => file.dir_id)));
+    if (parent_dir.length != 1) {
+      throw new ApiError(400);
+    }
+    parent_dir = parent_dir[0];
+    return Promise.all([
+      deleteDirs(req, data.dirs),
+      deleteFiles(req, data.files, true),
+      mapObjectIdToData(parent_dir, 'document.dir', 'name,path')
+    ]);
+  })
   .then(document => {
     res.json({});
     let document_dir = document[0];
     let document_file = document[1];
+    let document_path = document[2];
     let target_type;
     document_dir.length && (target_type = C.OBJECT_TYPE.DOCUMENT_DIR);
     document_file.length && (target_type = target_type ? C.OBJECT_TYPE.DOCUMENT : C.OBJECT_TYPE.DOCUMENT_FILE);
     addActivity(req, C.ACTIVITY_ACTION.DELETE, {
+      document_path,
       document_dir,
       document_file,
       target_type,
@@ -397,16 +415,19 @@ saveCdn('cdn-file'),
   })
   .then(() => createFile(req, data, dir_id))
   .then(files => {
-    addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
-      document_file: files.map(file => _.pick(file, '_id', 'name', 'dir_path')),
-      target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
-    });
     return Promise.map(files, file => attachFileUrls(req, file, thumb_size))
     .then(() => {
       return fetchCompanyMemberInfo(req.company, files, 'updated_by');
     });
   })
-  .then(files => res.json(files))
+  .then(files => {
+    res.json(files);
+    addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
+      document_path: files[0] && files[0].dir_path,
+      document_file: files.map(file => _.pick(file, '_id', 'name')),
+      target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
+    });
+  })
   .catch(next);
 });
 
@@ -415,15 +436,19 @@ api.put('/move', (req, res, next) => {
   validate('move', data);
   let { files, dirs, dest_dir } = data;
   let moveInfo = _.clone(data);
+  let parent_dir;
   mapObjectIdToData(moveInfo, [
-    ['document.dir', 'name,files,dirs,project_id,company_id,path', 'dest_dir'],
-    ['document.dir', 'name,parent_dir,project_id,company_id', 'dirs'],
-    ['document.file', 'name,dir_id,project_id,company_id', 'files'],
+    ['document.dir', `name,files,parent_dir,dirs,path,${req.document.posKey}`, 'dest_dir'],
+    ['document.dir', `name,parent_dir,${req.document.posKey}`, 'dirs'],
+    ['document.file', `name,dir_id,${req.document.posKey}`, 'files'],
   ])
   .then(() => {
-    let filter = item => (!!item &&
-      ((req.document.isProject && item.project_id.equals(req.project._id))
-        || (req.document.isCompany && item.company_id.equals(req.company._id))));
+    parent_dir = uniqObjectId(moveInfo.dirs.map(dir => dir.parent_dir).concat(moveInfo.files.map(file => file.dir_id)));
+    if (parent_dir.length != 1) {
+      throw new ApiError(400);
+    }
+    parent_dir = parent_dir[0];
+    let filter = item => (!!item && item[req.document.posKey].equals(req.document.posVal));
     if (!filter(moveInfo.dest_dir)) {
       moveInfo.dest_dir = null;
     }
@@ -496,13 +521,17 @@ api.put('/move', (req, res, next) => {
     let target_type;
     moveInfo.dirs.length && (target_type = C.OBJECT_TYPE.DOCUMENT_DIR);
     moveInfo.files.length && (target_type = target_type ? C.OBJECT_TYPE.DOCUMENT : C.OBJECT_TYPE.DOCUMENT_FILE);
-    let activityExt = {
-      dest_dir: _.pick(moveInfo.dest_dir, '_id', 'name', 'path'),
-      document_dir: moveInfo.dirs.map(dir => _.pick(dir, '_id', 'name', 'path')),
-      document_file: moveInfo.files.map(file => _.pick(file, '_id', 'name', 'dir_path')),
-      target_type,
-    };
-    addActivity(req, C.ACTIVITY_ACTION.MOVE, activityExt);
+    mapObjectIdToData(parent_dir, 'document.dir', 'name,path')
+    .then(document_path => {
+      let activityExt = {
+        document_path,
+        dest_dir: _.pick(moveInfo.dest_dir, '_id', 'name', 'path'),
+        document_dir: moveInfo.dirs.map(dir => _.pick(dir, '_id', 'name', 'path')),
+        document_file: moveInfo.files.map(file => _.pick(file, '_id', 'name', 'dir_path')),
+        target_type,
+      };
+      return addActivity(req, C.ACTIVITY_ACTION.MOVE, activityExt);
+    });
   })
   .catch(next);
 });
@@ -658,42 +687,37 @@ function deleteDirs(req, dirs) {
     return Promise.resolve([]);
   }
   let dirsDeleted = [];
-  return Promise.all(dirs.map(dir_id => {
-    return db.document.dir.findOne({
-      _id: dir_id,
-      [req.document.posKey]: req.document.posVal,
-    })
-    .then(doc => {
-      if (!doc || doc.parent_dir == null) {
-        return null;
-      }
-      dirsDeleted.push(_.pick(doc, '_id', 'name'));
-      return Promise.all([
-        db.document.dir.update({
-          _id: doc.parent_dir
-        }, {
-          $pull: {
-            dirs: dir_id
-          }
-        }),
-        doc.dirs && req.model('document').fetchItemIdsUnderDir(doc.dirs)
-        .then(items => {
-          return Promise.all([
-            deleteFiles(req, items.files.concat(doc.files)),
-            db.document.dir.remove({
-              _id: {
-                $in: items.dirs
-              }
-            })
-          ]);
-        })
-      ])
-      .then(() => {
-        return db.document.dir.remove({
-          _id: {
-            $in: (doc.dirs || []).concat(dir_id)
-          }
-        });
+  return Promise.all(dirs.map(dir => {
+    if (!dir || dir.parent_dir == null) {
+      return null;
+    }
+    dirsDeleted.push(_.pick(dir, '_id', 'name'));
+    return Promise.all([
+      db.document.dir.update({
+        _id: dir.parent_dir
+      }, {
+        $pull: {
+          dirs: dir._id
+        }
+      }),
+      dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
+      .then(items => {
+        return Promise.all([
+          mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
+          .then(files => deleteFiles(req, files)),
+          db.document.dir.remove({
+            _id: {
+              $in: items.dirs
+            }
+          })
+        ]);
+      })
+    ])
+    .then(() => {
+      return db.document.dir.remove({
+        _id: {
+          $in: (dir.dirs || []).concat(dir._id)
+        }
       });
     });
   }))
@@ -709,47 +733,33 @@ function deleteFiles(req, files, dirCheckAndPull) {
   }
   let incSize = 0;
   let filesDeleted = [];
-  return Promise.all(files.map(file_id => {
-    return db.document.file.findOne({
-      _id: file_id
-    }, {
-      name: 1,
-      size: 1,
-      dir_id: 1,
-      path: 1,
-      cdn_key: 1,
-    })
-    .then(fileInfo => {
-      if (!fileInfo) {
-        return null;
-      }
-      filesDeleted.push(_.pick(fileInfo, '_id', 'name'));
-      let removeFileFromDb;
-      if (dirCheckAndPull) {
-        removeFileFromDb = checkDirExist(req, fileInfo.dir_id).then(() => {
-          return Promise.all([
-            db.document.file.remove({
-              _id: file_id,
-            }),
-            db.document.dir.update({
-              _id: fileInfo.dir_id,
-            }, {
-              $pull: {
-                files: file_id
-              }
-            }),
-          ]);
-        });
-      } else {
-        removeFileFromDb = db.document.file.remove({
-          _id: file_id,
-        });
-      }
-      return removeFileFromDb.then(() => {
-        incSize -= fileInfo.size;
-        fileInfo.path && fs.unlink(fileInfo.path, e => e && console.error(e));
-        fileInfo.cdn_key && req.model('qiniu').bucket('cdn-file').delete(fileInfo.cdn_key).catch(e => console.error(e));
+  return Promise.all(files.map(file => {
+    filesDeleted.push(_.pick(file, '_id', 'name'));
+    let removeFileFromDb;
+    if (dirCheckAndPull) {
+      removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
+        return Promise.all([
+          db.document.file.remove({
+            _id: file._id,
+          }),
+          db.document.dir.update({
+            _id: file.dir_id,
+          }, {
+            $pull: {
+              files: file._id
+            }
+          }),
+        ]);
       });
+    } else {
+      removeFileFromDb = db.document.file.remove({
+        _id: file._id,
+      });
+    }
+    return removeFileFromDb.then(() => {
+      incSize -= file.size;
+      file.path && fs.unlink(file.path, e => e && console.error(e));
+      file.cdn_key && req.model('qiniu').bucket('cdn-file').delete(file.cdn_key).catch(e => console.error(e));
     });
   }))
   .then(() => {
@@ -833,25 +843,26 @@ function addActivity(req, action, data) {
   };
   if (req.project) {
     info.project = req.project._id;
+    info.company_id = req.company._id;
   } else {
     info.company = req.company._id;
   }
   _.extend(info, data);
-  if (req.project) {
-    let exts = {
-      company_id: req.company._id
-    };
-    ['document_dir', 'document_file', 'dest_dir'].forEach(key => {
-      if (info[key]) {
-        if (_.isArray(info[key])) {
-          info[key] = info[key].map(i => _.extend({}, exts, i));
-        } else {
-          info[key] = _.extend({}, exts, info[key]);
-        }
-      }
-    });
-  }
-  return mapObjectIdToData(info, 'document.dir', 'name', 'document_path,document_dir.path,document_file.dir_path,dest_dir.path')
+  // if (req.project) {
+  //   let exts = {
+  //     company_id: req.company._id
+  //   };
+  //   ['document_dir', 'document_file', 'dest_dir'].forEach(key => {
+  //     if (info[key]) {
+  //       if (_.isArray(info[key])) {
+  //         info[key] = info[key].map(i => _.extend({}, exts, i));
+  //       } else {
+  //         info[key] = _.extend({}, exts, info[key]);
+  //       }
+  //     }
+  //   });
+  // }
+  return mapObjectIdToData(info, 'document.dir', 'name', 'document_path,document_path.path,document_dir.path,document_file.dir_path,dest_dir.path')
   .then(() => req.model('activity').insert(info));
 }
 
