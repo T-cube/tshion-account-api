@@ -34,7 +34,7 @@ api.post('/', (req, res, next) => {
   .then(doc => {
     res.json(doc);
     return Promise.all([
-      addActivity(req, C.ACTIVITY_ACTION.CREATE, {
+      addActivity(req, C.ACTIVITY_ACTION.ADD, {
         schedule: _.pick(doc, '_id', 'title')
       }),
       data.remind.type != 'none' &&

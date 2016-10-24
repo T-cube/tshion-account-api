@@ -453,16 +453,26 @@ api.post('/:task_id/subtask', (req, res, next) => {
   db.task.update({
     _id: req.task._id
   }, {
-    $push: {
-      subtask: subtask
-    }
+    $push: {subtask}
   })
-  .then(doc => res.json(subtask))
+  .then(doc => {
+    res.json(subtask);
+    addActivity(req, C.ACTIVITY_ACTION.ADD, {
+      target_type: C.OBJECT_TYPE.SUBTASK,
+      field: {
+        subtask: subtask.title
+      }
+    });
+  })
   .catch(next);
 });
 
 api.delete('/:task_id/subtask/:subtask', (req, res, next) => {
   let subtask_id = ObjectId(req.params.subtask);
+  let subtask = _.find(req.task.subtask, subtask => subtask._id.equals(subtask_id));
+  if (!subtask) {
+    throw new ApiError(404);
+  }
   db.task.update({
     _id: req.task._id
   }, {
@@ -472,13 +482,26 @@ api.delete('/:task_id/subtask/:subtask', (req, res, next) => {
       }
     }
   })
-  .then(doc => res.json({}))
+  .then(doc => {
+    res.json({});
+    addActivity(req, C.ACTIVITY_ACTION.DELETE, {
+      target_type: C.OBJECT_TYPE.SUBTASK,
+      field: {
+        subtask: subtask.title
+      }
+    });
+  })
   .catch(next);
 });
 
 api.put('/:task_id/subtask/:subtask', (req, res, next) => {
   let subtask_id = ObjectId(req.params.subtask);
+  let subtask = _.find(req.task.subtask, subtask => subtask._id.equals(subtask_id));
+  if (!subtask) {
+    throw new ApiError(404);
+  }
   let update = {};
+  let activityAction;
   let subtask1 = req.body;
   let subtask2 = _.clone(subtask1);
   if (subtask1.title) {
@@ -488,6 +511,11 @@ api.put('/:task_id/subtask/:subtask', (req, res, next) => {
   if (subtask2.status) {
     validate('subtask', subtask2, ['status']);
     update['subtask.$.status'] = subtask2.status;
+    if (C.TASK_STATUS.COMPLETED == subtask2.status) {
+      activityAction = C.ACTIVITY_ACTION.COMPLETE;
+    } else {
+      activityAction = C.ACTIVITY_ACTION.REOPEN;
+    }
   }
   if (_.isEmpty(update)) {
     throw new ApiError(400, 'update_failed');
@@ -499,7 +527,15 @@ api.put('/:task_id/subtask/:subtask', (req, res, next) => {
   }, {
     $set: update
   })
-  .then(doc => res.json({}))
+  .then(doc => {
+    res.json({});
+    activityAction && addActivity(req, activityAction, {
+      target_type: C.OBJECT_TYPE.SUBTASK,
+      field: {
+        subtask: subtask.title
+      }
+    });
+  })
   .catch(next);
 });
 

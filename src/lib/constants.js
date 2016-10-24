@@ -157,6 +157,7 @@ let constants = {
     REMINDING: 'reminding',
     REQUEST: 'request',
     SCHEDULE: 'schedule',
+    SUBTASK: 'subtask',
     TASK: 'task',
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
