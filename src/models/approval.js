@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import moment from 'moment';
+import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -240,6 +241,88 @@ export default class Approval {
     });
   }
 
+  static createNewVersionTemplate(data, options) {
+    let { criteria, createNew, templateStatus, company_id } = options;
+    return db.approval.template.findOne(criteria, {
+      master_id: 1,
+      status: 1,
+      for: 1,
+      forms_not_editable: 1,
+      forms: 1,
+      number: 1,
+    })
+    .then(oldTpl => {
+      if (createNew && !oldTpl) {
+        return Approval.createTemplate(_.extend({}, criteria, data));
+      } else if (!oldTpl) {
+        throw new ApiError(400, 'cannot_modify');
+      }
+      let template_id = oldTpl._id;
+      if (oldTpl.forms_not_editable) {
+        data.forms = oldTpl.forms; // 不能修改表单
+      }
+      return db.approval.item.count({
+        template: template_id,
+      })
+      .then(count => {
+        if (!count) {
+          return Promise.all([
+            db.approval.template.master.update({
+              _id: oldTpl.master_id,
+              status: {
+                $ne: C.APPROVAL_STATUS.NORMAL
+              }
+            }, {
+              $set: {
+                status: C.APPROVAL_STATUS.NORMAL
+              }
+            }),
+            db.approval.template.update({
+              _id: template_id
+            }, {
+              $set: data
+            })
+          ])
+          .then(() => _.extend(oldTpl, data));
+        } else {
+          let number = oldTpl.number.toString().split('-');
+          number[1] = (parseInt(number[1]) || 0) + 1;
+          _.extend(data, {
+            master_id: oldTpl.master_id,
+            company_id: criteria.company_id || company_id,
+            status: templateStatus || C.APPROVAL_STATUS.UNUSED,
+            number: `${number[0]}-${number[1]}`
+          });
+          return Promise.all([
+            db.approval.template.insert(data)
+            .then(newTpl => {
+              return db.approval.template.master.update({
+                _id: oldTpl.master_id
+              }, {
+                $set: {
+                  current: newTpl._id,
+                  status: C.APPROVAL_STATUS.NORMAL
+                },
+                $push: {
+                  reversions: newTpl._id
+                }
+              })
+              .then(() => newTpl);
+            }),
+            db.approval.template.update({
+              _id: template_id
+            }, {
+              $set: {
+                status: C.APPROVAL_STATUS.OLD_VERSION
+              }
+            })
+          ])
+          .then(doc => doc[0]);
+        }
+      });
+    });
+  }
+
   static getStepRelatedMembers(structure, steps, step_id) {
     let step = _.find(steps, i => i._id.equals(step_id));
     let approver = [];
@@ -290,11 +373,12 @@ export default class Approval {
         company: req.company._id,
         from: req.user._id,
       };
+      let groupItems = _.groupBy(items, item => item.from.toString());
       return Promise.all(
-        items.map(item => {
+        _.map(groupItems, (userItems, fromUser) => {
           return req.model('notification').send(_.extend(notification, {
-            to: item.from,
-            approval_item: item._id,
+            to: ObjectId(fromUser),
+            approval_item: userItems.map(userItem => userItem._id),
           }));
         })
         .concat(db.approval.item.update({

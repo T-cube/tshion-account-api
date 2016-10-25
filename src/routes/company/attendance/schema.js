@@ -5,7 +5,7 @@ export let settingSanitization = {
   time_start: { type: 'string' },
   time_end: { type: 'string' },
   ahead_time: { type: 'string', optional: true },
-  auditor: { $objectId: 1 },
+  auditor: { $objectId: 1, optional: true },
   workday: {
     type: 'array',
     items: { type: 'integer' },
@@ -54,7 +54,7 @@ export let settingValidation = {
   time_start: { type: 'string', pattern: /^(([1-9])|([1|0]\d)|(2[0-3])):[0-6]?\d$/ },
   time_end: { type: 'string', pattern: /^(([1-9])|([0|1]\d)|(2[0-3])):[0-6]?\d$/ },
   ahead_time: { type: 'string', optional: true },
-  auditor: { $objectId: 1 },
+  auditor: { $objectId: 1, optional: true },
   workday: {
     type: 'array',
     items: {

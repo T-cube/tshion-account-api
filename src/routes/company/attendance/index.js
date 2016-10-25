@@ -46,7 +46,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(signSanitization, signValidation, data);
   checkUserLocation(req.company._id, data.location).then(isValid => {
-    let from_pc = !!req.query.from_pc && !req.headers['user-agent'].toLowerCase().match(/(iphone|ipod|ipad|android)/) && getClientIp(req);
+    let from_pc = !!req.query.from_pc && getClientIp(req);
     if (!isValid && !from_pc) {
       throw new ApiError(400, 'invalid_user_location');
     }
@@ -341,6 +341,7 @@ api.get('/setting', (req, res, next) => {
       max_distance: 200,
       workday_special: [],
       holiday: [],
+      audit: true,
     }));
   })
   .catch(next);
@@ -353,20 +354,38 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   if (checkDupliDate(data.workday_special) || checkDupliDate(data.holiday)) {
     throw new ApiError(400, 'validation_error');
   }
-  if (!_.find(req.company.members, i => i._id.equals(data.auditor))) {
-    throw new ApiError(400,'member_not_exists');
+  let $set = _.clone(data);
+  let update = {$set};
+  if (data.auditor) {
+    if (!_.find(req.company.members, i => i._id.equals(data.auditor))) {
+      throw new ApiError(400,'member_not_exists');
+    }
+  } else {
+    delete $set.auditor;
+    delete $set.approval_template;
+    update.$unset = {
+      auditor: 1,
+      approval_template: 1
+    };
   }
-  db.attendance.setting.update({
-    _id: company_id
-  }, {
-    $set: data
-  }, {
-    upsert: true
+  db.attendance.setting.findAndModify({
+    query: {
+      _id: company_id
+    },
+    update,
+    fields: {
+      approval_template: 1
+    },
+    upsert:true
   })
-  .then(setting => {
-    res.json(setting);
+  .then(doc => {
+    let setting = doc.value;
+    res.json(_.extend({}, setting, data));
     if (!data.approval_template && data.auditor) {
       return createApprovalTemplate(req, data.auditor);
+    }
+    if (setting.approval_template && !data.auditor) {
+      return disableApprovalTemplate(req, setting.approval_template);
     }
   })
   .catch(next);
@@ -462,7 +481,7 @@ function createApprovalTemplate(req, auditor) {
     for: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
     forms_not_editable: true,
     name: '补签',
-    description: '',
+    description: '考勤的补签流程，审批通过之后会自动修改考勤记录',
     scope: [req.company.structure._id],
     company_id: req.company._id,
     status: C.APPROVAL_STATUS.NORMAL,
@@ -489,7 +508,14 @@ function createApprovalTemplate(req, auditor) {
       type: 'datetime',
     }],
   };
-  return Approval.createTemplate(template)
+  return Approval.createNewVersionTemplate(template, {
+    criteria: {
+      company_id: req.company._id,
+      for: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
+    },
+    createNew: true,
+    templateStatus: C.APPROVAL_STATUS.NORMAL
+  })
   .then(template => {
     return db.attendance.setting.update({
       _id: req.company._id,
@@ -499,4 +525,20 @@ function createApprovalTemplate(req, auditor) {
       }
     });
   });
+}
+
+function disableApprovalTemplate(req, templateId) {
+  return Promise.all([
+    db.approval.template.update({
+      _id: templateId
+    }, {
+      $set: {
+        status: C.APPROVAL_STATUS.DELETED
+      },
+      $unset: {
+        forms_not_editable: 1
+      }
+    }),
+    Approval.cancelItemsUseTemplate(req, templateId)
+  ]);
 }

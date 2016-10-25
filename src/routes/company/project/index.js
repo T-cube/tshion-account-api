@@ -184,7 +184,12 @@ api.put('/:project_id/logo', (req, res, next) => {
   }, {
     $set: data
   })
-  .then(() => res.json(data))
+  .then(() => {
+    res.json(data);
+    logProject(req, C.ACTIVITY_ACTION.UPDATE, {
+      update_fields: ['logo']
+    });
+  })
   .catch(next);
 });
 
@@ -204,7 +209,12 @@ saveCdn('cdn-public'),
   }, {
     $set: data
   })
-  .then(() => res.json(data))
+  .then(() => {
+    res.json(data);
+    logProject(req, C.ACTIVITY_ACTION.UPDATE, {
+      update_fields: ['logo']
+    });
+  })
   .catch(next);
 });
 

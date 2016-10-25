@@ -16,7 +16,7 @@ export let validation = {
   schedule: { $objectId: 1, optional: true },
   user: { $objectId: 1, optional: true },
   request: { $objectId: 1, optional: true },
-  approval_item: { $objectId: 1, optional: true },
+  approval_item: { optional: true }, // objectId or array
   approval_template: { $objectId: 1, optional: true },
   announcement: { $objectId: 1, optional: true },
   field: { type: 'object', optional: true },

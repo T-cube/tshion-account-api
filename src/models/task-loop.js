@@ -72,10 +72,10 @@ export default class TaskLoop {
       newTask.status = C.TASK_STATUS.PROCESSING;
       newTask.date_create = date_create;
       newTask.date_update = date_create;
+      newTask.date_start = moment().startOf('day').toDate();
+      newTask.date_due = moment().add(1, 'd').startOf('day').toDate();
       delete newTask._id;
       delete newTask.loop;
-      delete newTask.date_start;
-      delete newTask.date_due;
       return newTask;
     });
     return newTasks.length && db.task.insert(newTasks);

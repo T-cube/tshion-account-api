@@ -51,6 +51,7 @@ api.get('/', (req, res, next) => {
       scope: 1,
       status: 1,
       number: 1,
+      for: 1,
     })
     .sort({
       name: 1
@@ -144,81 +145,21 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
     i._id = ObjectId();
   });
   checkAndInitForms(data.forms);
-  let condition = {
+  let criteria = {
     _id: template_id,
     company_id: req.company._id,
-    status: {
-      $nin: [C.APPROVAL_STATUS.DELETED, C.APPROVAL_STATUS.OLD_VERSION]
-    }
+    status: C.APPROVAL_STATUS.UNUSED
   };
-  db.approval.template.findOne(condition, {
-    master_id: 1,
-    status: 1,
-    for: 1,
-    forms_not_editable: 1,
-    forms: 1,
-    number: 1,
+  Approval.createNewVersionTemplate(data, {
+    criteria
   })
-  .then(oldTpl => {
-    if (!oldTpl) {
-      throw new ApiError(404, 'approval_template_not_exists');
-    }
-    if (oldTpl.status != C.APPROVAL_STATUS.UNUSED) {
-      throw new ApiError(400, 'cannot_modify');
-    }
-    if (oldTpl.forms_not_editable) {
-      data.forms = oldTpl.forms; // 不能修改表单
-    }
-    return db.approval.item.count({
-      template: template_id,
-    })
-    .then(count => {
-      if (!count) {
-        return db.approval.template.update({
-          _id: template_id
-        }, {
-          $set: data
-        })
-        .then(() => res.json(_.extend(oldTpl, data)));
-      } else {
-        let number = oldTpl.number.toString().split('-');
-        number[1] = (parseInt(number[1]) || 0) + 1;
-        _.extend(data, {
-          master_id: oldTpl.master_id,
-          company_id: req.company._id,
-          status: C.APPROVAL_STATUS.UNUSED,
-          number: `${number[0]}-${number[1]}`
-        });
-        return Promise.all([
-          db.approval.template.insert(data)
-          .then(newTpl => {
-            res.json(newTpl);
-            return db.approval.template.master.update({
-              _id: oldTpl.master_id
-            }, {
-              $set: {
-                current: newTpl._id
-              },
-              $push: {
-                reversions: newTpl._id
-              }
-            });
-          }),
-          Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE),
-          db.approval.template.update({
-            _id: template_id
-          }, {
-            $set: {
-              status: C.APPROVAL_STATUS.OLD_VERSION
-            }
-          })
-        ]);
-      }
+  .then(newTpl => {
+    res.json(newTpl);
+    addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+      approval_template: template_id
     });
+    return Approval.cancelItemsUseTemplate(req, template_id);
   })
-  .then(() => addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
-    approval_template: template_id
-  }))
   .catch(next);
 });
 
@@ -297,7 +238,10 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
   db.approval.template.findAndModify({
     query: {
       _id: template_id,
-      company_id: req.company._id
+      company_id: req.company._id,
+      for: {
+        $exists: false
+      }
     },
     update: {
       $set: {

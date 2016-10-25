@@ -319,10 +319,13 @@ function updateAttendance(item, status) {
   } else {
     status = C.ATTENDANCE_AUDIT_STATUS.REJECTED;
   }
+  let date = forms[0] && forms[0].value;
+  let sign_in = forms[1] && forms[1].value;
+  let sign_out = forms[2] && forms[2].value;
   let data = {
-    date: forms[0].value,
-    sign_in: forms[1].value,
-    sign_out: forms[2].value,
+    date,
+    sign_in,
+    sign_out
   };
   return Attendance.audit(company_id, userId, data, status);
 }
