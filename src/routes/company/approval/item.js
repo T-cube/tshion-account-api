@@ -152,6 +152,7 @@ api.put('/:item_id/status', (req, res, next) => {
     template: 1,
     step: 1,
   })
+  .then(item => mapObjectIdToData(item, 'approval.template', 'steps', 'template'))
   .then(item => {
     if (!item || item.status != C.APPROVAL_ITEM_STATUS.PROCESSING) {
       throw new ApiError(400, 'cannot_modify');
@@ -163,25 +164,19 @@ api.put('/:item_id/status', (req, res, next) => {
     })
     .then(() => {
       res.json({});
-      return db.approval.template.findOne({
-        _id: item.template
-      }, {
-        steps: 1
-      })
-      .then(template => {
-        let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
-        return Promise.all([
-          addActivity(req, C.ACTIVITY_ACTION.REVOKE, {
-            approval_item: item_id,
-            approval_template: item.template,
-          }),
-          addNotification(req, C.ACTIVITY_ACTION.REVOKE, {
-            approval_item: item_id,
-            approval_template: item.template,
-            to: approver
-          })
-        ]);
-      });
+      let { template } = item;
+      let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
+      return Promise.all([
+        addActivity(req, C.ACTIVITY_ACTION.REVOKE, {
+          approval_item: item_id,
+          approval_template: template._id,
+        }),
+        addNotification(req, C.ACTIVITY_ACTION.REVOKE, {
+          approval_item: item_id,
+          approval_template: template._id,
+          to: approver
+        })
+      ]);
     });
   })
   .catch(next);
@@ -190,90 +185,82 @@ api.put('/:item_id/status', (req, res, next) => {
 api.put('/:item_id/steps', (req, res, next) => {
   let item_id = ObjectId(req.params.item_id);
   let data = req.body;
-  let approval_template;
   sanitizeValidateObject(stepSanitization, stepValidation, data);
   db.approval.item.findOne({
     _id: item_id,
     status: C.APPROVAL_ITEM_STATUS.PROCESSING
   })
+  .then(item => mapObjectIdToData(item, 'approval.template', 'steps,forms', 'template'))
   .then(item => {
-    if (!item) {
+    if (!item || !item.template) {
       throw new ApiError(400, 'cannot_modify');
     }
-    approval_template = item.template;
-    let { step, steps } = item;
-    if (!step.equals(data._id)) {
-      throw new ApiError(400, 'forbidden');
+    checkAprroveStep(req, item, data);
+    let nextStep = findNextStep(item);
+    let update = {
+      step: nextStep && nextStep._id,
+      // log: data.log,
+      'steps.$.approver': req.user._id,
+      'steps.$.status': data.status,
+      'steps.$.create_time': new Date(),
+      'steps.$.log': data.log,
+    };
+    if (!nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
+      update.status = C.APPROVAL_ITEM_STATUS.APPROVED;
     }
-    return checkAprroverOfStepAndGetSteps(req, item)
-    .then(templateSteps => {
-      let k = _.findIndex(steps, item => item._id.equals(step));
-      let nextStep = steps[k + 1] ? steps[k + 1] : null;
-      let update = {
-        step: nextStep ? nextStep._id : null,
-        // log: data.log,
-        'steps.$.approver': req.user._id,
-        'steps.$.status': data.status,
-        'steps.$.create_time': new Date(),
-        'steps.$.log': data.log,
-      };
-      if (!nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-        update.status = C.APPROVAL_ITEM_STATUS.APPROVED;
+    if (data.status == C.APPROVAL_ITEM_STATUS.REJECTED) {
+      update.status = C.APPROVAL_ITEM_STATUS.REJECTED;
+    }
+    return db.approval.item.update({
+      _id: item_id,
+      'steps._id': data._id
+    }, {
+      $set: update
+    })
+    .then(() => {
+      if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
+        return Approval.prepareNextStep(req, item_id, item.template.steps, nextStep._id);
       }
-      if (data.status == C.APPROVAL_ITEM_STATUS.REJECTED) {
-        update.status = C.APPROVAL_ITEM_STATUS.REJECTED;
+      if (!nextStep) {
+        let isApproved = data.status != C.APPROVAL_ITEM_STATUS.REJECTED;
+        let activityAction = isApproved
+          ? C.ACTIVITY_ACTION.APPROVE
+          : C.ACTIVITY_ACTION.REJECT;
+        addNotification(req, activityAction, {
+          approval_item: item_id,
+          to: item.from,
+          approval_template: item.template._id,
+        });
+        let url = config.get('mobileUrl') + `oa/company/${req.company._id}/feature/approval/detail/${item_id}`;
+        wUtil.sendTemplateMessage(item.from, 'approval_result', url, {
+          'first': {
+            'value': '您好！',
+            'color': '#173177'
+          },
+          'keyword1': {
+            'value': `『${item.title}』 ${item.content}`,
+            'color': '#173177'
+          },
+          'keyword2': {
+            'value': isApproved ? '通过' : '驳回',
+            'color': isApproved ? '#419641' : '#ef4f4f'
+          },
+          'remark': {
+            'value': moment().format('YYYY/MM/DD HH:mm'),
+          }
+        });
+        return doAfterApproval(item, data.status);
       }
-      return db.approval.item.update({
-        _id: item_id,
-        'steps._id': data._id
-      }, {
-        $set: update
-      })
-      .then(() => {
-        if (nextStep && data.status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-          return Approval.prepareNextStep(req, item_id, templateSteps, nextStep._id);
-        }
-        if (!nextStep) {
-          let isApproved = data.status != C.APPROVAL_ITEM_STATUS.REJECTED;
-          let activityAction = isApproved
-            ? C.ACTIVITY_ACTION.APPROVE
-            : C.ACTIVITY_ACTION.REJECT;
-          addNotification(req, activityAction, {
-            approval_item: item_id,
-            to: item.from,
-            approval_template,
-          });
-          let url = config.get('mobileUrl') + `oa/company/${req.company._id}/feature/approval/detail/${item_id}`;
-          wUtil.sendTemplateMessage(item.from, 'approval_result', url, {
-            'first': {
-              'value': '您好！',
-              'color': '#173177'
-            },
-            'keyword1': {
-              'value': `『${item.title}』 ${item.content}`,
-              'color': '#173177'
-            },
-            'keyword2': {
-              'value': isApproved ? '通过' : '驳回',
-              'color': isApproved ? '#419641' : '#ef4f4f'
-            },
-            'remark': {
-              'value': moment().format('YYYY/MM/DD HH:mm'),
-            }
-          });
-          return doAfterApproval(item, data.status);
-        }
+    })
+    .then(item => {
+      res.json({});
+      let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
+        ? C.ACTIVITY_ACTION.REJECT
+        : C.ACTIVITY_ACTION.APPROVE;
+      return addActivity(req, activityAction, {
+        approval_item: item_id,
+        user: item.from
       });
-    });
-  })
-  .then(() => {
-    res.json({});
-    let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
-      ? C.ACTIVITY_ACTION.REJECT
-      : C.ACTIVITY_ACTION.APPROVE;
-    return addActivity(req, activityAction, {
-      approval_item: item_id,
-      approval_template,
     });
   })
   .catch(next);
@@ -312,35 +299,43 @@ function doAfterApproval(item, status) {
 }
 
 function updateAttendance(item, status) {
-  let { company_id, forms } = item;
+  let { company_id, forms, template } = item;
+  let tplForms = mapTemplateFormValue(template.forms, forms);
   let userId = item.from;
   if (status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-    status = C.ATTENDANCE_AUDIT_STATUS.APPROVED;
-  } else {
-    status = C.ATTENDANCE_AUDIT_STATUS.REJECTED;
+    let data = {
+      date: tplForms[0] && tplForms[0].value,
+      sign_in: tplForms[1] && tplForms[1].value,
+      sign_out: tplForms[2] && tplForms[2].value
+    };
+    return Attendance.audit(company_id, userId, data, status);
   }
-  let date = forms[0] && forms[0].value;
-  let sign_in = forms[1] && forms[1].value;
-  let sign_out = forms[2] && forms[2].value;
-  let data = {
-    date,
-    sign_in,
-    sign_out
-  };
-  return Attendance.audit(company_id, userId, data, status);
 }
 
-function checkAprroverOfStepAndGetSteps(req, item) {
-  return db.approval.template.findOne({
-    _id: item.template
-  }, {
-    steps: 1
-  })
-  .then(template => {
-    let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
-    if (-1 == indexObjectId(approver, req.user._id)) {
-      throw new ApiError(400, 'forbidden');
+function mapTemplateFormValue(templateForms, forms) {
+  return templateForms.map(tplForm => {
+    let found = _.find(forms, form => tplForm._id.equals(form._id));
+    if (found) {
+      return _.extend({}, tplForm, {value: found.value});
     }
-    return template.steps;
+    return tplForm;
   });
+}
+
+function checkAprroveStep(req, item, approveData) {
+  let { template, step } = item;
+  let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
+  if (-1 == indexObjectId(approver, req.user._id)) {
+    throw new ApiError(400, 'forbidden');
+  }
+  if (!step.equals(approveData._id)) {
+    throw new ApiError(400, 'forbidden');
+  }
+}
+
+function findNextStep(item) {
+  let { step, steps } = item;
+  let k = _.findIndex(steps, s => s._id.equals(step));
+  let nextStep = steps[k + 1] ? steps[k + 1] : null;
+  return nextStep;
 }

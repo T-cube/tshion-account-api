@@ -44,13 +44,10 @@ export default class Attendance {
       } else {
         let newData = [];
         data.forEach(item => {
-          if (doc.data[0][item.type]) {
-            if (!isPatch) {
-              throw new ApiError(400, 'user_has_signed');
-            }
-          } else {
-            newData.push(item);
+          if (doc.data[0][item.type] && !isPatch) {
+            throw new ApiError(400, 'user_has_signed');
           }
+          newData.push(item);
         });
         parsedData = this._parseSignFromUser(newData, `${year}-${month}-${date}`, doc, isPatch, from_pc);
         return db.attendance.sign.update({
@@ -148,10 +145,9 @@ export default class Attendance {
         }
         update['data.$.patch'] = patch;
       }
-      update = {
+      return !_.isEmpty(update) ? {
         $set: update
-      };
-      return update;
+      } : {};
     }
   }
 
@@ -263,10 +259,7 @@ export default class Attendance {
     return this.setting.auditor && this.setting.auditor.equals(user_id);
   }
 
-  static audit(companyId, userId, data, status) {
-    if (status != C.ATTENDANCE_AUDIT_STATUS.APPROVED) {
-      return;
-    }
+  static audit(companyId, userId, data) {
     return db.attendance.setting.findOne({
       _id: companyId,
       // is_open: true,
@@ -276,26 +269,22 @@ export default class Attendance {
         return;
       }
       let signData = [];
-      let date = new Date(data.date);
-      delete data.date;
-      for (let i in data) {
-        let _date = data[i];
-        if (_date) {
-          _date = new Date(_date);
-          if (_date.getTime()) {
-            signData.push({
-              type: i,
-              date: _date,
-            });
-          }
+      ['sign_in', 'sign_out'].forEach(type => {
+        let date = data[type];
+        if (data[type] && moment(date).isValid()) {
+          signData.push({
+            type,
+            date,
+          });
         }
-      }
-      if (!date.getTime() || !signData.length) {
+      });
+      let date = data.date;
+      if (!moment(date).isValid() || !signData.length) {
         return;
       }
       return new Attendance(setting).updateSign({
+        date,
         data: signData,
-        date: date,
       }, userId, true);
     });
   }
