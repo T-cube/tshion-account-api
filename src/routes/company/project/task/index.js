@@ -596,13 +596,20 @@ function doUpdateField(req, field) {
     if (field == 'title') {
       action = C.ACTIVITY_ACTION.RENAME;
       ext.field = {
-        title: data.title
+        title: data[field]
       };
+    } else if (field == 'assignee') {
+      action = C.ACTIVITY_ACTION.CHANGE_TASK_ASSIGNEE;
+      ext.project_member = data[field];
     } else {
       action = C.ACTIVITY_ACTION.UPDATE;
-      ext.update_fields = [field];
+      if (_.contains(['priority', 'date_start', 'date_due'], field)) {
+        ext.update_fields = [[field, data[field]]];
+      } else {
+        ext.update_fields = [field];
+      }
     }
-    logTask(req, action, ext);
+    addActivity(req, action, ext);
     return data;
   });
 }

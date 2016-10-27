@@ -42,6 +42,7 @@ let constants = {
     // 关注
     FOLLOW: 'follow',         // 关注
     UNFOLLOW: 'unfollow',     // 取消关注
+    CHANGE_TASK_ASSIGNEE: 'change_task_assignee', // 修改项目的执行人
     // 文件操作
     UPLOAD: 'upload',         // 上传
     MOVE: 'move',             // 移动
