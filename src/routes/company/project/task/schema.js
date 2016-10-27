@@ -10,7 +10,7 @@ let schema = {
     validation: {
       title: {
         type: 'string',
-        minLength: 3,
+        minLength: 1,
         maxLength: 200
       },
       status: { $enum: [C.TASK_STATUS.PROCESSING, C.TASK_STATUS.COMPLETED] },
