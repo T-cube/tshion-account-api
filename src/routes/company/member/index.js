@@ -183,7 +183,30 @@ api.put('/:member_id', (req, res, next) => {
   }, {
     $set: data
   })
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    if (req.body.type) {
+      let activityAction;
+      if (req.body.type == C.COMPANY_MEMBER_TYPE.ADMIN) {
+        activityAction = C.ACTIVITY_ACTION.SET_ADMIN;
+      } else {
+        activityAction = C.ACTIVITY_ACTION.REMOVE_ADMIN;
+      }
+      let notification = {
+        target_type: C.OBJECT_TYPE.COMPANY,
+        company: req.company._id,
+        action: activityAction,
+      };
+      req.model('activity').insert(_.extend({}, notification, {
+        creator: req.user._id,
+        user: member_id,
+      }));
+      req.model('notification').send(_.extend({}, notification, {
+        from: req.user._id,
+        to: member_id,
+      }));
+    }
+  })
   .catch(next);
 });
 

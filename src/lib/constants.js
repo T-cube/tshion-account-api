@@ -142,6 +142,7 @@ let constants = {
     ATTENDANCE: 'attendance',
     ATTENDANCE_SIGN_DATA: 'attendance.sign.data',
     COMPANY: 'company',
+    COMPANY_ADMIN: 'company.admin',
     COMPANY_MEMBER: 'company.member',
     COMPANY_DIR: 'company.dir',
     COMPANY_FILE: 'company.file',

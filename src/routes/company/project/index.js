@@ -301,10 +301,8 @@ api.put('/:project_id/member/:member_id/type', (req, res, next) => {
   .then(doc => {
     res.json(doc);
     let notification = {
-      target_type: C.OBJECT_TYPE.PROJECT_ADMIN,
+      target_type: C.OBJECT_TYPE.PROJECT,
       project: project_id,
-      from: req.user._id,
-      to: member_id
     };
     let activityAction;
     if (type == C.PROJECT_MEMBER_TYPE.ADMIN) {
@@ -318,7 +316,10 @@ api.put('/:project_id/member/:member_id/type', (req, res, next) => {
     logProject(req, activityAction, {
       project_member: member_id,
     });
-    req.model('notification').send(notification);
+    req.model('notification').send(_.extend({}, notification, {
+      from: req.user._id,
+      to: member_id
+    }));
   })
   .catch(next);
 });
