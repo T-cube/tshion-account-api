@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { ObjectId } from 'mongodb';
 
 import '../bootstrap';
 import program from 'commander';
@@ -6,6 +7,7 @@ import db from 'lib/database';
 
 program
   .option('-o, --oauth', 'insert oauth clients')
+  .option('--approvaltemplate', 'insert approval default templates')
   .parse(process.argv);
 
 console.log('database initialization');
@@ -47,4 +49,36 @@ if (program.oauth) {
     process.exit();
   });
 
+}
+
+if (program.approvaltemplate) {
+  db.approval.template.default.remove({})
+  .then(() => {
+    return db.approval.template.default.insert([
+      {
+        name: '请假单',
+        description: '请假单介绍',
+        icon: '',
+        forms: [{
+          _id: ObjectId(),
+          label: '开始时间',
+          type: 'datetime',
+          required: true
+        }, {
+          _id: ObjectId(),
+          label: '结束时间',
+          type: 'datetime',
+          required: true
+        }, {
+          _id: ObjectId(),
+          label: '工作代理人',
+          type: 'text',
+        }]
+      }
+    ]);
+  })
+  .then(() => {
+    console.log('approval.template.default inserted.');
+    process.exit();
+  });
 }
