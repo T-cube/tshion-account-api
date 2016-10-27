@@ -152,11 +152,12 @@ api.put('/:company_id', (req, res, next) => {
   .then(doc => {
     res.json(doc);
     let update_fields = [];
-    ['name', 'description'].forEach(key => {
-      if (data[key] != req.company[key]) {
-        update_fields.push([key]);
-      }
-    });
+    if (data.name != req.company.name) {
+      update_fields.push(['name', req.company.name, data['name']]);
+    }
+    if (data.description != req.company.description) {
+      update_fields.push(['description']);
+    }
     req.model('activity').insert({
       creator: req.user._id,
       action: C.ACTIVITY_ACTION.UPDATE,
