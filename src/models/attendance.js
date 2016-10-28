@@ -3,6 +3,8 @@ import moment from 'moment';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
+import { diffObjectId } from 'lib/utils';
+import Structure from 'models/structure';
 import C from 'lib/constants';
 
 export default class Attendance {
@@ -286,6 +288,67 @@ export default class Attendance {
         date,
         data: signData,
       }, userId, true);
+    });
+  }
+
+  getDepartmentRecord(company, department_id, query) {
+    let tree = new Structure(company.structure);
+    let members = tree.getMemberAll(department_id).map(member => member._id);
+    let totalrows = members.length;
+    let { year, month, page, pageSize } = query;
+    page && pageSize && (members = members.slice((page - 1) * pageSize, page * pageSize));
+    return db.attendance.record.findOne({
+      company: company._id,
+      year: year,
+      month: month,
+      member: {
+        $in: members
+      }
+    })
+    .then(record => {
+      if (record) {
+        return record.map(item => {
+          item.data.user = item.member;
+          return item.data;
+        });
+      }
+      return db.attendance.sign.find({
+        user: {
+          $in: members
+        },
+        year: year,
+        month: month,
+        company: company._id,
+      })
+      .then(doc => {
+        let signRecord = [];
+        doc.forEach(sign => {
+          signRecord.push(_.extend(this.parseUserRecord(sign.data, year, month), {
+            user: sign.user
+          }));
+          members = diffObjectId(members, [sign.user]);
+        });
+        if (members.length) {
+          members.forEach(user => {
+            signRecord.push(_.extend(this.parseUserRecord([], year, month), {
+              user: user
+            }));
+          });
+        }
+        return signRecord;
+      });
+    })
+    .then(record => {
+      record.forEach(item => {
+        item.user = _.find(company.members, member => member._id.equals(item.user));
+        item.user = item.user && _.pick(item.user, '_id', 'name');
+      });
+      return ({
+        page,
+        pageSize,
+        totalrows,
+        list: record
+      });
     });
   }
 }

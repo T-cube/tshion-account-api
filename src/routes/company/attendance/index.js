@@ -23,13 +23,10 @@ import { checkUserTypeFunc, checkUserType } from '../utils';
 import {
   fetchCompanyMemberInfo,
   mapObjectIdToData,
-  diffObjectId,
-  indexObjectId,
   getClientIp,
   getGpsDistance,
   generateToken,
 } from 'lib/utils';
-import Structure from 'models/structure';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 
@@ -134,84 +131,31 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
     return res.json([]);
   }
   let department_id = ObjectId(req.params.department_id);
-  let tree = new Structure(req.company.structure);
-  let members = tree.getMemberAll(department_id).map(member => member._id);
   let page = parseInt(req.query.page) || 1;
   let pageSize = config.get('view.attendRecordNum');
-  let totalrows = members.length;
-  members = members.slice((page - 1) * pageSize, page * pageSize);
-  let year = parseInt(req.query.year);
-  let month = parseInt(req.query.month);
-  if (!year || !month) {
-    let date = new Date();
-    year = date.getFullYear();
-    month = date.getMonth() + 1;
-  }
-  db.attendance.record.findOne({
-    company: req.company._id,
-    year: year,
-    month: month,
-    member: {
-      $in: members
-    }
+  let { year, month } = getQueryMonth(req.query);
+  let attendance = new Attendance(req.attendanceSetting);
+  attendance.getDepartmentRecord(req.company, department_id, {
+    year,
+    month,
+    page,
+    pageSize
   })
-  .then(record => {
-    if (record) {
-      return record.map(item => {
-        item.data.user = item.member;
-        return item.data;
-      });
-    }
-    return db.attendance.sign.find({
-      user: {
-        $in: members
-      },
-      year: year,
-      month: month,
-      company: req.company._id,
-    })
-    .then(doc => {
-      let signRecord = [];
-      let setting = new Attendance(req.attendanceSetting);
-      doc.forEach(sign => {
-        signRecord.push(_.extend(setting.parseUserRecord(sign.data, year, month), {
-          user: sign.user
-        }));
-        members = diffObjectId(members, [sign.user]);
-      });
-      if (members.length) {
-        members.forEach(user => {
-          signRecord.push(_.extend(setting.parseUserRecord([], year, month), {
-            user: user
-          }));
-        });
-      }
-      return signRecord;
-    });
-  })
-  .then(record => {
-    record.forEach(item => {
-      item.user = _.find(req.company.members, member => member._id.equals(item.user));
-      item.user = item.user && _.pick(item.user, '_id', 'name');
-    });
-    res.json({
-      page,
-      pageSize,
-      totalrows,
-      list: record
-    });
-  })
+  .then(record => res.json(record))
   .catch(next);
 });
 
 api.get('/sign/department/:department_id/export', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   return generateToken(48)
   .then(token => {
+    let { year, month } = getQueryMonth(req.query);
     return db.attendance.export.insert({
       token,
       user: req.user._id,
       company: req.company._id,
       department_id: req.params.department_id,
+      year,
+      month,
     })
     .then(() => res.json({token}));
   })
@@ -413,6 +357,17 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   })
   .catch(next);
 });
+
+function getQueryMonth(query) {
+  let year = parseInt(query.year);
+  let month = parseInt(query.month);
+  if (!year || !month) {
+    let date = new Date();
+    year = date.getFullYear();
+    month = date.getMonth() + 1;
+  }
+  return { year, month };
+}
 
 function checkDupliDate(list) {
   let newList = _.clone(list);
