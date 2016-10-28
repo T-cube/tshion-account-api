@@ -171,21 +171,24 @@ export let auditCheckValidation = {
 export let recordSanitization = {
   yaer: { type: 'integer' },
   month: { type: 'integer' },
-  data: {
-    type: 'object',
-    properties: {
-      member: { $objectId: 1 },
-      normal: { type: 'integer' },
-      late: { type: 'integer' },
-      leave_early: { type: 'integer' },
-      absent: { type: 'integer' },
-      patch: { type: 'integer' },
-      business_trip: { type: 'integer' },
-      paid_vacation: { type: 'integer' },
-      nopaid_vacation: { type: 'integer' },
-      extra_work: { type: 'integer' },
-      workday_all: { type: 'integer' },
-      workday_real: { type: 'integer' },
+  members: {
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        member: { $objectId: 1 },
+        normal: { type: 'integer' },
+        late: { type: 'integer' },
+        leave_early: { type: 'integer' },
+        absent: { type: 'integer' },
+        patch: { type: 'integer' },
+        business_trip: { type: 'integer' },
+        paid_vacation: { type: 'integer' },
+        nopaid_vacation: { type: 'integer' },
+        extra_work: { type: 'integer' },
+        workday_all: { type: 'integer' },
+        workday_real: { type: 'integer' },
+      }
     }
   }
 };
@@ -193,21 +196,24 @@ export let recordSanitization = {
 export let recordValidation = {
   yaer: { type: 'integer' },
   month: { type: 'integer' },
-  data: {
-    type: 'object',
-    properties: {
-      member: { $objectId: 1 },
-      normal: { type: 'integer' },
-      late: { type: 'integer' },
-      leave_early: { type: 'integer' },
-      absent: { type: 'integer' },
-      patch: { type: 'integer' },
-      business_trip: { type: 'integer' },
-      paid_vacation: { type: 'integer' },
-      nopaid_vacation: { type: 'integer' },
-      extra_work: { type: 'integer' },
-      workday_all: { type: 'integer' },
-      workday_real: { type: 'integer' },
+  members: {
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        member: { $objectId: 1 },
+        normal: { type: 'integer' },
+        late: { type: 'integer' },
+        leave_early: { type: 'integer' },
+        absent: { type: 'integer' },
+        patch: { type: 'integer' },
+        business_trip: { type: 'integer' },
+        paid_vacation: { type: 'integer' },
+        nopaid_vacation: { type: 'integer' },
+        extra_work: { type: 'integer' },
+        workday_all: { type: 'integer' },
+        workday_real: { type: 'integer' },
+      }
     }
   }
 };

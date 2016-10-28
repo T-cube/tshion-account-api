@@ -21,6 +21,7 @@ module.exports = {
     listNum: 20,
     taskListNum: 10,
     approvalListNum: 10,
+    attendRecordNum: 10,
     maxListNum: 100,
   },
   passwordHashRounds: 10,

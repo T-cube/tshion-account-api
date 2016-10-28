@@ -114,11 +114,12 @@ api.put('/:project_id', (req, res, next) => {
   .then(doc => res.json(doc))
   .then(() => {
     let update_fields = [];
-    ['name', 'description'].forEach(key => {
-      if (data[key] != req.project[key]) {
-        update_fields.push(key);
-      }
-    });
+    if (data.name != req.project.name) {
+      update_fields.push(['name', req.project.name, data.name]);
+    }
+    if (data.description != req.project.description) {
+      update_fields.push('description');
+    }
     logProject(req, C.ACTIVITY_ACTION.UPDATE, {
       update_fields
     });
@@ -470,6 +471,13 @@ api.put('/:project_id/archived', (req, res, next) => {
       project_id: req.project._id,
     }, update, {
       multi: true
+    });
+  })
+  .then(() => {
+    logProject(req, archived ? C.ACTIVITY_ACTION.ARCHIVED : C.ACTIVITY_ACTION.UN_ARCHIVED, {
+      field: {
+        is_archived: archived
+      }
     });
   })
   .catch(next);

@@ -42,6 +42,8 @@ let constants = {
     // 关注
     FOLLOW: 'follow',         // 关注
     UNFOLLOW: 'unfollow',     // 取消关注
+    ARCHIVED: 'archived',     // 归档
+    UN_ARCHIVED: 'un_archived',     // 重启
     CHANGE_TASK_ASSIGNEE: 'change_task_assignee', // 修改项目的执行人
     // 文件操作
     UPLOAD: 'upload',         // 上传

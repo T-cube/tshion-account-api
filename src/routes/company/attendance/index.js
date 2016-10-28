@@ -136,6 +136,10 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
   let department_id = ObjectId(req.params.department_id);
   let tree = new Structure(req.company.structure);
   let members = tree.getMemberAll(department_id).map(member => member._id);
+  let page = parseInt(req.query.page) || 1;
+  let pageSize = config.get('view.attendRecordNum');
+  let totalrows = members.length;
+  members = members.slice((page - 1) * pageSize, pageSize);
   let year = parseInt(req.query.year);
   let month = parseInt(req.query.month);
   if (!year || !month) {
@@ -147,10 +151,16 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
     company: req.company._id,
     year: year,
     month: month,
+    member: {
+      $in: members
+    }
   })
   .then(record => {
     if (record) {
-      return record.data.filter(item => indexObjectId(members, item.user) > -1);
+      return record.map(item => {
+        item.data.user = item.member;
+        return item.data;
+      });
     }
     return db.attendance.sign.find({
       user: {
@@ -184,7 +194,12 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
       item.user = _.find(req.company.members, member => member._id.equals(item.user));
       item.user = item.user && _.pick(item.user, '_id', 'name');
     });
-    res.json(record);
+    res.json({
+      page,
+      pageSize,
+      totalrows,
+      list: record
+    });
   })
   .catch(next);
 });
@@ -206,14 +221,22 @@ api.get('/sign/department/:department_id/export', checkUserType(C.COMPANY_MEMBER
 api.put('/record', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(recordSanitization, recordValidation, data);
-  let condition = _.pick(data, 'year', 'month');
-  delete data.year;
-  delete data.month;
-  _.extend(condition, {
+  let condition = {
+    year: data.year,
+    month: data.month,
     company: req.company._id,
-  });
-  db.attendance.record.update(condition, data, {upsert: true})
-  .then(doc => res.json(_.pick(doc, '_id')))
+  };
+  if (data.members.length > 100) {
+    throw new ApiError(400);
+  }
+  Promise.map(data.members, member => (
+    db.attendance.record.update(_.extend({}, condition, {member: member.member}), {
+      $set: {
+        data: _.emit(member, 'member')
+      }
+    }, {upsert: true})
+  ))
+  .then(() => res.json({}))
   .catch(next);
 });
 
