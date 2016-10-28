@@ -139,7 +139,7 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
   let page = parseInt(req.query.page) || 1;
   let pageSize = config.get('view.attendRecordNum');
   let totalrows = members.length;
-  members = members.slice((page - 1) * pageSize, pageSize);
+  members = members.slice((page - 1) * pageSize, page * pageSize);
   let year = parseInt(req.query.year);
   let month = parseInt(req.query.month);
   if (!year || !month) {
