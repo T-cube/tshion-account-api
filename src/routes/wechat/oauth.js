@@ -51,7 +51,7 @@ api.get('/unbind', oauthCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.post('/token', wechatOauth.grant());
+api.post('/token', bodyParser.json(), wechatOauth.grant());
 
 /**
  * if userLogin and wechat binded redirect to web app user page
