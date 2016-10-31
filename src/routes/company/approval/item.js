@@ -252,7 +252,7 @@ api.put('/:item_id/steps', (req, res, next) => {
         return doAfterApproval(item, data.status);
       }
     })
-    .then(item => {
+    .then(() => {
       res.json({});
       let activityAction = data.status == C.APPROVAL_ITEM_STATUS.REJECTED
         ? C.ACTIVITY_ACTION.REJECT
