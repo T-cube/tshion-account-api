@@ -30,6 +30,7 @@
     "easyimage": "^2.1.0",
     "ejs": "^2.4.2",
     "escape-regexp": "0.0.1",
+    "exceljs": "^0.2.32",
     "express": "^4.13.4",
     "express-session": "^1.14.0",
     "express-validation": "^0.4.5",
