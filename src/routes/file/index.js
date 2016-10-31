@@ -299,7 +299,7 @@ api.get('/attendance/:token', (req, res, next) => {
         };
         detail.forEach(item => {
           let username = _.find(companyInfo.members, member => member._id.equals(item.user)).name;
-          item.data.forEach(record => {
+          _.sortBy(item.data, record => record.date).forEach(record => {
             detailParsed.push({
               date: `${month}.${record.date}`,
               name: username,
@@ -310,7 +310,6 @@ api.get('/attendance/:token', (req, res, next) => {
             });
           });
         });
-        detailParsed = _.sortBy(detailParsed, record => record.date);
         detailSheet.addRows(detailParsed);
         detailParsed.forEach((record, k) => {
           (detailSheet.getCell(`C${k + 2}`).font = {
@@ -321,7 +320,7 @@ api.get('/attendance/:token', (req, res, next) => {
           });
         });
 
-        let filename = encodeFilename(req, `${department.name}-${year}-${month}.xlsx`);
+        let filename = encodeFilename(req, `考勤（${department.name}）-${year}.${month}.xlsx`);
         res.set('Pragma', 'public');
         res.set('Expires', '0');
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');

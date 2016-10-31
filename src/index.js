@@ -38,7 +38,6 @@ import { OfficeWeb365 } from 'vendor/officeweb365';
 import { QiniuTools } from 'vendor/qiniu';
 import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
-import wechatOAuthRoute from './routes/wechat-oauth';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -111,10 +110,6 @@ app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
 app.all('/oauth/token', app.oauth.grant());
 app.use('/oauth/revoke', oauthRoute.revokeToken);
-// wechat login
-app.use('/wechat-oauth', wechatOAuthRoute);
-// wechat apis
-app.use('/api/wechat-oauth', wechatOAuthRoute);
 
 // use nginx for static resource
 // app.use('/', express.static('./public'));

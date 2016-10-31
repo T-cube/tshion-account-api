@@ -5,10 +5,8 @@ import Promise from 'bluebird';
 import config from 'config';
 import bodyParser from 'body-parser';
 
-import Redis from 'vendor/redis';
 import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
-import corsHandler from 'lib/cors';
 import { oauthCheck } from 'lib/middleware';
 
 let api = express.Router();
@@ -34,13 +32,12 @@ const wechatOauth = oauthserver({
   refreshTokenLifetime: 3600 * 24 * 15,
 });
 
-api.use(corsHandler);
 api.use(bodyParser.urlencoded({ extended: true }));
 
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
   let wechatOAuthClient = getOAuthClient(req.model('redis'));
-  let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'wechat-oauth/access', checkCode, 'snsapi_userinfo');
+  let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'api/wechat/oauth/access', checkCode, 'snsapi_userinfo');
   res.redirect(url);
 });
 
@@ -160,7 +157,7 @@ function getOAuthClient(redis) {
       }
       redis.set(`oauth-token:${openid}`, data)
       .then(() => {
-        redis.expire(`oauth-token:${openid}`, 7200);
+        redis.expire(`oauth-token:${openid}`, 60);
         callback(null);
       })
       .catch(e => {

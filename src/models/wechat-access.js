@@ -74,7 +74,7 @@ export default class WechatAccess {
         let data = JSON.parse(body);
         if (data.access_token) {
           this.redis.set(accessTokenKey, data.access_token);
-          this.redis.expire(accessTokenKey, 7200000);
+          this.redis.expire(accessTokenKey, 7200);
           this.doRefreshJsApiTicket(data.access_token, 0);
         }
       } else {
@@ -95,7 +95,7 @@ export default class WechatAccess {
         let data = JSON.parse(body);
         if (data.ticket) {
           this.redis.set(jsapiTicketKey, data.ticket);
-          this.redis.expire(jsapiTicketKey, 7200000);
+          this.redis.expire(jsapiTicketKey, 7200);
           this.redis.delete(signatureKey);
         }
       } else {

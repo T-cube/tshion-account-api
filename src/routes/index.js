@@ -12,8 +12,6 @@ export default api;
 
 api.use(corsHandler);
 
-api.use(bodyParser.json());
-
 api.use((req, res, next) => {
   // req.loadModel('notification', Notification);
   req.loadModel('activity', Activity);
@@ -32,7 +30,6 @@ let routes = [
   'tools',
   'user',
   'wechat',
-  'wechat-bootstrap',
   's',
 ];
 
@@ -40,5 +37,9 @@ _.each(routes, route => {
   let path = '/' + route;
   let file = '.' + path + '/';
   let module = require(file)['default'];
-  api.use(path, module);
+  if (route == 'wechat') {
+    api.use(path, module);
+  } else {
+    api.use(path, bodyParser.json(), module);
+  }
 });
