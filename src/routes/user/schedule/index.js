@@ -63,8 +63,6 @@ api.get([
      ? moment(dateStart).add(1, 'day').toDate()
      : moment(dateStart).add(1, 'month').toDate();
   }
-  console.log('dateEnd', dateEnd);
-  console.log('dateStart', dateStart);
   db.schedule.find({
     creator: req.user._id,
     time_start: {

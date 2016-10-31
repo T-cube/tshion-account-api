@@ -2,7 +2,7 @@ module.exports = {
   apiUrl: 'http://tlf.findteachers.cn/',
   webUrl: 'http://mtlf.findteachers.cn/',
   mobileUrl: 'http://mtlf.findteachers.cn/',
-  database: '192.168.1.18/tlf_core',
+  database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
   wechat: {
     token: 'wechat',
