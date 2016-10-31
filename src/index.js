@@ -18,6 +18,7 @@ import config from 'config';
 import _ from 'underscore';
 import session from 'express-session';
 const sessionRedis = require('connect-redis')(session);
+import RPC from '@ym/rpc';
 
 import 'lib/i18n';
 import bindLoader from 'lib/loader';

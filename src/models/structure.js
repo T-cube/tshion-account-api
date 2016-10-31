@@ -151,7 +151,9 @@ class Structure {
 
   getMember(node_id, all = false) {
     node_id = ObjectId(node_id);
-    return this._getMember(node_id, all);
+    let members = this._getMember(node_id, all);
+    let memberIds = uniqObjectId(members.map(member => member._id));
+    return memberIds.map(mid => _.find(members, member => member._id.equals(mid)));
   }
 
   getMemberAll(node_id) {
