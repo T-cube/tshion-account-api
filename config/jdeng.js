@@ -1,5 +1,5 @@
 module.exports = {
-  apiUrl: 'http://tlf.findteachers.cn/',
+  apiUrl: 'http://localhost:3001/',
   webUrl: 'http://mtlf.findteachers.cn/',
   mobileUrl: 'http://mtlf.findteachers.cn/',
   database: '127.0.0.1/tlf_core',

@@ -471,20 +471,30 @@ function createApprovalTemplate(req, auditor) {
       },
       copy_to: []
     }],
-    forms: [{
-      _id: ObjectId(),
-      label: '补签日期',
-      type: 'date',
-      required: true,
-    }, {
-      _id: ObjectId(),
-      label: '签到时间',
-      type: 'datetime',
-    }, {
-      _id: ObjectId(),
-      label: '签退时间',
-      type: 'datetime',
-    }],
+    forms: [
+      {
+        _id: ObjectId(),
+        label: '类型',
+        optionsKeyValueSame: false,
+        required: true,
+        type: 'radiogroup',
+        options: [
+          {
+            label: '签到',
+            value: 'sign_in'
+          },
+          {
+            label: '签退',
+            value: 'sign_out'
+          }
+        ]
+      }, {
+        _id: ObjectId(),
+        label: '考勤时间',
+        type: 'datetime',
+        required: true,
+      }
+    ],
   };
   return Approval.createNewVersionTemplate(template, {
     criteria: {
