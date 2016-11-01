@@ -86,9 +86,11 @@ api.get('/', (req, res, next) => {
     projects: 1
   })
   .then(user => {
-    condition.project_id = {
-      $in: user.projects
-    };
+    if (user.projects && user.projects.length) {
+      condition.project_id = {
+        $in: user.projects
+      };
+    }
     return Promise.all([
       db.task.count(condition)
       .then(sum => {
