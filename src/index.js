@@ -39,6 +39,7 @@ import { OfficeWeb365 } from 'vendor/officeweb365';
 import { QiniuTools } from 'vendor/qiniu';
 import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
+import rpcRoutes from './rpc';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -126,4 +127,16 @@ app.use(apiErrorHandler);
 server.listen(config.get('server'), () => {
   console.log('listening on ', server.address());
   console.log('--------------------------------------------------------------------------------');
+});
+
+RPC.register( {
+  protocol: 'http',
+  hostname: '127.0.0.1',
+  port: 2001,
+  appid: 'xuezi',
+  appsecret: 123456
+}).then((clientRpc) => {
+  rpcRoutes(clientRpc);
+}).catch(e => {
+  throw e;
 });
