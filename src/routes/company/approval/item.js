@@ -303,12 +303,14 @@ function updateAttendance(item, status) {
   let tplForms = mapTemplateFormValue(template.forms, forms);
   let userId = item.from;
   if (status == C.APPROVAL_ITEM_STATUS.APPROVED) {
-    let data = {
-      date: tplForms[0] && tplForms[0].value,
-      sign_in: tplForms[1] && tplForms[1].value,
-      sign_out: tplForms[2] && tplForms[2].value
-    };
-    return Attendance.audit(company_id, userId, data, status);
+    if (tplForms[0] && tplForms[1]) {
+      let signType = tplForms[0].value;
+      let data = {
+        date: tplForms[1].value,
+        [signType]: tplForms[1].value,
+      };
+      return Attendance.audit(company_id, userId, data, status);
+    }
   }
 }
 
