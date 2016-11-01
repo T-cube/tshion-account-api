@@ -258,7 +258,7 @@ export default class Approval {
         throw new ApiError(400, 'cannot_modify');
       }
       let template_id = oldTpl._id;
-      if (oldTpl.forms_not_editable) {
+      if (oldTpl.forms_not_editable && !createNew) {
         data.forms = oldTpl.forms; // 不能修改表单
       }
       return db.approval.item.count({
