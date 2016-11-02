@@ -633,7 +633,7 @@ function ensureProjectOwner(project, user_id) {
 }
 
 function ensureProjectMember(project, user_id) {
-  if (_.find(project.members, member => member._id.equals(user_id))) {
+  if (!_.find(project.members, member => member._id.equals(user_id))) {
     throw new ApiError(400, 'not_project_member');
   }
 }
