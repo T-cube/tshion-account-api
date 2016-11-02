@@ -1,7 +1,14 @@
+import RpcRoute from 'models/rpc-route';
+
 import accountRoutes from './account';
 
 export default (socket) => {
 
-  accountRoutes(socket.of('/account'));
+  const rpcRoute = new RpcRoute(socket);
+  const route = rpcRoute.route.bind(rpcRoute);
+
+  route('pid', () => process.pid);
+
+  rpcRoute.use(accountRoutes);
 
 };
