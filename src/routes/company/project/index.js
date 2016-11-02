@@ -402,6 +402,16 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
           members: { _id: member_id }
         }
       }),
+      db.task.update({
+        project_id,
+        followers: member_id,
+      }, {
+        $pull: {
+          followers: member_id
+        }
+      }, {
+        multi: true
+      }),
       db.discussion.update({
         project_id
       }, {
