@@ -9,6 +9,6 @@ export default (socket) => {
 
   route('pid', () => process.pid);
 
-  rpcRoute.use(accountRoutes);
+  rpcRoute.use('/account', accountRoutes);
 
 };

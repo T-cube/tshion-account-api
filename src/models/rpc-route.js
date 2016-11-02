@@ -41,8 +41,8 @@ export default class RpcRoute {
     });
   }
 
-  use(routes) {
-    routes(this.socket);
+  use(prefix, routes) {
+    routes(this.socket, this.prefix + (prefix || ''));
     return this;
   }
 

@@ -129,14 +129,15 @@ server.listen(config.get('server'), () => {
   console.log('--------------------------------------------------------------------------------');
 });
 
-RPC.register( {
-  protocol: 'http',
-  hostname: '127.0.0.1',
-  port: 2001,
-  appid: 'xuezi',
-  appsecret: 123456
-}).then((clientRpc) => {
-  rpcRoutes(clientRpc);
-}).catch(e => {
-  throw e;
-});
+// RPC.register( {
+//   protocol: 'http',
+//   hostname: '192.168.1.25',
+//   port: 2000,
+//   appid: 'xuezi',
+//   appsecret: 123456
+// }).then((clientRpc) => {
+//   rpcRoutes(clientRpc);
+// }).catch(e => {
+//   console.error(e);
+//   // throw e;
+// });
