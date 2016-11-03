@@ -150,9 +150,19 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
       }, {
         $pull: {projects: project_id}
       }),
-      db.task.remove({
-        project_id
-      }),
+      db.task.find({project_id}, {
+        _id: 1
+      })
+      .then(tasks => (
+        Promise.all([
+          db.task.comments.remove({
+            task_id: {
+              $in: tasks.map(task => task._id)
+            }
+          }),
+          db.task.remove({project_id})
+        ])
+      )),
       db.discussion.remove({
         project_id
       }),
@@ -413,7 +423,8 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
         multi: true
       }),
       db.discussion.update({
-        project_id
+        project_id,
+        followers: member_id
       }, {
         $pull: {
           followers: member_id

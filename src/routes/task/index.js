@@ -79,18 +79,25 @@ api.get('/', (req, res, next) => {
     order = order == 'desc' ? -1 : 1;
     sortBy = { [sort]: order };
   }
-  let data = {}, projects = [];
+  let data = {
+    page: page,
+    pagesize: pagesize
+  };
+  let projects = [];
   db.user.findOne({
     _id: req.user._id
   }, {
     projects: 1
   })
   .then(user => {
-    if (user.projects && user.projects.length) {
-      condition.project_id = {
-        $in: user.projects
-      };
+    if (!user.projects || !user.projects.length) {
+      data.totalrows = 0;
+      data.list = [];
+      return;
     }
+    condition.project_id = {
+      $in: user.projects
+    };
     return Promise.all([
       db.task.count(condition)
       .then(sum => {
