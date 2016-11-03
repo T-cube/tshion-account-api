@@ -18,6 +18,7 @@ import config from 'config';
 import _ from 'underscore';
 import session from 'express-session';
 const sessionRedis = require('connect-redis')(session);
+import RPC from '@ym/rpc';
 
 import 'lib/i18n';
 import bindLoader from 'lib/loader';
@@ -38,6 +39,7 @@ import { OfficeWeb365 } from 'vendor/officeweb365';
 import { QiniuTools } from 'vendor/qiniu';
 import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
+import rpcRoutes from './rpc';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -126,3 +128,16 @@ server.listen(config.get('server'), () => {
   console.log('listening on ', server.address());
   console.log('--------------------------------------------------------------------------------');
 });
+
+// RPC.register( {
+//   protocol: 'http',
+//   hostname: '192.168.1.25',
+//   port: 2000,
+//   appid: 'xuezi',
+//   appsecret: 123456
+// }).then((clientRpc) => {
+//   rpcRoutes(clientRpc);
+// }).catch(e => {
+//   console.error(e);
+//   // throw e;
+// });
