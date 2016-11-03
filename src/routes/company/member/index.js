@@ -269,6 +269,13 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
         name: thisMember.name
       }
     });
+    req.model('notification').send({
+      from: req.user._id,
+      to: member_id,
+      action: C.ACTIVITY_ACTION.REMOVE,
+      target_type: C.OBJECT_TYPE.COMPANY_MEMBER,
+      company: req.company._id,
+    });
   })
   .catch(next);
 });

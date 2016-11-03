@@ -768,3 +768,16 @@
   }
 }
 ```
+
+### account log
+
+```javascript
+{
+  _id: <ObjectId>,
+  user: <ObjectId>,
+  type: <String[Enum=login, logout, refresh, login_fail, refresh_fail],
+  client: <String[Enum=com_tlifang_web, com_tlifang_mobile, com_tlifang_wechat, com_tlifang_www],
+  time: <Date>,
+  ip: <String>,
+}
+```

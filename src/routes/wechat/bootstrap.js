@@ -56,9 +56,6 @@ api.use('/', wechat(wechatConfig, function (req, res) {
     break;
   }
   default:
-    return res.reply({
-      content: 'T立方 - 云工作平台',
-      type: 'text',
-    });
+    return res.reply();
   }
 }));
