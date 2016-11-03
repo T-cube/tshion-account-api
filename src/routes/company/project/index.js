@@ -423,7 +423,8 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
         multi: true
       }),
       db.discussion.update({
-        project_id
+        project_id,
+        followers: member_id
       }, {
         $pull: {
           followers: member_id
