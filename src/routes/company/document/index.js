@@ -386,7 +386,7 @@ saveCdn('cdn-file'),
         return;
       }
       return new Promise(function (resolve, reject) {
-        fs.readFile(fileData.path, 'utf8', (err, content) => {
+        fs.readFile(fileData.relpath, 'utf8', (err, content) => {
           if (err) {
             reject(err);
           }
@@ -394,7 +394,7 @@ saveCdn('cdn-file'),
         });
       })
       .then(content => {
-        let file_path = fileData.path;
+        let file_path = fileData.relpath;
         _.extend(fileData, {
           content,
           path: null,
@@ -906,7 +906,6 @@ function attachFileUrls(req, file, thumb_size) {
   if (_.contains(sizes), thumb_size) {
     size = thumb_size;
   }
-  console.log(file);
   if (!file.cdn_key) {
     if (path.extname(file.name) == '.html') {
       return generateFileToken(req.user._id, file._id)

@@ -1,5 +1,6 @@
 import config from 'config';
 import Promise from 'bluebird';
+import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
 import db from 'lib/database';
@@ -45,6 +46,9 @@ export default (socket, prefix) => {
 
   route('/detail', (query) => {
     let { user } = query;
+    if (!user) {
+      throw new ApiError(400);
+    }
     return db.user.findOne({
       _id: user
     }, {
@@ -62,6 +66,9 @@ export default (socket, prefix) => {
       projects: 1,
     })
     .then(user => {
+      if (!user) {
+        throw new ApiError(404);
+      }
       user.project_count = user.projects.length;
       delete user.projects;
       return mapObjectIdToData(user, 'company', 'name', 'companies');
