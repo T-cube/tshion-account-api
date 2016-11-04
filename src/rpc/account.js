@@ -12,7 +12,7 @@ export default (socket, prefix) => {
 
   route('/list', (query) => {
     let { page, pagesize } = query;
-    page = page || 1;
+    page = page >= 0 ? page : 0;
     pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
       ? pagesize
       : config.get('view.listNum');
@@ -29,7 +29,7 @@ export default (socket, prefix) => {
         birthdate: 1,
         sex: 1,
       })
-      .skip((page - 1) * pagesize)
+      .skip(page * pagesize)
       .limit(pagesize)
     ])
     .then(doc => {
