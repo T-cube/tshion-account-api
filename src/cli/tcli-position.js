@@ -66,7 +66,7 @@ function updateStructer(node) {
     return false;
   });
   if (children && children.length) {
-    children.forEach(child => {
+    node.children.forEach(child => {
       if (updateStructer(child)) {
         updated = true;
       }
