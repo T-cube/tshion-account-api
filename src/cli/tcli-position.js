@@ -58,7 +58,7 @@ function updateStructer(node) {
   let { positions, members, children } = node;
   let positionIds = _.pluck(positions, '_id');
   let updated = false;
-  node.members = members.filter(m => {
+  node.members = _.filter(members, m => {
     if (indexObjectId(positionIds, m.position) > -1) {
       return true;
     }
