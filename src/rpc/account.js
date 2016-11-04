@@ -11,6 +11,7 @@ export default (socket, prefix) => {
 
   route('/list', (query) => {
     let { page, pagesize } = query;
+    page = page || 1;
     pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
       ? pagesize
       : config.get('view.listNum');

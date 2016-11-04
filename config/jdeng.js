@@ -15,5 +15,12 @@ module.exports = {
       task_expired: 'A3P5cDmtv7xKqeotk_0AQ5dJFvMXZOa32tqeyZ6AqTA',
       reminding: 'M2le2CxHBAdHCHZkqP9JS410XZttonO9p05c9kenlLs',
     }
-  }
+  },
+  rpc: {
+    protocol: 'http',
+    hostname: '127.0.0.1',
+    port: 2001,
+    appsecret: 'gvldWZTnQ8BIAReK',
+    appid: 'tlf-api'
+  },
 };
