@@ -63,8 +63,8 @@ export default class RpcRoute {
     }
     return {
       status: err.code,
-      error_name: err.name,
-      error_message: err.message,
+      error: err.name,
+      error_description: err.message,
     };
   }
 
