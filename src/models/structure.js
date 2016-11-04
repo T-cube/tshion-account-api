@@ -246,7 +246,7 @@ class Structure {
     let index = _.findIndex(node.positions, pos => pos._id.equals(position_id));
     if (index >= 0) {
       node.positions.splice(index, 1);
-      node.members = _.reject(node.members, m => m.position.equals(position_id));
+      node.members = _.reject(node.members, m => m._id.equals(position_id));
       return true;
     } else {
       return false;
