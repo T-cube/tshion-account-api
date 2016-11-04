@@ -386,7 +386,7 @@ saveCdn('cdn-file'),
         return;
       }
       return new Promise(function (resolve, reject) {
-        fs.readFile(fileData.path, 'utf8', (err, content) => {
+        fs.readFile(file.path, 'utf8', (err, content) => {
           if (err) {
             reject(err);
           }
@@ -394,7 +394,7 @@ saveCdn('cdn-file'),
         });
       })
       .then(content => {
-        let file_path = fileData.path;
+        let file_path = file.path;
         _.extend(fileData, {
           content,
           path: null,
