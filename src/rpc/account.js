@@ -1,4 +1,5 @@
 import config from 'config';
+import Promise from 'bluebird';
 
 import RpcRoute from 'models/rpc-route';
 import db from 'lib/database';
@@ -15,19 +16,31 @@ export default (socket, prefix) => {
     pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
       ? pagesize
       : config.get('view.listNum');
-    return db.user.find({}, {
-      name: 1,
-      email: 1,
-      email_verified: 1,
-      mobile: 1,
-      mobile_verified: 1,
-      description: 1,
-      avatar: 1,
-      birthdate: 1,
-      sex: 1,
-    })
-    .skip((page - 1) * pagesize)
-    .limit(pagesize);
+    return Promise.all([
+      db.user.count(),
+      db.user.find({}, {
+        name: 1,
+        email: 1,
+        email_verified: 1,
+        mobile: 1,
+        mobile_verified: 1,
+        description: 1,
+        avatar: 1,
+        birthdate: 1,
+        sex: 1,
+      })
+      .skip((page - 1) * pagesize)
+      .limit(pagesize)
+    ])
+    .then(doc => {
+      let [totalRows, list] = doc;
+      return {
+        list,
+        page,
+        pagesize,
+        totalRows
+      };
+    });
   });
 
   route('/detail', (query) => {
