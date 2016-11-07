@@ -50,10 +50,6 @@ export default class RpcRoute {
     return value && typeof value.then === 'function';
   }
 
-  isError(value) {
-    return value instanceof Error;
-  }
-
   errorHandler(err) {
     if (err instanceof ValidationError) {
       err = new ApiError(400, 'validation_error');

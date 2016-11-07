@@ -321,6 +321,9 @@ export default class Attendance {
         company: company._id,
       })
       .then(doc => {
+        if (!doc.length) {
+          return [];
+        }
         let signRecord = [];
         doc.forEach(sign => {
           signRecord.push(_.extend(this.parseUserRecord(sign.data, year, month), {
