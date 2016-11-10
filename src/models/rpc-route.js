@@ -22,7 +22,7 @@ export default class RpcRoute {
       try {
         value = callback(query);
       } catch (e) {
-        return this.emit(uri, this.errorHandler(value));
+        return this.emit(uri, this.errorHandler(e));
       }
       if (!this.isPromise(value)) {
         return this.emit(uri, {
@@ -35,7 +35,6 @@ export default class RpcRoute {
         data,
       }))
       .catch(e => {
-        console.error(e);
         this.emit(uri, this.errorHandler(e));
       });
     });
@@ -51,6 +50,7 @@ export default class RpcRoute {
   }
 
   errorHandler(err) {
+    console.error('rpc error', err);
     if (err instanceof ValidationError) {
       err = new ApiError(400, 'validation_error');
     }

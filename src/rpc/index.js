@@ -1,6 +1,7 @@
 import RpcRoute from 'models/rpc-route';
 
 import accountRoutes from './account';
+import companyRoutes from './company';
 
 export default (socket) => {
 
@@ -10,5 +11,6 @@ export default (socket) => {
   route('pid', () => process.pid);
 
   rpcRoute.use('/account', accountRoutes);
+  rpcRoute.use('/company', companyRoutes);
 
 };

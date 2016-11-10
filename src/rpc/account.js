@@ -1,5 +1,6 @@
 import config from 'config';
 import Promise from 'bluebird';
+import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
@@ -12,14 +13,20 @@ export default (socket, prefix) => {
   const route = rpcRoute.route.bind(rpcRoute);
 
   route('/list', (query) => {
-    let { page, pagesize } = query;
+    let { page, pagesize, keyword } = query;
     page = page >= 0 ? page : 0;
     pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
       ? pagesize
       : config.get('view.listNum');
+    let criteria = {};
+    if (keyword) {
+      criteria['name'] = {
+        $regex: RegExp(keyword, 'i')
+      };
+    }
     return Promise.all([
-      db.user.count(),
-      db.user.find({}, {
+      db.user.count(criteria),
+      db.user.find(criteria, {
         name: 1,
         email: 1,
         email_verified: 1,
@@ -45,12 +52,12 @@ export default (socket, prefix) => {
   });
 
   route('/detail', (query) => {
-    let { user } = query;
-    if (!user) {
+    let { _id } = query;
+    if (!_id || !ObjectId.isValid(_id)) {
       throw new ApiError(400);
     }
     return db.user.findOne({
-      _id: user
+      _id: ObjectId(_id)
     }, {
       name: 1,
       email: 1,
@@ -69,9 +76,10 @@ export default (socket, prefix) => {
       if (!user) {
         throw new ApiError(404);
       }
-      user.project_count = user.projects.length;
-      delete user.projects;
-      return mapObjectIdToData(user, 'company', 'name', 'companies');
+      return mapObjectIdToData(user, [
+        ['company', 'name', 'companies'],
+        ['project', 'name,logo,is_archived', 'projects'],
+      ]);
     });
   });
 
