@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import objectPath from 'object-path';
 import { camelCase } from 'change-case';
+import escapeRegexp from 'escape-regexp';
 
 import db from 'lib/database';
 import config from 'config';
@@ -328,4 +329,11 @@ export function getClientIp(req) {
     req.connection.remoteAddress ||
     req.socket.remoteAddress ||
     req.connection.socket.remoteAddress;
+}
+
+export function strToReg(source, ext) {
+  if (!ext || !_.isString(ext)) {
+    ext = undefined;
+  }
+  return new RegExp(escapeRegexp(source), ext);
 }

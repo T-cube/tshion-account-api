@@ -22,7 +22,10 @@ import C from 'lib/constants';
 import { mapObjectIdToData, indexObjectId, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
-import wUtil from 'lib/wechat-util';
+import {
+  APPROVAL,
+  APPROVAL_ITEM_RESULT,
+} from 'models/notification-setting';
 
 let api = express.Router();
 export default api;
@@ -175,7 +178,7 @@ api.put('/:item_id/status', (req, res, next) => {
           approval_item: item_id,
           approval_template: template._id,
           to: approver
-        })
+        }, APPROVAL)
       ]);
     });
   })
@@ -230,25 +233,7 @@ api.put('/:item_id/steps', (req, res, next) => {
           approval_item: item_id,
           to: item.from,
           approval_template: item.template._id,
-        });
-        let url = config.get('mobileUrl') + `oa/company/${req.company._id}/feature/approval/detail/${item_id}`;
-        wUtil.sendTemplateMessage(item.from, 'approval_result', url, {
-          'first': {
-            'value': '您好！',
-            'color': '#173177'
-          },
-          'keyword1': {
-            'value': `『${item.title}』 ${item.content}`,
-            'color': '#173177'
-          },
-          'keyword2': {
-            'value': isApproved ? '通过' : '驳回',
-            'color': isApproved ? '#419641' : '#ef4f4f'
-          },
-          'remark': {
-            'value': moment().format('YYYY/MM/DD HH:mm'),
-          }
-        });
+        }, APPROVAL_ITEM_RESULT);
         return doAfterApproval(item, data.status);
       }
     })
@@ -276,7 +261,7 @@ function addActivity(req, action, data) {
   return req.model('activity').insert(info);
 }
 
-function addNotification(req, action, data) {
+function addNotification(req, action, data, type) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.APPROVAL_ITEM,
@@ -284,7 +269,7 @@ function addNotification(req, action, data) {
     from: req.user._id,
   };
   _.extend(info, data);
-  return req.model('notification').send(info);
+  return req.model('notification').send(info, type);
 }
 
 function doAfterApproval(item, status) {

@@ -13,6 +13,10 @@ import {
   memberSanitization,
   memberValidation
 } from './schema';
+import {
+  STRUCTURE_MEMBER_ADD,
+  STRUCTURE_MEMBER_REMOVE,
+} from 'models/notification-setting';
 
 /* company collection */
 let api = require('express').Router();
@@ -176,7 +180,7 @@ api.post('/:node_id/member', (req, res, next) => {
         from: req.user._id,
         to: ObjectId(data._id),
         position,
-      });
+      }, STRUCTURE_MEMBER_ADD);
     }
   })
   .catch(next);
@@ -209,7 +213,7 @@ api.delete('/:node_id/member/:member_id', (req, res, next) => {
           from: req.user._id,
           to: member_id,
           position,
-        });
+        }, STRUCTURE_MEMBER_REMOVE);
       }
     })
     .catch(next);

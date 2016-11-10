@@ -9,6 +9,10 @@ import { oauthCheck } from 'lib/middleware';
 import { upload, saveCdn } from 'lib/upload';
 import C, { ENUMS } from 'lib/constants';
 import { fetchUserInfo, mapObjectIdToData } from 'lib/utils';
+import {
+  REQUEST_REJECT,
+  REQUEST_ACCEPT,
+} from 'models/notification-setting';
 
 // import { sanitizeValidateObject } from 'lib/inspector';
 // import { infoSanitization, infoValidation, avatarSanitization, avatarValidation } from './schema';
@@ -97,7 +101,7 @@ api.post('/:request_id/accept', (req, res, next) => {
           action: C.ACTIVITY_ACTION.ACCEPT,
           target_type: C.OBJECT_TYPE.REQUEST,
           request: requestId,
-        }),
+        }, REQUEST_ACCEPT),
         req.model('activity').insert({
           creator: request.to,
           company: companyId,
@@ -150,7 +154,7 @@ api.post('/:request_id/reject', (req, res, next) => {
           action: C.ACTIVITY_ACTION.REJECT,
           target_type: C.OBJECT_TYPE.REQUEST,
           request: requestId,
-        }),
+        }, REQUEST_REJECT),
       ]);
     }
   })

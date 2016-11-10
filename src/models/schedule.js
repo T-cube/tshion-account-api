@@ -6,6 +6,7 @@ import WechatApi from 'wechat-api';
 import db from 'lib/database';
 import C from 'lib/constants';
 import wUtil from 'lib/wechat-util';
+import { SCHEDULE_REMIND } from 'models/notification-setting';
 
 export default class Schedule {
 
@@ -198,32 +199,7 @@ export default class Schedule {
       target_type: C.OBJECT_TYPE.SCHEDULE,
       schedule: schedule._id,
       remind_time,
-    });
-    wUtil.getUserWechat(schedule.creator).then(wechat => {
-      if (!wechat) {
-        return;
-      }
-      let url = '';
-      let data = {
-        'first': {
-          'value':'您好！',
-          'color':'#173177'
-        },
-        'keyword1': {
-          'value':'test',
-          'color':'#173177'
-        },
-        'keyword2': {
-          'value':'test',
-          'color':'#173177'
-        },
-        'remark':{
-          'value':'提醒',
-          'color':'#173177'
-        }
-      };
-      this.wechatApi.sendTemplate(wechat.openid, config.get('wechat.templates.reminding'), url, data);
-    });
+    }, SCHEDULE_REMIND);
   }
 
   updateReminding(schedule) {

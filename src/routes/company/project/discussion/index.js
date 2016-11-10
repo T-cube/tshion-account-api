@@ -16,6 +16,9 @@ import {
   followValidation,
 } from './schema';
 import { fetchCompanyMemberInfo } from 'lib/utils';
+import {
+  PROJECT_DISCUSSION
+} from 'models/notification-setting';
 
 let api = express.Router();
 export default api;
@@ -308,6 +311,6 @@ function logProject(req, action, data) {
       from: req.user._id,
       to: req.project_discussion_followers.filter(follower => !follower.equals(req.user._id))
     });
-    req.model('notification').send(notification);
+    req.model('notification').send(notification, PROJECT_DISCUSSION);
   }
 }

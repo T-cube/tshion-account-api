@@ -5,26 +5,48 @@ import { time } from 'lib/utils';
 import { validate } from 'lib/inspector';
 import config from 'config';
 
+import C from 'lib/constants';
 import db from 'lib/database';
 import { validation } from './notification.schema';
 import { mapObjectIdToData } from 'lib/utils';
-import C from 'lib/constants';
+import NotificationSetting from 'models/notification-setting';
+import EmailSender from 'models/notification/sender-email';
+import WebSender from 'models/notification/sender-web';
+import WechatSender from 'models/notification/sender-wechat';
 
-const extendedProps = [
+export const extendedProps = [
   ['user', 'name', 'from,user'],
   ['company', 'name', 'company'],
   ['project', 'name,company_id', 'project'],
-  ['task', 'title,company_id,project_id', 'task'],
+  ['task', 'title,company_id,project_id,creator,priority', 'task'],
   ['request', 'type', 'request'],
   ['schedule', 'title,remind', 'schedule'],
   ['approval.item', 'company_id,apply_date,title', 'approval_item'],
   ['announcement', 'title,is_published,company_id,type', 'announcement'],
 ];
 
+
+
 export default class Notification {
+
   constructor() {
     this._from = null;
     this._to = null;
+    this.setting = new NotificationSetting();
+  }
+
+  init() {
+    let emailSender = new EmailSender();
+    let webSender = new WebSender();
+    let wechatSender = new WechatSender();
+    this.bindLoader(emailSender);
+    this.bindLoader(webSender);
+    this.bindLoader(wechatSender);
+    this.senders = {
+      email: emailSender,
+      web: webSender,
+      wechat: wechatSender,
+    };
   }
 
   from(user) {
@@ -37,61 +59,44 @@ export default class Notification {
     return this;
   }
 
-  send(data, messageType) {
+  send(data, type) {
+
+    // TODO
+    if (!type) {
+      type = 'request';
+    }
+
     let self = this;
     data = _.extend({
       from: this._from,
       to: this._to,
     }, data);
-    console.log(data);
     if (_.isArray(data.to)) {
-      return self.sendToMany(data, data.to);
+      return self.sendToMany(data.to, type, data);
     } else {
-      return self.sendToSingle(data, data.to);
+      return self.sendToSingle(data.to, type, data);
     }
   }
 
-  getOption(userId, type) {
-    return db.user.findOne({_id: userId}, {options: 1})
-    .then(doc => {
-      if (doc && doc.options) {
-        return !!doc.options['notice_' + type];
-      } else {
-        return false;
-      }
-    });
-  }
-
-
-  sendToSingle(data, user) {
-    if (user.equals(data._id)) {
-      return Promise.resolve(false);
-    }
-    let promise = Promise.resolve(true);
-    if (data.target_type && /task|project/.test(data.target_type)) {
-      promise = this.getOption(user, 'project');
-    } else if (data.target_type && /request/.test(data.target_type)) {
-      promise = this.getOption(user, 'request');
-    }
-    promise.then(enabled => {
-      if (!enabled) {
-        return false;
-      }
+  sendToSingle(user, type, data) {
+    return this.setting.get(user, type)
+    .then(setting => {
       data = _.extend({}, data, {
         to: user,
         is_read: false,
         date_create: time(),
       });
-      validate(validation, data);
+      // validate(validation, data);
       let extended = _.clone(data);
-      mapObjectIdToData(extended, extendedProps)
-      .then(d => this.model('socket').send(user, d) );
-      return db.notification.insert(data);
+      return mapObjectIdToData(extended, extendedProps)
+      .then(d => Promise.all(_.map(this.senders, (sender, method) => {
+        setting[method] && sender.send(type, data, d);
+      })));
     });
   }
 
-  sendToMany(data, list) {
-    let promises = list.map(user => this.sendToSingle(data, user));
+  sendToMany(list, type, data) {
+    let promises = list.map(user => this.sendToSingle(user, type, data));
     return Promise.all(promises);
   }
 

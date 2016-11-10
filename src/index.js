@@ -46,7 +46,7 @@ console.log();
 console.log('--------------------------------------------------------------------------------');
 console.log('Tlifang API Service v%s', version);
 console.log('--------------------------------------------------------------------------------');
-console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('NODE_ENV=' + process.env.NODE_ENV);
 console.log('loaded config:');
 console.log(JSON.stringify(_.pick(config, ['apiUrl', 'webUrl', 'server', 'database']), (key, value) => {
   return _.isArray(value) ? value.join(';') : value;

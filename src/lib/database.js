@@ -30,6 +30,7 @@ const collections = [
   'document.file',
   'document.token',
   'notification',
+  'notification.setting',
   'oauth.accesstoken',
   'oauth.clients',
   'oauth.refreshtoken',

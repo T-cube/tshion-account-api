@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import config from 'config';
 
 import db from 'lib/database';
+import { strToReg } from 'lib/utils';
 
 class Document {
 
@@ -32,7 +33,7 @@ class Document {
       db.document.file.find({
         dir_path: dir,
         name: {
-          $regex: RegExp(name, 'i')
+          $regex: strToReg(name, 'i')
         },
       }, {
         name: 1,
@@ -51,7 +52,7 @@ class Document {
       db.document.dir.find({
         path: dir,
         name: {
-          $regex: RegExp(name, 'i')
+          $regex: strToReg(name, 'i')
         },
       }, {
         name: 1,

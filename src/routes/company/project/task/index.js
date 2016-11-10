@@ -9,7 +9,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, indexObjectId } from 'lib/utils';
+import { fetchCompanyMemberInfo, indexObjectId, strToReg } from 'lib/utils';
 import {
   sanitization,
   validation,
@@ -17,6 +17,11 @@ import {
   commentValidation,
   validate,
 } from './schema';
+import {
+  TASK_ASSIGNED,
+  TASK_UPDATE,
+  TASK_REPLY,
+} from 'models/notification-setting';
 
 let api = express.Router();
 export default api;
@@ -54,7 +59,7 @@ api.get('/', (req, res, next) => {
   if (keyword) {
     // condition['$text'] = { $search: keyword };
     condition['title'] = {
-      $regex: RegExp(keyword, 'i')
+      $regex: strToReg(keyword, 'i')
     };
   }
   if (tag && ObjectId.isValid(tag)) {
@@ -304,7 +309,7 @@ api.put('/:task_id/tag', (req, res, next) => {
   })
   .then(() => {
     let tagItem = _.find(req.project.tags, tag => tag._id.equals(tagId));
-    logTask(req, C.ACTIVITY_ACTION.ADD, {
+    addActivity(req, C.ACTIVITY_ACTION.ADD, {
       target_type: C.OBJECT_TYPE.TASK_TAG,
       tag: tagItem,
     });
@@ -324,7 +329,7 @@ api.delete('/:task_id/tag/:tag_id', (req, res, next) => {
   })
   .then(() => {
     let tagItem = _.find(req.project.tags, tag => tag._id.equals(tagId));
-    logTask(req, C.ACTIVITY_ACTION.REMOVE, {
+    addActivity(req, C.ACTIVITY_ACTION.REMOVE, {
       target_type: C.OBJECT_TYPE.TASK_TAG,
       tag: tagItem,
     });
@@ -406,7 +411,7 @@ api.post('/:task_id/comment', (req, res, next) => {
     })
     .then(() => {
       res.json(data);
-      sendNotification(req, C.ACTIVITY_ACTION.REPLY);
+      sendNotification(req, C.ACTIVITY_ACTION.REPLY, {}, TASK_REPLY);
     });
   })
   .catch(next);
@@ -550,7 +555,7 @@ function updateField(field) {
 function logTask(req, action, data) {
   return Promise.all([
     addActivity(req, action, data),
-    sendNotification(req, action, data)
+    sendNotification(req, action, data, TASK_UPDATE)
   ]);
 }
 
@@ -567,7 +572,7 @@ function addActivity(req, action, data) {
   return req.model('activity').insert(activity);
 }
 
-function sendNotification(req, action, data) {
+function sendNotification(req, action, data, type) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.TASK,
@@ -577,7 +582,7 @@ function sendNotification(req, action, data) {
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),
   };
   let notification = _.extend({}, info, data);
-  return req.model('notification').send(notification);
+  return req.model('notification').send(notification, type);
 }
 
 function doUpdateField(req, field) {
@@ -601,6 +606,9 @@ function doUpdateField(req, field) {
     } else if (field == 'assignee') {
       action = C.ACTIVITY_ACTION.CHANGE_TASK_ASSIGNEE;
       ext.project_member = data[field];
+      data[field].equals(req.user._id) || sendNotification(req, action, _.extend(ext, {
+        to: data[field]
+      }), TASK_ASSIGNED);
     } else {
       action = C.ACTIVITY_ACTION.UPDATE;
       if (_.contains(['priority', 'date_start', 'date_due'], field)) {
