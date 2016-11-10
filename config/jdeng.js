@@ -11,9 +11,12 @@ module.exports = {
     appsecret: '33e3cc720d35830e154a5eab8bc853d3',
     auth_code_lifetime: 60 * 5,
     templates: {
-      approval_result: '5SDcb0I1fEPbjpw0KRPzy0-xqmi92jNe5gajq3p32gk',
-      task_expired: 'A3P5cDmtv7xKqeotk_0AQ5dJFvMXZOa32tqeyZ6AqTA',
-      reminding: 'M2le2CxHBAdHCHZkqP9JS410XZttonO9p05c9kenlLs',
+      APPROVAL_ITEM_RESULT: '5SDcb0I1fEPbjpw0KRPzy0-xqmi92jNe5gajq3p32gk',
+      TASK_ASSIGNED: 'D6u6xojT0VG9nffhl9JdcbkKi6FmSd9vfZC9N7tMFBE',
+      TASK_DAYLYREPORT: 'M2le2CxHBAdHCHZkqP9JS410XZttonO9p05c9kenlLs',
+      REQUEST_ACCEPT: 'onWa4TDALZMy7ZaSpIUXneNzKlUed1UQNL_lq5eZdPA',
+      SCHEDULE_REMIND: 'N6tGBD_tAvCDcgGIlgISZ9_3msM6TX5miFhooOXjMRE',
+      ATTENDENCE: 'onRwwhajeVIHWW8wp6GlMajKBnmx3frvgni-x5pA5F4',
     }
   }
 };
