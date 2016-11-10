@@ -7,6 +7,7 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import Structure from 'models/structure';
 import { uniqObjectId } from 'lib/utils';
+import { APPROVAL } from 'models/notification-setting';
 
 export default class Approval {
 
@@ -195,7 +196,7 @@ export default class Approval {
         approver.length && req.model('notification').send(_.extend(notification, {
           action: C.ACTIVITY_ACTION.SUBMIT,
           to: approver,
-        })),
+        }), APPROVAL),
         // copyto.length && req.model('notification').send(_.extend(notification, {
         //   action: C.ACTIVITY_ACTION.COPY,
         //   to: copyto,
@@ -379,7 +380,7 @@ export default class Approval {
           return req.model('notification').send(_.extend(notification, {
             to: ObjectId(fromUser),
             approval_item: userItems.map(userItem => userItem._id),
-          }));
+          }), APPROVAL);
         })
         .concat(db.approval.item.update({
           _id: {

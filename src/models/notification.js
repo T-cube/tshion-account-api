@@ -60,12 +60,6 @@ export default class Notification {
   }
 
   send(data, type) {
-
-    // TODO
-    if (!type) {
-      type = 'request';
-    }
-
     let self = this;
     data = _.extend({
       from: this._from,

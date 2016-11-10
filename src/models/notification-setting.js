@@ -54,7 +54,7 @@ export default class NotificationSetting {
       [COMPANY_MEMBER_INVITE]: {
         web: { editable: false, default: true },
         wechat: { editable: false, default: true },
-        email: { editable: false, default: false },
+        email: { editable: false, default: true },
       },
       [COMPANY_MEMBER_UPDATE]: {
         web: { editable: true, default: true },

@@ -129,14 +129,14 @@ let render = {
     };
   },
   [SCHEDULE_REMIND]: (extended) => {
-    let { schedules } = extended;
+    let { schedule } = extended;
     return {
       'first': {
         'value': '今天的日程提醒',
         'color': colors.primary
       },
       'keyword1': {
-        'value': schedules.map(schedule => schedule.title).join('，'),
+        'value': schedule.title,
         'color': colors.primary
       },
       'keyword2': {

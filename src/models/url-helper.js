@@ -57,7 +57,7 @@ export default class UrlHelper {
       url = `/oa/company/${object.company_id}/feature/announcement/${object.type}/${object._id}`;
       break;
     case SCHEDULE_REMIND:
-      url = `/oa/company/${object.company._id}/feature/schedule`;
+      url = '`/oa/company';
       break;
     case ATTENDENCE:
       url = `/oa/company/${object.company._id}/feature/attend`;

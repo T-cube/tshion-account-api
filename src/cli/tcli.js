@@ -13,6 +13,7 @@ program
   .command('filecdnkey', 'add cdn key to document file')
   .command('approvalversion', 'update approval template version status')
   .command('position', 'update member position')
+  .command('notification', 'set default notification')
   .parse(process.argv);
 
 console.log('TLifang API Command Line Tool');
