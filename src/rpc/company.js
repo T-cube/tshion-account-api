@@ -1,6 +1,7 @@
 import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
+import { strToReg } from 'lib/utils';
 
 import RpcRoute from 'models/rpc-route';
 
@@ -18,7 +19,7 @@ export default (socket, prefix) => {
     let criteria = {};
     if (keyword) {
       criteria['name'] = {
-        $regex: RegExp(keyword, 'i')
+        $regex: strToReg(keyword, 'i')
       };
     }
     return Promise.all([

@@ -5,7 +5,7 @@ import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
 import db from 'lib/database';
-import { mapObjectIdToData } from 'lib/utils';
+import { mapObjectIdToData, strToReg } from 'lib/utils';
 
 export default (socket, prefix) => {
 
@@ -21,7 +21,7 @@ export default (socket, prefix) => {
     let criteria = {};
     if (keyword) {
       criteria['name'] = {
-        $regex: RegExp(keyword, 'i')
+        $regex: strToReg(keyword, 'i')
       };
     }
     return Promise.all([
