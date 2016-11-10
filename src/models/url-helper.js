@@ -20,8 +20,8 @@ export default class UrlHelper {
   getMobileUrl(type, object) {
     let url;
     switch(type) {
-    case 'company':
-      url = `/oa/company/${object._id}/desktop`;
+    case REQUEST_ACCEPT:
+      url = `/oa/company/${object.company._id}/desktop`;
       break;
     case 'project':
       url = `/oa/company/${object.company_id}/desktop/project/${object._id}/list`;
@@ -29,8 +29,8 @@ export default class UrlHelper {
     case 'project.discussion':
       url = `/oa/company/${object.company_id}/desktop/project/${object.project_id}/list/discuss/${object._id}/detail`;
       break;
-    case 'task':
-      url = `/oa/company/${object.company_id}/desktop/project/${object.project_id}/list/task/${object._id}/detail`;
+    case TASK_ASSIGNED:
+      url = `/oa/company/${object.task.company_id}/desktop/project/${object.project_id}/list/task/${object.task._id}/detail`;
       break;
     case COMPANY_MEMBER_INVITE:
       url = '/oa/user/mine/request/all';
@@ -56,8 +56,11 @@ export default class UrlHelper {
     case 'announcement.draft':
       url = `/oa/company/${object.company_id}/feature/announcement/${object.type}/${object._id}`;
       break;
-    case 'schedule':
-      url = `/oa/company/${object.company_id}/feature/schedule/${object._id}`;
+    case SCHEDULE_REMIND:
+      url = `/oa/company/${object.company._id}/feature/schedule`;
+      break;
+    case ATTENDENCE:
+      url = `/oa/company/${object.company._id}/feature/attend`;
       break;
     case 'default':
       url = null;
@@ -71,8 +74,8 @@ export default class UrlHelper {
   getWebUrl(type, object) {
     let url;
     switch(type) {
-    case 'company':
-      url = `/oa/company/${object._id}`;
+    case REQUEST_ACCEPT:
+      url = `/oa/company/${object.company._id}`;
       break;
     case 'project':
       url = `/oa/company/${object.company_id}/project/${object._id}`;
@@ -80,8 +83,8 @@ export default class UrlHelper {
     case 'project.discussion':
       url = `/oa/company/${object.company_id}/project/${object.project_id}/discuss/detail/${object._id}`;
       break;
-    case 'task':
-      url = `/oa/company/${object.company_id}/project/${object.project_id}/task/filter/all/detail/${object._id}`;
+    case TASK_ASSIGNED:
+      url = `/oa/company/${object.task.company_id}/project/${object.project_id}/task/filter/all/detail/${object.task._id}`;
       break;
     case COMPANY_MEMBER_INVITE:
       url = '/oa/user/request/all';
@@ -112,8 +115,11 @@ export default class UrlHelper {
     case 'announcement.draft':
       url = `/oa/company/${object.company_id}/announcement/drafts/${object._id}/edit`;
       break;
-    case 'schedule':
-      url = `/oa/user/schedule/${object._id}`;
+    case SCHEDULE_REMIND:
+      url = '/oa/user/schedule';
+      break;
+    case ATTENDENCE:
+      url = `/oa/company/${object.company._id}/attendance`;
       break;
     case 'default':
       url = null;
