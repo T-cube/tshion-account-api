@@ -9,7 +9,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, indexObjectId } from 'lib/utils';
+import { fetchCompanyMemberInfo, indexObjectId, strToReg } from 'lib/utils';
 import {
   sanitization,
   validation,
@@ -59,7 +59,7 @@ api.get('/', (req, res, next) => {
   if (keyword) {
     // condition['$text'] = { $search: keyword };
     condition['title'] = {
-      $regex: RegExp(keyword, 'i')
+      $regex: strToReg(keyword, 'i')
     };
   }
   if (tag && ObjectId.isValid(tag)) {

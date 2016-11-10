@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import { oauthCheck } from 'lib/middleware';
-import { fetchUserInfo, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
+import { fetchUserInfo, fetchCompanyMemberInfo, uniqObjectId, strToReg } from 'lib/utils';
 import C, { ENUMS } from 'lib/constants';
 
 let api = express.Router();
@@ -45,7 +45,7 @@ api.get('/', (req, res, next) => {
   }
   if (keyword) {
     condition['title'] = {
-      $regex: RegExp(keyword, 'i')
+      $regex: strToReg(keyword, 'i')
     };
   }
   if (is_expired === '1') {
