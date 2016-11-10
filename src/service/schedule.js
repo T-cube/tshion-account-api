@@ -36,6 +36,9 @@ export default class ScheduleServer {
       },
       wechat_access_token: {
         init: ['0 */1 * * *', () => wechatAccess.refresh()]
+      },
+      attendance_remind: {
+        init: ['*/10 * * * *', () => {}]
       }
       // task_expire: {
       //   init: ['0 9 * * *', () => {

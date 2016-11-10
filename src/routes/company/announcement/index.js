@@ -11,6 +11,7 @@ import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
 import C from 'lib/constants';
 import { checkUserType } from '../utils';
+import { ANNOUNCEMENT } from 'models/notification-setting';
 
 let api = express.Router();
 export default api;
@@ -253,7 +254,7 @@ function addNotification(req, action, data, to) {
     to: to
   };
   _.extend(info, data);
-  return req.model('notification').send(info, C.NOTICE.COMMON);
+  return req.model('notification').send(info, ANNOUNCEMENT);
 }
 
 function getNotifyUsers(req, to) {

@@ -19,6 +19,14 @@ import {
   tagSanitization,
   tagValidation,
 } from './schema';
+import {
+  PROJECT_TRANSFER,
+  PROJECT_QUIT,
+  PROJECT_MEMBER_ADD,
+  PROJECT_MEMBER_REMOVE,
+  PROJECT_MEMBER_SETADMIN,
+  PROJECT_MEMBER_REMOVEADMIN,
+} from 'models/notification-setting';
 
 /* company collection */
 let api = express.Router();
@@ -287,7 +295,7 @@ api.post('/:project_id/member', (req, res, next) => {
       from: req.user._id,
       to: members
     };
-    req.model('notification').send(notification);
+    req.model('notification').send(notification, PROJECT_MEMBER_ADD);
   })
   .catch(next);
 });
@@ -330,7 +338,7 @@ api.put('/:project_id/member/:member_id/type', (req, res, next) => {
     req.model('notification').send(_.extend({}, notification, {
       from: req.user._id,
       to: member_id
-    }));
+    }), activityAction == C.ACTIVITY_ACTION.SET_ADMIN ? PROJECT_MEMBER_SETADMIN : PROJECT_MEMBER_REMOVEADMIN);
   })
   .catch(next);
 });
@@ -371,7 +379,7 @@ api.post('/:project_id/transfer', authCheck(), (req, res, next) => {
       from: req.user._id,
       to: member_id
     };
-    req.model('notification').send(notification);
+    req.model('notification').send(notification, PROJECT_TRANSFER);
   })
   .catch(next);
 });
@@ -447,7 +455,7 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
         from: req.user._id,
         to: members.map(member => member._id).filter(member => !member.equals(req.user._id))
       };
-      req.model('notification').send(notification);
+      req.model('notification').send(notification, PROJECT_QUIT);
     } else {
       logProject(req, C.ACTIVITY_ACTION.REMOVE, {
         target_type: C.OBJECT_TYPE.PROJECT_MEMBER,
@@ -460,7 +468,7 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
         from: req.user._id,
         to: member_id
       };
-      req.model('notification').send(notification);
+      req.model('notification').send(notification, PROJECT_MEMBER_REMOVE);
     }
   })
   .catch(next);

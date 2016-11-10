@@ -13,6 +13,13 @@ import { checkUserType, checkUserTypeFunc } from '../utils';
 import { isEmail, time } from 'lib/utils';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
+import {
+  COMPANY_MEMBER_INVITE,
+  COMPANY_MEMBER_REMOVE,
+  COMPANY_MEMBER_UPDATE,
+  COMPANY_MEMBER_UPDATE_SETADMIN,
+  COMPANY_MEMBER_UPDATE_REMOVEADMIN,
+} from 'models/notification-setting';
 
 /* company collection */
 let api = express.Router();
@@ -97,7 +104,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
             target_type: C.OBJECT_TYPE.REQUEST,
             request: request._id,
             company: req.company._id,
-          }, C.NOTICE.COMMON);
+          }, COMPANY_MEMBER_INVITE);
         }),
         db.company.update({
           _id: req.company._id,
@@ -204,7 +211,7 @@ api.put('/:member_id', (req, res, next) => {
       req.model('notification').send(_.extend({}, notification, {
         from: req.user._id,
         to: member_id,
-      }));
+      }), activityAction == C.ACTIVITY_ACTION.SET_ADMIN ? COMPANY_MEMBER_UPDATE_SETADMIN : COMPANY_MEMBER_UPDATE_REMOVEADMIN);
     }
   })
   .catch(next);
@@ -275,7 +282,7 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
       action: C.ACTIVITY_ACTION.REMOVE,
       target_type: C.OBJECT_TYPE.COMPANY_MEMBER,
       company: req.company._id,
-    });
+    }, COMPANY_MEMBER_REMOVE);
   })
   .catch(next);
 });
