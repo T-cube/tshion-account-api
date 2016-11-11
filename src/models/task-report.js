@@ -3,15 +3,52 @@ import Promise from 'bluebird';
 
 import C from 'lib/constants';
 import db from 'lib/database';
+import { TASK_DAYLYREPORT } from 'models/notification-setting';
 
 export default class TaskReport {
 
   constructor() {
     this.taskFields = {
-      name: 1,
+      title: 1,
       date_start: 1,
       date_due: 1,
     };
+  }
+
+  doJob() {
+    this._doJob();
+  }
+
+  _doJob(last_id) {
+    let criteria = last_id ? {
+      _id: {
+        $gt: last_id
+      }
+    } : {};
+    db.user.findOne(criteria, {_id: 1})
+    .then(user => {
+      if (!user) {
+        return;
+      }
+      return this.get(user._id)
+      .then(doc => {
+        this.model('notification').send({
+          to: user._id,
+          action: C.ACTIVITY_ACTION.TASK_DAYLYREPORT,
+          target_type: C.OBJECT_TYPE.TASK,
+          field: doc,
+        }, TASK_DAYLYREPORT);
+      })
+      .then(() => user._id)
+      .catch(e => {
+        console.error(e);
+        return user._id;
+      });
+    })
+    .then(last_id => {
+      last_id && this._doJob(last_id);
+    })
+    .catch(e => console.error(e));
   }
 
   get(userId, date) {
@@ -20,8 +57,8 @@ export default class TaskReport {
       this.getExpiredTasks(userId, date),
     ])
     .then(doc => {
-      let [dateTasks, expiredTasks] = doc;
-      return {dateTasks, expiredTasks};
+      let [todayTasks, expiredTasks] = doc;
+      return {todayTasks, expiredTasks};
     });
   }
 

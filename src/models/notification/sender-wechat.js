@@ -89,18 +89,18 @@ let render = {
     };
   },
   [TASK_DAYLYREPORT]: (extended) => {
-    let { todayTasks, expiredTasks } = extended;
+    let { todayTasks, expiredTasks } = extended.field;
     return {
       'first': {
         'value': '您今天有以下任务待处理！',
         'color': colors.primary
       },
       'keyword1': {
-        'value': todayTasks.map(task => task.name).join('，'),
+        'value': todayTasks.map(task => task.title).join('，'),
         'color': colors.primary
       },
       'keyword2': {
-        'value': expiredTasks.map(task => task.name).join('，'),
+        'value': expiredTasks.map(task => task.title).join('，'),
         'color': colors.primary
       },
       'remark': {

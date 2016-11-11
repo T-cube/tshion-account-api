@@ -58,6 +58,8 @@ let constants = {
     SIGN_AUDIT: 'sign.audit', // 补签
 
     RELEASE: 'release',   // 发布
+
+    TASK_DAYLYREPORT: 'task_daylyreport',   // 任务日报
   },
 
   ACTIVITY_TYPE: {
