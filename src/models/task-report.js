@@ -13,6 +13,7 @@ export default class TaskReport {
       date_start: 1,
       date_due: 1,
     };
+    this.taskItemCount = 5;
   }
 
   doJob() {
@@ -69,7 +70,8 @@ export default class TaskReport {
       date_due: {
         $lt: moment(date).startOf('day').toDate(),
       },
-    }, this.taskFields);
+    }, this.taskFields)
+    .limit(this.taskItemCount);
   }
 
   getDateTasks(userId, date) {
@@ -83,7 +85,8 @@ export default class TaskReport {
       date_due: {
         $gte: moment(date).add(1, 'day').startOf('day').toDate(),
       },
-    }, this.taskFields);
+    }, this.taskFields)
+    .limit(this.taskItemCount);
   }
 
 }
