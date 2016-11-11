@@ -47,7 +47,7 @@ export default class ScheduleServer {
         init: ['*/5 * * * *', () => attendanceRemind.doJob()]
       },
       task_report: {
-        init: ['*/1 * * * *', () => taskReport.doJob()]
+        init: ['0 10 * * *', () => taskReport.doJob()]
       },
       // task_expire: {
       //   init: ['0 9 * * *', () => {
