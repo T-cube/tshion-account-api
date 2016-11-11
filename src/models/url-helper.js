@@ -62,6 +62,9 @@ export default class UrlHelper {
     case ATTENDANCE:
       url = `/oa/company/${object.company._id}/feature/attend`;
       break;
+    case TASK_DAYLYREPORT:
+      url = '/oa/company';
+      break;
     case 'default':
       url = null;
     }
@@ -120,6 +123,9 @@ export default class UrlHelper {
       break;
     case ATTENDANCE:
       url = `/oa/company/${object.company._id}/attendance`;
+      break;
+    case TASK_DAYLYREPORT:
+      url = '/oa/company';
       break;
     case 'default':
       url = null;

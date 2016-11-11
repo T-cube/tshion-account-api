@@ -10,8 +10,8 @@ import { ATTENDANCE } from 'models/notification-setting';
 export default class AttendanceRemind {
 
   doJob() {
-    let fiveMinuteLater = moment().add(0, 'minute').format('HH:mm');
-    let tenMinuteLater = moment().add(100, 'minute').format('HH:mm');
+    let fiveMinuteLater = moment().add(5, 'minute').format('HH:mm');
+    let tenMinuteLater = moment().add(10, 'minute').format('HH:mm');
     this.remindSignIn([fiveMinuteLater, tenMinuteLater], 0);
     this.remindSignOut([fiveMinuteLater, tenMinuteLater], 0);
   }
