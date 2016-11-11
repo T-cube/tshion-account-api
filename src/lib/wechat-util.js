@@ -178,6 +178,7 @@ export default class WechatUtil {
       .then(wechat => wechat && wechat.openid);
     }
     getOpenid.then(openid => {
+      console.log({openid, template, url, data});
       openid && wechatApi.sendTemplate(openid, template, url, data);
     });
   }

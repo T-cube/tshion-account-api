@@ -579,7 +579,8 @@ function sendNotification(req, action, data, type) {
   let info = {
     action: action,
     target_type: C.OBJECT_TYPE.TASK,
-    task: _.pick(req.task, '_id', 'title', 'company_id'),
+    task: req.task._id,
+    ori_task: _.pick(req.task, '_id', 'title', 'company_id'),
     project: req.project._id,
     from: req.user._id,
     to: req.task.followers.filter(_id => !_id.equals(req.user._id)),

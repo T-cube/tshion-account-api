@@ -1,14 +1,14 @@
 import db from 'lib/database';
+import Sender from './sender';
 
-import UrlHelper from 'models/url-helper';
 import {
   COMPANY_MEMBER_INVITE
 } from 'models/notification-setting';
 
-export default class EmailSender {
+export default class EmailSender extends Sender {
 
   constructor() {
-    this.urlHelper = new UrlHelper();
+    super();
   }
 
   send(type, data, extended) {

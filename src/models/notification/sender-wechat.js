@@ -1,8 +1,8 @@
 import moment from 'moment';
+import Sender from './sender';
 
 import C from 'lib/constants';
 import getTemplate from 'lib/wechat-message-template';
-import UrlHelper from 'models/url-helper';
 import wUtil from 'lib/wechat-util';
 
 import {
@@ -109,10 +109,10 @@ let render = {
     };
   },
   [REQUEST_ACCEPT]: (extended) => {
-    let { company, from, date_create } = extended;
+    let { from, date_create } = extended;
     return {
       'first': {
-        'value': `新成员加入了团队 ${company.name}`,
+        'value': '新成员加入了团队',
         'color': colors.primary
       },
       'keyword1': {
@@ -140,11 +140,11 @@ let render = {
         'color': colors.primary
       },
       'keyword2': {
-        'value': moment().format('YYYY/MM/DD HH:mm'),
+        'value': schedule.description,
         'color': colors.primary
       },
       'remark': {
-        'value': '',
+        'value': '开始时间：' + moment(schedule.date_start).format('YYYY/MM/DD HH:mm'),
       }
     };
   },
@@ -170,10 +170,10 @@ let render = {
   },
 };
 
-export default class WechatSender {
+export default class WechatSender extends Sender {
 
   constructor() {
-    this.urlHelper = new UrlHelper();
+    super();
   }
 
   send(type, data, extended) {
