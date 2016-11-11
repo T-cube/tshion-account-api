@@ -78,15 +78,16 @@ INPUT:
 }
 ```
 
-### PUT /user/options
+### PUT /user/options/notification
 
 修改用户选项
 
 INPUT:
 ```javascript
 {
-  notice_request: <Boolean>,
-  notice_project: <Boolean>,
+  type: <String[Enum]>, // models/notification-setting
+  method: <String[Enum: wechat, web, email]>,
+  isOn: <Boolean>,
 }
 ```
 

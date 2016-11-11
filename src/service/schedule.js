@@ -5,6 +5,7 @@ import config from 'config';
 
 import ScheduleModel from 'models/schedule';
 import TaskLoop from 'models/task-loop';
+import AttendanceRemind from 'models/attendance-remind';
 import db from 'lib/database';
 import C from 'lib/constants';
 import wUtil from 'lib/wechat-util';
@@ -26,6 +27,8 @@ export default class ScheduleServer {
     let taskLoop = new TaskLoop({
       rows_fetch_once: 100
     });
+    let attendanceRemind = new AttendanceRemind();
+    this.bindLoader(attendanceRemind);
 
     this.jobs = {
       schedule_reminding: {
@@ -38,7 +41,7 @@ export default class ScheduleServer {
         init: ['0 */1 * * *', () => wechatAccess.refresh()]
       },
       attendance_remind: {
-        init: ['*/10 * * * *', () => {}]
+        init: ['*/5 * * * *', () => attendanceRemind.doJob()]
       }
       // task_expire: {
       //   init: ['0 9 * * *', () => {

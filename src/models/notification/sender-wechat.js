@@ -12,7 +12,7 @@ import {
   TASK_DAYLYREPORT,        //  待办任务提醒
   REQUEST_ACCEPT,          //  成员加入提醒
   SCHEDULE_REMIND,         //  待办事项提醒
-  ATTENDENCE,              //  考勤提醒
+  ATTENDANCE,              //  考勤提醒
 } from 'models/notification-setting';
 
 const colors = {
@@ -132,7 +132,7 @@ let render = {
     let { schedule } = extended;
     return {
       'first': {
-        'value': '今天的日程提醒',
+        'value': '您有新的日程提醒',
         'color': colors.primary
       },
       'keyword1': {
@@ -148,15 +148,15 @@ let render = {
       }
     };
   },
-  [ATTENDENCE]: (extended) => {
-    let { company, user, sign_type } = extended;
+  [ATTENDANCE]: (extended) => {
+    let { company, company_member, sign_type } = extended;
     return {
       'first': {
-        'value': `考勤提醒，${company.name}`,
+        'value': `${company.name}，考勤提醒`,
         'color': colors.primary
       },
       'keyword1': {
-        'value': user.name,
+        'value': company_member.name,
         'color': colors.primary
       },
       'keyword2': {
@@ -164,7 +164,7 @@ let render = {
         'color': colors.primary
       },
       'remark': {
-        'value': '快上班了，别忘了打卡',
+        'value': '别忘了打卡哦！',
       }
     };
   },
@@ -179,7 +179,7 @@ export default class WechatSender extends Sender {
   send(type, data, extended) {
     let template = this.getTemplate(type);
     if (!template) {
-      return null;
+      return Promise.resolve();
     }
     let url = this.urlHelper.getMobileUrl(type, extended);
     let tplData = this.getData(type, extended);

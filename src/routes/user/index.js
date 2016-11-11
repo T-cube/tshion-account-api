@@ -90,19 +90,9 @@ api.put('/settings', (req, res, next) => {
 
 api.put('/options', (req, res, next) => {
   let data = req.body;
-  validate('options', data);
-  if (!_.keys(data).length) {
-    throw new ApiError(400, null, 'no option provided!');
-  }
-  let fields = {};
-  _.each(data, (val, key) => {
-    fields[`options.${key}`] = val;
-  });
-  db.user.update({
-    _id: req.user._id
-  }, {
-    $set: fields,
-  })
+  validate('options-notification', data);
+  let { type, method, isOn } = data;
+  req.model('notification-setting').set(req.user._id, type, method, isOn)
   .then(() => res.json(data))
   .catch(next);
 });

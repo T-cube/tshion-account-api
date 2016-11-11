@@ -1,5 +1,10 @@
 import { ENUMS } from 'lib/constants';
 import { buildValidator } from 'lib/inspector';
+import NotificationSetting from 'models/notification-setting';
+
+const notificationSetting = new NotificationSetting();
+const notificationTypes = notificationSetting.getSettingTypes();
+const notificationMethods = notificationSetting.getSettingMethods();
 
 const schema = {
   info: {
@@ -50,14 +55,16 @@ const schema = {
       current_company: { $ObjectId: true, optional: true },
     },
   },
-  options: {
+  'options-notification': {
     sanitization: {
-      notice_request: { type: 'boolean', optional: true },
-      notice_project: { type: 'boolean', optional: true },
+      type: { type: 'string' },
+      method: { type: 'string' },
+      isOn: { type: 'boolean' },
     },
     validation: {
-      notice_request: { type: 'boolean', optional: true },
-      notice_project: { type: 'boolean', optional: true },
+      type: { $enum: notificationTypes },
+      method: { $enum: notificationMethods },
+      isOn: { type: 'boolean' },
     },
   },
 };

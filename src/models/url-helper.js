@@ -7,7 +7,7 @@ import {
   TASK_DAYLYREPORT,
   REQUEST_ACCEPT,
   SCHEDULE_REMIND,
-  ATTENDENCE,
+  ATTENDANCE,
 } from 'models/notification-setting';
 
 export default class UrlHelper {
@@ -59,7 +59,7 @@ export default class UrlHelper {
     case SCHEDULE_REMIND:
       url = '`/oa/company';
       break;
-    case ATTENDENCE:
+    case ATTENDANCE:
       url = `/oa/company/${object.company._id}/feature/attend`;
       break;
     case 'default':
@@ -118,7 +118,7 @@ export default class UrlHelper {
     case SCHEDULE_REMIND:
       url = '/oa/user/schedule';
       break;
-    case ATTENDENCE:
+    case ATTENDANCE:
       url = `/oa/company/${object.company._id}/attendance`;
       break;
     case 'default':

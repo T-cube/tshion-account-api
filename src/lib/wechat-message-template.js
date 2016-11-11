@@ -6,7 +6,7 @@ import {
   TASK_DAYLYREPORT,
   REQUEST_ACCEPT,
   SCHEDULE_REMIND,
-  ATTENDENCE,
+  ATTENDANCE,
 } from 'models/notification-setting';
 
 
@@ -61,8 +61,8 @@ export let templates = {
           '提醒时间：{{keyword2.DATA}}' +
           '{{remark.DATA}}',
   },
-  [ATTENDENCE]: {
-    _id: config.get('wechat.templates.ATTENDENCE'),
+  [ATTENDANCE]: {
+    _id: config.get('wechat.templates.ATTENDANCE'),
     title: '考勤提醒',
     data: '{{first.DATA}}' +
           '姓名：{{keyword1.DATA}}' +

@@ -16,7 +16,7 @@ module.exports = {
       TASK_DAYLYREPORT: 'M2le2CxHBAdHCHZkqP9JS410XZttonO9p05c9kenlLs',
       REQUEST_ACCEPT: 'onWa4TDALZMy7ZaSpIUXneNzKlUed1UQNL_lq5eZdPA',
       SCHEDULE_REMIND: 'N6tGBD_tAvCDcgGIlgISZ9_3msM6TX5miFhooOXjMRE',
-      ATTENDENCE: 'onRwwhajeVIHWW8wp6GlMajKBnmx3frvgni-x5pA5F4',
+      ATTENDANCE: 'onRwwhajeVIHWW8wp6GlMajKBnmx3frvgni-x5pA5F4',
     }
   }
 };

@@ -9,8 +9,6 @@ import db from 'lib/database';
 import { generateToken, timestamp, getGpsDistance } from 'lib/utils';
 import MarsGPS from 'lib/mars-gps.js';
 
-const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
-
 export default class WechatUtil {
 
   static getUserWechat(user_id) {
@@ -178,13 +176,12 @@ export default class WechatUtil {
       .then(wechat => wechat && wechat.openid);
     }
     getOpenid.then(openid => {
-      console.log({openid, template, url, data});
-      openid && wechatApi.sendTemplate(openid, template, url, data);
+      openid && this.getWechatApi().sendTemplate(openid, template, url, data);
     });
   }
 
   static createMenu(menu, callback) {
-    return wechatApi.createMenu(menu, callback);
+    return this.getWechatApi().createMenu(menu, callback);
   }
 
   static checkUserLocation(userId, location, maxDistance) {
@@ -252,6 +249,10 @@ export default class WechatUtil {
         upsert: true
       });
     });
+  }
+
+  static getWechatApi() {
+    return new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
   }
 
 }

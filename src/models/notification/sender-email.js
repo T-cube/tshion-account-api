@@ -14,7 +14,7 @@ export default class EmailSender extends Sender {
   send(type, data, extended) {
     let template = this.getTemplate(type);
     if (!template) {
-      return null;
+      return Promise.reject(new Error(`notification: email template not found ${type}`));
     }
     let tplData = this.getData(type, extended);
     return this.getUserEmail(data.to)
@@ -46,7 +46,6 @@ export default class EmailSender extends Sender {
     case COMPANY_MEMBER_INVITE:
       return {
         from: extended.from.name,
-        to: extended.to.name,
         company: extended.company.name,
         url: this.urlHelper.getWebUrl(type, extended),
       };

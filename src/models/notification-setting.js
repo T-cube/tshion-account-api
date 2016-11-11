@@ -19,7 +19,7 @@ export const TASK_DAYLYREPORT = 'task_dailyreport';
 export const TASK_UPDATE = 'task_update';
 export const REQUEST = 'request';
 export const SCHEDULE_REMIND = 'schedule_remind';
-export const ATTENDENCE = 'attendence';
+export const ATTENDANCE = 'ATTENDANCE';
 
 // config items
 export const APPROVAL_ITEM_RESULT = 'approval_item_result';
@@ -116,7 +116,7 @@ export default class NotificationSetting {
         wechat: { editable: true, default: false },
         email: { editable: false, default: false },
       },
-      [ATTENDENCE]: {
+      [ATTENDANCE]: {
         web: { editable: true, default: true },
         wechat: { editable: true, default: true },
         email: { editable: false, default: false },
@@ -154,6 +154,7 @@ export default class NotificationSetting {
     if (!defaultType.editable || !setting) {
       return defaultType.default;
     }
+    return true;
     return _.contains(setting, method);
   }
 
@@ -207,6 +208,19 @@ export default class NotificationSetting {
     return this._setMethod(userId, type, method, isOn);
   }
 
+  initUserDefaultSetting(userId) {
+    if (!userId) {
+      return Promise.reject(new Error('setDefault notification setting error: empty userId'));
+    }
+    return this.getAll().then(defaultSetting => {
+      let setting = {};
+      _.each(defaultSetting, (item, type) => setting[type] = _.map(item, (v, method) => v.default && method).filter(i => i));
+      return db.notification.setting.insert(_.extend(setting, {
+        _id: userId
+      }));
+    });
+  }
+
   _setMethods(userId, type, methods) {
     for (let method in methods) {
       if (!this._isOn(type, {[method]: { on: true}}, method)) {
@@ -239,6 +253,14 @@ export default class NotificationSetting {
         }
       });
     });
+  }
+
+  getSettingTypes() {
+    return _.keys(this.default);
+  }
+
+  getSettingMethods() {
+    return _.keys(this.default[this.getSettingTypes()[0]]);
   }
 
 }
