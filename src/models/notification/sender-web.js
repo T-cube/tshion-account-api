@@ -1,6 +1,11 @@
 import db from 'lib/database';
+import Sender from './sender';
 
-export default class WebSender {
+export default class WebSender extends Sender {
+
+  constructor() {
+    super();
+  }
 
   send(type, data, extended) {
     return Promise.all([

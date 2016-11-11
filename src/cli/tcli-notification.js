@@ -1,11 +1,9 @@
 #!/usr/bin/env node
-import { ObjectId } from 'mongodb';
 import _ from 'underscore';
 
 import '../bootstrap';
 import program from 'commander';
 import db from 'lib/database';
-import { indexObjectId } from 'lib/utils';
 import NotificationSetting from 'models/notification-setting';
 
 program

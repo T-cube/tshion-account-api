@@ -18,9 +18,9 @@ export const extendedProps = [
   ['user', 'name', 'from,user'],
   ['company', 'name', 'company'],
   ['project', 'name,company_id', 'project'],
-  ['task', 'title,company_id,project_id,creator,priority', 'task'],
-  ['request', 'type', 'request'],
-  ['schedule', 'title,remind', 'schedule'],
+  ['task', 'title,description,company_id,project_id,creator,priority', 'task'],
+  ['request', 'type,object', 'request'],
+  ['schedule', 'title,remind,description,time_start', 'schedule'],
   ['approval.item', 'company_id,apply_date,title', 'approval_item'],
   ['announcement', 'title,is_published,company_id,type', 'announcement'],
 ];

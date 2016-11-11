@@ -21,7 +21,7 @@ export default class UrlHelper {
     let url;
     switch(type) {
     case REQUEST_ACCEPT:
-      url = `/oa/company/${object.company._id}/desktop`;
+      url = `/oa/company/${object.request.object}/desktop`;
       break;
     case 'project':
       url = `/oa/company/${object.company_id}/desktop/project/${object._id}/list`;
@@ -30,13 +30,13 @@ export default class UrlHelper {
       url = `/oa/company/${object.company_id}/desktop/project/${object.project_id}/list/discuss/${object._id}/detail`;
       break;
     case TASK_ASSIGNED:
-      url = `/oa/company/${object.task.company_id}/desktop/project/${object.project_id}/list/task/${object.task._id}/detail`;
+      url = `/oa/company/${object.task.company_id}/desktop/project/${object.project._id}/list/task/${object.task._id}/detail`;
       break;
     case COMPANY_MEMBER_INVITE:
       url = '/oa/user/mine/request/all';
       break;
     case APPROVAL_ITEM_RESULT:
-      url = `oa/company/${object.company._id}/feature/approval/detail/${object.approval_item._id}`;
+      url = `oa/company/${object.approval_item.company_id}/feature/approval/detail/${object.approval_item._id}`;
       break;
     case 'document.dir':
       if (object.project_id) {
@@ -75,7 +75,7 @@ export default class UrlHelper {
     let url;
     switch(type) {
     case REQUEST_ACCEPT:
-      url = `/oa/company/${object.company._id}`;
+      url = `/oa/company/${object.request.object}`;
       break;
     case 'project':
       url = `/oa/company/${object.company_id}/project/${object._id}`;
@@ -84,13 +84,13 @@ export default class UrlHelper {
       url = `/oa/company/${object.company_id}/project/${object.project_id}/discuss/detail/${object._id}`;
       break;
     case TASK_ASSIGNED:
-      url = `/oa/company/${object.task.company_id}/project/${object.project_id}/task/filter/all/detail/${object.task._id}`;
+      url = `/oa/company/${object.task.company_id}/project/${object.project._id}/task/filter/all/detail/${object.task._id}`;
       break;
     case COMPANY_MEMBER_INVITE:
       url = '/oa/user/request/all';
       break;
     case APPROVAL_ITEM_RESULT:
-      url = `/oa/company/${object.company._id}/approval/check/${object.approval_item._id}`;
+      url = `/oa/company/${object.approval_item.company_id}/approval/check/${object.approval_item._id}`;
       break;
     case 'approval.template':
       url = `/oa/company/${object.company_id}/approval/setting/template/${object._id}`;
