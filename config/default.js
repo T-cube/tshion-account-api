@@ -165,6 +165,9 @@ module.exports = {
           tlifang_password_recovery: {
             variables: ['name', 'email', 'code'],
           },
+          tlifang_email_company_invite: {
+            variables: ['to', 'from', 'company', 'url'],
+          },
         },
       },
       sms: {
