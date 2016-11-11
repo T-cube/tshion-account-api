@@ -19,7 +19,7 @@ export const TASK_DAYLYREPORT = 'task_dailyreport';
 export const TASK_UPDATE = 'task_update';
 export const REQUEST = 'request';
 export const SCHEDULE_REMIND = 'schedule_remind';
-export const ATTENDANCE = 'ATTENDANCE';
+export const ATTENDANCE = 'attendance';
 
 // config items
 export const APPROVAL_ITEM_RESULT = 'approval_item_result';

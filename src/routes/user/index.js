@@ -88,7 +88,13 @@ api.put('/settings', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/options', (req, res, next) => {
+api.get('/options/notification', (req, res, next) => {
+  req.model('notification-setting').getAll(req.user._id)
+  .then(data => res.json(data))
+  .catch(next);
+});
+
+api.put('/options/notification', (req, res, next) => {
   let data = req.body;
   validate('options-notification', data);
   let { type, method, isOn } = data;

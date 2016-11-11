@@ -78,6 +78,30 @@ INPUT:
 }
 ```
 
+### GET /user/options/notification
+
+OUTPUT:
+```javascript
+{
+  approval: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  announcement: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  company_member_invite: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  company_member_update: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  company_member_remove: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  structure_member: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  project_discussion: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  project_member: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  project_transfer: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  project_quit: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  task_assigned: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  task_dailyreport: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  task_update: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  request: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  schedule_remind: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  attendance: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+}
+```
+
 ### PUT /user/options/notification
 
 修改用户选项
