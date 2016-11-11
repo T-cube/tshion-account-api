@@ -168,13 +168,11 @@ export default class NotificationSetting {
     }
     return fetchPromise.then(doc => {
       let setting = _.clone(this.default);
-      if (doc) {
-        _.each(setting, (item, type) => {
-          _.each(item, (v, method) => {
-            setting[type][method]['on'] = !!(doc && doc[type] && this._isOn(type, doc[type], method));
-          });
+      _.each(setting, (item, type) => {
+        _.each(item, (v, method) => {
+          setting[type][method]['on'] = !!(doc[type] ? this._isOn(type, doc[type], method) : setting[type][method]['default']);
         });
-      }
+      });
       return setting;
     });
   }

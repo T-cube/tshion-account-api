@@ -148,7 +148,10 @@ api.post('/', (req, res, next) => {
     req.task = task;
     return Promise.all([
       data.loop && TaskLoop.updateLoop(task),
-      logTask(req, C.ACTIVITY_ACTION.CREATE)
+      addActivity(req, C.ACTIVITY_ACTION.CREATE),
+      data.assignee.equals(req.user._id) || sendNotification(req, C.ACTIVITY_ACTION.CHANGE_TASK_ASSIGNEE, {
+        to: data.assignee
+      }, TASK_ASSIGNED)
     ]);
   })
   .catch(next);
