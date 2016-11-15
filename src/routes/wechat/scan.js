@@ -13,8 +13,6 @@ const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.a
 let api = express.Router();
 export default api;
 
-api.use(express.query());
-
 api.post('/', (req, res, next) => {
   let data = req.body;
   validate('scan', data);

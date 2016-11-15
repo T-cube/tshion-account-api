@@ -23,14 +23,22 @@ if (program.reset) {
       defaultSetting[type] = _.map(item, (v, method) => v.default && method).filter(i => i);
     });
     return db.user.find({}, {
-      _id: 1
+      _id: 1,
+      options: 1,
     })
     .then(users => {
       return Promise.all(users.map(user => {
         console.log(`reset user ${user._id}`);
         return db.notification.setting.insert(_.extend({}, user, defaultSetting));
       }));
-    });
+    })
+    .then(() => (
+      db.user.update({}, {
+        $unset: {options: 1}
+      }, {
+        multi: true
+      })
+    ));
   })
   .then(() => {
     console.log('reseted.');
