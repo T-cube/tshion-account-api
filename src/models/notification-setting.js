@@ -246,11 +246,12 @@ export default class NotificationSetting {
     return this.get(userId, type)
     .then(setting => {
       setting[method] = isOn;
+      let updateAction = isOn ? '$addToSet' : '$pull';
       return db.notification.setting.update({
         _id: userId
       }, {
-        $set: {
-          [type]: _.keys(_.find(setting, itemOn => itemOn))
+        [updateAction]: {
+          [type]: method
         }
       });
     });
