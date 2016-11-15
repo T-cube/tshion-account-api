@@ -56,3 +56,25 @@ QUERY
   _id: <String>,
 }
 ```
+
+### /account/detail/company
+
+QUERY
+```javascript
+{
+  _id: <String>,
+  page: <Int>,
+  pagesize: <Int>,
+}
+```
+
+### /account/detail/project
+
+QUERY
+```javascript
+{
+  _id: <String>,
+  page: <Int>,
+  pagesize: <Int>,
+}
+```

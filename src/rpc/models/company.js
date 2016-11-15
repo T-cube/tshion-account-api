@@ -31,10 +31,8 @@ export default class CompanyModel extends Model {
     return this.db.company.count(criteria);
   }
 
-  fetchDetail(companyId) {
-    return this.db.company.findOne({
-      _id: companyId
-    }, {
+  fetchDetail(_id) {
+    return this.db.company.findOne({_id}, {
       structure: 0
     })
     .then(company => {

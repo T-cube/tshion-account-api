@@ -7,48 +7,24 @@ import RpcRoute from 'models/rpc-route';
 import db from 'lib/database';
 import { mapObjectIdToData, strToReg } from 'lib/utils';
 
+import AccountModel from './models/account';
+
 export default (socket, prefix) => {
 
   const rpcRoute = new RpcRoute(socket, prefix);
   const route = rpcRoute.route.bind(rpcRoute);
+  const accountModel = new AccountModel();
 
   route('/list', (query) => {
-    let { page, pagesize, keyword } = query;
-    page = page >= 0 ? page : 0;
-    pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
-      ? pagesize
-      : config.get('view.listNum');
     let criteria = {};
+    let { keyword } = query;
     if (keyword) {
       criteria['name'] = {
         $regex: strToReg(keyword, 'i')
       };
     }
-    return Promise.all([
-      db.user.count(criteria),
-      db.user.find(criteria, {
-        name: 1,
-        email: 1,
-        email_verified: 1,
-        mobile: 1,
-        mobile_verified: 1,
-        description: 1,
-        avatar: 1,
-        birthdate: 1,
-        sex: 1,
-      })
-      .skip(page * pagesize)
-      .limit(pagesize)
-    ])
-    .then(doc => {
-      let [totalRows, list] = doc;
-      return {
-        list,
-        page,
-        pagesize,
-        totalRows
-      };
-    });
+    let { page, pagesize } = accountModel.getPageInfo(query);
+    return accountModel.page({criteria, page, pagesize});
   });
 
   route('/detail', (query) => {
@@ -56,31 +32,49 @@ export default (socket, prefix) => {
     if (!_id || !ObjectId.isValid(_id)) {
       throw new ApiError(400);
     }
-    return db.user.findOne({
-      _id: ObjectId(_id)
-    }, {
-      name: 1,
-      email: 1,
-      email_verified: 1,
-      mobile: 1,
-      mobile_verified: 1,
-      description: 1,
-      avatar: 1,
-      birthdate: 1,
-      address: 1,
-      sex: 1,
-      companies: 1,
-      projects: 1,
-    })
+    return accountModel.fetchDetail(ObjectId(_id))
     .then(user => {
       if (!user) {
         throw new ApiError(404);
       }
-      return mapObjectIdToData(user, [
-        ['company', 'name', 'companies'],
-        ['project', 'name,logo,is_archived', 'projects'],
-      ]);
+      return user;
     });
   });
+
+  route('/detail/project', (query) => {
+    return fetchSubInfo('project', query);
+  });
+
+  route('/detail/company', (query) => {
+    return fetchSubInfo('company', query);
+  });
+
+  function fetchSubInfo(target, query) {
+    let { _id } = query;
+    if (!_id || !ObjectId.isValid(_id)) {
+      throw new ApiError(400);
+    }
+    let { page, pagesize } = accountModel.getPageInfo(query);
+    let props = {
+      _id: ObjectId(_id),
+      pagesize,
+      page
+    };
+    let fetch;
+    switch (target) {
+    case 'company':
+      fetch = accountModel.fetchCompanyList(props);
+      break;
+    case 'project':
+      fetch = accountModel.fetchProjectList(props);
+      break;
+    }
+    return fetch.then(doc => {
+      if (null === doc) {
+        throw new ApiError(404);
+      }
+      return doc;
+    });
+  }
 
 };
