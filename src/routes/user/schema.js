@@ -59,12 +59,12 @@ const schema = {
     sanitization: {
       type: { type: 'string' },
       method: { type: 'string' },
-      isOn: { type: 'boolean' },
+      on: { type: 'boolean' },
     },
     validation: {
       type: { $enum: notificationTypes },
       method: { $enum: notificationMethods },
-      isOn: { type: 'boolean' },
+      on: { type: 'boolean' },
     },
   },
 };
