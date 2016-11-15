@@ -38,6 +38,10 @@ export default class AttendanceRemind {
         $gt: last_id
       };
     }
+    let today = moment();
+    let year = today.year();
+    let month = today.month() + 1;
+    let day = today.date();
     this._findSetting(criteria)
     .then(attendance => {
       if (!attendance) {
@@ -46,15 +50,28 @@ export default class AttendanceRemind {
       let companyId = attendance._id;
       return this._findCompanyMembers(companyId)
       .then(members => {
-        members && members.forEach(member => {
-          this.model('notification').send({
-            to: member._id,
-            action: C.ACTIVITY_ACTION.ATTENDANCE_REMIND,
-            target_type: C.OBJECT_TYPE.ATTENDANCE,
+        return members && Promise.map(members, member => {
+          db.attendance.sign.findOne({
             company: companyId,
-            company_member: _.pick(member, '_id', 'name'),
-            sign_type,
-          }, ATTENDANCE);
+            user: member._id,
+            year,
+            month,
+            'data.date': day
+          }, {
+            'data.$': 1
+          })
+          .then(doc => {
+            if (!doc || !doc.data[0][sign_type]) {
+              this.model('notification').send({
+                to: member._id,
+                action: C.ACTIVITY_ACTION.ATTENDANCE_REMIND,
+                target_type: C.OBJECT_TYPE.ATTENDANCE,
+                company: companyId,
+                company_member: _.pick(member, '_id', 'name'),
+                sign_type,
+              }, ATTENDANCE);
+            }
+          });
         });
       })
       .then(() => companyId)
