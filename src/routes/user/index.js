@@ -97,6 +97,8 @@ api.get('/options/notification', (req, res, next) => {
       _.each(item, (v, method) => {
         if (v.editable) {
           parsed[type][method] = v.on;
+        } else {
+          parsed[type][method] = v.on ? 1 : 0;
         }
       });
     });
