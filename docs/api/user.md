@@ -83,22 +83,22 @@ INPUT:
 OUTPUT:
 ```javascript
 {
-  approval: { [web|wechat|email]: <Boolean> ... },
-  announcement: { [web|wechat|email]: <Boolean> ... },
-  company_member_invite: { [web|wechat|email]: <Boolean> ... },
-  company_member_update: { [web|wechat|email]: <Boolean> ... },
-  company_member_remove: { [web|wechat|email]: <Boolean> ... },
-  structure_member: { [web|wechat|email]: <Boolean> ... },
-  project_discussion: { [web|wechat|email]: <Boolean> ... },
-  project_member: { [web|wechat|email]: <Boolean> ... },
-  project_transfer: { [web|wechat|email]: <Boolean> ... },
-  project_quit: { [web|wechat|email]: <Boolean> ... },
-  task_assigned: { [web|wechat|email]: <Boolean> ... },
-  task_dailyreport: { [web|wechat|email]: <Boolean> ... },
-  task_update: { [web|wechat|email]: <Boolean> ... },
-  request: { [web|wechat|email]: <Boolean> ... },
-  schedule_remind: { [web|wechat|email]: <Boolean> ... },
-  attendance: { [web|wechat|email]: <Boolean> ... },
+  approval: { [web|wechat|email]: <Boolean> ... },              // 审批
+  announcement: { [web|wechat|email]: <Boolean> ... },          // 公告
+  company_member_invite: { [web|wechat|email]: <Boolean> ... }, // 团队邀请
+  company_member_update: { [web|wechat|email]: <Boolean> ... }, // 团队成员更新
+  company_member_remove: { [web|wechat|email]: <Boolean> ... }, // 团队成员移除
+  structure_member: { [web|wechat|email]: <Boolean> ... },      // 团队职位更新
+  project_discussion: { [web|wechat|email]: <Boolean> ... },    // 项目讨论
+  project_member: { [web|wechat|email]: <Boolean> ... },        // 项目成员更新
+  project_transfer: { [web|wechat|email]: <Boolean> ... },      // 项目转让
+  project_quit: { [web|wechat|email]: <Boolean> ... },          // 项目成员退出
+  task_assigned: { [web|wechat|email]: <Boolean> ... },         // 新任务提醒
+  task_dailyreport: { [web|wechat|email]: <Boolean> ... },      // 任务日报
+  task_update: { [web|wechat|email]: <Boolean> ... },           // 任务更新
+  request: { [web|wechat|email]: <Boolean> ... },               // 团队邀请
+  schedule_remind: { [web|wechat|email]: <Boolean> ... },       // 日程提醒
+  attendance: { [web|wechat|email]: <Boolean> ... },            // 考勤提醒
 }
 ```
 

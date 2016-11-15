@@ -54,7 +54,7 @@ export default class NotificationSetting {
       },
       [COMPANY_MEMBER_INVITE]: {
         web: { editable: false, default: true },
-        wechat: { editable: false, default: true },
+        wechat: { editable: false, default: false },
         email: { editable: false, default: true },
       },
       [COMPANY_MEMBER_UPDATE]: {
@@ -168,6 +168,7 @@ export default class NotificationSetting {
       });
     }
     return fetchPromise.then(doc => {
+      doc = doc || {};
       let setting = _.clone(this.default);
       _.each(setting, (item, type) => {
         _.each(item, (v, method) => {
@@ -200,7 +201,7 @@ export default class NotificationSetting {
 
   set(userId, type, method, isOn) {
     if (!this.default[type]) {
-      return Promise.reject(new ApiError(400, `invalid type ${type}`));
+      return Promise.reject(new ApiError(400, null, `invalid type ${type}`));
     }
     if (isOn === undefined && _.isArray(method)) {
       return this._setMethods(userId, type, method);
@@ -224,7 +225,7 @@ export default class NotificationSetting {
   _setMethods(userId, type, methods) {
     for (let method in methods) {
       if (!this._isOn(type, {[method]: { on: true}}, method)) {
-        return Promise.reject(new ApiError(400, 'invalid_value'));
+        return Promise.reject(new ApiError(400, null,  'invalid value'));
       }
     }
     return db.notification.setting.update({
@@ -240,7 +241,7 @@ export default class NotificationSetting {
 
   _setMethod(userId, type, method, isOn) {
     if (isOn != this._isOn(type, {[method]: { on: isOn}}, method)) {
-      return Promise.reject(new ApiError(400, 'invalid_value'));
+      return Promise.reject(new ApiError(400,  null, 'invalid value'));
     }
     return this.get(userId, type)
     .then(setting => {

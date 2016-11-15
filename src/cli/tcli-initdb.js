@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 import '../bootstrap';
 import program from 'commander';
 import db from 'lib/database';
+import approvalTemplate from './config/approval-template';
 
 program
   .option('-o, --oauth', 'insert oauth clients')
@@ -54,28 +55,16 @@ if (program.oauth) {
 if (program.approvaltemplate) {
   db.approval.template.default.remove({})
   .then(() => {
-    return db.approval.template.default.insert([
-      {
-        name: '请假单',
-        description: '请假单介绍',
-        icon: '',
-        forms: [{
-          _id: ObjectId(),
-          label: '开始时间',
-          type: 'datetime',
-          required: true
-        }, {
-          _id: ObjectId(),
-          label: '结束时间',
-          type: 'datetime',
-          required: true
-        }, {
-          _id: ObjectId(),
-          label: '工作代理人',
-          type: 'text',
-        }]
-      }
-    ]);
+    return db.approval.template.default.remove({})
+    .then(() => {
+      let templates = approvalTemplate.map(item => {
+        item.forms.forEach(form => form._id = ObjectId());
+        return item;
+      });
+      console.log('templates will be inserted:');
+      console.log(templates.map(item => item.name).join('|'));
+      return db.approval.template.default.insert(templates);
+    });
   })
   .then(() => {
     console.log('approval.template.default inserted.');

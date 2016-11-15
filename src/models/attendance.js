@@ -331,13 +331,13 @@ export default class Attendance {
           }));
           members = diffObjectId(members, [sign.user]);
         });
-        if (members.length) {
-          members.forEach(user => {
-            signRecord.push(_.extend(this.parseUserRecord([], year, month), {
-              user: user
-            }));
-          });
-        }
+        // if (members.length) {
+        //   members.forEach(user => {
+        //     signRecord.push(_.extend(this.parseUserRecord([], year, month), {
+        //       user: user
+        //     }));
+        //   });
+        // }
         return signRecord;
       });
     })
