@@ -37,43 +37,20 @@ export default class TaskLoop {
 
   updateTargetsNext(targets) {
     return Promise.map(targets, target => {
-      return TaskLoop.updateLoop(target, target.next);
+      return TaskLoop.updateLoop(target);
     });
   }
 
-  static getTaskNext(task, lastDate) {
-    let { loop } = task;
-    if (!loop) {
-      return null;
-    }
-    if (loop.end && loop.end.type == 'times') {
-      if (1 >= loop.end.times) {
-        return null;
-      }
-    }
-    let rule = CronRule.transToRule(loop);
-    if (!rule) {
-      return null;
-    }
-    let nextTime = CronRule.getNextTime(rule, lastDate || new Date());
-    if (loop.end && loop.end.type == 'date') {
-      if (loop.end.date && loop.end.date < nextTime) {
-        return null;
-      }
-    }
-    return nextTime;
-  }
-
   addLoopTasks(tasks) {
-    let date_create = new Date();
-    let newTasks = tasks.map(task => {
+    let now = moment().startOf('day').toDate();
+    let newTasks = tasks.filter(task => task.loop.next >= now).map(task => {
       let newTask = _.clone(task);
       newTask.p_id = newTask._id;
       newTask.status = C.TASK_STATUS.PROCESSING;
-      newTask.date_create = date_create;
-      newTask.date_update = date_create;
-      newTask.date_start = moment(date_create).startOf('day').toDate();
-      newTask.date_due = moment(date_create).add(1, 'd').startOf('day').toDate();
+      newTask.date_create = now;
+      newTask.date_update = now;
+      newTask.date_start = now;
+      newTask.date_due = moment().add(1, 'd').startOf('day').toDate();
       delete newTask._id;
       delete newTask.loop;
       return newTask;
@@ -84,7 +61,7 @@ export default class TaskLoop {
   fetchTargets(last_id) {
     let criteria = {
       'loop.next': {
-        $gte: moment().startOf('day').toDate(),
+        // $gte: moment().startOf('day').toDate(),
         $lt: moment().add(1, 'd').startOf('day').toDate(),
       }
     };
@@ -102,12 +79,35 @@ export default class TaskLoop {
     });
   }
 
-  static updateLoop(task, lastDate, isInit) {
+  static getTaskNextGenerateTime(task) {
+    let { loop } = task;
+    if (!loop) {
+      return null;
+    }
+    if (loop.end && loop.end.type == 'times') {
+      if (1 >= loop.end.times) {
+        return null;
+      }
+    }
+    let rule = CronRule.transToRule(loop);
+    if (!rule) {
+      return null;
+    }
+    let nextTime = CronRule.getNextTime(rule, new Date());
+    if (loop.end && loop.end.type == 'date') {
+      if (loop.end.date && loop.end.date < nextTime) {
+        return null;
+      }
+    }
+    return nextTime;
+  }
+
+  static updateLoop(task, isInit) {
     let loopEndByTimes = task.loop.end && task.loop.end.type == 'times';
     if (loopEndByTimes && isInit) {
       task.loop.end.times += 1;
     }
-    let taskNext = TaskLoop.getTaskNext(task, lastDate);
+    let taskNext = TaskLoop.getTaskNextGenerateTime(task);
     let update;
     if (!taskNext) {
       update = {
