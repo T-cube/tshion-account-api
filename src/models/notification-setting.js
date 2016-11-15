@@ -240,7 +240,7 @@ export default class NotificationSetting {
   }
 
   _setMethod(userId, type, method, isOn) {
-    if (isOn != this._isOn(type, [method], method)) {
+    if (isOn != this._isOn(type, isOn ? [method] : [], method)) {
       return Promise.reject(new ApiError(400,  null, 'invalid value'));
     }
     return this.get(userId, type)
