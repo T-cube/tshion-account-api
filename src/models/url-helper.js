@@ -7,7 +7,7 @@ import {
   TASK_DAYLYREPORT,
   REQUEST_ACCEPT,
   SCHEDULE_REMIND,
-  ATTENDENCE,
+  ATTENDANCE,
 } from 'models/notification-setting';
 
 export default class UrlHelper {
@@ -20,8 +20,8 @@ export default class UrlHelper {
   getMobileUrl(type, object) {
     let url;
     switch(type) {
-    case 'company':
-      url = `/oa/company/${object._id}/desktop`;
+    case REQUEST_ACCEPT:
+      url = `/oa/company/${object.request.object}/desktop`;
       break;
     case 'project':
       url = `/oa/company/${object.company_id}/desktop/project/${object._id}/list`;
@@ -29,14 +29,14 @@ export default class UrlHelper {
     case 'project.discussion':
       url = `/oa/company/${object.company_id}/desktop/project/${object.project_id}/list/discuss/${object._id}/detail`;
       break;
-    case 'task':
-      url = `/oa/company/${object.company_id}/desktop/project/${object.project_id}/list/task/${object._id}/detail`;
+    case TASK_ASSIGNED:
+      url = `/oa/company/${object.task.company_id}/desktop/project/${object.project._id}/list/task/${object.task._id}/detail`;
       break;
     case COMPANY_MEMBER_INVITE:
       url = '/oa/user/mine/request/all';
       break;
     case APPROVAL_ITEM_RESULT:
-      url = `oa/company/${object.company._id}/feature/approval/detail/${object.approval_item._id}`;
+      url = `oa/company/${object.approval_item.company_id}/feature/approval/detail/${object.approval_item._id}`;
       break;
     case 'document.dir':
       if (object.project_id) {
@@ -56,8 +56,14 @@ export default class UrlHelper {
     case 'announcement.draft':
       url = `/oa/company/${object.company_id}/feature/announcement/${object.type}/${object._id}`;
       break;
-    case 'schedule':
-      url = `/oa/company/${object.company_id}/feature/schedule/${object._id}`;
+    case SCHEDULE_REMIND:
+      url = '`/oa/company';
+      break;
+    case ATTENDANCE:
+      url = `/oa/company/${object.company._id}/feature/attend`;
+      break;
+    case TASK_DAYLYREPORT:
+      url = '/oa/company';
       break;
     case 'default':
       url = null;
@@ -71,8 +77,8 @@ export default class UrlHelper {
   getWebUrl(type, object) {
     let url;
     switch(type) {
-    case 'company':
-      url = `/oa/company/${object._id}`;
+    case REQUEST_ACCEPT:
+      url = `/oa/company/${object.request.object}`;
       break;
     case 'project':
       url = `/oa/company/${object.company_id}/project/${object._id}`;
@@ -80,14 +86,14 @@ export default class UrlHelper {
     case 'project.discussion':
       url = `/oa/company/${object.company_id}/project/${object.project_id}/discuss/detail/${object._id}`;
       break;
-    case 'task':
-      url = `/oa/company/${object.company_id}/project/${object.project_id}/task/filter/all/detail/${object._id}`;
+    case TASK_ASSIGNED:
+      url = `/oa/company/${object.task.company_id}/project/${object.project._id}/task/filter/all/detail/${object.task._id}`;
       break;
     case COMPANY_MEMBER_INVITE:
       url = '/oa/user/request/all';
       break;
     case APPROVAL_ITEM_RESULT:
-      url = `/oa/company/${object.company._id}/approval/check/${object.approval_item._id}`;
+      url = `/oa/company/${object.approval_item.company_id}/approval/check/${object.approval_item._id}`;
       break;
     case 'approval.template':
       url = `/oa/company/${object.company_id}/approval/setting/template/${object._id}`;
@@ -112,8 +118,14 @@ export default class UrlHelper {
     case 'announcement.draft':
       url = `/oa/company/${object.company_id}/announcement/drafts/${object._id}/edit`;
       break;
-    case 'schedule':
-      url = `/oa/user/schedule/${object._id}`;
+    case SCHEDULE_REMIND:
+      url = '/oa/user/schedule';
+      break;
+    case ATTENDANCE:
+      url = `/oa/company/${object.company._id}/attendance`;
+      break;
+    case TASK_DAYLYREPORT:
+      url = '/oa/company';
       break;
     case 'default':
       url = null;

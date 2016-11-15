@@ -5,6 +5,8 @@ import config from 'config';
 
 import ScheduleModel from 'models/schedule';
 import TaskLoop from 'models/task-loop';
+import AttendanceRemind from 'models/attendance-remind';
+import TaskReport from 'models/task-report';
 import db from 'lib/database';
 import C from 'lib/constants';
 import wUtil from 'lib/wechat-util';
@@ -26,6 +28,10 @@ export default class ScheduleServer {
     let taskLoop = new TaskLoop({
       rows_fetch_once: 100
     });
+    let attendanceRemind = new AttendanceRemind();
+    let taskReport = new TaskReport();
+    this.bindLoader(attendanceRemind);
+    this.bindLoader(taskReport);
 
     this.jobs = {
       schedule_reminding: {
@@ -38,58 +44,11 @@ export default class ScheduleServer {
         init: ['0 */1 * * *', () => wechatAccess.refresh()]
       },
       attendance_remind: {
-        init: ['*/10 * * * *', () => {}]
-      }
-      // task_expire: {
-      //   init: ['0 9 * * *', () => {
-      //     db.task.find({
-      //       status: C.TASK_STATUS.PROCESSING,
-      //       date_due: {
-      //         $gt: new Date(moment().format('YYYY-MM-DD')),
-      //         $lt: new Date(moment().add(1, 'day').format('YYYY-MM-DD')),
-      //       },
-      //       date_start: {
-      //         $lt: new Date(moment().format('YYYY-MM-DD')),
-      //       },
-      //     }, {
-      //       title: 1,
-      //       assignee: 1,
-      //       description: 1,
-      //     })
-      //     .then(tasks => {
-      //       tasks.forEach(task => {
-      //         notificationModel.send({
-      //           from: 0,
-      //           to: task.assignee,
-      //           action: C.ACTIVITY_ACTION.SYSTEM_SET,
-      //           target_type: C.OBJECT_TYPE.TASK_EXPIRE,
-      //           task: task._id,
-      //         }, C.NOTICE.TASK_EXPIRE);
-      //         wUtil.sendTemplateMessage(task.assignee, config.get('wechat.templates.reminding'), {
-      //           'first': {
-      //             'value':'您好！',
-      //             'color':'#173177'
-      //           },
-      //           'keyword1': {
-      //             'value':'test',
-      //             'color':'#173177'
-      //           },
-      //           'keyword2': {
-      //             'value':'test',
-      //             'color':'#173177'
-      //           },
-      //           'remark':{
-      //             'value':'提醒',
-      //             'color':'#173177'
-      //           }
-      //         });
-      //       });
-      //     })
-      //     .catch(e => {
-      //       console.error(e);
-      //     });
-      //   }]
-      // }
+        init: ['*/5 * * * *', () => attendanceRemind.doJob()]
+      },
+      task_report: {
+        init: ['0 10 * * *', () => taskReport.doJob()]
+      },
     };
   }
 

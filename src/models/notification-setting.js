@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
 
+import { ApiError } from 'lib/error';
 import db from 'lib/database';
 
 // config
@@ -19,7 +20,7 @@ export const TASK_DAYLYREPORT = 'task_dailyreport';
 export const TASK_UPDATE = 'task_update';
 export const REQUEST = 'request';
 export const SCHEDULE_REMIND = 'schedule_remind';
-export const ATTENDENCE = 'attendence';
+export const ATTENDANCE = 'attendance';
 
 // config items
 export const APPROVAL_ITEM_RESULT = 'approval_item_result';
@@ -54,7 +55,7 @@ export default class NotificationSetting {
       [COMPANY_MEMBER_INVITE]: {
         web: { editable: false, default: true },
         wechat: { editable: false, default: true },
-        email: { editable: false, default: false },
+        email: { editable: false, default: true },
       },
       [COMPANY_MEMBER_UPDATE]: {
         web: { editable: true, default: true },
@@ -116,7 +117,7 @@ export default class NotificationSetting {
         wechat: { editable: true, default: false },
         email: { editable: false, default: false },
       },
-      [ATTENDENCE]: {
+      [ATTENDANCE]: {
         web: { editable: true, default: true },
         wechat: { editable: true, default: true },
         email: { editable: false, default: false },
@@ -168,13 +169,11 @@ export default class NotificationSetting {
     }
     return fetchPromise.then(doc => {
       let setting = _.clone(this.default);
-      if (doc) {
-        _.each(setting, (item, type) => {
-          _.each(item, (v, method) => {
-            setting[type][method]['on'] = !!(doc && doc[type] && this._isOn(type, doc[type], method));
-          });
+      _.each(setting, (item, type) => {
+        _.each(item, (v, method) => {
+          setting[type][method]['on'] = !!(doc[type] ? this._isOn(type, doc[type], method) : setting[type][method]['default']);
         });
-      }
+      });
       return setting;
     });
   }
@@ -182,7 +181,7 @@ export default class NotificationSetting {
   get(userId, type) {
     type = this.mapSetting(type);
     if (!_.isString(type) || !this.default[type]) {
-      throw new Error(`invalid type ${type}`);
+      throw new ApiError(400, null, `invalid type ${type}`);
     }
     return db.notification.setting.findOne({
       _id: userId
@@ -200,8 +199,8 @@ export default class NotificationSetting {
   }
 
   set(userId, type, method, isOn) {
-    if (!this.default(type)) {
-      return Promise.reject(new Error(`invalid type ${type}`));
+    if (!this.default[type]) {
+      return Promise.reject(new ApiError(400, `invalid type ${type}`));
     }
     if (isOn === undefined && _.isArray(method)) {
       return this._setMethods(userId, type, method);
@@ -209,10 +208,23 @@ export default class NotificationSetting {
     return this._setMethod(userId, type, method, isOn);
   }
 
+  initUserDefaultSetting(userId) {
+    if (!userId) {
+      return Promise.reject(new ApiError(400, null, 'setDefault notification setting error: empty userId'));
+    }
+    return this.getAll().then(defaultSetting => {
+      let setting = {};
+      _.each(defaultSetting, (item, type) => setting[type] = _.map(item, (v, method) => v.default && method).filter(i => i));
+      return db.notification.setting.insert(_.extend(setting, {
+        _id: userId
+      }));
+    });
+  }
+
   _setMethods(userId, type, methods) {
     for (let method in methods) {
       if (!this._isOn(type, {[method]: { on: true}}, method)) {
-        return Promise.reject(new Error('invalid value'));
+        return Promise.reject(new ApiError(400, 'invalid_value'));
       }
     }
     return db.notification.setting.update({
@@ -228,7 +240,7 @@ export default class NotificationSetting {
 
   _setMethod(userId, type, method, isOn) {
     if (isOn != this._isOn(type, {[method]: { on: isOn}}, method)) {
-      return Promise.reject(new Error('invalid value'));
+      return Promise.reject(new ApiError(400, 'invalid_value'));
     }
     return this.get(userId, type)
     .then(setting => {
@@ -241,6 +253,14 @@ export default class NotificationSetting {
         }
       });
     });
+  }
+
+  getSettingTypes() {
+    return _.keys(this.default);
+  }
+
+  getSettingMethods() {
+    return _.keys(this.default[this.getSettingTypes()[0]]);
   }
 
 }

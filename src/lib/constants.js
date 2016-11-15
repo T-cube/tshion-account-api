@@ -51,12 +51,15 @@ let constants = {
 
     SYSTEM_SET: 'system.set', // 提醒
     SCHEDULE_REMIND: 'schedule.remind',      // 日程提醒
+    ATTENDANCE_REMIND: 'attendance.remind',  // 考勤提醒
 
     SIGN_IN: 'sign.in',       // 签到
     SIGN_OUT: 'sign.out',     // 签到
     SIGN_AUDIT: 'sign.audit', // 补签
 
     RELEASE: 'release',   // 发布
+
+    TASK_DAYLYREPORT: 'task_daylyreport',   // 任务日报
   },
 
   ACTIVITY_TYPE: {

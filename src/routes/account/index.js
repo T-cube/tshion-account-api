@@ -14,6 +14,7 @@ import { ValidationError } from 'lib/inspector';
 let api = express.Router();
 export default api;
 
+
 api.post('/check', (req, res, next) => {
   let data = req.body;
   let { type } = req.body;
@@ -88,10 +89,13 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
     }
     return db.user.insert(doc);
   })
-  .then(() => res.json({
-    type: type,
-    [type]: id,
-  }))
+  .then(user => {
+    res.json({
+      type: type,
+      [type]: id,
+    });
+    req.model('notification-setting').initUserDefaultSetting(user._id);
+  })
   .catch(next);
 });
 
@@ -102,7 +106,10 @@ api.post('/confirm', (req, res, next) => {
     throw new ApiError(400, 'invalid_email_code');
   }
   req.model('account').confirmRegisterEmailCode(code)
-  .then(data => res.json(data))
+  .then(data => {
+    res.json(data);
+    req.model('notification-setting').initUserDefaultSetting(req.user._id);
+  })
   .catch(next);
 });
 

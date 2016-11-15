@@ -1,8 +1,8 @@
 import moment from 'moment';
+import Sender from './sender';
 
 import C from 'lib/constants';
 import getTemplate from 'lib/wechat-message-template';
-import UrlHelper from 'models/url-helper';
 import wUtil from 'lib/wechat-util';
 
 import {
@@ -12,7 +12,7 @@ import {
   TASK_DAYLYREPORT,        //  待办任务提醒
   REQUEST_ACCEPT,          //  成员加入提醒
   SCHEDULE_REMIND,         //  待办事项提醒
-  ATTENDENCE,              //  考勤提醒
+  ATTENDANCE,              //  考勤提醒
 } from 'models/notification-setting';
 
 const colors = {
@@ -89,18 +89,18 @@ let render = {
     };
   },
   [TASK_DAYLYREPORT]: (extended) => {
-    let { todayTasks, expiredTasks } = extended;
+    let { todayTasks, expiredTasks } = extended.field;
     return {
       'first': {
         'value': '您今天有以下任务待处理！',
         'color': colors.primary
       },
       'keyword1': {
-        'value': todayTasks.map(task => task.name).join('，'),
+        'value': todayTasks.map(task => task.title).join('，'),
         'color': colors.primary
       },
       'keyword2': {
-        'value': expiredTasks.map(task => task.name).join('，'),
+        'value': expiredTasks.map(task => task.title).join('，'),
         'color': colors.primary
       },
       'remark': {
@@ -109,10 +109,10 @@ let render = {
     };
   },
   [REQUEST_ACCEPT]: (extended) => {
-    let { company, from, date_create } = extended;
+    let { from, date_create } = extended;
     return {
       'first': {
-        'value': `新成员加入了团队 ${company.name}`,
+        'value': '新成员加入了团队',
         'color': colors.primary
       },
       'keyword1': {
@@ -129,34 +129,34 @@ let render = {
     };
   },
   [SCHEDULE_REMIND]: (extended) => {
-    let { schedules } = extended;
+    let { schedule } = extended;
     return {
       'first': {
-        'value': '今天的日程提醒',
+        'value': '您有新的日程提醒',
         'color': colors.primary
       },
       'keyword1': {
-        'value': schedules.map(schedule => schedule.title).join('，'),
+        'value': schedule.title,
         'color': colors.primary
       },
       'keyword2': {
-        'value': moment().format('YYYY/MM/DD HH:mm'),
+        'value': schedule.description,
         'color': colors.primary
       },
       'remark': {
-        'value': '',
+        'value': '开始时间：' + moment(schedule.date_start).format('YYYY/MM/DD HH:mm'),
       }
     };
   },
-  [ATTENDENCE]: (extended) => {
-    let { company, user, sign_type } = extended;
+  [ATTENDANCE]: (extended) => {
+    let { company, company_member, sign_type } = extended;
     return {
       'first': {
-        'value': `考勤提醒，${company.name}`,
+        'value': `${company.name}，考勤提醒`,
         'color': colors.primary
       },
       'keyword1': {
-        'value': user.name,
+        'value': company_member.name,
         'color': colors.primary
       },
       'keyword2': {
@@ -164,22 +164,22 @@ let render = {
         'color': colors.primary
       },
       'remark': {
-        'value': '快上班了，别忘了打卡',
+        'value': '别忘了打卡哦！',
       }
     };
   },
 };
 
-export default class WechatSender {
+export default class WechatSender extends Sender {
 
   constructor() {
-    this.urlHelper = new UrlHelper();
+    super();
   }
 
   send(type, data, extended) {
     let template = this.getTemplate(type);
     if (!template) {
-      return null;
+      return Promise.resolve();
     }
     let url = this.urlHelper.getMobileUrl(type, extended);
     let tplData = this.getData(type, extended);

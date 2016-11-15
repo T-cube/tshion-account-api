@@ -88,21 +88,28 @@ api.put('/settings', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/options', (req, res, next) => {
-  let data = req.body;
-  validate('options', data);
-  if (!_.keys(data).length) {
-    throw new ApiError(400, null, 'no option provided!');
-  }
-  let fields = {};
-  _.each(data, (val, key) => {
-    fields[`options.${key}`] = val;
-  });
-  db.user.update({
-    _id: req.user._id
-  }, {
-    $set: fields,
+api.get('/options/notification', (req, res, next) => {
+  req.model('notification-setting').getAll(req.user._id)
+  .then(data => {
+    let parsed = {};
+    _.each(data, (item, type) => {
+      parsed[type] = {};
+      _.each(item, (v, method) => {
+        if (v.editable) {
+          parsed[type][method] = v.on;
+        }
+      });
+    });
+    res.json(parsed);
   })
+  .catch(next);
+});
+
+api.put('/options/notification', (req, res, next) => {
+  let data = req.body;
+  validate('options-notification', data);
+  let { type, method, on } = data;
+  req.model('notification-setting').set(req.user._id, type, method, on)
   .then(() => res.json(data))
   .catch(next);
 });

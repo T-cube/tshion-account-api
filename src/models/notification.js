@@ -9,7 +9,6 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import { validation } from './notification.schema';
 import { mapObjectIdToData } from 'lib/utils';
-import NotificationSetting from 'models/notification-setting';
 import EmailSender from 'models/notification/sender-email';
 import WebSender from 'models/notification/sender-web';
 import WechatSender from 'models/notification/sender-wechat';
@@ -18,9 +17,9 @@ export const extendedProps = [
   ['user', 'name', 'from,user'],
   ['company', 'name', 'company'],
   ['project', 'name,company_id', 'project'],
-  ['task', 'title,company_id,project_id,creator,priority', 'task'],
-  ['request', 'type', 'request'],
-  ['schedule', 'title,remind', 'schedule'],
+  ['task', 'title,description,company_id,project_id,creator,priority', 'task'],
+  ['request', 'type,object', 'request'],
+  ['schedule', 'title,remind,description,time_start', 'schedule'],
   ['approval.item', 'company_id,apply_date,title', 'approval_item'],
   ['announcement', 'title,is_published,company_id,type', 'announcement'],
 ];
@@ -32,7 +31,6 @@ export default class Notification {
   constructor() {
     this._from = null;
     this._to = null;
-    this.setting = new NotificationSetting();
   }
 
   init() {
@@ -60,12 +58,6 @@ export default class Notification {
   }
 
   send(data, type) {
-
-    // TODO
-    if (!type) {
-      type = 'request';
-    }
-
     let self = this;
     data = _.extend({
       from: this._from,
@@ -79,7 +71,7 @@ export default class Notification {
   }
 
   sendToSingle(user, type, data) {
-    return this.setting.get(user, type)
+    return this.model('notification-setting').get(user, type)
     .then(setting => {
       data = _.extend({}, data, {
         to: user,

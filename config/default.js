@@ -165,6 +165,9 @@ module.exports = {
           tlifang_password_recovery: {
             variables: ['name', 'email', 'code'],
           },
+          tlifang_email_company_invite: {
+            variables: ['to', 'from', 'company', 'url'],
+          },
         },
       },
       sms: {
@@ -197,5 +200,13 @@ module.exports = {
     encodingAESKey: 'PuUMhTzz0JxYxV7bGw4aeNJdxXq3CIw2cTRVe56cTgP',
     appsecret: '372eb0308edc5a06d437bc3d0a321737',
     auth_code_lifetime: 60 * 5,
+    templates: {
+      APPROVAL_ITEM_RESULT: 'gsYoVNFkxSi7Q9dFeSikaSqHsg5pHURwc-da8RxGghg',
+      TASK_ASSIGNED: 'zFCBJwQwHIHW95JsKSXuGJqSgVwvpnokQRbTXPDeKbw',
+      TASK_DAYLYREPORT: '0BdmQfgjL3SMv5F7Q6BaciSFw7eaoG7A5vYtHckMlQI',
+      REQUEST_ACCEPT: 'Rw2ZZ6ryHMTvYNn-ajO41PP9RiT_qwS2hW3o-giowsw',
+      SCHEDULE_REMIND: '6uvplr2mosnDG8VwdKsPw_ANWfuBMzOWUD7xDVVHlc4',
+      ATTENDANCE: 'hRzNn-bytk6hjAU0-sh7-0lTN-uloL93c0pfFDTIJKc',
+    }
   }
 };

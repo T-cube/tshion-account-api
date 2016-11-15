@@ -78,15 +78,40 @@ INPUT:
 }
 ```
 
-### PUT /user/options
+### GET /user/options/notification
+
+OUTPUT:
+```javascript
+{
+  approval: { [web|wechat|email]: <Boolean> ... },
+  announcement: { [web|wechat|email]: <Boolean> ... },
+  company_member_invite: { [web|wechat|email]: <Boolean> ... },
+  company_member_update: { [web|wechat|email]: <Boolean> ... },
+  company_member_remove: { [web|wechat|email]: <Boolean> ... },
+  structure_member: { [web|wechat|email]: <Boolean> ... },
+  project_discussion: { [web|wechat|email]: <Boolean> ... },
+  project_member: { [web|wechat|email]: <Boolean> ... },
+  project_transfer: { [web|wechat|email]: <Boolean> ... },
+  project_quit: { [web|wechat|email]: <Boolean> ... },
+  task_assigned: { [web|wechat|email]: <Boolean> ... },
+  task_dailyreport: { [web|wechat|email]: <Boolean> ... },
+  task_update: { [web|wechat|email]: <Boolean> ... },
+  request: { [web|wechat|email]: <Boolean> ... },
+  schedule_remind: { [web|wechat|email]: <Boolean> ... },
+  attendance: { [web|wechat|email]: <Boolean> ... },
+}
+```
+
+### PUT /user/options/notification
 
 修改用户选项
 
 INPUT:
 ```javascript
 {
-  notice_request: <Boolean>,
-  notice_project: <Boolean>,
+  type: <String[Enum]>, // models/notification-setting
+  method: <String[Enum: wechat, web, email]>,
+  on: <Boolean>,
 }
 ```
 
