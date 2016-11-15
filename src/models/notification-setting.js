@@ -224,7 +224,7 @@ export default class NotificationSetting {
 
   _setMethods(userId, type, methods) {
     for (let method in methods) {
-      if (!this._isOn(type, {[method]: { on: true}}, method)) {
+      if (!this._isOn(type, methods, method)) {
         return Promise.reject(new ApiError(400, null,  'invalid value'));
       }
     }
@@ -240,7 +240,7 @@ export default class NotificationSetting {
   }
 
   _setMethod(userId, type, method, isOn) {
-    if (isOn != this._isOn(type, {[method]: { on: isOn}}, method)) {
+    if (isOn != this._isOn(type, [method], method)) {
       return Promise.reject(new ApiError(400,  null, 'invalid value'));
     }
     return this.get(userId, type)
