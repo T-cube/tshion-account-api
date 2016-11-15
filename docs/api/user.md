@@ -83,22 +83,22 @@ INPUT:
 OUTPUT:
 ```javascript
 {
-  approval: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  announcement: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  company_member_invite: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  company_member_update: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  company_member_remove: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  structure_member: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  project_discussion: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  project_member: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  project_transfer: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  project_quit: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  task_assigned: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  task_dailyreport: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  task_update: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  request: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  schedule_remind: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
-  attendance: { editable: <Boolean>, default: <Boolean>, isOn: <Boolean> }
+  approval: { [web|wechat|email]: <Boolean> ... },
+  announcement: { [web|wechat|email]: <Boolean> ... },
+  company_member_invite: { [web|wechat|email]: <Boolean> ... },
+  company_member_update: { [web|wechat|email]: <Boolean> ... },
+  company_member_remove: { [web|wechat|email]: <Boolean> ... },
+  structure_member: { [web|wechat|email]: <Boolean> ... },
+  project_discussion: { [web|wechat|email]: <Boolean> ... },
+  project_member: { [web|wechat|email]: <Boolean> ... },
+  project_transfer: { [web|wechat|email]: <Boolean> ... },
+  project_quit: { [web|wechat|email]: <Boolean> ... },
+  task_assigned: { [web|wechat|email]: <Boolean> ... },
+  task_dailyreport: { [web|wechat|email]: <Boolean> ... },
+  task_update: { [web|wechat|email]: <Boolean> ... },
+  request: { [web|wechat|email]: <Boolean> ... },
+  schedule_remind: { [web|wechat|email]: <Boolean> ... },
+  attendance: { [web|wechat|email]: <Boolean> ... },
 }
 ```
 
@@ -111,7 +111,7 @@ INPUT:
 {
   type: <String[Enum]>, // models/notification-setting
   method: <String[Enum: wechat, web, email]>,
-  isOn: <Boolean>,
+  on: <Boolean>,
 }
 ```
 

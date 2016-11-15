@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
 
+import { ApiError } from 'lib/error';
 import db from 'lib/database';
 
 // config
@@ -154,7 +155,6 @@ export default class NotificationSetting {
     if (!defaultType.editable || !setting) {
       return defaultType.default;
     }
-    return true;
     return _.contains(setting, method);
   }
 
@@ -181,7 +181,7 @@ export default class NotificationSetting {
   get(userId, type) {
     type = this.mapSetting(type);
     if (!_.isString(type) || !this.default[type]) {
-      throw new Error(`invalid type ${type}`);
+      throw new ApiError(400, null, `invalid type ${type}`);
     }
     return db.notification.setting.findOne({
       _id: userId
@@ -199,8 +199,8 @@ export default class NotificationSetting {
   }
 
   set(userId, type, method, isOn) {
-    if (!this.default(type)) {
-      return Promise.reject(new Error(`invalid type ${type}`));
+    if (!this.default[type]) {
+      return Promise.reject(new ApiError(400, `invalid type ${type}`));
     }
     if (isOn === undefined && _.isArray(method)) {
       return this._setMethods(userId, type, method);
@@ -210,7 +210,7 @@ export default class NotificationSetting {
 
   initUserDefaultSetting(userId) {
     if (!userId) {
-      return Promise.reject(new Error('setDefault notification setting error: empty userId'));
+      return Promise.reject(new ApiError(400, null, 'setDefault notification setting error: empty userId'));
     }
     return this.getAll().then(defaultSetting => {
       let setting = {};
@@ -224,7 +224,7 @@ export default class NotificationSetting {
   _setMethods(userId, type, methods) {
     for (let method in methods) {
       if (!this._isOn(type, {[method]: { on: true}}, method)) {
-        return Promise.reject(new Error('invalid value'));
+        return Promise.reject(new ApiError(400, 'invalid_value'));
       }
     }
     return db.notification.setting.update({
@@ -240,7 +240,7 @@ export default class NotificationSetting {
 
   _setMethod(userId, type, method, isOn) {
     if (isOn != this._isOn(type, {[method]: { on: isOn}}, method)) {
-      return Promise.reject(new Error('invalid value'));
+      return Promise.reject(new ApiError(400, 'invalid_value'));
     }
     return this.get(userId, type)
     .then(setting => {

@@ -90,15 +90,26 @@ api.put('/settings', (req, res, next) => {
 
 api.get('/options/notification', (req, res, next) => {
   req.model('notification-setting').getAll(req.user._id)
-  .then(data => res.json(data))
+  .then(data => {
+    let parsed = {};
+    _.each(data, (item, type) => {
+      parsed[type] = {};
+      _.each(item, (v, method) => {
+        if (v.editable) {
+          parsed[type][method] = v.on;
+        }
+      });
+    });
+    res.json(parsed);
+  })
   .catch(next);
 });
 
 api.put('/options/notification', (req, res, next) => {
   let data = req.body;
   validate('options-notification', data);
-  let { type, method, isOn } = data;
-  req.model('notification-setting').set(req.user._id, type, method, isOn)
+  let { type, method, on } = data;
+  req.model('notification-setting').set(req.user._id, type, method, on)
   .then(() => res.json(data))
   .catch(next);
 });
