@@ -61,7 +61,7 @@ if (program.approvaltemplate) {
         item.forms.forEach(form => form._id = ObjectId());
         return item;
       });
-      console.log('templates will be inserted:');
+      console.log('templates will be inserting:');
       console.log(templates.map(item => item.name).join('|'));
       return db.approval.template.default.insert(templates);
     });

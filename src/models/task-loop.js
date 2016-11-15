@@ -72,8 +72,8 @@ export default class TaskLoop {
       newTask.status = C.TASK_STATUS.PROCESSING;
       newTask.date_create = date_create;
       newTask.date_update = date_create;
-      newTask.date_start = moment().startOf('day').toDate();
-      newTask.date_due = moment().add(1, 'd').startOf('day').toDate();
+      newTask.date_start = moment(date_create).startOf('day').toDate();
+      newTask.date_due = moment(date_create).add(1, 'd').startOf('day').toDate();
       delete newTask._id;
       delete newTask.loop;
       return newTask;
@@ -102,8 +102,9 @@ export default class TaskLoop {
     });
   }
 
-  static updateLoop(task, lastDate, noUpdateTimes) {
-    if (task.loop.end && task.loop.end.times && noUpdateTimes) {
+  static updateLoop(task, lastDate, isInit) {
+    let loopEndByTimes = task.loop.end && task.loop.end.type == 'times';
+    if (loopEndByTimes && isInit) {
       task.loop.end.times += 1;
     }
     let taskNext = TaskLoop.getTaskNext(task, lastDate);
@@ -114,7 +115,7 @@ export default class TaskLoop {
           'loop.next': 1
         }
       };
-      if (task.loop.end && task.loop.end.type == 'times') {
+      if (loopEndByTimes) {
         update['$set'] = {
           'loop.end.times': 0
         };
@@ -125,7 +126,7 @@ export default class TaskLoop {
           'loop.next': taskNext
         }
       };
-      if (task.loop.end && task.loop.end.type == 'times' && !noUpdateTimes) {
+      if (loopEndByTimes && !isInit) {
         update['$inc'] = {
           'loop.end.times': -1
         };

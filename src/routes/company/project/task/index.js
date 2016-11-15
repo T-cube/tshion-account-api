@@ -232,26 +232,6 @@ api.put('/:task_id/loop', (req, res, next) => {
     }, null, true);
   })
   .catch(next);
-  // let data = validField('loop', req.body['loop']);
-  // let nextLoop = TaskLoop.getTaskNext(data);
-  // nextLoop && (data.loop.next = nextLoop);
-  // if (data.loop && data.loop.end && data.loop.end.type == 'times') {
-  //   data.loop.end.times_already = 1;
-  // }
-  // return db.task.update({
-  //   _id: req.task._id
-  // }, {
-  //   $set: data,
-  // })
-  // .then(() => {
-  //   res.json(data);
-  //   logTask(req, C.ACTIVITY_ACTION.UPDATE, {field: {
-  //     loop: {
-  //       type: data.loop.type
-  //     }
-  //   }});
-  // })
-  // .catch(next);
 });
 
 api.put('/:task_id/status', (req, res, next) => {

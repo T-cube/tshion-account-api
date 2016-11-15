@@ -185,9 +185,7 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
   })
   .then(() => {
     res.json({});
-    logProject(req, C.ACTIVITY_ACTION.DELETE, {
-      project_name: req.project.name
-    });
+    // logProject(req, C.ACTIVITY_ACTION.DELETE);
   })
   .catch(next);
 });

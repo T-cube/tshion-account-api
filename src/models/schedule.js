@@ -5,7 +5,6 @@ import WechatApi from 'wechat-api';
 
 import db from 'lib/database';
 import C from 'lib/constants';
-import wUtil from 'lib/wechat-util';
 import { SCHEDULE_REMIND } from 'models/notification-setting';
 
 export default class Schedule {
