@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
@@ -94,9 +95,22 @@ export default class CompanyModel extends Model {
       let companies = doc.companies || [];
       let totalRows = companies.length;
       companies = companies.slice(page * pagesize, (page + 1) * pagesize);
-      return mapObjectIdToData(companies, 'company', 'name,logo')
+      return this.db.company.find({
+        _id: {$in: companies},
+        'members._id': _id
+      }, {
+        name: 1,
+        description: 1,
+        logo: 1,
+        'members.$': 1
+      })
       .then(list => ({
-        list: list.filter(i => i),
+        list: list.filter(i => i).map(i => {
+          i.member_type = i.members.length ? i.members[0].type : null;
+          i.member_count = i.members.length;
+          delete i.members;
+          return i;
+        }),
         page,
         pagesize,
         totalRows
