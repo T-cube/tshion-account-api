@@ -51,4 +51,40 @@ export default (socket, prefix) => {
     });
   });
 
+  route('/detail/project', (query) => {
+    return fetchSubInfo('project', query);
+  });
+
+  route('/detail/member', (query) => {
+    return fetchSubInfo('member', query);
+  });
+
+  function fetchSubInfo(target, query) {
+    let { _id } = query;
+    if (!_id || !ObjectId.isValid(_id)) {
+      throw new ApiError(400);
+    }
+    let { page, pagesize } = companyModel.getPageInfo(query);
+    let props = {
+      _id: ObjectId(_id),
+      pagesize,
+      page
+    };
+    let fetch;
+    switch (target) {
+    case 'member':
+      fetch = companyModel.fetchMemberList(props);
+      break;
+    case 'project':
+      fetch = companyModel.fetchProjectList(props);
+      break;
+    }
+    return fetch.then(doc => {
+      if (null === doc) {
+        throw new ApiError(404);
+      }
+      return doc;
+    });
+  }
+
 };

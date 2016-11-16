@@ -73,7 +73,7 @@ export default class CompanyModel extends Model {
       let projects = doc.projects || [];
       let totalRows = projects.length;
       projects = projects.slice(page * pagesize, (page + 1) * pagesize);
-      return mapObjectIdToData(projects, 'project', 'name,logo,is_archived,company')
+      return mapObjectIdToData(projects, 'project', 'name,logo,is_archived,company,date_create')
       .then(list => ({
         list: list.filter(i => i),
         page,

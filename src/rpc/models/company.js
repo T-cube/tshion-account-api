@@ -36,7 +36,54 @@ export default class CompanyModel extends Model {
       structure: 0
     })
     .then(company => {
-      return company && mapObjectIdToData(company, 'project', 'name,logo,is_archived', 'projects');
+      if (company) {
+        company.member_count = company.members.length;
+        company.project_count = company.projects ? company.projects.length : 0;
+        delete company.members;
+        delete company.projects;
+      }
+      return company;
+    });
+  }
+
+  fetchMemberList(props) {
+    let { _id, page, pagesize } = props;
+    return this.db.company.findOne({_id}, {
+      members: 1
+    })
+    .then(company => {
+      if (!company) {
+        return null;
+      }
+      let totalRows = company.members.length;
+      return {
+        list: company.members.slice(page * pagesize, (page + 1) * pagesize),
+        page,
+        pagesize,
+        totalRows
+      };
+    });
+  }
+
+  fetchProjectList(props) {
+    let { _id, page, pagesize } = props;
+    return this.db.company.findOne({_id}, {
+      projects: 1
+    })
+    .then(doc => {
+      if (!doc) {
+        return null;
+      }
+      let projects = doc.projects || [];
+      let totalRows = projects.length;
+      projects = projects.slice(page * pagesize, (page + 1) * pagesize);
+      return mapObjectIdToData(projects, 'project', 'name,logo,is_archived,date_create')
+      .then(list => ({
+        list: list.filter(i => i),
+        page,
+        pagesize,
+        totalRows
+      }));
     });
   }
 
