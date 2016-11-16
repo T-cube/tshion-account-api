@@ -36,6 +36,28 @@ QUERY
 }
 ```
 
+### /company/detail/company
+
+QUERY
+```javascript
+{
+  _id: <String>, // company id
+  page: <Int>,
+  pagesize: <Int>,
+}
+```
+
+### /company/detail/project
+
+QUERY
+```javascript
+{
+  _id: <String>, // company id
+  page: <Int>,
+  pagesize: <Int>,
+}
+```
+
 
 ### /account/list
 
@@ -62,7 +84,7 @@ QUERY
 QUERY
 ```javascript
 {
-  _id: <String>,
+  _id: <String>, // user id
   page: <Int>,
   pagesize: <Int>,
 }
@@ -73,7 +95,7 @@ QUERY
 QUERY
 ```javascript
 {
-  _id: <String>,
+  _id: <String>, // user id
   page: <Int>,
   pagesize: <Int>,
 }
