@@ -10,10 +10,10 @@ export default class Model {
 
   getPageInfo(query) {
     let { page, pagesize } = query;
-    page = page >= 0 ? page : 0;
-    pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
+    page = page >= 0 ? parseInt(page) : 0;
+    pagesize = parseInt((pagesize <= config.get('view.maxListNum') && pagesize > 0)
       ? pagesize
-      : config.get('view.listNum');
+      : config.get('view.listNum'));
     return {page, pagesize};
   }
 
