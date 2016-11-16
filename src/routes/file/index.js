@@ -275,21 +275,18 @@ api.get('/attendance/:token', (req, res, next) => {
           {
             header: '日期',
             key: 'date',
-            style: { numFmt: 'mm/dd' }
           }, {
             header: '姓名',
             key: 'name',
           }, {
             header: '签到',
             key: 'sign_in',
-            style: { numFmt: 'hh:mm' }
           }, {
             header: '签到方式',
             key: 'sign_in_method',
           }, {
             header: '签退',
             key: 'sign_out',
-            style: { numFmt: 'hh:mm' }
           }, {
             header: '签退方式',
             key: 'sign_out_method',
@@ -302,16 +299,16 @@ api.get('/attendance/:token', (req, res, next) => {
         summarySheet.addRows(summary.list);
         let detailParsed = [];
         let parseRecord = (sign) => {
-          return sign && (sign.from_pc ? `PC/${sign.from_pc}` : 'Weixin') + (sign.patch ? ' 补签' : '');
+          return sign && sign.patch ? ' 补签' : (sign.from_pc ? `PC/${sign.from_pc}` : 'Weixin');
         };
         detail.forEach(item => {
           let username = _.find(companyInfo.members, member => member._id.equals(item.user)).name;
           _.sortBy(item.data, record => record.date).forEach(record => {
             detailParsed.push({
-              date: new Date(`${year}-${month}-${record.date}`),
+              date: `${month}/${record.date}`,
               name: username,
-              sign_in: record.sign_in && moment(record.sign_in.time).utcOffset(0, true).toDate(),
-              sign_out: record.sign_out && moment(record.sign_out.time).utcOffset(0, true).toDate(),
+              sign_in: record.sign_in && moment(record.sign_in.time).format('HH:mm'),
+              sign_out: record.sign_out && moment(record.sign_out.time).format('HH:mm'),
               sign_in_method: parseRecord(record.sign_in),
               sign_out_method: parseRecord(record.sign_out),
               sign_in_ok: record.sign_in && record.sign_in.time <= record.sign_in.setting,
