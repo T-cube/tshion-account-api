@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import moment from 'moment';
 import Promise from 'bluebird';
+import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import db from 'lib/database';
@@ -65,21 +66,19 @@ export default class TaskLoop {
   fetchTargets(last_id) {
     let criteria = {
       'loop.next': {
-        $gte: moment().startOf('day').toDate(),
+        // $gte: moment().startOf('day').toDate(),
         $lt: moment().add(1, 'd').startOf('day').toDate(),
       }
     };
     if (last_id) {
       criteria._id = {
-        _id: {
-          $gt: last_id
-        }
+        $lt: last_id
       };
     }
     return db.task.find(criteria)
     .limit(this.settings.rows_fetch_once)
     .sort({
-      _id: 1
+      _id: -1
     });
   }
 
