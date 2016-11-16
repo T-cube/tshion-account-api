@@ -307,8 +307,8 @@ api.get('/attendance/:token', (req, res, next) => {
             detailParsed.push({
               date: `${month}/${record.date}`,
               name: username,
-              sign_in: record.sign_in && moment(record.sign_in.time).format('HH:mm'),
-              sign_out: record.sign_out && moment(record.sign_out.time).format('HH:mm'),
+              sign_in: record.sign_in && moment(record.sign_in.time).format('HH:mm:ss'),
+              sign_out: record.sign_out && moment(record.sign_out.time).format('HH:mm:ss'),
               sign_in_method: parseRecord(record.sign_in),
               sign_out_method: parseRecord(record.sign_out),
               sign_in_ok: record.sign_in && record.sign_in.time <= record.sign_in.setting,
