@@ -252,7 +252,35 @@ export default class WechatUtil {
   }
 
   static getWechatApi() {
-    return new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
+    return new WechatApi(
+      config.get('wechat.appid'),
+      config.get('wechat.appsecret'),
+      (openid, callback) => {
+        this.redis.get(`wechat-api-token:${openid}`)
+        .then(token => callback(null, JSON.parse(token)))
+        .catch(e => {
+          callback(e);
+          console.error(e);
+        });
+      },
+      (openid, token, callback) => {
+        let data = null;
+        try {
+          data = JSON.stringify(token);
+        } catch(e) {
+          return callback(e);
+        }
+        this.redis.set(`wechat-api-token:${openid}`, data)
+        .then(() => {
+          this.redis.expire(`wechat-api-token:${openid}`, 2 * 60 * 60);
+          callback(null);
+        })
+        .catch(e => {
+          callback(e);
+          console.error(e);
+        });
+      }
+    );
   }
 
 }

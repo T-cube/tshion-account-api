@@ -13,21 +13,20 @@ const signatureKey = 'wechat-jsapi-signature';
 
 export default class WechatAccess {
 
-  constructor(redis) {
-    this.redis = redis;
+  constructor() {
     this.tryRefresh();
   }
 
   getAccessToken() {
-    return this.redis.get(accessTokenKey);
+    return this.model('redis').get(accessTokenKey);
   }
 
   getJsApiTicket() {
-    return this.redis.get(jsapiTicketKey);
+    return this.model('redis').get(jsapiTicketKey);
   }
 
   getJsApiSignature(url) {
-    return this.redis.hmget(signatureKey, url)
+    return this.model('redis').hmget(signatureKey, url)
     .then(signatureInfo => {
       if (signatureInfo) {
         return JSON.parse(signatureInfo);
@@ -50,7 +49,7 @@ export default class WechatAccess {
         };
         try {
           signatureInfo = JSON.stringify(data);
-          this.redis.hmset(signatureKey, [url, signatureInfo]);
+          this.model('redis').hmset(signatureKey, [url, signatureInfo]);
         } catch(e) {
           console.error(e);
           return null;
@@ -73,8 +72,8 @@ export default class WechatAccess {
       if (!error && response.statusCode == 200) {
         let data = JSON.parse(body);
         if (data.access_token) {
-          this.redis.set(accessTokenKey, data.access_token);
-          this.redis.expire(accessTokenKey, 7200);
+          this.model('redis').set(accessTokenKey, data.access_token);
+          this.model('redis').expire(accessTokenKey, 7200);
           this.doRefreshJsApiTicket(data.access_token, 0);
         }
       } else {
@@ -94,9 +93,9 @@ export default class WechatAccess {
       if (!error && response.statusCode == 200) {
         let data = JSON.parse(body);
         if (data.ticket) {
-          this.redis.set(jsapiTicketKey, data.ticket);
-          this.redis.expire(jsapiTicketKey, 7200);
-          this.redis.delete(signatureKey);
+          this.model('redis').set(jsapiTicketKey, data.ticket);
+          this.model('redis').expire(jsapiTicketKey, 7200);
+          this.model('redis').delete(signatureKey);
         }
       } else {
         console.error(error || body);

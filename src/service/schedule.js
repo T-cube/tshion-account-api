@@ -40,9 +40,9 @@ export default class ScheduleServer {
       task_loop: {
         init: ['0 0 * * *', () => taskLoop.generateTasks()]
       },
-      wechat_access_token: {
-        init: ['0 */1 * * *', () => wechatAccess.refresh()]
-      },
+      // wechat_access_token: {
+      //   init: ['0 */1 * * *', () => wechatAccess.refresh()]
+      // },
       attendance_remind: {
         init: ['*/5 * * * *', () => attendanceRemind.doJob()]
       },

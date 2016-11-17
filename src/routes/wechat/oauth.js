@@ -141,7 +141,7 @@ function getOAuthClient(redis) {
     config.get('wechat.appid'),
     config.get('wechat.appsecret'),
     (openid, callback) => {
-      redis.get(`oauth-token:${openid}`)
+      redis.get(`wechat-oauth-token:${openid}`)
       .then(token => callback(null, JSON.parse(token)))
       .catch(e => {
         callback(e);
@@ -155,9 +155,9 @@ function getOAuthClient(redis) {
       } catch(e) {
         return callback(e);
       }
-      redis.set(`oauth-token:${openid}`, data)
+      redis.set(`wechat-oauth-token:${openid}`, data)
       .then(() => {
-        redis.expire(`oauth-token:${openid}`, 60);
+        redis.expire(`wechat-oauth-token:${openid}`, 60);
         callback(null);
       })
       .catch(e => {

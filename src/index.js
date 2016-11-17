@@ -39,6 +39,7 @@ import { QiniuTools } from 'vendor/qiniu';
 import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import NotificationSetting from 'models/notification-setting';
+import WechatUtil from 'lib/wechat-util';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -70,7 +71,8 @@ app.loadModel('html-helper', HtmlHelper);
 app.loadModel('notification', Notification);
 app.loadModel('account', Account);
 app.loadModel('document', Document);
-app.loadModel('wechat-access', WechatAccess, app.model('redis'));
+app.loadModel('wechat-access', WechatAccess);
+app.loadModel('wechat-util', WechatUtil);
 app.loadModel('notification-setting', NotificationSetting);
 
 // load services;

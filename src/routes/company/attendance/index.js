@@ -34,9 +34,14 @@ let api = express.Router();
 export default api;
 
 api.get('/jsapi', (req, res, next) => {
-  req.model('wechat-access').getJsApiSignature(config.get('mobileUrl') + `oa/company/${req.company._id}/feature/attend/mine`)
-  .then(jsapiInfo => res.json(jsapiInfo))
-  .catch(next);
+  req.model('wechat-util').getWechatApi().getJsConfig({
+    debug: false,
+    jsApiList: ['getNetworkType'],
+    url: config.get('mobileUrl') + `oa/company/${req.company._id}/feature/attend/mine`
+  }, (err, jsapiInfo) => {
+    err && next(err);
+    res.json(jsapiInfo);
+  });
 });
 
 api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
