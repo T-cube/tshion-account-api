@@ -241,7 +241,7 @@ api.get('/attendance/:token', (req, res, next) => {
           }, {
             header: '部门',
             key: 'department',
-            width: 18,
+            width: 12,
           }, {
             header: '工作日（天）',
             key: 'workday_all',
@@ -281,11 +281,15 @@ api.get('/attendance/:token', (req, res, next) => {
           }, {
             header: '签到',
             key: 'sign_in',
-            width: 18,
+          }, {
+            header: '签到方式',
+            key: 'sign_in_method',
           }, {
             header: '签退',
             key: 'sign_out',
-            width: 18,
+          }, {
+            header: '签退方式',
+            key: 'sign_out_method',
           },
         ];
         summary.list.forEach(item => {
@@ -295,16 +299,18 @@ api.get('/attendance/:token', (req, res, next) => {
         summarySheet.addRows(summary.list);
         let detailParsed = [];
         let parseRecord = (sign) => {
-          return sign && moment(sign.time).format('HH:mm') + (sign.patch ? ' 补签' : '') + (sign.from_pc ? ` PC/${sign.from_pc}` : '');
+          return sign && sign.patch ? ' 补签' : (sign.from_pc ? `PC/${sign.from_pc}` : 'Weixin');
         };
         detail.forEach(item => {
           let username = _.find(companyInfo.members, member => member._id.equals(item.user)).name;
           _.sortBy(item.data, record => record.date).forEach(record => {
             detailParsed.push({
-              date: `${month}.${record.date}`,
+              date: `${month}/${record.date}`,
               name: username,
-              sign_in: parseRecord(record.sign_in),
-              sign_out: parseRecord(record.sign_out),
+              sign_in: record.sign_in && moment(record.sign_in.time).format('HH:mm:ss'),
+              sign_out: record.sign_out && moment(record.sign_out.time).format('HH:mm:ss'),
+              sign_in_method: parseRecord(record.sign_in),
+              sign_out_method: parseRecord(record.sign_out),
               sign_in_ok: record.sign_in && record.sign_in.time <= record.sign_in.setting,
               sign_out_ok: record.sign_out && record.sign_out.time >= record.sign_out.setting,
             });
@@ -315,7 +321,7 @@ api.get('/attendance/:token', (req, res, next) => {
           (detailSheet.getCell(`C${k + 2}`).font = {
             color: record.sign_in_ok ? { argb: '006400' } : { argb: 'FFB90F'},
           });
-          (detailSheet.getCell(`D${k + 2}`).font = {
+          (detailSheet.getCell(`E${k + 2}`).font = {
             color: record.sign_out_ok ? { argb: '006400' } : { argb: 'FFB90F'},
           });
         });

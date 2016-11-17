@@ -3,7 +3,6 @@ import Sender from './sender';
 
 import C from 'lib/constants';
 import getTemplate from 'lib/wechat-message-template';
-import wUtil from 'lib/wechat-util';
 
 import {
   APPROVAL_ITEM_RESULT,    //  审批结果提醒
@@ -183,7 +182,7 @@ export default class WechatSender extends Sender {
     }
     let url = this.urlHelper.getMobileUrl(type, extended);
     let tplData = this.getData(type, extended);
-    return wUtil.sendTemplateMessage(data.to, template, url, tplData);
+    return this.model('wechat-util').sendTemplateMessage(data.to, template, url, tplData);
   }
 
   getTemplate(type) {
