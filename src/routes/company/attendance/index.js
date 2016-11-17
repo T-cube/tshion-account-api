@@ -34,7 +34,7 @@ let api = express.Router();
 export default api;
 
 api.get('/jsapi', (req, res, next) => {
-  req.model('wechat-util').getJsConfig({
+  req.model('wechat-util').getWechatApi().getJsConfig({
     debug: false,
     jsApiList: ['getNetworkType'],
     url: config.get('mobileUrl') + `oa/company/${req.company._id}/feature/attend/mine`
