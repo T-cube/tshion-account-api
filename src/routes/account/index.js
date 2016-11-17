@@ -108,7 +108,7 @@ api.post('/confirm', (req, res, next) => {
   req.model('account').confirmRegisterEmailCode(code)
   .then(data => {
     res.json(data);
-    req.model('notification-setting').initUserDefaultSetting(req.user._id);
+    req.model('notification-setting').initUserDefaultSetting(data.user_id);
   })
   .catch(next);
 });
