@@ -257,7 +257,7 @@ export default class WechatUtil {
 
   getWechatApi() {
     let redis = this.model('redis');
-    return new WechatApi(
+    let wechatApi =  new WechatApi(
       config.get('wechat.appid'),
       config.get('wechat.appsecret'),
       (callback) => {
@@ -287,6 +287,35 @@ export default class WechatUtil {
         });
       }
     );
+    wechatApi.registerTicketHandle(
+      (type, callback) => {
+        redis.get(`wechat-ticket-token:${type}`)
+        .then(token => {
+          return callback(null, JSON.parse(token));
+        })
+        .catch(e => {
+          callback(e);
+          console.error(e);
+        });
+      },
+      (type, token, callback) => {
+        try {
+          token = JSON.stringify(token);
+        } catch(e) {
+          return callback(e);
+        }
+        redis.set(`wechat-ticket-token:${type}`, token)
+        .then(() => {
+          redis.expire(`wechat-ticket-token:${type}`, 2 * 60 * 60);
+          callback(null);
+        })
+        .catch(e => {
+          callback(e);
+          console.error(e);
+        });
+      }
+    );
+    return wechatApi;
   }
 
 }
