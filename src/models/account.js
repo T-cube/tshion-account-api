@@ -90,11 +90,13 @@ export default class Account {
               expires: new Date(0),
             },
           }),
-        ]);
+        ])
+        .then(() => user._id);
       })
-      .then(() => {
+      .then(user_id => {
         return {
           email: doc.email,
+          user_id,
         };
       });
     });

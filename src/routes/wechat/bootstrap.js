@@ -3,8 +3,6 @@ import wechat from 'wechat';
 import config from 'config';
 import db from 'lib/database';
 
-import wUtil from 'lib/wechat-util.js';
-
 let api = express.Router();
 export default api;
 
@@ -22,7 +20,7 @@ api.use('/', wechat(wechatConfig, function (req, res) {
   case 'event': {
     let openid = message.FromUserName;
     if (message.Event == 'LOCATION') {
-      wUtil.updateUserLocation(openid, {
+      req.model('wechat-util').updateUserLocation(openid, {
         latitude: parseFloat(message.Latitude),
         longitude: parseFloat(message.Longitude),
         precision: parseFloat(message.Precision),

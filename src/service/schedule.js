@@ -9,7 +9,6 @@ import AttendanceRemind from 'models/attendance-remind';
 import TaskReport from 'models/task-report';
 import db from 'lib/database';
 import C from 'lib/constants';
-import wUtil from 'lib/wechat-util';
 
 export default class ScheduleServer {
 
@@ -24,7 +23,7 @@ export default class ScheduleServer {
   initJobs() {
     let notificationModel = this.model('notification');
     let scheduleModel = new ScheduleModel(notificationModel);
-    let wechatAccess = this.model('wechat-access');
+    // let wechatAccess = this.model('wechat-access');
     let taskLoop = new TaskLoop({
       rows_fetch_once: 100
     });
@@ -40,9 +39,9 @@ export default class ScheduleServer {
       task_loop: {
         init: ['0 0 * * *', () => taskLoop.generateTasks()]
       },
-      wechat_access_token: {
-        init: ['0 */1 * * *', () => wechatAccess.refresh()]
-      },
+      // wechat_access_token: {
+      //   init: ['0 */1 * * *', () => wechatAccess.refresh()]
+      // },
       attendance_remind: {
         init: ['*/5 * * * *', () => attendanceRemind.doJob()]
       },

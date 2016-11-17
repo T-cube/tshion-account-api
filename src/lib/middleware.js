@@ -1,7 +1,6 @@
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { time } from 'lib/utils';
-import wUtil from 'lib/wechat-util.js';
 
 export function oauthCheck() {
   return (req, res, next) => {
@@ -43,19 +42,19 @@ export function fetchRegUserinfoOfOpen(allowOpenType) {
     }
     switch(from_open) {
     case 'wechat':
-      wUtil.findWechatByRandomToken(random_token)
+      req.model('wechat-util').findWechatByRandomToken(random_token)
       .then(wechat => {
         if (!wechat) {
           return next();
         }
-        return wUtil.findWechatUserinfo(wechat.openid)
+        return req.model('wechat-util').findWechatUserinfo(wechat.openid)
         .then(openUserinfo => {
           if (openUserinfo) {
             req.openUserinfo = {
               name: openUserinfo.nickname,
               sex: openUserinfo.sex,
               avatar: openUserinfo.headimgurl,
-              wechat: wUtil.getBindWechatData(wechat)
+              wechat: req.model('wechat-util').getBindWechatData(wechat)
             };
           }
           next();

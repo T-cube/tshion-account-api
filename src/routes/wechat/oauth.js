@@ -5,7 +5,6 @@ import Promise from 'bluebird';
 import config from 'config';
 import bodyParser from 'body-parser';
 
-import wUtil from 'lib/wechat-util.js';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
 import { oauthCheck } from 'lib/middleware';
 
@@ -46,7 +45,7 @@ api.get('/access', access);
 api.post('/bind', bodyParser.json(), oauthCheck(), access);
 
 api.get('/unbind', oauthCheck(), (req, res, next) => {
-  wUtil.unbindWechat(req.user._id)
+  req.model('wechat-util').unbindWechat(req.user._id)
   .then(() => res.json({}))
   .catch(next);
 });
@@ -68,6 +67,7 @@ function access(req, res, next) {
   let { random_token } = req.body;
   let wechatOAuthClient = getOAuthClient(req.model('redis'));
   let oauthInfoErr = new Error('can not get access_token from wechat server');
+  let wUtil = req.model('wechat-util');
   if (random_token) {
     gettingWechatOauth = wUtil.findWechatByRandomToken(random_token);
   } else if (code) {
@@ -141,7 +141,7 @@ function getOAuthClient(redis) {
     config.get('wechat.appid'),
     config.get('wechat.appsecret'),
     (openid, callback) => {
-      redis.get(`oauth-token:${openid}`)
+      redis.get(`wechat-oauth-token:${openid}`)
       .then(token => callback(null, JSON.parse(token)))
       .catch(e => {
         callback(e);
@@ -155,9 +155,9 @@ function getOAuthClient(redis) {
       } catch(e) {
         return callback(e);
       }
-      redis.set(`oauth-token:${openid}`, data)
+      redis.set(`wechat-oauth-token:${openid}`, data)
       .then(() => {
-        redis.expire(`oauth-token:${openid}`, 60);
+        redis.expire(`wechat-oauth-token:${openid}`, 60);
         callback(null);
       })
       .catch(e => {
