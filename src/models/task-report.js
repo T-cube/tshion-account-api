@@ -33,7 +33,7 @@ export default class TaskReport {
       }
       return this.get(user._id)
       .then(doc => {
-        this.model('notification').send({
+        doc && this.model('notification').send({
           to: user._id,
           action: C.ACTIVITY_ACTION.TASK_DAYLYREPORT,
           target_type: C.OBJECT_TYPE.TASK,
@@ -59,6 +59,9 @@ export default class TaskReport {
     ])
     .then(doc => {
       let [todayTasks, expiredTasks] = doc;
+      if (!todayTasks.length && !expiredTasks.length) {
+        return null;
+      }
       return {todayTasks, expiredTasks};
     });
   }

@@ -13,7 +13,9 @@ const signatureKey = 'wechat-jsapi-signature';
 
 export default class WechatAccess {
 
-  constructor() {
+  constructor() {}
+
+  init() {
     this.tryRefresh();
   }
 

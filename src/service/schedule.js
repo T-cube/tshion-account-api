@@ -24,7 +24,7 @@ export default class ScheduleServer {
   initJobs() {
     let notificationModel = this.model('notification');
     let scheduleModel = new ScheduleModel(notificationModel);
-    let wechatAccess = this.model('wechat-access');
+    // let wechatAccess = this.model('wechat-access');
     let taskLoop = new TaskLoop({
       rows_fetch_once: 100
     });
