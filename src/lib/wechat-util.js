@@ -11,7 +11,7 @@ import MarsGPS from 'lib/mars-gps.js';
 
 export default class WechatUtil {
 
-  static getUserWechat(user_id) {
+  getUserWechat(user_id) {
     return db.user.findOne({
       _id: user_id
     }, {
@@ -25,7 +25,7 @@ export default class WechatUtil {
     });
   }
 
-  static findUserByOpenid(openid) {
+  findUserByOpenid(openid) {
     if (!openid) {
       return Promise.resolve(null);
     }
@@ -40,7 +40,7 @@ export default class WechatUtil {
     });
   }
 
-  static findWechatByRandomToken(random_token) {
+  findWechatByRandomToken(random_token) {
     return db.wechat.oauth.findOne({
       random_token
     })
@@ -57,7 +57,7 @@ export default class WechatUtil {
     });
   }
 
-  static bindWechat(user_id, wechat) {
+  bindWechat(user_id, wechat) {
     wechat = this.getBindWechatData(wechat);
     return Promise.all([
       db.user.update({
@@ -73,7 +73,7 @@ export default class WechatUtil {
     ]);
   }
 
-  static unbindWechat(user_id) {
+  unbindWechat(user_id) {
     return Promise.all([
       db.user.update({
         _id: user_id
@@ -92,7 +92,7 @@ export default class WechatUtil {
     ]);
   }
 
-  static storeWechatOAuthAndGetRandomToken(wechat) {
+  storeWechatOAuthAndGetRandomToken(wechat) {
     let _id = wechat.openid;
     delete wechat.openid;
     return generateToken(20)
@@ -108,7 +108,7 @@ export default class WechatUtil {
     });
   }
 
-  static storeWechatUserinfo(wechatUser) {
+  storeWechatUserinfo(wechatUser) {
     let _id = wechatUser.openid;
     delete wechatUser.openid;
     return db.wechat.user.update({_id}, {
@@ -118,13 +118,13 @@ export default class WechatUtil {
     });
   }
 
-  static findWechatUserinfo(openid) {
+  findWechatUserinfo(openid) {
     return db.wechat.user.findOne({
       _id: openid
     });
   }
 
-  static generateAuthCode(user_id) {
+  generateAuthCode(user_id) {
     return generateToken(20)
     .then(authCode => {
       authCode += `_${user_id}`;
@@ -163,11 +163,11 @@ export default class WechatUtil {
     });
   }
 
-  static getBindWechatData(wechat) {
+  getBindWechatData(wechat) {
     return _.pick(wechat, 'openid');
   }
 
-  static sendTemplateMessage(user, template, url, data) {
+  sendTemplateMessage(user, template, url, data) {
     let getOpenid;
     if (!ObjectId.isValid(user)) {
       getOpenid = Promise.resolve(user);
@@ -176,15 +176,19 @@ export default class WechatUtil {
       .then(wechat => wechat && wechat.openid);
     }
     getOpenid.then(openid => {
-      openid && this.getWechatApi().sendTemplate(openid, template, url, data);
+      openid && this.getWechatApi().sendTemplate(openid, template, url, data, err => {
+        if (err) {
+          console.error('wechat send template error:', err, {user, template, url, data});
+        }
+      });
     });
   }
 
-  static createMenu(menu, callback) {
+  createMenu(menu, callback) {
     return this.getWechatApi().createMenu(menu, callback);
   }
 
-  static checkUserLocation(userId, location, maxDistance) {
+  checkUserLocation(userId, location, maxDistance) {
     return this.getUserLocations(userId).then(locations => {
       if (!locations || !locations.length) {
         return false;
@@ -203,7 +207,7 @@ export default class WechatUtil {
     });
   }
 
-  static getUserLocations(userId) {
+  getUserLocations(userId) {
     return db.user.findOne({
       _id: userId
     }, {
@@ -229,7 +233,7 @@ export default class WechatUtil {
     });
   }
 
-  static updateUserLocation(openid, location) {
+  updateUserLocation(openid, location) {
     return db.wechat.location.findOne({
       _id: openid
     })
@@ -251,28 +255,30 @@ export default class WechatUtil {
     });
   }
 
-  static getWechatApi() {
+  getWechatApi() {
+    let redis = this.model('redis');
     return new WechatApi(
       config.get('wechat.appid'),
       config.get('wechat.appsecret'),
-      (openid, callback) => {
-        this.redis.get(`wechat-api-token:${openid}`)
-        .then(token => callback(null, JSON.parse(token)))
+      (callback) => {
+        redis.get('wechat-api-token')
+        .then(token => {
+          return callback(null, JSON.parse(token));
+        })
         .catch(e => {
           callback(e);
           console.error(e);
         });
       },
-      (openid, token, callback) => {
-        let data = null;
+      (token, callback) => {
         try {
-          data = JSON.stringify(token);
+          token = JSON.stringify(token);
         } catch(e) {
           return callback(e);
         }
-        this.redis.set(`wechat-api-token:${openid}`, data)
+        redis.set('wechat-api-token', token)
         .then(() => {
-          this.redis.expire(`wechat-api-token:${openid}`, 2 * 60 * 60);
+          redis.expire('wechat-api-token', 2 * 60 * 60);
           callback(null);
         })
         .catch(e => {

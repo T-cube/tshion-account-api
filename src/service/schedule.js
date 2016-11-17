@@ -9,7 +9,6 @@ import AttendanceRemind from 'models/attendance-remind';
 import TaskReport from 'models/task-report';
 import db from 'lib/database';
 import C from 'lib/constants';
-import wUtil from 'lib/wechat-util';
 
 export default class ScheduleServer {
 

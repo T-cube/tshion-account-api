@@ -2,7 +2,7 @@
 
 import '../bootstrap';
 import program from 'commander';
-import wUtil from 'lib/wechat-util.js';
+import WechatUtil from 'lib/wechat-util.js';
 
 program
   .option('-o, --create', 'create wechat menu')
@@ -16,7 +16,7 @@ if (!program.create) {
 
 if (program.create) {
 
-  wUtil.createMenu({
+  new WechatUtil().createMenu({
     'button': [{
       'type':'view',
       'name':'工作台',
