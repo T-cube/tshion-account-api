@@ -8,10 +8,10 @@ module.exports = {
   },
   rpc: {
     protocol: 'http',
-    hostname: '127.0.0.1',
-    port: 2001,
-    username: 'tlf-api',
-    password: 'Z#cref=EswuPH=#UHEtRaf+Efa&A7uma',
+    hostname: '192.168.1.18',
+    port: 2000,
+    appsecret: 'gvldWZTnQ8BIAReK',
+    appid: 'tlf-api'
   },
   database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',

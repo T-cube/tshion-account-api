@@ -906,7 +906,6 @@ function attachFileUrls(req, file, thumb_size) {
   if (_.contains(sizes), thumb_size) {
     size = thumb_size;
   }
-  console.log(file);
   if (!file.cdn_key) {
     if (path.extname(file.name) == '.html') {
       return generateFileToken(req.user._id, file._id)

@@ -94,7 +94,8 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       type: type,
       [type]: id,
     });
-    req.model('notification-setting').initUserDefaultSetting(user._id);
+    // init notification setting when user activiated
+    type == C.USER_ID_TYPE.MOBILE && req.model('notification-setting').initUserDefaultSetting(user._id);
   })
   .catch(next);
 });
@@ -108,6 +109,7 @@ api.post('/confirm', (req, res, next) => {
   req.model('account').confirmRegisterEmailCode(code)
   .then(data => {
     res.json(data);
+    // init notification setting when user activiated
     req.model('notification-setting').initUserDefaultSetting(data.user_id);
   })
   .catch(next);

@@ -18,5 +18,12 @@ module.exports = {
       SCHEDULE_REMIND: 'N6tGBD_tAvCDcgGIlgISZ9_3msM6TX5miFhooOXjMRE',
       ATTENDANCE: 'onRwwhajeVIHWW8wp6GlMajKBnmx3frvgni-x5pA5F4',
     }
-  }
+  },
+  rpc: {
+    protocol: 'http',
+    hostname: '127.0.0.1',
+    port: 2002,
+    appsecret: 'gvldWZTnQ8BIAReK',
+    appid: 'tlf-api'
+  },
 };

@@ -1,7 +1,6 @@
 import _ from 'underscore';
 import cronParser from 'cron-parser';
 import config from 'config';
-import WechatApi from 'wechat-api';
 
 import db from 'lib/database';
 import C from 'lib/constants';
@@ -11,7 +10,6 @@ export default class Schedule {
 
   constructor(notification) {
     this.notification = notification;
-    this.wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
   }
 
   remindingJob() {

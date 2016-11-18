@@ -1,14 +1,12 @@
 import RPC from '@ym/rpc';
+import config from 'config';
 
-RPC.register({
-  protocol: 'http',
-  hostname: '127.0.0.1',
-  port: 2001,
-  username: 'xuezi',
-  password: 123456
-})
-.then(function(clientRpc){
-  clientRpc.emit('pid', {pid: process.pid});
-}).catch(e=>{
-  throw e;
+import rpcRoutes from '../rpc';
+
+RPC
+.register(config.get('rpc'))
+.then((clientRpc) => rpcRoutes(clientRpc))
+.catch(e => {
+  console.error(e);
+  // throw e;
 });

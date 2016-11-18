@@ -3,6 +3,13 @@ module.exports = {
   upload: {
     url: 'https://tlifang.com/cdn/',
   },
+  rpc: {
+    protocol: 'http',
+    hostname: '192.168.1.2',
+    port: 2000,
+    appsecret: 'gvldWZTnQ8BIAReK',
+    appid: 'tlf-api'
+  },
   vendor: {
     qiniu: {
       ACCESS_KEY: 'f_l5R_bNDR03QjAfqqGy7C3XRuaoMp2qpiHTfAOJ',
