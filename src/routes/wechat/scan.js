@@ -2,13 +2,10 @@ import _ from 'underscore';
 import express from 'express';
 import config from 'config';
 import db from 'lib/database';
-import WechatApi from 'wechat-api';
 import Promise from 'bluebird';
 
 import { validate } from './schema.js';
 import { mapObjectIdToData } from 'lib/utils';
-
-const wechatApi = new WechatApi(config.get('wechat.appid'), config.get('wechat.appsecret'));
 
 let api = express.Router();
 export default api;
@@ -35,6 +32,7 @@ api.post('/', (req, res, next) => {
     return db.wechat.scan.insert(data)
     .then(doc => {
       let scanId = last_id;
+      let wechatApi = req.model('wechat-util').getWechatApi();
       wechatApi.createLimitQRCode(scanId, (e, result) => {
         if (e) {
           throw e;

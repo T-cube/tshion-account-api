@@ -33,6 +33,7 @@ const BASIC_FIELDS = {
   date_join: 1,
   current_company: 1,
   options: 1,
+  'wechat.openid': 1,
 };
 
 /* users collection */
