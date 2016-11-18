@@ -121,6 +121,10 @@ module.exports = {
       retry_max_value: 5,
       prefix: 'tlf_',
     },
+    showapi: {
+      apiid: 'tlifang_test',
+      apikey: '148760960ae44ca29877efbfde7e7551',
+    },
     officeweb365: {
       siteId: '10390',
       encodeUrl: true,
