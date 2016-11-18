@@ -278,7 +278,6 @@ export default class WechatUtil {
         }
         redis.set('wechat-api-token', token)
         .then(() => {
-          redis.expire('wechat-api-token', 2 * 60 * 60);
           callback(null);
         })
         .catch(e => {
@@ -306,7 +305,6 @@ export default class WechatUtil {
         }
         redis.set(`wechat-ticket-token:${type}`, token)
         .then(() => {
-          redis.expire(`wechat-ticket-token:${type}`, 2 * 60 * 60);
           callback(null);
         })
         .catch(e => {
