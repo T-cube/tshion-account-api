@@ -229,6 +229,19 @@ let constants = {
     MOBILE: 'mobile',
   },
 
+  ACCOUNT_LOG_TYPE: {
+    LOGIN: 'login',
+    LOGOUT: 'logout',
+    REFRESH: 'refresh'
+  },
+
+  ACCOUNT_CLIENT: {
+    WEB: 'com_tlifang_web',
+    MOBILE: 'com_tlifang_mobile',
+    WECHAT: 'com_tlifang_wechat',
+    // WWW: 'com_tlifang_www',
+  },
+
 };
 
 export default constants;
