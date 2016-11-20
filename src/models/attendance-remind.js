@@ -4,6 +4,7 @@ import Promise from 'bluebird';
 
 import db from 'lib/database';
 import C from 'lib/constants';
+import Attendance from './attendance';
 import { ATTENDANCE } from 'models/notification-setting';
 
 export default class AttendanceRemind {
@@ -18,13 +19,13 @@ export default class AttendanceRemind {
       is_open: true,
       $or: [
         {
-          ['time_start']: {
+          time_start: {
             $gt: now.add(5, 'minute').format('HH:mm'),
             $lte: now.add(10, 'minute').format('HH:mm')
           }
         },
         {
-          ['time_end']: {
+          time_end: {
             $gt: now.subtract(5, 'minute').format('HH:mm'),
             $lte: now.format('HH:mm')
           }
@@ -41,20 +42,24 @@ export default class AttendanceRemind {
     let month = now.month() + 1;
     let date = now.date();
     this._findSetting(criteria)
-    .then(attendance => {
-      if (!attendance) {
+    .then(setting => {
+      if (!setting) {
         return;
       }
-      let minuteDiffOfStart = now.diff(new Date(`${year}-${month}-${date} ${attendance.time_start}`), 'minute');
-      let minuteDiffOfEnd = now.diff(new Date(`${year}-${month}-${date} ${attendance.time_end}`), 'minute');
+      let attendance = new Attendance(setting);
+      let companyId = setting._id;
+      if (!attendance.isWorkDay(now.format('YYYY-MM-DD'))) {
+        return companyId;
+      }
+      let minuteDiffOfStart = now.diff(new Date(`${year}-${month}-${date} ${setting.time_start}`), 'minute');
+      let minuteDiffOfEnd = now.diff(new Date(`${year}-${month}-${date} ${setting.time_end}`), 'minute');
       let signTypes = [];
       if (minuteDiffOfStart >= -10 && minuteDiffOfStart < -5) {
         signTypes.push('sign_in');
       }
-      if (minuteDiffOfEnd <= 0 && minuteDiffOfEnd > 5) {
+      if (minuteDiffOfEnd >= 0 && minuteDiffOfEnd < 5) {
         signTypes.push('sign_out');
       }
-      let companyId = attendance._id;
       return this._findCompanyMembers(companyId)
       .then(members => {
         return members && Promise.map(members, member => {
@@ -96,11 +101,7 @@ export default class AttendanceRemind {
   }
 
   _findSetting(criteria) {
-    return db.attendance.setting.findOne(criteria, {
-      _id: 1,
-      time_start: 1,
-      time_end: 1,
-    });
+    return db.attendance.setting.findOne(criteria);
   }
 
   _findCompanyMembers(companyId) {
