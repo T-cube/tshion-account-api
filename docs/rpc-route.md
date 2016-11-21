@@ -36,7 +36,7 @@ QUERY
 }
 ```
 
-### /company/detail/company
+### /company/detail/member
 
 QUERY
 ```javascript

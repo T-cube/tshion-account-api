@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
@@ -56,12 +57,16 @@ export default class CompanyModel extends Model {
         return null;
       }
       let totalRows = company.members.length;
-      return {
-        list: company.members.slice(page * pagesize, (page + 1) * pagesize),
-        page,
-        pagesize,
-        totalRows
-      };
+      let companyMemberList = company.members.slice(page * pagesize, (page + 1) * pagesize);
+      return mapObjectIdToData(companyMemberList.map(m => m._id), 'user', 'avatar,name')
+      .then(members => {
+        return {
+          list: companyMemberList.map(m => _.extend(m, _.find(members, member => member._id.equals(m._id)))),
+          page,
+          pagesize,
+          totalRows
+        };
+      });
     });
   }
 

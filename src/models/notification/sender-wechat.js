@@ -95,11 +95,11 @@ let render = {
         'color': colors.primary
       },
       'keyword1': {
-        'value': todayTasks.map(task => task.title).join('，'),
+        'value': todayTasks.map(task => task.title).join('，') || '无',
         'color': colors.primary
       },
       'keyword2': {
-        'value': expiredTasks.map(task => task.title).join('，'),
+        'value': expiredTasks.map(task => task.title).join('，') || '无',
         'color': colors.primary
       },
       'remark': {

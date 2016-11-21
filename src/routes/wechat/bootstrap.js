@@ -53,7 +53,6 @@ api.use('/', wechat(wechatConfig, function (req, res) {
     }
     break;
   }
-  default:
-    return res.reply();
   }
+  return res.reply();
 }));
