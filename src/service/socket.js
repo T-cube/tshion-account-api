@@ -24,7 +24,7 @@ class SocketClient {
     if (!_.isString(socket)) {
       socket = socket.id;
     }
-    this.sockets.delete(socket.id);
+    this.sockets.delete(socket);
   }
 
 }
@@ -92,7 +92,7 @@ export default class SocketServer extends EventEmitter {
     } else if (_.isString(object) && ObjectId.isValid(object)) {
       userId = object;
     } else if (_.isObject(object)) {
-      userId = object.id;
+      userId = object.userId;
     } else {
       return null;
     }

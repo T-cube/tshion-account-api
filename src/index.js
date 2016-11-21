@@ -41,6 +41,7 @@ import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import NotificationSetting from 'models/notification-setting';
 import WechatUtil from 'lib/wechat-util';
+import AccountLog from 'models/account-log';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -79,6 +80,7 @@ app.loadModel('notification-setting', NotificationSetting);
 // load services;
 app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
+app.loadModel('account-log', AccountLog);
 
 // model loader
 app.use((req, res, next) => {

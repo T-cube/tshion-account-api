@@ -96,9 +96,9 @@ export default class TaskLoop {
     if (!rule) {
       return null;
     }
-    let nextTime = CronRule.getNextTime(rule, new Date());
+    let nextTime = CronRule.getNextTime(rule, moment().add(1, 'd').startOf('day').toDate());
     if (loop.end && loop.end.type == 'date') {
-      if (loop.end.date && loop.end.date < nextTime) {
+      if (loop.end.date && loop.end.date <= nextTime) {
         return null;
       }
     }
