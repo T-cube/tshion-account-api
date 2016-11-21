@@ -178,7 +178,7 @@ export default class WechatUtil {
     getOpenid.then(openid => {
       openid && this.getWechatApi().sendTemplate(openid, template, url, data, err => {
         if (err) {
-          console.error('wechat send template error:', err, {user, template, url, data});
+          console.error('wechat send template error:', err);
         }
       });
     });
