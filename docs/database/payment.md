@@ -2,7 +2,7 @@
 
 ## Description
 
- * 金额在数据库中是单位“分”的整数，即实际显示使用公式 `m = n / 100`
+ * 金额在数据库中是单位“分”的整数（使用`Currency`类型表示），即实际显示使用公式 `m = n / 100`
 
 ## Basic Type Define
 
@@ -10,6 +10,7 @@
 PaimentMethod: String[Enum:balance,alipay,wxpay,banktrans];
 DiscountType: String[Enum:number,rate,amount];
 OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
+Currency: Number;
 ```
 
 ## Tables
@@ -24,7 +25,7 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
   product_no: String,
   title: String,
   description: String,
-  original_price: Number,
+  original_price: Currency,
   discount: [ObjectId...],
   amount_min: Number,
   amount_max: Number,
@@ -46,13 +47,13 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
   description: String,
   criteria: {
     quantity: Number,               // 最低数量
-    total_fee: Number,              // 最低金额
+    total_fee: Currency,              // 最低金额
   },
   discount: {
     type: DiscountType,             // 优惠类型：金额，
     number: Number,                 // 赠送数量
     rate: Number,                   // 折扣（0~0.99）
-    amount: Number,                 // 优惠金额
+    amount: Currency,                 // 优惠金额
   },
   period: {
     date_start: Date,
@@ -70,19 +71,19 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
 ```javascript
 {
   _id: ObjectId,
-  coupon_no: String,                // 优惠券编码
+  coupon_no: String,                // 优惠券编号
   products: [String(product_no)...],// 适用产品
   title: String,
   description: String,
   criteria: {
     quantity: Number,               // 最低数量
-    total_fee: Number,              // 最低金额
+    total_fee: Currency,              // 最低金额
   },
   discount: {
     type: DiscountType,             // 优惠类型：金额，
     number: Number,                 // 赠送数量
     rate: Number,                   // 折扣（0~0.99）
-    amount: Number,                 // 优惠金额
+    amount: Currency,                 // 优惠金额
   },
   period: {
     date_start: Date,
@@ -95,15 +96,16 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
 }
 ```
 
-### Table `payment.coupon.applied`
+### Table `payment.coupon.item`
 
-记录帐户余额
+已使用的优惠券
 
 ```javascript
 {
   _id: ObjectId,
+  coupon_no: String,                // 优惠券编号
+  serial_no: String,                // 优惠券序列号（由优惠券编号追加随机数字）
   company_id: ObjectId,             // 关联团队
-  coupon_no: String,                // 优惠券编码
   user_id: ObjectId,                // 申请用户
   is_used: Boolean,                 // 是否已使用
   date_create: Date,                // 申请日期
@@ -128,8 +130,8 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
 {
   _id: ObjectId,
   company_id: ObjectId,             // 关联公司
-  balance: Number,                  // 帐户剩余金额
-  freezed: Number,                  // 冻结金额
+  balance: Currency,                  // 帐户剩余金额
+  freezed: Currency,                  // 冻结金额
   date_update: Date,
 }
 ```
@@ -152,13 +154,13 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
   detail: String,
   // 支付信息
   charge_no: ObjectId               // 关联支付记录
-  original_price: Number            // 原始价格
-  paid_amount: Number,              // 支付金额
+  original_price: Currency          // 原始价格
+  paid_amount: Currency,            // 支付金额
   // 打折信息
   discount: [{
     type: DiscountType,
     title: String,
-    reduced_amount: Number          // 降低的价格
+    reduced_amount: Currency        // 降低的价格
   }],
   // 订单状态
   status: OrderStatus,
@@ -185,8 +187,8 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
   _id: ObjectId,
   charge_no,                        // 帐户收入流水号
   company_id: ObjectId,             // 关联公司
-  amount: Number,                   // 充值金额
-  order_no: Number,                 // 关联订单
+  amount: Currency,                 // 充值金额
+  order_no: String,                 // 关联订单
   title: String,
   invoice_issued: Boolean           // 发票是否已开具
   payment_method: PaymentMethod,    // 支付方式
@@ -195,7 +197,7 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
   payment_data: {
     title: String,                  // 标题
     out_trade_no: String,           // 订单号
-    total_fee: Number,              // 总金额
+    total_fee: Currency,            // 总金额
     notify_url: String,             // 通知回调地址
     redirect_url: String,           // 重定向地址
     detail: String,                 // 商品详细描述
@@ -226,13 +228,13 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
   invoice_no: String,
   company_id: ObjectId,
   title: String,                    // 只能为认证公司名称
-  total_amount: Number,             // （税后）总金额，为实际充值金额
+  total_amount: Currency,           // （税后）总金额，为实际充值金额
   tax_rate: Float,                  // 税率
   // 项目明细
   item_list: [{
     category: String,
     description: String,
-    amount: Number,
+    amount: Currency,
     comment: String,
   }],
   // 对应充值信息
@@ -240,7 +242,7 @@ OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
     _id: ObjectId,
     charge_no: String,
     title: String,
-    amount: Number,
+    amount: Currency,
   }],
   // 地址信息
   address: {
