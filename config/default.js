@@ -130,7 +130,7 @@ module.exports = {
       encodeUrl: true,
       cipherIv: '48467919',
       cipherKey: '20908463',
-      deleteAfterView: true,
+      deleteAfterView: false,
     },
     qiniu: {
       TOKEN_EXPIRE: 3600,
