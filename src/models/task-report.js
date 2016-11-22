@@ -82,11 +82,11 @@ export default class TaskReport {
       assignee: userId,
       status: C.TASK_STATUS.PROCESSING,
       date_start: {
-        $gt: moment(date).startOf('day').toDate(),
+        $gte: moment(date).startOf('day').toDate(),
         $lt: moment(date).add(1, 'day').startOf('day').toDate(),
       },
       date_due: {
-        $gte: moment(date).add(1, 'day').startOf('day').toDate(),
+        $gte: moment(date).startOf('day').toDate(),
       },
     }, this.taskFields)
     .limit(this.taskItemCount);
