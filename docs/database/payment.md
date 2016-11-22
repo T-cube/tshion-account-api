@@ -36,6 +36,29 @@ Currency: Number;
 }
 ```
 
+``范例数据``
+
+| product_no | title | description | original_price |
+| ---------- | ----- | ----------- | -------------- |
+| P0001 | Pro Edition Monthly Fee | 专业版月费 | 99.00 |
+| P0002 | Pro Edition Per User Fee | 专业版用户升级月费 | 9.90 |
+| P0001 | Cooperate Edition Monthly Fee | 专业版月费 | 199.00 |
+| P0002 | Cooperate Edition Per User Fee | 专业版用户升级月费 | 19.90 |
+
+### Table `payment.product.history`
+
+商品历史版本，除列举字段，同商品信息
+
+```javascript
+{
+  _id: ObjectId,
+  product_no: String,
+  index: Number,
+  version: String,
+  ... // 同商品信息
+}
+```
+
 ### Table `payment.discount`
 
 优惠支付信息，可用于多个产品
@@ -60,7 +83,7 @@ Currency: Number;
     data_end: Date,
   },
   date_create: Date,
-  date_updated: Date,
+  date_update: Date,
 }
 ```
 
@@ -92,7 +115,7 @@ Currency: Number;
   stock_total: Number,              // 库存数量，无数量限制为 null
   stock_current: Number,            // 剩余数量，无数量限制为 null
   date_create: Date,
-  date_updated: Date,
+  date_update: Date,
 }
 ```
 
@@ -112,15 +135,6 @@ Currency: Number;
   date_used: Date,                  // 使用日期
 }
 ```
-
-``范例数据``
-
-| product_no | title | description | original_price |
-| ---------- | ----- | ----------- | -------------- |
-| P0001 | Pro Edition Monthly Fee | 专业版月费 | 99.00 |
-| P0002 | Pro Edition Per User Fee | 专业版用户升级月费 | 9.90 |
-| P0001 | Cooperate Edition Monthly Fee | 专业版月费 | 199.00 |
-| P0002 | Cooperate Edition Per User Fee | 专业版用户升级月费 | 19.90 |
 
 ### Table `payment.balance`
 
@@ -148,25 +162,29 @@ Currency: Number;
   user_id: ObjectId,
   company_id: ObjectId,
   // 商品信息
-  product_no: String,
-  quantity: Number,
-  title: String,
-  detail: String,
+  product: [{
+    product_no: String,
+    title: String,
+    quantity: Number,
+    times: Number,
+    price: Currency,
+    sum: Currency,
+    // 打折信息
+    discount: [{
+      type: DiscountType,
+      title: String,
+      reduced_amount: Currency        // 降低的价格
+    }],
+  }...],
   // 支付信息
   charge_no: ObjectId               // 关联支付记录
   original_price: Currency          // 原始价格
   paid_amount: Currency,            // 支付金额
-  // 打折信息
-  discount: [{
-    type: DiscountType,
-    title: String,
-    reduced_amount: Currency        // 降低的价格
-  }],
   // 订单状态
   status: OrderStatus,
   comment: String,
   date_create: Date,
-  date_updated: Date,
+  date_update: Date,
   // 订单状态历史变更记录
   log: [{
     _id: ObjectId,
@@ -178,22 +196,38 @@ Currency: Number;
 }
 ```
 
-### Table `payment.charge`
+### Table `payment.charge.discount`
+
+充值优惠
+
+```javascript
+{
+  _id: ObjectId,
+  discount_no: String,
+  title: String,
+  amount: Currency,
+  extra_amount: Currency,
+  date_create: Date,
+  date_update: Date,
+}
+```
+
+### Table `payment.charge.order`
 
 帐户充值记录，实际转入资金，包含预充值或直接消费
 
 ```javascript
 {
   _id: ObjectId,
-  charge_no,                        // 帐户收入流水号
+  charge_no: String,                        // 帐户收入流水号
   company_id: ObjectId,             // 关联公司
   amount: Currency,                 // 充值金额
-  order_no: String,                 // 关联订单
-  title: String,
   invoice_issued: Boolean           // 发票是否已开具
+  payment_type: PaymentType         // 支付类型
   payment_method: PaymentMethod,    // 支付方式
+  order_no: String,                 // 关联订单
   date_create: Date,
-  // 支付接口信息，参考 @ym-modules/payment
+  // 支付接口信息（可选），参考 @ym-modules/payment
   payment_data: {
     title: String,                  // 标题
     out_trade_no: String,           // 订单号
