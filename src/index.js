@@ -120,11 +120,14 @@ app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 app.all('/oauth/token', app.oauth.grant(), (req, res, next) => {
   req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
 }, (err, req, res, next) => {
-  oauthModel._getUser(req.body.username)
-  .then(user => {
-    req.user = user;
-    return req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN_FAIL);
-  });
+  let {body: {grant_type}} = req;
+  if (grant_type == 'password') {
+    oauthModel._getUser(req.body.username)
+    .then(user => {
+      req.user = user;
+      return req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN_FAIL);
+    });
+  }
   next(err);
 });
 app.all('/oauth/revoke', oauthRoute.revokeToken);
