@@ -229,17 +229,19 @@ let constants = {
     MOBILE: 'mobile',
   },
 
-  ACCOUNT_LOG_TYPE: {
+  USER_ACTIVITY: {
     LOGIN: 'login',
     LOGOUT: 'logout',
-    REFRESH: 'refresh'
+    LOGIN_FAIL: 'login_fail',
+    CHANGE_PASSW: 'change_passw',
+    BIND_WECHAT: 'bind_wechat',
+    UNBIND_WECHAT: 'unbind_wechat',
   },
 
-  ACCOUNT_CLIENT: {
+  CLIENT_ID: {
     WEB: 'com_tlifang_web',
     MOBILE: 'com_tlifang_mobile',
     WECHAT: 'com_tlifang_wechat',
-    // WWW: 'com_tlifang_www',
   },
 
 };

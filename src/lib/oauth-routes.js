@@ -3,10 +3,11 @@ import { time } from 'lib/utils';
 import qs from 'qs';
 import { ObjectId } from 'mongodb';
 
+import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import oauthModel from 'lib/oauth-model';
-import { camelCaseObjectKey } from 'lib/utils';
+import { camelCaseObjectKey, getClientIp } from 'lib/utils';
 
 const token_types = ['access_token', 'refresh_token'];
 
@@ -21,15 +22,30 @@ export function revokeToken(req, res, next) {
       'The access token provided is invalid.'));
   }
   let collection = token_type_hint.replace('_','');
-  db.oauth[collection].findOne({[token_type_hint]: token})
+  return db.oauth[collection].findOne({[token_type_hint]: token})
   .then(doc => {
     if (!doc) {
       throw new ApiError(400, 'invalid token');
     } else if (time() > doc.expires) {
       throw new ApiError(400, 'token expired');
     }
-    db.oauth[collection].remove({[token_type_hint]: token})
-    .then(() => res.json({code: 200}));
+    let user = doc.user_id;
+    let client_id = doc.client_id;
+    return db.oauth[collection].remove({[token_type_hint]: token})
+    .then(() => {
+      res.json({code: 200});
+      // account logout log
+      if (req.body.token_type_hint == 'access_token') {
+        req.model('user-activity').create({
+          user,
+          action: C.USER_ACTIVITY.LOGOUT,
+          client_id,
+          user_agent: req.get('user-agent'),
+          ip: getClientIp(req),
+          time: new Date(),
+        });
+      }
+    });
   })
   .catch(next);
 }

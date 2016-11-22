@@ -23,6 +23,7 @@ module.exports = {
     approvalListNum: 10,
     attendRecordNum: 20,
     maxListNum: 100,
+    userLoginListNum: 10,
   },
   passwordHashRounds: 10,
   avatar: {

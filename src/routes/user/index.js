@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import config from 'config';
 import compare from 'node-version-compare';
 
 import C from 'lib/constants';

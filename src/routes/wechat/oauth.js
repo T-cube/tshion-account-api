@@ -5,6 +5,7 @@ import Promise from 'bluebird';
 import config from 'config';
 import bodyParser from 'body-parser';
 
+import C from 'lib/constants';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
 import { oauthCheck } from 'lib/middleware';
 
@@ -46,7 +47,10 @@ api.post('/bind', bodyParser.json(), oauthCheck(), access);
 
 api.get('/unbind', oauthCheck(), (req, res, next) => {
   req.model('wechat-util').unbindWechat(req.user._id)
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.UNBIND_WECHAT);
+  })
   .catch(next);
 });
 
@@ -98,7 +102,10 @@ function access(req, res, next) {
         if (!user) {
           if (loginUser) {
             return wUtil.bindWechat(loginUser._id, wechat)
-            .then(() => res.json({}));
+            .then(() => {
+              res.json({});
+              req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.BIND_WECHAT);
+            });
           } else {
             return wUtil.storeWechatOAuthAndGetRandomToken(wechat)
             .then(oauthRandomToken => {

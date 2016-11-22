@@ -70,6 +70,7 @@ export default class SocketServer extends EventEmitter {
         let key = userId.toHexString();
         let client;
         socket.userId = key;
+        socket.client_id = doc.client_id;
         if (clients.has(key)) {
           client = clients.get(key);
         } else {

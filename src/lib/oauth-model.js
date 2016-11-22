@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import Promise from 'bluebird';
 import Joi from 'joi';
 import _ from 'underscore';
 
@@ -66,23 +67,7 @@ export default {
 
   getUser(username, password, callback) {
     // console.log('# getUser (username: ' + username + ', password: ' + password + ')');
-    let query = {};
-    if (/^1[3|4|5|7|8]\d{9}$/.test(username)) {
-      query.mobile = username;
-    } else if (!Joi.validate(username, Joi.string().email()).error) {
-      query.email = username;
-    } else {
-      return callback(null, null);
-    }
-    query.activiated = true;
-    db.user.findOne(query, {
-      name: 1,
-      avatar: 1,
-      email: 1,
-      mobile: 1,
-      password: 1,
-      options: 1,
-    })
+    this._getUser(username)
     .then(doc => {
       if (!doc) {
         return callback(null, null);
@@ -94,6 +79,26 @@ export default {
       });
     })
     .catch(e => callback(e));
+  },
+
+  _getUser(username) {
+    let query = {};
+    if (/^1[3|4|5|7|8]\d{9}$/.test(username)) {
+      query.mobile = username;
+    } else if (!Joi.validate(username, Joi.string().email()).error) {
+      query.email = username;
+    } else {
+      return Promise.resolve(null);
+    }
+    query.activiated = true;
+    return db.user.findOne(query, {
+      name: 1,
+      avatar: 1,
+      email: 1,
+      mobile: 1,
+      password: 1,
+      options: 1,
+    });
   },
 
   saveRefreshToken(token, clientId, expires, user, callback) {

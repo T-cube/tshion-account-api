@@ -195,6 +195,7 @@ api.post('/change-pass', oauthCheck(), (req, res, next) => {
           password: password,
         }
       }),
+      req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.CHANGE_PASSW)
       // TODO logout current user
     ]);
   })
@@ -322,5 +323,11 @@ api.post('/bind', oauthCheck(), (req, res, next) => {
     });
   })
   .then(() => res.json({}))
+  .catch(next);
+});
+
+api.get('/activity', oauthCheck(), (req, res, next) => {
+  req.model('user-activity').getLatestLoginInfo(req.user._id)
+  .then(doc => res.json(doc))
   .catch(next);
 });

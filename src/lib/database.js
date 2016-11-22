@@ -5,7 +5,6 @@ export { ObjectId } from 'mongodb';
 
 const collections = [
   'announcement',
-  'account.log',
   'activity',
   'approval.approve',
   'approval.copyto',
@@ -45,6 +44,7 @@ const collections = [
   'task',
   'task.comments',
   'user',
+  'user.activity',
   'user.confirm.email',
   'user.confirm.mobile',
   'user.guide',

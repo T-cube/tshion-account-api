@@ -41,7 +41,8 @@ import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import NotificationSetting from 'models/notification-setting';
 import WechatUtil from 'lib/wechat-util';
-import AccountLog from 'models/account-log';
+import UserActivity from 'models/user-activity';
+import C from 'lib/constants';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -80,7 +81,7 @@ app.loadModel('notification-setting', NotificationSetting);
 // load services;
 app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
-app.loadModel('account-log', AccountLog);
+app.loadModel('user-activity', UserActivity);
 
 // model loader
 app.use((req, res, next) => {
@@ -96,6 +97,7 @@ app.oauth = oauthServer({
   debug: false,
   accessTokenLifetime: 1800,
   refreshTokenLifetime: 3600 * 24 * 15,
+  continueAfterResponse: true,
 });
 
 app.use('/oauth', corsHandler);
@@ -115,8 +117,17 @@ app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 app.use('/oauth/login', oauthRoute.login);
 app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
-app.all('/oauth/token', app.oauth.grant());
-app.use('/oauth/revoke', oauthRoute.revokeToken);
+app.all('/oauth/token', app.oauth.grant(), (req, res, next) => {
+  req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
+}, (err, req, res, next) => {
+  oauthModel._getUser(req.body.username)
+  .then(user => {
+    req.user = user;
+    return req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN_FAIL);
+  });
+  next(err);
+});
+app.all('/oauth/revoke', oauthRoute.revokeToken);
 
 // use nginx for static resource
 // app.use('/', express.static('./public'));
