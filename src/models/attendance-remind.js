@@ -20,14 +20,14 @@ export default class AttendanceRemind {
       $or: [
         {
           time_start: {
-            $gt: now.add(5, 'minute').format('HH:mm'),
-            $lte: now.add(10, 'minute').format('HH:mm')
+            $gt: moment(now.toDate()).add(5, 'minute').format('HH:mm'),
+            $lte: moment(now.toDate()).add(10, 'minute').format('HH:mm')
           }
         },
         {
           time_end: {
-            $gt: now.subtract(5, 'minute').format('HH:mm'),
-            $lte: now.format('HH:mm')
+            $gt: moment(now.toDate()).subtract(5, 'minute').format('HH:mm'),
+            $lte: moment(now.toDate()).format('HH:mm')
           }
         },
       ]
@@ -37,7 +37,6 @@ export default class AttendanceRemind {
         $gt: last_id
       };
     }
-    now.subtract(10, 'minute'); // subtract 10m added
     let year = now.year();
     let month = now.month() + 1;
     let date = now.date();
