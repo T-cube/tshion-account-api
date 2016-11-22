@@ -769,15 +769,16 @@
 }
 ```
 
-### `account.log`
+### `user.activity`
 
 ```javascript
 {
-  _id: ObjectId,
-  user: ObjectId,
-  type: String[Enum=login, logout, refresh, login_fail, refresh_fail],
-  client: String[Enum=com_tlifang_web, com_tlifang_mobile, com_tlifang_wechat, com_tlifang_www],
-  time: Date,
-  ip: String,
+  _id: <ObjectId>,
+  user: <ObjectId>,
+  action: <String>,     // login logout login_fail change_passw bind_wechat unbind_wechat
+  client_id: <String>,  // com_tlifang_web com_tlifang_mobile
+  user_agent: <String>,
+  ip: <String>,
+  time: <Date>,
 }
 ```

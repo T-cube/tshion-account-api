@@ -178,3 +178,19 @@ OUTPUT
   "mobile":"..."
 }
 ```
+
+### GET /account/activity
+获取登录日志
+
+OUTPUT
+```javascript
+[{
+  _id: <ObjectId>,
+  user: <ObjectId>,
+  action: <String>,
+  client_id: <String>,
+  user_agent: <String>,
+  ip: <String>,
+  time: <Date>,
+}...]
+```
