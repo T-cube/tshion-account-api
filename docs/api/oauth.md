@@ -100,7 +100,7 @@ HTTP 302 Redirect:
 INPUT
 ```javascript
 {
-  'token_type_hint': '...'
+  'token_type_hint': 'access_token|refresh_token'
   'token': '...',
 }
 ```

@@ -98,6 +98,7 @@
   description: String,
   logo: URL,
   owner: ObjectId[link=user._id],
+  plan: plan.TeamPlan,
   members: [{
     _id: ObjectId[link=user._id],
     name: String,

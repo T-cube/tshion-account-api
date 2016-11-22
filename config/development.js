@@ -5,4 +5,11 @@ module.exports = {
   upload: {
     url: 'http://web.tlf.test.local/cdn/',
   },
+  vendor: {
+    officeweb365: {
+      siteId: '11137',
+      encodeUrl: false,
+      deleteAfterView: false,
+    },
+  }
 };

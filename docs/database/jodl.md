@@ -18,7 +18,7 @@ JODL 的基本结构与 JSON 相同，但有些不一样：
 
 * 对象中属性的 key 无需双引号包裹;
 * 允许 Object、Array 最后一项允许逗号 `,`；
-* 其中字段的值以 `<Type>` 形式表示其数据类型、描述；
+* 其中字段的值以 `Type` 形式表示其数据类型、描述；
 
 ## 应用场景
 
@@ -30,13 +30,13 @@ JODL 可用于数据库结构定义（如 mongodb），JSON 数据的校验等�
 
 | Type | Description | Example |
 | ---- | ----------- | ------- |
-| `<String>` | 字符串 | `"my company"` |
-| `<Boolean>` `<Bool>` | 布尔型 | `true`, `false` |
-| `<Number>` | 数字 | `1`, `3.1415926`, `-128` |
-| `<Integer>` `<Int>` | 整数 | `128`, `-55`, `0` |
-| `<Double>` `<Float>` | 浮点数 | `3.1415926` |
-| `<Date>` | javascript 日期对象 | `ISODate("2014-02-10T10:50:42.389Z")` |
-| `<ObjectId>` | mongodb ObjectId() | `ObjectId("569f02df333b79f8077540b8")` |
+| `String` | 字符串 | `"my company"` |
+| `Boolean` `Bool` | 布尔型 | `true`, `false` |
+| `Number` | 数字 | `1`, `3.1415926`, `-128` |
+| `Integer` `Int` | 整数 | `128`, `-55`, `0` |
+| `Double` `Float` | 浮点数 | `3.1415926` |
+| `Date` | javascript 日期对象 | `ISODate("2014-02-10T10:50:42.389Z")` |
+| `ObjectId` | mongodb ObjectId() | `ObjectId("569f02df333b79f8077540b8")` |
 
 ### 复合数据类型
 
@@ -46,9 +46,9 @@ Example:
 ```javascript
 {
   friends: [{
-    _id: <ObjectId[link=user._id]>,
-    name: <String>,
-    avatar: <String[url]>,
+    _id: ObjectId[link=user._id],
+    name: String,
+    avatar: String[url],
   }...]
 }
 ```
@@ -56,20 +56,20 @@ Example:
 
 | Type | Description | Example |
 | ---- | ----------- | ------- |
-| `<Type[Enum:e1,e2,e3...]>` | 枚举类型 | `<Int[Enum:1,2,3]>` |
-| `<String[/.../]>` | 带有正则的字符串 | `<String[/[\d]{11}/]>` |
+| `Type[Enum:e1,e2,e3...]` | 枚举类型 | `Int[Enum:1,2,3]` |
+| `String[/.../]` | 带有正则的字符串 | `String[/[\d]{11}/]` |
 
 ### 自定义类型
 
 对于重复使用的复合数据类型，可使用自定义类型
 
 ```javascript
-<URI:> <String[/https?:\/\/(\w+)*\.\w\/.+/]>
+URI: String[/https?:\/\/(\w+)*\.\w\/.+/]
 
-<UserItem:> {
-  _id: <ObjectId>,
-  name: <String>,
-  avatar: <URI>,
+UserItem: {
+  _id: ObjectId,
+  name: String,
+  avatar: URI,
 }
 ```
 
@@ -85,6 +85,6 @@ Example:
 
 | Type | Description | Example |
 | ---- | ----------- | ------- |
-| `auto` | 该字段为 mongodb 自动生成 | `_id: <ObjectId[auto]>` |
-| `optional` | 非必须项目 | `description: <String[optional]>` |
-| `rel` | 表示关联字段 | `user_id: <ObjectId[rel=user._id]>` |
+| `auto` | 该字段为 mongodb 自动生成 | `_id: ObjectId[auto]` |
+| `optional` | 非必须项目 | `description: String[optional]` |
+| `rel` | 表示关联字段 | `user_id: ObjectId[rel=user._id]` |

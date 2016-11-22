@@ -101,6 +101,15 @@ api.get('/preview/:file_id/token/:token', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/preview/doc', (req, res, next) => {
+  let { download_url } = req.query;
+  let options = {
+    enableSSL: /^https/.test(download_url),
+  };
+  let preview_url = req.model('ow365').getPreviewUrl(download_url, options);
+  res.redirect(preview_url);
+});
+
 api.get('/preview/doc/:file_id/token/:token', (req, res, next) => {
   let fileId = ObjectId(req.params.file_id);
   const { token } = req.params;
