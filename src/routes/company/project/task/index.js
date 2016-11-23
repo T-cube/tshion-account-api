@@ -590,7 +590,7 @@ function doUpdateField(req, field) {
     } else if (field == 'assignee') {
       action = C.ACTIVITY_ACTION.CHANGE_TASK_ASSIGNEE;
       ext.project_member = data[field];
-      data[field].equals(req.user._id) || sendNotification(req, action, _.extend(ext, {
+      data[field].equals(req.user._id) || sendNotification(req, action, _.extend({}, ext, {
         to: data[field]
       }), TASK_ASSIGNED);
     } else {
