@@ -33,7 +33,6 @@ import rpc from 'service/rpc';
 import Notification from 'models/notification';
 import Account from 'models/account';
 import Document from 'models/document';
-// import WechatAccess from 'models/wechat-access';
 import HtmlHelper from 'models/html-helper';
 import { OfficeWeb365 } from 'vendor/officeweb365';
 import { QiniuTools } from 'vendor/qiniu';
@@ -74,7 +73,6 @@ app.loadModel('html-helper', HtmlHelper);
 app.loadModel('notification', Notification);
 app.loadModel('account', Account);
 app.loadModel('document', Document);
-// app.loadModel('wechat-access', WechatAccess);
 app.loadModel('wechat-util', WechatUtil);
 app.loadModel('notification-setting', NotificationSetting);
 
