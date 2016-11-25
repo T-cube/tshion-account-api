@@ -244,6 +244,25 @@ let constants = {
     WECHAT: 'com_tlifang_wechat',
   },
 
+  PLAN: {
+    TEAMPLAN: {
+      FREE: 'free',
+      PRO: 'pro',
+      ENT: 'ent',
+    },
+    PLAN_STATUS: {
+      ACTIVED: 'actived',
+      EXPIRED: 'expired',
+    },
+    AUTH_STATUS: {
+      POSTED: 'posted',
+      CANCELED: 'cancelled',
+      REPOSTED: 'reposted',
+      ACCEPTED: 'accepted',
+      REJECTED: 'rejected',
+    }
+  },
+
 };
 
 export default constants;

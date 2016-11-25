@@ -19,12 +19,17 @@ export default class CompanyLevel {
 
   setCompanyInfo(company) {
     this.company = company;
+    this.company.level = company.level || C.TEAMPLAN.FREE;
     this.companyId = company._id;
   }
 
   setCompanyId(companyId) {
     this.companyId = ObjectId(companyId);
     this.company = null;
+  }
+
+  getLevel() {
+    return this.getCompanyInfo().then(() => this.company.level);
   }
 
   canUpload(size) {
@@ -36,7 +41,7 @@ export default class CompanyLevel {
       size = [size];
     }
     return this.getCompanyInfo().then(() => {
-      let level = this.getLevel();
+      let level = this.company.level;
 
       let store_max_file_size = config.get(`accountLevel.${level}.store_max_file_size`);
       let store_max_total_size = config.get(`accountLevel.${level}.store_max_total_size`);
@@ -70,9 +75,6 @@ export default class CompanyLevel {
     if (!this.companyId) {
       return this._rejectWhenMissingCompany();
     }
-    if (this.company && this.company.cached_level_info) {
-      return Promise.resolve(this.company.cached_level_info);
-    }
     return db.company.level.findOne({
       _id: this.companyId
     })
@@ -92,10 +94,6 @@ export default class CompanyLevel {
       };
       return db.company.level.insert(info).then(() => info);
     });
-  }
-
-  clearCachedLevelInfo() {
-    this.company && delete this.company.cached_level_info;
   }
 
   updateUpload(args) {
@@ -154,8 +152,7 @@ export default class CompanyLevel {
           'file.size': size,
         }
       });
-    })
-    .then(() => this.clearCachedLevelInfo());
+    });
   }
 
   canAddMember() {
@@ -170,7 +167,7 @@ export default class CompanyLevel {
 
   getMemberLevelInfo() {
     return this.getCompanyInfo().then(() => {
-      let level = this.getLevel();
+      let level = this.company.level;
       let max_members = config.get(`accountLevel.${level}.max_members`);
       return {
         max_members,
@@ -181,7 +178,7 @@ export default class CompanyLevel {
 
   getStorageInfo() {
     return this.getCompanyInfo().then(() => {
-      let level = this.getLevel();
+      let level = this.company.level;
 
       let store_max_file_size = config.get(`accountLevel.${level}.store_max_file_size`);
       let store_max_total_size = config.get(`accountLevel.${level}.store_max_total_size`);
@@ -216,13 +213,6 @@ export default class CompanyLevel {
     });
   }
 
-  getLevel() {
-    if (!this.company) {
-      throw new Error('CompanyLevel: missing company');
-    }
-    return this.company.level || 'free';
-  }
-
   getCompanyInfo() {
     let company = this.company;
     if (company && company.members && company.level) {
@@ -237,8 +227,8 @@ export default class CompanyLevel {
       structure: 0,
     })
     .then(company => {
-      this.company = company;
-      return company;
+      this.setCompanyInfo(company);
+      return this.company;
     });
   }
 

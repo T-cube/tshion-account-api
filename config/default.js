@@ -55,13 +55,13 @@ module.exports = {
       store_max_total_size: 2 * 1024 * 1024 * 1024,
       store_max_file_size: 20 * 1024 * 1024,
     },
-    standard: {
+    pro: {
       max_members: 100,
       max_own_companies: 3,
       store_max_total_size: 2 * 1024 * 1024 * 1024,
       store_max_file_size: 20 * 1024 * 1024,
     },
-    pro: {
+    ent: {
       max_members: 100,
       max_own_companies: 3,
       store_max_total_size: 2 * 1024 * 1024 * 1024,

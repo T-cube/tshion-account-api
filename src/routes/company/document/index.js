@@ -543,12 +543,12 @@ api.get('/storage', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/used-size', (req, res, next) => {
-  let companyLevel = new CompanyLevel(req.company);
-  return companyLevel.getUsedStorageSize(req.document.posKey == 'company_id' ? 'knowledge' : 'project', req.document.posKey)
-  .then(used_size => res.json({used_size}))
-  .catch(next);
-});
+// api.get('/used-size', (req, res, next) => {
+//   let companyLevel = new CompanyLevel(req.company);
+//   return companyLevel.getUsedStorageSize(req.document.posKey == 'company_id' ? 'knowledge' : 'project', req.document.posKey)
+//   .then(used_size => res.json({used_size}))
+//   .catch(next);
+// });
 
 function checkNameValid(req, name, parent_dir) {
   return db.document.dir.findOne({
