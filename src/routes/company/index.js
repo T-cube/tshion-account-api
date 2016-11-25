@@ -13,6 +13,7 @@ import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
 import Structure from 'models/structure';
 import UserLevel from 'models/user-level';
+import { COMPANY_MEMBER_UPDATE } from 'models/notification-setting';
 
 /* company collection */
 let api = express.Router();
@@ -382,10 +383,12 @@ api.post('/:company_id/exit', (req, res, next) => {
     req.model('activity').insert(_.extend({}, info, {
       creator: user_id,
     }));
-    req.model('activity').insert(_.extend({}, info, {
+    let to = req.company.members.filter(member => _.contains(['admin', 'owner'], member.type)).map(member => member._id);
+    req.model('notification').send(_.extend({}, info, {
       from: user_id,
-      to: req.company.owner,
-    }));
+      to
+    }), COMPANY_MEMBER_UPDATE)
+    .catch(e => console.error(e));
   })
   .catch(next);
 });

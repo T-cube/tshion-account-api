@@ -16,7 +16,7 @@ export default class WechatAccess {
   constructor() {}
 
   init() {
-    this.tryRefresh();
+    // this.tryRefresh();
   }
 
   getAccessToken() {

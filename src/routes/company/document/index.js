@@ -381,36 +381,36 @@ saveCdn('cdn-file'),
         dir_path: path,
         path: undefined,
       });
-      if (fileData.mimetype != 'text/plain') {
-        data.push(fileData);
-        return;
-      }
-      return new Promise(function (resolve, reject) {
-        fs.readFile(file.path, 'utf8', (err, content) => {
-          if (err) {
-            reject(err);
-          }
-          resolve(content);
-        });
-      })
-      .then(content => {
-        let file_path = file.path;
-        _.extend(fileData, {
-          content,
-          path: null,
-          url: null,
-          relpath: null,
-        });
-        data.push(fileData);
-        new Promise(function (resolve, reject) {
-          fs.unlink(file_path, (err) => {
-            if (err) {
-              reject(err);
-            }
-            resolve();
-          });
-        });
-      });
+      data.push(fileData);
+      // if (fileData.mimetype != 'text/plain') {
+      //   return;
+      // }
+      // return new Promise(function (resolve, reject) {
+      //   fs.readFile(file.path, 'utf8', (err, content) => {
+      //     if (err) {
+      //       reject(err);
+      //     }
+      //     resolve(content.replace(/\r\n/g, '<br>'));
+      //   });
+      // })
+      // .then(content => {
+      //   let file_path = file.path;
+      //   _.extend(fileData, {
+      //     content,
+      //     path: null,
+      //     url: null,
+      //     relpath: null,
+      //   });
+      //   data.push(fileData);
+      //   new Promise(function (resolve, reject) {
+      //     fs.unlink(file_path, (err) => {
+      //       if (err) {
+      //         reject(err);
+      //       }
+      //       resolve();
+      //     });
+      //   });
+      // });
     });
   })
   .then(() => createFile(req, data, dir_id))

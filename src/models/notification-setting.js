@@ -182,7 +182,7 @@ export default class NotificationSetting {
   get(userId, type) {
     type = this.mapSetting(type);
     if (!_.isString(type) || !this.default[type]) {
-      throw new ApiError(400, null, `invalid type ${type}`);
+      Promise.reject(new ApiError(400, null, `invalid type ${type}`));
     }
     return db.notification.setting.findOne({
       _id: userId
