@@ -23,22 +23,22 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/item', (req, res, next) => {
-  let planModel = new Plan();
-  let { page, pagesize } = req.query;
-  planModel.get(req.company._id, {page, pagesize})
-  .then(plan => {
-    res.json(plan);
-  })
-  .catch(next);
-});
-
-api.get('/item/current', (req, res, next) => {
-  let planModel = new Plan();
-  planModel.getCurrent(req.company._id)
-  .then(plan => res.json(plan))
-  .catch(next);
-});
+// api.get('/item', (req, res, next) => {
+//   let planModel = new Plan();
+//   let { page, pagesize } = req.query;
+//   planModel.get(req.company._id, {page, pagesize})
+//   .then(plan => {
+//     res.json(plan);
+//   })
+//   .catch(next);
+// });
+//
+// api.get('/item/current', (req, res, next) => {
+//   let planModel = new Plan();
+//   planModel.getCurrent(req.company._id)
+//   .then(plan => res.json(plan))
+//   .catch(next);
+// });
 
 api.post('/item', (req, res, next) => {
   let { type, plan, period } = req.body;
@@ -48,6 +48,7 @@ api.post('/item', (req, res, next) => {
   let date_start = new Date();
   let auth = new Auth(company_id);
   auth.getAuthPlan().thne(authedPlan => {
+    console.log('authedPlan', authedPlan);
     if (authedPlan != plan) {
       throw new ApiError(400, 'invalid_team_plan');
     }

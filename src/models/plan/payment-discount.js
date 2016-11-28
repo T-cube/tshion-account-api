@@ -13,4 +13,8 @@ export default class PaymentDiscount {
     return db.discount.remove({_id});
   }
 
+  static getDiscount(order) {
+    return Promise.resolve(5);
+  }
+
 }

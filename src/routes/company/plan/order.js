@@ -17,18 +17,23 @@ api.get('/', (req, res, next) => {
 
 });
 
-api.post('/', (req, res, next) => {
+api.post(/\/(prepare)?$/, (req, res, next) => {
+  let isPrepare = /prepare$/.test(req.url);
   let data = req.body;
   validate('create_order', data);
-  let { month_count, user_count, coupons } = data;
+  let { coupons } = data;
+  let productsQuantity = data.products;
   let planModel = new Plan(req.company._id);
   planModel.getProduct()
   .then(products => {
     if (!products) {
       throw new ApiError(400, 'product_not_accessable');
     }
-    products.monthly.count = month_count;
-    products.user.count = user_count;
+    products.forEach(product => {
+      let quantityInfo = _.find(productsQuantity, item => item.product_no == product.product_no);
+      product.quantity = quantityInfo ? quantityInfo.quantity : 0;
+    });
+    products.filter(product => product.quantity);
     let orderModel = new Order({
       company_id: req.company._id,
       user_id: req.user._id,
@@ -37,9 +42,11 @@ api.post('/', (req, res, next) => {
     if (coupons) {
       orderModel.useCoupons(coupons);
     }
-    return orderModel.save();
+    if (isPrepare) {
+      return orderModel.prepare().then(info => res.json(info));
+    }
+    return orderModel.save().then(order_id => res.json({order_id}));
   })
-  .thne(order_id => res.json({order_id}))
   .catch(next);
 });
 
@@ -55,6 +62,7 @@ api.get('/payment', (req, res, next) => {
 api.post('/:orderId/pay', (req, res, next) => {
   let { payment_method } = req.body;
   let orderId = ObjectId(req.params.orderId);
-  let payment = new Payment().getInstance(payment_method);
-
+  Order.pay(orderId, payment_method)
+  .then(doc => res.json(doc))
+  .catch(next);
 });

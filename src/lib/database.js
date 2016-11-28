@@ -55,6 +55,14 @@ const collections = [
   'wechat.from',
   'wechat.user',
   'wiki',
+
+  // plan
+  'plan.company',
+  'plan.auth',
+  'product',
+  'product.discount',
+  'payment.order',
+  'payment.discount',
 ];
 
 const dbConfig = config.get('database');

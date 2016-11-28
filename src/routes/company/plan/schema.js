@@ -4,11 +4,31 @@ import C, { ENUMS } from 'lib/constants';
 const schema = {
   create_order: {
     sanitization: {
-      month_count: { type: 'int' },
-      user_count: { type: 'int' },
-      coupons: { $objectId: 1 },
+      products: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            product_no: { type: 'string' },
+            quantity: { type: 'int' },
+          }
+        }
+      },
+      coupons: { $objectId: 1, optional: true },
     },
-    validation: {},
+    validation: {
+      products: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            product_no: { type: 'string' },
+            quantity: { type: 'int' },
+          }
+        }
+      },
+      coupons: { $objectId: 1, optional: true },
+    },
   },
   recharge: {
     sanitization: {

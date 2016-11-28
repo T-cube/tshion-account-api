@@ -14,7 +14,7 @@ export default class Plan {
 
   getCurrent() {
     let { company_id } = this;
-    return db.company.plan.findOne({
+    return db.plan.company.findOne({
       company_id,
       status: 'actived'
     });
@@ -25,7 +25,7 @@ export default class Plan {
     data.type = 'trial';
     return this.ensureTrialNotExists(company_id)
     .then(() => {
-      return db.company.plan.insert(data);
+      return db.plan.company.insert(data);
     });
     // {
     //   company_id: ObjectId,             // 团队
@@ -39,7 +39,7 @@ export default class Plan {
 
   createNewPaid(data, period) {
     data.type = 'paid';
-    return db.company.plan.insert(data);
+    return db.plan.company.insert(data);
   }
 
   ensureTrialNotExists() {
@@ -61,6 +61,7 @@ export default class Plan {
     let { company_id } = this;
     let auth = new Auth(company_id);
     return auth.getAuthPlan().then(plan => {
+      console.log('plan', plan);
       if (!plan) {
         return null;
       }

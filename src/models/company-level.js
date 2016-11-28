@@ -19,7 +19,7 @@ export default class CompanyLevel {
 
   setCompanyInfo(company) {
     this.company = company;
-    this.company.level = company.level || C.TEAMPLAN.FREE;
+    this.company.level = company.level || C.PLAN.TEAMPLAN.FREE;
     this.companyId = company._id;
   }
 

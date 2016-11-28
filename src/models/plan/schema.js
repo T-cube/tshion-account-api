@@ -56,72 +56,174 @@ const schema = {
     },
   },
 
-  auth: {
+  auth_pro: {
     sanitization: {
       plan: { type: 'string' },                   // 升级方案
-      status: { type: 'string' },               // 认证状态
       info: {
-        contact: {
-          type: 'object',
-          properties: {
-            realname: { type: 'string' },
-            gender: { type: 'string' },               // Enum:F,M
-            position: { type: 'string' },
-            phone: { type: 'string' },
-            address: {
-              type: 'object',
-              properties: {
-                province: { type: 'string' },
-                city: { type: 'string' },
-                district: { type: 'string' },
-                postcode: { type: 'string' },
-                address: { type: 'string' },
-              }
-            },
-            // 实名信息，仅在专业版认证时需要
-            // realname: {
-            //   type: 'object',
-            //   properties: {
-            //     idcard: { $idcard: 1 },              // 身份证编码
-            //     idcard_photo: { type: 'url' },           // 身份证照片
-            //   }
-            // },
-          }
-        },
-        // 团队信息
-        team: {
-          type: 'object',
-          optional: true,
-          properties: {
-            location: locationSchema.sanitization,
-            type: { type: 'string' }, //String[Enum:none-profit,workshop,startup],
-            scale: { type: 'int' }, //Number[Enum:5,10,50,100],
-            description: { type: 'string' },
-          }
-        },
-        // 企业信息
-        enterprise: {
-          type: 'object',
-          optional: true,
-          properties: {
-            location: locationSchema.sanitization,
-            industry: { type: 'string' },               // 行业类型
-            scale: { type: 'int' }, //Number[Enum:5,10,50,100],
-            description: { type: 'string' },
-          }
-        },
-      },
-      log: {
-        type: 'array',
-        optional: true,
-        items: {
-          type: 'object',
-          properties: logSchema.sanitization,
+        type: 'object',
+        properties: {
+          contact: {
+            type: 'object',
+            properties: {
+              realname: { type: 'string' },
+              gender: { type: 'string' },               // Enum:F,M
+              position: { type: 'string' },
+              phone: { type: 'string' },
+              address: {
+                type: 'object',
+                properties: {
+                  province: { type: 'string' },
+                  city: { type: 'string' },
+                  district: { type: 'string' },
+                  postcode: { type: 'string' },
+                  address: { type: 'string' },
+                }
+              },
+              // 实名信息，仅在专业版认证时需要
+              realname_ext: {
+                type: 'object',
+                properties: {
+                  idcard: { $idcard: 1 },              // 身份证编码
+                  idcard_photo: { type: 'url' },           // 身份证照片
+                }
+              },
+            }
+          },
+          // 团队信息
+          team: {
+            type: 'object',
+            properties: {
+              location: locationSchema.sanitization,
+              type: { type: 'string' }, //String[Enum:none-profit,workshop,startup],
+              scale: { type: 'int' }, //Number[Enum:5,10,50,100],
+              description: { type: 'string' },
+            }
+          },
         }
       },
-      date_apply: { type: 'date' },                 // 申请日期
     },
-    validation: {},
+    validation: {
+      plan: { type: 'string' },                   // 升级方案
+      info: {
+        type: 'object',
+        properties: {
+          contact: {
+            type: 'object',
+            properties: {
+              realname: { type: 'string' },
+              gender: { type: 'string' },               // Enum:F,M
+              position: { type: 'string' },
+              phone: { type: 'string' },
+              address: {
+                type: 'object',
+                properties: {
+                  province: { type: 'string' },
+                  city: { type: 'string' },
+                  district: { type: 'string' },
+                  postcode: { type: 'string' },
+                  address: { type: 'string' },
+                }
+              },
+              // 实名信息，仅在专业版认证时需要
+              realname_ext: {
+                type: 'object',
+                properties: {
+                  idcard: { $idcard: 1 },              // 身份证编码
+                  idcard_photo: { type: 'url' },           // 身份证照片
+                }
+              },
+            }
+          },
+          // 团队信息
+          team: {
+            type: 'object',
+            properties: {
+              location: locationSchema.sanitization,
+              type: { type: 'string' }, //String[Enum:none-profit,workshop,startup],
+              scale: { type: 'int' }, //Number[Enum:5,10,50,100],
+              description: { type: 'string' },
+            }
+          },
+        }
+      },
+    },
+  },
+
+  auth_ent: {
+    sanitization: {
+      plan: { type: 'string' },                   // 升级方案
+      info: {
+        type: 'object',
+        properties: {
+          contact: {
+            type: 'object',
+            properties: {
+              realname: { type: 'string' },
+              gender: { type: 'string' },               // Enum:F,M
+              position: { type: 'string' },
+              phone: { type: 'string' },
+              address: {
+                type: 'object',
+                properties: {
+                  province: { type: 'string' },
+                  city: { type: 'string' },
+                  district: { type: 'string' },
+                  postcode: { type: 'string' },
+                  address: { type: 'string' },
+                }
+              },
+            }
+          },
+          // 企业信息
+          enterprise: {
+            type: 'object',
+            properties: {
+              location: locationSchema.sanitization,
+              industry: { type: 'string' },               // 行业类型
+              scale: { type: 'int' }, // Number[Enum:5,10,50,100],
+              description: { type: 'string' },
+            }
+          },
+        }
+      },
+    },
+    validation: {
+      plan: { type: 'string' },                   // 升级方案
+      info: {
+        type: 'object',
+        properties: {
+          contact: {
+            type: 'object',
+            properties: {
+              realname: { type: 'string' },
+              gender: { type: 'string' },               // Enum:F,M
+              position: { type: 'string' },
+              phone: { type: 'string' },
+              address: {
+                type: 'object',
+                properties: {
+                  province: { type: 'string' },
+                  city: { type: 'string' },
+                  district: { type: 'string' },
+                  postcode: { type: 'string' },
+                  address: { type: 'string' },
+                }
+              },
+            }
+          },
+          // 企业信息
+          enterprise: {
+            type: 'object',
+            properties: {
+              location: locationSchema.sanitization,
+              industry: { type: 'string' },               // 行业类型
+              scale: { type: 'int' }, // Number[Enum:5,10,50,100],
+              description: { type: 'string' },
+            }
+          },
+        }
+      },
+    },
   },
 
   coupon: {

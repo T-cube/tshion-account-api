@@ -15,12 +15,6 @@ export default class Product {
   static getByPlan(plan) {
     return db.product.find({
       plan
-    })
-    .then(doc => {
-      return {
-        monthly: _.find(doc, item => item.product_type == 'monthly'),
-        peruser: _.find(doc, item => item.product_type == 'peruser'),
-      };
     });
   }
 

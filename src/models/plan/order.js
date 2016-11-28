@@ -2,6 +2,9 @@ import _ from 'underscore';
 import Promise from 'bluebird';
 
 import db from 'lib/database';
+import Payment from 'models/plan/payment';
+import PaymentDiscount from 'models/plan/payment-discount';
+import ProductDiscount from 'models/plan/product-discount';
 
 export default class Order {
 
@@ -29,21 +32,23 @@ export default class Order {
     this.coupons.concat(coupons);
   }
 
+
   save() {
+    this.prepare().then(data => {
+      return db.payment.order.insert(data);
+    });
+  }
+
+  prepare() {
+    let { user_id, company_id, products } = this;
     if (!this.canAddProducts()) {
 
     }
     if (!this.canUseCoupons()) {
 
     }
-    let data = this._generateOrder();
-    return db.payment.order.insert(data);
-  }
-
-  _generateOrder() {
-    let { user_id, company_id, products } = this;
-    products.map(product => {});
-    return {
+    // products.map(product => {});
+    let order = {
       user_id,
       company_id,
       products,
@@ -54,6 +59,7 @@ export default class Order {
       date_update: new Date(),
       log: [],
     };
+    return this.getDiscount(order);
   }
 
   canAddProducts() {
@@ -84,17 +90,41 @@ export default class Order {
       });
     })
     .then(coupons => {
-      // filter coupons
+      // coupons item isAvaliable
 
     });
   }
 
-  getPayDiscount() {
-    return 0;
+  getDiscount(order) {
+    return this.getProductDiscount(order.products).then(productDiscount => {
+      order.product_discount = productDiscount;
+      return this.getPayDiscount();
+    })
+    .then(payDiscount => {
+      order.pay_discount = payDiscount;
+      return order;
+    });
   }
 
-  getUsefulCoupons() {
+  getProductDiscount(products) {
+    return ProductDiscount.getDiscount(products);
+  }
 
+  getPayDiscount(order) {
+    return PaymentDiscount.getDiscount(order);
+  }
+
+  pay(orderId, payment_method) {
+    let { user_id, company_id } = this;
+    return db.payment.order.findOne({
+      user_id,
+      company_id,
+      _id: orderId,
+    })
+    .then(order => {
+      let paymentData = {};
+      Payment.getInstance(payment_method).createPay(paymentData);
+    });
   }
 
 }

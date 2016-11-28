@@ -5,14 +5,17 @@ import { validate } from './schema';
 
 export default class Auth {
 
-  constructor(company_id) {
+  constructor(company_id, user_id) {
     this.company_id = company_id;
+    this.user_id = user_id;
   }
 
   create(data) {
-    let { company_id } = this;
+    let { company_id, user_id } = this;
     data.company_id = company_id;
-    validate('auth', data);
+    data.user_id = user_id;
+    data.date_apply = new Date();
+    data.status = 'posted';
     return db.plan.auth.insert(data);
   }
 
@@ -26,8 +29,18 @@ export default class Auth {
     }, {
       plan: 1,
       status: 1
-    })
-    .then(doc => doc.plan);
+    });
+  }
+
+  getRejectedAuth() {
+    let { company_id } = this;
+    return db.plan.auth.findOne({
+      company_id,
+      status: 'rejected'
+    }, {
+      plan: 1,
+      status: 1
+    });
   }
 
   getAuthPlan() {
