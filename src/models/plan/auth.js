@@ -1,4 +1,5 @@
 
+import { ApiError } from 'lib/error';
 import db from 'lib/database';
 import { validate } from './schema';
 
@@ -9,29 +10,47 @@ export default class Auth {
   }
 
   create(data) {
+    let { company_id } = this;
+    data.company_id = company_id;
     validate('auth', data);
     return db.plan.auth.insert(data);
   }
 
-  getPlan() {
+  getActiveAuth() {
     let { company_id } = this;
     return db.plan.auth.findOne({
       company_id,
-      status: 'actived'
+      status: {
+        $in: ['posted', 'reposted', 'accepted']
+      }
+    }, {
+      plan: 1,
+      status: 1
+    })
+    .then(doc => doc.plan);
+  }
+
+  getAuthPlan() {
+    let { company_id } = this;
+    return db.plan.auth.findOne({
+      company_id,
+      status: 'accepted'
     }, {
       plan: 1,
     })
-    .then(authInfo => authInfo && authInfo.plan);
+    .then(authInfo => (authInfo && authInfo.plan) || 'free');
   }
 
-  expireA() {
+  cancel() {
     let { company_id } = this;
     return db.plan.auth.update({
       company_id,
-      status: 'actived'
+      status: {
+        $in: ['posted', 'reposted', 'accepted']
+      }
     }, {
       $set: {
-        status: 'expired'
+        status: 'cancelled'
       }
     });
   }

@@ -39,6 +39,7 @@ api.post('/', (req, res, next) => {
     }
     return orderModel.save();
   })
+  .thne(order_id => res.json({order_id}))
   .catch(next);
 });
 
@@ -46,7 +47,7 @@ api.get('/:orderId', (req, res, next) => {
 
 });
 
-api.get('/payment-method', (req, res, next) => {
+api.get('/payment', (req, res, next) => {
   let methods = new Payment().getMethods();
   res.json(methods);
 });

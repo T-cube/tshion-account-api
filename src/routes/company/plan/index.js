@@ -1,11 +1,27 @@
 import _ from 'underscore';
 import express from 'express';
 
+import { ApiError } from 'lib/error';
 import Plan from 'models/plan/plan';
+import Auth from 'models/plan/auth';
 
 let api = express.Router();
 
 export default api;
+
+
+api.get('/', (req, res, next) => {
+  let auth = new Auth(req.company._id);
+  Promise.all([
+    auth.getAuthPlan(),
+    Plan.list()
+  ])
+  .then(doc => res.json({
+    current: doc[0],
+    list: doc[1],
+  }))
+  .catch(next);
+});
 
 api.get('/item', (req, res, next) => {
   let planModel = new Plan();
@@ -30,19 +46,25 @@ api.post('/item', (req, res, next) => {
   let company_id = req.company._id;
   let user_id = req.user._id;
   let date_start = new Date();
-  let data = {plan, date_start, company_id, user_id};
-  if (type == 'trail') {
-    return planModel.createTrial(data)
-    .then(() => res.json({}))
-    .catch(next);
-  } else if (type == 'paid') {
-    return planModel.createPaid(data, period)
-    .then(orderId => res.json({orderId}))
-    .catch(next);
-  }
-  // res.json({
-  //   order
-  // });
+  let auth = new Auth(company_id);
+  auth.getAuthPlan().thne(authedPlan => {
+    if (authedPlan != plan) {
+      throw new ApiError(400, 'invalid_team_plan');
+    }
+    return planModel.getCurrent().then(currentPlan => {
+      console.log(currentPlan);
+      // expire current plan
+      let data = {plan, date_start, company_id, user_id};
+      if (type == 'trail') {
+        return planModel.createNewTrial(data)
+        .then(() => res.json({}));
+      } else if (type == 'paid') {
+        return planModel.createNewPaid(data, period)
+        .then(() => res.json({}));
+      }
+    });
+  })
+  .catch(next);
 });
 
 api.put('/item/current/status', (req, res, next) => {

@@ -1,3 +1,4 @@
+import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -19,7 +20,7 @@ export default class Plan {
     });
   }
 
-  createTrial(data) {
+  createNewTrial(data) {
     let { company_id } = this;
     data.type = 'trial';
     return this.ensureTrialNotExists(company_id)
@@ -36,7 +37,7 @@ export default class Plan {
     // }
   }
 
-  createPaid(data, period) {
+  createNewPaid(data, period) {
     data.type = 'paid';
     return db.company.plan.insert(data);
   }
@@ -53,7 +54,7 @@ export default class Plan {
 
   expire() {
     let { company_id } = this;
-    
+
   }
 
   getProduct() {
@@ -65,6 +66,40 @@ export default class Plan {
       }
       return Product.getByPlan(plan);
     });
+  }
+
+  static list() {
+    return Promise.resolve([
+      {
+        name: '免费版',
+        type: 'free',
+        description: '免费团队，可使用T立方的基本功能',
+        store: 1000000000,
+        member: 10,
+        fee: 0,
+        fee_per_member: 0,
+      },
+      {
+        name: '专业版',
+        type: 'pro',
+        description: '',
+        store: 10000000000,
+        member: 10,
+        fee: 0,
+        fee_per_member: 19.9,
+        ext_info: '专业版',
+      },
+      {
+        name: '企业版',
+        type: 'ent',
+        description: '',
+        store: 10000000000,
+        member: 10,
+        fee: 0,
+        fee_per_member: 19.9,
+        ext_info: '企业版',
+      },
+    ]);
   }
 
 }
