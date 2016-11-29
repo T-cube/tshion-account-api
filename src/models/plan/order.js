@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
 
+import C from 'lib/constants';
 import db from 'lib/database';
 import Payment from 'models/plan/payment';
 import PaymentDiscount from 'models/plan/payment-discount';
@@ -18,34 +19,45 @@ export default class Order {
     }
     this.user_id = user_id;
     this.company_id = company_id;
+    this.order_type = C.PAYMENT.ORDER.TYPE.BUY;
     this.products = [];
-    this.coupons = [];
-    this.quantity = 0;
+    this.coupon = [];
+    this.times = 0;
   }
 
   getProducts() {
     return this.products;
   }
 
-  getQuantity() {
-    return this.products[0].quantity;
+  getTimes() {
+    return this.times;
   }
 
-  setProducts(products, quantity) {
+  setProducts(products) {
     products = _.flatten(products);
-    this.quantity = quantity;
     this.products = this.products.concat(products);
   }
 
-  withCoupons(...coupons) {
-    coupons = _.flatten(coupons);
-    this.coupons = this.coupons.concat(coupons);
+  setTimes(times) {
+    this.times = times;
+  }
+
+  withCoupon(coupon) {
+    this.coupon = coupon;
+  }
+
+  useCoupon() {
+    this.coupon; // TODO
   }
 
   save() {
-    this.prepare().then(order => {
+    return this.prepare().then(order => {
       order.status = 'created';
-      return db.payment.order.insert(order);
+      return Promise.all([
+        this.useCoupon(),
+        db.payment.order.insert(order)
+      ])
+      .then(doc => doc[1]);
     });
   }
 
@@ -54,7 +66,7 @@ export default class Order {
     if (!this.canAddProducts()) {
 
     }
-    if (!this.canUseCoupons() && this.coupon.length) {
+    if (this.coupon && !this.isCouponAvaliable(this.coupon)) {
 
     }
     // products.map(product => {});
@@ -68,7 +80,6 @@ export default class Order {
       date_create: new Date(),
       date_update: new Date(),
     };
-    order = this.getCouponDiscount(order);
     return this.getDiscount(order);
   }
 
@@ -81,44 +92,55 @@ export default class Order {
     return result;
   }
 
-  canUseCoupons() {
-    this.coupons;
-  }
-
-  getAvaliableCoupons() {
-    return db.company.coupon.find({
+  getCoupons() {
+    return db.company.coupon.findOne({
       _id: this.company_id
     }, {
       list: 1
     })
     .then(coupon => {
-      return db.coupon.find({
+      if (!coupon) {
+        return [];
+      }
+      return db.plan.coupon.find({
         _id: {$in: coupon.list},
-        date_start: {$lt: new Date()},
-        data_end: {$gte: new Date()},
+        'period.date_start': {$lt: new Date()},
+        'period.data_end': {$gte: new Date()},
 
       });
     })
     .then(coupons => {
       // coupons item isAvaliable
-
+      coupons.forEach(coupon => {
+        coupon.isAvaliable = this.isCouponAvaliable(coupon);
+      });
+      return coupons;
     });
   }
 
-  getCouponDiscount(products) {
-
+  isCouponAvaliable(coupon) {
+    let { criteria } = coupon;
+    // ...
+    return true;
   }
 
   getDiscount(order) {
     return this.getProductDiscount(order.products).then(productDiscount => {
       order.product_discount = productDiscount;
-      return this.getPayDiscount();
+      let couponDiscount = this.getCouponDiscount(order);
+      order.coupon_discount = couponDiscount;
+      return this.getPayDiscount(order);
     })
     .then(payDiscount => {
       order.pay_discount = payDiscount;
       order.paid_amount = order.original_price - order.product_discount.total_discount - order.pay_discount;
       return order;
     });
+  }
+
+
+  getCouponDiscount(products) {
+    return;
   }
 
   getProductDiscount(products) {

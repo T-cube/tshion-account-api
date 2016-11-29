@@ -64,6 +64,8 @@ const collections = [
   'product.discount',
   'payment.order',
   'payment.discount',
+  'company.coupon',
+  'user.realname',
 ];
 
 const dbConfig = config.get('database');

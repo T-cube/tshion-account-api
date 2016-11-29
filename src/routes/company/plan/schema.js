@@ -14,7 +14,7 @@ const schema = {
           }
         }
       },
-      coupons: { $objectId: 1, optional: true },
+      coupon: { $objectId: 1, optional: true },
     },
     validation: {
       products: {
@@ -27,7 +27,7 @@ const schema = {
           }
         }
       },
-      coupons: { $objectId: 1, optional: true },
+      coupon: { $objectId: 1, optional: true },
     },
   },
   recharge: {

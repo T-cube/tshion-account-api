@@ -21,7 +21,7 @@ api.post(/\/(prepare)?$/, (req, res, next) => {
   let isPrepare = /prepare$/.test(req.url);
   let data = req.body;
   validate('create_order', data);
-  let { coupons } = data;
+  let { coupon } = data;
   let productsQuantity = data.products;
   let planModel = new Plan(req.company._id);
   planModel.getProduct()
@@ -38,12 +38,19 @@ api.post(/\/(prepare)?$/, (req, res, next) => {
       company_id: req.company._id,
       user_id: req.user._id,
     });
-    orderModel.addProducts(products);
-    if (coupons) {
-      orderModel.withCoupons(coupons);
+    orderModel.setProducts(products);
+    if (coupon) {
+      orderModel.withCoupon(coupon);
     }
     if (isPrepare) {
-      return orderModel.prepare().then(info => res.json(info));
+      return Promise.all([
+        orderModel.getCoupons(),
+        orderModel.prepare()
+      ])
+      .then(doc => res.json({
+        order: doc[1],
+        coupons: doc[0],
+      }));
     }
     return orderModel.save().then(order_id => res.json({order_id}));
   })

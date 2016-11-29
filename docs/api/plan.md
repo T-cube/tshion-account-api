@@ -25,16 +25,25 @@
 ```
 
 ### POST /auth
+
+提交认证
+
 ```javascript
 
 ```
 
 ### PUT /auth
+
+更新认证
+
 ```javascript
 
 ```
 
-### PUT /auth/status
+### PUT /auth/cancel
+
+取消认证
+
 ```javascript
 
 ```

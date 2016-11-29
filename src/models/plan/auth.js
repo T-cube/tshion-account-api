@@ -19,6 +19,20 @@ export default class Auth {
     return db.plan.auth.insert(data);
   }
 
+  update(data) {
+    let { company_id, user_id } = this;
+    data.company_id = company_id;
+    data.user_id = user_id;
+    data.date_apply = new Date();
+    data.status = 'reposted';
+    return db.plan.auth.update({
+      company_id,
+      status: 'rejected'
+    }, {
+      $set: data
+    });
+  }
+
   getActiveAuth() {
     let { company_id } = this;
     return db.plan.auth.findOne({
@@ -34,13 +48,20 @@ export default class Auth {
 
   getRejectedAuth() {
     let { company_id } = this;
-    return db.plan.auth.findOne({
-      company_id,
-      status: 'rejected'
-    }, {
-      plan: 1,
-      status: 1
-    });
+    return Promise.all([
+      db.plan.auth.count({
+        company_id,
+        status: 'accepted'
+      }),
+      db.plan.auth.findOne({
+        company_id,
+        status: 'rejected'
+      }, {
+        plan: 1,
+        status: 1
+      })
+    ])
+    .then(doc => !doc[0] && doc[1]);
   }
 
   getAuthPlan() {
@@ -59,7 +80,7 @@ export default class Auth {
     return db.plan.auth.update({
       company_id,
       status: {
-        $in: ['posted', 'reposted', 'accepted']
+        $in: ['posted', 'reposted']
       }
     }, {
       $set: {

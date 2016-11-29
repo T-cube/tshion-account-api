@@ -67,6 +67,14 @@ const validationCustom = {
       !/^1[3|4|5|7|8]\d{9}$/.test(candidate)) {
       this.report('invalid mobile: ' + candidate);
     }
+  },
+  idcard: function (schema, candidate) {
+    if (!schema.$idcard) {
+      return;
+    }
+    if (candidate && !/^([0-9]{15}[\dx]|[0-9]{17}[\dx])$/.test(candidate)) {
+      this.report('invalid idcard: ' + candidate);
+    }
   }
 };
 schemaInspector.Validation.extend(validationCustom);

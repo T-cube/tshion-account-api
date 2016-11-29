@@ -263,6 +263,15 @@ let constants = {
     }
   },
 
+  PAYMENT: {
+    ORDER: {
+      TYPE: {
+        BUY: 'buy',
+        UPGRADE: 'upgrade',
+      }
+    }
+  }
+
 };
 
 export default constants;

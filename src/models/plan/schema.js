@@ -64,6 +64,7 @@ const schema = {
         properties: {
           contact: {
             type: 'object',
+            optional: true,
             properties: {
               realname: { type: 'string' },
               gender: { type: 'string' },               // Enum:F,M
@@ -84,7 +85,6 @@ const schema = {
                 type: 'object',
                 properties: {
                   idcard: { $idcard: 1 },              // 身份证编码
-                  idcard_photo: { type: 'url' },           // 身份证照片
                 }
               },
             }
@@ -129,7 +129,6 @@ const schema = {
                 type: 'object',
                 properties: {
                   idcard: { $idcard: 1 },              // 身份证编码
-                  idcard_photo: { type: 'url' },           // 身份证照片
                 }
               },
             }
@@ -162,16 +161,6 @@ const schema = {
               gender: { type: 'string' },               // Enum:F,M
               position: { type: 'string' },
               phone: { type: 'string' },
-              address: {
-                type: 'object',
-                properties: {
-                  province: { type: 'string' },
-                  city: { type: 'string' },
-                  district: { type: 'string' },
-                  postcode: { type: 'string' },
-                  address: { type: 'string' },
-                }
-              },
             }
           },
           // 企业信息
@@ -199,16 +188,6 @@ const schema = {
               gender: { type: 'string' },               // Enum:F,M
               position: { type: 'string' },
               phone: { type: 'string' },
-              address: {
-                type: 'object',
-                properties: {
-                  province: { type: 'string' },
-                  city: { type: 'string' },
-                  district: { type: 'string' },
-                  postcode: { type: 'string' },
-                  address: { type: 'string' },
-                }
-              },
             }
           },
           // 企业信息
