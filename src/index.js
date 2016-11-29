@@ -16,6 +16,7 @@ import oauthServer from 'oauth2-server';
 import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
+import git from 'git-rev-sync';
 import session from 'express-session';
 const sessionRedis = require('connect-redis')(session);
 
@@ -29,7 +30,7 @@ import corsHandler from 'lib/cors';
 import SocketServer from 'service/socket';
 import ScheduleServer from 'service/schedule';
 import { SocketClient } from 'service/socket';
-import rpc from 'service/rpc';
+import { initRPC } from 'service/rpc';
 import Notification from 'models/notification';
 import Account from 'models/account';
 import Document from 'models/document';
@@ -49,9 +50,12 @@ console.log();
 console.log('--------------------------------------------------------------------------------');
 console.log('Tlifang API Service v%s', version);
 console.log('--------------------------------------------------------------------------------');
-console.log('NODE_ENV=' + process.env.NODE_ENV);
+console.log(`GIT_REV=${git.short()}`);
+const NODE_ENV = process.env.NODE_ENV || 'default';
+console.log(`NODE_ENV=${NODE_ENV}`);
 console.log('loaded config:');
-console.log(JSON.stringify(_.pick(config, ['apiUrl', 'webUrl', 'server', 'database']), (key, value) => {
+const selectedConfigItems = ['apiUrl', 'webUrl', 'server', 'database'];
+console.log(JSON.stringify(_.pick(config, selectedConfigItems), (key, value) => {
   return _.isArray(value) ? value.join(';') : value;
 }, 2));
 console.log('initializing service...');
@@ -80,6 +84,10 @@ app.loadModel('notification-setting', NotificationSetting);
 app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
 app.loadModel('user-activity', UserActivity);
+
+initRPC(config.get('rpc')).then(cfg => {
+  console.log(`rpc connected to ${cfg.protocol}://${cfg.hostname}:${cfg.port}`);
+}).catch(console.error);
 
 // model loader
 app.use((req, res, next) => {
