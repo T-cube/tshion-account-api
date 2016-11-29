@@ -59,7 +59,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.discount`
+### Table `payment.product.discount`
 
 优惠支付信息，可用于多个产品
 
@@ -70,6 +70,7 @@ Currency: Number;
   description: String,
   criteria: {
     quantity: Number,               // 最低数量
+    times: Number,               // 最低数量
     total_fee: Currency,              // 最低金额
   },
   discount: {
@@ -162,11 +163,11 @@ Currency: Number;
   user_id: ObjectId,
   company_id: ObjectId,
   // 商品信息
+  times: Number,
   product: [{
     product_no: String,
     title: String,
     quantity: Number,
-    times: Number,
     price: Currency,
     sum: Currency,
     // 打折信息
@@ -178,8 +179,8 @@ Currency: Number;
   }...],
   // 支付信息
   charge_no: ObjectId               // 关联支付记录
-  original_price: Currency          // 原始价格
-  paid_amount: Currency,            // 支付金额
+  original_sum: Currency          // 原始价格
+  paid_sum: Currency,            // 支付金额
   // 订单状态
   status: OrderStatus,
   comment: String,

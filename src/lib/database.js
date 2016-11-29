@@ -59,6 +59,7 @@ const collections = [
   // plan
   'plan.company',
   'plan.auth',
+  'plan.coupon',
   'product',
   'product.discount',
   'payment.order',

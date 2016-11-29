@@ -20,22 +20,32 @@ export default class Order {
     this.company_id = company_id;
     this.products = [];
     this.coupons = [];
+    this.quantity = 0;
   }
 
-  addProducts(...products) {
+  getProducts() {
+    return this.products;
+  }
+
+  getQuantity() {
+    return this.products[0].quantity;
+  }
+
+  setProducts(products, quantity) {
     products = _.flatten(products);
-    this.products.concat(products);
+    this.quantity = quantity;
+    this.products = this.products.concat(products);
   }
 
-  useCoupons(...coupons) {
+  withCoupons(...coupons) {
     coupons = _.flatten(coupons);
-    this.coupons.concat(coupons);
+    this.coupons = this.coupons.concat(coupons);
   }
-
 
   save() {
-    this.prepare().then(data => {
-      return db.payment.order.insert(data);
+    this.prepare().then(order => {
+      order.status = 'created';
+      return db.payment.order.insert(order);
     });
   }
 
@@ -44,7 +54,7 @@ export default class Order {
     if (!this.canAddProducts()) {
 
     }
-    if (!this.canUseCoupons()) {
+    if (!this.canUseCoupons() && this.coupon.length) {
 
     }
     // products.map(product => {});
@@ -52,13 +62,13 @@ export default class Order {
       user_id,
       company_id,
       products,
-      original_price: 0,
+      original_price: ProductDiscount.getOriginalFeeOfProducts(products),
       paid_amount: 0,
-      status: '',
+      status: null,
       date_create: new Date(),
       date_update: new Date(),
-      log: [],
     };
+    order = this.getCouponDiscount(order);
     return this.getDiscount(order);
   }
 
@@ -95,6 +105,10 @@ export default class Order {
     });
   }
 
+  getCouponDiscount(products) {
+
+  }
+
   getDiscount(order) {
     return this.getProductDiscount(order.products).then(productDiscount => {
       order.product_discount = productDiscount;
@@ -102,6 +116,7 @@ export default class Order {
     })
     .then(payDiscount => {
       order.pay_discount = payDiscount;
+      order.paid_amount = order.original_price - order.product_discount.total_discount - order.pay_discount;
       return order;
     });
   }

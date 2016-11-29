@@ -337,3 +337,7 @@ export function strToReg(source, ext) {
   }
   return new RegExp(escapeRegexp(source), ext);
 }
+
+export function formatAmount(amount) {
+  return Math.round(amount) / 100;
+}
