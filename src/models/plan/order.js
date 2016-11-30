@@ -5,6 +5,7 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import Coupon from 'models/plan/coupon';
 import Payment from 'models/plan/payment';
+import Discount from 'models/plan/discount';
 import PaymentDiscount from 'models/plan/payment-discount';
 import ProductDiscount from 'models/plan/product-discount';
 
@@ -70,7 +71,7 @@ export default class Order {
   prepare() {
     let { products } = this;
     if (!this.canAddProducts()) {
-      throw new Error('invalid product');
+      return Promise.reject(new Error('invalid products'));
     }
     this.original_sum = ProductDiscount.getOriginalFeeOfProducts(products);
     return this.getDiscount().then(() => ({
@@ -141,55 +142,113 @@ export default class Order {
   }
 
   getDiscount() {
-    return this.getProductDiscount().then(productDiscount => {
-      this.product_discount = productDiscount;
+    return this.getProductDiscount().then(() => {
       return this.getCouponDiscount();
     })
-    .then(couponDiscount => {
-      this.coupon_discount = couponDiscount;
+    .then(() => {
       return this.getPayDiscount();
     })
     .then(payDiscount => {
       this.pay_discount = payDiscount;
-      this.paid_sum = this.original_sum - this.product_discount.total_discount - this.pay_discount - this.coupon_discount;
+      this.paid_sum = this.original_sum - (this.product_discount || 0) - (this.pay_discount || 0) - (this.coupon_discount && this.coupon_discount.fee || 0);
     });
   }
 
   getCouponDiscount() {
-    let order = this.order;
     if (!this.coupon) {
-      return Promise.resolve();
+      return Promise.resolve(undefined);
     }
     return new Coupon(this.company_id).getCoupon(this.coupon).then(coupon => {
       if (!coupon || !this.isCouponAvaliable(coupon)) {
         this.coupon = undefined;
-        return null;
+        return undefined;
       }
       let coupon_discount;
-      let { criteria, products } = coupon;
-      if (coupon.products === null) {
-        // TODO
-
+      let { criteria, products, discount } = coupon;
+      if (coupon.products === null && discount.type == 'times') {  // for order all products
+        coupon_discount = Discount.getDiscount({
+          fee: this.paid_sum
+        }, discount);
+        this.times += coupon_discount.times;
       } else {
-        for (let product_no in products) {
-          let product = _.find(order.products, item => item.product_no == product_no);
-          if ((product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity)
-            || (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee)) {
-            // TODO
-
-          }
-        }
-        return coupon_discount;
+        let productIdListUseCoupon = _.filter(this.products, item => _.contains(products, item.product_no)).map(product => product._id);
+        coupon_discount = this._getProductDiscountCommon(productIdListUseCoupon, criteria, discount, {coupon: this.coupon});
       }
+      this.coupon_discount = coupon_discount; // TODO
+      return coupon_discount;
     });
   }
 
   getProductDiscount() {
-    return ProductDiscount.getDiscount(this.order.products);
+    return Promise.map(this.products, product => {
+      let { discount, quantity, sum } = product;
+      if (!discount || !discount.length) {
+        return;
+      }
+      return db.product.discount.find({
+        _id: {
+          $in: discount
+        },
+        'period.date_start': {$lte: new Date()},
+        'period.date_end': {$gte: new Date()},
+        $or: [
+          {
+            'criteria.quantity': {$lte: quantity}
+          },
+          {
+            'criteria.total_fee': {$lte: sum}
+          }
+        ]
+      })
+      .then(discountList => {
+        let discountInfo = [];
+        discountList.forEach(discountItem => {
+          discountInfo.push(this._getProductDiscountCommon([_.clone(product)], discountItem.criteria, discountItem.discount, {product_discount: discountItem._id}));
+        });
+        let discountResult = _.reduce(discountList, (memo, n) => {
+          return ((_.isInt(memo.fee) && memo.fee > n.fee) || ((_.isInt(memo.number) && memo.number > n.number))) ? memo : n;
+        }, {});
+        if (_.isInt(discountResult.fee)) {
+          product.sum -= discountResult.fee;
+          this.paid_sum -= discountResult.fee;
+        }
+        if (_.isInt(discountResult.number)) {
+          product.quantity += discountResult.number;
+        }
+        product.discount = (product.discount || []).contact(discountResult);
+        return discountResult;
+      });
+    });
+  }
+
+  // discount_info like { coupon: this.coupon } or { product_discount: true }
+  _getProductDiscountCommon(productIdList, criteria, discount, discount_info) {
+    let discountSummary;
+    for (let productId in productIdList) {
+      let product = _.find(this.products, item => item._id == productId);
+
+      if ((product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity)
+        || (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee)) {
+        let itemDiscount = Discount.getDiscount(product, discount);
+        if (_.isInt(itemDiscount.fee)) {
+          product.sum -= itemDiscount.fee;
+          discountSummary = discountSummary ? {
+            type: discountSummary.type,
+            fee: discountSummary.fee + itemDiscount.fee
+          } : itemDiscount;
+        }
+        if (_.isInt(itemDiscount.number)) {
+          product.quantity += itemDiscount.number;
+          discountSummary = { type: itemDiscount.type };
+        }
+        product.discount = (product.discount || []).contact(_.extend(itemDiscount, discount_info));
+      }
+    }
+    return discountSummary;
   }
 
   getPayDiscount() {
-    return PaymentDiscount.getDiscount(this.order);
+    return PaymentDiscount.getDiscount(this.paid_sum);
   }
 
   pay(orderId, payment_method) {

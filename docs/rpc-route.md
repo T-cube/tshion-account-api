@@ -111,7 +111,7 @@ QUERY
 {
   page: <Int>,
   pagesize: <Int>,
-  status: <String>,  // accepted rejected
+  status: <String>,  // accepted rejected ...
 }
 ```
 
