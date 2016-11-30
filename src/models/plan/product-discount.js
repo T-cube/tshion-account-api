@@ -14,14 +14,14 @@ export default class ProductDiscount {
     return db.product.discount.remove({_id});
   }
 
-  static getDiscount(products, quantity) {
+  static getDiscount(products, times) {
     let totalFee = ProductDiscount.getOriginalFeeOfProducts(products);
     return db.product.discount.find({
       'period.date_start': {$lte: new Date()},
       'period.date_end': {$gte: new Date()},
       $or: [
         {
-          'criteria.quantity': {$lte: quantity}
+          'criteria.times': {$lte: times}
         },
         {
           'criteria.total_fee': {$lte: totalFee}

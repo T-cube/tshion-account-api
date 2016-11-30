@@ -69,8 +69,8 @@ api.post('/item', (req, res, next) => {
 });
 
 api.put('/item/current/status', (req, res, next) => {
-  let { status } = req.body;
-
+  // let { status } = req.body;
+  res.json({});
 });
 
 api.get('/product', (req, res, next) => {

@@ -7,6 +7,7 @@ import Payment from 'models/plan/payment';
 import PaymentDiscount from 'models/plan/payment-discount';
 import ProductDiscount from 'models/plan/product-discount';
 
+
 export default class Order {
 
   constructor(options) {
@@ -21,7 +22,7 @@ export default class Order {
     this.company_id = company_id;
     this.order_type = C.PAYMENT.ORDER.TYPE.BUY;
     this.products = [];
-    this.coupon = [];
+    this.coupon = undefined;
     this.times = 0;
   }
 
@@ -46,18 +47,14 @@ export default class Order {
     this.coupon = coupon;
   }
 
-  useCoupon() {
+  updateUsedCoupon() {
     this.coupon; // TODO
   }
 
   save() {
     return this.prepare().then(order => {
       order.status = 'created';
-      return Promise.all([
-        this.useCoupon(),
-        db.payment.order.insert(order)
-      ])
-      .then(doc => doc[1]);
+      return db.payment.order.insert(order);
     });
   }
 
@@ -77,6 +74,7 @@ export default class Order {
       original_price: ProductDiscount.getOriginalFeeOfProducts(products),
       paid_amount: 0,
       status: null,
+      coupon: this.coupon,
       date_create: new Date(),
       date_update: new Date(),
     };

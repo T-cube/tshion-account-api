@@ -76,7 +76,7 @@ export default class Auth {
   }
 
   cancel() {
-    let { company_id } = this;
+    let { company_id, user_id } = this;
     return db.plan.auth.update({
       company_id,
       status: {
@@ -103,34 +103,29 @@ export default class Auth {
     return db.plan.auth.find(criteria).limit(pagesize).skip(pagesize * (page - 1));
   }
 
-  revoke() {
-    let { company_id } = this;
-    return db.plan.auth.update({
-      company_id
-    }, {
-      $set: {
-        status: ''
-      }
-    });
-  }
-
-  audit() {
-    let { company_id } = this;
+  static audit(options) {
+    let { status, comment, user_id, company_id } = options;
+    let log = {
+      status,
+      comment,
+      user_id,
+      date_create: new Date(),
+    };
     return db.plan.auth.update({
       company_id,
-      status: '',
+      status: {
+        $in: ['posted', 'reposted']
+      },
     }, {
-      $set: {
-        status: ''
-      }
+      $set: {status}
     })
-    .then(() => this.logAuth());
+    .then(() => Auth.logAuth(log));
   }
 
-  logAuth(log) {
+  static logAuth(log) {
     let { company_id } = this;
     log.date_create = new Date();
-    validate('log', log);
+    // validate('log', log);
     return db.plan.auth.update({
       company_id
     }, {
