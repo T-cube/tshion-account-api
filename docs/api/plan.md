@@ -6,10 +6,12 @@
 TeamPlan: String[Enum:free,pro,ent] // 团队方案：免费版，专业版，企业版
 PlanStatus: String[Enum:actived,expired],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
+```
 
 ## 挂载点
-```
-/company/plan
+
+```javascript
+/company/:companyId/plan
 ```
 
 

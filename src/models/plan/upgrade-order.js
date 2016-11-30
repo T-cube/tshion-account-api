@@ -1,9 +1,9 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
 
-import Order from './order';
 import C from 'lib/constants';
 import db from 'lib/database';
+import Order from './order';
 import Payment from 'models/plan/payment';
 import PaymentDiscount from 'models/plan/payment-discount';
 import ProductDiscount from 'models/plan/product-discount';

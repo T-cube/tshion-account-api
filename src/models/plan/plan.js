@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
@@ -52,12 +53,19 @@ export default class Plan {
     });
   }
 
-  expire() {
+  expireCurrent() {
     let { company_id } = this;
-
+    return db.plan.company.update({
+      company_id,
+      status: 'actived'
+    }, {
+      $set: {
+        status: 'expired'
+      }
+    });
   }
 
-  getProduct() {
+  getProducts() {
     let { company_id } = this;
     let auth = new Auth(company_id);
     return auth.getAuthPlan().then(plan => {
@@ -70,37 +78,41 @@ export default class Plan {
   }
 
   static list() {
-    return Promise.resolve([
-      {
-        name: '免费版',
-        type: 'free',
-        description: '免费团队，可使用T立方的基本功能',
-        store: 1000000000,
-        member: 10,
-        fee: 0,
-        fee_per_member: 0,
-      },
-      {
-        name: '专业版',
-        type: 'pro',
-        description: '',
-        store: 10000000000,
-        member: 10,
-        fee: 0,
-        fee_per_member: 19.9,
-        ext_info: '专业版',
-      },
-      {
-        name: '企业版',
-        type: 'ent',
-        description: '',
-        store: 10000000000,
-        member: 10,
-        fee: 0,
-        fee_per_member: 19.9,
-        ext_info: '企业版',
-      },
-    ]);
+    return db.product.find({
+      product_no: {
+        $in: ['P0001', 'P0002']
+      }
+    })
+    .then(products => {
+      return [
+        {
+          name: '免费版',
+          type: 'free',
+          description: '免费团队，可使用T立方的基本功能',
+          store: 1000000000,
+          max_member: 10,
+          products: _.find(products, product => product.plan == 'free'),
+        },
+        {
+          name: '专业版',
+          type: 'pro',
+          description: '',
+          store: 10000000000,
+          max_member: 50,
+          products: _.find(products, product => product.plan == 'pro'),
+          ext_info: '专业版',
+        },
+        {
+          name: '企业版',
+          type: 'ent',
+          description: '',
+          store: 10000000000,
+          max_member: 100,
+          products: _.find(products, product => product.plan == 'ent'),
+          ext_info: '企业版',
+        },
+      ];
+    });
   }
 
 }

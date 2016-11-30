@@ -100,3 +100,40 @@ QUERY
   pagesize: <Int>,
 }
 ```
+
+## 认证
+
+### /plan/auth/list
+
+QUERY
+
+```javascript
+{
+  page: <Int>,
+  pagesize: <Int>,
+  status: <String>,  // accepted rejected
+}
+```
+
+### /plan/auth/detail
+
+QUERY
+
+```javascript
+{
+  auth_id: <String>,
+}
+```
+
+### /plan/auth/audit
+
+QUERY
+
+```javascript
+{
+  auth_id: <String>,
+  status: <String>,  // accepted rejected
+  comment: <String>,
+  operator_id,: <String>
+}
+```

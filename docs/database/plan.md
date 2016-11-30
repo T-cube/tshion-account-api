@@ -97,10 +97,11 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
     }
   },
   log: [{
-    status: AuthStatus,
-    user_id: ObjectId,
-    comment: String,
+    _id: ObjectId,
+    status: OrderStatus,
     date_create: Date,
+    creator: String[Enum:user,system,cs], // 用户，系统，客服
+    operator_id: String,
   }]
   date_apply: Date,                 // 申请日期
 }

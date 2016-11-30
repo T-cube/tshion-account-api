@@ -3,6 +3,7 @@ import Promise from 'bluebird';
 
 import C from 'lib/constants';
 import db from 'lib/database';
+import Coupon from 'models/plan/coupon';
 import Payment from 'models/plan/payment';
 import PaymentDiscount from 'models/plan/payment-discount';
 import ProductDiscount from 'models/plan/product-discount';
@@ -22,8 +23,13 @@ export default class Order {
     this.company_id = company_id;
     this.order_type = C.PAYMENT.ORDER.TYPE.BUY;
     this.products = [];
-    this.coupon = undefined;
     this.times = 0;
+    this.original_sum = 0;
+    this.paid_amount = 0;
+    this.coupon = undefined;
+    this.status = undefined;
+    this.date_create = new Date();
+    this.date_update = new Date();
   }
 
   getProducts() {
@@ -35,8 +41,7 @@ export default class Order {
   }
 
   setProducts(products) {
-    products = _.flatten(products);
-    this.products = this.products.concat(products);
+    this.products = products;
   }
 
   setTimes(times) {
@@ -54,61 +59,58 @@ export default class Order {
   save() {
     return this.prepare().then(order => {
       order.status = 'created';
-      return db.payment.order.insert(order);
-    });
+      return Promise.all([
+        this.updateUsedCoupon(),
+        db.payment.order.insert(order)
+      ]);
+    })
+    .then(doc => doc[1]);
   }
 
   prepare() {
-    let { user_id, company_id, products } = this;
+    let { products } = this;
     if (!this.canAddProducts()) {
-
+      throw new Error('invalid product');
     }
-    if (this.coupon && !this.isCouponAvaliable(this.coupon)) {
-
-    }
-    // products.map(product => {});
-    let order = {
-      user_id,
-      company_id,
-      products,
-      original_price: ProductDiscount.getOriginalFeeOfProducts(products),
-      paid_amount: 0,
-      status: null,
+    this.original_sum = ProductDiscount.getOriginalFeeOfProducts(products);
+    return this.getDiscount().then(() => ({
+      user_id: this.user_id,
+      company_id: this.company_id,
+      order_type: this.order_type,
+      products: this.products,
+      times: this.times,
+      original_sum: this.original_sum,
+      paid_amount: this.paid_amount,
       coupon: this.coupon,
-      date_create: new Date(),
-      date_update: new Date(),
-    };
-    return this.getDiscount(order);
+      status: this.status,
+      date_create: this.date_create,
+      date_update: this.date_update,
+    }));
   }
 
   canAddProducts() {
+    let { products } = this;
+    if (!products || !products.length) {
+      return false;
+    }
+    let product_no_list = products.map(product => product.product_no);
+    if (_.uniq(product_no_list).length != product_no_list.length) {
+      return false;
+    }
     let result = false;
-    this.products.map(product => {
+    products.map(product => {
       let { product_no, quantity } = product;
-
+      if (quantity > 12) {
+        return false;
+      }
+      // TODO
     });
     return result;
   }
 
   getCoupons() {
-    return db.company.coupon.findOne({
-      _id: this.company_id
-    }, {
-      list: 1
-    })
-    .then(coupon => {
-      if (!coupon) {
-        return [];
-      }
-      return db.plan.coupon.find({
-        _id: {$in: coupon.list},
-        'period.date_start': {$lt: new Date()},
-        'period.data_end': {$gte: new Date()},
-
-      });
-    })
+    return new Coupon(this.company_id).getCoupons()
     .then(coupons => {
-      // coupons item isAvaliable
       coupons.forEach(coupon => {
         coupon.isAvaliable = this.isCouponAvaliable(coupon);
       });
@@ -117,36 +119,77 @@ export default class Order {
   }
 
   isCouponAvaliable(coupon) {
-    let { criteria } = coupon;
-    // ...
-    return true;
+    let { criteria, products } = coupon;
+    let order = this.order;
+    if (coupon.products === null) {
+      if (order.paid_sum && _.isInt(criteria.total_fee) && order.paid_sum >= criteria.total_fee) {
+        return true;
+      } else if (order.times && _.isInt(criteria.times) && order.times >= criteria.times) {
+        return true;
+      }
+    } else {
+      for (let product_no in products) {
+        let product = _.find(order.products, item => item.product_no == product_no);
+        if (product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity) {
+          return true;
+        } else if (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
-  getDiscount(order) {
-    return this.getProductDiscount(order.products).then(productDiscount => {
-      order.product_discount = productDiscount;
-      let couponDiscount = this.getCouponDiscount(order);
-      order.coupon_discount = couponDiscount;
-      return this.getPayDiscount(order);
+  getDiscount() {
+    return this.getProductDiscount().then(productDiscount => {
+      this.product_discount = productDiscount;
+      return this.getCouponDiscount();
+    })
+    .then(couponDiscount => {
+      this.coupon_discount = couponDiscount;
+      return this.getPayDiscount();
     })
     .then(payDiscount => {
-      order.pay_discount = payDiscount;
-      order.paid_amount = order.original_price - order.product_discount.total_discount - order.pay_discount;
-      return order;
+      this.pay_discount = payDiscount;
+      this.paid_sum = this.original_sum - this.product_discount.total_discount - this.pay_discount - this.coupon_discount;
     });
   }
 
+  getCouponDiscount() {
+    let order = this.order;
+    if (!this.coupon) {
+      return Promise.resolve();
+    }
+    return new Coupon(this.company_id).getCoupon(this.coupon).then(coupon => {
+      if (!coupon || !this.isCouponAvaliable(coupon)) {
+        this.coupon = undefined;
+        return null;
+      }
+      let coupon_discount;
+      let { criteria, products } = coupon;
+      if (coupon.products === null) {
+        // TODO
 
-  getCouponDiscount(products) {
-    return;
+      } else {
+        for (let product_no in products) {
+          let product = _.find(order.products, item => item.product_no == product_no);
+          if ((product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity)
+            || (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee)) {
+            // TODO
+
+          }
+        }
+        return coupon_discount;
+      }
+    });
   }
 
-  getProductDiscount(products) {
-    return ProductDiscount.getDiscount(products);
+  getProductDiscount() {
+    return ProductDiscount.getDiscount(this.order.products);
   }
 
-  getPayDiscount(order) {
-    return PaymentDiscount.getDiscount(order);
+  getPayDiscount() {
+    return PaymentDiscount.getDiscount(this.order);
   }
 
   pay(orderId, payment_method) {

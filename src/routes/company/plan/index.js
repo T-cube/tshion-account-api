@@ -48,21 +48,20 @@ api.post('/item', (req, res, next) => {
   let date_start = new Date();
   let auth = new Auth(company_id);
   auth.getAuthPlan().thne(authedPlan => {
-    console.log('authedPlan', authedPlan);
     if (authedPlan != plan) {
       throw new ApiError(400, 'invalid_team_plan');
     }
     return planModel.getCurrent().then(currentPlan => {
-      console.log(currentPlan);
       // expire current plan
+      let createPromise;
       let data = {plan, date_start, company_id, user_id};
       if (type == 'trail') {
-        return planModel.createNewTrial(data)
-        .then(() => res.json({}));
+        createPromise =planModel.createNewTrial(data);
       } else if (type == 'paid') {
-        return planModel.createNewPaid(data, period)
-        .then(() => res.json({}));
+        createPromise =planModel.createNewPaid(data, period);
       }
+      return createPromise.then(() => planModel.expireCurrent())
+      .then(() => res.json({}));
     });
   })
   .catch(next);
@@ -75,7 +74,7 @@ api.put('/item/current/status', (req, res, next) => {
 
 api.get('/product', (req, res, next) => {
   let planModel = new Plan(req.company._id);
-  planModel.getProduct()
+  planModel.getProducts()
   .then(products => res.json(products))
   .catch(next);
 });

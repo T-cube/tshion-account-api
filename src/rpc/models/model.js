@@ -17,4 +17,24 @@ export default class Model {
     return {page, pagesize};
   }
 
+  page(props) {
+    let { page, pagesize, criteria } = props;
+    return Promise.all([
+      this.count(criteria),
+      this.fetchList(props)
+    ])
+    .then(doc => {
+      let [totalRows, list] = doc;
+      return {
+        list,
+        page,
+        pagesize,
+        totalRows
+      };
+    });
+  }
+
+  count() {}
+  fetchList() {}
+
 }

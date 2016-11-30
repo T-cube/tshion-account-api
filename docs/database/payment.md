@@ -165,6 +165,7 @@ Currency: Number;
   // 商品信息
   times: Number,
   product: [{
+    _id: ObjectId,
     product_no: String,
     title: String,
     quantity: Number,

@@ -2,6 +2,7 @@ import RpcRoute from 'models/rpc-route';
 
 import accountRoutes from './account';
 import companyRoutes from './company';
+import planRoutes from './plan';
 
 export default (socket) => {
 
@@ -12,5 +13,6 @@ export default (socket) => {
 
   rpcRoute.use('/account', accountRoutes);
   rpcRoute.use('/company', companyRoutes);
+  rpcRoute.use('/plan', planRoutes);
 
 };
