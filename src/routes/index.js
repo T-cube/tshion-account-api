@@ -26,11 +26,12 @@ let routes = [
   'public',
   'relation',
   'request',
+  's',
   'task',
   'tools',
   'user',
+  'weather',
   'wechat',
-  's',
 ];
 
 _.each(routes, route => {
