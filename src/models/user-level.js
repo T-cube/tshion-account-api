@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import config from 'config';
 import { ObjectId } from 'mongodb';
 
@@ -8,7 +9,7 @@ export default class UserLevel {
   constructor(user) {
     if (ObjectId.isValid(user)) {
       this.setUserId(user);
-    } else {
+    } else if (_.isObject(user)) {
       this.setUserInfo(user);
     }
   }
