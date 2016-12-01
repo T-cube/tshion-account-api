@@ -24,7 +24,7 @@ api.post(/\/(prepare)?$/, (req, res, next) => {
   let { coupon } = data;
   let productsQuantity = data.products;
   let planModel = new Plan(req.company._id);
-  planModel.getProduct()
+  planModel.getProducts()
   .then(products => {
     if (!products) {
       throw new ApiError(400, 'product_not_accessable');

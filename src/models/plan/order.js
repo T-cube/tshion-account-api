@@ -26,8 +26,10 @@ export default class Order {
     this.products = [];
     this.times = 0;
     this.original_sum = 0;
-    this.paid_amount = 0;
+    this.paid_sum = 0;
     this.coupon = undefined;
+    this.coupon_discount = undefined;
+    this.pay_discount = undefined;
     this.status = undefined;
     this.date_create = new Date();
     this.date_update = new Date();
@@ -81,8 +83,10 @@ export default class Order {
       products: this.products,
       times: this.times,
       original_sum: this.original_sum,
-      paid_amount: this.paid_amount,
+      paid_sum: this.paid_sum,
       coupon: this.coupon,
+      coupon_discount: this.coupon_discount,
+      pay_discount: this.pay_discount,
       status: this.status,
       date_create: this.date_create,
       date_update: this.date_update,
@@ -90,6 +94,7 @@ export default class Order {
   }
 
   canAddProducts() {
+    return true;
     let { products } = this;
     if (!products || !products.length) {
       return false;
@@ -121,19 +126,18 @@ export default class Order {
 
   isCouponAvaliable(coupon) {
     let { criteria, products } = coupon;
-    let order = this.order;
     if (coupon.products === null) {
-      if (order.paid_sum && _.isInt(criteria.total_fee) && order.paid_sum >= criteria.total_fee) {
+      if (this.paid_sum && _.isInt(criteria.total_fee) && this.paid_sum >= criteria.total_fee) {
         return true;
-      } else if (order.times && _.isInt(criteria.times) && order.times >= criteria.times) {
+      } else if (this.times && _.isInt(criteria.times) && this.times >= criteria.times) {
         return true;
       }
     } else {
       for (let product_no in products) {
-        let product = _.find(order.products, item => item.product_no == product_no);
+        let product = _.find(this.products, item => item.product_no == product_no);
         if (product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity) {
           return true;
-        } else if (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee) {
+        } else if (product && product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee) {
           return true;
         }
       }
@@ -170,11 +174,11 @@ export default class Order {
           fee: this.paid_sum
         }, discount);
         this.times += coupon_discount.times;
+        this.coupon_discount = coupon_discount; // TODO
       } else {
         let productIdListUseCoupon = _.filter(this.products, item => _.contains(products, item.product_no)).map(product => product._id);
         coupon_discount = this._getProductDiscountCommon(productIdListUseCoupon, criteria, discount, {coupon: this.coupon});
       }
-      this.coupon_discount = coupon_discount; // TODO
       return coupon_discount;
     });
   }
@@ -200,28 +204,28 @@ export default class Order {
           }
         ]
       })
-      .then(discountList => {
-        let discountInfo = [];
-        discountList.forEach(discountItem => {
-          discountInfo.push(this._getProductDiscountCommon([_.clone(product)], discountItem.criteria, discountItem.discount, {product_discount: discountItem._id}));
-        });
-        let discountResult = _.reduce(discountList, (memo, n) => {
-          return ((_.isInt(memo.fee) && memo.fee > n.fee) || ((_.isInt(memo.number) && memo.number > n.number))) ? memo : n;
-        }, {});
-        if (_.isInt(discountResult.fee)) {
-          product.sum -= discountResult.fee;
-          this.paid_sum -= discountResult.fee;
+      .sort({
+        'criteria.quantity': 1,
+        'criteria.total_fee': 1,
+      })
+      .limit(1)
+      .then(doc => {
+        let discountItem = doc[0];
+        let discountInfo = this._getProductDiscountCommon([_.clone(product)], discountItem.criteria, discountItem.discount, {product_discount: discountItem._id});
+        if (_.isInt(discountInfo.fee)) {
+          product.sum -= discountInfo.fee;
+          this.paid_sum -= discountInfo.fee;
         }
-        if (_.isInt(discountResult.number)) {
-          product.quantity += discountResult.number;
+        if (_.isInt(discountInfo.number)) {
+          product.quantity += discountInfo.number;
         }
-        product.discount = (product.discount || []).contact(discountResult);
-        return discountResult;
+        product.discount = (product.discount || []).contact(discountInfo);
+        return discountInfo;
       });
     });
   }
 
-  // discount_info like { coupon: this.coupon } or { product_discount: true }
+  // discount_info like { coupon: this.coupon } or { product_discount: product_discount_id }
   _getProductDiscountCommon(productIdList, criteria, discount, discount_info) {
     let discountSummary;
     for (let productId in productIdList) {
