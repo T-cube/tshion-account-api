@@ -32,7 +32,11 @@ api.get('/', (req, res, next) => {
   }).catch(next);
 });
 
+api.get('/keyword/:keyword', (req, res, next) => {
+  let keyword = req.params.keyword;
 
+  weather.uzzyQuery(keyword).then(docs => res.json(docs)).catch(next);
+});
 
 class WEATHER {
   constructor(options) {
@@ -45,6 +49,19 @@ class WEATHER {
 
     self.APPID = options.appid;
     self.SECRET = options.secret;
+  }
+
+  /**
+   * 模糊查询
+   * @param keyword String
+   */
+  uzzyQuery(keyword) {
+    return db.weather.area.find({
+      $or: [
+        { nameen: { $regex: keyword, $options: 'i' } },
+        { namecn: { $regex: keyword, $options: 'i' } }
+      ],
+    }).limit(10);
   }
 
   getTimeStamp() {
