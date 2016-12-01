@@ -21,7 +21,7 @@
     "tcli": "node ./app/cli/tcli \"$@\""
   },
   "dependencies": {
-    "@ym/redis": "^0.7.1",
+    "@ym/redis": "^0.8.1",
     "@ym/rpc": "^0.4.1",
     "app-module-path": "^1.0.6",
     "bcrypt": "^0.8.5",
@@ -79,6 +79,7 @@
     "babel-preset-stage-0": "^6.5.0",
     "babel-watch": "^2.0.3",
     "eslint": "^2.11.1",
+    "node-xlsx": "^0.7.4",
     "nodemon": "^1.9.2"
   }
 }

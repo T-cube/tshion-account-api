@@ -1,7 +1,8 @@
 import pmongo from 'pmongo';
 import config from 'config';
 
-export { ObjectId } from 'mongodb';
+export { ObjectId }
+from 'mongodb';
 
 const collections = [
   'announcement',
@@ -49,6 +50,7 @@ const collections = [
   'user.confirm.mobile',
   'user.guide',
   'guide',
+  'weather.area',
   'wechat.location',
   'wechat.oauth',
   'wechat.user',
