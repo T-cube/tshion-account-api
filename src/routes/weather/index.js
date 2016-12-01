@@ -35,7 +35,7 @@ api.get('/', (req, res, next) => {
 api.get('/keyword/:keyword', (req, res, next) => {
   let keyword = req.params.keyword;
 
-  weather.uzzyQuery(keyword).then(docs => res.json(docs)).catch(next);
+  weather.fuzzyQuery(keyword).then(docs => res.json(docs)).catch(next);
 });
 
 class WEATHER {
@@ -55,7 +55,7 @@ class WEATHER {
    * 模糊查询
    * @param keyword String
    */
-  uzzyQuery(keyword) {
+  fuzzyQuery(keyword) {
     return db.weather.area.find({
       $or: [
         { nameen: { $regex: keyword, $options: 'i' } },
