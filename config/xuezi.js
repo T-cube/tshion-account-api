@@ -16,10 +16,12 @@ module.exports = {
       reminding: 'M2le2CxHBAdHCHZkqP9JS410XZttonO9p05c9kenlLs',
     }
   },
-  showapi: {
-    weather: {
-      appid: '5653',
-      secret: 'f668fa7e626043b19b34a61743fcf271'
+  vendor: {
+    showapi: {
+      weather: {
+        appid: '5653',
+        secret: 'f668fa7e626043b19b34a61743fcf271'
+      }
     }
   }
 };

@@ -1,6 +1,7 @@
 import express from 'express';
 import request from 'request';
 import config from 'config';
+import escapeRegexp from 'escape-regexp';
 
 import crypto from 'crypto';
 import querystring from 'querystring';
@@ -25,14 +26,18 @@ api.get('/', (req, res, next) => {
   ip = ip.replace(/\:\:f+\:/, '');
 
   // testip
-  ip = '120.36.191.13';
+  // ip = '120.36.191.13';
 
   weather.getWeatherByIp(ip, req.model('redis')).then(result => {
     res.send(result);
   }).catch(next);
 });
 
+api.get('/keyword/:keyword', (req, res, next) => {
+  let keyword = req.params.keyword;
 
+  weather.fuzzyQuery(keyword).then(docs => res.json(docs)).catch(next);
+});
 
 class WEATHER {
   constructor(options) {
@@ -45,6 +50,19 @@ class WEATHER {
 
     self.APPID = options.appid;
     self.SECRET = options.secret;
+  }
+
+  /**
+   * 模糊查询
+   * @param keyword String
+   */
+  fuzzyQuery(keyword) {
+    return db.weather.area.find({
+      $or: [
+        { nameen: { $regex: escapeRegexp(keyword), $options: 'i' } },
+        { namecn: { $regex: escapeRegexp(keyword), $options: 'i' } }
+      ],
+    }).limit(10);
   }
 
   getTimeStamp() {
@@ -135,4 +153,4 @@ class WEATHER {
   }
 }
 
-var weather = new WEATHER(config.get('showapi.weather'));
+var weather = new WEATHER(config.get('vendor.showapi.weather'));
