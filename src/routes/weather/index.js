@@ -25,7 +25,7 @@ api.get('/', (req, res, next) => {
   ip = ip.replace(/\:\:f+\:/, '');
 
   // testip
-  ip = '120.36.191.13';
+  // ip = '120.36.191.13';
 
   weather.getWeatherByIp(ip, req.model('redis')).then(result => {
     res.send(result);
@@ -135,4 +135,4 @@ class WEATHER {
   }
 }
 
-var weather = new WEATHER(config.get('showapi.weather'));
+var weather = new WEATHER(config.get('vendor.showapi.weather'));
