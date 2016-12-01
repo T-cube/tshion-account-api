@@ -7,7 +7,8 @@ import fs from 'fs';
 
 import db from 'lib/database';
 
-const workSheetsFromBuffer = xlsx.parse(fs.readFileSync(`${__dirname}/weather_areaid.xlsx`));
+let dir = `${__dirname}/../../design/data/weather_areaid.xlsx`;
+const workSheetsFromBuffer = xlsx.parse(fs.readFileSync(dir));
 
 const data = workSheetsFromBuffer[0].data;
 
@@ -25,9 +26,15 @@ let count = arr.length;
 
 
 function checkCount() {
+  console.log(count);
   count--;
   count == 0 && (console.log('finished'), process.exit());
 }
+
+
+fs.writeFileSync(dir.replace(/\.xlsx$/,'.json'), JSON.stringify(arr).replace(/\]\,/g, '],\n'));
+
+
 arr.forEach(item => {
   db.weather.area.findOne({ areaid: item.areaid }).then(doc => {
     if (doc) { console.log(doc); return checkCount(); }
@@ -43,8 +50,4 @@ arr.forEach(item => {
     checkCount();
   });
 });
-// fs.writeFileSync(`${__dirname}/weather_areaid2.json`,JSON.stringify(data).replace(/\]\,/g,'],\n'));
 
-
-
-// console.log(arr);
