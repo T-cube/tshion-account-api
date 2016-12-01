@@ -1,6 +1,7 @@
 import express from 'express';
 import request from 'request';
 import config from 'config';
+import escapeRegexp from 'escape-regexp';
 
 import crypto from 'crypto';
 import querystring from 'querystring';
@@ -58,8 +59,8 @@ class WEATHER {
   fuzzyQuery(keyword) {
     return db.weather.area.find({
       $or: [
-        { nameen: { $regex: keyword, $options: 'i' } },
-        { namecn: { $regex: keyword, $options: 'i' } }
+        { nameen: { $regex: escapeRegexp(keyword), $options: 'i' } },
+        { namecn: { $regex: escapeRegexp(keyword), $options: 'i' } }
       ],
     }).limit(10);
   }
