@@ -51,10 +51,11 @@ const collections = [
   'guide',
   'wechat.location',
   'wechat.oauth',
-  'wechat.scan',
-  'wechat.from',
   'wechat.user',
   'wiki',
+  'ids',                      // id 自增
+  'qrcode',
+  'qrcode.scan',
 ];
 
 const dbConfig = config.get('database');

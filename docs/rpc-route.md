@@ -100,3 +100,50 @@ QUERY
   pagesize: <Int>,
 }
 ```
+
+
+## qrcode
+
+### /qrcode/list
+
+QUERY
+
+```javascript
+{
+  page: <Int>,
+  pagesize: <Int>,
+}
+```
+
+
+### /qrcode/create
+
+QUERY
+
+```javascript
+{
+  name: <String>,
+  description: <String>,
+}
+```
+
+
+### /qrcode/detail
+
+QUERY
+```javascript
+{
+  _id: <String>,
+}
+```
+
+### /qrcode/detail/customers
+
+QUERY
+```javascript
+{
+  _id: <String>, // qrcode id
+  page: <Int>,
+  pagesize: <Int>,
+}
+```

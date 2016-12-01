@@ -337,3 +337,17 @@ export function strToReg(source, ext) {
   }
   return new RegExp(escapeRegexp(source), ext);
 }
+
+export function incId(tb) {
+  return db.ids.findAndModify({
+    update: {
+      $inc: {id: 1}
+    },
+    query: {
+      name: tb
+    },
+    new: true,
+    upsert:true,
+  })
+  .then(doc => doc.value && doc.value.id);
+}
