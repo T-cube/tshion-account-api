@@ -35,3 +35,11 @@ public/cdn/upload
 
 # temp
 temp/*
+
+
+#mac dstore
+.DS_Store
+
+#yarn
+.yarn.*
+yarn-error.*

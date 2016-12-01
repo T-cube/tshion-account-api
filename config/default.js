@@ -10,8 +10,8 @@ module.exports = {
     protocol: 'http',
     hostname: '192.168.1.18',
     port: 2000,
-    appsecret: '123456',
-    appid: 'xuezi'
+    appsecret: 'gvldWZTnQ8BIAReK',
+    appid: 'tlf-api'
   },
   database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
