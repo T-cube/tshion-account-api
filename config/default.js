@@ -129,8 +129,10 @@ module.exports = {
       prefix: 'tlf_',
     },
     showapi: {
-      apiid: 'tlifang_test',
-      apikey: '148760960ae44ca29877efbfde7e7551',
+      weather: {
+        appid: '5653',
+        secret: 'f668fa7e626043b19b34a61743fcf271'
+      },
     },
     officeweb365: {
       siteId: '10390',
@@ -219,6 +221,7 @@ module.exports = {
       REQUEST_ACCEPT: 'onWa4TDALZMy7ZaSpIUXneNzKlUed1UQNL_lq5eZdPA',
       SCHEDULE_REMIND: 'N6tGBD_tAvCDcgGIlgISZ9_3msM6TX5miFhooOXjMRE',
       ATTENDANCE: 'onRwwhajeVIHWW8wp6GlMajKBnmx3frvgni-x5pA5F4',
-    }
+    },
+    scanurl: 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=gQEH8DoAAAAAAAAAASxodHRwOi8vd2VpeGluLnFxLmNvbS9xL1Rqc2hsQkxtVHRzMzRWMTVIUmU4AAIEcmLGVwMEAAAAAA==', // id = 0 的二维码 非正常渠道
   }
 };

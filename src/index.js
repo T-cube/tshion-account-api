@@ -85,7 +85,9 @@ app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
 app.loadModel('user-activity', UserActivity);
 
-initRPC(config.get('rpc')).then(cfg => {
+let _loader = {};
+app.bindLoader(_loader);
+initRPC(config.get('rpc'), _loader).then(cfg => {
   console.log(`rpc connected to ${cfg.protocol}://${cfg.hostname}:${cfg.port}`);
 }).catch(console.error);
 

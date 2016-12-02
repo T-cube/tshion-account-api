@@ -49,10 +49,9 @@ const collections = [
   'user.confirm.mobile',
   'user.guide',
   'guide',
+  'weather.area',
   'wechat.location',
   'wechat.oauth',
-  'wechat.scan',
-  'wechat.from',
   'wechat.user',
   'wiki',
 
@@ -66,6 +65,10 @@ const collections = [
   'payment.discount',
   'company.coupon',
   'user.realname',
+
+  'ids',                      // id 自增
+  'qrcode',
+  'qrcode.scan',
 ];
 
 const dbConfig = config.get('database');

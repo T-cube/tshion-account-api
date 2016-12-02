@@ -32,6 +32,15 @@ runtime
 
 # User upload files
 public/cdn/upload
+public/cdn/resource/qrcode
 
 # temp
 temp/*
+
+
+#mac dstore
+.DS_Store
+
+#yarn
+.yarn.*
+yarn-error.*

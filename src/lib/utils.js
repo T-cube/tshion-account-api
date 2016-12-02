@@ -341,3 +341,17 @@ export function strToReg(source, ext) {
 export function formatAmount(amount) {
   return Math.round(amount) / 100;
 }
+
+export function incId(tb) {
+  return db.ids.findAndModify({
+    update: {
+      $inc: {id: 1}
+    },
+    query: {
+      name: tb
+    },
+    new: true,
+    upsert:true,
+  })
+  .then(doc => doc.value && doc.value.id);
+}

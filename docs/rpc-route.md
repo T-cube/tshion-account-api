@@ -117,14 +117,6 @@ QUERY
 
 ### /plan/auth/detail
 
-QUERY
-
-```javascript
-{
-  auth_id: <String>,
-}
-```
-
 ### /plan/auth/audit
 
 QUERY
@@ -135,5 +127,42 @@ QUERY
   status: <String>,  // accepted rejected
   comment: <String>,
   operator_id,: <String>
+}
+
+
+## qrcode
+
+### /qrcode/list
+
+
+### /qrcode/create
+
+QUERY
+
+```javascript
+{
+  name: <String>,
+  description: <String>,
+}
+```
+
+
+### /qrcode/detail
+
+QUERY
+```javascript
+{
+  _id: <String>,
+}
+```
+
+### /qrcode/detail/customers
+
+QUERY
+```javascript
+{
+  _id: <String>, // qrcode id
+  page: <Int>,
+  pagesize: <Int>,
 }
 ```
