@@ -16,7 +16,10 @@ export default class Auth {
     data.user_id = user_id;
     data.date_apply = new Date();
     data.status = 'posted';
-    return db.plan.auth.insert(data);
+    return this.getActiveAuth()
+    .then(doc => {
+      return doc || db.plan.auth.insert(data);
+    });
   }
 
   update(data) {
@@ -38,7 +41,7 @@ export default class Auth {
     return db.plan.auth.findOne({
       company_id,
       status: {
-        $in: ['posted', 'reposted', 'accepted']
+        $ne: 'expired'
       }
     }, {
       plan: 1,
@@ -75,7 +78,7 @@ export default class Auth {
     .then(authInfo => authInfo || {plan: 'free'});
   }
 
-  cancel() {
+  updateStatus(status) {
     let { company_id, user_id } = this;
     return db.plan.auth.update({
       company_id,
@@ -83,9 +86,7 @@ export default class Auth {
         $in: ['posted', 'reposted']
       }
     }, {
-      $set: {
-        status: 'cancelled'
-      }
+      $set: {status}
     });
   }
 

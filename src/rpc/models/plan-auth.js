@@ -10,7 +10,6 @@ export default class PlanAuthModel extends Model {
     super(props);
   }
 
-
   fetchList(criteria, query) {
     let { page, pagesize } = this.getPageInfo(query);
     return this.db.plan.auth.find(criteria, {
@@ -40,6 +39,9 @@ export default class PlanAuthModel extends Model {
   fetchDetail(_id) {
     return this.db.plan.auth.findOne({_id})
     .then(doc => {
+      if (!doc) {
+        return null;
+      }
       doc.user = doc.user_id;
       doc.company = doc.company_id;
       delete doc.user_id;

@@ -8,7 +8,7 @@ export default class Model {
     this.config = config;
   }
 
-  getPageInfo(query) {
+  getPageInfo(query = {}) {
     let { page, pagesize } = query;
     page = page >= 0 ? parseInt(page) : 0;
     pagesize = parseInt((pagesize <= config.get('view.maxListNum') && pagesize > 0)

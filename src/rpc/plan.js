@@ -20,7 +20,7 @@ export default (socket, prefix) => {
       criteria['status'] = status;
     }
     let { page, pagesize } = planAuthModel.getPageInfo(query);
-    return planAuthModel.page({criteria, page, pagesize});
+    return planAuthModel.page(criteria, {page, pagesize});
   });
 
   route('/auth/detail', (query) => {

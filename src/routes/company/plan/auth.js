@@ -21,9 +21,13 @@ api.put('/',
 handelUpload(true),
 createOrUpdateAuth(true));
 
-api.put('/cancel', (req, res, next) => {
+api.put('/status', (req, res, next) => {
+  let { status } = req.dody;
+  if (status != 'canceled' || status != 'expired') {
+    throw new ApiError(400, 'invalid_status');
+  }
   let auth = new Auth(req.company._id);
-  auth.cancel()
+  auth.updateStatus(status)
   .then(() => res.json({}))
   .catch(next);
 });
