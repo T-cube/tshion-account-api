@@ -5,6 +5,7 @@ import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
 import { mapObjectIdToData } from 'lib/utils';
+import { validate } from './schema';
 
 export default (socket, prefix) => {
 
@@ -19,7 +20,16 @@ export default (socket, prefix) => {
 
   route('/create', (query) => {
     let { name, description } = query;
-    return qrcodeModel.create({name, description});
+    let data = { name, description };
+    validate('qrcode', data);
+    return qrcodeModel.create(data);
+  });
+
+  route('/update', (query) => {
+    let { _id, name, description } = query;
+    let data = { _id, name, description };
+    validate('qrcode', data);
+    return qrcodeModel.update(data);
   });
 
   route('/detail', (query) => {

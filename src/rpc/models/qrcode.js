@@ -45,6 +45,15 @@ export default class QrcodeModel extends Model {
     });
   }
 
+  update({_id, name, description}) {
+    return this.db.qrcode.update({_id}, {
+      $set: {
+        name,
+        description,
+      }
+    });
+  }
+
   requestWechatImg(id) {
     return new Promise((resolve, reject) => {
       try {
@@ -197,7 +206,7 @@ export default class QrcodeModel extends Model {
           , ctx = canvas.getContext('2d');
 
           try {
-            ctx.drawImage(img, 0, 0, imgSize, imgSize);   // will fire error
+            ctx.drawImage(img, 0, 0, imgSize, imgSize);   // will fire error in my windows pc
           } catch (e) {
             console.log('canvas draw image error');
             console.error(e);
@@ -241,7 +250,7 @@ export default class QrcodeModel extends Model {
 
   }
 
-  // not use 
+  // not use
   createQrImg(url, filename) {
 
     let filepath = this.basePath + 'resource/qrcode/' + filename;

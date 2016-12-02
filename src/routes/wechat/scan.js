@@ -4,7 +4,6 @@ import config from 'config';
 import db from 'lib/database';
 import Promise from 'bluebird';
 
-import { validate } from './schema.js';
 import { mapObjectIdToData, getClientIp } from 'lib/utils';
 
 let api = express.Router();
