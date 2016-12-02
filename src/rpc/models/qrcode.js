@@ -176,6 +176,9 @@ export default class QrcodeModel extends Model {
   }
 
   createQrWhenNotExists(wechat_url, filename) {
+    if (!wechat_url) {
+      return Promise.resolve();
+    }
     let filepath = this.basePath + 'resource/qrcode/' + filename;
     return fileExists(filepath)
     .then(isExist => {
