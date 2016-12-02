@@ -44,6 +44,9 @@ export default class Order {
   }
 
   setProducts(products) {
+    products.forEach(product => {
+      product.sum = product.original_price * product.quantity;
+    });
     this.products = products;
   }
 
@@ -146,7 +149,8 @@ export default class Order {
   }
 
   getDiscount() {
-    return this.getProductDiscount().then(() => {
+    return this.getProductsDiscount()
+    .then(() => {
       return this.getCouponDiscount();
     })
     .then(() => {
@@ -160,7 +164,7 @@ export default class Order {
 
   getCouponDiscount() {
     if (!this.coupon) {
-      return Promise.resolve(undefined);
+      return Promise.resolve();
     }
     return new Coupon(this.company_id).getCoupon(this.coupon).then(coupon => {
       if (!coupon || !this.isCouponAvaliable(coupon)) {
@@ -183,7 +187,7 @@ export default class Order {
     });
   }
 
-  getProductDiscount() {
+  getProductsDiscount() {
     return Promise.map(this.products, product => {
       let { discount, quantity, sum } = product;
       if (!discount || !discount.length) {
@@ -211,6 +215,9 @@ export default class Order {
       .limit(1)
       .then(doc => {
         let discountItem = doc[0];
+        if (!discountItem) {
+          return null;
+        }
         let discountInfo = this._getProductDiscountCommon([_.clone(product)], discountItem.criteria, discountItem.discount, {product_discount: discountItem._id});
         if (_.isInt(discountInfo.fee)) {
           product.sum -= discountInfo.fee;
@@ -223,6 +230,22 @@ export default class Order {
         return discountInfo;
       });
     });
+  }
+
+  _getProductDiscount(product, discountInfo) {
+    let { criteria, discount } = discountInfo;
+    if ((product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity)
+      || (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee)) {
+      let itemDiscount = Discount.getDiscount(product, discount);
+      if (_.isInt(itemDiscount.fee)) {
+        product.sum -= itemDiscount.fee;
+      }
+      if (_.isInt(itemDiscount.number)) {
+        product.quantity += itemDiscount.number;
+      }
+      product.discount = (product.discount || []).contact(itemDiscount);
+    }
+    return product;
   }
 
   // discount_info like { coupon: this.coupon } or { product_discount: product_discount_id }

@@ -68,11 +68,11 @@ export default class Auth {
     let { company_id } = this;
     return db.plan.auth.findOne({
       company_id,
-      status: 'accepted'
-    }, {
-      plan: 1,
+      status: {
+        $nin: ['expired']
+      }
     })
-    .then(authInfo => (authInfo && authInfo.plan) || 'free');
+    .then(authInfo => authInfo || {plan: 'free'});
   }
 
   cancel() {

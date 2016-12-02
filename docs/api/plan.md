@@ -15,21 +15,37 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 ```
 
 
-### GET /
+### GET /item
+
+OUTPUT
+
+```javascript
+[{
+  name: <String>,
+  type: <String>, // free pro ent
+  description: <String>,
+  store: <Int>,
+  member: <Int>,
+  products: [
+    _id: ObjectId
+    title: String,
+    plan: String,
+    ...
+  ],
+  ext_info: <String>,
+}...]
+```
+
+### GET /current
+
+OUTPUT
 
 ```javascript
 {
-  current: <String>, // auth type
-  list: [{
-    name: <String>,
-    type: <String>, // free pro ent
-    description: <String>,
-    store: <Int>,
-    member: <Int>,
-    fee: <Currency>,
-    fee_per_member: <Currency>,
-    ext_info: <String>,
-  }...]
+  _id: ObjectId,
+  plan: String,
+  status: String,
+  ...
 }
 ```
 

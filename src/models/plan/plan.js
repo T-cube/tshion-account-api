@@ -91,7 +91,7 @@ export default class Plan {
           description: '免费团队，可使用T立方的基本功能',
           store: 1000000000,
           max_member: 10,
-          products: _.find(products, product => product.plan == 'free'),
+          products: _.filter(products, product => product.plan == 'free'),
         },
         {
           name: '专业版',
@@ -99,7 +99,7 @@ export default class Plan {
           description: '',
           store: 10000000000,
           max_member: 50,
-          products: _.find(products, product => product.plan == 'pro'),
+          products: _.filter(products, product => product.plan == 'pro'),
           ext_info: '专业版',
         },
         {
@@ -108,7 +108,7 @@ export default class Plan {
           description: '',
           store: 10000000000,
           max_member: 100,
-          products: _.find(products, product => product.plan == 'ent'),
+          products: _.filter(products, product => product.plan == 'ent'),
           ext_info: '企业版',
         },
       ];

@@ -18,4 +18,8 @@ export default class Product {
     });
   }
 
+  static getAll() {
+    return db.product.find({});
+  }
+
 }
