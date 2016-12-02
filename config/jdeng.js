@@ -21,7 +21,7 @@ module.exports = {
   },
   rpc: {
     protocol: 'http',
-    hostname: '127.0.0.1',
+    hostname: '192.168.1.22',
     port: 2002,
     appsecret: 'gvldWZTnQ8BIAReK',
     appid: 'tlf-api'
