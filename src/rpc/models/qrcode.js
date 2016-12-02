@@ -1,9 +1,10 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
 import Canvas from 'canvas';
+import config from 'config';
+import http from 'http';
 import Qr from 'qr-image';
 import fs from 'fs';
-import config from 'config';
 
 import { BASE_PATH } from 'lib/constants';
 import { mapObjectIdToData, fileExists, incId } from 'lib/utils';
@@ -13,11 +14,11 @@ export default class QrcodeModel extends Model {
 
   constructor() {
     super();
-    this.qrBasePath = BASE_PATH + config.get('resource.path') + 'qrcode/';
+    this.basePath = BASE_PATH + 'public/cdn/';
   }
 
-  getApiScanUrl(id) {
-    return config.get('apiUrl') + 'api/wechat/scan/' + id;
+  getApiScanUrl(filename) {
+    return config.get('apiUrl') + 'cdn/resource/qrcode/' + filename;
   }
 
   create({name, description}) {
@@ -25,9 +26,9 @@ export default class QrcodeModel extends Model {
       return this.requestWechatImg(id)
       .then(doc => {
         let { wechat_url, ticket } = doc;
-        let url = this.getApiScanUrl(id);
         let filename = (+new Date()) + '-' + id + '.png';
-        return this.createQrImg(url, filename)
+        let url = this.getApiScanUrl(filename);
+        return this.logoQrcode(wechat_url, filename)
         .then(() => {
           let data = {
             _id: id,
@@ -86,7 +87,7 @@ export default class QrcodeModel extends Model {
     .limit(pagesize)
     .then(list => {
       return Promise.map(list, item => {
-        return this.createQrWhenNotExists(item.url, item.filename).then(() => item);
+        return this.createQrWhenNotExists(item.wechat_url, item.filename).then(() => item);
       });
     })
     .then(scanList => {
@@ -115,7 +116,7 @@ export default class QrcodeModel extends Model {
       if (!item) {
         return null;
       }
-      return this.createQrWhenNotExists(item.url, item.filename).then(() => {
+      return this.createQrWhenNotExists(item.wechat_url, item.filename).then(() => {
         return this.db.qrcode.scan.aggregate([
           {$match: {_id: item._id}},
           {$unwind: '$key'},
@@ -165,23 +166,87 @@ export default class QrcodeModel extends Model {
     .then(() => data);
   }
 
-  createQrWhenNotExists(url, filename) {
-    let filepath = this.qrBasePath + filename;
+  createQrWhenNotExists(wechat_url, filename) {
+    let filepath = this.basePath + 'resource/qrcode/' + filename;
     return fileExists(filepath)
     .then(isExist => {
       if (isExist) {
         return;
       }
-      return this.createQrImg(url, filename);
+      return this.logoQrcode(wechat_url, filename);
     });
   }
 
-  createQrImg(url, filename) {
+  logoQrcode(wechat_url, filename) {
 
-    let filepath = this.qrBasePath + filename;
+    let filepath = this.basePath + 'resource/qrcode/' + filename;
 
     return new Promise((resolve, reject) => {
 
+      http.get(wechat_url.replace('https', 'http'), (res) => {
+        let qrData = [];
+        res.on('data', (chunk) => {
+          qrData.push(new Buffer(chunk));
+        });
+        res.on('end', () => {
+          let qrBuffer = Buffer.concat(qrData);
+          let img = new Canvas.Image;
+          img.src = qrBuffer;
+          let imgSize = (img.width && img.width) > 512 ? 512 : img.width;
+          let canvas = new Canvas(imgSize, imgSize)
+          , ctx = canvas.getContext('2d');
+
+          try {
+            ctx.drawImage(img, 0, 0, imgSize, imgSize);   // will fire error
+          } catch (e) {
+            console.log('canvas draw image error');
+            console.error(e);
+            fs.writeFile(filepath, qrBuffer, function(err) {
+              if (err) {
+                console.log('write wechat qrcode error');
+                console.error(err);
+              }
+            });
+            return resolve(filepath);
+          }
+
+          fs.readFile(this.basePath + 'common/img/qrcode-logo.png', (err, squid) => {
+            if (err) {
+              reject(err);
+            }
+            let logo = new Canvas.Image;
+            logo.src = squid;
+
+            let drawLogoSize = (imgSize / 5) < logo.width ? (imgSize / 5) : logo.width;
+            let drawLogoPos = (imgSize - drawLogoSize) / 2;
+
+            ctx.drawImage(logo, drawLogoPos, drawLogoPos, drawLogoSize, drawLogoSize);
+
+            let out = fs.createWriteStream(filepath)
+            , stream = canvas.pngStream();
+            stream.on('data', (chunk) => {
+              out.write(chunk);
+            });
+            stream.on('end', () => {
+              resolve(filepath);
+            });
+            stream.on('err', () => {
+              reject(err);
+            });
+          });
+        });
+      });
+
+    });
+
+  }
+
+  // not use 
+  createQrImg(url, filename) {
+
+    let filepath = this.basePath + 'resource/qrcode/' + filename;
+
+    return new Promise((resolve, reject) => {
       let qr = Qr.imageSync(url, {
         type: 'png',
         size: 16,
@@ -194,7 +259,7 @@ export default class QrcodeModel extends Model {
       ctx.drawImage(img, 0, 0, imgSize, imgSize);
 
 
-      fs.readFile(this.qrBasePath + 'qrcode-logo.png', (err, squid) => {
+      fs.readFile(this.basePath + 'common/img/qrcode-logo.png', (err, squid) => {
         if (err) {
           reject(err);
         }
@@ -220,6 +285,5 @@ export default class QrcodeModel extends Model {
       });
     });
   }
-
 
 }

@@ -201,9 +201,6 @@ module.exports = {
   download: {
     tokenExpires: 30 * 60 * 1000, // half a hour
   },
-  resource: {
-    path: 'public/resource/'
-  },
   // 测试账号T立方Oa的配置
   wechat: {
     token: 'wechat',

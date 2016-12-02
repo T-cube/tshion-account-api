@@ -11,28 +11,28 @@ let api = express.Router();
 export default api;
 
 
-api.get('/:qrcodeId', (req, res, next) => {
-  let graceUrl = config.get('wechat.scanurl');
-  let qrcodeId = parseInt(req.params.qrcodeId);
-  if (!qrcodeId) {
-    return res.redirect(graceUrl);
-  }
-  db.qrcode.findOne({
-    _id: qrcodeId
-  })
-  .then(qrcodeInfo => {
-    if (!qrcodeInfo) {
-      return res.redirect(graceUrl);
-    }
-    return db.qrcode.scan.insert({
-      qrcode_id: qrcodeId,
-      ip: getClientIp(req),
-      date: new Date(),
-    })
-    .then(() => res.redirect(qrcodeInfo.wechat_url));
-  })
-  .catch(next);
-});
+// api.get('/:qrcodeId', (req, res, next) => {
+//   let graceUrl = config.get('wechat.scanurl');
+//   let qrcodeId = parseInt(req.params.qrcodeId);
+//   if (!qrcodeId) {
+//     return res.redirect(graceUrl);
+//   }
+//   db.qrcode.findOne({
+//     _id: qrcodeId
+//   })
+//   .then(qrcodeInfo => {
+//     if (!qrcodeInfo) {
+//       return res.redirect(graceUrl);
+//     }
+//     return db.qrcode.scan.insert({
+//       qrcode_id: qrcodeId,
+//       ip: getClientIp(req),
+//       date: new Date(),
+//     })
+//     .then(() => res.redirect(qrcodeInfo.wechat_url));
+//   })
+//   .catch(next);
+// });
 
 
 // api.delete('/:scanId', (req, res, next) => {
