@@ -175,33 +175,27 @@ export default class Order {
 
       let coupon_discount;
       let { criteria, products, discount } = coupon;
-      if (coupon.products === null && discount.type == 'times') {  // for order all products
+      if (coupon.products === null) {  // for order all products
         coupon_discount = Discount.getDiscount({
-          fee: this.paid_sum
+          total_fee: this.paid_sum,
+          times: this.times
         }, discount);
         this.times += coupon_discount.times;
-        this.coupon_discount = coupon_discount; // TODO
+        this.coupon_discount = {
+          order: 1,
+          discount: coupon_discount
+        };
       } else {
-        let productIdListUseCoupon = _.filter(this.products, item => _.contains(products, item.product_no)).map(product => product._id);
-        coupon_discount = this._getProductDiscountCommon(productIdListUseCoupon, criteria, discount, {coupon: this.coupon});
+        let coupon_discount = _.filter(this.products, item => _.contains(products, item.product_no)).map(product => {
+          let discountPerProduct = Discount._getProductDiscount(product);
+          this._persistDiscount(discountPerProduct);
+          return {
+            product: product._id,
+            discount: discountPerProduct
+          };
+        });
+        this.coupon_discount = coupon_discount.filter(i => i.discount);
       }
-      this.coupon_discount = coupon_discount;
-      return coupon_discount;
-
-      // let coupon_discount;
-      // let { criteria, products, discount } = coupon;
-      // if (coupon.products === null && discount.type == 'times') {  // for order all products
-      //   coupon_discount = Discount.getDiscount({
-      //     fee: this.paid_sum
-      //   }, discount);
-      //   this.times += coupon_discount.times;
-      //   this.coupon_discount = coupon_discount; // TODO
-      // } else {
-      //   let productIdListUseCoupon = _.filter(this.products, item => _.contains(products, item.product_no)).map(product => product._id);
-      //   coupon_discount = this._getProductDiscountCommon(productIdListUseCoupon, criteria, discount, {coupon: this.coupon});
-      // }
-      // this.coupon_discount = coupon_discount;
-      // return coupon_discount;
     });
   }
 
@@ -232,67 +226,28 @@ export default class Order {
       })
       .limit(1)
       .then(doc => {
+        if (!doc.length) {
+          return null;
+        }
         let discountItem = doc[0];
-        if (!discountItem) {
-          return null;
-        }
-        let discountInfo = this._getProductDiscountCommon([_.clone(product)], discountItem.criteria, discountItem.discount, {product_discount: discountItem._id});
-        if (!discountInfo) {
-          return null;
-        }
-        if (_.isNumber(discountInfo.fee)) {
-          product.sum -= discountInfo.fee;
-          this.paid_sum -= discountInfo.fee;
-        }
-        if (_.isNumber(discountInfo.number)) {
-          product.quantity += discountInfo.number;
-        }
-        product.discount = (product.discount || []).contact(discountInfo);
-        return discountInfo;
+        let discountInfo = this._getProductDiscount(product, discountItem);
+        this._persistDiscount(discountInfo);
       });
     });
   }
 
-  _getProductDiscount(product, discountInfo) {
-    let { criteria, discount } = discountInfo;
-    if ((product && _.isNumber(criteria.quantity) && product.quantity >= criteria.quantity)
-      || (product.sum && _.isNumber(criteria.total_fee) && product.sum >= criteria.total_fee)) {
-      let itemDiscount = Discount.getDiscount(product, discount);
-      if (_.isNumber(itemDiscount.fee)) {
-        product.sum -= itemDiscount.fee;
-      }
-      if (_.isNumber(itemDiscount.number)) {
-        product.quantity += itemDiscount.number;
-      }
-      product.discount = (product.discount || []).contact(itemDiscount);
-    }
-    return product;
+  _persistDiscount() {
+
   }
 
-  // discount_info like { coupon: this.coupon } or { product_discount: product_discount_id }
-  _getProductDiscountCommon(productIdList, criteria, discount, discount_info) {
-    let discountSummary;
-    for (let productId of productIdList) {
-      let product = _.find(this.products, item => item._id.equals(productId));
-
-      if (product && ((_.isNumber(criteria.quantity) && product.quantity >= criteria.quantity)
-        || (product.sum && _.isNumber(criteria.total_fee) && product.sum >= criteria.total_fee))) {
-        let itemDiscount = Discount.getDiscount({fee: product.sum}, discount);
-        if (_.isNumber(itemDiscount.fee)) {
-          product.sum -= itemDiscount.fee;
-          discountSummary = discountSummary ? {
-            type: discountSummary.type,
-            fee: discountSummary.fee + itemDiscount.fee
-          } : itemDiscount;
-        }
-        if (_.isNumber(itemDiscount.number)) {
-          product.quantity += itemDiscount.number;
-          discountSummary = { type: itemDiscount.type };
-        }
-        product.discount = (product.discount || []).concat(_.extend(itemDiscount, discount_info));
-      }
+  _getProductDiscount(product, discountItem) {
+    let { criteria, discount } = discountItem;
+    let { quantity, sum } = product;
+    let origin = {quantity, total_fee: sum};
+    if (Discount.isMatch(origin, criteria)) {
+      return Discount.getDiscount(origin, discount);
     }
-    return discountSummary;
+    return null;
   }
 
   getPayDiscount() {

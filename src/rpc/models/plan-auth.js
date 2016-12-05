@@ -38,6 +38,11 @@ export default class PlanAuthModel extends Model {
 
   fetchDetail(_id) {
     return this.db.plan.auth.findOne({_id})
+    .then(doc => mapObjectIdToData(doc, [
+      ['company', 'name,logo', 'company_id'],
+      ['user', 'name,avatar', 'user_id'],
+      ['user.realname', '*', 'info.contact'],
+    ]))
     .then(doc => {
       if (!doc) {
         return null;

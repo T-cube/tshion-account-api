@@ -36,4 +36,10 @@ export default class Discount {
     }
   }
 
+  static isMatch(origin, criteria) {
+    let { quantity, total_fee, times } = criteria;
+    let result = !_.isEmpty(_.filter({quantity, total_fee, times}, (v, k) => _.isNumber(v) && origin[k] >= v));
+    return result;
+  }
+
 }

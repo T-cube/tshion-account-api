@@ -29,7 +29,7 @@ export default (socket, prefix) => {
   route('/auth/detail', (query) => {
     let { auth_id } = query;
     if (!auth_id || !ObjectId.isValid(auth_id)) {
-      throw new ApiError(400);
+      throw new ApiError(400, 'invalid auth_id');
     }
     return planAuthModel.fetchDetail(ObjectId(auth_id))
     .then(info => {
