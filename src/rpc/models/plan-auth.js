@@ -10,8 +10,8 @@ export default class PlanAuthModel extends Model {
     super(props);
   }
 
-  fetchList(criteria, query) {
-    let { page, pagesize } = this.getPageInfo(query);
+  fetchList(props) {
+    let { page, pagesize, criteria } = props;
     return this.db.plan.auth.find(criteria, {
       info: 0
     })

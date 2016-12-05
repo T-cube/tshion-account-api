@@ -22,19 +22,8 @@ export default (socket, prefix) => {
         $regex: strToReg(keyword, 'i')
       };
     }
-    return Promise.all([
-      companyModel.count(criteria),
-      companyModel.fetchList(criteria, query)
-    ])
-    .then(doc => {
-      let [totalRows, list] = doc;
-      return {
-        list,
-        page,
-        pagesize,
-        totalRows
-      };
-    });
+    let { page, pagesize } = companyModel.getPageInfo(query);
+    return companyModel.page({criteria, page, pagesize});
   });
 
   route('/detail', (query) => {

@@ -167,6 +167,7 @@ export default class Order {
       return Promise.resolve();
     }
     return new Coupon(this.company_id).getCoupon(this.coupon).then(coupon => {
+      console.log(this.isCouponAvaliable(coupon));
       if (!coupon || !this.isCouponAvaliable(coupon)) {
         this.coupon = undefined;
         return undefined;
