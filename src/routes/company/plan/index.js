@@ -11,14 +11,14 @@ let api = express.Router();
 export default api;
 
 
-api.get('/item', (req, res, next) => {
+api.get('/', (req, res, next) => {
   Plan.list()
   .then(plan => res.json(plan))
   .catch(next);
 });
 
 api.get('/current', (req, res, next) => {
-  new Auth(req.company._id).getAuthPlan()
+  new Plan(req.company._id).getCurrent()
   .then(plan => res.json(plan))
   .catch(next);
 });
@@ -30,7 +30,7 @@ api.get('/current', (req, res, next) => {
 //   let user_id = req.user._id;
 //   let date_start = new Date();
 //   let auth = new Auth(company_id);
-//   auth.getAuthPlan().thne(authedPlan => {
+//   auth.getAuthPlan().then(authedPlan => {
 //     if (authedPlan != plan) {
 //       throw new ApiError(400, 'invalid_team_plan');
 //     }

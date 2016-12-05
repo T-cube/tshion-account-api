@@ -6,34 +6,29 @@ export default class Discount {
 
   }
 
-  static getDiscount(origin, discount) {
-    let { type } = discount;
-    let { fee } = origin;
-    if (type == 'rate' && _.isNumber(discount.rate)) {
-      return {
-        type,
-        fee: (fee * discount.rate) || 0
-      };
-    } else if (type == 'amount' && _.isInt(discount.amount)) {
-      return {
-        type,
-        fee: discount.amount || 0
-      };
-    } else if (type == 'number' && _.isInt(discount.number)) {
-      return {
-        type,
-        number: discount.number || 0
-      };
-    } else if (type == 'times' && _.isNumber(discount.times)) {
-      return {
-        type,
-        times: discount.times || 0
-      };
-    } else {
-      return {
-        type,
-      };
+  static getDiscount(origin, discountItem) {
+    let { discount, criteria } = discountItem;
+    if (!Discount.isMatch(origin, criteria)) {
+      return null;
     }
+    let { type } = discount;
+    let { total_fee } = origin;
+    let result = {type};
+    switch (type) {
+    case 'rate':
+      result.fee = discount.rate > 1 ? total_fee : total_fee * discount.rate;
+      break;
+    case 'amount':
+      result.fee = discount.amount < total_fee ? discount.amount : total_fee;
+      break;
+    case 'number':
+      result.number = discount.number;
+      break;
+    case 'times':
+      result.times = discount.times;
+      break;
+    }
+    return result;
   }
 
   static isMatch(origin, criteria) {

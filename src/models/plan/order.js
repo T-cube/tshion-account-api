@@ -28,8 +28,6 @@ export default class Order {
     this.original_sum = 0;
     this.paid_sum = 0;
     this.coupon = undefined;
-    this.coupon_discount = undefined;
-    this.pay_discount = undefined;
     this.status = undefined;
     this.date_create = new Date();
     this.date_update = new Date();
@@ -78,7 +76,7 @@ export default class Order {
     if (!this.isValid()) {
       return Promise.reject(new Error('invalid products'));
     }
-    this.original_sum = ProductDiscount.getOriginalFeeOfProducts(products);
+    this.paid_sum = this.original_sum = ProductDiscount.getOriginalFeeOfProducts(products);
     return this.getDiscount().then(() => ({
       user_id: this.user_id,
       company_id: this.company_id,
@@ -86,10 +84,9 @@ export default class Order {
       products: this.products,
       times: this.times,
       original_sum: this.original_sum,
-      paid_sum: this.paid_sum,
+      paid_sum: Math.round(this.paid_sum),
       coupon: this.coupon,
-      coupon_discount: this.coupon_discount,
-      pay_discount: this.pay_discount,
+      discount: this.discount,
       status: this.status,
       date_create: this.date_create,
       date_update: this.date_update,
@@ -98,23 +95,6 @@ export default class Order {
 
   isValid() {
     return true;
-    let { products } = this;
-    if (!products || !products.length) {
-      return false;
-    }
-    let product_no_list = products.map(product => product.product_no);
-    if (_.uniq(product_no_list).length != product_no_list.length) {
-      return false;
-    }
-    let result = false;
-    products.map(product => {
-      let { product_no, quantity } = product;
-      if (quantity > 12) {
-        return false;
-      }
-      // TODO
-    });
-    return result;
   }
 
   getCoupons() {
@@ -128,39 +108,25 @@ export default class Order {
   }
 
   isCouponAvaliable(coupon) {
-    let { criteria, products } = coupon;
+    let { products } = coupon;
     let result = false;
     if (products === null) {
-      if (this.paid_sum && _.isNumber(criteria.total_fee) && this.paid_sum >= criteria.total_fee) {
-        result = true;
-      } else if (this.times && _.isNumber(criteria.times) && this.times >= criteria.times) {
-        result = true;
-      }
+      result = !!this._getOrderDiscount(coupon);
     } else {
-      for (let product_no of products) {
+      products.forEach(product_no => {
         let product = _.find(this.products, item => item.product_no == product_no);
-        if (product && _.isNumber(criteria.quantity) && product.quantity >= criteria.quantity) {
-          result = true;
-        } else if (product && product.sum && _.isNumber(criteria.total_fee) && product.sum >= criteria.total_fee) {
-          result = true;
+        if (product) {
+          result = result || !!this._getProductDiscount(product, coupon);
         }
-      }
+      });
     }
     return result;
   }
 
   getDiscount() {
     return this.getProductsDiscount()
-    .then(() => {
-      return this.getCouponDiscount();
-    })
-    .then(() => {
-      return this.getPayDiscount();
-    })
-    .then(payDiscount => {
-      this.pay_discount = payDiscount;
-      this.paid_sum = this.original_sum - (this.product_discount || 0) - (this.pay_discount || 0) - (this.coupon_discount && this.coupon_discount.fee || 0);
-    });
+    .then(() => this.getCouponDiscount())
+    .then(() => this.getPayDiscount());
   }
 
   getCouponDiscount() {
@@ -172,29 +138,14 @@ export default class Order {
         this.coupon = undefined;
         return;
       }
-
-      let coupon_discount;
-      let { criteria, products, discount } = coupon;
-      if (coupon.products === null) {  // for order all products
-        coupon_discount = Discount.getDiscount({
-          total_fee: this.paid_sum,
-          times: this.times
-        }, discount);
-        this.times += coupon_discount.times;
-        this.coupon_discount = {
-          order: 1,
-          discount: coupon_discount
-        };
+      let { products } = coupon;
+      if (coupon.products === null) {
+        this._persistOrderDiscount({coupon: coupon._id}, this._getOrderDiscount(coupon));
       } else {
-        let coupon_discount = _.filter(this.products, item => _.contains(products, item.product_no)).map(product => {
-          let discountPerProduct = Discount._getProductDiscount(product);
-          this._persistDiscount(discountPerProduct);
-          return {
-            product: product._id,
-            discount: discountPerProduct
-          };
+        _.filter(this.products, item => _.contains(products, item.product_no)).map(product => {
+          let discountProduct = this._getProductDiscount(product, coupon);
+          this._persistProductDiscount({coupon: coupon._id}, discountProduct, product._id);
         });
-        this.coupon_discount = coupon_discount.filter(i => i.discount);
       }
     });
   }
@@ -205,6 +156,7 @@ export default class Order {
       if (!discount || !discount.length) {
         return;
       }
+      delete product.discount;
       return db.product.discount.find({
         _id: {
           $in: discount
@@ -231,27 +183,76 @@ export default class Order {
         }
         let discountItem = doc[0];
         let discountInfo = this._getProductDiscount(product, discountItem);
-        this._persistDiscount(discountInfo);
+        this._persistProductDiscount({product_discount: discountItem._id}, discountInfo, product._id);
       });
     });
   }
 
-  _persistDiscount() {
+  getPayDiscount() {
+    return PaymentDiscount.getDiscount(this.paid_sum)
+    .then(payDiscount => {
+      if (_.isNumber(payDiscount)) {
+        this.discount = (this.discount || []).concat({
+          pay_discount: 1,
+          fee: payDiscount
+        });
+        this.paid_sum -= payDiscount;
+      }
+    });
+  }
 
+  _persistProductDiscount(ext, discountInfo, productId) {
+    if (!discountInfo) {
+      return;
+    }
+    _.extend(discountInfo, ext);
+    let { type } = discountInfo;
+    let product = _.find(this.products, product => product._id.equals(productId));
+    switch (type) {
+    case 'amount':
+    case 'rate':
+      discountInfo.fee = Math.round(discountInfo.fee);
+      product.sum -= discountInfo.fee;
+      this.paid_sum -= discountInfo.fee;
+      break;
+    case 'number':
+      product.quantity += discountInfo.number;
+      break;
+    }
+    product.discount = (product.discount || []).concat(discountInfo);
+  }
+
+  _persistOrderDiscount(ext, discountInfo) {
+    if (!discountInfo) {
+      return;
+    }
+    _.extend(discountInfo, ext);
+    let { type } = discountInfo;
+    switch (type) {
+    case 'amount':
+    case 'rate':
+      discountInfo.fee = Math.round(discountInfo.fee);
+      this.paid_sum -= discountInfo.fee;
+      break;
+    case 'times':
+      this.times += discountInfo.times;
+      break;
+    }
+    this.discount = (this.discount || []).concat(discountInfo);
   }
 
   _getProductDiscount(product, discountItem) {
-    let { criteria, discount } = discountItem;
     let { quantity, sum } = product;
     let origin = {quantity, total_fee: sum};
-    if (Discount.isMatch(origin, criteria)) {
-      return Discount.getDiscount(origin, discount);
-    }
-    return null;
+    return Discount.getDiscount(origin, discountItem);
   }
 
-  getPayDiscount() {
-    return PaymentDiscount.getDiscount(this.paid_sum);
+  _getOrderDiscount(discountItem) {
+    let origin = {
+      total_fee: this.paid_sum,
+      times: this.times
+    };
+    return Discount.getDiscount(origin, discountItem);
   }
 
   pay(orderId, payment_method) {

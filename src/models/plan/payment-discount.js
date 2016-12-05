@@ -14,7 +14,7 @@ export default class PaymentDiscount {
   }
 
   static getDiscount(order) {
-    return Promise.resolve(5);
+    return Promise.resolve(0);
   }
 
 }

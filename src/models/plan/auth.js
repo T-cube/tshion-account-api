@@ -1,3 +1,4 @@
+import _ from 'underscore';
 
 import { ApiError } from 'lib/error';
 import db from 'lib/database';
@@ -41,7 +42,7 @@ export default class Auth {
     return db.plan.auth.findOne({
       company_id,
       status: {
-        $ne: 'expired'
+        $nin: ['expired', 'canceled']
       }
     }, {
       plan: 1,
@@ -69,13 +70,25 @@ export default class Auth {
 
   getAuthPlan() {
     let { company_id } = this;
+    return db.plan.auth.find({
+      company_id,
+      status: 'accepted'
+    });
+  }
+
+  getPlanOfStatus(status, fields) {
+    if (!_.isString(status)) {
+      status = [status];
+    } else if (!_.isArray[status])  {
+      return Promise.resolve([]);
+    }
+    let { company_id } = this;
     return db.plan.auth.findOne({
       company_id,
       status: {
-        $nin: ['expired']
+        $in: status
       }
-    })
-    .then(authInfo => authInfo || {plan: 'free'});
+    }, fields || {});
   }
 
   updateStatus(status) {

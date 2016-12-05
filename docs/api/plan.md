@@ -15,7 +15,7 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 ```
 
 
-### GET /item
+### GET /list
 
 OUTPUT
 
@@ -47,6 +47,32 @@ OUTPUT
   status: String,
   ...
 }
+```
+
+### GET /auth
+
+获取最新的认证状态，比如查询企业认证是否成功：{status: 'accepted', plan: 'ent'}
+
+QUERY
+
+```javascript
+{
+  status: <Array|String>, // accepted rejected ...
+  plan: <String>, // pro ent
+}
+```
+
+OUTPUT
+
+```javascript
+[{
+  _id: <ObjectId>,
+  plan: <String>,
+  company_id: <ObjectId>,
+  user_id: <ObjectId>,
+  date_apply: <Date>,
+  status: <String>,
+}]
 ```
 
 ### POST /auth

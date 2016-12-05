@@ -33,7 +33,7 @@ api.post(/\/(prepare)?$/, (req, res, next) => {
       let quantityInfo = _.find(productsQuantity, item => item.product_no == product.product_no);
       product.quantity = quantityInfo ? quantityInfo.quantity : 0;
     });
-    // products.filter(product => product.quantity);
+    products = products.filter(product => product.quantity);
     let orderModel = new Order({
       company_id: req.company._id,
       user_id: req.user._id,
