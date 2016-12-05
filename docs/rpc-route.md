@@ -111,7 +111,7 @@ QUERY
 {
   page: <Int>,
   pagesize: <Int>,
-  status: <String>,  // accepted rejected ...
+  status: <String>,  // posted cancelled reposted accepted rejected
 }
 ```
 
@@ -128,6 +128,7 @@ QUERY
   comment: <String>,
   operator_id,: <String>
 }
+```
 
 
 ## qrcode

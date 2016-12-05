@@ -73,7 +73,7 @@ export default class Plan {
       if (!plan) {
         return null;
       }
-      return Product.getByPlan(plan);
+      return Product.getByPlan(plan.plan);
     });
   }
 

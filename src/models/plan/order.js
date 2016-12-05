@@ -129,18 +129,18 @@ export default class Order {
 
   isCouponAvaliable(coupon) {
     let { criteria, products } = coupon;
-    if (coupon.products === null) {
-      if (this.paid_sum && _.isInt(criteria.total_fee) && this.paid_sum >= criteria.total_fee) {
+    if (products === null) {
+      if (this.paid_sum && _.isNumber(criteria.total_fee) && this.paid_sum >= criteria.total_fee) {
         return true;
-      } else if (this.times && _.isInt(criteria.times) && this.times >= criteria.times) {
+      } else if (this.times && _.isNumber(criteria.times) && this.times >= criteria.times) {
         return true;
       }
-    } else {
-      for (let product_no in products) {
+    } else if (products) {
+      for (let product_no of products) {
         let product = _.find(this.products, item => item.product_no == product_no);
-        if (product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity) {
+        if (product && _.isNumber(criteria.quantity) && product.quantity >= criteria.quantity) {
           return true;
-        } else if (product && product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee) {
+        } else if (product && product.sum && _.isNumber(criteria.total_fee) && product.sum >= criteria.total_fee) {
           return true;
         }
       }
@@ -171,6 +171,7 @@ export default class Order {
         this.coupon = undefined;
         return undefined;
       }
+      console.log('here');
       let coupon_discount;
       let { criteria, products, discount } = coupon;
       if (coupon.products === null && discount.type == 'times') {  // for order all products
@@ -219,6 +220,9 @@ export default class Order {
           return null;
         }
         let discountInfo = this._getProductDiscountCommon([_.clone(product)], discountItem.criteria, discountItem.discount, {product_discount: discountItem._id});
+        if (!discountInfo) {
+          return null;
+        }
         if (_.isInt(discountInfo.fee)) {
           product.sum -= discountInfo.fee;
           this.paid_sum -= discountInfo.fee;
@@ -254,8 +258,8 @@ export default class Order {
     for (let productId in productIdList) {
       let product = _.find(this.products, item => item._id == productId);
 
-      if ((product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity)
-        || (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee)) {
+      if (product && ((_.isInt(criteria.quantity) && product.quantity >= criteria.quantity)
+        || (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee))) {
         let itemDiscount = Discount.getDiscount(product, discount);
         if (_.isInt(itemDiscount.fee)) {
           product.sum -= itemDiscount.fee;
