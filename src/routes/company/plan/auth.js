@@ -104,7 +104,7 @@ function createOrUpdateAuth(isUpdate) {
         });
       }
     } else {
-      data.enterprise.certificate_pic = pics;
+      data.info.enterprise.certificate_pic = pics;
       validateType = 'auth_ent';
       validate(validateType, data);
       createAuth = isUpdate ? auth.update(data) : auth.create(data);
