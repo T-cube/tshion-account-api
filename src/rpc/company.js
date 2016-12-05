@@ -14,7 +14,6 @@ export default (socket, prefix) => {
   const companyModel = new CompanyModel();
 
   route('/list', (query) => {
-    let { page, pagesize } = companyModel.getPageInfo(query);
     let { keyword } = query;
     let criteria = {};
     if (keyword) {
