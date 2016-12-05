@@ -69,7 +69,7 @@ export default class Plan {
     let { company_id } = this;
     let auth = new Auth(company_id);
     return auth.getAuthPlan().then(plan => {
-      console.log('plan', plan);
+      console.log('plan', plan.plan);
       if (!plan) {
         return null;
       }

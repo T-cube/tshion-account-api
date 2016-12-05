@@ -112,6 +112,7 @@ QUERY
   page: <Int>,
   pagesize: <Int>,
   status: <String>,  // posted cancelled reposted accepted rejected
+  plan: <String>, // ent || pro
 }
 ```
 

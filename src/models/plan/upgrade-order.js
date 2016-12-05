@@ -27,7 +27,7 @@ export default class UpgradeOrder extends Order {
 
   prepare() {
     let { user_id, company_id, products } = this;
-    if (!this.canAddProducts()) {
+    if (!this.isValid()) {
 
     }
     if (this.coupons && !this.isCouponAvaliable()) {
@@ -48,6 +48,6 @@ export default class UpgradeOrder extends Order {
     return this.getDiscount(order);
   }
 
-  canAddProducts() {}
+  isValid() {}
 
 }

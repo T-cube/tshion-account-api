@@ -12,7 +12,7 @@ export default class Discount {
     if (type == 'rate' && _.isNumber(discount.rate)) {
       return {
         type,
-        fee: fee * discount.rate || 0
+        fee: (fee * discount.rate) || 0
       };
     } else if (type == 'amount' && _.isInt(discount.amount)) {
       return {

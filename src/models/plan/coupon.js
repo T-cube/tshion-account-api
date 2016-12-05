@@ -32,7 +32,7 @@ export default class Coupon {
         _id: this.company_id,
         list: couponId
       }),
-      db.plan.coupon.find({
+      db.plan.coupon.findOne({
         _id: couponId,
         'period.date_start': {$lt: new Date()},
         'period.data_end': {$gte: new Date()},

@@ -75,7 +75,7 @@ export default class Order {
 
   prepare() {
     let { products } = this;
-    if (!this.canAddProducts()) {
+    if (!this.isValid()) {
       return Promise.reject(new Error('invalid products'));
     }
     this.original_sum = ProductDiscount.getOriginalFeeOfProducts(products);
@@ -96,7 +96,7 @@ export default class Order {
     }));
   }
 
-  canAddProducts() {
+  isValid() {
     return true;
     let { products } = this;
     if (!products || !products.length) {
@@ -129,23 +129,24 @@ export default class Order {
 
   isCouponAvaliable(coupon) {
     let { criteria, products } = coupon;
+    let result = false;
     if (products === null) {
       if (this.paid_sum && _.isNumber(criteria.total_fee) && this.paid_sum >= criteria.total_fee) {
-        return true;
+        result = true;
       } else if (this.times && _.isNumber(criteria.times) && this.times >= criteria.times) {
-        return true;
+        result = true;
       }
-    } else if (products) {
+    } else {
       for (let product_no of products) {
         let product = _.find(this.products, item => item.product_no == product_no);
         if (product && _.isNumber(criteria.quantity) && product.quantity >= criteria.quantity) {
-          return true;
+          result = true;
         } else if (product && product.sum && _.isNumber(criteria.total_fee) && product.sum >= criteria.total_fee) {
-          return true;
+          result = true;
         }
       }
     }
-    return false;
+    return result;
   }
 
   getDiscount() {
@@ -167,12 +168,11 @@ export default class Order {
       return Promise.resolve();
     }
     return new Coupon(this.company_id).getCoupon(this.coupon).then(coupon => {
-      console.log(this.isCouponAvaliable(coupon));
       if (!coupon || !this.isCouponAvaliable(coupon)) {
         this.coupon = undefined;
-        return undefined;
+        return;
       }
-      console.log('here');
+
       let coupon_discount;
       let { criteria, products, discount } = coupon;
       if (coupon.products === null && discount.type == 'times') {  // for order all products
@@ -185,7 +185,23 @@ export default class Order {
         let productIdListUseCoupon = _.filter(this.products, item => _.contains(products, item.product_no)).map(product => product._id);
         coupon_discount = this._getProductDiscountCommon(productIdListUseCoupon, criteria, discount, {coupon: this.coupon});
       }
+      this.coupon_discount = coupon_discount;
       return coupon_discount;
+
+      // let coupon_discount;
+      // let { criteria, products, discount } = coupon;
+      // if (coupon.products === null && discount.type == 'times') {  // for order all products
+      //   coupon_discount = Discount.getDiscount({
+      //     fee: this.paid_sum
+      //   }, discount);
+      //   this.times += coupon_discount.times;
+      //   this.coupon_discount = coupon_discount; // TODO
+      // } else {
+      //   let productIdListUseCoupon = _.filter(this.products, item => _.contains(products, item.product_no)).map(product => product._id);
+      //   coupon_discount = this._getProductDiscountCommon(productIdListUseCoupon, criteria, discount, {coupon: this.coupon});
+      // }
+      // this.coupon_discount = coupon_discount;
+      // return coupon_discount;
     });
   }
 
@@ -224,11 +240,11 @@ export default class Order {
         if (!discountInfo) {
           return null;
         }
-        if (_.isInt(discountInfo.fee)) {
+        if (_.isNumber(discountInfo.fee)) {
           product.sum -= discountInfo.fee;
           this.paid_sum -= discountInfo.fee;
         }
-        if (_.isInt(discountInfo.number)) {
+        if (_.isNumber(discountInfo.number)) {
           product.quantity += discountInfo.number;
         }
         product.discount = (product.discount || []).contact(discountInfo);
@@ -239,13 +255,13 @@ export default class Order {
 
   _getProductDiscount(product, discountInfo) {
     let { criteria, discount } = discountInfo;
-    if ((product && _.isInt(criteria.quantity) && product.quantity >= criteria.quantity)
-      || (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee)) {
+    if ((product && _.isNumber(criteria.quantity) && product.quantity >= criteria.quantity)
+      || (product.sum && _.isNumber(criteria.total_fee) && product.sum >= criteria.total_fee)) {
       let itemDiscount = Discount.getDiscount(product, discount);
-      if (_.isInt(itemDiscount.fee)) {
+      if (_.isNumber(itemDiscount.fee)) {
         product.sum -= itemDiscount.fee;
       }
-      if (_.isInt(itemDiscount.number)) {
+      if (_.isNumber(itemDiscount.number)) {
         product.quantity += itemDiscount.number;
       }
       product.discount = (product.discount || []).contact(itemDiscount);
@@ -256,24 +272,24 @@ export default class Order {
   // discount_info like { coupon: this.coupon } or { product_discount: product_discount_id }
   _getProductDiscountCommon(productIdList, criteria, discount, discount_info) {
     let discountSummary;
-    for (let productId in productIdList) {
-      let product = _.find(this.products, item => item._id == productId);
+    for (let productId of productIdList) {
+      let product = _.find(this.products, item => item._id.equals(productId));
 
-      if (product && ((_.isInt(criteria.quantity) && product.quantity >= criteria.quantity)
-        || (product.sum && _.isInt(criteria.total_fee) && product.sum >= criteria.total_fee))) {
-        let itemDiscount = Discount.getDiscount(product, discount);
-        if (_.isInt(itemDiscount.fee)) {
+      if (product && ((_.isNumber(criteria.quantity) && product.quantity >= criteria.quantity)
+        || (product.sum && _.isNumber(criteria.total_fee) && product.sum >= criteria.total_fee))) {
+        let itemDiscount = Discount.getDiscount({fee: product.sum}, discount);
+        if (_.isNumber(itemDiscount.fee)) {
           product.sum -= itemDiscount.fee;
           discountSummary = discountSummary ? {
             type: discountSummary.type,
             fee: discountSummary.fee + itemDiscount.fee
           } : itemDiscount;
         }
-        if (_.isInt(itemDiscount.number)) {
+        if (_.isNumber(itemDiscount.number)) {
           product.quantity += itemDiscount.number;
           discountSummary = { type: itemDiscount.type };
         }
-        product.discount = (product.discount || []).contact(_.extend(itemDiscount, discount_info));
+        product.discount = (product.discount || []).concat(_.extend(itemDiscount, discount_info));
       }
     }
     return discountSummary;
