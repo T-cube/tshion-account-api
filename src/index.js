@@ -42,6 +42,7 @@ import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import NotificationSetting from 'models/notification-setting';
 import WechatUtil from 'lib/wechat-util';
 import UserActivity from 'models/user-activity';
+import Preference from 'models/preference';
 import C from 'lib/constants';
 
 // welcome messages and output corre config
@@ -84,6 +85,7 @@ app.loadModel('notification-setting', NotificationSetting);
 app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
 app.loadModel('user-activity', UserActivity);
+app.loadModel('preference', Preference);
 
 let _loader = {};
 app.bindLoader(_loader);
