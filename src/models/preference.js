@@ -15,10 +15,14 @@ export default class Preference {
       if (_.isString(key)) {
         fields = {[key]: 1};
       }
-      if (_.isArray(key)) {
-        fields = _.object(key, _.range(key.length).map(() => 1));
-      } else if (_.isObject(key)) {
-        fields = key;
+      if (_.isObject(key)) {
+        let tempKey;
+        if (!_.isArray(key)) {
+          tempKey = _.keys(key).sort().reverse();
+        } else {
+          tempKey = _.clone(key);
+        }
+        fields = _.object(tempKey.sort().reverse(), _.range(tempKey.length).map(() => 1));
       }
     }
     return db.preference.findOne({
