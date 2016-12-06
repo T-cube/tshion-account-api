@@ -8,7 +8,7 @@ import path from 'path';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
-import { upload, saveCdn, isImageFile ,getCdnThumbnail } from 'lib/upload';
+import { upload, saveCdn, isImageFile, getCdnThumbnail } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo,
   generateToken, timestamp, indexObjectId, uniqObjectId } from 'lib/utils';
 import config from 'config';
@@ -901,10 +901,20 @@ function generateFileToken(user_id, file_id) {
 
 function attachFileUrls(req, file, thumb_size) {
   const qiniu = req.model('qiniu').bucket('cdn-file');
-  const sizes = [16, 32, 48, 128];
-  let size = sizes[1];
-  if (_.contains(sizes), thumb_size) {
-    size = thumb_size;
+  if (!_.isString(thumb_size)) {
+    thumb_size = '32';
+  }
+  if (!/^\d+(,\d+)?/.test(thumb_size)) {
+    return Promise.reject('invalid thumbnail size!');
+  }
+  let sizes = thumb_size.split(',');
+  let thumb_width = parseInt(sizes[0]);
+  let thumb_height = parseInt(sizes[1]);
+  if (!thumb_height) {
+    thumb_height = thumb_width;
+  }
+  if (thumb_width > 1000 || thumb_height > 1000) {
+    return Promise.reject('thumbnail size should less than 1000!');
   }
   if (!file.cdn_key) {
     if (path.extname(file.name) == '.html') {
@@ -926,7 +936,7 @@ function attachFileUrls(req, file, thumb_size) {
   ];
   if (isImageFile(file.name)) {
     promises.push(
-      qiniu.getThumnailUrl(file.cdn_key, size).then(link => {
+      qiniu.getThumnailUrl(file.cdn_key, thumb_width, thumb_height).then(link => {
         file.thumbnail_url = link;
       })
     );

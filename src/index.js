@@ -89,7 +89,9 @@ let _loader = {};
 app.bindLoader(_loader);
 initRPC(config.get('rpc'), _loader).then(cfg => {
   console.log(`rpc connected to ${cfg.protocol}://${cfg.hostname}:${cfg.port}`);
-}).catch(console.error);
+}).catch(e => {
+  console.error('rpc:', e);
+});
 
 // model loader
 app.use((req, res, next) => {
