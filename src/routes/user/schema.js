@@ -67,6 +67,34 @@ const schema = {
       on: { type: 'boolean' },
     },
   },
+  preference: {
+    sanitization: {
+      explore: {
+        type: 'object',
+        optional: true,
+        properties: {
+          sort_by: { type: 'string', optional: true },
+          view_type: { type: 'string', optional: true },
+        }
+      },
+      'explore.sort_by': { type: 'string', optional: true },
+      'explore.view_type': { type: 'string', optional: true },
+      'weather.areaid': { type: 'string', optional: true },
+    }
+  },
+  validation: {
+    explore: {
+      type: 'object',
+      optional: true,
+      properties: {
+        sort_by: { type: 'string', optional: true },
+        view_type: { type: 'string', optional: true },
+      }
+    },
+    'explore.sort_by': { type: 'string', optional: true },
+    'explore.view_type': { type: 'string', optional: true },
+    'weather.areaid': { type: 'string', optional: true },
+  }
 };
 
 export const validate = buildValidator(schema);
