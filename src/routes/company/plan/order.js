@@ -57,8 +57,16 @@ api.post(/\/(prepare)?$/, (req, res, next) => {
   .catch(next);
 });
 
-api.get('/:orderId', (req, res, next) => {
-
+api.get('/pending', (req, res, next) => {
+  let orderModel = new Order({
+    company_id: req.company._id,
+    user_id: req.user._id,
+  });
+  orderModel.getPendingOrder()
+  .then(pendingOrder => {
+    res.json(pendingOrder);
+  })
+  .catch(next);
 });
 
 api.get('/payment', (req, res, next) => {

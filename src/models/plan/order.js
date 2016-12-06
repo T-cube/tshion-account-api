@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
 
+import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Coupon from 'models/plan/coupon';
@@ -61,12 +62,18 @@ export default class Order {
   }
 
   save() {
-    return this.prepare().then(order => {
-      order.status = 'created';
-      return Promise.all([
-        this.updateUsedCoupon(),
-        db.payment.order.insert(order)
-      ]);
+    return this.getPendingOrder()
+    .then(orderPending => {
+      if (orderPending) {
+        throw new ApiError(400, 'exist_pending_order');
+      }
+      return this.prepare().then(order => {
+        order.status = 'created';
+        return Promise.all([
+          this.updateUsedCoupon(),
+          db.payment.order.insert(order)
+        ]);
+      });
     })
     .then(doc => doc[1]);
   }
@@ -95,6 +102,13 @@ export default class Order {
 
   isValid() {
     return true;
+  }
+
+  getPendingOrder() {
+    return db.payment.order.findOne({
+      company_id: this.company_id,
+      status: {$in: ['created', 'paying']}
+    });
   }
 
   getCoupons() {

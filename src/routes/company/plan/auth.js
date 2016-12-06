@@ -27,12 +27,12 @@ api.get('/', (req, res, next) => {
   if (plan) {
     criteria.plan = plan;
   }
-  return db.plan.auth.find(criteria, {info: 0})
+  return db.plan.auth.find(criteria, {info: 0, log: 0})
   .sort({
     date_apply: -1
   })
   .limit(1)
-  .then(doc => res.json(doc[0]))
+  .then(doc => res.json(doc[0] || null))
   .catch(next);
 });
 
@@ -98,7 +98,7 @@ function createOrUpdateAuth(isUpdate) {
     let pics = req.files ? req.files.map(file => file.relpath) : [];
     let data = req.body;
     let validateType;
-    let createAuth;
+    let promise;
     if (data.plan == 'pro') {
       let realnameModel = new Realname(req.user._id);
       validateType = 'auth_pro';
@@ -107,7 +107,7 @@ function createOrUpdateAuth(isUpdate) {
       if (realnameData) {
         realnameData.realname_ext.idcard_photo = pics;
         realnameData.status = 'posted';
-        createAuth = realnameModel.getAuthed().then(doc => {
+        promise = realnameModel.getAuthed().then(doc => {
           if (doc) {
             throw new ApiError(400, 'user realname authed');
           }
@@ -117,7 +117,7 @@ function createOrUpdateAuth(isUpdate) {
           });
         });
       } else {
-        createAuth = realnameModel.getAuthed().then(doc => {
+        promise = realnameModel.getAuthed().then(doc => {
           if (!doc) {
             throw new ApiError(400, 'user realname not authed');
           }
@@ -130,8 +130,8 @@ function createOrUpdateAuth(isUpdate) {
       data.info.enterprise.certificate_pic = pics;
       validateType = 'auth_ent';
       validate(validateType, data);
-      createAuth = isUpdate ? auth.update(data) : auth.create(data);
+      promise = isUpdate ? auth.update(data) : auth.create(data);
     }
-    return createAuth.then(doc => res.json(doc)).catch(next);
+    return promise.then(doc => res.json(doc)).catch(next);
   };
 }

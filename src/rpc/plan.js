@@ -15,12 +15,17 @@ export default (socket, prefix) => {
 
   route('/auth/list', (query) => {
     let criteria = {};
-    let { status, plan } = query;
+    let { status, plan, keyword } = query;
     if (status) {
       criteria['status'] = status;
     }
     if (plan) {
       criteria['plan'] = plan;
+    }
+    if (keyword) {
+      criteria['info.name'] = {
+        $regex: strToReg(keyword, 'i')
+      };
     }
     let { page, pagesize } = planAuthModel.getPageInfo(query);
     return planAuthModel.page({criteria, page, pagesize});
