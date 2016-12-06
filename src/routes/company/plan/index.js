@@ -1,10 +1,10 @@
 import _ from 'underscore';
 import express from 'express';
+import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import Plan from 'models/plan/plan';
 import Auth from 'models/plan/auth';
-import Product from 'models/plan/product';
 
 let api = express.Router();
 
@@ -18,8 +18,31 @@ api.get('/list', (req, res, next) => {
 });
 
 api.get('/current', (req, res, next) => {
-  new Plan(req.company._id).getCurrent()
+  new Plan(req.company._id).getNearest()
   .then(plan => res.json(plan))
+  .catch(next);
+});
+
+api.post('/trial', (req, res, next) => {
+  let { plan } = req.body;
+  let planModel = new Plan(req.company._id);
+  Promise.all([
+    new Auth(req.company._id).isPlanAuthed(plan),
+    planModel.isNewTrier()
+  ])
+  .then(([isAuthed, isNewTrier]) => {
+    if (!isAuthed) {
+      throw new ApiError(400, 'team_not_authed');
+    }
+    if (!isNewTrier) {
+      throw new ApiError(400, 'trial_exists');
+    }
+    return planModel.createNewTrial({
+      plan,
+      user_id: req.user._id
+    });
+  })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 

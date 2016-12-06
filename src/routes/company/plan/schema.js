@@ -18,7 +18,7 @@ const schema = {
       coupon: { $objectId: 1, optional: true },
     },
     validation: {
-      plan: { $enum: ['pro', 'ent'] },
+      plan: { $enum: [C.PLAN.TEAMPLAN.PRO, C.PLAN.TEAMPLAN.ENT] },
       products: {
         type: 'array',
         items: {
@@ -38,7 +38,15 @@ const schema = {
       payment_method: { type: 'string' },
     },
     validation: {},
-  }
+  },
+  trial: {
+    sanitization: {
+      plan: { type: 'string' },
+    },
+    validation: {
+      plan: { $enum: [C.PLAN.TEAMPLAN.PRO, C.PLAN.TEAMPLAN.ENT] },
+    },
+  },
 };
 
 export const validate = buildValidator(schema);

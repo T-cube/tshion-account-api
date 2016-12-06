@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
+import moment from 'moment';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -13,56 +14,51 @@ export default class Plan {
     this.company_id = company_id;
   }
 
-  getCurrent() {
+  getNearest() {
     let { company_id } = this;
-    return db.plan.company.findOne({
-      company_id,
-      status: 'actived'
-    });
+    return db.plan.company.find({company_id})
+    .sort({date_start: -1})
+    .limit(1)
+    .then(doc => doc[0]);
   }
 
   createNewTrial(data) {
-    let { company_id } = this;
     data.type = 'trial';
-    return this.ensureTrialNotExists(company_id)
-    .then(() => {
-      return db.plan.company.insert(data);
-    });
-    // {
-    //   company_id: ObjectId,             // 团队
-    //   user_id: ObjectId,                // 申请用户
-    //   plan: TeamPlan,                   // 升级方案
-    //   status: PlanStatus                // 状态
-    //   date_start: Date,                 // 申请日期
-    //   date_end: Date,
-    // }
-  }
-
-  createNewPaid(data, period) {
-    data.type = 'paid';
+    data.company_id = this.company_id;
+    data.status = 'actived';
+    data.date_start = new Date();
+    data.date_end = moment().add(30, 'day').toDate();
     return db.plan.company.insert(data);
   }
 
-  ensureTrialNotExists() {
+  updatePaid(data) {
+    data.type = 'paid';
     let { company_id } = this;
-    return db.plan.trial.count({company_id})
-    .then(count => {
-      if (count > 0) {
-        throw new ApiError('400', 'plan_trial_exists');
+    return db.plan.company.update({
+      company_id,
+    }, {
+      $set: data
+    }, {
+      upsert: true
+    });
+  }
+
+  expireTrial() {
+    let { company_id } = this;
+    return db.plan.company.update({
+      company_id,
+      status: 'actived',
+    }, {
+      $set: {
+        status: 'expired',
       }
     });
   }
 
-  expireCurrent() {
+  isNewTrier() {
     let { company_id } = this;
-    return db.plan.company.update({
-      company_id,
-      status: 'actived'
-    }, {
-      $set: {
-        status: 'expired'
-      }
-    });
+    return db.plan.company.count({company_id})
+    .then(doc => !!doc);
   }
 
   static list() {

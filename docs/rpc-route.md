@@ -111,7 +111,7 @@ QUERY
 {
   page: <Int>,
   pagesize: <Int>,
-  status: <String>,  // posted cancelled reposted accepted rejected
+  status: <String>,  // posted cancelled reposted accepted rejected 多个使用“,”分隔
   plan: <String>, // ent || pro
 }
 ```

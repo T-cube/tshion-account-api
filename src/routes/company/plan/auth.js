@@ -6,7 +6,6 @@ import { upload } from 'lib/upload';
 import { validate } from 'models/plan/schema';
 import { ApiError } from 'lib/error';
 import Auth from 'models/plan/auth';
-import Plan from 'models/plan/plan';
 import Realname from 'models/plan/realname';
 
 
@@ -72,14 +71,13 @@ function handelUpload(isUpdate) {
         }
       });
     } else {
-      preCriteriaPromise = auth.getActiveAuth().then(info => {
+      preCriteriaPromise = auth.getActiveAuth(plan).then(info => {
         if (info) {
-          let { plan, status } = info;
-          if (status == 'posted' || status == 'reposted') {
+          let { status } = info;
+          if (status == 'accepted') {
+            throw new ApiError(400, 'team_has_authed');
+          } else {
             throw new ApiError(400, 'cannot_create_new_auth');
-          }
-          if (plan == 'ent' || (plan == 'pro' && data.plan != 'ent')) {
-            throw new ApiError(400, 'cannot_create_auth');
           }
         }
       });

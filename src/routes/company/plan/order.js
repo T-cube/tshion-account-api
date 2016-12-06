@@ -27,7 +27,7 @@ api.post(/\/(prepare)?$/, (req, res, next) => {
   new Auth(req.company._id).isPlanAuthed(plan)
   .then(isAuthed => {
     if (!isAuthed) {
-      throw new ApiError(400, 'invalid_team_plan');
+      throw new ApiError(400, 'team_not_authed');
     }
     return Product.getByPlan(plan);
   })

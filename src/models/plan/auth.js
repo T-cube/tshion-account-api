@@ -37,10 +37,11 @@ export default class Auth {
     });
   }
 
-  getActiveAuth() {
+  getActiveAuth(plan) {
     let { company_id } = this;
     return db.plan.auth.findOne({
       company_id,
+      plan,
       status: {
         $nin: ['expired', 'canceled']
       }
