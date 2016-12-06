@@ -38,6 +38,7 @@ const collections = [
   'oauth.code',
   'project',
   'project.tags',
+  'preference',
   'reminding',
   'request',
   'schedule',

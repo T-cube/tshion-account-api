@@ -48,9 +48,13 @@ api.get('/info', (req, res, next) => {
     _id: req.user._id
   }, BASIC_FIELDS)
   .then(data => {
-    return new UserLevel(data).getLevelInfo()
-    .then(levelInfo => {
+    return Promise.all([
+      new UserLevel(data).getLevelInfo(),
+      req.model('preference').get(req.user._id)
+    ])
+    .then(([levelInfo, preference]) => {
       data.level_info = levelInfo;
+      data.preference = preference;
       if (data.email) {
         data.email = maskEmail(data.email);
       }
@@ -278,6 +282,14 @@ api.post('/guide', (req, res, next) => {
   let data = req.body;
   db.guide.insert(data)
   .then(() => res.json({}))
+  .catch(next);
+});
+
+api.post('/preference', (req, res, next) => {
+  let data = req.body;
+  validate('preference', data);
+  req.model('preference').set(req.user._id, data)
+  .then(() => {})
   .catch(next);
 });
 
