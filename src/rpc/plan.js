@@ -17,7 +17,12 @@ export default (socket, prefix) => {
     let criteria = {};
     let { status, plan, keyword } = query;
     if (status) {
-      criteria['status'] = status;
+      status = status.split(',');
+      if (status.length > 1) {
+        criteria['status'] = {$in: status};
+      } else {
+        criteria['status'] = status[0];
+      }
     }
     if (plan) {
       criteria['plan'] = plan;

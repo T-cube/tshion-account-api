@@ -65,18 +65,6 @@ export default class Plan {
     });
   }
 
-  getProducts() {
-    let { company_id } = this;
-    let auth = new Auth(company_id);
-    return auth.getAuthPlan().then(plan => {
-      console.log('plan', plan.plan);
-      if (!plan) {
-        return null;
-      }
-      return Product.getByPlan(plan.plan);
-    });
-  }
-
   static list() {
     return db.product.find({
       product_no: {

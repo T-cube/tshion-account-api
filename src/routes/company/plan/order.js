@@ -5,8 +5,9 @@ import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import Order from 'models/plan/order';
-import Plan from 'models/plan/plan';
+import Auth from 'models/plan/auth';
 import Payment from 'models/plan/payment';
+import Product from 'models/plan/product';
 
 let api = express.Router();
 
@@ -22,18 +23,22 @@ api.post(/\/(prepare)?$/, (req, res, next) => {
   let data = req.body;
   validate('create_order', data);
   let { coupon } = data;
-  let productsQuantity = data.products;
-  let planModel = new Plan(req.company._id);
-  planModel.getProducts()
-  .then(products => {
-    if (!products) {
+  let { plan, products } = data;
+  new Auth(req.company._id).isPlanAuthed(plan)
+  .then(isAuthed => {
+    if (!isAuthed) {
+      throw new ApiError(400, 'invalid_team_plan');
+    }
+    return Product.getByPlan(plan);
+  })
+  .then(planProducts => {
+    if (!planProducts) {
       throw new ApiError(400, 'product_not_accessable');
     }
-    products.forEach(product => {
-      let quantityInfo = _.find(productsQuantity, item => item.product_no == product.product_no);
-      product.quantity = quantityInfo ? quantityInfo.quantity : 0;
-    });
-    products = products.filter(product => product.quantity);
+    products = products.map(product => {
+      let productInfo = _.find(planProducts, item => item.product_no == product.product_no);
+      return productInfo && Object.assign({}, productInfo, product);
+    }).filter(i => i);
     let orderModel = new Order({
       company_id: req.company._id,
       user_id: req.user._id,

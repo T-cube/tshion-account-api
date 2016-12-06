@@ -11,7 +11,7 @@ let api = express.Router();
 export default api;
 
 
-api.get('/', (req, res, next) => {
+api.get('/list', (req, res, next) => {
   Plan.list()
   .then(plan => res.json(plan))
   .catch(next);

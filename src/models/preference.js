@@ -14,11 +14,10 @@ export default class Preference {
     if (key) {
       if (_.isString(key)) {
         fields = {[key]: 1};
-      }
-      if (_.isObject(key)) {
+      } else if (_.isObject(key)) {
         let tempKey;
         if (!_.isArray(key)) {
-          tempKey = _.keys(key).sort().reverse();
+          tempKey = _.keys(key);
         } else {
           tempKey = _.clone(key);
         }

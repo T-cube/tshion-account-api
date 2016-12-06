@@ -136,3 +136,31 @@ POST // 同 post
 ### PUT /auth/cancel
 
 取消认证
+
+
+### POST /order
+
+INPUT
+
+```javascript
+{
+  plan: String, // pro, ent
+  products: [
+    {
+      product_no: String,
+      quantity: Number,
+    } ...
+  ]
+  coupon: ObjectId,
+}
+```
+
+OUTPUT
+
+```javascript
+{
+
+}
+```
+
+### POST /order/prepare

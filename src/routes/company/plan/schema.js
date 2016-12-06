@@ -4,6 +4,7 @@ import C, { ENUMS } from 'lib/constants';
 const schema = {
   create_order: {
     sanitization: {
+      plan: { type: 'string' },
       products: {
         type: 'array',
         items: {
@@ -17,6 +18,7 @@ const schema = {
       coupon: { $objectId: 1, optional: true },
     },
     validation: {
+      plan: { $enum: ['pro', 'ent'] },
       products: {
         type: 'array',
         items: {

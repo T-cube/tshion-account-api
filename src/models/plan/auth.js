@@ -68,12 +68,14 @@ export default class Auth {
     .then(doc => !doc[0] && doc[1]);
   }
 
-  getAuthPlan() {
+  isPlanAuthed(plan) {
     let { company_id } = this;
-    return db.plan.auth.find({
+    return db.plan.auth.count({
       company_id,
+      plan,
       status: 'accepted'
-    });
+    })
+    .then(count => !!count);
   }
 
   getPlanOfStatus(status, fields) {
