@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import objectPath from 'object-path';
+import config from 'config';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
@@ -50,11 +51,12 @@ export default class Preference {
     });
   }
 
-  init(userId, data) {
+  init(userId) {
+    let data = config.get('preference.default');
     return db.preference.update({
       _id: userId
     }, {
-      $set: this._flattenValues(data)
+      $set: data
     }, {
       upsert: true
     });

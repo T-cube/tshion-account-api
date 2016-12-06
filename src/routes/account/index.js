@@ -95,7 +95,10 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       [type]: id,
     });
     // init notification setting when user activiated
-    type == C.USER_ID_TYPE.MOBILE && req.model('notification-setting').initUserDefaultSetting(user._id);
+    if (type == C.USER_ID_TYPE.MOBILE) {
+      req.model('notification-setting').initUserDefaultSetting(user._id);
+      req.model('preference').init(user._id);
+    }
   })
   .catch(next);
 });
@@ -111,6 +114,7 @@ api.post('/confirm', (req, res, next) => {
     res.json(data);
     // init notification setting when user activiated
     req.model('notification-setting').initUserDefaultSetting(data.user_id);
+    req.model('preference').init(data.user._id);
   })
   .catch(next);
 });
