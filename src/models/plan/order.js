@@ -269,7 +269,7 @@ export default class Order {
     return Discount.getDiscount(origin, discountItem);
   }
 
-  pay(orderId, payment_method) {
+  static pay(orderId, payment_method) {
     let { user_id, company_id } = this;
     return db.payment.order.findOne({
       user_id,

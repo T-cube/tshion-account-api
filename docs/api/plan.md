@@ -4,6 +4,7 @@
 
 ```javascript
 TeamPlan: String[Enum:free,pro,ent] // 团队方案：免费版，专业版，企业版
+TeamPlanPaid: String[Enum:pro,ent] // 专业版，企业版
 PlanStatus: String[Enum:actived,expired],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 ```
@@ -21,67 +22,144 @@ OUTPUT
 
 ```javascript
 [{
-  name: <String>,
-  type: <String>, // free pro ent
-  description: <String>,
-  store: <Int>,
-  member: <Int>,
+  name: String,
+  type: TeamPlan,
+  description: String,
+  store: Int,
+  member: Int,
   products: [
     _id: ObjectId
     title: String,
     plan: String,
     ...
   ],
-  ext_info: <String>,
+  ext_info: String,
 }...]
 ```
 
-### GET /current
+### GET /status
 
 OUTPUT
 
 ```javascript
 {
-  _id: ObjectId,
-  plan: String,
-  status: String,
+  history: [
+    {
+      _id: ObjectId,
+      type: String, // paid trial
+      company_id: ObjectId,
+      user_id: ObjectId,
+      plan: TeamPlanPaid,
+      status: PlanStatus,
+      date_start: Date,
+      date_end: Date,
+    }
+  ],
+  current: {
+    _id: ObjectId,
+    type: String, // paid trial
+    company_id: ObjectId,
+    user_id: ObjectId,
+    plan: TeamPlanPaid,
+    status: PlanStatus,
+    date_start: Date,
+    date_end: Date,
+  },
+  viable: {
+    trial: [TeamPlanPaid],
+    paid: [TeamPlanPaid],
+  },
+  authed: [TeamPlanPaid],
+}
+```
+
+### POST /trial
+
+试用
+
+INPUT
+
+```javascript
+{
+  plan: [TeamPlanPaid],
+}
+```
+
+
+## auth
+
+### GET /auth/status
+
+获取当前的认证状态
+
+OUTPUT
+
+```javascript
+{
+  [TeamPlanPaid]: {
+    _id: ObjectId,
+    plan: TeamPlanPaid,
+    company_id: ObjectId,
+    user_id: ObjectId,
+    date_apply: Date,
+    status: AuthStatus,
+  }
   ...
 }
 ```
 
-### GET /auth
-
-获取最新的认证状态，比如查询企业认证是否成功：{status: 'accepted', plan: 'ent'}
+### GET /auth/history
 
 QUERY
 
 ```javascript
 {
-  status: <Array|String>, // accepted rejected ...
-  plan: <String>, // pro ent
+  page: Int,
+  pagesize: Int,
 }
 ```
 
 OUTPUT
 
 ```javascript
-[{
-  _id: <ObjectId>,
-  plan: <String>,
-  company_id: <ObjectId>,
-  user_id: <ObjectId>,
-  date_apply: <Date>,
-  status: <String>,
-}]
+{
+  list: [{
+    _id: ObjectId,
+    plan: TeamPlanPaid,
+    company_id: ObjectId,
+    user_id: ObjectId,
+    date_apply: Date,
+    status: AuthStatus,
+  }],
+  page: Int,
+  pagesize: Int,
+  totalRows: Int,
+}
 ```
 
-### POST /auth
+
+### GET /auth/realname
+
+OUTPUT
+
+```javascript
+{
+  realname: String,
+  position: String,
+  phone: String,
+  address: String,
+  realname_ext: {
+
+  }
+}
+```
+
+### POST /auth/(ent|pro)
 
 提交认证
 
 POST
 ```javascript
-plan: TeamPlan,                   // 升级方案
 status: AuthStatus,               // 认证状态
 info: {
   contact: {
@@ -126,16 +204,24 @@ info: {
 },
 ```
 
-### PUT /auth
+### PUT /auth/(ent|pro)
 
 更新认证
 
 POST // 同 post
 
 
-### PUT /auth/cancel
+### PUT /auth/status
 
 取消认证
+
+INPUT
+
+```javascript
+{
+  status: String, // cancelled
+}
+```
 
 
 ### POST /order

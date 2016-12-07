@@ -58,7 +58,6 @@ const schema = {
 
   auth_pro: {
     sanitization: {
-      plan: { type: 'string' },                   // 升级方案
       info: {
         type: 'object',
         properties: {
@@ -103,12 +102,12 @@ const schema = {
       },
     },
     validation: {
-      plan: { type: 'string' },                   // 升级方案
       info: {
         type: 'object',
         properties: {
           contact: {
             type: 'object',
+            optional: true,
             properties: {
               realname: { type: 'string' },
               gender: { type: 'string' },               // Enum:F,M
@@ -150,7 +149,6 @@ const schema = {
 
   auth_ent: {
     sanitization: {
-      plan: { type: 'string' },                   // 升级方案
       info: {
         type: 'object',
         properties: {
@@ -177,7 +175,6 @@ const schema = {
       },
     },
     validation: {
-      plan: { type: 'string' },                   // 升级方案
       info: {
         type: 'object',
         properties: {

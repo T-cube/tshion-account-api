@@ -13,6 +13,20 @@ const schema = {
       name: { type: 'string' },
       description: { type: 'string', optional: true },
     }
+  },
+  plan_audit: {
+    sanitization: {
+      auth_id: { $objectId: 1 },
+      status: { type: 'string' },
+      comment: { type: 'string' },
+      operator_id: { $objectId: 1 },
+    },
+    validation: {
+      auth_id: { $objectId: 1 },
+      status: { $enum: ['rejected', 'accepted'] },
+      comment: { type: 'string', minLength: 3 },
+      operator_id: { $objectId: 1 },
+    },
   }
 };
 

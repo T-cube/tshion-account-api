@@ -18,8 +18,9 @@ api.get('/', (req, res, next) => {
 
 });
 
-api.post(/\/(prepare)?$/, (req, res, next) => {
+api.post(/\/(buy|upgrade)\/(prepare)?$/, (req, res, next) => {
   let isPrepare = /prepare$/.test(req.url);
+  let isUpgrade = /upgrade$/.test(req.url);
   let data = req.body;
   validate('create_order', data);
   let { coupon } = data;

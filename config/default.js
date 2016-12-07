@@ -71,16 +71,16 @@ module.exports = {
   upload: {
     path: 'public/cdn/',
     url: 'http://api.tlifang.com/cdn/',
-    types: ['avatar', 'attachment', 'plan_auth_idcard', 'plan_auth_ent'],
+    types: ['avatar', 'attachment', 'plan-auth-pro', 'plan-auth-ent'],
     defaultType: 'attachment',
     allowed: {
       avatar: [
         '.png', '.jpg', '.jpeg', '.gif',
       ],
-      plan_auth_idcard: [
+      'plan-auth-pro': [
         '.png', '.jpg', '.jpeg',
       ],
-      plan_auth_ent: [
+      'plan-auth-ent': [
         '.png', '.jpg', '.jpeg',
       ],
       attachment: [

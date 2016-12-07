@@ -250,13 +250,14 @@ let constants = {
       PRO: 'pro',
       ENT: 'ent',
     },
+    TEAMPLAN_PAID: ['pro', 'ent'],
     PLAN_STATUS: {
       ACTIVED: 'actived',
       EXPIRED: 'expired',
     },
     AUTH_STATUS: {
       POSTED: 'posted',
-      CANCELED: 'cancelled',
+      cancelled: 'cancelled',
       REPOSTED: 'reposted',
       ACCEPTED: 'accepted',
       REJECTED: 'rejected',

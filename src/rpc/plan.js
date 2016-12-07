@@ -4,7 +4,7 @@ import { ApiError } from 'lib/error';
 import { strToReg } from 'lib/utils';
 
 import RpcRoute from 'models/rpc-route';
-
+import { validate } from './schema';
 import PlanAuthModel from './models/plan-auth';
 
 export default (socket, prefix) => {
@@ -47,13 +47,8 @@ export default (socket, prefix) => {
   });
 
   route('/auth/audit', (query) => {
-    let { auth_id, status, comment, operator_id } = query;
-    if (!auth_id || !ObjectId.isValid(auth_id) || !operator_id || ObjectId.isValid(operator_id)) {
-      throw new ApiError(400);
-    }
-    // TODO validate
-    auth_id = ObjectId(auth_id);
-    return planAuthModel.audit({auth_id, status, comment, operator_id}).then(() => ({ok: 1}));
+    validate('plan_audit', query);
+    return planAuthModel.audit(query).then(() => ({ok: 1}));
   });
 
 };

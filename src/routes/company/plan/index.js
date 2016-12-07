@@ -4,7 +4,6 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import Plan from 'models/plan/plan';
-import Auth from 'models/plan/auth';
 
 let api = express.Router();
 
@@ -17,24 +16,21 @@ api.get('/list', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/current', (req, res, next) => {
-  new Plan(req.company._id).getNearest()
-  .then(plan => res.json(plan))
+api.get('/status', (req, res, next) => {
+  new Plan(req.company._id).getStatus()
+  .then(info => res.json(info))
   .catch(next);
 });
 
 api.post('/trial', (req, res, next) => {
   let { plan } = req.body;
   let planModel = new Plan(req.company._id);
-  Promise.all([
-    new Auth(req.company._id).isPlanAuthed(plan),
-    planModel.isNewTrier()
-  ])
-  .then(([isAuthed, isNewTrier]) => {
-    if (!isAuthed) {
+  planModel.getStatus()
+  .then(status => {
+    if (!_.contains(status.authed, plan)) {
       throw new ApiError(400, 'team_not_authed');
     }
-    if (!isNewTrier) {
+    if (!_.contains(status.trail, plan)) {
       throw new ApiError(400, 'trial_exists');
     }
     return planModel.createNewTrial({

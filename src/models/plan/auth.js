@@ -1,5 +1,7 @@
 import _ from 'underscore';
+import Promise from 'bluebird';
 
+import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import db from 'lib/database';
 import { validate } from './schema';
@@ -12,14 +14,18 @@ export default class Auth {
   }
 
   create(data) {
+    let { plan } = data;
     let { company_id, user_id } = this;
     data.company_id = company_id;
     data.user_id = user_id;
     data.date_apply = new Date();
     data.status = 'posted';
-    return this.getActiveAuth()
+    return Auth.getAuthStatus(company_id, plan)
     .then(doc => {
-      return doc || db.plan.auth.insert(data);
+      if (doc[plan] && !_.contains(['expired', 'cancelled'], doc[plan].status)) {
+        throw new Error('auth_exists');
+      }
+      return db.plan.auth.insert(data);
     });
   }
 
@@ -37,36 +43,23 @@ export default class Auth {
     });
   }
 
-  getActiveAuth(plan) {
-    let { company_id } = this;
-    return db.plan.auth.findOne({
-      company_id,
-      plan,
-      status: {
-        $nin: ['expired', 'canceled']
-      }
-    }, {
-      plan: 1,
-      status: 1
-    });
-  }
-
-  getRejectedAuth() {
-    let { company_id } = this;
-    return Promise.all([
-      db.plan.auth.count({
-        company_id,
-        status: 'accepted'
-      }),
-      db.plan.auth.findOne({
-        company_id,
-        status: 'rejected'
-      }, {
-        plan: 1,
-        status: 1
+  static getAuthStatus(company_id, plan) {
+    if (plan) {
+      return db.plan.auth.find({company_id, plan}, {info: 0, log: 0})
+      .sort({date_apply: -1})
+      .limit(1)
+      .then(doc => ({
+        [plan]: doc[0]
+      }));
+    } else {
+      return Promise.map(C.PLAN.TEAMPLAN_PAID, plan => {
+        return db.plan.auth.find({company_id, plan}, {info: 0, log: 0})
+        .sort({date_apply: -1})
+        .limit(1)
+        .then(doc => doc[0]);
       })
-    ])
-    .then(doc => !doc[0] && doc[1]);
+      .then(list => _.object(C.PLAN.TEAMPLAN_PAID, list));
+    }
   }
 
   isPlanAuthed(plan) {
@@ -79,27 +72,11 @@ export default class Auth {
     .then(count => !!count);
   }
 
-  getPlanOfStatus(status, fields) {
-    if (!_.isString(status)) {
-      status = [status];
-    } else if (!_.isArray[status])  {
-      return Promise.resolve([]);
-    }
-    let { company_id } = this;
-    return db.plan.auth.findOne({
-      company_id,
-      status: {
-        $in: status
-      }
-    }, fields || {});
-  }
-
-  updateStatus(status) {
-    let { company_id, user_id } = this;
+  static updateStatus(authId, status) {
     return db.plan.auth.update({
-      company_id,
+      _id: authId,
       status: {
-        $in: ['posted', 'reposted']
+        $nin: ['accepted']
       }
     }, {
       $set: {status}
@@ -113,11 +90,30 @@ export default class Auth {
     });
   }
 
-  list(options) {
+  getAuthedPlan() {
     let { company_id } = this;
+    return db.plan.auth.find({
+      company_id,
+      status: 'accepted'
+    }, {
+      plan: 1
+    })
+    .then(doc => doc.map(i => i.plan));
+  }
+
+  static list(company_id, options) {
     let { page, pagesize } = options;
     let criteria = company_id ? {company_id} : {};
-    return db.plan.auth.find(criteria).limit(pagesize).skip(pagesize * (page - 1));
+    return Promise.all([
+      db.plan.auth.count(criteria),
+      db.plan.auth.find(criteria).limit(pagesize).skip(pagesize * (page - 1)),
+    ])
+    .then(([totalRows, list]) => ({
+      page,
+      pagesize,
+      totalRows,
+      list,
+    }));
   }
 
   static audit(options) {
@@ -128,12 +124,7 @@ export default class Auth {
       user_id,
       date_create: new Date(),
     };
-    return db.plan.auth.update({
-      company_id,
-      status: {
-        $in: ['posted', 'reposted']
-      },
-    }, {
+    return db.plan.auth.update({company_id}, {
       $set: {status}
     })
     .then(() => Auth.logAuth(log));

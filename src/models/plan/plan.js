@@ -6,7 +6,7 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Auth from './auth';
-import Product from './product';
+
 
 export default class Plan {
 
@@ -14,21 +14,89 @@ export default class Plan {
     this.company_id = company_id;
   }
 
-  getNearest() {
+  getStatus() {
     let { company_id } = this;
-    return db.plan.company.find({company_id})
-    .sort({date_start: -1})
-    .limit(1)
-    .then(doc => doc[0]);
+    return Promise.all([
+      db.plan.company.find({company_id}),
+      new Auth(company_id).getAuthedPlan()
+    ])
+    .then(([history, authed]) => {
+      let trial = C.PLAN.TEAMPLAN_PAID.filter(item => -1 == history.map(h => h.plan).indexOf(item));
+      let current = this._getCurrent(history.filter(item => item.status == C.PLAN.PLAN_STATUS.ACTIVED));
+      let paid = C.PLAN.TEAMPLAN_PAID;
+      return {
+        history,
+        current,
+        viable: {trial, paid},
+        authed,
+      };
+    });
+  }
+
+  getCurrent() {
+    let { company_id } = this;
+    return db.plan.company.find({
+      company_id,
+      status: C.PLAN.PLAN_STATUS.ACTIVED
+    })
+    .then(planList => {
+      return this._getCurrent(planList);
+    });
+  }
+
+  _getCurrent(planList) {
+    let len = planList.length;
+    // free
+    if (len == 0) {
+      return {plan: C.PLAN.TEAMPLAN.FREE};
+    }
+    // trial or paid
+    if (len == 1) {
+      return planList[0];
+    }
+    // trial and paid
+    if (len == 2) {
+      return _.find(planList, item => item.type == 'trial');
+    }
+  }
+
+  getUpgradeStatus() {
+    let { company_id } = this;
+    return db.plan.company.findOne({
+      company_id,
+      type: 'paid',
+      status: C.PLAN.PLAN_STATUS.ACTIVED
+    })
+    .then(doc => {
+      if (!doc) {
+        return null;
+      }
+      let now = moment().startOf('date');
+      let { plan, date_end, member_count } = doc;
+      let times = moment(date_end).diff(now, 'month');
+      if (times <= 0) {
+        return null;
+      }
+      return {times, plan, member_count};
+    });
   }
 
   createNewTrial(data) {
-    data.type = 'trial';
-    data.company_id = this.company_id;
-    data.status = 'actived';
-    data.date_start = new Date();
-    data.date_end = moment().add(30, 'day').toDate();
-    return db.plan.company.insert(data);
+    let { company_id } = this;
+    let { plan, user_id } = data;
+    return Plan.getDefaultMemberCount(plan)
+    .then(member_count => {
+      return db.plan.company.insert({
+        company_id,
+        user_id,
+        type: 'trial',
+        plan,
+        member_count,
+        status: C.PLAN.PLAN_STATUS.ACTIVED,
+        date_start: new Date(),
+        date_end: moment().add(30, 'day').toDate(),
+      });
+    });
   }
 
   updatePaid(data) {
@@ -43,22 +111,8 @@ export default class Plan {
     });
   }
 
-  expireTrial() {
-    let { company_id } = this;
-    return db.plan.company.update({
-      company_id,
-      status: 'actived',
-    }, {
-      $set: {
-        status: 'expired',
-      }
-    });
-  }
-
-  isNewTrier() {
-    let { company_id } = this;
-    return db.plan.company.count({company_id})
-    .then(doc => !!doc);
+  static getDefaultMemberCount(plan) {
+    return Promise.resolve(10);
   }
 
   static list() {
