@@ -7,6 +7,7 @@ import db from 'lib/database';
 import Coupon from 'models/plan/coupon';
 import Payment from 'models/plan/payment';
 import Discount from 'models/plan/discount';
+import Plan from 'models/plan/plan';
 import PaymentDiscount from 'models/plan/payment-discount';
 import ProductDiscount from 'models/plan/product-discount';
 
@@ -67,7 +68,10 @@ export default class Order {
       if (orderPending) {
         throw new ApiError(400, 'exist_pending_order');
       }
-      return this.prepare().then(order => {
+      return this.prepare().then(({order, isValid, error}) => {
+        if (!isValid) {
+          throw new ApiError(400, error);
+        }
         order.status = 'created';
         return Promise.all([
           this.updateUsedCoupon(),
@@ -80,28 +84,46 @@ export default class Order {
 
   prepare() {
     let { products } = this;
-    if (!this.isValid()) {
-      return Promise.reject(new Error('invalid products'));
-    }
-    this.paid_sum = this.original_sum = ProductDiscount.getOriginalFeeOfProducts(products);
-    return this.getDiscount().then(() => ({
-      user_id: this.user_id,
-      company_id: this.company_id,
-      order_type: this.order_type,
-      products: this.products,
-      times: this.times,
-      original_sum: this.original_sum,
-      paid_sum: Math.round(this.paid_sum),
-      coupon: this.coupon,
-      discount: this.discount,
-      status: this.status,
-      date_create: this.date_create,
-      date_update: this.date_update,
-    }));
+    return this.isValid().then(({error, isValid}) => {
+      if (!isValid) {
+        return {
+          isValid,
+          error,
+          limits: this.limits,
+        };
+      }
+      this.paid_sum = this.original_sum = ProductDiscount.getOriginalFeeOfProducts(products);
+      return this.getDiscount().then(() => ({
+        isValid,
+        limits: this.limits,
+        order: {
+          user_id: this.user_id,
+          company_id: this.company_id,
+          order_type: this.order_type,
+          products: this.products,
+          times: this.times,
+          original_sum: this.original_sum,
+          paid_sum: Math.round(this.paid_sum),
+          coupon: this.coupon,
+          discount: this.discount,
+          status: this.status,
+          date_create: this.date_create,
+          date_update: this.date_update,
+        },
+      }));
+    });
   }
 
   isValid() {
-    return true;
+    return this.getLimits().then(({member_count}) => {
+      let memberNum = _.find(this.products, product => product.product_no == 'P0002');
+      let isValid = !member_count || (memberNum && memberNum.quantity >= member_count);
+      let error;
+      if (!isValid) {
+        error = 'invalid_member_count';
+      }
+      return {isValid, error};
+    });
   }
 
   getPendingOrder() {
@@ -267,6 +289,25 @@ export default class Order {
       times: this.times
     };
     return Discount.getDiscount(origin, discountItem);
+  }
+
+  getLimits(plan) {
+    if (this.limits) {
+      return Promise.resolve(this.limits);
+    }
+    return Promise.all([
+      Plan.getDefaultMemberCount(plan),
+      db.company.findOne({_id : this.company_id}, {
+        'members._id': 1
+      })
+    ])
+    .then(([defaultCount, comapny]) => {
+      let member_count = comapny.members.length - defaultCount;
+      this.limits = {
+        member_count: member_count < 0 ? 0 : member_count
+      };
+      return this.limits;
+    });
   }
 
   static pay(orderId, payment_method) {

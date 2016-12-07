@@ -230,13 +230,13 @@ INPUT
 
 ```javascript
 {
-  plan: String, // pro, ent
+  plan: TeamPlanPaid,
   products: [
     {
       product_no: String,
       quantity: Number,
     } ...
-  ]
+  ],
   coupon: ObjectId,
 }
 ```
@@ -245,8 +245,40 @@ OUTPUT
 
 ```javascript
 {
-
+  _id: ObjectId,
+  ...
 }
 ```
 
 ### POST /order/prepare
+
+INPUT
+
+```javascript
+{
+  plan: TeamPlanPaid,
+  products: [
+    {
+      product_no: String,
+      quantity: Number,
+    } ...
+  ],
+  coupon: ObjectId,
+}
+```
+
+OUTPUT
+
+```javascript
+{
+  isValid: Boolean,
+  error: String, // isValid为fasle时
+  limits: {
+    member_count: Int,
+  },
+  order: {
+    _id: ObjectId,
+    ...
+  }
+}
+```

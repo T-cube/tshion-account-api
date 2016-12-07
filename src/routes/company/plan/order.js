@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
+import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import Order from 'models/plan/order';
@@ -18,9 +19,9 @@ api.get('/', (req, res, next) => {
 
 });
 
-api.post(/\/(buy|upgrade)\/(prepare)?$/, (req, res, next) => {
+api.post(/\/(buy|upgrade)\/(prepare)?\/?$/, (req, res, next) => {
   let isPrepare = /prepare$/.test(req.url);
-  let isUpgrade = /upgrade$/.test(req.url);
+  let isUpgrade = /upgrade/.test(req.url);
   let data = req.body;
   validate('create_order', data);
   let { coupon } = data;
@@ -50,13 +51,13 @@ api.post(/\/(buy|upgrade)\/(prepare)?$/, (req, res, next) => {
     }
     if (isPrepare) {
       return Promise.all([
+        orderModel.prepare(),
         orderModel.getCoupons(),
-        orderModel.prepare()
       ])
-      .then(doc => res.json({
-        order: doc[1],
-        coupons: doc[0],
-      }));
+      .then(([info, coupons]) => {
+        info.coupons = coupons;
+        res.json(info);
+      });
     }
     return orderModel.save().then(order_id => res.json({order_id}));
   })
