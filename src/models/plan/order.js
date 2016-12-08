@@ -4,26 +4,31 @@ import Promise from 'bluebird';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
-import Coupon from 'models/plan/coupon';
-import Payment from 'models/plan/payment';
-import Discount from 'models/plan/discount';
-import Plan from 'models/plan/plan';
-import PaymentDiscount from 'models/plan/payment-discount';
-import ProductDiscount from 'models/plan/product-discount';
+import Coupon from './coupon';
+import Payment from './payment';
+import Discount from './discount';
+import Plan from './plan';
+import PaymentDiscount from './payment-discount';
+import ProductDiscount from './product-discount';
+import CompanyLevel from 'models/company-level';
 
 
 export default class Order {
 
   constructor(options) {
-    let { user_id, company_id } = options;
+    let { user_id, company_id, plan } = options;
     if (!user_id) {
       throw new Error('invalid user_id');
     }
     if (!company_id) {
       throw new Error('invalid company_id');
     }
+    if (!plan) {
+      throw new Error('invalid plan');
+    }
     this.user_id = user_id;
     this.company_id = company_id;
+    this.plan = plan;
     this.order_type = C.PAYMENT.ORDER.TYPE.BUY;
     this.products = [];
     this.times = 0;
@@ -33,14 +38,6 @@ export default class Order {
     this.status = undefined;
     this.date_create = new Date();
     this.date_update = new Date();
-  }
-
-  getProducts() {
-    return this.products;
-  }
-
-  getTimes() {
-    return this.times;
   }
 
   setProducts(products) {
@@ -99,6 +96,7 @@ export default class Order {
         order: {
           user_id: this.user_id,
           company_id: this.company_id,
+          plan: this.plan,
           order_type: this.order_type,
           products: this.products,
           times: this.times,
@@ -291,20 +289,20 @@ export default class Order {
     return Discount.getDiscount(origin, discountItem);
   }
 
-  getLimits(plan) {
-    if (this.limits) {
-      return Promise.resolve(this.limits);
+  getLimits() {
+    let {plan, company_id, limits} = this;
+    if (limits) {
+      return Promise.resolve(limits);
     }
-    return Promise.all([
-      Plan.getDefaultMemberCount(plan),
-      db.company.findOne({_id : this.company_id}, {
-        'members._id': 1
-      })
-    ])
-    .then(([defaultCount, comapny]) => {
-      let member_count = comapny.members.length - defaultCount;
+    return new CompanyLevel(company_id).getStatus()
+    .then(status => {
+      let {setting, planInfo, levelInfo} = status;
+      let minMember = levelInfo.member.count - setting.default_member;
       this.limits = {
-        member_count: member_count < 0 ? 0 : member_count
+        member_count: {
+          min: minMember > 0 ? minMember : 0,
+          max: setting.max_member - setting.default_member
+        }
       };
       return this.limits;
     });

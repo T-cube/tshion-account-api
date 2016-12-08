@@ -224,20 +224,33 @@ INPUT
 ```
 
 
+## order
+
+订单的几种形式：
+
+1. 未购买过，新购，order_type = new
+2. 已购买，增加周期，人数方案不变，order_type = renewal
+3. 已购买，升级人数或方案（付款成功后生效），order_type = increase
+4. 已购买，降级人数或方案（立即生效），order_type = decrease
+5. 已过期，等同新购（方案不变，人数不变），order_type = expire
+
+
 ### POST /order
 
 INPUT
 
 ```javascript
 {
-  plan: TeamPlanPaid,
-  products: [
+  plan: TeamPlanPaid,      // order_type 为 new increase decrease
+  order_type: String,     // new, renewal, increase, decrease, expire
+  times: Int,             // order_type 为 new renewal expire
+  products: [             // order_type 为 new increase decrease
     {
       product_no: String,
       quantity: Number,
     } ...
   ],
-  coupon: ObjectId,
+  coupon: ObjectId,       // 满足优惠券条件
 }
 ```
 
@@ -254,18 +267,7 @@ OUTPUT
 
 INPUT
 
-```javascript
-{
-  plan: TeamPlanPaid,
-  products: [
-    {
-      product_no: String,
-      quantity: Number,
-    } ...
-  ],
-  coupon: ObjectId,
-}
-```
+同 POST /order
 
 OUTPUT
 

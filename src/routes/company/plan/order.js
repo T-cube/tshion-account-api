@@ -6,6 +6,7 @@ import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import Order from 'models/plan/order';
+import UpgradeOrder from 'models/plan/upgrade-order';
 import Auth from 'models/plan/auth';
 import Payment from 'models/plan/payment';
 import Product from 'models/plan/product';
@@ -19,13 +20,14 @@ api.get('/', (req, res, next) => {
 
 });
 
-api.post(/\/(buy|upgrade)\/(prepare)?\/?$/, (req, res, next) => {
-  let isPrepare = /prepare$/.test(req.url);
-  let isUpgrade = /upgrade/.test(req.url);
+api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   let data = req.body;
   validate('create_order', data);
-  let { coupon } = data;
-  let { plan, products } = data;
+  let isPrepare = /prepare$/.test(req.url);
+  let { plan, products, coupon, times, order_type } = data;
+  let company_id = req.company._id;
+  let user_id = req.user._id;
+
   new Auth(req.company._id).isPlanAuthed(plan)
   .then(isAuthed => {
     if (!isAuthed) {
@@ -37,17 +39,24 @@ api.post(/\/(buy|upgrade)\/(prepare)?\/?$/, (req, res, next) => {
     if (!planProducts) {
       throw new ApiError(400, 'product_not_accessable');
     }
-    products = products.map(product => {
-      let productInfo = _.find(planProducts, item => item.product_no == product.product_no);
-      return productInfo && Object.assign({}, productInfo, product);
-    }).filter(i => i);
-    let orderModel = new Order({
-      company_id: req.company._id,
-      user_id: req.user._id,
-    });
+    products = planProducts
+      .filter(product => _.contains(_.pluck(products, 'product_no'), product.product_no))
+      .map(product => {
+        product.quantity = _.find(products, item => item.product_no == product.product_no).quantity || 1;
+        return product;
+      });
+
+    let props = {company_id, user_id, plan};
+    let orderModel = order_type == C.PAYMENT.ORDER.TYPE.UPGRADE
+      ? new UpgradeOrder(props)
+      : new Order(props);
+
     orderModel.setProducts(products);
     if (coupon) {
       orderModel.withCoupon(coupon);
+    }
+    if (times) {
+      orderModel.setTimes(times);
     }
     if (isPrepare) {
       return Promise.all([
@@ -63,10 +72,6 @@ api.post(/\/(buy|upgrade)\/(prepare)?\/?$/, (req, res, next) => {
   })
   .catch(next);
 });
-
-api.post('/buy', (req, res, next) => {});
-api.post('/upgrade', (req, res, next) => {});
-api.post('/upgrade-member', (req, res, next) => {});
 
 api.get('/pending', (req, res, next) => {
   let orderModel = new Order({

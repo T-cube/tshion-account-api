@@ -5,6 +5,7 @@ const schema = {
   create_order: {
     sanitization: {
       plan: { type: 'string' },
+      order_type: { type: 'string' },
       products: {
         type: 'array',
         items: {
@@ -19,6 +20,7 @@ const schema = {
     },
     validation: {
       plan: { $enum: [C.PLAN.TEAMPLAN.PRO, C.PLAN.TEAMPLAN.ENT] },
+      order_type: { $enum: [C.PAYMENT.ORDER.TYPE.BUY, C.PAYMENT.ORDER.TYPE.UPGRADE] },
       products: {
         type: 'array',
         items: {
