@@ -64,6 +64,10 @@ api.post(/\/(buy|upgrade)\/(prepare)?\/?$/, (req, res, next) => {
   .catch(next);
 });
 
+api.post('/buy', (req, res, next) => {});
+api.post('/upgrade', (req, res, next) => {});
+api.post('/upgrade-member', (req, res, next) => {});
+
 api.get('/pending', (req, res, next) => {
   let orderModel = new Order({
     company_id: req.company._id,

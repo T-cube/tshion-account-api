@@ -48,7 +48,10 @@ export default class Plan {
     let len = planList.length;
     // free
     if (len == 0) {
-      return {plan: C.PLAN.TEAMPLAN.FREE};
+      return {
+        plan: C.PLAN.TEAMPLAN.FREE,
+        member_count: 0,
+      };
     }
     // trial or paid
     if (len == 1) {
@@ -111,6 +114,13 @@ export default class Plan {
     });
   }
 
+  static getSetting(plan) {
+    // return db.plan.findOne({plan}); // TODO
+    return Plan.list().then(doc => {
+      return _.find(doc, item => item.type == plan);
+    });
+  }
+
   static getDefaultMemberCount(plan) {
     return Promise.resolve(10);
   }
@@ -128,6 +138,8 @@ export default class Plan {
           type: 'free',
           description: '免费团队，可使用T立方的基本功能',
           store: 1000000000,
+          inc_member_store: 10,
+          max_file_size: 100000,
           max_member: 10,
           products: _.filter(products, product => product.plan == 'free'),
         },
@@ -136,6 +148,8 @@ export default class Plan {
           type: 'pro',
           description: '',
           store: 10000000000,
+          inc_member_store: 10,
+          max_file_size: 100000,
           max_member: 50,
           products: _.filter(products, product => product.plan == 'pro'),
           ext_info: '专业版',
@@ -145,6 +159,8 @@ export default class Plan {
           type: 'ent',
           description: '',
           store: 10000000000,
+          inc_member_store: 10,
+          max_file_size: 100000,
           max_member: 100,
           products: _.filter(products, product => product.plan == 'ent'),
           ext_info: '企业版',

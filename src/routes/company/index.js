@@ -12,6 +12,7 @@ import { time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
 import Structure from 'models/structure';
+import CompanyLevel from 'models/company-level';
 import UserLevel from 'models/user-level';
 import { COMPANY_MEMBER_UPDATE } from 'models/notification-setting';
 
@@ -95,6 +96,8 @@ api.post('/', (req, res, next) => {
       target_type: C.OBJECT_TYPE.COMPANY,
       company: company._id
     });
+    // init company level
+    CompanyLevel.init(company._id);
     // add company to user
     return db.user.update({
       _id: req.user._id

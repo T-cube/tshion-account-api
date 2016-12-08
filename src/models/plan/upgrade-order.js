@@ -30,7 +30,7 @@ export default class UpgradeOrder extends Order {
     if (!this.isValid()) {
 
     }
-    if (this.coupons && !this.isCouponAvaliable()) {
+    if (this.coupons && !this.isCouponAvailable()) {
 
     }
     // products.map(product => {});

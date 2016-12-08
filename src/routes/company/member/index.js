@@ -49,15 +49,20 @@ api.get('/', (req, res, next) => {
 });
 
 api.get('/level-info', (req, res, next) => {
-  let companyLevel = new CompanyLevel(req.company);
-  companyLevel.getMemberLevelInfo().then(info => {
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.getStatus().then(status => {
+    let {levelInfo, planInfo, setting} = status;
+    let info = {
+      max_members: setting.member_count + planInfo.member_count,
+      member_num: levelInfo.member.count,
+    };
     return res.json(info);
   })
   .catch(next);
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  let companyLevel = new CompanyLevel(req.company);
+  let companyLevel = new CompanyLevel(req.company._id);
   companyLevel.canAddMember().then(isCanAddmement => {
     if (!isCanAddmement) {
       throw new ApiError(400, 'over_member_num');
@@ -110,7 +115,8 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
           _id: req.company._id,
         }, {
           $push: {members: data}
-        })
+        }),
+        CompanyLevel.incMemberCount(req.company._id, 1),
       ]);
     })
     .then(() => res.json(data));
@@ -266,6 +272,7 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
     }, {
       multi: true
     }),
+    CompanyLevel.incMemberCount(req.company._id, -1),
     save(req),
   ])
   .then(() => {
@@ -313,6 +320,7 @@ api.post('/exit', (req, res, next) => {
     }, {
       upsert: true
     }),
+    CompanyLevel.incMemberCount(req.company._id, -1),
   ])
   .then(() => {
     res.json({});

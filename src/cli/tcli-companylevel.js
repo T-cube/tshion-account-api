@@ -7,7 +7,7 @@ import _ from 'underscore';
 import Promise from 'bluebird';
 
 program
-  .option('-o, --update', 'update company storage')
+  .option('-o, --update', 'update company level')
   .parse(process.argv);
 
 console.log('database updating');
@@ -19,7 +19,8 @@ if (!program.update) {
 if (program.update) {
 
   db.company.find({}, {
-    _id: 1
+    _id: 1,
+    'members._id': 1,
   })
   .then(companyList => {
     return Promise.map(companyList, companyInfo => {
@@ -63,6 +64,9 @@ if (program.update) {
           };
           let size = knowledge_stroage.size + _.reduce(project_stroage.map(item => item.size), (memo, num) => (memo + num), 0);
           console.log(company_id, {
+            member: {
+              count: companyInfo.members.length
+            },
             file: {
               size,
               knowledge: knowledge_stroage,
@@ -73,6 +77,9 @@ if (program.update) {
             _id: company_id
           }, {
             $set: {
+              member: {
+                count: companyInfo.members.length
+              },
               file: {
                 size,
                 knowledge: knowledge_stroage,

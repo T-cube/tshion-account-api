@@ -137,13 +137,13 @@ export default class Order {
     return new Coupon(this.company_id).getCoupons()
     .then(coupons => {
       coupons.forEach(coupon => {
-        coupon.isAvaliable = this.isCouponAvaliable(coupon);
+        coupon.isAvailable = this.isCouponAvailable(coupon);
       });
       return coupons;
     });
   }
 
-  isCouponAvaliable(coupon) {
+  isCouponAvailable(coupon) {
     let { products } = coupon;
     let result = false;
     if (products === null) {
@@ -170,7 +170,7 @@ export default class Order {
       return Promise.resolve();
     }
     return new Coupon(this.company_id).getCoupon(this.coupon).then(coupon => {
-      if (!coupon || !this.isCouponAvaliable(coupon)) {
+      if (!coupon || !this.isCouponAvailable(coupon)) {
         this.coupon = undefined;
         return;
       }
