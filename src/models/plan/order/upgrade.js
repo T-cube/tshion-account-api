@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
+import moment from 'moment';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -30,24 +31,21 @@ export default class UpgradeOrder extends Base {
       this.getPlanStatus(),
       this.getLimits(),
     ])
-    .then(([{current, authed}, {member_count}]) => {
+    .then(([{current, authed}, {times}]) => {
       let error = [];
       let isValid = true;
       if (!_.contains(authed, this.plan)) {
         isValid = false;
         error.push('plan_not_authed');
       }
-      if (current && (current.type != 'trial' && current.plan != C.TEAMPLAN.FREE)) {
+      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
         isValid = false;
-        error.push('plan_using');
+        error.push('invalid_plan_status');
       }
-      let memberNum = _.find(this.products, product => product.product_no == 'P0002');
-      if (member_count) {
-        let {min, max} = member_count;
-        let quantity = memberNum ? memberNum.quantity : 0;
-        if (min > quantity || max < quantity) {
+      if (times) {
+        if (this.times < times.min || this.times > times.max) {
           isValid = false;
-          error.push('invalid_member_count');
+          error.push('invalid_times');
         }
       }
       return {isValid, error};
@@ -59,17 +57,38 @@ export default class UpgradeOrder extends Base {
     if (limits) {
       return Promise.resolve(limits);
     }
-    return this.getCompanyLevelStatus()
-    .then(companyLevelStatus => {
+    return Promise.all([
+      this.getTimes(),
+      this.getCompanyLevelStatus(),
+    ])
+    .then(([times, companyLevelStatus]) => {
       let {setting, planInfo, levelInfo} = companyLevelStatus;
-      let minMember = levelInfo.member.count - setting.default_member;
       this.limits = {
         member_count: {
-          min: minMember > 0 ? minMember : 0,
+          min: planInfo.member_count || 0,
           max: setting.max_member - setting.default_member
         },
+        times: {
+          min: times,
+          max: times,
+        }
       };
       return this.limits;
+    });
+  }
+
+  getTimes() {
+    let {times} = this;
+    if (times) {
+      return Promise.resolve(times);
+    }
+    return this.getPlanStatus().then(({current}) => {
+      if (!current || !current.date_end) {
+        return 0;
+      }
+      let times = moment(current.date_end).diff(moment(), 'month');
+      this.times = times > 0 ? times : 0;
+      return this.times;
     });
   }
 

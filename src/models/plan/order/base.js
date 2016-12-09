@@ -81,7 +81,7 @@ export default class Order {
       if (!isValid) {
         return {
           isValid,
-          error,
+          error: error.join(','),
           limits: this.limits,
         };
       }
