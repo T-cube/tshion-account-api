@@ -15,13 +15,16 @@ export default class Schedule {
   remindingJob() {
     let criteria = {
       time: {
-        $gte: moment().startOf('minute'),
-        $lt: moment().add(5, 'minute').startOf('minute'),
+        $gte: moment().startOf('minute').toDate(),
+        $lt: moment().add(5, 'minute').startOf('minute').toDate(),
       }
     };
     db.reminding.find(criteria)
-    .forEach(reminding => {
+    .forEach((err, reminding) => {
       if (!reminding) {
+        if (err) {
+          console.error(err);
+        }
         return;
       }
       return db.schedule.find({
