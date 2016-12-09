@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import cronParser from 'cron-parser';
-import config from 'config';
+import moment from 'moment';
 
 import db from 'lib/database';
 import C from 'lib/constants';
@@ -13,45 +13,25 @@ export default class Schedule {
   }
 
   remindingJob() {
-    let time = new Date();
-    time.setMilliseconds(0);
-    time.setSeconds(0);
-    this.doRemindingJob(time, 1000);
-  }
-
-  doRemindingJob(time, limit, last_id) {
-    limit = limit || 1;
-    let condition = {
-      time: time
+    let criteria = {
+      time: {
+        $gte: moment().startOf('minute'),
+        $lt: moment().add(5, 'minute').startOf('minute'),
+      }
     };
-    if (last_id) {
-      condition._id = {
-        $gt: last_id
-      };
-    }
-    db.reminding.find(condition)
-    // .limit(limit)
-    .then(list => {
-      if (!list.length) {
+    db.reminding.find(criteria)
+    .forEach(reminding => {
+      if (!reminding) {
         return;
       }
-      let schedules = [];
-      list.forEach(reminding => schedules.push(reminding.target_id));
       return db.schedule.find({
-        _id: {
-          $in: schedules
-        }
+        _id: reminding.target_id
       })
-      .then(schedules => {
-        return Promise.all(schedules.map(schedule => {
-          this.sentMessage(schedule, time);
-          return this.updateReminding(schedule);
-        }));
-      });
-      // .then(() => doJob(db, time, limit, list[list.length - 1]._id))
-    })
-    .catch(e => {
-      console.error(e);
+      .then(schedule => {
+        this.sentMessage(schedule, schedule.time_start);
+        return this.updateReminding(schedule);
+      })
+      .catch(e => console.error(e));
     });
   }
 
