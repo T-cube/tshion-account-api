@@ -244,33 +244,28 @@ let constants = {
     WECHAT: 'com_tlifang_wechat',
   },
 
-  PLAN: {
-    TEAMPLAN: {
-      FREE: 'free',
-      PRO: 'pro',
-      ENT: 'ent',
-    },
-    TEAMPLAN_PAID: ['pro', 'ent'],
-    PLAN_STATUS: {
-      ACTIVED: 'actived',
-      EXPIRED: 'expired',
-    },
-    AUTH_STATUS: {
-      POSTED: 'posted',
-      cancelled: 'cancelled',
-      REPOSTED: 'reposted',
-      ACCEPTED: 'accepted',
-      REJECTED: 'rejected',
-    }
+  TEAMPLAN: {
+    FREE: 'free',
+    PRO: 'pro',
+    ENT: 'ent',
   },
-
-  PAYMENT: {
-    ORDER: {
-      TYPE: {
-        BUY: 'buy',
-        UPGRADE: 'upgrade',
-      }
-    }
+  PLAN_STATUS: {
+    ACTIVED: 'actived',
+    EXPIRED: 'expired',
+  },
+  AUTH_STATUS: {
+    POSTED: 'posted',
+    cancelled: 'cancelled',
+    REPOSTED: 'reposted',
+    ACCEPTED: 'accepted',
+    REJECTED: 'rejected',
+  },
+  ORDER_TYPE: {
+    NEWLY: 'newly',
+    RENEWAL: 'renewal',
+    UPGRADE: 'upgrade',
+    DEGRADE: 'degrade',
+    PATCH: 'patch',
   }
 
 };

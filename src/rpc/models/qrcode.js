@@ -146,13 +146,13 @@ export default class QrcodeModel extends Model {
     };
     let data = {};
     return Promise.all([
-      this.qrcode.scan.from.count(condition)
+      this.db.qrcode.scan.count(condition)
       .then(sum => {
         data.totalrows = sum;
         data.page = page;
         data.pagesize = pagesize;
       }),
-      this.qrcode.scan.from.find(condition)
+      this.db.qrcode.scan.find(condition)
       .sort({
         _id: -1
       })

@@ -109,15 +109,7 @@ export default class Order {
   }
 
   isValid() {
-    return this.getLimits().then(({member_count}) => {
-      let memberNum = _.find(this.products, product => product.product_no == 'P0002');
-      let isValid = !member_count || (memberNum && memberNum.quantity >= member_count);
-      let error;
-      if (!isValid) {
-        error = 'invalid_member_count';
-      }
-      return {isValid, error};
-    });
+    return Promise.resolve({});
   }
 
   getPendingOrder() {
@@ -286,5 +278,27 @@ export default class Order {
   }
 
   getLimits() {}
+
+  getPlanStatus() {
+    let {planStatus, company_id} = this;
+    if (planStatus) {
+      return Promise.resolve(planStatus);
+    }
+    return new Plan(company_id).getStatus().then(planStatus => {
+      this.planStatus = planStatus;
+      return planStatus;
+    });
+  }
+
+  getCompanyLevelStatus() {
+    let {companyLevelStatus, company_id} = this;
+    if (companyLevelStatus) {
+      return Promise.resolve(companyLevelStatus);
+    }
+    return new CompanyLevel(company_id).getStatus().then(companyLevelStatus => {
+      this.companyLevelStatus = companyLevelStatus;
+      return companyLevelStatus;
+    });
+  }
 
 }

@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
+import config from 'config';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -13,7 +14,7 @@ import ProductDiscount from 'models/plan/product-discount';
 import CompanyLevel from 'models/company-level';
 
 
-export default class NewOrder extends Base {
+export default class NewlyOrder extends Base {
 
   constructor(options) {
     super(options);
@@ -22,16 +23,39 @@ export default class NewOrder extends Base {
       throw new Error('invalid plan');
     }
     this.plan = plan;
-    this.order_type = C.PAYMENT.ORDER.TYPE.NEW;
+    this.order_type = C.ORDER_TYPE.NEWLY;
   }
 
   isValid() {
-    return this.getLimits().then(({member_count}) => {
+    return Promise.all([
+      this.getPlanStatus(),
+      this.getLimits(),
+    ])
+    .then(([{current, authed}, {member_count, times}]) => {
+      let error = [];
+      let isValid = true;
+      if (!_.contains(authed, this.plan)) {
+        isValid = false;
+        error.push('plan_not_authed');
+      }
+      if (current && (current.type != 'trial') && current.plan != C.TEAMPLAN.FREE) {
+        isValid = false;
+        error.push('plan_using');
+      }
       let memberNum = _.find(this.products, product => product.product_no == 'P0002');
-      let isValid = !member_count || (memberNum && memberNum.quantity >= member_count);
-      let error;
-      if (!isValid) {
-        error = 'invalid_member_count';
+      if (member_count) {
+        let {min, max} = member_count;
+        let quantity = memberNum ? memberNum.quantity : 0;
+        if (min > quantity || max < quantity) {
+          isValid = false;
+          error.push('invalid_member_count');
+        }
+      }
+      if (times) {
+        if (this.times < times.min || this.times > times.max) {
+          isValid = false;
+          error.push('invalid_times');
+        }
       }
       return {isValid, error};
     });
@@ -42,14 +66,18 @@ export default class NewOrder extends Base {
     if (limits) {
       return Promise.resolve(limits);
     }
-    return new CompanyLevel(company_id).getStatus()
-    .then(status => {
-      let {setting, planInfo, levelInfo} = status;
+    return this.getCompanyLevelStatus()
+    .then(companyLevelStatus => {
+      let {setting, planInfo, levelInfo} = companyLevelStatus;
       let minMember = levelInfo.member.count - setting.default_member;
       this.limits = {
         member_count: {
           min: minMember > 0 ? minMember : 0,
           max: setting.max_member - setting.default_member
+        },
+        times: {
+          min: 1,
+          max: config.get('plan.max_times'),
         }
       };
       return this.limits;

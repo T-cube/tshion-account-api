@@ -1,5 +1,7 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
+import config from 'config';
+import moment from 'moment';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -13,25 +15,38 @@ import ProductDiscount from 'models/plan/product-discount';
 import CompanyLevel from 'models/company-level';
 
 
-export default class NewOrder extends Base {
+export default class RenewalOrder extends Base {
 
   constructor(options) {
     super(options);
-    let { user_id, company_id, plan } = options;
-    if (!plan) {
-      throw new Error('invalid plan');
-    }
-    this.plan = plan;
-    this.order_type = C.PAYMENT.ORDER.TYPE.NEW;
+    this.order_type = C.ORDER_TYPE.RENEWAL;
   }
 
   isValid() {
-    return this.getLimits().then(({member_count}) => {
-      let memberNum = _.find(this.products, product => product.product_no == 'P0002');
-      let isValid = !member_count || (memberNum && memberNum.quantity >= member_count);
-      let error;
-      if (!isValid) {
-        error = 'invalid_member_count';
+    return Promise.all([
+      this.getPlanStatus(),
+      this.getLimits(),
+    ])
+    .then(([{current, authed}, {times}]) => {
+      let error = [];
+      let isValid = true;
+      if (!_.contains(authed, this.plan)) {
+        isValid = false;
+        error.push('plan_not_authed');
+      }
+      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
+        isValid = false;
+        error.push('cannot_upgrade');
+      }
+      if (times.max < 1) {
+        isValid = false;
+        error.push('over_period');
+      }
+      if (times) {
+        if (this.times < times.min || this.times > times.max) {
+          isValid = false;
+          error.push('invalid_times');
+        }
       }
       return {isValid, error};
     });
@@ -42,14 +57,12 @@ export default class NewOrder extends Base {
     if (limits) {
       return Promise.resolve(limits);
     }
-    return new CompanyLevel(company_id).getStatus()
-    .then(status => {
-      let {setting, planInfo, levelInfo} = status;
-      let minMember = levelInfo.member.count - setting.default_member;
+    return this.getPlanStatus().then(({current}) => {
+      let max = moment().add(config.get('plan.max_times'), 'month').diff(current.date_end, 'month');
       this.limits = {
-        member_count: {
-          min: minMember > 0 ? minMember : 0,
-          max: setting.max_member - setting.default_member
+        times: {
+          min: 1,
+          max: 12
         }
       };
       return this.limits;

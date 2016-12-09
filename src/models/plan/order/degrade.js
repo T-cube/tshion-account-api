@@ -13,7 +13,7 @@ import ProductDiscount from 'models/plan/product-discount';
 import CompanyLevel from 'models/company-level';
 
 
-export default class NewOrder extends Base {
+export default class DegradeOrder extends Base {
 
   constructor(options) {
     super(options);
@@ -22,7 +22,7 @@ export default class NewOrder extends Base {
       throw new Error('invalid plan');
     }
     this.plan = plan;
-    this.order_type = C.PAYMENT.ORDER.TYPE.NEW;
+    this.order_type = C.ORDER_TYPE.DEGRADE;
   }
 
   isValid() {

@@ -232,5 +232,8 @@ module.exports = {
       },
       'weather.areaid': '',
     }
-  }
+  },
+  plan: {
+    max_times: 12,
+  },
 };

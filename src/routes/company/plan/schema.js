@@ -19,8 +19,8 @@ const schema = {
       coupon: { $objectId: 1, optional: true },
     },
     validation: {
-      plan: { $enum: [C.PLAN.TEAMPLAN.PRO, C.PLAN.TEAMPLAN.ENT] },
-      order_type: { $enum: [C.PAYMENT.ORDER.TYPE.BUY, C.PAYMENT.ORDER.TYPE.UPGRADE] },
+      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
+      order_type: { $enum: ENUMS.ORDER_TYPE },
       products: {
         type: 'array',
         items: {
@@ -46,7 +46,7 @@ const schema = {
       plan: { type: 'string' },
     },
     validation: {
-      plan: { $enum: [C.PLAN.TEAMPLAN.PRO, C.PLAN.TEAMPLAN.ENT] },
+      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
     },
   },
 };

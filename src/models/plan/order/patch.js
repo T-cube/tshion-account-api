@@ -13,16 +13,11 @@ import ProductDiscount from 'models/plan/product-discount';
 import CompanyLevel from 'models/company-level';
 
 
-export default class NewOrder extends Base {
+export default class PatchOrder extends Base {
 
   constructor(options) {
     super(options);
-    let { user_id, company_id, plan } = options;
-    if (!plan) {
-      throw new Error('invalid plan');
-    }
-    this.plan = plan;
-    this.order_type = C.PAYMENT.ORDER.TYPE.NEW;
+    this.order_type = C.ORDER_TYPE.DEGRADE;
   }
 
   isValid() {

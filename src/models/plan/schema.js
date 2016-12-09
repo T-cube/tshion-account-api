@@ -1,6 +1,6 @@
 
 import { buildValidator } from 'lib/inspector';
-import { ENUMS } from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
 
 const logSchema = {
   sanitization: {
@@ -49,8 +49,8 @@ const schema = {
     validation: {
       company_id: { $bjectId: 1 },
       user_id: { $bjectId: 1 },
-      plan: { $enum: ENUMS.PLAN.TEAMPLAN },
-      status: { $enum: ENUMS.PLAN.PLAN_STATUS },
+      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
+      status: { $enum: ENUMS.PLAN_STATUS },
       date_start: { type: 'date' },
       date_end: { type: 'date' },
     },

@@ -241,10 +241,10 @@ INPUT
 
 ```javascript
 {
-  plan: TeamPlanPaid,      // order_type 为 new upgrade degrade
-  order_type: String,     // new, renewal, upgrade, degrade, patch
-  times: Int,             // order_type 为 new renewal
-  products: [             // order_type 为 new upgrade degrade
+  plan: TeamPlanPaid,      // order_type 为 newLY upgrade degrade
+  order_type: String,     // newLY, renewal, upgrade, degrade, patch
+  times: Int,             // order_type 为 newLY renewal
+  products: [             // order_type 为 newLY upgrade degrade
     {
       product_no: String,
       quantity: Number,
