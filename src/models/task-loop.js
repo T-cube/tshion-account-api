@@ -16,27 +16,20 @@ export default class TaskLoop {
     this.settings = _.extend(setting, opts);
   }
 
-  generateTasks() {
-    this.doGenerateTasks().catch(e => console.error(e));
-  }
-
-  doGenerateTasks(last_id) {
-    return this.fetchTargets(last_id)
-    .then(tasks => {
-      if (!tasks.length) {
+  loopJob() {
+    let criteria = {
+      'loop.next': {
+        // $gte: moment().startOf('day').toDate(),
+        $lt: moment().add(1, 'd').startOf('day').toDate(),
+      }
+    };
+    let cursor = db.task.find(criteria);
+    cursor.forEach((err, doc) => {
+      if (!doc) {
         return;
       }
-      let next_last_id = tasks.length && tasks[tasks.length - 1]._id;
-      return Promise.all([
-        this.addLoopTasks(tasks),
-        this.updateTargetsNextGenerateTime(tasks),
-      ])
-      .then(() => {
-        if (next_last_id) {
-          this.doGenerateTasks(next_last_id);
-        }
-      })
-      .catch(e => console.error(e));
+      this.addLoopTasks([doc]).catch(e => console.error(e));
+      this.updateTargetsNextGenerateTime([doc]).catch(e => console.error(e));
     });
   }
 
@@ -61,25 +54,6 @@ export default class TaskLoop {
       return newTask;
     });
     return newTasks.length && db.task.insert(newTasks);
-  }
-
-  fetchTargets(last_id) {
-    let criteria = {
-      'loop.next': {
-        // $gte: moment().startOf('day').toDate(),
-        $lt: moment().add(1, 'd').startOf('day').toDate(),
-      }
-    };
-    if (last_id) {
-      criteria._id = {
-        $lt: last_id
-      };
-    }
-    return db.task.find(criteria)
-    .limit(this.settings.rows_fetch_once)
-    .sort({
-      _id: -1
-    });
   }
 
   static getTaskNextGenerateTime(task) {

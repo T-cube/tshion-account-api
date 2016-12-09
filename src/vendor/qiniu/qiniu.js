@@ -80,15 +80,21 @@ export default class Qiniu {
     });
   }
 
-  getThumnailUrl(url, size) {
+  getThumnailUrl(url, width, height) {
     if (!/^http/.test(url)) {
       url = this.conf.SERVER_URL + url;
     }
-    if (!/^\d+$/.test(size)) {
+    width = parseInt(width);
+    if (undefined === height) {
+      height = width;
+    } else {
+      height = parseInt(height);
+    }
+    if (!/^\d+$/.test(width + '' + height)) {
       throw new Error('getThumnailUrl: invalid thumbnail size');
     }
     let find = /\?.+/;
-    let replace = `?imageView2/1/w/${size}/h/${size}`;
+    let replace = `?imageView2/1/w/${width}/h/${height}`;
     if (find.test(url)) {
       url = url.replace(find, replace);
     } else {

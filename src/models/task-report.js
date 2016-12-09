@@ -17,42 +17,25 @@ export default class TaskReport {
   }
 
   doJob() {
-    this._doJob();
-  }
-
-  _doJob(last_id) {
-    let criteria = last_id ? {
-      _id: {
-        $gt: last_id
-      }
-    } : {};
-    db.user.findOne(criteria, {_id: 1})
-    .then(user => {
+    let cursor = db.user.find();
+    cursor.forEach((err, user) => {
       if (!user) {
         return;
       }
-      return this.get(user._id)
+      return this.getTasks(user._id)
       .then(doc => {
         doc && this.model('notification').send({
-          to: user._id,
+          to: doc._id,
           action: C.ACTIVITY_ACTION.TASK_DAYLYREPORT,
           target_type: C.OBJECT_TYPE.TASK,
           field: doc,
         }, TASK_DAYLYREPORT);
       })
-      .then(() => user._id)
-      .catch(e => {
-        console.error(e);
-        return user._id;
-      });
-    })
-    .then(last_id => {
-      last_id && this._doJob(last_id);
-    })
-    .catch(e => console.error(e));
+      .catch(e => console.error(e));
+    });
   }
 
-  get(userId, date) {
+  getTasks(userId, date) {
     return Promise.all([
       this.getDateTasks(userId, date),
       this.getExpiredTasks(userId, date),
