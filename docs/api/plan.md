@@ -230,9 +230,9 @@ INPUT
 
 1. 未购买过，新购，order_type = new
 2. 已购买，增加周期，人数方案不变，order_type = renewal
-3. 已购买，升级人数或方案（付款成功后生效），order_type = increase
-4. 已购买，降级人数或方案（立即生效），order_type = decrease
-5. 已过期，等同新购（方案不变，人数不变），order_type = expire
+3. 已购买，升级人数或方案（付款成功后生效），order_type = upgrade
+4. 已购买，降级人数或方案（立即生效），order_type = degrade
+5. 已过期，同新购（方案不变，人数不变），order_type = patch
 
 
 ### POST /order
@@ -241,10 +241,10 @@ INPUT
 
 ```javascript
 {
-  plan: TeamPlanPaid,      // order_type 为 new increase decrease
-  order_type: String,     // new, renewal, increase, decrease, expire
-  times: Int,             // order_type 为 new renewal expire
-  products: [             // order_type 为 new increase decrease
+  plan: TeamPlanPaid,      // order_type 为 new upgrade degrade
+  order_type: String,     // new, renewal, upgrade, degrade, patch
+  times: Int,             // order_type 为 new renewal
+  products: [             // order_type 为 new upgrade degrade
     {
       product_no: String,
       quantity: Number,
