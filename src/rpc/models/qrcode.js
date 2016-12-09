@@ -156,7 +156,7 @@ export default class QrcodeModel extends Model {
       .sort({
         _id: -1
       })
-      .skip((page - 1) * pagesize)
+      .skip(page * pagesize)
       .limit(pagesize)
       .then(list => data.list = list)
     ])
