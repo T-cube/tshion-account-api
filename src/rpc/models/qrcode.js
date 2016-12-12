@@ -148,7 +148,7 @@ export default class QrcodeModel extends Model {
     return Promise.all([
       this.db.qrcode.scan.count(condition)
       .then(sum => {
-        data.totalrows = sum;
+        data.totalRows = sum;
         data.page = page;
         data.pagesize = pagesize;
       }),
