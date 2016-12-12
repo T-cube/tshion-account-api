@@ -249,6 +249,10 @@ let constants = {
     PRO: 'pro',
     ENT: 'ent',
   },
+  TEAMPLAN_PAID: {
+    PRO: 'pro',
+    ENT: 'ent',
+  },
   PLAN_STATUS: {
     ACTIVED: 'actived',
     EXPIRED: 'expired',

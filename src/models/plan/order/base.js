@@ -13,7 +13,7 @@ import ProductDiscount from '../product-discount';
 import CompanyLevel from 'models/company-level';
 
 
-export default class Order {
+export default class BaseOrder {
 
   constructor(props) {
     let { user_id, company_id } = props;
@@ -86,7 +86,7 @@ export default class Order {
   }
 
   save() {
-    return this.getPendingOrder()
+    return BaseOrder.getPendingOrder()
     .then(orderPending => {
       if (orderPending) {
         throw new ApiError(400, 'exist_pending_order');
@@ -142,9 +142,9 @@ export default class Order {
     return Promise.resolve({});
   }
 
-  getPendingOrder() {
+  static getPendingOrder(company_id) {
     return db.payment.order.findOne({
-      company_id: this.company_id,
+      company_id: company_id,
       status: {$in: ['created', 'paying']}
     });
   }

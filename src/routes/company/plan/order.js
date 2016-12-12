@@ -5,9 +5,9 @@ import { ObjectId } from 'mongodb';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
-import Order from 'models/plan/order';
-import Payment from 'models/plan/payment';
+import BaseOrder from 'models/plan/order/base';
 import OrderFactory from 'models/plan/order';
+import Payment from 'models/plan/payment';
 
 let api = express.Router();
 
@@ -39,33 +39,26 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
         return info;
       });
     }
-    return orderModel.save().then(order_id => ({order_id}));
+    return orderModel.save();
   })
   .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.get('/pending', (req, res, next) => {
-  let orderModel = new Order({
-    company_id: req.company._id,
-    user_id: req.user._id,
-  });
-  orderModel.getPendingOrder()
+  BaseOrder.getPendingOrder(req.company._id)
   .then(pendingOrder => {
     res.json(pendingOrder);
   })
   .catch(next);
 });
 
-api.get('/payment', (req, res, next) => {
-  let methods = new Payment().getMethods();
-  res.json(methods);
-});
-
-api.post('/:orderId/pay', (req, res, next) => {
-  let { payment_method } = req.body;
-  let orderId = ObjectId(req.params.orderId);
-  Order.pay(orderId, payment_method)
-  .then(doc => res.json(doc))
+api.post('/pending/pay', (req, res, next) => {
+  let data = req.body;
+  validate('pay', data);
+  BaseOrder.getPendingOrder(req.company._id)
+  .then(order => {
+    return Payment.pay(order, data);
+  })
   .catch(next);
 });

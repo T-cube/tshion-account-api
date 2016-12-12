@@ -21,9 +21,9 @@ export default class Plan {
       new Auth(company_id).getAuthedPlan()
     ])
     .then(([history, authed]) => {
-      let trial = C.PLAN.TEAMPLAN_PAID.filter(item => -1 == history.map(h => h.plan).indexOf(item));
-      let current = this._getCurrent(history.filter(item => item.status == C.PLAN.PLAN_STATUS.ACTIVED));
-      let paid = C.PLAN.TEAMPLAN_PAID;
+      let paid = _.values(C.TEAMPLAN_PAID);
+      let trial = paid.filter(item => -1 == history.map(h => h.plan).indexOf(item));
+      let current = this._getCurrent(history.filter(item => item.status == C.PLAN_STATUS.ACTIVED));
       return {
         history,
         current,
@@ -37,7 +37,7 @@ export default class Plan {
     let { company_id } = this;
     return db.plan.company.find({
       company_id,
-      status: C.PLAN.PLAN_STATUS.ACTIVED
+      status: C.PLAN_STATUS.ACTIVED
     })
     .then(planList => {
       return this._getCurrent(planList);
@@ -49,7 +49,7 @@ export default class Plan {
     // free
     if (len == 0) {
       return {
-        plan: C.PLAN.TEAMPLAN.FREE,
+        plan: C.TEAMPLAN.FREE,
         member_count: 0,
       };
     }
@@ -68,7 +68,7 @@ export default class Plan {
     return db.plan.company.findOne({
       company_id,
       type: 'paid',
-      status: C.PLAN.PLAN_STATUS.ACTIVED
+      status: C.PLAN_STATUS.ACTIVED
     })
     .then(doc => {
       if (!doc) {
@@ -95,7 +95,7 @@ export default class Plan {
         type: 'trial',
         plan,
         member_count,
-        status: C.PLAN.PLAN_STATUS.ACTIVED,
+        status: C.PLAN_STATUS.ACTIVED,
         date_start: new Date(),
         date_end: moment().add(30, 'day').toDate(),
       });

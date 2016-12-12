@@ -7,15 +7,23 @@ const schema = {
       plan: { type: 'string', optional: true },
       order_type: { type: 'string' },
       member_count: { type: 'int', optional: true },
-      times: { type: 'number', optional: true },
+      times: { type: 'int', optional: true },
       coupon: { $objectId: 1, optional: true },
     },
     validation: {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT], optional: true },
       order_type: { $enum: ENUMS.ORDER_TYPE },
       member_count: { type: 'int', optional: true },
-      times: { type: 'number', optional: true },
+      times: { type: 'int', optional: true },
       coupon: { $objectId: 1, optional: true },
+    },
+  },
+  pay: {
+    sanitization: {
+      payment_method: { type: 'string' },
+    },
+    validation: {
+      payment_method: { $enum: ['alipay', 'wechat'] },
     },
   },
   recharge: {

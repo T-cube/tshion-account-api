@@ -4,6 +4,7 @@ import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import Plan from 'models/plan/plan';
+import Payment from 'models/plan/payment';
 
 let api = express.Router();
 
@@ -42,32 +43,10 @@ api.post('/trial', (req, res, next) => {
   .catch(next);
 });
 
-// api.post('/item', (req, res, next) => {
-//   let { type, plan, period } = req.body;
-//   let planModel = new Plan(req.company._id);
-//   let company_id = req.company._id;
-//   let user_id = req.user._id;
-//   let date_start = new Date();
-//   let auth = new Auth(company_id);
-//   auth.getAuthPlan().then(authedPlan => {
-//     if (authedPlan != plan) {
-//       throw new ApiError(400, 'invalid_team_plan');
-//     }
-//     return planModel.getCurrent().then(currentPlan => {
-//       // expire current plan
-//       let createPromise;
-//       let data = {plan, date_start, company_id, user_id};
-//       if (type == 'trail') {
-//         createPromise =planModel.createNewTrial(data);
-//       } else if (type == 'paid') {
-//         createPromise =planModel.createNewPaid(data, period);
-//       }
-//       return createPromise.then(() => planModel.expireCurrent())
-//       .then(() => res.json({}));
-//     });
-//   })
-//   .catch(next);
-// });
+api.get('/payment', (req, res, next) => {
+  let methods = new Payment().getMethods();
+  res.json(methods);
+});
 
 
 api.use('/order', require('./order').default);
