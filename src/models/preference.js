@@ -47,6 +47,8 @@ export default class Preference {
       _id: userId
     }, {
       $set: cover ? data : this._flattenValues(data)
+    }, {
+      upsert: true
     });
   }
 

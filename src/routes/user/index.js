@@ -288,6 +288,9 @@ api.post('/guide', (req, res, next) => {
 api.post('/preference', (req, res, next) => {
   let data = req.body;
   validate('preference', data);
+  if (_.isEmpty(data)) {
+    throw new ApiError(400);
+  }
   req.model('preference').set(req.user._id, data)
   .then(() => res.json({}))
   .catch(next);
