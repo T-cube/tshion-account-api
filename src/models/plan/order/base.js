@@ -32,6 +32,7 @@ export default class BaseOrder {
     this.paid_sum = 0;
     this.coupon = undefined;
     this.status = undefined;
+    this.original_plan = undefined;
     this.date_create = new Date();
     this.date_update = new Date();
     this.member_count = 0;
@@ -106,7 +107,6 @@ export default class BaseOrder {
   }
 
   prepare() {
-    let { products } = this;
     return this.isValid().then(({error, isValid}) => {
       if (!isValid) {
         return {
@@ -115,7 +115,7 @@ export default class BaseOrder {
           limits: this.limits,
         };
       }
-      this.paid_sum = this.original_sum = ProductDiscount.getOriginalFeeOfProducts(products);
+      this.paid_sum = this.original_sum = this.getOriginalFeeOfProducts();
       return this.getDiscount().then(() => ({
         isValid,
         limits: this.limits,
@@ -133,6 +133,7 @@ export default class BaseOrder {
           status: this.status,
           date_create: this.date_create,
           date_update: this.date_update,
+          original_plan: this.original_plan,
         },
       }));
     });
@@ -159,6 +160,7 @@ export default class BaseOrder {
     });
   }
 
+  // TODO
   isCouponAvailable(coupon) {
     let { products } = coupon;
     let result = false;
@@ -176,9 +178,20 @@ export default class BaseOrder {
   }
 
   getDiscount() {
+    this.initProducts();
     return this.getProductsDiscount()
     .then(() => this.getCouponDiscount())
     .then(() => this.getPayDiscount());
+  }
+
+  initProducts() {
+    this.products.forEach(product => {
+      product.sum = this.times * product.quantity * product.original_price;
+    });
+  }
+
+  getOriginalFeeOfProducts() {
+    return _.reduce(this.products.map(product => product.quantity * product.original_price * this.times), (memo, num) => memo + num, 0);
   }
 
   getCouponDiscount() {

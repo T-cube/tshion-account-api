@@ -6,13 +6,8 @@ import moment from 'moment';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
-import Coupon from 'models/plan/coupon';
-import Payment from 'models/plan/payment';
-import Discount from 'models/plan/discount';
+import Product from '../product';
 import Base from './base';
-import PaymentDiscount from 'models/plan/payment-discount';
-import ProductDiscount from 'models/plan/product-discount';
-import CompanyLevel from 'models/company-level';
 
 
 export default class RenewalOrder extends Base {
@@ -20,6 +15,28 @@ export default class RenewalOrder extends Base {
   constructor(props) {
     super(props);
     this.order_type = C.ORDER_TYPE.RENEWAL;
+  }
+
+  init() {
+    return this.getPlanStatus().then(({current}) => {
+      let {plan, member_count} = current;
+      this.plan = plan;
+      this.member_count = member_count;
+      return Product.getByPlan(plan)
+      .then(planProducts => {
+        let products = [];
+        planProducts.forEach(product => {
+          if (product.product_no == 'P0002') {
+            product.quantity = member_count || 0;
+          } else if (product.product_no == 'P0001') {
+            product.quantity = 1;
+          }
+          product.sum = product.original_price * product.quantity;
+          products.push(product);
+        });
+        this.products = products;
+      });
+    });
   }
 
   isValid() {

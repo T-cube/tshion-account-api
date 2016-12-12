@@ -5,13 +5,8 @@ import moment from 'moment';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
-import Coupon from 'models/plan/coupon';
-import Payment from 'models/plan/payment';
-import Discount from 'models/plan/discount';
 import Base from './base';
-import PaymentDiscount from 'models/plan/payment-discount';
-import ProductDiscount from 'models/plan/product-discount';
-import CompanyLevel from 'models/company-level';
+import Product from '../product';
 
 
 export default class UpgradeOrder extends Base {
@@ -22,11 +17,52 @@ export default class UpgradeOrder extends Base {
     this.order_type = C.ORDER_TYPE.UPGRADE;
   }
 
-  init() {
-    return Promise.all([
-      super.init(),
-      this.getTimes(),
-    ]);
+  init({member_count, plan}) {
+    this.plan = plan;
+    this.member_count = member_count;
+    return this.getPlanStatus().then(({current}) => {
+      this.original_plan = current.plan;
+      let fetchNewPlanProducts = Product.getByPlan(plan);
+      let fetchOriPlanProducts = current.plan == plan || Product.getByPlan(current.plan);
+      return new Promise.all([
+        this.getTimes(),
+        fetchNewPlanProducts,
+        fetchOriPlanProducts,
+      ])
+      .then(([times, planProducts, oriProducts]) => {
+        let products = [];
+        this.times = times;
+        if (member_count > current.member_count) {
+          let incMember = _.find(planProducts, product => product.product_no == 'P0002');
+          if (incMember) {
+            products.push(_.extend(incMember, {quantity: member_count - current.member_count}));
+          }
+        }
+        if (plan != current.plan) {
+          let incPlan = _.find(planProducts, product => product.product_no == 'P0001');
+          let oriIncPlan = _.find(oriProducts, product => product.product_no == 'P0001');
+          if (incPlan && oriIncPlan) {
+            products.push(_.extend({
+              product_no: 'P0003',
+              title: '计划升级费用',
+              original_price: incPlan.original_price - oriIncPlan.original_price,
+            }, {quantity: 1}));
+          }
+          if (current.member_count) {
+            let incMember = _.find(planProducts, product => product.product_no == 'P0002');
+            let oriIncMember = _.find(oriProducts, product => product.product_no == 'P0002');
+            if (incMember && oriIncMember) {
+              products.push(_.extend({
+                product_no: 'P0004',
+                title: '计划升级人数费用',
+                original_price: incMember.original_price - oriIncMember.original_price,
+              }, {quantity: current.member_count}));
+            }
+          }
+        }
+        this.products = products;
+      });
+    });
   }
 
   isValid() {
@@ -81,15 +117,17 @@ export default class UpgradeOrder extends Base {
   }
 
   getTimes() {
+    if (this.times !== undefined) {
+      return this.times;
+    }
     return this.getPlanStatus().then(({current}) => {
       let times;
       if (!current || current.type == 'trial' || !current.date_end) {
         times = 0;
       } else {
-        times = moment(current.date_end).diff(moment(), 'month');
+        times = moment(current.date_end).diff(moment(), 'month', true);
       }
-      this.times = times > 0 ? (Math.round(times * 100) / 100) : times;
-      return this.times;
+      return times > 0 ? (Math.round(times * 100) / 100) : times;
     });
   }
 

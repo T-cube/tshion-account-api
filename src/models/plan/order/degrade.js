@@ -22,11 +22,12 @@ export default class DegradeOrder extends Base {
     this.order_type = C.ORDER_TYPE.DEGRADE;
   }
 
-  init() {
-    return Promise.all([
-      super.init(),
-      this.getTimes(),
-    ]);
+  init({member_count, plan}) {
+    this.plan = plan;
+    this.member_count = member_count;
+    return this.getPlanStatus().then(({current}) => {
+      this.original_plan = current.plan;
+    });
   }
 
   isValid() {

@@ -5,13 +5,8 @@ import moment from 'moment';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
-import Coupon from 'models/plan/coupon';
-import Payment from 'models/plan/payment';
-import Discount from 'models/plan/discount';
+import Product from '../product';
 import Base from './base';
-import PaymentDiscount from 'models/plan/payment-discount';
-import ProductDiscount from 'models/plan/product-discount';
-import CompanyLevel from 'models/company-level';
 
 
 export default class PatchOrder extends Base {
@@ -22,11 +17,30 @@ export default class PatchOrder extends Base {
     this.times = undefined;
   }
 
-  init() {
-    return Promise.all([
-      super.init(),
-      this.getTimes(),
-    ]);
+  init(options) {
+    return this.getPlanStatus().then(({current}) => {
+      let {plan, member_count} = current;
+      this.plan = plan;
+      this.member_count = member_count;
+      return new Promise.all([
+        this.getTimes(),
+        Product.getByPlan(plan),
+      ])
+      .then(([times, planProducts]) => {
+        let products = [];
+        this.times = times;
+        planProducts.forEach(product => {
+          if (product.product_no == 'P0002') {
+            product.quantity = member_count || 0;
+          } else if (product.product_no == 'P0001') {
+            product.quantity = 1;
+          }
+          product.sum = product.original_price * product.quantity;
+          products.push(product);
+        });
+        this.products = products;
+      });
+    });
   }
 
   isValid() {
@@ -52,6 +66,9 @@ export default class PatchOrder extends Base {
   getLimits() {}
 
   getTimes() {
+    if (this.times !== undefined) {
+      return this.times;
+    }
     return this.getPlanStatus().then(({current}) => {
       let times;
       if (!current || current.type == 'trial' || !current.date_end) {
@@ -59,8 +76,7 @@ export default class PatchOrder extends Base {
       } else {
         times = moment().diff(current.date_end, 'month', true);
       }
-      this.times = times > 0 ? (Math.round(times % 1 * 100) / 100) : 0;
-      return this.times;
+      return times > 0 ? (Math.round(times % 1 * 100) / 100) : 0;
     });
   }
 

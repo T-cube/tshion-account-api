@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
 import moment from 'moment';
+import config from 'config';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -87,30 +88,48 @@ export default class Plan {
   createNewTrial(data) {
     let { company_id } = this;
     let { plan, user_id } = data;
-    return Plan.getDefaultMemberCount(plan)
-    .then(member_count => {
-      return db.plan.company.insert({
-        company_id,
-        user_id,
-        type: 'trial',
-        plan,
-        member_count,
-        status: C.PLAN_STATUS.ACTIVED,
-        date_start: new Date(),
-        date_end: moment().add(30, 'day').toDate(),
-      });
+    return db.plan.company.insert({
+      company_id,
+      user_id,
+      type: 'trial',
+      plan,
+      member_count: 0,
+      status: C.PLAN_STATUS.ACTIVED,
+      date_start: new Date(),
+      date_end: moment().add(config.get('plan.trial_times'), 'month').toDate(),
     });
   }
 
   updatePaid(data) {
-    data.type = 'paid';
     let { company_id } = this;
-    return db.plan.company.update({
-      company_id,
-    }, {
-      $set: data
-    }, {
-      upsert: true
+    let { plan, user_id, member_count, times, date_create } = data;
+    return this.getCurrent().then(current => {
+      let {date_start, date_end, status, type} = current;
+      let update = {
+        user_id,
+      };
+      if (status != C.PLAN_STATUS.ACTIVED || type == 'trial') {
+        date_start = new Date();
+        update.status = C.PLAN_STATUS.ACTIVED;
+        date_end = moment(date_create).add(times, 'month').toDate();
+        update.date_end = date_end;
+      } else if (times) {
+        date_end = moment(date_end).add(times, 'month').toDate();
+        update.date_end = date_end;
+      }
+      update.date_start = date_start;
+      if (member_count !== undefined) {
+        update.member_count = member_count;
+      }
+      return db.plan.company.update({
+        company_id,
+        type: 'paid',
+        plan,
+      }, {
+        $set: update
+      }, {
+        upsert: true
+      });
     });
   }
 
