@@ -289,7 +289,7 @@ api.post('/preference', (req, res, next) => {
   let data = req.body;
   validate('preference', data);
   req.model('preference').set(req.user._id, data)
-  .then(() => {})
+  .then(() => res.json({}))
   .catch(next);
 });
 
