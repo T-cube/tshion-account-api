@@ -16,13 +16,8 @@ import CompanyLevel from 'models/company-level';
 
 export default class NewlyOrder extends Base {
 
-  constructor(options) {
-    super(options);
-    let { user_id, company_id, plan } = options;
-    if (!plan) {
-      throw new Error('invalid plan');
-    }
-    this.plan = plan;
+  constructor(props) {
+    super(props);
     this.order_type = C.ORDER_TYPE.NEWLY;
   }
 
@@ -42,20 +37,13 @@ export default class NewlyOrder extends Base {
         isValid = false;
         error.push('plan_using');
       }
-      let memberNum = _.find(this.products, product => product.product_no == 'P0002');
-      if (member_count) {
-        let {min, max} = member_count;
-        let quantity = memberNum ? memberNum.quantity : 0;
-        if (min > quantity || max < quantity) {
-          isValid = false;
-          error.push('invalid_member_count');
-        }
+      if (this.member_count < member_count.min || this.member_count > member_count.max) {
+        isValid = false;
+        error.push('invalid_member_count');
       }
-      if (times) {
-        if (this.times < times.min || this.times > times.max) {
-          isValid = false;
-          error.push('invalid_times');
-        }
+      if (this.times < times.min || this.times > times.max) {
+        isValid = false;
+        error.push('invalid_times');
       }
       return {isValid, error};
     });

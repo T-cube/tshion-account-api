@@ -16,22 +16,26 @@ import CompanyLevel from 'models/company-level';
 
 export default class DegradeOrder extends Base {
 
-  constructor(options) {
-    super(options);
-    let { user_id, company_id, plan } = options;
-    if (!plan) {
-      throw new Error('invalid plan');
-    }
-    this.plan = plan;
+  constructor(props) {
+    super(props);
+    this.times = undefined;
     this.order_type = C.ORDER_TYPE.DEGRADE;
+  }
+
+  init() {
+    return Promise.all([
+      super.init(),
+      this.getTimes(),
+    ]);
   }
 
   isValid() {
     return Promise.all([
       this.getPlanStatus(),
       this.getLimits(),
+      this.getTimes(),
     ])
-    .then(([{current, authed}, {times}]) => {
+    .then(([{current, authed}, {member_count}, times]) => {
       let error = [];
       let isValid = true;
       if (!_.contains(authed, this.plan)) {
@@ -42,11 +46,17 @@ export default class DegradeOrder extends Base {
         isValid = false;
         error.push('invalid_plan_status');
       }
-      if (times) {
-        if (this.times < times.min || this.times > times.max) {
-          isValid = false;
-          error.push('invalid_times');
-        }
+      if (this.member_count < member_count.min || this.member_count > member_count.max) {
+        isValid = false;
+        error.push('invalid_member_count');
+      }
+      if (this.plan == current.plan && this.member_count == member_count.max) {
+        isValid = false;
+        error.push('eq_current_status');
+      }
+      if (times <= 0) {
+        isValid = false;
+        error.push('invalid_times');
       }
       return {isValid, error};
     });
@@ -57,21 +67,14 @@ export default class DegradeOrder extends Base {
     if (limits) {
       return Promise.resolve(limits);
     }
-    return Promise.all([
-      this.getTimes(),
-      this.getCompanyLevelStatus(),
-    ])
-    .then(([times, companyLevelStatus]) => {
+    return this.getCompanyLevelStatus()
+    .then(companyLevelStatus => {
       let {setting, planInfo, levelInfo} = companyLevelStatus;
       let minMember = levelInfo.member.count - setting.default_member;
       this.limits = {
         member_count: {
           min: minMember > 0 ? minMember : 0,
-          max: planInfo.member_count
-        },
-        times: {
-          min: times,
-          max: times,
+          max: planInfo.member_count || 0,
         }
       };
       return this.limits;
@@ -79,16 +82,14 @@ export default class DegradeOrder extends Base {
   }
 
   getTimes() {
-    let {times} = this;
-    if (times) {
-      return Promise.resolve(times);
-    }
     return this.getPlanStatus().then(({current}) => {
-      if (!current || !current.date_end) {
-        return 0;
+      let times;
+      if (!current || current.type == 'trial' || !current.date_end) {
+        times = 0;
+      } else {
+        times = moment(current.date_end).diff(moment(), 'month');
       }
-      let times = moment(current.date_end).diff(moment(), 'month');
-      this.times = times > 0 ? times : 0;
+      this.times = times > 0 ? (Math.round(times * 100) / 100) : times;
       return this.times;
     });
   }

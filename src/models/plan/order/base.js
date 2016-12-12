@@ -4,19 +4,19 @@ import Promise from 'bluebird';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
-import Coupon from './coupon';
-import Payment from './payment';
-import Discount from './discount';
-import Plan from './plan';
-import PaymentDiscount from './payment-discount';
-import ProductDiscount from './product-discount';
+import Coupon from '../coupon';
+import Product from '../product';
+import Discount from '../discount';
+import Plan from '../plan';
+import PaymentDiscount from '../payment-discount';
+import ProductDiscount from '../product-discount';
 import CompanyLevel from 'models/company-level';
 
 
 export default class Order {
 
-  constructor(options) {
-    let { user_id, company_id } = options;
+  constructor(props) {
+    let { user_id, company_id } = props;
     if (!user_id) {
       throw new Error('invalid user_id');
     }
@@ -34,13 +34,43 @@ export default class Order {
     this.status = undefined;
     this.date_create = new Date();
     this.date_update = new Date();
+    this.member_count = 0;
   }
 
-  setProducts(products) {
-    products.forEach(product => {
-      product.sum = product.original_price * product.quantity;
+  init({plan, member_count, coupon, times}) {
+    if (coupon) {
+      this.withCoupon(coupon);
+    }
+    if (times) {
+      this.setTimes(times);
+    }
+    this.member_count = member_count || 0;
+    let getPlan = plan
+      ? Promise.resolve(plan)
+      : this.getPlanStatus().then(({current}) => {
+        if (current && C.TEAMPLAN.FREE != current.plan && current.type != 'trial') {
+          return current.plan;
+        }
+      });
+    return getPlan.then(plan => {
+      if (!plan) {
+        return;
+      }
+      this.plan = plan;
+      return Product.getByPlan(plan).then(planProducts => {
+        let products = [];
+        planProducts.forEach(product => {
+          if (product.product_no == 'P0002') {
+            product.quantity = member_count || 0;
+          } else if (product.product_no == 'P0001') {
+            product.quantity = 1;
+          }
+          product.sum = product.original_price * product.quantity;
+          products.push(product);
+        });
+        this.products = products;
+      });
     });
-    this.products = products;
   }
 
   setTimes(times) {
@@ -81,7 +111,7 @@ export default class Order {
       if (!isValid) {
         return {
           isValid,
-          error: error.join(','),
+          error: error && error.join(','),
           limits: this.limits,
         };
       }

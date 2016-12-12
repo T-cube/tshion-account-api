@@ -17,8 +17,8 @@ import CompanyLevel from 'models/company-level';
 
 export default class RenewalOrder extends Base {
 
-  constructor(options) {
-    super(options);
+  constructor(props) {
+    super(props);
     this.order_type = C.ORDER_TYPE.RENEWAL;
   }
 
@@ -27,13 +27,9 @@ export default class RenewalOrder extends Base {
       this.getPlanStatus(),
       this.getLimits(),
     ])
-    .then(([{current, authed}, {times}]) => {
+    .then(([{current}, {times}]) => {
       let error = [];
       let isValid = true;
-      if (!_.contains(authed, this.plan)) {
-        isValid = false;
-        error.push('plan_not_authed');
-      }
       if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
         isValid = false;
         error.push('invalid_plan_status');

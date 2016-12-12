@@ -16,64 +16,50 @@ import CompanyLevel from 'models/company-level';
 
 export default class PatchOrder extends Base {
 
-  constructor(options) {
-    super(options);
+  constructor(props) {
+    super(props);
     this.order_type = C.ORDER_TYPE.DEGRADE;
+    this.times = undefined;
+  }
+
+  init() {
+    return Promise.all([
+      super.init(),
+      this.getTimes(),
+    ]);
   }
 
   isValid() {
     return Promise.all([
       this.getPlanStatus(),
-      this.getLimits(),
+      this.getTimes(),
     ])
-    .then(([{current, authed}, {times}]) => {
+    .then(([{current}, times]) => {
       let error = [];
       let isValid = true;
-      if (!_.contains(authed, this.plan)) {
-        isValid = false;
-        error.push('plan_not_authed');
-      }
       if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
         isValid = false;
         error.push('invalid_plan_status');
       }
-      if (times) {
-        if (this.times < times.min || this.times > times.max) {
-          isValid = false;
-          error.push('invalid_times');
-        }
+      if (times <= 0) {
+        isValid = false;
+        error.push('invalid_times');
       }
       return {isValid, error};
     });
   }
 
-  getLimits() {
-    let {plan, company_id, limits} = this;
-    if (limits) {
-      return Promise.resolve(limits);
-    }
-    return this.getTimes().then(times => {
-      this.limits = {
-        times: {
-          min: times,
-          max: times,
-        }
-      };
-      return this.limits;
-    });
-  }
+  getLimits() {}
 
   getTimes() {
-    let {times} = this;
-    if (times) {
-      return Promise.resolve(times);
-    }
     return this.getPlanStatus().then(({current}) => {
-      if (!current || !current.date_end) {
-        return 0;
+      let times;
+      if (!current || current.type == 'trial' || !current.date_end) {
+        times = 0;
+      } else {
+        times = moment().diff(current.date_end, 'month', true);
       }
-      let times = moment(current.date_end).diff(moment(), 'month');
-      this.times = times > 0 ? times : 0;
+      this.times = times > 0 ? (Math.round(times % 1 * 100) / 100) : 0;
       return this.times;
     });
   }

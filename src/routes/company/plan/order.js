@@ -6,58 +6,29 @@ import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import Order from 'models/plan/order';
-import UpgradeOrder from 'models/plan/upgrade-order';
-import Auth from 'models/plan/auth';
 import Payment from 'models/plan/payment';
-import Product from 'models/plan/product';
+import OrderFactory from 'models/plan/order';
 
 let api = express.Router();
 
 export default api;
 
 
-api.get('/', (req, res, next) => {
-
-});
-
 api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   let data = req.body;
   validate('create_order', data);
-  let isPrepare = /prepare$/.test(req.url);
-  let { plan, products, coupon, times, order_type } = data;
+  let isPrepare = /prepare\/?$/.test(req.url);
+  let { plan, member_count, coupon, times, order_type } = data;
   let company_id = req.company._id;
   let user_id = req.user._id;
 
-  new Auth(req.company._id).isPlanAuthed(plan)
-  .then(isAuthed => {
-    if (!isAuthed) {
-      throw new ApiError(400, 'team_not_authed');
-    }
-    return Product.getByPlan(plan);
-  })
-  .then(planProducts => {
-    if (!planProducts) {
-      throw new ApiError(400, 'product_not_accessable');
-    }
-    products = planProducts
-      .filter(product => _.contains(_.pluck(products, 'product_no'), product.product_no))
-      .map(product => {
-        product.quantity = _.find(products, item => item.product_no == product.product_no).quantity || 1;
-        return product;
-      });
+  let orderModel = OrderFactory.getInstance(order_type, {company_id, user_id});
+  if (!orderModel) {
+    next(new ApiError(400, 'invalid_order_type'));
+  }
 
-    let props = {company_id, user_id, plan};
-    let orderModel = order_type == C.PAYMENT.ORDER.TYPE.UPGRADE
-      ? new UpgradeOrder(props)
-      : new Order(props);
-
-    orderModel.setProducts(products);
-    if (coupon) {
-      orderModel.withCoupon(coupon);
-    }
-    if (times) {
-      orderModel.setTimes(times);
-    }
+  orderModel.init({plan, member_count, coupon, times})
+  .then(() => {
     if (isPrepare) {
       return Promise.all([
         orderModel.prepare(),
@@ -65,11 +36,12 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
       ])
       .then(([info, coupons]) => {
         info.coupons = coupons;
-        res.json(info);
+        return info;
       });
     }
-    return orderModel.save().then(order_id => res.json({order_id}));
+    return orderModel.save().then(order_id => ({order_id}));
   })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 

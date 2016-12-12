@@ -4,33 +4,17 @@ import C, { ENUMS } from 'lib/constants';
 const schema = {
   create_order: {
     sanitization: {
-      plan: { type: 'string' },
+      plan: { type: 'string', optional: true },
       order_type: { type: 'string' },
-      products: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            product_no: { type: 'string' },
-            quantity: { type: 'int' },
-          }
-        }
-      },
+      member_count: { type: 'int', optional: true },
+      times: { type: 'number', optional: true },
       coupon: { $objectId: 1, optional: true },
     },
     validation: {
-      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
+      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT], optional: true },
       order_type: { $enum: ENUMS.ORDER_TYPE },
-      products: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            product_no: { type: 'string' },
-            quantity: { type: 'int' },
-          }
-        }
-      },
+      member_count: { type: 'int', optional: true },
+      times: { type: 'number', optional: true },
       coupon: { $objectId: 1, optional: true },
     },
   },
