@@ -7,11 +7,13 @@ const schema = {
       _id: { type: 'int', optional: true },
       name: { type: 'string', minLength: 1, rules: ['trim', 'title'] },
       description: { type: 'string', optional: true },
+      status: { type: 'string' },
     },
     validation: {
       _id: { type: 'int', optional: true },
       name: { type: 'string' },
       description: { type: 'string', optional: true },
+      status: { $enum: ['deleted', 'normal'] },
     }
   },
   plan_audit: {

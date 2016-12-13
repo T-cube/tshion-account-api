@@ -14,8 +14,10 @@ export default (socket, prefix) => {
   const qrcodeModel = socket.model('qrcode-model');
 
   route('/list', (query) => {
-    let { page, pagesize } = qrcodeModel.getPageInfo(query);
-    return qrcodeModel.page({page, pagesize});
+    let { page, pagesize, status } = qrcodeModel.getPageInfo(query);
+    status = status == 'deleted' ? 'deleted' : 'normal';
+    let criteria = {status};
+    return qrcodeModel.page({page, pagesize, criteria});
   });
 
   route('/create', (query) => {
@@ -26,9 +28,12 @@ export default (socket, prefix) => {
   });
 
   route('/update', (query) => {
-    let { _id, name, description } = query;
-    let data = { _id, name, description };
+    let { _id, name, description, status } = query;
+    let data = { _id, name, description, status };
     validate('qrcode', data);
+    if (data.status) {
+      return qrcodeModel.updateStatus(data);
+    }
     return qrcodeModel.update(data);
   });
 

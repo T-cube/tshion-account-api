@@ -783,3 +783,18 @@
   time: <Date>,
 }
 ```
+
+### `user.preference`
+
+```javascript
+{
+  explore: {
+    sort_by: <String>,
+    view_type: <String>,
+  }
+  weather: {
+    areaid: <String>,
+  },
+  ...
+}
+```

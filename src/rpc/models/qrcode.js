@@ -54,6 +54,12 @@ export default class QrcodeModel extends Model {
     });
   }
 
+  updateStatus({_id, status}) {
+    return this.db.qrcode.update({_id}, {
+      $set: {status}
+    });
+  }
+
   requestWechatImg(id) {
     return new Promise((resolve, reject) => {
       try {
