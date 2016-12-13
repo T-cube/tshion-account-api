@@ -17,7 +17,10 @@ export default class UpgradeOrder extends Base {
     this.order_type = C.ORDER_TYPE.UPGRADE;
   }
 
-  init({member_count, plan}) {
+  init({member_count, plan, coupon}) {
+    if (coupon) {
+      this.withCoupon(coupon);
+    }
     this.plan = plan;
     this.member_count = member_count;
     return this.getPlanStatus().then(({current}) => {
@@ -42,21 +45,19 @@ export default class UpgradeOrder extends Base {
           let incPlan = _.find(planProducts, product => product.product_no == 'P0001');
           let oriIncPlan = _.find(oriProducts, product => product.product_no == 'P0001');
           if (incPlan && oriIncPlan) {
-            products.push(_.extend({
-              product_no: 'P0003',
-              title: '计划升级费用',
+            products.push(_.extend({}, incPlan, {
               original_price: incPlan.original_price - oriIncPlan.original_price,
-            }, {quantity: 1}));
+              quantity: 1,
+            }));
           }
           if (current.member_count) {
             let incMember = _.find(planProducts, product => product.product_no == 'P0002');
             let oriIncMember = _.find(oriProducts, product => product.product_no == 'P0002');
             if (incMember && oriIncMember) {
-              products.push(_.extend({
-                product_no: 'P0004',
-                title: '计划升级人数费用',
+              products.push(_.extend({}, incMember, {
                 original_price: incMember.original_price - oriIncMember.original_price,
-              }, {quantity: current.member_count}));
+                quantity: current.member_count,
+              }));
             }
           }
         }
@@ -78,7 +79,7 @@ export default class UpgradeOrder extends Base {
         isValid = false;
         error.push('plan_not_authed');
       }
-      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
+      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || times <= 0) {
         isValid = false;
         error.push('invalid_plan_status');
       }
@@ -90,9 +91,9 @@ export default class UpgradeOrder extends Base {
         isValid = false;
         error.push('eq_current_status');
       }
-      if (times <= 0) {
+      if (this.member_count != current.member_count && this.plan != current.plan) {
         isValid = false;
-        error.push('invalid_times');
+        error.push('cannot_update_multi');
       }
       return {isValid, error};
     });

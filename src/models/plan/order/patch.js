@@ -17,7 +17,10 @@ export default class PatchOrder extends Base {
     this.times = undefined;
   }
 
-  init(options) {
+  init({coupon}) {
+    if (coupon) {
+      this.withCoupon(coupon);
+    }
     return this.getPlanStatus().then(({current}) => {
       let {plan, member_count} = current;
       this.plan = plan;
@@ -51,13 +54,9 @@ export default class PatchOrder extends Base {
     .then(([{current}, times]) => {
       let error = [];
       let isValid = true;
-      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
+      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || times <= 0) {
         isValid = false;
         error.push('invalid_plan_status');
-      }
-      if (times <= 0) {
-        isValid = false;
-        error.push('invalid_times');
       }
       return {isValid, error};
     });

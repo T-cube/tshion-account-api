@@ -116,6 +116,7 @@ export default class BaseOrder {
         };
       }
       this.paid_sum = this.original_sum = this.getOriginalFeeOfProducts();
+      this.initProducts();
       return this.getDiscount().then(() => ({
         isValid,
         limits: this.limits,
@@ -123,6 +124,7 @@ export default class BaseOrder {
           user_id: this.user_id,
           company_id: this.company_id,
           plan: this.plan,
+          original_plan: this.original_plan,
           order_type: this.order_type,
           products: this.products,
           times: this.times,
@@ -133,7 +135,6 @@ export default class BaseOrder {
           status: this.status,
           date_create: this.date_create,
           date_update: this.date_update,
-          original_plan: this.original_plan,
         },
       }));
     });
@@ -178,7 +179,6 @@ export default class BaseOrder {
   }
 
   getDiscount() {
-    this.initProducts();
     return this.getProductsDiscount()
     .then(() => this.getCouponDiscount())
     .then(() => this.getPayDiscount());
@@ -186,7 +186,7 @@ export default class BaseOrder {
 
   initProducts() {
     this.products.forEach(product => {
-      product.sum = this.times * product.quantity * product.original_price;
+      product.paid_sum = product.sum = this.times * product.quantity * product.original_price;
     });
   }
 
@@ -277,7 +277,7 @@ export default class BaseOrder {
     case 'amount':
     case 'rate':
       discountInfo.fee = Math.round(discountInfo.fee);
-      product.sum -= discountInfo.fee;
+      product.paid_sum -= discountInfo.fee;
       this.paid_sum -= discountInfo.fee;
       break;
     case 'number':

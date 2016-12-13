@@ -15,12 +15,18 @@ export default class NewlyOrder extends Base {
     this.order_type = C.ORDER_TYPE.NEWLY;
   }
 
-  init({plan, member_count}) {
-    this.member_count = member_count || 0;
+  init({plan, member_count, coupon, times}) {
     if (!plan) {
       return Promise.reject();
     }
+    if (coupon) {
+      this.withCoupon(coupon);
+    }
+    if (times) {
+      this.setTimes(times);
+    }
     this.plan = plan;
+    this.member_count = member_count || 0;
     return Product.getByPlan(plan).then(planProducts => {
       let products = [];
       planProducts.forEach(product => {

@@ -22,7 +22,10 @@ export default class DegradeOrder extends Base {
     this.order_type = C.ORDER_TYPE.DEGRADE;
   }
 
-  init({member_count, plan}) {
+  init({member_count, plan, coupon}) {
+    if (coupon) {
+      this.withCoupon(coupon);
+    }
     this.plan = plan;
     this.member_count = member_count;
     return this.getPlanStatus().then(({current}) => {
@@ -43,7 +46,7 @@ export default class DegradeOrder extends Base {
         isValid = false;
         error.push('plan_not_authed');
       }
-      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
+      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || times <= 0) {
         isValid = false;
         error.push('invalid_plan_status');
       }
@@ -55,9 +58,9 @@ export default class DegradeOrder extends Base {
         isValid = false;
         error.push('eq_current_status');
       }
-      if (times <= 0) {
+      if (this.member_count != current.member_count && this.plan != current.plan) {
         isValid = false;
-        error.push('invalid_times');
+        error.push('cannot_update_multi');
       }
       return {isValid, error};
     });

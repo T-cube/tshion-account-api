@@ -100,25 +100,30 @@ export default class Plan {
     });
   }
 
-  updatePaid(data) {
+  updatePaidFromOrder(order) {
     let { company_id } = this;
-    let { plan, user_id, member_count, times, date_create } = data;
+    let { plan, order_type, times, date_create, products } = order;
     return this.getCurrent().then(current => {
-      let {date_start, date_end, status, type} = current;
+      let {date_start, date_end} = current;
       let update = {
-        user_id,
+        status: C.PLAN_STATUS.ACTIVED,
+        date_start
       };
-      if (status != C.PLAN_STATUS.ACTIVED || type == 'trial') {
-        date_start = new Date();
-        update.status = C.PLAN_STATUS.ACTIVED;
-        date_end = moment(date_create).add(times, 'month').toDate();
-        update.date_end = date_end;
-      } else if (times) {
-        date_end = moment(date_end).add(times, 'month').toDate();
-        update.date_end = date_end;
+      if (order_type == C.ORDER_TYPE.NEWLY) {
+        update.date_start = new Date();
+        update.date_end = moment(date_create).add(times, 'month').toDate();
+      } else if (order_type == C.ORDER_TYPE.RENEWAL) {
+        update.date_end = moment(date_end).add(times, 'month').toDate();
+      } else if (order_type == C.ORDER_TYPE.PATCH) {
+        update.date_end = moment(date_start).month(new Date().getMonth());
       }
-      update.date_start = date_start;
-      if (member_count !== undefined) {
+      if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.DEGRADE], order_type)) {
+        let member_count;
+        products.forEach(product => {
+          if (product.product_no == 'P0002') {
+            member_count = product.quantity;
+          }
+        });
         update.member_count = member_count;
       }
       return db.plan.company.update({

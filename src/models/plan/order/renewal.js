@@ -17,7 +17,13 @@ export default class RenewalOrder extends Base {
     this.order_type = C.ORDER_TYPE.RENEWAL;
   }
 
-  init() {
+  init({coupon, times}) {
+    if (coupon) {
+      this.withCoupon(coupon);
+    }
+    if (times) {
+      this.setTimes(times);
+    }
     return this.getPlanStatus().then(({current}) => {
       let {plan, member_count} = current;
       this.plan = plan;
@@ -47,18 +53,18 @@ export default class RenewalOrder extends Base {
     .then(([{current}, {times}]) => {
       let error = [];
       let isValid = true;
-      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
+      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || current.date_end < new Date()) {
         isValid = false;
         error.push('invalid_plan_status');
-      }
-      if (times.max < 1) {
-        isValid = false;
-        error.push('over_period');
-      }
-      if (times) {
-        if (this.times < times.min || this.times > times.max) {
+      } else {
+        if (times.max < 1) {
           isValid = false;
-          error.push('invalid_times');
+          error.push('over_period');
+        } else {
+          if (this.times < times.min || this.times > times.max) {
+            isValid = false;
+            error.push('invalid_times');
+          }
         }
       }
       return {isValid, error};
@@ -74,8 +80,13 @@ export default class RenewalOrder extends Base {
       if (!current || !current.date_end) {
         return {};
       }
-      let max = moment().add(config.get('plan.max_times'), 'month').diff(current.date_end, 'month');
-      max = Math.floor(max);
+      let max;
+      if (current.date_end < new Date()) {
+        max = 0;
+      } else {
+        max = moment().add(config.get('plan.max_times'), 'month').diff(current.date_end, 'month');
+        max = Math.floor(max);
+      }
       this.limits = {
         times: {
           min: 1,

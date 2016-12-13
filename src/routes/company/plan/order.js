@@ -28,14 +28,8 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
     next(new ApiError(400, 'invalid_order_type'));
   }
 
-  orderModel.init({plan, member_count})
+  orderModel.init(_.filter({plan, member_count, coupon, times}))
   .then(() => {
-    if (coupon) {
-      orderModel.withCoupon(coupon);
-    }
-    if (times) {
-      orderModel.setTimes(times);
-    }
     if (isPrepare) {
       return Promise.all([
         orderModel.prepare(),
@@ -65,20 +59,7 @@ api.post('/pending/pay', (req, res, next) => {
   validate('pay', data);
   BaseOrder.getPendingOrder(req.company._id)
   .then(order => {
-    let {user_id, products, order_type, plan} = order;
-    let member_count, times;
-    if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.DEGRADE], order_type)) {
-      products.forEach(product => {
-        if (product.product_no == 'P0002') {
-          member_count = product.quantity;
-        }
-      });
-    }
-    if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.RENEWAL], order_type)) {
-      times = order.times;
-    }
-
-    return new Plan(req.company._id).updatePaid({user_id, plan, member_count, times})
+    return new Plan(req.company._id).updatePaidFromOrder(order)
     .then(doc => {
       res.json(doc);
       console.log(doc);
