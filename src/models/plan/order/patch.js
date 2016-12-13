@@ -13,7 +13,7 @@ export default class PatchOrder extends Base {
 
   constructor(props) {
     super(props);
-    this.order_type = C.ORDER_TYPE.DEGRADE;
+    this.order_type = C.ORDER_TYPE.PATCH;
     this.times = undefined;
   }
 

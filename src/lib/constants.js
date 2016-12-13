@@ -270,6 +270,10 @@ let constants = {
     UPGRADE: 'upgrade',
     DEGRADE: 'degrade',
     PATCH: 'patch',
+  },
+  PRODUCT_NO: {
+    PLAN: 'P0001',
+    MEMBER: 'P0002',
   }
 
 };

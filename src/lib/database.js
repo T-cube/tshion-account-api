@@ -70,6 +70,11 @@ const collections = [
   'ids',                      // id 自增
   'qrcode',
   'qrcode.scan',
+
+  // payment & plan
+  'plan',
+  'payment.product',
+  'payment.product.history',
 ];
 
 const dbConfig = config.get('database');

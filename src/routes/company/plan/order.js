@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
+import db from 'lib/database';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
@@ -27,8 +28,7 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   if (!orderModel) {
     next(new ApiError(400, 'invalid_order_type'));
   }
-
-  orderModel.init(_.filter({plan, member_count, coupon, times}))
+  orderModel.init({plan, member_count, coupon, times})
   .then(() => {
     if (isPrepare) {
       return Promise.all([
@@ -59,6 +59,13 @@ api.post('/pending/pay', (req, res, next) => {
   validate('pay', data);
   BaseOrder.getPendingOrder(req.company._id)
   .then(order => {
+    db.payment.order.update({
+      _id: order._id
+    }, {
+      $set: {
+        status: 'successed'
+      }
+    });
     return new Plan(req.company._id).updatePaidFromOrder(order)
     .then(doc => {
       res.json(doc);

@@ -23,8 +23,7 @@ export default class Model {
       this.count(criteria),
       this.fetchList(props)
     ])
-    .then(doc => {
-      let [totalRows, list] = doc;
+    .then(([totalRows, list]) => {
       return {
         list,
         page,

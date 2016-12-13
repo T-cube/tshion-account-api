@@ -408,6 +408,9 @@ api.put('/move', (req, res, next) => {
   let { files, dirs, dest_dir } = data;
   let moveInfo = _.clone(data);
   let parent_dir;
+  if (indexObjectId(dirs, dest_dir) >= 0) {
+    throw new ApiError(400, 'invalid_dest_dir');
+  }
   mapObjectIdToData(moveInfo, [
     ['document.dir', `name,files,parent_dir,dirs,path,${req.document.posKey}`, 'dest_dir'],
     ['document.dir', `name,parent_dir,${req.document.posKey}`, 'dirs'],

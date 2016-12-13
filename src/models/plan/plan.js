@@ -115,17 +115,16 @@ export default class Plan {
       } else if (order_type == C.ORDER_TYPE.RENEWAL) {
         update.date_end = moment(date_end).add(times, 'month').toDate();
       } else if (order_type == C.ORDER_TYPE.PATCH) {
-        update.date_end = moment(date_start).month(new Date().getMonth());
+        update.date_end = moment(date_start).month(new Date().getMonth() + 1).toDate();
       }
       if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.DEGRADE], order_type)) {
-        let member_count;
         products.forEach(product => {
           if (product.product_no == 'P0002') {
-            member_count = product.quantity;
+            update.member_count = product.quantity;
           }
         });
-        update.member_count = member_count;
       }
+      console.log(order_type);
       return db.plan.company.update({
         company_id,
         type: 'paid',

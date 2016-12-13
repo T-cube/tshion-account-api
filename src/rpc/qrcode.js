@@ -1,10 +1,5 @@
-import config from 'config';
-import Promise from 'bluebird';
-import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
-
 import RpcRoute from 'models/rpc-route';
-import { mapObjectIdToData } from 'lib/utils';
 import { validate } from './schema';
 
 export default (socket, prefix) => {

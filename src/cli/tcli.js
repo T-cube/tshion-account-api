@@ -14,6 +14,8 @@ program
   .command('approvalversion', 'update approval template version status')
   .command('position', 'update member position')
   .command('notification', 'set default notification')
+  .command('plan', 'init plan')
+  .command('product', 'init product')
   .parse(process.argv);
 
 console.log('TLifang API Command Line Tool');
