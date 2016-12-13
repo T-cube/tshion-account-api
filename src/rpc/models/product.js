@@ -52,7 +52,7 @@ export default class ProductModel extends Model {
       return this.db.payment.product.update({
         _id: product_id
       }, {
-        $pull: {
+        $addToSet: {
           discount: discount_id
         }
       });
