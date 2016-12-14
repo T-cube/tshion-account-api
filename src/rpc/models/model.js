@@ -22,7 +22,7 @@ export default class Model {
     let { page, pagesize } = this.getPageInfo(props);
     return Promise.all([
       this.count(criteria),
-      this.fetchList(props)
+      this.fetchList({criteria, page, pagesize})
     ])
     .then(([totalRows, list]) => {
       return {
