@@ -4,6 +4,7 @@ import Pay from '@ym/payment';
 import C from 'lib/constants';
 import db from 'lib/database';
 
+import ChargeOrder from 'models/plan/charge-order';
 
 export default class Payment {
 
@@ -38,8 +39,12 @@ export default class Payment {
     this.pay = new Pay(config.get('payment'));
   }
 
-  pay(order) {
-    let notify_url, redirect_url;
+  pay(order, payMethod) {
+    return this.payWechat(order);
+  }
+
+  payWechat(order) {
+    let {notify_url, redirect_url} = this.getUrls();
     return this.pay.createPay({
       type:'wxpay',
       opts:{
@@ -48,10 +53,22 @@ export default class Payment {
         redirect_url: encodeURIComponent(redirect_url),
         title: order.order_type,
         total_fee: order.paid_sum,
-        spbill_create_ip:'110.84.35.141'
+        spbill_create_ip: '110.84.35.141'
       }
     })
-    .then(doc =>console.log(doc));
+    .then(data => {
+      console.log(data);
+      let {code_url} = data;
+      if (code_url) {
+        return this.createChargeOrder(order, data).then(() => {
+          return {code_url};
+        });
+      }
+    });
+  }
+
+  createChargeOrder(order, payment) {
+    return ChargeOrder.create(order, payment);
   }
 
 }

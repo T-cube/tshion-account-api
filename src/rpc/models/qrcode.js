@@ -108,8 +108,8 @@ export default class QrcodeModel extends Model {
     });
   }
 
-  count() {
-    return this.db.qrcode.count({});
+  count(criteria) {
+    return this.db.qrcode.count(criteria);
   }
 
   fetchDetail(_id) {

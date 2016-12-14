@@ -159,6 +159,25 @@ export default class BaseOrder {
     });
   }
 
+  static payPendingOrder(company_id) {
+    return db.payment.order.findAndModify({
+      query: {
+        company_id: company_id,
+        status: {$in: ['created']}
+      },
+      update: {
+        status: 'paying'
+      }
+    })
+    .then(doc => {
+      let order = doc.value;
+      if (order) {
+        return order;
+      }
+      return null;
+    });
+  }
+
   getCoupons() {
     return new Coupon(this.company_id).getCoupons()
     .then(coupons => {
@@ -237,6 +256,19 @@ export default class BaseOrder {
         }
         let discountInfo = this._getProductDiscount(product, discountItem);
         this._persistProductDiscount({product_discount: discountItem._id}, discountInfo, product._id);
+      });
+    });
+  }
+
+  mapProductsDiscountList() {
+    return Promise.map(this.products, product => {
+      let { discounts } = product;
+      if (!discounts || !discounts.length) {
+        return;
+      }
+      return Product.getDiscount(discounts)
+      .then(discountList => {
+        product.discounts = discountList;
       });
     });
   }

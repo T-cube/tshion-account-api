@@ -57,6 +57,28 @@ api.get('/pending', (req, res, next) => {
 api.post('/pending/pay', (req, res, next) => {
   let data = req.body;
   validate('pay', data);
+  BaseOrder.payPendingOrder(req.company._id)
+  .then(order => {
+    if (!order) {
+      throw new ApiError(400, 'invalid_order_status');
+    }
+    return Payment.pay(order);
+  })
+  .then(doc => {
+    if (doc) {
+      let {code_url} = doc;
+      if (code_url) {
+        return res.json({code_url});
+      }
+    }
+    throw new ApiError(500);
+  })
+  .catch(next);
+});
+
+api.post('/pending/pay-callback', (req, res, next) => {
+  let data = req.body;
+  validate('pay', data);
   BaseOrder.getPendingOrder(req.company._id)
   .then(order => {
     db.payment.order.update({
@@ -71,7 +93,6 @@ api.post('/pending/pay', (req, res, next) => {
       res.json(doc);
       console.log(doc);
     });
-    // return Payment.pay(order, data);
   })
   .catch(next);
 });
