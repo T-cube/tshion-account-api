@@ -127,6 +127,7 @@ export default class BaseOrder {
           original_plan: this.original_plan,
           order_type: this.order_type,
           products: this.products,
+          member_count: this.member_count,
           times: this.times,
           original_sum: this.original_sum,
           paid_sum: Math.round(this.paid_sum),

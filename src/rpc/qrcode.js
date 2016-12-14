@@ -27,8 +27,9 @@ export default (socket, prefix) => {
     let { _id, name, description, status } = query;
     if (status) {
       return qrcodeModel.updateStatus(_id, status);
+    } else if (name && description) {
+      return qrcodeModel.update(_id, {name, description});
     }
-    return qrcodeModel.update(_id, {name, description});
   });
 
   route('/detail', (query) => {
