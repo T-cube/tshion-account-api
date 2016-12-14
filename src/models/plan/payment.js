@@ -57,7 +57,6 @@ export default class Payment {
       }
     })
     .then(data => {
-      console.log(data);
       let {code_url} = data;
       if (code_url) {
         return this.createChargeOrder(order, data).then(() => {

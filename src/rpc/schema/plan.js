@@ -66,7 +66,7 @@ const schema = {
         properties: {
           type: { type: 'string' },
           number: { type: 'integer', optional: true },
-          rate: { type: 'number', optional: true, min: 0 },
+          rate: { type: 'number', optional: true },
           amount: { type: 'integer', optional: true },
         }
       },
@@ -108,6 +108,68 @@ const schema = {
       }
     },
   },
+  coupon: {
+    sanitization: {
+      title: { type: 'string' },
+      description: { type: 'string' },
+      criteria: {
+        type: 'object',
+        properties: {
+          quantity: { type: 'integer', optional: true },
+          total_fee: { type: 'integer', optional: true },
+        }
+      },
+      discount: {
+        type: 'object',
+        properties: {
+          type: { type: 'string' },
+          number: { type: 'integer', optional: true },
+          rate: { type: 'number', optional: true },
+          amount: { type: 'integer', optional: true },
+        }
+      },
+      period: {
+        type: 'object',
+        properties: {
+          date_start: { type: 'date' },
+          data_end: { type: 'date' },
+        }
+      },
+      stock_total: { type: 'integer' },
+      stock_current: { type: 'integer' },
+    },
+    validation: {
+      title: { type: 'string' },
+      description: { type: 'string' },
+      criteria: {
+        type: 'object',
+        someKeys: ['quantity', 'total_fee'],
+        properties: {
+          quantity: { type: 'integer', optional: true, min: 1 },
+          total_fee: { type: 'integer', optional: true, min: 1 },
+        }
+      },
+      discount: {
+        type: 'object',
+        someKeys: ['number', 'rate', 'amount'],
+        properties: {
+          type: { $enum: [] },
+          number: { type: 'integer', optional: true, min: 1 },
+          rate: { type: 'number', optional: true, min: 0, max: 0.99 },
+          amount: { type: 'integer', optional: true, min: 1 },
+        }
+      },
+      period: {
+        type: 'object',
+        properties: {
+          date_start: { type: 'date' },
+          data_end: { type: 'date' },
+        }
+      },
+      stock_total: { type: 'integer' },
+      stock_current: { type: 'integer' },
+    },
+  }
 };
 
 export const validate = buildValidator(schema);

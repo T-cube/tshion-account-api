@@ -170,11 +170,7 @@ export default class BaseOrder {
       }
     })
     .then(doc => {
-      let order = doc.value;
-      if (order) {
-        return order;
-      }
-      return null;
+      return doc.value;
     });
   }
 

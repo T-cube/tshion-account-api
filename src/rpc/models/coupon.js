@@ -12,62 +12,51 @@ export default class CouponModel extends Model {
 
   fetchList(props) {
     let { page, pagesize, criteria } = props;
-    return this.db.plan.auth.find(criteria)
+    return this.db.payment.coupon.find(criteria)
     .skip(page * pagesize)
     .limit(pagesize)
-    .then(doc => mapObjectIdToData(doc, [
-      ['company', 'name,logo', 'company_id'],
-      ['user', 'name,avatar', 'user_id'],
-    ]))
-    .then(doc => {
-      doc.forEach(info => {
-        info.user = info.user_id;
-        info.company = info.company_id;
-        delete info.user_id;
-        delete info.company_id;
-      });
-      return doc;
+    .sort({
+      'period.date_end': 1,
+      'period.date_start': 1,
     });
   }
 
   count(criteria) {
-    return this.db.plan.auth.count(criteria);
+    return this.db.payment.coupon.count(criteria);
   }
 
   fetchDetail(_id) {
-    return this.db.plan.auth.findOne({_id})
-    .then(doc => mapObjectIdToData(doc, [
-      ['company', 'name,logo', 'company_id'],
-      ['user', 'name,avatar', 'user_id'],
-      ['user.realname', '', 'info.contact'],
-    ]))
-    .then(doc => {
-      if (!doc) {
-        return null;
-      }
-      doc.user = doc.user_id;
-      doc.company = doc.company_id;
-      delete doc.user_id;
-      delete doc.company_id;
-      return doc;
+    return this.db.payment.coupon.findOne({_id});
+  }
+
+  create(data) {
+    data.date_create = data.date_update = new Date();
+    return this.db.payment.coupon.insert(data);
+  }
+
+  update(_id, data) {
+    data.date_update = new Date();
+    return this.db.payment.coupon.update({_id}, {
+      $set: data
     });
   }
 
-  audit({auth_id, status, comment, operator_id}) {
-    return this.db.plan.auth.update({
-      _id: auth_id
-    }, {
-      $set: {
-        status,
-      },
-      $push: {
-        log: {
-          _id: ObjectId(),
-          status,
-          comment,
-          operator_id,
-          creator: 'cs',
-        }
+  delete(_id) {
+    return this.db.payment.coupon.remove({_id});
+  }
+
+  addProduct(_id, product_no) {
+    return this.db.payment.coupon.update({_id}, {
+      $addToSet: {
+        products: product_no
+      }
+    });
+  }
+
+  removeProduct(_id, product_no) {
+    return this.db.payment.coupon.update({_id}, {
+      $pull: {
+        products: product_no
       }
     });
   }

@@ -14,7 +14,11 @@ export default class DiscountModel extends Model {
     let { page, pagesize, criteria } = props;
     return this.db.payment.discount.find(criteria)
     .skip(page * pagesize)
-    .limit(pagesize);
+    .limit(pagesize)
+    .sort({
+      'period.date_end': 1,
+      'period.date_start': 1,
+    });
   }
 
   count(criteria) {
