@@ -94,7 +94,7 @@ const schema = {
             properties: {
               location: locationSchema.sanitization,
               type: { type: 'string' }, //String[Enum:none-profit,workshop,startup],
-              scale: { type: 'int' }, //Number[Enum:5,10,50,100],
+              scale: { type: 'integer' }, //Number[Enum:5,10,50,100],
               description: { type: 'string' },
             }
           },
@@ -138,7 +138,7 @@ const schema = {
             properties: {
               location: locationSchema.sanitization,
               type: { type: 'string' }, //String[Enum:none-profit,workshop,startup],
-              scale: { type: 'int' }, //Number[Enum:5,10,50,100],
+              scale: { type: 'integer' }, //Number[Enum:5,10,50,100],
               description: { type: 'string' },
             }
           },
@@ -167,7 +167,7 @@ const schema = {
             properties: {
               location: locationSchema.sanitization,
               industry: { type: 'string' },               // 行业类型
-              scale: { type: 'int' }, // Number[Enum:5,10,50,100],
+              scale: { type: 'integer' }, // Number[Enum:5,10,50,100],
               description: { type: 'string' },
             }
           },
@@ -193,7 +193,7 @@ const schema = {
             properties: {
               location: locationSchema.sanitization,
               industry: { type: 'string' },               // 行业类型
-              scale: { type: 'int' }, // Number[Enum:5,10,50,100],
+              scale: { type: 'integer' }, // Number[Enum:5,10,50,100],
               description: { type: 'string' },
             }
           },
@@ -214,14 +214,14 @@ const schema = {
       title: { type: 'string' },
       description: { type: 'string' },
       criteria: {
-        quantity: { type: 'int' },                 // 最低数量
-        total_fee: { type: 'int' },              // 最低金额
+        quantity: { type: 'integer' },                 // 最低数量
+        total_fee: { type: 'integer' },              // 最低金额
       },
       discount: {
         type: { type: 'string' },               // 优惠类型：number,rate,amount
-        number: { type: 'int' },                   // 赠送数量
+        number: { type: 'integer' },                   // 赠送数量
         rate: { type: 'number' },                     // 折扣（0~0.99）
-        amount: { type: 'int' },                 // 优惠金额
+        amount: { type: 'integer' },                 // 优惠金额
       },
       period: {
         date_start: { type: 'date' },
@@ -239,8 +239,8 @@ const schema = {
     sanitization: {
       discount_no: { type: 'string' },
       title: { type: 'string' },
-      amount: { type: 'int' },
-      extra_amount: { type: 'int' },
+      amount: { type: 'integer' },
+      extra_amount: { type: 'integer' },
       date_create: { type: 'date' },
       date_update: { type: 'date' },
     },

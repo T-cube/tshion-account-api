@@ -45,17 +45,17 @@ const schema = {
       criteria: {
         type: 'object',
         properties: {
-          quantity: { type: 'int', optional: true },
-          total_fee: { type: 'int', optional: true },
+          quantity: { type: 'integer', optional: true },
+          total_fee: { type: 'integer', optional: true },
         }
       },
       discount: {
         type: 'object',
         properties: {
           type: { type: 'string' },
-          number: { type: 'int', optional: true },
+          number: { type: 'integer', optional: true },
           rate: { type: 'number', optional: true, min: 0 },
-          amount: { type: 'int', optional: true },
+          amount: { type: 'integer', optional: true },
         }
       },
       period: {
@@ -73,8 +73,8 @@ const schema = {
         type: 'object',
         someKeys: ['quantity', 'total_fee'],
         properties: {
-          quantity: { type: 'int', optional: true, min: 1 },
-          total_fee: { type: 'int', optional: true, min: 1 },
+          quantity: { type: 'integer', optional: true, min: 1 },
+          total_fee: { type: 'integer', optional: true, min: 1 },
         }
       },
       discount: {
@@ -82,9 +82,9 @@ const schema = {
         someKeys: ['number', 'rate', 'amount'],
         properties: {
           type: { $enum: [] },
-          number: { type: 'int', optional: true, min: 1 },
+          number: { type: 'integer', optional: true, min: 1 },
           rate: { type: 'number', optional: true, min: 0, max: 0.99 },
-          amount: { type: 'int', optional: true, min: 1 },
+          amount: { type: 'integer', optional: true, min: 1 },
         }
       },
       period: {
