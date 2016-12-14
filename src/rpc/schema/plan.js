@@ -24,8 +24,20 @@ const schema = {
     },
     validation: {
       product_id: { $objectId: 1 },
-      title: { type: 'string', minLength: 3, optional: true },
+      title: { type: 'string', minLength: 3, maxLength: 100, optional: true },
       original_price: { type: 'init', min: 0, optional: true },
+    },
+  },
+  update_plan: {
+    sanitization: {
+      plan_id: { $objectId: 1 },
+      name: { type: 'string' },
+      description: { type: 'string' },
+    },
+    validation: {
+      plan_id: { $objectId: 1 },
+      name: { type: 'string', minLength: 3, maxLength: 100 },
+      description: { type: 'string', minLength: 3, maxLength: 10000 },
     },
   },
   product_discount: {

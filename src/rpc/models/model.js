@@ -11,9 +11,9 @@ export default class Model {
   getPageInfo(query = {}) {
     let { page, pagesize } = query;
     page = page >= 0 ? parseInt(page) : 0;
-    pagesize = parseInt((pagesize <= config.get('view.maxListNum') && pagesize > 0)
-      ? pagesize
-      : config.get('view.listNum'));
+    pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0
+      ? parseInt(pagesize)
+      : parseInt(config.get('view.listNum')));
     return {page, pagesize};
   }
 

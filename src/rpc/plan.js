@@ -9,6 +9,8 @@ import discountRoutes from './plan/discount';
 
 import PlanModel from './models/plan';
 import { getObjectId } from './utils';
+import { validate } from './schema/plan';
+
 
 export default (socket, prefix) => {
 
@@ -33,7 +35,8 @@ export default (socket, prefix) => {
   });
 
   route('/update', query => {
-
+    validate('update_plan', query);
+    return planModel.update(query.plan_id, query);
   });
 
 };

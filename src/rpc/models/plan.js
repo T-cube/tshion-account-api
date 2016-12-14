@@ -20,14 +20,16 @@ export default class PlanModel extends Model {
   fetchDetail(_id) {
     return this.db.plan.findOne({_id})
     .then(doc => {
-      if (doc.plan == C.TEAMPLAN.FREE) {
+      if (doc.type == C.TEAMPLAN.FREE) {
         return doc;
       }
       return this.db.payment.product.find({
-        plan: doc.plan
+        plan: doc.type
+      }, {
+        discount: 0
       })
-      .then(([plan, products]) => {
-        doc.products = _.find(products, product => product.plan == plan.type);
+      .then(products => {
+        doc.products = products;
         return doc;
       });
     });
