@@ -14,7 +14,7 @@ export default (socket, prefix) => {
 
   route('/list', (query) => {
     let criteria = {};
-    let { page, pagesize } = couponModel.getPageInfo(query);
+    let { page, pagesize } = query;
     return couponModel.page({criteria, page, pagesize});
   });
 

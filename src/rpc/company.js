@@ -21,7 +21,7 @@ export default (socket, prefix) => {
         $regex: strToReg(keyword, 'i')
       };
     }
-    let { page, pagesize } = companyModel.getPageInfo(query);
+    let { page, pagesize } = query;
     return companyModel.page({criteria, page, pagesize});
   });
 

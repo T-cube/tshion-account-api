@@ -14,7 +14,7 @@ export default (socket, prefix) => {
   const discountModel = new DiscountModel();
 
   route('/list', (query) => {
-    let { page, pagesize } = discountModel.getPageInfo(query);
+    let { page, pagesize } = query;
     return discountModel.page({page, pagesize});
   });
 

@@ -9,7 +9,7 @@ export default (socket, prefix) => {
   const qrcodeModel = socket.model('qrcode-model');
 
   route('/list', (query) => {
-    let { page, pagesize, status } = qrcodeModel.getPageInfo(query);
+    let { page, pagesize, status } = query;
     status = status == 'deleted' ? 'deleted' : 'normal';
     let criteria = {status};
     return qrcodeModel.page({page, pagesize, criteria});

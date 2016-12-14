@@ -14,7 +14,7 @@ export default (socket, prefix) => {
 
   route('/list', (query) => {
     let criteria = {};
-    let { status, plan, keyword } = query;
+    let { status, plan, keyword, page, pagesize } = query;
     if (status) {
       status = status.split(',');
       criteria['status'] = {$in: status};
@@ -27,7 +27,6 @@ export default (socket, prefix) => {
         $regex: strToReg(keyword, 'i')
       };
     }
-    let { page, pagesize } = planAuthModel.getPageInfo(query);
     return planAuthModel.page({criteria, page, pagesize});
   });
 

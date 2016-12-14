@@ -23,7 +23,7 @@ export default (socket, prefix) => {
         $regex: strToReg(keyword, 'i')
       };
     }
-    let { page, pagesize } = accountModel.getPageInfo(query);
+    let { page, pagesize } = query;
     return accountModel.page({criteria, page, pagesize});
   });
 

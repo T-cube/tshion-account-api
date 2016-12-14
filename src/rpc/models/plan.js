@@ -1,10 +1,9 @@
 import _ from 'underscore';
-import { ObjectId } from 'mongodb';
+import C from 'lib/constants';
 
-import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
-export default class ProductModel extends Model {
+export default class PlanModel extends Model {
 
   constructor(props) {
     super(props);
@@ -19,29 +18,26 @@ export default class ProductModel extends Model {
   }
 
   fetchDetail(_id) {
-    return Promise.all([
-      this.db.plan.findOne({_id}),
-      this.db.payment.product.find(),
-    ])
-    .then(([plans, products]) => {
-      plans.forEach(plan => {
-        plan.products = _.find(products, product => product.plan == plan.type);
+    return this.db.plan.findOne({_id})
+    .then(doc => {
+      if (doc.plan == C.TEAMPLAN.FREE) {
+        return doc;
+      }
+      return this.db.payment.product.find({
+        plan: doc.plan
+      })
+      .then(([plan, products]) => {
+        doc.products = _.find(products, product => product.plan == plan.type);
+        return doc;
       });
-      return plans;
     });
   }
 
-  update(_id, {title, original_price}) {
-    let update = {};
-    if (title) {
-      update.title = title;
-    }
-    if (original_price) {
-      update.original_price = original_price;
-    }
-    if (_.isEmpty(update)) {
-      return;
-    }
+  update(_id, {name, description}) {
+    let update = {
+      name,
+      description,
+    };
     update.date_update = new Date();
     return this.db.plan.update({_id}, {
       $set: update

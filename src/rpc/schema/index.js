@@ -5,13 +5,13 @@ const schema = {
   qrcode: {
     sanitization: {
       _id: { type: 'integer', optional: true },
-      name: { type: 'string', minLength: 1, rules: ['trim', 'title'] },
+      name: { type: 'string', minLength: 1, rules: ['trim', 'title'], optional: true },
       description: { type: 'string', optional: true },
       status: { type: 'string', optional: true },
     },
     validation: {
       _id: { type: 'integer', optional: true },
-      name: { type: 'string' },
+      name: { type: 'string', optional: true },
       description: { type: 'string', optional: true },
       status: { $enum: ['deleted', 'normal'], optional: true },
     }

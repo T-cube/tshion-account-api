@@ -12,8 +12,7 @@ export default (socket, prefix) => {
   const productModel = new ProductModel();
 
   route('/list', (query) => {
-    let { page, pagesize } = productModel.getPageInfo(query);
-    return productModel.page({page, pagesize});
+    return productModel.page(query);
   });
 
   route('/detail', (query) => {

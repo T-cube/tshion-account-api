@@ -7,10 +7,15 @@ import productRoutes from './plan/product';
 import paymentRoutes from './plan/payment';
 import discountRoutes from './plan/discount';
 
+import PlanModel from './models/plan';
+import { getObjectId } from './utils';
+
 export default (socket, prefix) => {
 
   const rpcRoute = new RpcRoute(socket, prefix);
   const route = rpcRoute.route.bind(rpcRoute);
+
+  const planModel = new PlanModel();
 
   rpcRoute.use('/auth', authRoutes);
   rpcRoute.use('/product', productRoutes);
@@ -19,11 +24,12 @@ export default (socket, prefix) => {
   rpcRoute.use('/payment', paymentRoutes);
 
   route('/list', query => {
-    
+    return planModel.page();
   });
 
   route('/detail', query => {
-
+    let planId = getObjectId(query, 'plan_id');
+    return planModel.fetchDetail(planId);
   });
 
   route('/update', query => {
