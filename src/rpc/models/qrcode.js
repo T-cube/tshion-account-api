@@ -79,23 +79,6 @@ export default class QrcodeModel extends Model {
     });
   }
 
-  page(props) {
-    let { page, pagesize, criteria } = props;
-    return Promise.all([
-      this.count(criteria),
-      this.fetchList(props)
-    ])
-    .then(doc => {
-      let [totalRows, list] = doc;
-      return {
-        list,
-        page,
-        pagesize,
-        totalRows
-      };
-    });
-  }
-
   fetchList(props) {
     let { page, pagesize } = props;
     return this.db.qrcode.find({})
