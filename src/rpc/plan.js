@@ -25,16 +25,16 @@ export default (socket, prefix) => {
   rpcRoute.use('/coupon', couponRoutes);
   rpcRoute.use('/payment', paymentRoutes);
 
-  route('/list', query => {
+  route('/type/list', query => {
     return planModel.page();
   });
 
-  route('/detail', query => {
+  route('/type/detail', query => {
     let planId = getObjectId(query, 'plan_id');
     return planModel.fetchDetail(planId);
   });
 
-  route('/update', query => {
+  route('/type/update', query => {
     validate('update_plan', query);
     return planModel.update(query.plan_id, query);
   });

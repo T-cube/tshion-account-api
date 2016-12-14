@@ -1,8 +1,10 @@
-## plan
+## type
 
-### /plan/list
+套餐计划类型
 
-### /plan/detail
+### /plan/type/list
+
+### /plan/type/detail
 
 QUERY
 
@@ -38,7 +40,7 @@ OUTPUT
 }
 ```
 
-### /plan/update
+### /plan/type/update
 
 QUERY
 
@@ -53,6 +55,7 @@ QUERY
 
 ## auth
 
+认证
 
 ### /plan/auth/list
 
@@ -93,6 +96,7 @@ QUERY
 
 ## product
 
+产品
 
 ### /plan/product/list
 
@@ -144,6 +148,7 @@ QUERY
 
 ## discount
 
+折扣
 
 ### /plan/discount/list
 
