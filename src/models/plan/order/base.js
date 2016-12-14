@@ -87,7 +87,7 @@ export default class BaseOrder {
   }
 
   save() {
-    return BaseOrder.getPendingOrder()
+    return BaseOrder.hasPendingOrder(this.company_id)
     .then(orderPending => {
       if (orderPending) {
         throw new ApiError(400, 'exist_pending_order');
@@ -147,6 +147,13 @@ export default class BaseOrder {
 
   static getPendingOrder(company_id) {
     return db.payment.order.findOne({
+      company_id: company_id,
+      status: {$in: ['created', 'paying']}
+    });
+  }
+
+  static hasPendingOrder(company_id) {
+    return db.payment.order.count({
       company_id: company_id,
       status: {$in: ['created', 'paying']}
     });
@@ -218,36 +225,16 @@ export default class BaseOrder {
 
   getProductsDiscount() {
     return Promise.map(this.products, product => {
-      let { discount, quantity, sum } = product;
-      if (!discount || !discount.length) {
+      let { discounts, quantity, sum } = product;
+      if (!discounts || !discounts.length) {
         return;
       }
-      delete product.discount;
-      return db.payment.product.discount.find({
-        _id: {
-          $in: discount
-        },
-        'period.date_start': {$lte: new Date()},
-        'period.date_end': {$gte: new Date()},
-        $or: [
-          {
-            'criteria.quantity': {$lte: quantity}
-          },
-          {
-            'criteria.total_fee': {$lte: sum}
-          }
-        ]
-      })
-      .sort({
-        'criteria.quantity': 1,
-        'criteria.total_fee': 1,
-      })
-      .limit(1)
-      .then(doc => {
-        if (!doc.length) {
-          return null;
+      delete product.discounts;
+      return Product.getDiscount(discounts, {quantity, total_fee: sum})
+      .then(discountItem => {
+        if (!discountItem) {
+          return;
         }
-        let discountItem = doc[0];
         let discountInfo = this._getProductDiscount(product, discountItem);
         this._persistProductDiscount({product_discount: discountItem._id}, discountInfo, product._id);
       });

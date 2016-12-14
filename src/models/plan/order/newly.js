@@ -7,6 +7,7 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import Base from './base';
 import Product from '../product';
+import Plan from '../plan';
 
 export default class NewlyOrder extends Base {
 
@@ -75,13 +76,11 @@ export default class NewlyOrder extends Base {
     if (limits) {
       return Promise.resolve(limits);
     }
-    return this.getCompanyLevelStatus()
-    .then(companyLevelStatus => {
-      let {setting, planInfo, levelInfo} = companyLevelStatus;
-      let minMember = levelInfo.member.count - setting.default_member;
+    return Plan.getSetting(plan)
+    .then(setting => {
       this.limits = {
         member_count: {
-          min: minMember > 0 ? minMember : 0,
+          min: 0,
           max: setting.max_member - setting.default_member
         },
         times: {

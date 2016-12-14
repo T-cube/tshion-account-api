@@ -53,7 +53,7 @@ export default class ProductModel extends Model {
         _id: product_id
       }, {
         $addToSet: {
-          discount: discount_id
+          discounts: discount_id
         }
       });
     });
@@ -64,7 +64,7 @@ export default class ProductModel extends Model {
       _id: product_id
     }, {
       $pull: {
-        discount: discount_id
+        discounts: discount_id
       }
     });
   }

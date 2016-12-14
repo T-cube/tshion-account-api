@@ -26,7 +26,7 @@ export default class Plan {
       let trial = paid.filter(item => -1 == history.map(h => h.plan).indexOf(item));
       let current = this._getCurrent(history.filter(item => item.status == C.PLAN_STATUS.ACTIVED));
       return {
-        history,
+        // history,
         current,
         viable: {trial, paid},
         authed,
@@ -111,12 +111,13 @@ export default class Plan {
       };
       if (order_type == C.ORDER_TYPE.NEWLY) {
         update.date_start = new Date();
-        update.date_end = moment(date_create).add(times, 'month').toDate();
+        date_end = moment(date_create).add(times, 'month').toDate();
       } else if (order_type == C.ORDER_TYPE.RENEWAL) {
-        update.date_end = moment(date_end).add(times, 'month').toDate();
+        date_end = moment(date_end).add(times, 'month').toDate();
       } else if (order_type == C.ORDER_TYPE.PATCH) {
-        update.date_end = moment(date_start).month(new Date().getMonth() + 1).toDate();
+        date_end = moment(date_start).month(new Date().getMonth() + 1).toDate();
       }
+      update.date_end = date_end;
       if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.DEGRADE], order_type)) {
         update.member_count = member_count;
       }
@@ -132,15 +133,8 @@ export default class Plan {
     });
   }
 
-  static getSetting(plan) {
-    // return db.plan.findOne({plan}); // TODO
-    return Plan.list().then(doc => {
-      return _.find(doc, item => item.type == plan);
-    });
-  }
-
-  static getDefaultMemberCount(plan) {
-    return Promise.resolve(10);
+  static getSetting(type) {
+    return db.plan.findOne({type});
   }
 
   static list() {

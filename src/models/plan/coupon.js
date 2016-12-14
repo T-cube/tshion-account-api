@@ -18,7 +18,7 @@ export default class Coupon {
       if (!coupon) {
         return [];
       }
-      return db.plan.coupon.find({
+      return db.payment.coupon.find({
         _id: {$in: coupon.list},
         'period.date_start': {$lt: new Date()},
         'period.data_end': {$gte: new Date()},
@@ -32,7 +32,7 @@ export default class Coupon {
         _id: this.company_id,
         list: couponId
       }),
-      db.plan.coupon.findOne({
+      db.payment.coupon.findOne({
         _id: couponId,
         'period.date_start': {$lt: new Date()},
         'period.data_end': {$gte: new Date()},

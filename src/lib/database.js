@@ -57,11 +57,7 @@ const collections = [
   'wiki',
 
   // plan
-  'plan.coupon',
-  'product',
-  'product.discount',
   'payment.order',
-  'payment.discount',
   'company.coupon',
   'user.realname',
 
@@ -74,6 +70,8 @@ const collections = [
   'plan.auth',
   'plan.company',
   'payment.product',
+  'payment.discount',
+  'payment.coupon',
   'payment.product.history',
 ];
 

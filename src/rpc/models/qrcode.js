@@ -84,6 +84,9 @@ export default class QrcodeModel extends Model {
     return this.db.qrcode.find({})
     .skip(page * pagesize)
     .limit(pagesize)
+    .sort({
+      _id: -1
+    })
     .then(list => {
       return Promise.map(list, item => {
         return this.createQrWhenNotExists(item.wechat_url, item.filename).then(() => item);
