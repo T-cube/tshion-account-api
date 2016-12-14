@@ -29,6 +29,8 @@ export default (socket, prefix) => {
       return qrcodeModel.updateStatus(_id, status);
     } else if (name && description) {
       return qrcodeModel.update(_id, {name, description});
+    } else {
+      throw new ApiError(400);
     }
   });
 
