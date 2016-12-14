@@ -45,9 +45,15 @@ export default (socket, prefix) => {
     });
   });
 
-  route('/audit', (query) => {
+  route('/discount/list', (query) => {
     validate('plan_audit', query);
     return planAuthModel.audit(query).then(() => ({ok: 1}));
   });
+
+  route('/discount/update', (query) => {
+    validate('plan_audit', query);
+    return planAuthModel.audit(query).then(() => ({ok: 1}));
+  });
+
 
 };

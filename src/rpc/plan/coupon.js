@@ -36,6 +36,10 @@ export default (socket, prefix) => {
 
   });
 
+  route('/update', (query) => {
+
+  });
+
   route('/delete', (query) => {
 
   });

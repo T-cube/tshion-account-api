@@ -38,6 +38,7 @@ export default class QrcodeModel extends Model {
             description,
             wechat_url,
             ticket,
+            status: 'normal'
           };
           return this.db.qrcode.insert(data);
         });
@@ -45,7 +46,7 @@ export default class QrcodeModel extends Model {
     });
   }
 
-  update({_id, name, description}) {
+  update(_id, {name, description}) {
     return this.db.qrcode.update({_id}, {
       $set: {
         name,
@@ -54,7 +55,7 @@ export default class QrcodeModel extends Model {
     });
   }
 
-  updateStatus({_id, status}) {
+  updateStatus(_id, status) {
     return this.db.qrcode.update({_id}, {
       $set: {status}
     });

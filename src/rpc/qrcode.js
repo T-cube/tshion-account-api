@@ -23,13 +23,12 @@ export default (socket, prefix) => {
   });
 
   route('/update', (query) => {
+    validate('qrcode', query);
     let { _id, name, description, status } = query;
-    let data = { _id, name, description, status };
-    validate('qrcode', data);
-    if (data.status) {
-      return qrcodeModel.updateStatus(data);
+    if (status) {
+      return qrcodeModel.updateStatus(_id, status);
     }
-    return qrcodeModel.update(data);
+    return qrcodeModel.update(_id, {name, description});
   });
 
   route('/detail', (query) => {
