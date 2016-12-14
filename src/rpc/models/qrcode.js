@@ -80,8 +80,8 @@ export default class QrcodeModel extends Model {
   }
 
   fetchList(props) {
-    let { page, pagesize } = props;
-    return this.db.qrcode.find({})
+    let { page, pagesize, criteria } = props;
+    return this.db.qrcode.find(criteria)
     .skip(page * pagesize)
     .limit(pagesize)
     .sort({

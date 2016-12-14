@@ -237,4 +237,18 @@ module.exports = {
     max_times: 12,
     trial_times: 1,
   },
+  payment: {
+    alipay: {
+      APPID: 'appid',
+      KEY: 'key',
+      PARTNER: 'partner',
+      EMAIL: 'email'
+    },
+    wxpay: {
+      APIKEY: 'apikey',
+      APPID: 'appid',
+      APPSECRET: 'appsecret',
+      MCHID: 'mchid'
+    }
+  }
 };
