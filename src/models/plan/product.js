@@ -13,13 +13,13 @@ export default class Product {
   }
 
   static getByPlan(plan) {
-    return db.product.find({
+    return db.payment.product.find({
       plan
     });
   }
 
   static getAll() {
-    return db.product.find({});
+    return db.payment.product.find({});
   }
 
 }

@@ -223,7 +223,7 @@ export default class BaseOrder {
         return;
       }
       delete product.discount;
-      return db.product.discount.find({
+      return db.payment.product.discount.find({
         _id: {
           $in: discount
         },
