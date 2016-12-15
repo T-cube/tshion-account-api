@@ -1,7 +1,7 @@
 
-## discount
+## plan-company
 
-折扣
+各版本的使用情况
 
 ### /plan/company/list
 
