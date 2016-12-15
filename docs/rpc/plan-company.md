@@ -12,6 +12,7 @@ QUERY
   pagesize: Int,
   plan: String, // ent | pro
   type: String, // trial paid
+  status: String, // expired actived
 }
 ```
 
