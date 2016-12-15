@@ -6,6 +6,7 @@ import couponRoutes from './plan/coupon';
 import productRoutes from './plan/product';
 import paymentRoutes from './plan/payment';
 import discountRoutes from './plan/discount';
+import rechargeDiscountRoutes from './plan/recharge-discount';
 
 import PlanModel from './models/plan';
 import { getObjectId } from './utils';
@@ -22,6 +23,7 @@ export default (socket, prefix) => {
   rpcRoute.use('/auth', authRoutes);
   rpcRoute.use('/product', productRoutes);
   rpcRoute.use('/discount', discountRoutes);
+  rpcRoute.use('/recharge-discount', rechargeDiscountRoutes);
   rpcRoute.use('/coupon', couponRoutes);
   rpcRoute.use('/payment', paymentRoutes);
 

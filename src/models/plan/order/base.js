@@ -203,8 +203,8 @@ export default class BaseOrder {
 
   getDiscount() {
     return this.getProductsDiscount()
-    .then(() => this.getCouponDiscount())
-    .then(() => this.getPayDiscount());
+    .then(() => this.getCouponDiscount());
+    // .then(() => this.getPayDiscount());
   }
 
   initProducts() {

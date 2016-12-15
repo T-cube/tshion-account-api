@@ -102,7 +102,7 @@ export default class Plan {
 
   updatePaidFromOrder(order) {
     let { company_id } = this;
-    let { plan, order_type, times, date_create, products, member_count } = order;
+    let { plan, order_type, times, date_create, member_count } = order;
     return this.getCurrent().then(current => {
       let {date_start, date_end} = current;
       let update = {

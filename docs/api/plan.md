@@ -205,8 +205,7 @@ info: {
       city: String,
     },
     industry: String,               // 行业类型
-    certificate_pic: URL,
-    scale: Number[Enum:5,10,50,100,500],
+    scale: Number[Enum:1,10,50,100,500],
     description: String,
   }
 },

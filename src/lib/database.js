@@ -72,6 +72,7 @@ const collections = [
   'payment.product',
   'payment.discount',
   'payment.coupon',
+  'payment.recharge.discount',
   'payment.product.history',
 ];
 

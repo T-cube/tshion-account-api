@@ -117,29 +117,4 @@ export default class Auth {
     }));
   }
 
-  static audit(options) {
-    let { status, comment, user_id, company_id } = options;
-    let log = {
-      status,
-      comment,
-      user_id,
-      date_create: new Date(),
-    };
-    return db.plan.auth.update({company_id}, {
-      $set: {status}
-    })
-    .then(() => Auth.logAuth(log));
-  }
-
-  static logAuth(log) {
-    let { company_id } = this;
-    log.date_create = new Date();
-    // validate('log', log);
-    return db.plan.auth.update({
-      company_id
-    }, {
-      $push: {log}
-    });
-  }
-
 }

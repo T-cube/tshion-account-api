@@ -169,6 +169,18 @@ const schema = {
       stock_total: { type: 'integer' },
       stock_current: { type: 'integer' },
     },
+  },
+  recharge_discount: {
+    sanitization: {
+      title: { type: 'string' },
+      amount: { type: 'integer' },
+      extra_amount: { type: 'integer' },
+    },
+    validation: {
+      title: { type: 'string' },
+      amount: { type: 'integer', min: 1 },
+      extra_amount: { type: 'integer', min: 1 },
+    },
   }
 };
 

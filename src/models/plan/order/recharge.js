@@ -26,4 +26,14 @@ export default class RechargeOrder extends Base {
 
   }
 
+  getDiscount() {
+    return this.getProductsDiscount()
+    .then(() => this.getCouponDiscount())
+    .then(() => this.getChargeDiscount());
+  }
+
+  getChargeDiscount() {
+    return Promise.resolve(0);
+  }
+
 }
