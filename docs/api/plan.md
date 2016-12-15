@@ -170,7 +170,6 @@ OUTPUT
 
 POST
 ```javascript
-status: AuthStatus,               // 认证状态
 info: {
   contact: {
     realname: String,
@@ -185,7 +184,7 @@ info: {
       address: String,
     },
     // 实名信息，仅在专业版认证时需要
-    realname: {
+    realname_ext: {
       idcard: String,              // 身份证编码
     },
   },
