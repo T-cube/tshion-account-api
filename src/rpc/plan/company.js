@@ -28,8 +28,8 @@ export default (socket, prefix) => {
   });
 
   route('/detail', (query) => {
-    let _id = getObjectId(query, '_id');
-    return planCompany.fetchDetail(_id)
+    let usage_id = getObjectId(query, 'usage_id');
+    return planCompany.fetchDetail(usage_id)
     .then(info => {
       if (!info) {
         throw new ApiError(404);
