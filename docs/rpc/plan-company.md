@@ -16,7 +16,7 @@ QUERY
 }
 ```
 
-### /plan/discount/detail
+### /plan/company/detail
 
 QUERY
 ```javascript

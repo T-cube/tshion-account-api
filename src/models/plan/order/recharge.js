@@ -5,24 +5,31 @@ import config from 'config';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
-import Base from './base';
+import BaseOrder from './base';
 
-export default class RechargeOrder {
+export default class RechargeOrder extends BaseOrder {
 
-  constructor() {
+  constructor(props) {
+    super(props);
     this.order_type = C.ORDER_TYPE.RECHARGE;
   }
 
-  prepare({user_id, company_id, amount}) {
-    let data = {
-      user_id: user_id,
-      company_id: company_id,
-      original_sum: amount,
-    };
+  prepare() {
+    return this.getDiscount().then(() => {
+      let order = {
+
+      };
+
+    });
   }
 
-  init() {
+  save() {
+    
+  }
 
+  init({amount}) {
+    this.amount = amount;
+    return Promise.resolve();
   }
 
   isValid() {
