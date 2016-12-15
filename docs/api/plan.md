@@ -22,7 +22,7 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 5. 试用 `POST /plan/trial`
 6. 购买，订单预查询（用户操作刷新状态）：`POST /plan/order/prepare`，生成订单：`POST /plan/order`
 7. 查看当前正在处理的订单 `GET /plan/order/pending`
-8. 支付处理的订单 `POST /plan/order/pending/pay?` 
+8. 支付处理的订单 `POST /plan/order/pending/pay?`
 9. ...
 
 
@@ -187,7 +187,6 @@ info: {
     // 实名信息，仅在专业版认证时需要
     realname: {
       idcard: String,              // 身份证编码
-      idcard_photo: URL,           // 身份证照片
     },
   },
   // 团队信息
@@ -197,7 +196,7 @@ info: {
       city: String,
     },
     type: String[Enum:none-profit,workshop,startup],
-    scale: Number[Enum:5,10,50,100],
+    scale: Number[Enum:1,10,50,100],
     description: String,
   }
   // 企业信息
