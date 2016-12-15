@@ -9,7 +9,6 @@ import Product from '../product';
 import Discount from '../discount';
 import Plan from '../plan';
 import PaymentDiscount from '../payment-discount';
-import ProductDiscount from '../product-discount';
 import CompanyLevel from 'models/company-level';
 
 

@@ -9,8 +9,6 @@ import Base from './base';
 import Coupon from 'models/plan/coupon';
 import Payment from 'models/plan/payment';
 import Discount from 'models/plan/discount';
-import PaymentDiscount from 'models/plan/payment-discount';
-import ProductDiscount from 'models/plan/product-discount';
 import CompanyLevel from 'models/company-level';
 
 

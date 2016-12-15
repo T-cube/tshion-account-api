@@ -36,25 +36,6 @@ const locationSchema = {
 
 const schema = {
   log: logSchema,
-  
-  // plan: {
-  //   sanitization: {
-  //     company_id: { $bjectId: 1 },             // 团队
-  //     user_id: { $bjectId: 1 },                // 申请用户
-  //     plan: { type: 'string' },                   // 升级方案
-  //     status: { type: 'string' },                // 状态
-  //     date_start: { type: 'date' },     // 申请日期
-  //     date_end: { type: 'date' },
-  //   },
-  //   validation: {
-  //     company_id: { $bjectId: 1 },
-  //     user_id: { $bjectId: 1 },
-  //     plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
-  //     status: { $enum: ENUMS.PLAN_STATUS },
-  //     date_start: { type: 'date' },
-  //     date_end: { type: 'date' },
-  //   },
-  // },
 
   auth_pro: {
     sanitization: {

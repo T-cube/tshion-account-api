@@ -9,10 +9,6 @@ export default class Product {
 
   }
 
-  create() {
-
-  }
-
   static getByPlan(plan) {
     let fields = {
       title: 1,

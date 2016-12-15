@@ -1,6 +1,5 @@
 
 import db from 'lib/database';
-import ProductDiscount from 'models/plan/product-discount';
 
 export default class Coupon {
 

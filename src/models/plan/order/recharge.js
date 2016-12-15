@@ -7,11 +7,18 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import Base from './base';
 
-export default class RechargeOrder extends Base {
+export default class RechargeOrder {
 
-  constructor(props) {
-    super(props);
+  constructor() {
     this.order_type = C.ORDER_TYPE.RECHARGE;
+  }
+
+  prepare({user_id, company_id, amount}) {
+    let data = {
+      user_id: user_id,
+      company_id: company_id,
+      original_sum: amount,
+    };
   }
 
   init() {
@@ -19,11 +26,12 @@ export default class RechargeOrder extends Base {
   }
 
   isValid() {
-
+    let isValid = true;
+    return Promise.resolve({isValid});
   }
 
   getLimits() {
-
+    return Promise.resolve({});
   }
 
   getDiscount() {
