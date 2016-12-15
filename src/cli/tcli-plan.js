@@ -28,10 +28,10 @@ if (program.init) {
         default_member: 10,
         project_actived: 5,
         project_all: 10,
-        store: 10000000000, // 10G
-        project_store: 100000000, // 100M
+        store: 10737418240, // 10G
+        project_store: 104857600, // 100M
         inc_member_store: 0,
-        max_file_size: 5000000, // 5M
+        max_file_size: 5242880, // 5M
         max_member: 10,
       },
       {
@@ -41,10 +41,10 @@ if (program.init) {
         default_member: 10,
         project_actived: 50,
         project_all: 50,
-        store: 20000000000, // 20G
-        project_store: 500000000, // 500M
+        store: 2147483648, // 20G
+        project_store: 524288000, // 500M
         inc_member_store: 0,
-        max_file_size: 10000000, // 10M
+        max_file_size: 10485760, // 10M
         max_member: 50,
         ext_info: '专业版',
       },
@@ -55,10 +55,10 @@ if (program.init) {
         default_member: 10,
         project_actived: 100,
         project_all: 100,
-        store: 10000000000, // 100G
-        project_store: 1000000000, // 1G
-        inc_member_store: 10000000000, // 1G
-        max_file_size: 20000000, // 20M
+        store: 107374182400, // 100G
+        project_store: 1073741824, // 1G
+        inc_member_store: 1073741824, // 1G
+        max_file_size: 20971520, // 20M
         max_member: 100,
         ext_info: '企业版',
       },
