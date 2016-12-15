@@ -4,7 +4,7 @@ import { ApiError } from 'lib/error';
 import RpcRoute from 'models/rpc-route';
 import { validate } from '../schema/plan';
 import { getObjectId } from '../utils';
-import RechargeModel from '../models/recharge';
+import RechargeModel from '../models/recharge-discount';
 
 
 export default (socket, prefix) => {
