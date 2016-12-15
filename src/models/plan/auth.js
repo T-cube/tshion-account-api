@@ -52,13 +52,13 @@ export default class Auth {
         [plan]: doc[0]
       }));
     } else {
-      return Promise.map(C.PLAN.TEAMPLAN_PAID, plan => {
+      return Promise.map(C.TEAMPLAN_PAID, plan => {
         return db.plan.auth.find({company_id, plan}, {info: 0, log: 0})
         .sort({date_apply: -1})
         .limit(1)
         .then(doc => doc[0]);
       })
-      .then(list => _.object(C.PLAN.TEAMPLAN_PAID, list));
+      .then(list => _.object(C.TEAMPLAN_PAID, list));
     }
   }
 

@@ -9,7 +9,7 @@ import { validate } from 'models/plan/schema';
 import { ApiError } from 'lib/error';
 import Auth from 'models/plan/auth';
 import Realname from 'models/plan/realname';
-
+import { saveCdn } from 'lib/upload';
 
 let api = express.Router();
 export default api;
@@ -56,20 +56,26 @@ api.get('/realname', (req, res, next) => {
   .catch(next);
 });
 
+const cdnBucket = 'cdn-auth';
+
 api.post('/pro',
 handelUpload('pro'),
+saveCdn(cdnBucket),
 createOrUpdatePro());
 
 api.post('/ent',
 handelUpload('ent'),
+saveCdn(cdnBucket),
 createOrUpdateEnt());
 
 api.put('/pro',
 handelUpload('pro', true),
+saveCdn(cdnBucket),
 createOrUpdatePro(true));
 
 api.put('/ent',
 handelUpload('ent', true),
+saveCdn(cdnBucket),
 createOrUpdateEnt(true));
 
 api.put(/\/(pro|ent)\/status\/?/, (req, res, next) => {
@@ -116,7 +122,7 @@ function createOrUpdatePro(isUpdate) {
   return (req, res, next) => {
     let data = req.body;
     let auth = new Auth(req.company._id, req.user._id);
-    let pics = req.files ? req.files.map(file => file.relpath) : [];
+    let pics = req.files ? req.files.map(file => _.pick(file, 'relpath', 'url')) : [];
     let realnameData = data.info.contact;
     let realnameModel = new Realname(req.user._id);
     let promise = realnameModel.get();
@@ -149,7 +155,7 @@ function createOrUpdateEnt(isUpdate) {
   return (req, res, next) => {
     let data = req.body;
     let auth = new Auth(req.company._id, req.user._id);
-    let pics = req.files ? req.files.map(file => file.relpath) : [];
+    let pics = req.files ? req.files.map(file => _.pick(file, 'relpath', 'url')) : [];
     data.info.enterprise.certificate_pic = pics;
     let promise = isUpdate ? auth.update(data) : auth.create(data);
     return promise.then(doc => res.json(doc)).catch(next);

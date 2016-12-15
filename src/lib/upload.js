@@ -121,6 +121,8 @@ export function saveCdn(bucket) {
         const { relpath, path } = file;
         return cdnUpload(file, relpath, path);
       });
+    } else {
+      promise = Promise.resolve();
     }
     promise.then(() => next())
     .catch(next);

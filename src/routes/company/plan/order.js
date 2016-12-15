@@ -76,7 +76,7 @@ api.post('/pending/pay', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/pending/pay-callback', (req, res, next) => {
+api.post('/pay-callback/wechat', (req, res, next) => {
   let data = req.body;
   validate('pay', data);
   BaseOrder.getPendingOrder(req.company._id)

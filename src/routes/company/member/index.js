@@ -53,7 +53,7 @@ api.get('/level-info', (req, res, next) => {
   companyLevel.getStatus().then(status => {
     let {levelInfo, planInfo, setting} = status;
     let info = {
-      max_members: setting.member_count + planInfo.member_count,
+      max_members: setting.default_member + (planInfo.member_count || 0),
       member_num: levelInfo.member.count,
     };
     return res.json(info);
