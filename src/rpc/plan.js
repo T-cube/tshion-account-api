@@ -6,6 +6,7 @@ import couponRoutes from './plan/coupon';
 import productRoutes from './plan/product';
 import paymentRoutes from './plan/payment';
 import discountRoutes from './plan/discount';
+import companyRoutes from './plan/company';
 import rechargeDiscountRoutes from './plan/recharge-discount';
 
 import PlanModel from './models/plan';
@@ -26,6 +27,7 @@ export default (socket, prefix) => {
   rpcRoute.use('/recharge-discount', rechargeDiscountRoutes);
   rpcRoute.use('/coupon', couponRoutes);
   rpcRoute.use('/payment', paymentRoutes);
+  rpcRoute.use('/company', companyRoutes);
 
   route('/type/list', query => {
     return planModel.page();

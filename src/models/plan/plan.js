@@ -88,15 +88,26 @@ export default class Plan {
   createNewTrial(data) {
     let { company_id } = this;
     let { plan, user_id } = data;
-    return db.plan.company.insert({
+    return  db.plan.company.update({
       company_id,
-      user_id,
-      type: 'trial',
-      plan,
-      member_count: 0,
       status: C.PLAN_STATUS.ACTIVED,
-      date_start: new Date(),
-      date_end: moment().add(config.get('plan.trial_times'), 'month').toDate(),
+      type: 'trial',
+    }, {
+      $set: {
+        status: C.PLAN_STATUS.EXPIRED,
+      }
+    })
+    .then(() => {
+      return db.plan.company.insert({
+        company_id,
+        user_id,
+        type: 'trial',
+        plan,
+        member_count: 0,
+        status: C.PLAN_STATUS.ACTIVED,
+        date_start: new Date(),
+        date_end: moment().add(config.get('plan.trial_times'), 'month').toDate(),
+      });
     });
   }
 
@@ -104,7 +115,7 @@ export default class Plan {
     let { company_id } = this;
     let { plan, order_type, times, date_create, member_count } = order;
     return this.getCurrent().then(current => {
-      let {date_start, date_end} = current;
+      let {date_start, date_end, type, status} = current;
       let update = {
         status: C.PLAN_STATUS.ACTIVED,
         date_start
@@ -120,6 +131,15 @@ export default class Plan {
       update.date_end = date_end;
       if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.DEGRADE], order_type)) {
         update.member_count = member_count;
+      }
+      if (type == 'trial' && status == C.PLAN_STATUS.ACTIVED && current._id) {
+        db.plan.company.update({
+          _id: current._id
+        }, {
+          $set: {
+            status: C.PLAN_STATUS.EXPIRED
+          }
+        });
       }
       return db.plan.company.update({
         company_id,

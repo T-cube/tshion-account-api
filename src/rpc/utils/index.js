@@ -4,7 +4,7 @@ import { ApiError } from 'lib/error';
 export function getObjectId(query, key) {
   let v = query[key];
   if (!v || !ObjectId.isValid(v)) {
-    throw new ApiError(400, `invalid ${key}`);
+    throw new ApiError(400, `invalid ${key} ${key}`);
   }
   return ObjectId(v);
 }
