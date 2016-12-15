@@ -52,13 +52,14 @@ export default class Auth {
         [plan]: doc[0]
       }));
     } else {
-      return Promise.map(C.TEAMPLAN_PAID, plan => {
+      let plansPaid = _.values(C.TEAMPLAN_PAID);
+      return Promise.map(plansPaid, plan => {
         return db.plan.auth.find({company_id, plan}, {info: 0, log: 0})
         .sort({date_apply: -1})
         .limit(1)
         .then(doc => doc[0]);
       })
-      .then(list => _.object(C.TEAMPLAN_PAID, list));
+      .then(list => _.object(plansPaid, list));
     }
   }
 
