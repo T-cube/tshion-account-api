@@ -36,25 +36,25 @@ const locationSchema = {
 
 const schema = {
   log: logSchema,
-
-  plan: {
-    sanitization: {
-      company_id: { $bjectId: 1 },             // 团队
-      user_id: { $bjectId: 1 },                // 申请用户
-      plan: { type: 'string' },                   // 升级方案
-      status: { type: 'string' },                // 状态
-      date_start: { type: 'date' },     // 申请日期
-      date_end: { type: 'date' },
-    },
-    validation: {
-      company_id: { $bjectId: 1 },
-      user_id: { $bjectId: 1 },
-      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
-      status: { $enum: ENUMS.PLAN_STATUS },
-      date_start: { type: 'date' },
-      date_end: { type: 'date' },
-    },
-  },
+  
+  // plan: {
+  //   sanitization: {
+  //     company_id: { $bjectId: 1 },             // 团队
+  //     user_id: { $bjectId: 1 },                // 申请用户
+  //     plan: { type: 'string' },                   // 升级方案
+  //     status: { type: 'string' },                // 状态
+  //     date_start: { type: 'date' },     // 申请日期
+  //     date_end: { type: 'date' },
+  //   },
+  //   validation: {
+  //     company_id: { $bjectId: 1 },
+  //     user_id: { $bjectId: 1 },
+  //     plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
+  //     status: { $enum: ENUMS.PLAN_STATUS },
+  //     date_start: { type: 'date' },
+  //     date_end: { type: 'date' },
+  //   },
+  // },
 
   auth_pro: {
     sanitization: {
@@ -83,7 +83,7 @@ const schema = {
               realname_ext: {
                 type: 'object',
                 properties: {
-                  idcard: { $idcard: 1 },              // 身份证编码
+                  idcard: { type: 'string', rules: ['lower', 'trim'] },              // 身份证编码
                 }
               },
             }
@@ -93,8 +93,8 @@ const schema = {
             type: 'object',
             properties: {
               location: locationSchema.sanitization,
-              type: { type: 'string' }, //String[Enum:none-profit,workshop,startup],
-              scale: { type: 'integer' }, //Number[Enum:5,10,50,100],
+              type: { type: 'string' },
+              scale: { type: 'integer' },
               description: { type: 'string' },
             }
           },
@@ -109,18 +109,18 @@ const schema = {
             type: 'object',
             optional: true,
             properties: {
-              realname: { type: 'string' },
-              gender: { type: 'string' },               // Enum:F,M
+              realname: { type: 'string', minLength: 2 },
+              gender: { type: 'string', $enum: ENUMS.GENDER },
               position: { type: 'string' },
-              phone: { type: 'string' },
+              phone: { $phone: 1 },
               address: {
                 type: 'object',
                 properties: {
-                  province: { type: 'string' },
-                  city: { type: 'string' },
-                  district: { type: 'string' },
-                  postcode: { type: 'string' },
-                  address: { type: 'string' },
+                  province: { type: 'string', minLength: 1 },
+                  city: { type: 'string', minLength: 1 },
+                  district: { type: 'string', minLength: 1 },
+                  postcode: { type: 'string', minLength: 4 },
+                  address: { type: 'string', minLength: 1 },
                 }
               },
               // 实名信息，仅在专业版认证时需要
@@ -137,9 +137,9 @@ const schema = {
             type: 'object',
             properties: {
               location: locationSchema.sanitization,
-              type: { type: 'string' }, //String[Enum:none-profit,workshop,startup],
-              scale: { type: 'integer' }, //Number[Enum:5,10,50,100],
-              description: { type: 'string' },
+              type: { $enum: ENUMS.TEAM_TYPE },
+              scale: { $enum: [1, 10, 50, 100] },
+              description: { type: 'string', minLength: 3 },
             }
           },
         }
@@ -166,8 +166,8 @@ const schema = {
             type: 'object',
             properties: {
               location: locationSchema.sanitization,
-              industry: { type: 'string' },               // 行业类型
-              scale: { type: 'integer' }, // Number[Enum:5,10,50,100],
+              industry: { type: 'string' },
+              scale: { type: 'integer' },
               description: { type: 'string' },
             }
           },
@@ -181,10 +181,10 @@ const schema = {
           contact: {
             type: 'object',
             properties: {
-              realname: { type: 'string' },
-              gender: { type: 'string' },               // Enum:F,M
+              realname: { type: 'string', minLength: 2 },
+              gender: { type: 'string', $enum: ENUMS.GENDER },
               position: { type: 'string' },
-              phone: { type: 'string' },
+              phone: { $phone: 1 },
             }
           },
           // 企业信息
@@ -192,47 +192,14 @@ const schema = {
             type: 'object',
             properties: {
               location: locationSchema.sanitization,
-              industry: { type: 'string' },               // 行业类型
-              scale: { type: 'integer' }, // Number[Enum:5,10,50,100],
-              description: { type: 'string' },
+              industry: { type: 'string', minLength: 2 },
+              scale: { $enum: [1, 10, 50, 100] },
+              description: { type: 'string', minLength: 3 },
             }
           },
         }
       },
     },
-  },
-
-  coupon: {
-    sanitization: {
-      coupon_no: { type: 'string' },                  // 优惠券编号
-      products: {
-        type: 'array',
-        items: {
-          $objectId: 1
-        }
-      },
-      title: { type: 'string' },
-      description: { type: 'string' },
-      criteria: {
-        quantity: { type: 'integer' },                 // 最低数量
-        total_fee: { type: 'integer' },              // 最低金额
-      },
-      discount: {
-        type: { type: 'string' },               // 优惠类型：number,rate,amount
-        number: { type: 'integer' },                   // 赠送数量
-        rate: { type: 'number' },                     // 折扣（0~0.99）
-        amount: { type: 'integer' },                 // 优惠金额
-      },
-      period: {
-        date_start: { type: 'date' },
-        data_end: { type: 'date' },
-      },
-      stock_total: { type: ['int', null] },      // 库存数量，无数量限制为 null
-      stock_current: { type: ['int', null] },    // 剩余数量，无数量限制为 null
-      date_create: { type: 'date' },
-      date_update: { type: 'date' },
-    },
-    validation: {},
   },
 
   charge_discount: {

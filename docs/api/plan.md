@@ -14,6 +14,16 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 ```javascript
 /company/:companyId/plan
 ```
+### 认证购买的流程
+1. 获取所有计划的列表 `GET /plan/list`
+2. 获取公司当前的计划状态 `GET /plan/status`
+3. 获取公司当前的认证状态 `GET /plan/auth/status`
+4. 认证，团队：`POST /plan/auth/pro`，企业：`POST /plan/auth/ent`
+5. 试用 `POST /plan/trial`
+6. 购买，订单预查询（用户操作刷新状态）：`POST /plan/order/prepare`，生成订单：`POST /plan/order`
+7. 查看当前正在处理的订单 `GET /plan/order/pending`
+8. 支付处理的订单 `POST /plan/order/pending/pay?` 
+9. ...
 
 
 ### GET /list
@@ -43,18 +53,18 @@ OUTPUT
 
 ```javascript
 {
-  history: [
-    {
-      _id: ObjectId,
-      type: String, // paid trial
-      company_id: ObjectId,
-      user_id: ObjectId,
-      plan: TeamPlanPaid,
-      status: PlanStatus,
-      date_start: Date,
-      date_end: Date,
-    }
-  ],
+  // history: [
+  //   {
+  //     _id: ObjectId,
+  //     type: String, // paid trial
+  //     company_id: ObjectId,
+  //     user_id: ObjectId,
+  //     plan: TeamPlanPaid,
+  //     status: PlanStatus,
+  //     date_start: Date,
+  //     date_end: Date,
+  //   }
+  // ],
   current: {
     _id: ObjectId,
     type: String, // paid trial
@@ -282,5 +292,17 @@ OUTPUT
     _id: ObjectId,
     ...
   }
+}
+```
+
+### GET /order/pending
+
+### POST /order/pending/pay
+
+INPUT
+
+```javascript
+{
+  payment_method: String, // alipay|wechat
 }
 ```

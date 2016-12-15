@@ -274,6 +274,16 @@ let constants = {
   PRODUCT_NO: {
     PLAN: 'P0001',
     MEMBER: 'P0002',
+  },
+
+  GENDER: {
+    FEMALE: 'F',
+    MALE: 'M',
+  },
+  TEAM_TYPE: {
+    NONE_PROFIT: 'none-profit',
+    WORKSHOP: 'workshop',
+    STARTUP: 'startup',
   }
 
 };

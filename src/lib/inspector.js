@@ -77,7 +77,15 @@ const validationCustom = {
     if (candidate && !/^([0-9]{15}[\dx]|[0-9]{17}[\dx])$/.test(candidate)) {
       this.report('invalid idcard: ' + candidate);
     }
-  }
+  },
+  phone: function (schema, candidate) {
+    if (!schema.$phone) {
+      return;
+    }
+    if (candidate && !/^\d[\d-]{4,16}\d$/.test(candidate)) {
+      this.report('invalid phone: ' + candidate);
+    }
+  },
 };
 schemaInspector.Validation.extend(validationCustom);
 schemaInspector.Sanitization.extend(sanitizationCustom);
