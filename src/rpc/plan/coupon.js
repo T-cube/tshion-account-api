@@ -5,6 +5,7 @@ import RpcRoute from 'models/rpc-route';
 import { validate } from '../schema/plan';
 import { getObjectId } from '../utils';
 import CouponModel from '../models/discount';
+import CompanyCouponModel from '../models/company-coupon';
 
 
 export default (socket, prefix) => {
@@ -12,6 +13,7 @@ export default (socket, prefix) => {
   const rpcRoute = new RpcRoute(socket, prefix);
   const route = rpcRoute.route.bind(rpcRoute);
   const couponModel = new CouponModel();
+  const companyCoupon = new CompanyCouponModel();
 
   route('/list', (query) => {
     let { page, pagesize } = query;
@@ -55,6 +57,17 @@ export default (socket, prefix) => {
   route('/delete', query => {
     let coupon_id = getObjectId(query, 'coupon_id');
     return couponModel.delete(coupon_id);
+  });
+
+  route('/company', query => {
+    let coupon_id = getObjectId(query, 'coupon_id');
+    return companyCoupon.pageCompanyHasCoupon(coupon_id, query);
+  });
+
+  route('/send', query => {
+    let coupon_id = getObjectId(query, 'coupon_id');
+    let company_id = getObjectId(query, 'company_id');
+    return companyCoupon.create({coupon_id, company_id});
   });
 
 };

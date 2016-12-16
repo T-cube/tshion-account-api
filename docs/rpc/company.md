@@ -41,3 +41,14 @@ QUERY
   pagesize: <Int>,
 }
 ```
+
+### /company/detail/coupon
+
+QUERY
+```javascript
+{
+  _id: <String>, // company id
+  page: <Int>,
+  pagesize: <Int>,
+}
+```

@@ -113,6 +113,8 @@ QUERY
 
 ### /plan/coupon/product/add
 
+添加优惠券适用的产品
+
 QUERY
 ```javascript
 {
@@ -123,10 +125,35 @@ QUERY
 
 ### /plan/coupon/product/remove
 
+移除优惠券适用的产品
+
 QUERY
 ```javascript
 {
   coupon_id: ObjectId,
   product_no: String, // P0001 P0002
+}
+```
+
+### /plan/coupon/company
+
+有该优惠券的公司列表
+
+QUERY
+```javascript
+{
+  coupon_id: ObjectId,
+}
+```
+
+### /plan/coupon/send
+
+给公司发优惠券
+
+QUERY
+```javascript
+{
+  coupon_id: ObjectId,
+  company_id: ObjectId,
 }
 ```

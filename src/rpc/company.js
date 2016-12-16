@@ -6,12 +6,15 @@ import { strToReg } from 'lib/utils';
 import RpcRoute from 'models/rpc-route';
 
 import CompanyModel from './models/company';
+import CompanyCouponModel from './models/company-coupon';
+import { getObjectId } from './utils';
 
 export default (socket, prefix) => {
 
   const rpcRoute = new RpcRoute(socket, prefix);
   const route = rpcRoute.route.bind(rpcRoute);
   const companyModel = new CompanyModel();
+  const companyCoupon = new CompanyCouponModel();
 
   route('/list', (query) => {
     let { keyword } = query;
@@ -26,10 +29,7 @@ export default (socket, prefix) => {
   });
 
   route('/detail', (query) => {
-    let { _id } = query;
-    if (!_id || !ObjectId.isValid(_id)) {
-      throw new ApiError(400);
-    }
+    let _id = getObjectId(query, '_id');
     return companyModel.fetchDetail(ObjectId(_id))
     .then(company => {
       if (!company) {
@@ -47,11 +47,13 @@ export default (socket, prefix) => {
     return fetchSubInfo('member', query);
   });
 
+  route('/detail/coupon', (query) => {
+    let _id = getObjectId(query, '_id');
+    return companyCoupon.pageCompanyCoupon(_id, query);
+  });
+
   function fetchSubInfo(target, query) {
-    let { _id } = query;
-    if (!_id || !ObjectId.isValid(_id)) {
-      throw new ApiError(400);
-    }
+    let _id = getObjectId(query, '_id');
     let { page, pagesize } = companyModel.getPageInfo(query);
     let props = {
       _id: ObjectId(_id),
