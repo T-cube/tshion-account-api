@@ -42,8 +42,8 @@ Currency: Number;
 | ---------- | ----- | ----------- | -------------- |
 | P0001 | Pro Edition Monthly Fee | 专业版月费 | 99.00 |
 | P0002 | Pro Edition Per User Fee | 专业版用户升级月费 | 9.90 |
-| P0001 | Cooperate Edition Monthly Fee | 专业版月费 | 199.00 |
-| P0002 | Cooperate Edition Per User Fee | 专业版用户升级月费 | 19.90 |
+| P0001 | Cooperate Edition Monthly Fee |  企业版月费 | 199.00 |
+| P0002 | Cooperate Edition Per User Fee | 企业版用户升级月费 | 19.90 |
 
 ### Table `payment.product.history`
 
