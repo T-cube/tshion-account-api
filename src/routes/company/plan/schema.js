@@ -23,7 +23,7 @@ const schema = {
       payment_method: { type: 'string' },
     },
     validation: {
-      payment_method: { $enum: ['alipay', 'wechat'] },
+      payment_method: { $enum: ENUMS.PAYMENT_METHOD },
     },
   },
   recharge: {

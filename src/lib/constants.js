@@ -271,6 +271,13 @@ let constants = {
     DEGRADE: 'degrade',
     PATCH: 'patch',
   },
+  ORDER_STATUS: {
+    CREATED: 'created',
+    PAYING: 'paying',
+    EXPIRED: 'expired',
+    CANCELED: 'cancelled',
+    SUCCEED: 'succeed'
+  },
   PRODUCT_NO: {
     PLAN: 'P0001',
     MEMBER: 'P0002',
@@ -284,6 +291,11 @@ let constants = {
     NONE_PROFIT: 'none-profit',
     WORKSHOP: 'workshop',
     STARTUP: 'startup',
+  },
+  PAYMENT_METHOD: {
+    ALIPAY: 'alipay',
+    WECHAT: 'wechat',
+    BALANCE: 'balance',
   }
 
 };

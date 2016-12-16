@@ -75,6 +75,8 @@ const collections = [
   'payment.company.coupon',
   'payment.recharge.discount',
   'payment.product.history',
+  'payment.balance',
+  'payment.balance.log',
 ];
 
 const dbConfig = config.get('database');

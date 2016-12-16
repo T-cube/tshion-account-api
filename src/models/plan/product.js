@@ -1,7 +1,4 @@
-import _ from 'underscore';
-
 import db from 'lib/database';
-import { mapObjectIdToData } from 'lib/utils';
 
 export default class Product {
 
@@ -49,10 +46,6 @@ export default class Product {
     })
     .limit(1)
     .then(doc => doc[0]);
-  }
-
-  static getAll() {
-    return db.payment.product.find({});
   }
 
 }

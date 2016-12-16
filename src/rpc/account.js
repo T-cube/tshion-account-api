@@ -1,10 +1,8 @@
-import config from 'config';
-import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
-import { mapObjectIdToData, strToReg } from 'lib/utils';
+import { strToReg } from 'lib/utils';
 import AccountModel from './models/account';
 import { getObjectId } from './utils';
 

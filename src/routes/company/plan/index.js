@@ -31,7 +31,7 @@ api.post('/trial', (req, res, next) => {
     // if (!_.contains(status.authed, plan)) {
     //   throw new ApiError(400, 'team_not_authed');
     // }
-    if (!_.contains(status.trail, plan)) {
+    if (!_.contains(status.viable.trial, plan)) {
       throw new ApiError(400, 'trial_exists');
     }
     return planModel.createNewTrial({

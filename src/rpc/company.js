@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 import { strToReg } from 'lib/utils';

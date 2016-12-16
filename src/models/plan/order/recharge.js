@@ -11,39 +11,31 @@ export default class RechargeOrder extends BaseOrder {
 
   constructor(props) {
     super(props);
+    let {amount} = props;
+    this.original_sum = amount;
+    this.paid_sum = amount;
     this.order_type = C.ORDER_TYPE.RECHARGE;
   }
 
-  prepare() {
+  create({amount}) {
+    let {company_id, user_id, discount} = this;
     return this.getDiscount().then(() => {
-      let order = {
-
+      let data = {
+        amount,
+        company_id,
+        user_id,
+        original_sum: this.original_sum,
+        paid_sum: this.paid_sum,
+        discount: this.discount,
+        date_create: new Date(),
+        date_update: new Date(),
       };
-
+      return db.payment.recharge.insert(data);
     });
   }
 
-  save() {
-    
-  }
-
-  init({amount}) {
-    this.amount = amount;
-    return Promise.resolve();
-  }
-
-  isValid() {
-    let isValid = true;
-    return Promise.resolve({isValid});
-  }
-
-  getLimits() {
-    return Promise.resolve({});
-  }
-
   getDiscount() {
-    return this.getProductsDiscount()
-    .then(() => this.getCouponDiscount())
+    return this.getCouponDiscount()
     .then(() => this.getChargeDiscount());
   }
 

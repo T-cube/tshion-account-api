@@ -1,5 +1,6 @@
 import config from 'config';
 import Pay from '@ym/payment';
+import {ApiError} from 'lib/error';
 
 import C from 'lib/constants';
 import db from 'lib/database';
@@ -11,18 +12,21 @@ export default class Payment {
   constructor() {
 
     this.methods = {
-      alipay: {
+      [C.PAYMENT_METHOD.ALIPAY]: {
         title: '支付宝'
       },
-      wechat: {
+      [C.PAYMENT_METHOD.WECHAT]: {
         title: '微信支付'
       },
-      balance: {
+      [C.PAYMENT_METHOD.BALANCE]: {
         title: '余额'
       }
     };
-
     this.init();
+  }
+
+  init() {
+    this.pay = new Pay(config.get('payment'));
   }
 
   getMethods(orderId) {
@@ -33,10 +37,6 @@ export default class Payment {
 
   getInstance(method) {
     return this.methods[method].instance;
-  }
-
-  init() {
-    this.pay = new Pay(config.get('payment'));
   }
 
   pay(order, payMethod) {
@@ -68,6 +68,33 @@ export default class Payment {
 
   createChargeOrder(order, payment) {
     return ChargeOrder.create(order, payment);
+  }
+
+  payWithBalance(order) {
+    let {paid_sum, company_id} = order;
+    if (paid_sum > 0) {
+      return db.payment.balance.findOne({
+        _id: company_id
+      })
+      .then(doc => {
+        let balance = doc ? doc.balance : 0;
+        if (balance < paid_sum) {
+          return {ok: false, error: 'balance_insufficient'};
+        }
+        return db.payment.balance.update({
+          _id: company_id
+        }, {
+          $inc: {
+            balance: -paid_sum
+          }
+        })
+        .then(doc => {
+          // TODO log balance here
+          return {ok: true};
+        });
+      });
+    }
+    return Promise.resolve({ok: true});
   }
 
 }

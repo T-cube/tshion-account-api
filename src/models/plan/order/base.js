@@ -86,23 +86,16 @@ export default class BaseOrder {
   }
 
   save() {
-    return BaseOrder.hasPendingOrder(this.company_id)
-    .then(orderPending => {
-      if (orderPending) {
-        throw new ApiError(400, 'exist_pending_order');
+    return this.prepare().then(({order, isValid, error}) => {
+      if (!isValid) {
+        throw new ApiError(400, error);
       }
-      return this.prepare().then(({order, isValid, error}) => {
-        if (!isValid) {
-          throw new ApiError(400, error);
-        }
-        order.status = 'created';
-        return Promise.all([
-          this.updateUsedCoupon(),
-          db.payment.order.insert(order)
-        ]);
-      });
-    })
-    .then(doc => doc[1]);
+      order.status = 'created';
+      return Promise.all([
+        this.updateUsedCoupon(),
+        db.payment.order.insert(order)
+      ]);
+    });
   }
 
   prepare() {
@@ -142,35 +135,6 @@ export default class BaseOrder {
 
   isValid() {
     return Promise.resolve({});
-  }
-
-  static getPendingOrder(company_id) {
-    return db.payment.order.findOne({
-      company_id: company_id,
-      status: {$in: ['created', 'paying']}
-    });
-  }
-
-  static hasPendingOrder(company_id) {
-    return db.payment.order.count({
-      company_id: company_id,
-      status: {$in: ['created', 'paying']}
-    });
-  }
-
-  static payPendingOrder(company_id) {
-    return db.payment.order.findAndModify({
-      query: {
-        company_id: company_id,
-        status: {$in: ['created']}
-      },
-      update: {
-        status: 'paying'
-      }
-    })
-    .then(doc => {
-      return doc.value;
-    });
   }
 
   getCoupons() {

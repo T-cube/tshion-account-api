@@ -11,7 +11,8 @@ export default class RpcRoute {
   }
 
   on(uri, callback) {
-    this.socket.on(`${this.prefix}${uri}`, callback);
+    // this.socket.on(`${this.prefix}${uri}`, callback);
+    this.route(uri, callback);
   }
 
   emit(uri, data) {

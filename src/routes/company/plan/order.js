@@ -6,15 +6,13 @@ import db from 'lib/database';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
-import BaseOrder from 'models/plan/order/base';
+import PlanOrder from 'models/plan/plan-order';
 import OrderFactory from 'models/plan/order';
 import Plan from 'models/plan/plan';
 import Payment from 'models/plan/payment';
 
 let api = express.Router();
-
 export default api;
-
 
 api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   let data = req.body;
@@ -40,14 +38,20 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
         return info;
       });
     }
-    return orderModel.save();
+    return PlanOrder.hasPendingOrder(req.company._id)
+    .then(hasPendingOrder => {
+      if (hasPendingOrder) {
+        throw new ApiError(400, 'exist_pending_order');
+      }
+      return orderModel.save();
+    });
   })
   .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.get('/pending', (req, res, next) => {
-  BaseOrder.getPendingOrder(req.company._id)
+  PlanOrder.getPendingOrder(req.company._id)
   .then(pendingOrder => {
     res.json(pendingOrder);
   })
@@ -57,7 +61,30 @@ api.get('/pending', (req, res, next) => {
 api.post('/pending/pay', (req, res, next) => {
   let data = req.body;
   validate('pay', data);
-  BaseOrder.payPendingOrder(req.company._id)
+  let {payment_method} = data;
+
+  if (payment_method == C.PAYMENT_METHOD.BALANCE) {
+    return PlanOrder.getPendingOrder(req.company._id)
+    .then(order => {
+      if (!order || order.order_type == C.ORDER_TYPE.RECHARGE) {
+        throw new ApiError(400, 'invalid_order_status');
+      }
+      return new Payment().payWithBalance(order).then(({ok, error}) => {
+        if (ok) {
+          return PlanOrder.updateOrderPaidWithBalance(order);
+        } else {
+          throw new ApiError(400, error);
+        }
+      })
+      .then(() => {
+        return new Plan(req.company._id).updatePaidFromOrder(order);
+      });
+    })
+    .then(() => res.json({}))
+    .catch(next);
+  }
+
+  PlanOrder.payPendingOrder(req.company._id)
   .then(order => {
     if (!order) {
       throw new ApiError(400, 'invalid_order_status');
@@ -72,27 +99,6 @@ api.post('/pending/pay', (req, res, next) => {
       }
     }
     throw new ApiError(500);
-  })
-  .catch(next);
-});
-
-api.post('/pay-callback/wechat', (req, res, next) => {
-  let data = req.body;
-  validate('pay', data);
-  BaseOrder.getPendingOrder(req.company._id)
-  .then(order => {
-    db.payment.order.update({
-      _id: order._id
-    }, {
-      $set: {
-        status: 'successed'
-      }
-    });
-    return new Plan(req.company._id).updatePaidFromOrder(order)
-    .then(doc => {
-      res.json(doc);
-      console.log(doc);
-    });
   })
   .catch(next);
 });
