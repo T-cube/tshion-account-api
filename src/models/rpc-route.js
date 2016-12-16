@@ -1,11 +1,13 @@
+import _ from 'underscore';
 import { ValidationError } from 'lib/inspector';
 import { ApiError } from 'lib/error';
 
 export default class RpcRoute {
 
-  constructor(socket, prefix) {
+  constructor(socket, prefix, loader) {
     this.socket = socket;
     this.prefix = prefix || '';
+    this.loader = loader;
   }
 
   on(uri, callback) {
@@ -23,7 +25,7 @@ export default class RpcRoute {
       }
       let value;
       try {
-        value = callback(query);
+        value = callback(query, this.loader);
       } catch (e) {
         return this.emit(uri, this.errorHandler(e));
       }
@@ -43,10 +45,10 @@ export default class RpcRoute {
     });
   }
 
-  use(prefix, routes) {
-    routes(this.socket, this.prefix + (prefix || ''));
-    return this;
-  }
+  // use(prefix, routes) {
+  //   routes(this.socket, this.prefix + (prefix || ''));
+  //   return this;
+  // }
 
   isPromise(value) {
     return value && typeof value.then === 'function';
@@ -65,6 +67,37 @@ export default class RpcRoute {
       error: err.name,
       error_description: err.message,
     };
+  }
+
+  use(prefix, routeBag) {
+    let newInstance = new RpcRoute(this.socket, this.prefix + (prefix || ''), this.loader);
+    _.each(routeBag.uses, (childRouteBag, sub_prefix) => {
+      newInstance.use(sub_prefix, childRouteBag);
+    });
+    _.each(routeBag.routes, (callback, uri) => {
+      newInstance.route(uri, callback);
+    });
+  }
+
+  static router() {
+    return new RouteBag();
+  }
+
+}
+
+class RouteBag {
+
+  constructor() {
+    this.routes = {};
+    this.uses = {};
+  }
+
+  on(uri, callback) {
+    this.routes[uri] = callback;
+  }
+
+  use(prefix, childRouteBag) {
+    this.uses[prefix] = childRouteBag;
   }
 
 }

@@ -7,19 +7,18 @@ import qrcodeRoutes from './qrcode';
 
 import QrcodeModel from './models/qrcode';
 
-export default (socket) => {
+export default (socket, _loader) => {
+
+  const route = new RpcRoute(socket, '', _loader);
+
+  route.on('pid', () => process.pid);
+
+  route.use('/account', accountRoutes);
+  route.use('/company', companyRoutes);
+  route.use('/plan', planRoutes);
+  route.use('/qrcode', qrcodeRoutes);
 
   // bind loader
-  socket.loadModel('qrcode-model', QrcodeModel);
-
-  const rpcRoute = new RpcRoute(socket, null);
-  const route = rpcRoute.route.bind(rpcRoute);
-
-  route('pid', () => process.pid);
-
-  rpcRoute.use('/account', accountRoutes);
-  rpcRoute.use('/company', companyRoutes);
-  rpcRoute.use('/plan', planRoutes);
-  rpcRoute.use('/qrcode', qrcodeRoutes);
+  _loader.loadModel('qrcode-model', QrcodeModel);
 
 };

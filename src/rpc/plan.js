@@ -1,4 +1,3 @@
-
 import RpcRoute from 'models/rpc-route';
 
 import authRoutes from './plan/auth';
@@ -13,34 +12,29 @@ import PlanModel from './models/plan';
 import { getObjectId } from './utils';
 import { validate } from './schema/plan';
 
+const route = RpcRoute.router();
+export default route;
 
-export default (socket, prefix) => {
+const planModel = new PlanModel();
 
-  const rpcRoute = new RpcRoute(socket, prefix);
-  const route = rpcRoute.route.bind(rpcRoute);
+route.use('/auth', authRoutes);
+route.use('/product', productRoutes);
+route.use('/discount', discountRoutes);
+route.use('/recharge-discount', rechargeDiscountRoutes);
+route.use('/coupon', couponRoutes);
+route.use('/payment', paymentRoutes);
+route.use('/company', companyRoutes);
 
-  const planModel = new PlanModel();
+route.on('/type/list', query => {
+  return planModel.page();
+});
 
-  rpcRoute.use('/auth', authRoutes);
-  rpcRoute.use('/product', productRoutes);
-  rpcRoute.use('/discount', discountRoutes);
-  rpcRoute.use('/recharge-discount', rechargeDiscountRoutes);
-  rpcRoute.use('/coupon', couponRoutes);
-  rpcRoute.use('/payment', paymentRoutes);
-  rpcRoute.use('/company', companyRoutes);
+route.on('/type/detail', query => {
+  let planId = getObjectId(query, 'plan_id');
+  return planModel.fetchDetail(planId);
+});
 
-  route('/type/list', query => {
-    return planModel.page();
-  });
-
-  route('/type/detail', query => {
-    let planId = getObjectId(query, 'plan_id');
-    return planModel.fetchDetail(planId);
-  });
-
-  route('/type/update', query => {
-    validate('update_plan', query);
-    return planModel.update(query.plan_id, query);
-  });
-
-};
+route.on('/type/update', query => {
+  validate('update_plan', query);
+  return planModel.update(query.plan_id, query);
+});

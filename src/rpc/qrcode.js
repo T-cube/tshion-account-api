@@ -2,53 +2,50 @@ import { ApiError } from 'lib/error';
 import RpcRoute from 'models/rpc-route';
 import { validate } from './schema';
 
-export default (socket, prefix) => {
+const route = RpcRoute.router();
+export default route;
 
-  const rpcRoute = new RpcRoute(socket, prefix);
-  const route = rpcRoute.route.bind(rpcRoute);
-  const qrcodeModel = socket.model('qrcode-model');
+route.on('/list', (query, loader) => {
+  let { page, pagesize, status } = query;
+  status = status == 'deleted' ? 'deleted' : 'normal';
+  let criteria = {status};
+  return loader.model('qrcode-model').page({page, pagesize, criteria});
+});
 
-  route('/list', (query) => {
-    let { page, pagesize, status } = query;
-    status = status == 'deleted' ? 'deleted' : 'normal';
-    let criteria = {status};
-    return qrcodeModel.page({page, pagesize, criteria});
-  });
+route.on('/create', (query, loader) => {
+  let { name, description } = query;
+  let data = { name, description };
+  validate('qrcode', data);
+  return loader.model('qrcode-model').create(data);
+});
 
-  route('/create', (query) => {
-    let { name, description } = query;
-    let data = { name, description };
-    validate('qrcode', data);
-    return qrcodeModel.create(data);
-  });
+route.on('/update', (query, loader) => {
+  validate('qrcode', query);
+  let { _id, name, description, status } = query;
+  const qrcodeModel = loader.model('qrcode-model');
+  if (status) {
+    return qrcodeModel.updateStatus(_id, status);
+  } else if (name && description) {
+    return qrcodeModel.update(_id, {name, description});
+  } else {
+    throw new ApiError(400);
+  }
+});
 
-  route('/update', (query) => {
-    validate('qrcode', query);
-    let { _id, name, description, status } = query;
-    if (status) {
-      return qrcodeModel.updateStatus(_id, status);
-    } else if (name && description) {
-      return qrcodeModel.update(_id, {name, description});
-    } else {
-      throw new ApiError(400);
+route.on('/detail', (query, loader) => {
+  let { _id } = query;
+  return loader.model('qrcode-model').fetchDetail(parseInt(_id))
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404);
     }
+    return doc;
   });
+});
 
-  route('/detail', (query) => {
-    let { _id } = query;
-    return qrcodeModel.fetchDetail(parseInt(_id))
-    .then(doc => {
-      if (!doc) {
-        throw new ApiError(404);
-      }
-      return doc;
-    });
-  });
-
-  route('/detail/customers', (query) => {
-    let { _id } = query;
-    let { page, pagesize } = qrcodeModel.getPageInfo(query);
-    return qrcodeModel.fetchScanUsers(parseInt(_id), {page, pagesize});
-  });
-
-};
+route.on('/detail/customers', (query, loader) => {
+  let { _id } = query;
+  const qrcodeModel = loader.model('qrcode-model');
+  let { page, pagesize } = qrcodeModel.getPageInfo(query);
+  return qrcodeModel.fetchScanUsers(parseInt(_id), {page, pagesize});
+});

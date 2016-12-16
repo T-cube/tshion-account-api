@@ -6,43 +6,38 @@ import { validate } from '../schema/plan';
 import { getObjectId } from '../utils';
 import DiscountModel from '../models/discount';
 
+const route = RpcRoute.router();
+export default route;
+const discountModel = new DiscountModel();
 
-export default (socket, prefix) => {
+route.on('/list', (query) => {
+  let { page, pagesize } = query;
+  return discountModel.page({page, pagesize});
+});
 
-  const rpcRoute = new RpcRoute(socket, prefix);
-  const route = rpcRoute.route.bind(rpcRoute);
-  const discountModel = new DiscountModel();
-
-  route('/list', (query) => {
-    let { page, pagesize } = query;
-    return discountModel.page({page, pagesize});
+route.on('/detail', (query) => {
+  let discount_id = getObjectId(query, 'discount_id');
+  return discountModel.fetchDetail(discount_id)
+  .then(info => {
+    if (!info) {
+      throw new ApiError(404);
+    }
+    return info;
   });
+});
 
-  route('/detail', (query) => {
-    let discount_id = getObjectId(query, 'discount_id');
-    return discountModel.fetchDetail(discount_id)
-    .then(info => {
-      if (!info) {
-        throw new ApiError(404);
-      }
-      return info;
-    });
-  });
+route.on('/create', query => {
+  validate('discount', query);
+  return discountModel.create(query);
+});
 
-  route('/create', query => {
-    validate('discount', query);
-    return discountModel.create(query);
-  });
+route.on('/update', query => {
+  let discount_id = getObjectId(query, 'discount_id');
+  validate('discount', query);
+  return discountModel.update(discount_id, query);
+});
 
-  route('/update', query => {
-    let discount_id = getObjectId(query, 'discount_id');
-    validate('discount', query);
-    return discountModel.update(discount_id, query);
-  });
-
-  route('/delete', query => {
-    let discount_id = getObjectId(query, 'discount_id');
-    return discountModel.delete(discount_id);
-  });
-
-};
+route.on('/delete', query => {
+  let discount_id = getObjectId(query, 'discount_id');
+  return discountModel.delete(discount_id);
+});
