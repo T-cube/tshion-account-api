@@ -76,7 +76,7 @@ const collections = [
   'payment.recharge.discount',
   'payment.product.history',
   'payment.balance',
-  'payment.balance.log',
+  'payment.transaction.log',
 
   // transaction
   'transaction',

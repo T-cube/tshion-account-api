@@ -63,33 +63,26 @@ api.post('/pending/pay', (req, res, next) => {
   validate('pay', data);
   let {payment_method} = data;
   let company_id = req.company._id;
-  if (payment_method == C.PAYMENT_METHOD.BALANCE) {
-    return PlanOrder.init({company_id})
-    .then(planOrder => {
-      if (!planOrder) {
-        throw new ApiError(400, 'invalid_order_status');
-      }
-      return planOrder.payWithBalance();
-    })
-    .then(() => res.json({}))
-    .catch(next);
-  }
-
-  PlanOrder.payPendingOrder(req.company._id)
-  .then(order => {
-    if (!order) {
+  return PlanOrder.init({company_id})
+  .then(planOrder => {
+    if (!planOrder) {
       throw new ApiError(400, 'invalid_order_status');
     }
-    return Payment.pay(order);
-  })
-  .then(doc => {
-    if (doc) {
-      let {code_url} = doc;
-      if (code_url) {
-        return res.json({code_url});
-      }
+    if (payment_method == C.PAYMENT_METHOD.BALANCE) {
+      return planOrder.payWithBalance()
+      .then(() => res.json({}));
+    } else {
+      return Payment.pay(planOrder.order)
+      .then(doc => {
+        if (doc) {
+          let {code_url} = doc;
+          if (code_url) {
+            return res.json({code_url});
+          }
+        }
+        throw new ApiError(500);
+      });
     }
-    throw new ApiError(500);
   })
   .catch(next);
 });

@@ -88,8 +88,18 @@ export default class Payment {
         return db.payment.balance.update({
           _id: company_id
         }, {
+          $inc: {
+            balance: -paid_sum
+          },
           $addToSet: {
-            transactions: transactionId
+            transactions: transactionId,
+          },
+          $push: {
+            log: {
+              amount: -paid_sum,
+              order: order._id,
+              date_create: new Date(),
+            }
           }
         })
         .then(() => ({ok: true}));
