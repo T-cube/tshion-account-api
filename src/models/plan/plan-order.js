@@ -94,7 +94,6 @@ export default class PlanOrder {
 
   commitPayWithBalance(transactionId) {
     let order = this.order;
-    throw new ApiError(400);
     return Promise.all([
       new Payment().commitPayWithBalance(order, transactionId),
       new Plan(this.company_id).commitUpdatePaidFromOrder(order, transactionId),
