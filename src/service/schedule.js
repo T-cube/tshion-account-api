@@ -10,6 +10,8 @@ import TaskReport from 'models/task-report';
 import db from 'lib/database';
 import C from 'lib/constants';
 
+import PlanOrder from 'models/plan/plan-order';
+
 export default class ScheduleServer {
 
   constructor() {
@@ -18,6 +20,7 @@ export default class ScheduleServer {
 
   init() {
     this.doJobs();
+    this.recoverOrderTransaction();
   }
 
   initJobs() {
@@ -51,6 +54,29 @@ export default class ScheduleServer {
     this.initJobs();
     _.each(this.jobs, job => {
       job.worker = scheduleService.scheduleJob(...job.init);
+    });
+  }
+
+  recoverOrderTransaction() {
+    db.transaction.find({
+      order: {$exists: true},
+      status: {$in: ['pending', 'commited']}
+    })
+    .forEach(transaction => {
+      return PlanOrder.init({order_id: transaction.order})
+      .then(planOrder => {
+        if (transaction.payment_method == 'balance') {
+          if (transaction.status == 'pending') {
+            return planOrder.doPayWithBalance(transaction._id)
+            .then(() => planOrder.commitTransaction(transaction._id))
+            .then(() => planOrder.commitPayWithBalance(transaction._id))
+            .then(() => planOrder.doneTransaction(transaction._id));
+          } else {
+            return planOrder.commitPayWithBalance(transaction._id)
+            .then(() => planOrder.doneTransaction(transaction._id));
+          }
+        }
+      });
     });
   }
 

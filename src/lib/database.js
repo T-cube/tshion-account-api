@@ -77,6 +77,9 @@ const collections = [
   'payment.product.history',
   'payment.balance',
   'payment.balance.log',
+
+  // transaction
+  'transaction',
 ];
 
 const dbConfig = config.get('database');

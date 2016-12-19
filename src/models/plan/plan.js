@@ -111,7 +111,7 @@ export default class Plan {
     });
   }
 
-  updatePaidFromOrder(order) {
+  updatePaidFromOrder(order, transactionId) {
     let { company_id } = this;
     let { plan, order_type, times, date_create, member_count } = order;
     return this.getCurrent().then(current => {
@@ -132,24 +132,47 @@ export default class Plan {
       if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.DEGRADE], order_type)) {
         update.member_count = member_count;
       }
+
+      let updatePromise = [];
       if (type == 'trial' && status == C.PLAN_STATUS.ACTIVED && current._id) {
-        db.plan.company.update({
+        let expireTrial = db.plan.company.update({
           _id: current._id
         }, {
           $set: {
             status: C.PLAN_STATUS.EXPIRED
+          },
+          $addToSet: {
+            transactions: transactionId
           }
         });
+        updatePromise.push(expireTrial);
       }
-      return db.plan.company.update({
+      let updatePlan = db.plan.company.update({
         company_id,
         type: 'paid',
         plan,
       }, {
-        $set: update
+        $set: update,
+        $addToSet: {
+          transactions: transactionId
+        }
       }, {
         upsert: true
       });
+      updatePromise.push(updatePlan);
+      return Promise.all(updatePromise);
+    });
+  }
+
+  commitUpdatePaidFromOrder(order, transactionId) {
+    let { company_id } = this;
+    return db.plan.company.update({
+      company_id,
+      transactions: transactionId
+    }, {
+      $pull: {
+        transactions: transactionId
+      }
     });
   }
 

@@ -38,9 +38,9 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
         return info;
       });
     }
-    return PlanOrder.hasPendingOrder(req.company._id)
-    .then(hasPendingOrder => {
-      if (hasPendingOrder) {
+    return PlanOrder.init({company_id: req.company._id})
+    .then(planOrder => {
+      if (planOrder && planOrder.order) {
         throw new ApiError(400, 'exist_pending_order');
       }
       return orderModel.save();
@@ -51,9 +51,9 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
 });
 
 api.get('/pending', (req, res, next) => {
-  PlanOrder.getPendingOrder(req.company._id)
-  .then(pendingOrder => {
-    res.json(pendingOrder);
+  PlanOrder.init({company_id: req.company._id})
+  .then(planOrder => {
+    res.json(planOrder && planOrder.order);
   })
   .catch(next);
 });
@@ -62,23 +62,14 @@ api.post('/pending/pay', (req, res, next) => {
   let data = req.body;
   validate('pay', data);
   let {payment_method} = data;
-
+  let company_id = req.company._id;
   if (payment_method == C.PAYMENT_METHOD.BALANCE) {
-    return PlanOrder.getPendingOrder(req.company._id)
-    .then(order => {
-      if (!order || order.order_type == C.ORDER_TYPE.RECHARGE) {
+    return PlanOrder.init({company_id})
+    .then(planOrder => {
+      if (!planOrder) {
         throw new ApiError(400, 'invalid_order_status');
       }
-      return new Payment().payWithBalance(order).then(({ok, error}) => {
-        if (ok) {
-          return PlanOrder.updateOrderPaidWithBalance(order);
-        } else {
-          throw new ApiError(400, error);
-        }
-      })
-      .then(() => {
-        return new Plan(req.company._id).updatePaidFromOrder(order);
-      });
+      return planOrder.payWithBalance();
     })
     .then(() => res.json({}))
     .catch(next);

@@ -231,6 +231,9 @@ module.exports = {
         view_type: '',
       },
       'weather.areaid': '',
+      'announcement.panel': '',
+      'schedule.panel': '',
+      'task.panel': '',
     }
   },
   plan: {

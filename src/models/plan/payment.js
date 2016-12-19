@@ -4,6 +4,7 @@ import {ApiError} from 'lib/error';
 
 import C from 'lib/constants';
 import db from 'lib/database';
+import {indexObjectId} from 'lib/utils';
 
 import ChargeOrder from 'models/plan/charge-order';
 
@@ -70,31 +71,42 @@ export default class Payment {
     return ChargeOrder.create(order, payment);
   }
 
-  payWithBalance(order) {
+  payWithBalance(order, transactionId) {
     let {paid_sum, company_id} = order;
     if (paid_sum > 0) {
       return db.payment.balance.findOne({
         _id: company_id
       })
       .then(doc => {
-        let balance = doc ? doc.balance : 0;
-        if (balance < paid_sum) {
+        let transactionReach = doc && doc.transactions && (indexObjectId(doc.transactions, transactionId) >= 0);
+        if (!doc || (!transactionReach && doc.balance < paid_sum)) {
           return {ok: false, error: 'balance_insufficient'};
+        }
+        if (transactionReach) {
+          return {ok: true};
         }
         return db.payment.balance.update({
           _id: company_id
         }, {
-          $inc: {
-            balance: -paid_sum
+          $addToSet: {
+            transactions: transactionId
           }
         })
-        .then(doc => {
-          // TODO log balance here
-          return {ok: true};
-        });
+        .then(() => ({ok: true}));
       });
     }
     return Promise.resolve({ok: true});
+  }
+
+  commitPayWithBalance(order, transactionId) {
+    let {company_id} = order;
+    return db.payment.balance.update({
+      _id: company_id
+    }, {
+      $pull: {
+        transactions: transactionId
+      }
+    });
   }
 
 }

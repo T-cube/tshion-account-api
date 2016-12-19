@@ -80,6 +80,9 @@ const schema = {
       'explore.sort_by': { type: 'string', optional: true },
       'explore.view_type': { type: 'string', optional: true },
       'weather.areaid': { type: 'string', optional: true },
+      'announcement.panel': { type: 'string', optional: true },
+      'schedule.panel': { type: 'string', optional: true },
+      'task.panel': { type: 'string', optional: true },
     }
   },
   validation: {
@@ -94,6 +97,9 @@ const schema = {
     'explore.sort_by': { type: 'string', optional: true },
     'explore.view_type': { type: 'string', optional: true },
     'weather.areaid': { type: 'string', optional: true },
+    'announcement.panel': { type: 'string', optional: true },
+    'schedule.panel': { type: 'string', optional: true },
+    'task.panel': { type: 'string', optional: true },
   }
 };
 

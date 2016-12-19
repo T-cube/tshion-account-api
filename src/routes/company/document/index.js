@@ -757,12 +757,12 @@ function checkMoveable(dest_dir, dirs, files) {
     let dirNameList = doc.dirs ? doc.dirs.map(item => item.name) : [];
     let fileNameList = doc.files ? doc.files.map(item => item.name) : [];
     dirs.forEach(dir => {
-      if (_.find(dirNameList, dir.name)) {
+      if (_.contains(dirNameList, dir.name)) {
         throw new ApiError(400, 'folder_name_exists');
       }
     });
     files.forEach(file => {
-      if (_.find(fileNameList, file.name)) {
+      if (_.contains(fileNameList, file.name)) {
         throw new ApiError(400, 'file_name_exists');
       }
     });

@@ -148,8 +148,13 @@ Currency: Number;
   balance: Currency,                  // 帐户剩余金额
   freezed: Currency,                  // 冻结金额
   date_update: Date,
+  logs: []
 }
 ```
+
+### Table `payment.transaction.log`
+
+
 
 ### Table `payment.order`
 
