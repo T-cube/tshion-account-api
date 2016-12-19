@@ -176,6 +176,7 @@ info: {
     gender: String[Enum:F,M],
     position: String,
     phone: String,
+    // 实名信息，仅在专业版认证时需要
     address: {
       province: String,
       city: String,
@@ -185,7 +186,7 @@ info: {
     },
     // 实名信息，仅在专业版认证时需要
     realname_ext: {
-      idcard: String,              // 身份证编码
+      idcard: String, // 身份证编码
     },
   },
   // 团队信息
@@ -193,6 +194,9 @@ info: {
     location: {
       province: String,
       city: String,
+      district: String,
+      postcode: String,
+      address: String,
     },
     type: String[Enum:none-profit,workshop,startup],
     scale: Number[Enum:1,10,50,100],
@@ -203,6 +207,9 @@ info: {
     location: {
       province: String,
       city: String,
+      district: String,
+      postcode: String,
+      address: String,
     },
     industry: String,               // 行业类型
     scale: Number[Enum:1,10,50,100,500],

@@ -17,12 +17,15 @@ const logSchema = {
   },
 };
 
-const locationSchema = {
+const addressSchema = {
   sanitization: {
     type: 'object',
     properties: {
       province: { type: 'string' },
       city: { type: 'string' },
+      district: { type: 'string' },
+      postcode: { type: 'string' },
+      address: { type: 'string' },
     }
   },
   validation: {
@@ -30,6 +33,9 @@ const locationSchema = {
     properties: {
       province: { type: 'string' },
       city: { type: 'string' },
+      district: { type: 'string' },
+      postcode: { type: 'string' },
+      address: { type: 'string' },
     }
   },
 };
@@ -50,16 +56,7 @@ const schema = {
               gender: { type: 'string' },               // Enum:F,M
               position: { type: 'string' },
               phone: { type: 'string' },
-              address: {
-                type: 'object',
-                properties: {
-                  province: { type: 'string' },
-                  city: { type: 'string' },
-                  district: { type: 'string' },
-                  postcode: { type: 'string' },
-                  address: { type: 'string' },
-                }
-              },
+              address: addressSchema.sanitization,
               // 实名信息，仅在专业版认证时需要
               realname_ext: {
                 type: 'object',
@@ -73,7 +70,7 @@ const schema = {
           team: {
             type: 'object',
             properties: {
-              location: locationSchema.sanitization,
+              location: addressSchema.sanitization,
               type: { type: 'string' },
               scale: { type: 'integer' },
               description: { type: 'string' },
@@ -94,16 +91,7 @@ const schema = {
               gender: { type: 'string', $enum: ENUMS.GENDER },
               position: { type: 'string' },
               phone: { $phone: 1 },
-              address: {
-                type: 'object',
-                properties: {
-                  province: { type: 'string', minLength: 1 },
-                  city: { type: 'string', minLength: 1 },
-                  district: { type: 'string', minLength: 1 },
-                  postcode: { type: 'string', minLength: 4 },
-                  address: { type: 'string', minLength: 1 },
-                }
-              },
+              address: addressSchema.validation,
               // 实名信息，仅在专业版认证时需要
               realname_ext: {
                 type: 'object',
@@ -117,7 +105,7 @@ const schema = {
           team: {
             type: 'object',
             properties: {
-              location: locationSchema.sanitization,
+              location: addressSchema.validation,
               type: { $enum: ENUMS.TEAM_TYPE },
               scale: { $enum: [1, 10, 50, 100] },
               description: { type: 'string', minLength: 3 },
@@ -146,7 +134,7 @@ const schema = {
           enterprise: {
             type: 'object',
             properties: {
-              location: locationSchema.sanitization,
+              location: addressSchema.sanitization,
               industry: { type: 'string' },
               scale: { type: 'integer' },
               description: { type: 'string' },
@@ -172,7 +160,7 @@ const schema = {
           enterprise: {
             type: 'object',
             properties: {
-              location: locationSchema.sanitization,
+              location: addressSchema.validation,
               industry: { type: 'string', minLength: 2 },
               scale: { $enum: [1, 10, 50, 100] },
               description: { type: 'string', minLength: 3 },
