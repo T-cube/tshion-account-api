@@ -94,7 +94,8 @@ export default class BaseOrder {
       return Promise.all([
         this.updateUsedCoupon(),
         db.payment.order.insert(order)
-      ]);
+      ])
+      .then(doc => doc[1]);
     });
   }
 
