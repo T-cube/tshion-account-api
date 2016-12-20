@@ -12,8 +12,8 @@ export default class Auth {
     this.user_id = user_id;
   }
 
-  create(data) {
-    let { plan } = data;
+  create(plan, info) {
+    let data = {info, plan};
     let { company_id, user_id } = this;
     data.company_id = company_id;
     data.user_id = user_id;
@@ -28,8 +28,9 @@ export default class Auth {
     });
   }
 
-  update(data) {
+  update(info) {
     let { company_id, user_id } = this;
+    let data = {info};
     data.company_id = company_id;
     data.user_id = user_id;
     data.date_apply = new Date();

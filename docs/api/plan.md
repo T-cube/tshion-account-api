@@ -215,6 +215,7 @@ POST
     industry: Array,
     scale: Number[Enum:1,10,50,100,500],
     description: String,
+    certificate_type: String, // license, code
   }
 }
 ```

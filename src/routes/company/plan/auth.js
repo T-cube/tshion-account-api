@@ -120,10 +120,10 @@ function handelUpload(plan, isUpdate) {
 
 function createOrUpdatePro(isUpdate) {
   return (req, res, next) => {
-    let data = req.body;
+    let info = req.body;
     let auth = new Auth(req.company._id, req.user._id);
     let pics = req.files ? req.files.map(file => _.pick(file, 'relpath', 'url')) : [];
-    let realnameData = data.info.contact;
+    let realnameData = info.contact;
     let realnameModel = new Realname(req.user._id);
     let promise = realnameModel.get();
     if (realnameData) {
@@ -134,8 +134,8 @@ function createOrUpdatePro(isUpdate) {
           throw new ApiError(400, 'user realname authed');
         }
         return realnameModel.persist(realnameData).then(() => {
-          data.info.contact = req.user._id;
-          return isUpdate ? auth.update(data) : auth.create(data);
+          info.contact = req.user._id;
+          return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
         });
       });
     } else {
@@ -143,8 +143,8 @@ function createOrUpdatePro(isUpdate) {
         if (!realname) {
           throw new ApiError(400, 'empty realname');
         }
-        data.info.contact =  req.user._id;
-        return isUpdate ? auth.update(data) : auth.create(data);
+        info.contact =  req.user._id;
+        return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
       });
     }
     return promise.then(doc => res.json(doc)).catch(next);
@@ -153,11 +153,11 @@ function createOrUpdatePro(isUpdate) {
 
 function createOrUpdateEnt(isUpdate) {
   return (req, res, next) => {
-    let data = req.body;
+    let info = req.body;
     let auth = new Auth(req.company._id, req.user._id);
     let pics = req.files ? req.files.map(file => _.pick(file, 'relpath', 'url')) : [];
-    data.info.enterprise.certificate_pic = pics;
-    let promise = isUpdate ? auth.update(data) : auth.create(data);
+    info.enterprise.certificate_pic = pics;
+    let promise = isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.ENT, info);
     return promise.then(doc => res.json(doc)).catch(next);
   };
 }

@@ -113,6 +113,7 @@ const schema = {
           gender: { type: 'string' },               // Enum:F,M
           position: { type: 'string' },
           phone: { type: 'string' },
+          certificate_type: { type: 'string' },
         }
       },
       enterprise: {
@@ -142,6 +143,7 @@ const schema = {
           industry: { type: 'array' },
           scale: { $enum: [1, 10, 50, 100] },
           description: { type: 'string', minLength: 3 },
+          certificate_type: { $enum: ['license', 'code'] },
         }
       },
     },
