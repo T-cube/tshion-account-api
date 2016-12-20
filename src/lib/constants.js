@@ -256,6 +256,7 @@ let constants = {
   PLAN_STATUS: {
     ACTIVED: 'actived',
     EXPIRED: 'expired',
+    OVERDUE: 'overdue',
   },
   AUTH_STATUS: {
     POSTED: 'posted',

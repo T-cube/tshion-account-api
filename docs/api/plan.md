@@ -5,7 +5,7 @@
 ```javascript
 TeamPlan: String[Enum:free,pro,ent] // 团队方案：免费版，专业版，企业版
 TeamPlanPaid: String[Enum:pro,ent] // 专业版，企业版
-PlanStatus: String[Enum:actived,expired],
+PlanStatus: String[Enum:actived,expired,overdue],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 ```
 
@@ -65,10 +65,10 @@ OUTPUT
   //     date_end: Date,
   //   }
   // ],
+  _id: ObjectId, // company_id
   current: {
     _id: ObjectId,
     type: String, // paid trial
-    company_id: ObjectId,
     user_id: ObjectId,
     plan: TeamPlanPaid,
     status: PlanStatus,
@@ -199,7 +199,7 @@ POST
       postcode: String,
       address: String,
     },
-    type: String[Enum:none-profit,workshop,startup],
+    industry: Array,
     scale: Number[Enum:1,10,50,100],
     description: String,
   }
@@ -212,7 +212,7 @@ POST
       postcode: String,
       address: String,
     },
-    industry: String,               // 行业类型
+    industry: Array,
     scale: Number[Enum:1,10,50,100,500],
     description: String,
   }

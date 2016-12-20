@@ -239,6 +239,7 @@ module.exports = {
   plan: {
     max_times: 12,
     trial_times: 1,
+    expire_days: 7,
   },
   payment: {
     alipay: {

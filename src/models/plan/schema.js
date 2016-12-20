@@ -68,7 +68,7 @@ const schema = {
         type: 'object',
         properties: {
           location: addressSchema.sanitization,
-          type: { type: 'string' },
+          industry: { type: 'array' },
           scale: { type: 'integer' },
           description: { type: 'string' },
         }
@@ -96,7 +96,7 @@ const schema = {
         type: 'object',
         properties: {
           location: addressSchema.validation,
-          type: { $enum: ENUMS.TEAM_TYPE },
+          industry: { type: 'array' },
           scale: { $enum: [1, 10, 50, 100] },
           description: { type: 'string', minLength: 3 },
         }
@@ -119,7 +119,7 @@ const schema = {
         type: 'object',
         properties: {
           location: addressSchema.sanitization,
-          industry: { type: 'string' },
+          industry: { type: 'array' },
           scale: { type: 'integer' },
           description: { type: 'string' },
         }
@@ -139,7 +139,7 @@ const schema = {
         type: 'object',
         properties: {
           location: addressSchema.validation,
-          industry: { type: 'string', minLength: 2 },
+          industry: { type: 'array' },
           scale: { $enum: [1, 10, 50, 100] },
           description: { type: 'string', minLength: 3 },
         }
