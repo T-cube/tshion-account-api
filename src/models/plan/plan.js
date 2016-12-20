@@ -118,7 +118,6 @@ export default class Plan {
       }
       let current = this._getCurrent(planInfo);
       let {date_start, date_end} = current;
-      date_start = moment(date_start).startOf('day').toDate();
       if (order_type == C.ORDER_TYPE.NEWLY) {
         date_end = moment(date_create).startOf('day').add(times, 'month').toDate();
       } else if (order_type == C.ORDER_TYPE.RENEWAL) {
@@ -127,6 +126,7 @@ export default class Plan {
         date_end = moment(date_start).startOf('day').month(new Date().getMonth() + 1).toDate();
       }
       let newId = ObjectId();
+      let today = moment().startOf('day').toDate();
       let criteria;
       let updates = {
         $set: {
@@ -151,7 +151,7 @@ export default class Plan {
             plan,
             type: 'paid',
             member_count,
-            date_start,
+            date_start: today,
             date_end
           }
         };
@@ -162,7 +162,7 @@ export default class Plan {
         let {list} = planInfo;
         list.forEach(item => {
           if (item._id.equals(current._id)) {
-            item.date_end = moment().startOf('day').toDate();
+            item.date_end = today;
           }
         });
         list.push({
@@ -171,11 +171,11 @@ export default class Plan {
           plan,
           type: 'paid',
           member_count,
-          date_start: moment().startOf('day').toDate(),
+          date_start: today,
           date_end
         });
         updates['$set'].list = list;
-      } else if (order_type == C.PLAN_STATUS.PATCH) {
+      } else if (order_type == C.PLAN_STATUS.RENEWAL) {
         criteria = {
           _id: company_id,
           'list._id': current._id,
