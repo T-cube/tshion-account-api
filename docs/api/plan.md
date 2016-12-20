@@ -191,6 +191,7 @@ POST
   },
   // 团队信息
   team: {
+    team_name: String,
     location: {
       province: String,
       city: String,
@@ -204,6 +205,7 @@ POST
   }
   // 企业信息
   enterprise: {
+    team_name: String,
     location: {
       province: String,
       city: String,

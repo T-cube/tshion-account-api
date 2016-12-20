@@ -20,10 +20,7 @@ export default class DegradeOrder extends Base {
     this.order_type = C.ORDER_TYPE.DEGRADE;
   }
 
-  init({member_count, plan, coupon}) {
-    if (coupon) {
-      this.withCoupon(coupon);
-    }
+  init({member_count, plan}) {
     this.plan = plan;
     this.member_count = member_count;
     return this.getPlanStatus().then(({current}) => {

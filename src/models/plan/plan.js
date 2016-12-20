@@ -229,4 +229,22 @@ export default class Plan {
     });
   }
 
+  stopTrial() {
+    return this.getPlanInfo().then(planInfo => {
+      let trial = this._getCurrent(planInfo);
+      if (!trial || trial.type != 'trial') {
+        return;
+      }
+      return db.plan.company.update({
+        _id: this.company_id,
+        'list._id': trial._id
+      }, {
+        $set: {
+          current: null,
+          'list.$.date_end': new Date()
+        }
+      });
+    });
+  }
+
 }

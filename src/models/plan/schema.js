@@ -66,6 +66,7 @@ const schema = {
       team: {
         type: 'object',
         properties: {
+          team_name: { type: 'string' },
           location: addressSchema.sanitization,
           industry: { type: 'array' },
           scale: { type: 'integer' },
@@ -93,6 +94,7 @@ const schema = {
       team: {
         type: 'object',
         properties: {
+          team_name: { type: 'string' },
           location: addressSchema.validation,
           industry: { type: 'array' },
           scale: { $enum: [1, 10, 50, 100] },
@@ -111,16 +113,17 @@ const schema = {
           gender: { type: 'string' },               // Enum:F,M
           position: { type: 'string' },
           phone: { type: 'string' },
-          certificate_type: { type: 'string' },
         }
       },
       enterprise: {
         type: 'object',
         properties: {
+          team_name: { type: 'string' },
           location: addressSchema.sanitization,
           industry: { type: 'array' },
           scale: { type: 'integer' },
           description: { type: 'string' },
+          certificate_type: { type: 'string' },
         }
       },
     },
@@ -137,6 +140,7 @@ const schema = {
       enterprise: {
         type: 'object',
         properties: {
+          team_name: { type: 'string' },
           location: addressSchema.validation,
           industry: { type: 'array' },
           scale: { $enum: [1, 10, 50, 100] },
