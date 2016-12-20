@@ -51,7 +51,6 @@ const schema = {
         properties: {
           realname: { type: 'string' },
           gender: { type: 'string' },               // Enum:F,M
-          position: { type: 'string' },
           phone: { type: 'string' },
           address: addressSchema.sanitization,
           // 实名信息，仅在专业版认证时需要
@@ -81,7 +80,6 @@ const schema = {
         properties: {
           realname: { type: 'string', minLength: 2 },
           gender: { type: 'string', $enum: ENUMS.GENDER },
-          position: { type: 'string' },
           phone: { $phone: 1 },
           address: addressSchema.validation,
           realname_ext: {

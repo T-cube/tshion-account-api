@@ -3,7 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
-import C from 'lib/constants';
+import C, {ENUMS} from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import PlanOrder from 'models/plan/plan-order';
@@ -16,9 +16,13 @@ export default api;
 
 api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   let data = req.body;
-  validate('create_order', data);
+  let {order_type} = data;
+  if (!_.contains(ENUMS, order_type)) {
+    throw new ApiError(400, 'invalid_order_type');
+  }
+  validate(`create_order_${order_type}`, data);
   let isPrepare = /prepare\/?$/.test(req.url);
-  let { plan, member_count, coupon, times, order_type } = data;
+  let { plan, member_count, coupon, times } = data;
   let company_id = req.company._id;
   let user_id = req.user._id;
 

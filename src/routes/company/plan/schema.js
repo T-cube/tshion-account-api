@@ -18,6 +18,70 @@ const schema = {
       coupon: { $objectId: 1, optional: true },
     },
   },
+  create_order_newly: {
+    sanitization: {
+      plan: { type: 'string' },
+      order_type: { type: 'string' },
+      member_count: { type: 'integer' },
+      times: { type: 'integer' },
+      coupon: { $objectId: 1, optional: true },
+    },
+    validation: {
+      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
+      order_type: { $enum: ENUMS.ORDER_TYPE },
+      member_count: { type: 'integer' },
+      times: { type: 'integer' },
+      coupon: { $objectId: 1, optional: true },
+    },
+  },
+  create_order_patch: {
+    sanitization: {
+      order_type: { type: 'string' },
+      coupon: { $objectId: 1, optional: true },
+    },
+    validation: {
+      order_type: { $enum: ENUMS.ORDER_TYPE },
+      coupon: { $objectId: 1, optional: true },
+    },
+  },
+  create_order_degrade: {
+    sanitization: {
+      plan: { type: 'string' },
+      order_type: { type: 'string' },
+      member_count: { type: 'integer' },
+    },
+    validation: {
+      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT, C.TEAMPLAN.FREE] },
+      order_type: { $enum: ENUMS.ORDER_TYPE },
+      member_count: { type: 'integer' },
+    },
+  },
+  create_order_upgrade: {
+    sanitization: {
+      plan: { type: 'string' },
+      order_type: { type: 'string' },
+      member_count: { type: 'integer' },
+      coupon: { $objectId: 1, optional: true },
+    },
+    validation: {
+      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
+      order_type: { $enum: ENUMS.ORDER_TYPE },
+      member_count: { type: 'integer' },
+      coupon: { $objectId: 1, optional: true },
+    },
+  },
+  create_order_renewal: {
+    sanitization: {
+      order_type: { type: 'string' },
+      times: { type: 'integer' },
+      coupon: { $objectId: 1, optional: true },
+    },
+    validation: {
+      order_type: { $enum: ENUMS.ORDER_TYPE },
+      times: { type: 'integer' },
+      coupon: { $objectId: 1, optional: true },
+    },
+  },
   pay: {
     sanitization: {
       payment_method: { type: 'string' },

@@ -175,7 +175,6 @@ POST
   contact: {
     realname: String,
     gender: String[Enum:F,M],
-    position: String,
     phone: String,
     // 实名信息，仅在专业版认证时需要
     address: {
