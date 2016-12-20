@@ -76,7 +76,7 @@ export default class NewlyOrder extends Base {
     if (limits) {
       return Promise.resolve(limits);
     }
-    return Plan.getSetting(plan)
+    return db.plan.findOne({type: plan})
     .then(setting => {
       this.limits = {
         member_count: {

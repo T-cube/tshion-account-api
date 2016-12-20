@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import Promise from 'bluebird';
 
+import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import Plan from 'models/plan/plan';
 import Payment from 'models/plan/payment';
@@ -12,8 +13,16 @@ export default api;
 
 
 api.get('/list', (req, res, next) => {
-  Plan.list()
-  .then(plan => res.json(plan))
+  return Promise.all([
+    db.plan.find(),
+    db.payment.product.find()
+  ])
+  .then(([plans, products]) => {
+    plans.forEach(plan => {
+      plan.products = _.filter(products, product => product.plan == plan.type);
+    });
+    res.json(plans);
+  })
   .catch(next);
 });
 

@@ -4,7 +4,6 @@ import Promise from 'bluebird';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import db from 'lib/database';
-import { validate } from './schema';
 
 export default class Auth {
 

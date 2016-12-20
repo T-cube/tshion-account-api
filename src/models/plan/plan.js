@@ -35,26 +35,27 @@ export default class Plan {
     });
   }
 
-  getCurrent() {
-    return this.getPlanInfo().then(planInfo => this._getCurrent(planInfo));
+  getCurrent(showExpired = false) {
+    return this.getPlanInfo().then(planInfo => this._getCurrent(planInfo, showExpired));
   }
 
-  _getCurrent(planInfo) {
+  _getCurrent(planInfo, showExpired = true) {
     let current = planInfo
       && planInfo.current
       && _.find(planInfo.list, item => item._id.equals(planInfo.current._id));
     if (current) {
       if (current.date_end > new Date()) {
         return _.extend({}, current, {status: C.PLAN_STATUS.ACTIVED});
-      } else if (moment().diff(current.date_end, 'days') < config.get('plan.expire_days')) {
+      } else if (moment().diff(current.date_end, 'days', true) < config.get('plan.expire_days')) {
         return _.extend({}, current, {status: C.PLAN_STATUS.OVERDUE});
-      } else {
+      } else if (showExpired) {
         return _.extend({}, current, {status: C.PLAN_STATUS.EXPIRED});
       }
     }
     return {
       plan: C.TEAMPLAN.FREE,
       member_count: 0,
+      status: null
     };
   }
 
@@ -69,7 +70,7 @@ export default class Plan {
   }
 
   getUpgradeStatus() {
-    return this.getCurrent()
+    return this.getCurrent(true)
     .then(current => {
       if (!current || current.type == 'trial' || current.status != C.PLAN_STATUS.ACTIVED) {
         return null;
@@ -83,8 +84,8 @@ export default class Plan {
   createNewTrial(data) {
     let { company_id } = this;
     let { plan, user_id } = data;
-
     let newId = ObjectId();
+    let date_end = moment().startOf('day').add(config.get('plan.trial_times'), 'month').toDate();
     return db.plan.company.update({
       _id: company_id
     }, {
@@ -93,6 +94,7 @@ export default class Plan {
           _id: newId,
           plan,
           type: 'trial',
+          date_end,
         },
       },
       $push: {
@@ -103,9 +105,11 @@ export default class Plan {
           type: 'trial',
           member_count: 0,
           date_start: moment().startOf('day').toDate(),
-          date_end: moment().startOf('day').add(config.get('plan.trial_times'), 'month').toDate(),
+          date_end: date_end,
         }
       }
+    }, {
+      upsert: true
     });
   }
 
@@ -140,7 +144,8 @@ export default class Plan {
           transactions: transactionId
         },
       };
-      if (order_type == C.ORDER_TYPE.NEWLY || order_type == C.ORDER_TYPE.PATCH) {
+      if ((order_type == C.ORDER_TYPE.NEWLY && current.status != C.PLAN_STATUS.ACTIVED)
+        || order_type == C.ORDER_TYPE.PATCH) {
         criteria = {
           _id: company_id,
         };
@@ -155,7 +160,8 @@ export default class Plan {
             date_end
           }
         };
-      } else if (order_type == C.ORDER_TYPE.UPGRADE || order_type == C.ORDER_TYPE.DEGRADE) {
+      } else if (order_type == C.ORDER_TYPE.UPGRADE || order_type == C.ORDER_TYPE.DEGRADE
+          || (order_type == C.ORDER_TYPE.NEWLY && current.status == C.PLAN_STATUS.ACTIVED)) {
         criteria = {
           _id: company_id,
         };
@@ -198,23 +204,6 @@ export default class Plan {
       $pull: {
         transactions: transactionId
       }
-    });
-  }
-
-  static getSetting(type) {
-    return db.plan.findOne({type});
-  }
-
-  static list() {
-    return Promise.all([
-      db.plan.find(),
-      db.payment.product.find()
-    ])
-    .then(([plans, products]) => {
-      plans.forEach(plan => {
-        plan.products = _.filter(products, product => product.plan == plan.type);
-      });
-      return plans;
     });
   }
 

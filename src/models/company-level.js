@@ -61,7 +61,8 @@ export default class CompanyLevel {
     let planModel = new Plan(company_id);
     return Promise.all([
       planModel.getCurrent().then(planInfo => {
-        return Plan.getSetting(planInfo.plan).then(setting => {
+        return db.plan.findOne({type: planInfo.plan})
+        .then(setting => {
           return {
             setting,
             planInfo,
