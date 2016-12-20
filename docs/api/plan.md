@@ -170,7 +170,8 @@ OUTPUT
 
 POST
 ```javascript
-info: {
+{
+  auth_pic: [File], // 身份证或企业执照
   contact: {
     realname: String,
     gender: String[Enum:F,M],
@@ -215,7 +216,7 @@ info: {
     scale: Number[Enum:1,10,50,100,500],
     description: String,
   }
-},
+}
 ```
 
 ### PUT /auth/(ent|pro)

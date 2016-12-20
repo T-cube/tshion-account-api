@@ -45,72 +45,60 @@ const schema = {
 
   auth_pro: {
     sanitization: {
-      info: {
+      contact: {
         type: 'object',
+        optional: true,
         properties: {
-          contact: {
-            type: 'object',
-            optional: true,
-            properties: {
-              realname: { type: 'string' },
-              gender: { type: 'string' },               // Enum:F,M
-              position: { type: 'string' },
-              phone: { type: 'string' },
-              address: addressSchema.sanitization,
-              // 实名信息，仅在专业版认证时需要
-              realname_ext: {
-                type: 'object',
-                properties: {
-                  idcard: { type: 'string', rules: ['lower', 'trim'] },              // 身份证编码
-                }
-              },
-            }
-          },
-          // 团队信息
-          team: {
+          realname: { type: 'string' },
+          gender: { type: 'string' },               // Enum:F,M
+          position: { type: 'string' },
+          phone: { type: 'string' },
+          address: addressSchema.sanitization,
+          // 实名信息，仅在专业版认证时需要
+          realname_ext: {
             type: 'object',
             properties: {
-              location: addressSchema.sanitization,
-              type: { type: 'string' },
-              scale: { type: 'integer' },
-              description: { type: 'string' },
+              idcard: { type: 'string', rules: ['lower', 'trim'] },              // 身份证编码
             }
           },
         }
       },
-    },
-    validation: {
-      info: {
+      // 团队信息
+      team: {
         type: 'object',
         properties: {
-          contact: {
-            type: 'object',
-            optional: true,
-            properties: {
-              realname: { type: 'string', minLength: 2 },
-              gender: { type: 'string', $enum: ENUMS.GENDER },
-              position: { type: 'string' },
-              phone: { $phone: 1 },
-              address: addressSchema.validation,
-              // 实名信息，仅在专业版认证时需要
-              realname_ext: {
-                type: 'object',
-                properties: {
-                  idcard: { $idcard: 1 },              // 身份证编码
-                }
-              },
-            }
-          },
-          // 团队信息
-          team: {
+          location: addressSchema.sanitization,
+          type: { type: 'string' },
+          scale: { type: 'integer' },
+          description: { type: 'string' },
+        }
+      },
+    },
+    validation: {
+      contact: {
+        type: 'object',
+        optional: true,
+        properties: {
+          realname: { type: 'string', minLength: 2 },
+          gender: { type: 'string', $enum: ENUMS.GENDER },
+          position: { type: 'string' },
+          phone: { $phone: 1 },
+          address: addressSchema.validation,
+          realname_ext: {
             type: 'object',
             properties: {
-              location: addressSchema.validation,
-              type: { $enum: ENUMS.TEAM_TYPE },
-              scale: { $enum: [1, 10, 50, 100] },
-              description: { type: 'string', minLength: 3 },
+              idcard: { $idcard: 1 },              // 身份证编码
             }
           },
+        }
+      },
+      team: {
+        type: 'object',
+        properties: {
+          location: addressSchema.validation,
+          type: { $enum: ENUMS.TEAM_TYPE },
+          scale: { $enum: [1, 10, 50, 100] },
+          description: { type: 'string', minLength: 3 },
         }
       },
     },
@@ -118,54 +106,42 @@ const schema = {
 
   auth_ent: {
     sanitization: {
-      info: {
+      contact: {
         type: 'object',
         properties: {
-          contact: {
-            type: 'object',
-            properties: {
-              realname: { type: 'string' },
-              gender: { type: 'string' },               // Enum:F,M
-              position: { type: 'string' },
-              phone: { type: 'string' },
-            }
-          },
-          // 企业信息
-          enterprise: {
-            type: 'object',
-            properties: {
-              location: addressSchema.sanitization,
-              industry: { type: 'string' },
-              scale: { type: 'integer' },
-              description: { type: 'string' },
-            }
-          },
+          realname: { type: 'string' },
+          gender: { type: 'string' },               // Enum:F,M
+          position: { type: 'string' },
+          phone: { type: 'string' },
+        }
+      },
+      enterprise: {
+        type: 'object',
+        properties: {
+          location: addressSchema.sanitization,
+          industry: { type: 'string' },
+          scale: { type: 'integer' },
+          description: { type: 'string' },
         }
       },
     },
     validation: {
-      info: {
+      contact: {
         type: 'object',
         properties: {
-          contact: {
-            type: 'object',
-            properties: {
-              realname: { type: 'string', minLength: 2 },
-              gender: { type: 'string', $enum: ENUMS.GENDER },
-              position: { type: 'string' },
-              phone: { $phone: 1 },
-            }
-          },
-          // 企业信息
-          enterprise: {
-            type: 'object',
-            properties: {
-              location: addressSchema.validation,
-              industry: { type: 'string', minLength: 2 },
-              scale: { $enum: [1, 10, 50, 100] },
-              description: { type: 'string', minLength: 3 },
-            }
-          },
+          realname: { type: 'string', minLength: 2 },
+          gender: { type: 'string', $enum: ENUMS.GENDER },
+          position: { type: 'string' },
+          phone: { $phone: 1 },
+        }
+      },
+      enterprise: {
+        type: 'object',
+        properties: {
+          location: addressSchema.validation,
+          industry: { type: 'string', minLength: 2 },
+          scale: { $enum: [1, 10, 50, 100] },
+          description: { type: 'string', minLength: 3 },
         }
       },
     },
