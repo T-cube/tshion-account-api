@@ -9,6 +9,7 @@ import AttendanceRemind from 'models/attendance-remind';
 import TaskReport from 'models/task-report';
 import db from 'lib/database';
 import C from 'lib/constants';
+import Plan from 'models/plan/plan';
 
 import PlanOrder from 'models/plan/plan-order';
 
@@ -21,6 +22,8 @@ export default class ScheduleServer {
   init() {
     this.doJobs();
     this.recoverOrderTransaction();
+    
+    this.updateTrialPlan();
   }
 
   initJobs() {
@@ -47,6 +50,10 @@ export default class ScheduleServer {
       task_report: {
         init: ['00 10 * * *', () => taskReport.doJob()]
       },
+
+      update_trial_plan: {
+        init: ['0 0 * * *', () => this.updateTrialPlan()]
+      }
     };
   }
 
@@ -58,7 +65,7 @@ export default class ScheduleServer {
   }
 
   recoverOrderTransaction() {
-    db.transaction.find({
+    return db.transaction.find({
       order: {$exists: true},
       status: {$in: ['pending', 'commited']}
     })
@@ -77,6 +84,21 @@ export default class ScheduleServer {
           }
         }
       });
+    });
+  }
+
+  // 更新到期的试用
+  updateTrialPlan() {
+    return db.plan.company.find({
+      'current.type': 'trial',
+      'current.date_end': {$lte: new Date()}
+    })
+    .forEach(item => {
+      // may send notification here
+      // ...
+      let planModel = new Plan(item._id);
+      planModel.planInfo = item;
+      planModel.cleanTrial();
     });
   }
 
