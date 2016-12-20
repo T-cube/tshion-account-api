@@ -77,6 +77,7 @@ const collections = [
   'payment.product.history',
   'payment.balance',
   'payment.transaction.log',
+  'plan.degrade',
 
   // transaction
   'transaction',

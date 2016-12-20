@@ -30,7 +30,7 @@ export default class Plan {
         // history,
         current,
         viable: {trial, paid},
-        authed,
+        authed: 'free',
       };
     });
   }
@@ -209,6 +209,14 @@ export default class Plan {
 
   // 清除当前的试用状态，如果之前的计划没有过期，则恢复（这种情况出现在购买专业版且正在使用然后试用企业版）
   cleanTrial() {
+    return this._updateTrial({clean: true});
+  }
+
+  stopTrial() {
+    return this._updateTrial({stop: true});
+  }
+
+  _updateTrial({clean = false, stop = false}) {
     return this.getPlanInfo().then(planInfo => {
       let trial = this._getCurrent(planInfo);
       if (!trial || trial.type != 'trial') {
@@ -216,34 +224,18 @@ export default class Plan {
       }
       let now = new Date();
       let paid = planInfo && _.find(planInfo.list, item => item.date_end > now && item.type == 'paid');
-      if (!paid) {
+      if (!paid && clean) {
         return;
+      }
+      let $set = {
+        current: paid ? _.pick(paid, '_id', 'plan', 'type') : null,
+      };
+      if (stop) {
+        $set['list.$.date_end'] = now;
       }
       return db.plan.company.update({
         _id: this.company_id,
-      }, {
-        $set: {
-          current: _.pick(paid, '_id', 'plan', 'type')
-        }
-      });
-    });
-  }
-
-  stopTrial() {
-    return this.getPlanInfo().then(planInfo => {
-      let trial = this._getCurrent(planInfo);
-      if (!trial || trial.type != 'trial') {
-        return;
-      }
-      return db.plan.company.update({
-        _id: this.company_id,
-        'list._id': trial._id
-      }, {
-        $set: {
-          current: null,
-          'list.$.date_end': new Date()
-        }
-      });
+      }, {$set});
     });
   }
 

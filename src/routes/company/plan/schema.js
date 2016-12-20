@@ -48,12 +48,12 @@ const schema = {
     sanitization: {
       plan: { type: 'string' },
       order_type: { type: 'string' },
-      member_count: { type: 'integer' },
+      member_count: { type: 'integer', optional: true, def: 0 },
     },
     validation: {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT, C.TEAMPLAN.FREE] },
       order_type: { $enum: ENUMS.ORDER_TYPE },
-      member_count: { type: 'integer' },
+      member_count: { type: 'integer', optional: true },
     },
   },
   create_order_upgrade: {

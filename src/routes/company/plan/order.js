@@ -17,7 +17,7 @@ export default api;
 api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   let data = req.body;
   let {order_type} = data;
-  if (!_.contains(ENUMS, order_type)) {
+  if (!_.contains(ENUMS.ORDER_TYPE, order_type)) {
     throw new ApiError(400, 'invalid_order_type');
   }
   validate(`create_order_${order_type}`, data);
@@ -71,6 +71,10 @@ api.post('/pending/pay', (req, res, next) => {
   .then(planOrder => {
     if (!planOrder) {
       throw new ApiError(400, 'invalid_order_status');
+    }
+    if (planOrder.get('order_type') == C.ORDER_TYPE.DEGRADE) {
+      return planOrder.prepareDegrade()
+      .then(() => res.json({}));
     }
     if (payment_method == C.PAYMENT_METHOD.BALANCE) {
       return planOrder.payWithBalance()
