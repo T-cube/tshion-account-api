@@ -82,7 +82,7 @@ const schema = {
       'weather.areaid': { type: 'string', optional: true },
       'panel.announcement': { type: 'boolean', optional: true },
       'panel.schedule': { type: 'boolean', optional: true },
-      'panel.task': { type: 'boolean', optional: true },
+      'panel.weather': { type: 'boolean', optional: true },
     },
     validation: {
       // explore: {
@@ -98,7 +98,7 @@ const schema = {
       'weather.areaid': { type: 'string', optional: true },
       'panel.announcement': { type: 'boolean', optional: true },
       'panel.schedule': { type: 'boolean', optional: true },
-      'panel.task': { type: 'boolean', optional: true },
+      'panel.weather': { type: 'boolean', optional: true },
     }
   },
   preference_reset: {

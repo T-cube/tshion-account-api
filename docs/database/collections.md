@@ -797,7 +797,7 @@
   },
   'panel.announcement': <Boolean>,
   'panel.schedule': <Boolean>,
-  'panel.task': <Boolean>,
+  'panel.weather': <Boolean>,
   ...
 }
 ```
