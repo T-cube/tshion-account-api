@@ -57,7 +57,7 @@ api.get('/realname', (req, res, next) => {
 });
 
 api.post('/', (req, res, next) => {
-  let {plan} = req.body;
+  let {plan} = req.query;
   if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
     throw new ApiError(400, 'invalid_team_plan');
   }
@@ -69,7 +69,7 @@ api.post('/', (req, res, next) => {
 });
 
 api.put('/', (req, res, next) => {
-  let {plan} = req.body;
+  let {plan} = req.query;
   if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
     throw new ApiError(400, 'invalid_team_plan');
   }

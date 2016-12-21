@@ -164,9 +164,18 @@ OUTPUT
 }
 ```
 
-### POST /auth/(ent|pro)
+### POST /auth
 
 提交认证
+
+
+QUERY
+
+```javascript
+{
+  plan: String,
+}
+```
 
 POST
 ```javascript
@@ -246,7 +255,7 @@ POST
 }
 ```
 
-### PUT /auth/(ent|pro)
+### PUT /auth
 
 更新认证
 
