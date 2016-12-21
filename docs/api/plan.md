@@ -159,7 +159,7 @@ OUTPUT
   phone: String,
   address: String,
   realname_ext: {
-
+    idcard: String,
   }
 }
 ```
@@ -187,6 +187,7 @@ POST
     // 实名信息，仅在专业版认证时需要
     realname_ext: {
       idcard: String, // 身份证编码
+      idcard_photo: Url,
     },
   },
   // 团队信息
@@ -199,8 +200,11 @@ POST
       postcode: String,
       address: String,
     },
-    industry: Array,
-    scale: Number[Enum:1,10,50,100],
+    industry: {
+      classify: String,
+      industry: String,
+    },
+    scale: String,
     description: String,
   }
   // 企业信息
@@ -213,10 +217,14 @@ POST
       postcode: String,
       address: String,
     },
-    industry: Array,
-    scale: Number[Enum:1,10,50,100,500],
+    industry: {
+      classify: String,
+      industry: String,
+    },
+    scale: String,
     description: String,
     certificate_type: String, // license, code
+    certificate_pic: Url,
   }
 }
 ```

@@ -1,6 +1,61 @@
 import { buildValidator } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
 
+// const logSchema = {
+//   sanitization: {
+//     status: { type: 'string' },
+//     user_id: { $objectId: 1 },
+//     comment: { type: 'string' },
+//     date_create: { type: 'date' },
+//   },
+//   validation: {
+//     status: { type: 'string' },
+//     user_id: { $objectId: 1 },
+//     comment: { type: 'string' },
+//     date_create: { type: 'date' },
+//   },
+// };
+
+const addressSchema = {
+  sanitization: {
+    type: 'object',
+    properties: {
+      province: { type: 'string' },
+      city: { type: 'string' },
+      district: { type: 'string' },
+      postcode: { type: 'string' },
+      address: { type: 'string' },
+    }
+  },
+  validation: {
+    type: 'object',
+    properties: {
+      province: { type: 'string' },
+      city: { type: 'string' },
+      district: { type: 'string' },
+      postcode: { type: 'string' },
+      address: { type: 'string' },
+    }
+  },
+};
+
+const industry = {
+  sanitization: {
+    type: 'object',
+    properties: {
+      classify: { type: 'string' },
+      industry: { type: 'string' },
+    }
+  },
+  validation: {
+    type: 'object',
+    properties: {
+      classify: { type: 'string' },
+      industry: { type: 'string' },
+    }
+  },
+};
+
 const schema = {
   create_order: {
     sanitization: {
@@ -103,6 +158,117 @@ const schema = {
     },
     validation: {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
+    },
+  },
+  auth_pro: {
+    sanitization: {
+      contact: {
+        type: 'object',
+        optional: true,
+        properties: {
+          realname: { type: 'string' },
+          gender: { type: 'string' },               // Enum:F,M
+          phone: { type: 'string' },
+          address: addressSchema.sanitization,
+          // 实名信息，仅在专业版认证时需要
+          realname_ext: {
+            type: 'object',
+            properties: {
+              idcard: { type: 'string', rules: ['lower', 'trim'] },              // 身份证编码
+              idcard_photo: { type: 'array' },
+            }
+          },
+        }
+      },
+      // 团队信息
+      team: {
+        type: 'object',
+        properties: {
+          team_name: { type: 'string' },
+          location: addressSchema.sanitization,
+          industry: industry.sanitization,
+          scale: { type: 'string' },
+          description: { type: 'string' },
+        }
+      },
+    },
+    validation: {
+      contact: {
+        type: 'object',
+        optional: true,
+        properties: {
+          realname: { type: 'string', minLength: 2 },
+          gender: { type: 'string', $enum: ENUMS.GENDER },
+          phone: { $phone: 1 },
+          address: addressSchema.validation,
+          realname_ext: {
+            type: 'object',
+            properties: {
+              idcard: { $idcard: 1 },
+              idcard_photo: { type: 'array' },
+            }
+          },
+        }
+      },
+      team: {
+        type: 'object',
+        properties: {
+          team_name: { type: 'string' },
+          location: addressSchema.validation,
+          industry: industry.validation,
+          scale: { type: 'string' },
+          description: { type: 'string', minLength: 3 },
+        }
+      },
+    },
+  },
+
+  auth_ent: {
+    sanitization: {
+      contact: {
+        type: 'object',
+        properties: {
+          realname: { type: 'string' },
+          gender: { type: 'string' },               // Enum:F,M
+          position: { type: 'string' },
+          phone: { type: 'string' },
+        }
+      },
+      enterprise: {
+        type: 'object',
+        properties: {
+          team_name: { type: 'string' },
+          location: addressSchema.sanitization,
+          industry: industry.sanitization,
+          scale: { type: 'string' },
+          description: { type: 'string' },
+          certificate_type: { type: 'string' },
+          certificate_pic: { type: 'array' },
+        }
+      },
+    },
+    validation: {
+      contact: {
+        type: 'object',
+        properties: {
+          realname: { type: 'string', minLength: 2 },
+          gender: { type: 'string', $enum: ENUMS.GENDER },
+          position: { type: 'string' },
+          phone: { $phone: 1 },
+        }
+      },
+      enterprise: {
+        type: 'object',
+        properties: {
+          team_name: { type: 'string' },
+          location: addressSchema.validation,
+          industry: industry.validation,
+          scale: { type: 'string' },
+          description: { type: 'string', minLength: 3 },
+          certificate_type: { $enum: ['license', 'code'] },
+          certificate_pic: { type: 'array' },
+        }
+      },
     },
   },
 };
