@@ -42,6 +42,12 @@ module.exports = {
           domain: 'cdn-file.tlifang.com',
           https: true,
           private: true,
+        },
+        'cdn-private': {
+          name: 'cdn-private',
+          domain: 'cdn-private.tlifang.com',
+          https: true,
+          private: true,
         }
       }
     },

@@ -158,6 +158,12 @@ module.exports = {
           domain: 'cdn-file-test.tlifang.com',
           https: false,
           private: true,
+        },
+        'cdn-private': {
+          name: 'cdn-private-test',
+          domain: 'cdn-private-test.tlifang.com',
+          https: false,
+          private: true,
         }
       }
     },

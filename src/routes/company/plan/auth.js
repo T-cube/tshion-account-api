@@ -103,7 +103,7 @@ api.post('/upload', (req, res, next) => {
   }
   let uploadType = `plan-auth-${plan}`;
   upload({type: uploadType}).single('auth_pic')(req, res, next);
-}, saveCdn('cdn-file'), (req, res, next) => {
+}, saveCdn('cdn-private'), (req, res, next) => {
   let url = req.file && req.file.url;
   res.json({url});
 });
