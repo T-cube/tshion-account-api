@@ -52,6 +52,25 @@ export default class Preference {
     });
   }
 
+  reset(userId, type) {
+    let conf = config.get('preference.default');
+    let data = {};
+    if (type == 'panel') {
+      for (let i in conf) {
+        if (/panel/.test(i)) {
+          data[i] = conf[i];
+        }
+      }
+    }
+    return db.preference.update({
+      _id: userId
+    }, {
+      $set: data
+    }, {
+      upsert: true
+    });
+  }
+
   init(userId) {
     let data = config.get('preference.default');
     return db.preference.update({

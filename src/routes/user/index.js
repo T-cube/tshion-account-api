@@ -296,4 +296,12 @@ api.post('/preference', (req, res, next) => {
   .catch(next);
 });
 
+api.put('/preference/reset', (req, res, next) => {
+  let data = req.body;
+  validate('preference_reset', data);
+  req.model('preference').reset(req.user._id, data.type)
+  .then(() => res.json({}))
+  .catch(next);
+});
+
 api.use('/schedule', require('./schedule').default);

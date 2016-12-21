@@ -47,9 +47,9 @@ OUTPUT:
     'explore.sort_by': String,
     'explore.view_type': String,
     'weather.areaid': String,
-    'announcement.panel': { String },
-    'schedule.panel': { String },
-    'task.panel': { String },
+    'panel.announcement': Boolean,
+    'panel.schedule': Boolean,
+    'panel.task': Boolean,
     ...
   }
 }
@@ -236,9 +236,20 @@ INPUT:
   'explore.sort_by': String,
   'explore.view_type': String,
   'weather.areaid': String,
-  'announcement.panel': String,
-  'schedule.panel': String,
-  'task.panel': String,
+  'panel.announcement': Boolean,
+  'panel.schedule': Boolean,
+  'panel.task': Boolean,
   ...
+}
+```
+
+### PUT /user/preference/reset
+
+恢复默认的设置
+
+INPUT:
+```javascript
+{
+  type: String, // panel 恢复仪表盘默认
 }
 ```

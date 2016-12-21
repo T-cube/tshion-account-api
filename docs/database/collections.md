@@ -795,9 +795,9 @@
   weather: {
     areaid: <String>,
   },
-  'announcement.panel': <String>,
-  'schedule.panel': <String>,
-  'task.panel': <String>,
+  'panel.announcement': <Boolean>,
+  'panel.schedule': <Boolean>,
+  'panel.task': <Boolean>,
   ...
 }
 ```

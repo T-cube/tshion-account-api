@@ -226,14 +226,12 @@ module.exports = {
   },
   preference: {
     default: {
-      explore: {
-        sort_by: '',
-        view_type: '',
-      },
+      'explore.sort_by': '',
+      'explore.view_type': '',
       'weather.areaid': '',
-      'announcement.panel': '',
-      'schedule.panel': '',
-      'task.panel': '',
+      'announcement.panel': true,
+      'schedule.panel': true,
+      'task.panel': true,
     }
   },
   plan: {

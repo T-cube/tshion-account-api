@@ -69,37 +69,45 @@ const schema = {
   },
   preference: {
     sanitization: {
-      explore: {
-        type: 'object',
-        optional: true,
-        properties: {
-          sort_by: { type: 'string', optional: true },
-          view_type: { type: 'string', optional: true },
-        }
-      },
+      // explore: {
+      //   type: 'object',
+      //   optional: true,
+      //   properties: {
+      //     sort_by: { type: 'string', optional: true },
+      //     view_type: { type: 'string', optional: true },
+      //   }
+      // },
       'explore.sort_by': { type: 'string', optional: true },
       'explore.view_type': { type: 'string', optional: true },
       'weather.areaid': { type: 'string', optional: true },
-      'announcement.panel': { type: 'string', optional: true },
-      'schedule.panel': { type: 'string', optional: true },
-      'task.panel': { type: 'string', optional: true },
+      'panel.announcement': { type: 'boolean', optional: true },
+      'panel.schedule': { type: 'boolean', optional: true },
+      'panel.task': { type: 'boolean', optional: true },
+    },
+    validation: {
+      // explore: {
+      //   type: 'object',
+      //   optional: true,
+      //   properties: {
+      //     sort_by: { type: 'string', optional: true },
+      //     view_type: { type: 'string', optional: true },
+      //   }
+      // },
+      'explore.sort_by': { type: 'string', optional: true },
+      'explore.view_type': { type: 'string', optional: true },
+      'weather.areaid': { type: 'string', optional: true },
+      'panel.announcement': { type: 'boolean', optional: true },
+      'panel.schedule': { type: 'boolean', optional: true },
+      'panel.task': { type: 'boolean', optional: true },
     }
   },
-  validation: {
-    explore: {
-      type: 'object',
-      optional: true,
-      properties: {
-        sort_by: { type: 'string', optional: true },
-        view_type: { type: 'string', optional: true },
-      }
+  preference_reset: {
+    sanitization: {
+      type: { type: 'string' },
     },
-    'explore.sort_by': { type: 'string', optional: true },
-    'explore.view_type': { type: 'string', optional: true },
-    'weather.areaid': { type: 'string', optional: true },
-    'announcement.panel': { type: 'string', optional: true },
-    'schedule.panel': { type: 'string', optional: true },
-    'task.panel': { type: 'string', optional: true },
+    validation: {
+      type: { $enum: ['panel'] },
+    },
   }
 };
 
