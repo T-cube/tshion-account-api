@@ -56,11 +56,8 @@ api.get('/realname', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/', (req, res, next) => {
+api.post('/', checkValid(), (req, res, next) => {
   let {plan} = req.query;
-  if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
-    throw new ApiError(400, 'invalid_team_plan');
-  }
   if (plan == C.TEAMPLAN.PRO) {
     createOrUpdatePro()(req, res, next);
   } else if (plan == C.TEAMPLAN.ENT) {
@@ -68,11 +65,8 @@ api.post('/', (req, res, next) => {
   }
 });
 
-api.put('/', (req, res, next) => {
+api.put('/', checkValid(true), (req, res, next) => {
   let {plan} = req.query;
-  if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
-    throw new ApiError(400, 'invalid_team_plan');
-  }
   if (plan == C.TEAMPLAN.PRO) {
     createOrUpdatePro(true)(req, res, next);
   } else if (plan == C.TEAMPLAN.ENT) {
@@ -107,6 +101,31 @@ api.post('/upload', (req, res, next) => {
   let url = req.file && req.file.url;
   res.json({url});
 });
+
+function checkValid(isUpdate) {
+  return (req, res, next) => {
+    let { plan } = req.query;
+    if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
+      throw new ApiError(400, 'invalid_team_plan');
+    }
+    let preCriteriaPromise = Auth.getAuthStatus(req.company._id, plan);
+    if (isUpdate) {
+      preCriteriaPromise.then(info => {
+        if (!info[plan] || info[plan].status != 'rejected') {
+          throw new ApiError(400, 'invalid_request');
+        }
+        next();
+      });
+    } else {
+      preCriteriaPromise.then(info => {
+        if (info[plan] && !_.contains(['rejected', 'cancelled'], info[plan].status)) {
+          throw new ApiError(400, 'invalid_request');
+        }
+        next();
+      });
+    }
+  };
+}
 
 function createOrUpdatePro(isUpdate) {
   return (req, res, next) => {

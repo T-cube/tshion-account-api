@@ -150,7 +150,10 @@ const schema = {
       amount: { type: 'integer' },
       payment_method: { type: 'string' },
     },
-    validation: {},
+    validation: {
+      amount: { type: 'integer' },
+      payment_method: { type: 'string' },
+    },
   },
   trial: {
     sanitization: {

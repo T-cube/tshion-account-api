@@ -19,13 +19,21 @@ const schema = {
   update_product: {
     sanitization: {
       product_id: { $objectId: 1 },
-      title: { type: 'string', optional: true },
-      original_price: { type: 'init', optional: true },
+      title: { type: 'string' },
+      original_price: { type: 'integer' },
+      amount_min: { type: ['integer', null] },
+      amount_max: { type: ['integer', null] },
+      stock_total: { type: ['integer', null] },
+      stock_current: { type: ['integer', null] },
     },
     validation: {
       product_id: { $objectId: 1 },
-      title: { type: 'string', minLength: 3, maxLength: 100, optional: true },
-      original_price: { type: 'init', min: 0, optional: true },
+      title: { type: 'string', minLength: 3, maxLength: 200 },
+      original_price: { type: 'integer', min: 0 },
+      amount_min: { type: ['integer', null], min: 1 },
+      amount_max: { type: ['integer', null], min: 1 },
+      stock_total: { type: ['integer', null], min: 1 },
+      stock_current: { type: ['integer', null], min: 1},
     },
   },
   update_plan: {
