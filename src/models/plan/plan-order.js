@@ -58,6 +58,34 @@ export default class PlanOrder {
     });
   }
 
+  handlePaySuccess(paymentInfo) {
+    let {order} = this;
+    return this.initTransaction(order.payment_method).then(transactionId => {
+      return this.startTransaction(transactionId)
+      .then(() => this.doHandlePaySuccess(paymentInfo, transactionId))
+      .then(() => this.commitTransaction(transactionId))
+      .then(() => this.commitHandlePaySuccess(paymentInfo, transactionId))
+      .then(() => this.doneTransaction(transactionId));
+    });
+  }
+
+  doHandlePaySuccess(paymentInfo, transactionId) {
+    // update payment status
+    let {order} = this;
+    return Promise.all([
+      new Plan(this.company_id).updatePaidFromOrder(order, transactionId),
+      new Payment().handlePaySuccess(paymentInfo, order, transactionId),
+    ]);
+  }
+
+  commitHandlePaySuccess(paymentInfo, transactionId) {
+    let {order} = this;
+    return Promise.all([
+      new Plan(this.company_id).commitUpdatePaidFromOrder(order, transactionId),
+      new Payment().commitPaySuccess(paymentInfo, order, transactionId),
+    ]);
+  }
+
   payWithBalance() {
     if (this.get('order_type') == C.ORDER_TYPE.RECHARGE) {
       throw new ApiError(400, 'invalid_order_status');

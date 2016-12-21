@@ -71,6 +71,14 @@ export default class Payment {
     return ChargeOrder.create(chargeType, order, payment);
   }
 
+  handlePaySuccess() {
+
+  }
+
+  commitPaySuccess() {
+
+  }
+
   payWithBalance(order, transactionId) {
     let {paid_sum, company_id} = order;
     if (paid_sum > 0) {

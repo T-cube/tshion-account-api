@@ -9,6 +9,7 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import Auth from './auth';
 import {indexObjectId} from 'lib/utils';
+import PlanDegrade from 'models/plan/plan-degrade';
 
 export default class Plan {
 
@@ -18,20 +19,23 @@ export default class Plan {
   }
 
   getStatus() {
+    let {company_id} = this;
     return Promise.all([
       this.getPlanInfo(),
-      new Auth(this.company_id).getAuthedPlan()
+      new Auth(company_id).getAuthedPlan(),
+      new PlanDegrade().get(company_id),
     ])
-    .then(([planInfo, authed]) => {
+    .then(([planInfo, authed, degrade]) => {
       let paid = _.values(C.TEAMPLAN_PAID);
       let trial = planInfo ? _.difference(paid, _.uniq(_.pluck(planInfo.list, 'plan'))) : paid;
       let current = this._getCurrent(planInfo);
       return {
         // history,
-        company_id: this.company_id,
+        company_id,
         current,
         viable: {trial, paid: _.contains(authed, C.TEAMPLAN.ENT) ? paid : authed},
         authed,
+        degrade,
       };
     });
   }
