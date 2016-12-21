@@ -56,22 +56,35 @@ api.get('/realname', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/pro',
-createOrUpdatePro());
+api.post('/', (req, res, next) => {
+  let {plan} = req.body;
+  if (!_.constants(ENUMS.TEAMPLAN_PAID)) {
+    throw new ApiError(400, 'invalid_team_plan');
+  }
+  if (plan == C.TEAMPLAN.PRO) {
+    createOrUpdatePro()(req, res, next);
+  } else if (plan == C.TEAMPLAN.ENT) {
+    createOrUpdateEnt()(req, res, next);
+  }
+});
 
-api.post('/ent',
-createOrUpdateEnt());
+api.put('/', (req, res, next) => {
+  let {plan} = req.body;
+  if (!_.constants(ENUMS.TEAMPLAN_PAID)) {
+    throw new ApiError(400, 'invalid_team_plan');
+  }
+  if (plan == C.TEAMPLAN.PRO) {
+    createOrUpdatePro(true)(req, res, next);
+  } else if (plan == C.TEAMPLAN.ENT) {
+    createOrUpdateEnt(true)(req, res, next);
+  }
+});
 
-api.put('/pro',
-createOrUpdatePro(true));
-
-api.put('/ent',
-createOrUpdateEnt(true));
-
-api.put(/\/(pro|ent)\/status\/?/, (req, res, next) => {
-  let plan = req.params[0];
-  let { status } = req.body;
-  status = 'cancelled';
+api.put('/status', (req, res, next) => {
+  let { plan, status } = req.body;
+  if (status != 'cancelled') {
+    throw new ApiError(400, 'invalid_status');
+  }
   Auth.getAuthStatus(req.company._id, plan)
   .then(info => {
     if (!info[plan] || 'accepted' == info[plan].status) {

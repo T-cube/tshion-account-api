@@ -47,6 +47,9 @@ OUTPUT:
     'explore.sort_by': String,
     'explore.view_type': String,
     'weather.areaid': String,
+    'announcement.panel': { String },
+    'schedule.panel': { String },
+    'task.panel': { String },
     ...
   }
 }

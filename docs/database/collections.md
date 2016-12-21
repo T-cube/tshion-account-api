@@ -795,6 +795,9 @@
   weather: {
     areaid: <String>,
   },
+  'announcement.panel': { String },
+  'schedule.panel': { String },
+  'task.panel': { String },
   ...
 }
 ```

@@ -171,7 +171,6 @@ OUTPUT
 POST
 ```javascript
 {
-  auth_pic: [File], // 身份证或企业执照
   contact: {
     realname: String,
     gender: String[Enum:F,M],
@@ -187,7 +186,7 @@ POST
     // 实名信息，仅在专业版认证时需要
     realname_ext: {
       idcard: String, // 身份证编码
-      idcard_photo: Url,
+      idcard_photo: [Url],
     },
   },
   // 团队信息
@@ -224,8 +223,16 @@ POST
     scale: String,
     description: String,
     certificate_type: String, // license, code
-    certificate_pic: Url,
+    certificate_pic: [Url],
   }
+}
+```
+
+### POST /auth/upload
+
+```javascript
+{
+  auth_pic: [File], // 身份证或企业执照
 }
 ```
 
