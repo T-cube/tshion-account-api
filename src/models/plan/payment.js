@@ -48,7 +48,7 @@ export default class Payment {
     let {notify_url, redirect_url} = this.getUrls();
     return this.pay.createPay({
       type:'wxpay',
-      opts:{
+      opts: {
         method: this.pay.wxpay.trade_type.NATIVE, // NATIVE | APP | JSAPI
         notify_url: encodeURIComponent(notify_url),
         redirect_url: encodeURIComponent(redirect_url),
@@ -60,15 +60,15 @@ export default class Payment {
     .then(data => {
       let {code_url} = data;
       if (code_url) {
-        return this.createChargeOrder(order, data).then(() => {
+        return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, data).then(() => {
           return {code_url};
         });
       }
     });
   }
 
-  createChargeOrder(order, payment) {
-    return ChargeOrder.create(order, payment);
+  createChargeOrder(chargeType, order, payment) {
+    return ChargeOrder.create(chargeType, order, payment);
   }
 
   payWithBalance(order, transactionId) {
@@ -117,6 +117,10 @@ export default class Payment {
         transactions: transactionId
       }
     });
+  }
+
+  payRecharge(recharge) {
+    // C.CHARGE_TYPE.RECHARGE
   }
 
 }

@@ -179,8 +179,8 @@ export default class PlanOrder {
       }
       return Promise.all([
         db.plan.degrade.insert({
+          _id: this.get('company_id'),
           order: orderId,
-          company_id: this.get('company_id'),
           time: current.date_end,
           date_create: new Date(),
           status: 'actived'

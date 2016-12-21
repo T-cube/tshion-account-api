@@ -8,21 +8,19 @@ export default class ChargeOrder {
 
   constructor() {}
 
-  static create(order, payment) {
+  static create(charge_type, order, payment_data) {
     let {company_id, paid_sum} = order;
-    let {payment_type, payment_method, date_create, title, code_url} = payment;
+    let {payment_type, payment_method, date_create} = payment_data;
 
     let data = {
       company_id,
       amount: paid_sum,
+      charge_type,
       payment_type,
       payment_method,
       order_no: order._id,
       date_create,
-      payment_data: {
-        title,
-        code_url
-      }
+      payment_data,
     };
     return db.payment.charge.order.update({
       company_id,

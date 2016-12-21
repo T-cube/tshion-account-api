@@ -279,6 +279,10 @@ let constants = {
     CANCELED: 'cancelled',
     SUCCEED: 'succeed'
   },
+  CHARGE_TYPE: {
+    PLAN: 'plan',
+    RECHARGE: 'recharge',
+  },
   PRODUCT_NO: {
     PLAN: 'P0001',
     MEMBER: 'P0002',

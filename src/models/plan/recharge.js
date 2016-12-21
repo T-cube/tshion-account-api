@@ -15,25 +15,29 @@ export default class Recharge {
     this.paid_sum = 0;
   }
 
-  create({amount}) {
+  create({amount, payment_method}) {
     let {company_id, user_id} = this;
-    return this.isValid().then(() => {
-      return this.getChargeDiscount(amount).then(discount => {
-        let {extra_amount} = discount;
-        let paid_sum = amount - extra_amount;
-        let data = {
-          amount,
-          company_id,
-          user_id,
-          original_sum: amount,
-          paid_sum,
-          discount: extra_amount ? discount : null,
-          status: C.ORDER_STATUS.CREATED,
-          date_create: new Date(),
-          date_update: new Date(),
-        };
-        return db.payment.recharge.insert(data);
-      });
+    return this.isValid()
+    .then(() => this.getChargeDiscount(amount))
+    .then(discount => {
+      let {extra_amount} = discount;
+      let paid_sum = amount - extra_amount;
+      let data = {
+        amount,
+        company_id,
+        user_id,
+        paid_sum,
+        payment_method,
+        discount: extra_amount ? discount : null,
+        status: C.ORDER_STATUS.CREATED,
+        date_create: new Date(),
+        date_update: new Date(),
+      };
+      return db.payment.recharge.insert(data);
+    })
+    .then(recharge => {
+      // TODO pay recharge order here
+      
     });
   }
 

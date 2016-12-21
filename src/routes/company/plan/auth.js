@@ -96,9 +96,9 @@ api.post('/upload', (req, res, next) => {
     throw new ApiError(400, 'invalid_team_plan');
   }
   let uploadType = `plan-auth-${plan}`;
-  upload({type: uploadType}).single('auth_pic')(req, res, next);
+  upload({type: uploadType}).array('auth_pic')(req, res, next);
 }, saveCdn('cdn-private'), (req, res, next) => {
-  let url = req.file && req.file.url;
+  let url = req.files ? req.files.map(file => file.url) : [];
   res.json({url});
 });
 
