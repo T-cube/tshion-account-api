@@ -230,9 +230,19 @@ POST
 
 ### POST /auth/upload
 
+QUERY
+
 ```javascript
 {
-  auth_pic: [File], // 身份证或企业执照
+  plan: String,
+}
+```
+
+POST
+
+```javascript
+{
+  auth_pic: File, // 身份证或企业执照
 }
 ```
 
