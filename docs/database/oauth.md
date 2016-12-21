@@ -10,7 +10,7 @@ OauthToken: String[32];
 
 ## Tables
 
-### Table `oauth.clients`
+### Collection `oauth.clients`
 
 ```javascript
 {
@@ -20,7 +20,7 @@ OauthToken: String[32];
 }
 ```
 
-### Table `oauth.code`
+### Collection `oauth.code`
 
 ```javascript
 {
@@ -32,7 +32,7 @@ OauthToken: String[32];
 }
 ```
 
-### Table `oauth.accesstoken`
+### Collection `oauth.accesstoken`
 
 ```javascript
 {
@@ -44,7 +44,7 @@ OauthToken: String[32];
 }
 ```
 
-### Table `oauth.refreshtoken`
+### Collection `oauth.refreshtoken`
 
 ```javascript
 {

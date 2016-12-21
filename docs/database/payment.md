@@ -15,7 +15,7 @@ Currency: Number;
 
 ## Tables
 
-### Table `payment.product`
+### Collection `payment.product`
 
 商品信息
 
@@ -45,7 +45,7 @@ Currency: Number;
 | P0001 | Cooperate Edition Monthly Fee |  企业版月费 | 199.00 |
 | P0002 | Cooperate Edition Per User Fee | 企业版用户升级月费 | 19.90 |
 
-### Table `payment.product.history`
+### Collection `payment.product.history`
 
 商品历史版本，除列举字段，同商品信息
 
@@ -59,7 +59,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.product.discount`
+### Collection `payment.product.discount`
 
 优惠支付信息，可用于多个产品
 
@@ -88,7 +88,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.coupon`
+### Collection `payment.coupon`
 
 商家发布的优惠券
 
@@ -120,7 +120,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.coupon.item`
+### Collection `payment.coupon.item`
 
 已使用的优惠券
 
@@ -137,7 +137,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.balance`
+### Collection `payment.balance`
 
 记录帐户余额
 
@@ -152,11 +152,11 @@ Currency: Number;
 }
 ```
 
-### Table `payment.transaction.log`
+### Collection `payment.transaction.log`
 
 
 
-### Table `payment.order`
+### Collection `payment.order`
 
 记录用户充值、付款记录
 
@@ -203,7 +203,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.charge.discount`
+### Collection `payment.charge.discount`
 
 充值优惠
 
@@ -219,7 +219,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.charge.order`
+### Collection `payment.charge.order`
 
 帐户充值记录，实际转入资金，包含预充值或直接消费
 
@@ -259,7 +259,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.invoice`
+### Collection `payment.invoice`
 
 发票记录跟踪记录信息
 
@@ -307,7 +307,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.address`
+### Collection `payment.address`
 
 企业联系人收货地址列表，用于邮寄发票、礼品
 
