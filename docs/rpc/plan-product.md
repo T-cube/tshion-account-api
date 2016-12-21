@@ -26,6 +26,7 @@ QUERY
 {
   product_id: ObjectId,
   title: String,
+  description: String,
   original_price: Int,
   amount_min: (Int, null),
   amount_max: (Int, null),

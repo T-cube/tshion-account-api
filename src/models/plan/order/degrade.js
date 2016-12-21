@@ -34,7 +34,7 @@ export default class DegradeOrder extends Base {
       this.getLimits(),
       this.getTimes(),
     ])
-    .then(([{current, authed}, {member_count}, times]) => {
+    .then(([{current, viable}, {member_count}, times]) => {
       let error = [];
       let isValid = true;
       if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || times <= 0) {
@@ -42,7 +42,7 @@ export default class DegradeOrder extends Base {
         error.push('invalid_plan_status');
       }
       if (this.plan != C.TEAMPLAN.FREE) {
-        if (!_.contains(authed, this.plan)) {
+        if (!_.contains(viable.paid, this.plan)) {
           isValid = false;
           error.push('plan_not_authed');
         }

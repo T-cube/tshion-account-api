@@ -130,6 +130,7 @@ export default class PlanOrder {
 
   initTransaction(payment_method) {
     return db.transaction.insert({
+      type: 'pay_order',
       order: this.get('_id'),
       payment_method,
       status: 'initial',

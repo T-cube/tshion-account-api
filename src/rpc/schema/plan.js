@@ -20,6 +20,7 @@ const schema = {
     sanitization: {
       product_id: { $objectId: 1 },
       title: { type: 'string' },
+      description: { type: 'string', optional: true },
       original_price: { type: 'integer' },
       amount_min: { type: ['integer', null] },
       amount_max: { type: ['integer', null] },
@@ -29,6 +30,7 @@ const schema = {
     validation: {
       product_id: { $objectId: 1 },
       title: { type: 'string', minLength: 3, maxLength: 200 },
+      description: { type: 'string', optional: true },
       original_price: { type: 'integer', min: 0 },
       amount_min: { type: ['integer', null], min: 1 },
       amount_max: { type: ['integer', null], min: 1 },

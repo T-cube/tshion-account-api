@@ -28,9 +28,10 @@ export default class Plan {
       let current = this._getCurrent(planInfo);
       return {
         // history,
+        company_id: this.company_id,
         current,
-        viable: {trial, paid},
-        authed: 'free',
+        viable: {trial, paid: _.contains(authed, C.TEAMPLAN.ENT) ? paid : authed},
+        authed,
       };
     });
   }

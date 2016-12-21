@@ -48,7 +48,7 @@ api.post('/trial', (req, res, next) => {
       user_id: req.user._id
     });
   })
-  .then(doc => res.json(doc))
+  .then(() => res.json({}))
   .catch(next);
 });
 

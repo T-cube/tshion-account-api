@@ -72,10 +72,10 @@ export default class UpgradeOrder extends Base {
       this.getLimits(),
       this.getTimes(),
     ])
-    .then(([{current, authed}, {member_count}, times]) => {
+    .then(([{current, viable}, {member_count}, times]) => {
       let error = [];
       let isValid = true;
-      if (!_.contains(authed, this.plan)) {
+      if (!_.contains(viable.paid, this.plan)) {
         isValid = false;
         error.push('plan_not_authed');
       }

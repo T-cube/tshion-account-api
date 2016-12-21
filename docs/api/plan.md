@@ -65,7 +65,7 @@ OUTPUT
   //     date_end: Date,
   //   }
   // ],
-  _id: ObjectId, // company_id
+  company_id: ObjectId,
   current: {
     _id: ObjectId,
     type: String, // paid trial
@@ -76,10 +76,10 @@ OUTPUT
     date_end: Date,
   },
   viable: {
-    trial: [TeamPlanPaid],
-    paid: [TeamPlanPaid],
+    trial: [TeamPlanPaid], // 可试用的（没有试用和购买）
+    paid: [TeamPlanPaid], // 可购买的（认证过的，企业的认证覆盖专业版）
   },
-  authed: [TeamPlanPaid],
+  authed: [TeamPlanPaid], // 已认证的
 }
 ```
 
