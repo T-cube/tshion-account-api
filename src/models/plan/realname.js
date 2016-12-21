@@ -23,6 +23,9 @@ export default class Realname {
       _id: this.user_id,
     })
     .then(doc => {
+      if (!doc) {
+        return null;
+      }
       if (!_.contains(['cancelled', 'rejected'], doc.status)) {
         return doc;
       }

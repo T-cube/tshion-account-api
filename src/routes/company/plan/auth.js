@@ -57,8 +57,8 @@ api.get('/realname', (req, res, next) => {
 });
 
 api.post('/', (req, res, next) => {
-  let {plan} = req.body;
-  if (!_.constants(ENUMS.TEAMPLAN_PAID)) {
+  let {plan} = req.query;
+  if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
     throw new ApiError(400, 'invalid_team_plan');
   }
   if (plan == C.TEAMPLAN.PRO) {
@@ -69,8 +69,8 @@ api.post('/', (req, res, next) => {
 });
 
 api.put('/', (req, res, next) => {
-  let {plan} = req.body;
-  if (!_.constants(ENUMS.TEAMPLAN_PAID)) {
+  let {plan} = req.query;
+  if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
     throw new ApiError(400, 'invalid_team_plan');
   }
   if (plan == C.TEAMPLAN.PRO) {
@@ -98,14 +98,14 @@ api.put('/status', (req, res, next) => {
 
 api.post('/upload', (req, res, next) => {
   let { plan } = req.query;
-  if (!_.constants(ENUMS.TEAMPLAN_PAID)) {
+  if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
     throw new ApiError(400, 'invalid_team_plan');
   }
   let uploadType = `plan-auth-${plan}`;
-  upload({type: uploadType}).array('auth_pic')(req, res, next);
-}, saveCdn('cdn-auth'), (req, res, next) => {
-  let pics = req.files ? req.files.map(file => file.url) : [];
-  res.json(pics);
+  upload({type: uploadType}).single('auth_pic')(req, res, next);
+}, saveCdn('cdn-private'), (req, res, next) => {
+  let url = req.file && req.file.url;
+  res.json({url});
 });
 
 function createOrUpdatePro(isUpdate) {
@@ -118,7 +118,7 @@ function createOrUpdatePro(isUpdate) {
     let promise = realnameModel.get();
     if (realnameData) {
       realnameData.status = 'posted';
-      promise.then(realname => {
+      promise = promise.then(realname => {
         if (realname) {
           throw new ApiError(400, 'user realname authed');
         }
@@ -128,7 +128,7 @@ function createOrUpdatePro(isUpdate) {
         });
       });
     } else {
-      promise.then(realname => {
+      promise = promise.then(realname => {
         if (!realname) {
           throw new ApiError(400, 'empty realname');
         }
@@ -136,7 +136,7 @@ function createOrUpdatePro(isUpdate) {
         return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
       });
     }
-    return promise.then(doc => res.json(doc)).catch(next);
+    promise.then(doc => res.json(doc)).catch(next);
   };
 }
 

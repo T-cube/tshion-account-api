@@ -7,7 +7,9 @@ import db from 'lib/database';
 
 export default class Preference {
 
-  constructor() {}
+  constructor() {
+    this.config = config.get('preference.default');
+  }
 
   // @key string array object or undefined
   get(userId, key) {
@@ -53,7 +55,7 @@ export default class Preference {
   }
 
   reset(userId, type) {
-    let conf = config.get('preference.default');
+    let conf = this.config;
     let data = {};
     if (type == 'panel') {
       for (let i in conf) {
@@ -72,7 +74,7 @@ export default class Preference {
   }
 
   init(userId) {
-    let data = config.get('preference.default');
+    let data = this.config;
     return db.preference.update({
       _id: userId
     }, {

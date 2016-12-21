@@ -158,6 +158,12 @@ module.exports = {
           domain: 'cdn-file-test.tlifang.com',
           https: false,
           private: true,
+        },
+        'cdn-private': {
+          name: 'cdn-private-test',
+          domain: 'cdn-private-test.tlifang.com',
+          https: false,
+          private: true,
         }
       }
     },
@@ -229,9 +235,9 @@ module.exports = {
       'explore.sort_by': '',
       'explore.view_type': '',
       'weather.areaid': '',
-      'announcement.panel': true,
-      'schedule.panel': true,
-      'task.panel': true,
+      'panel.announcement': true,
+      'panel.schedule': true,
+      'panel.weather': true,
     }
   },
   plan: {

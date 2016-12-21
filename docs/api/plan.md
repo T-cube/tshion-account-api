@@ -164,9 +164,18 @@ OUTPUT
 }
 ```
 
-### POST /auth/(ent|pro)
+### POST /auth
 
 提交认证
+
+
+QUERY
+
+```javascript
+{
+  plan: String,
+}
+```
 
 POST
 ```javascript
@@ -230,13 +239,23 @@ POST
 
 ### POST /auth/upload
 
+QUERY
+
 ```javascript
 {
-  auth_pic: [File], // 身份证或企业执照
+  plan: String,
 }
 ```
 
-### PUT /auth/(ent|pro)
+POST
+
+```javascript
+{
+  auth_pic: File, // 身份证或企业执照
+}
+```
+
+### PUT /auth
 
 更新认证
 
