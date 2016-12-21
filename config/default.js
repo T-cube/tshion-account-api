@@ -231,7 +231,7 @@ module.exports = {
       'weather.areaid': '',
       'panel.announcement': true,
       'panel.schedule': true,
-      'panel.task': true,
+      'panel.weather': true,
     }
   },
   plan: {

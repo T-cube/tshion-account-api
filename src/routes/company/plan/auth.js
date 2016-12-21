@@ -103,7 +103,7 @@ api.post('/upload', (req, res, next) => {
   }
   let uploadType = `plan-auth-${plan}`;
   upload({type: uploadType}).single('auth_pic')(req, res, next);
-}, saveCdn('cdn-auth'), (req, res, next) => {
+}, saveCdn('cdn-file'), (req, res, next) => {
   let url = req.file && req.file.url;
   res.json({url});
 });
@@ -118,7 +118,7 @@ function createOrUpdatePro(isUpdate) {
     let promise = realnameModel.get();
     if (realnameData) {
       realnameData.status = 'posted';
-      promise.then(realname => {
+      promise = promise.then(realname => {
         if (realname) {
           throw new ApiError(400, 'user realname authed');
         }
@@ -128,7 +128,7 @@ function createOrUpdatePro(isUpdate) {
         });
       });
     } else {
-      promise.then(realname => {
+      promise = promise.then(realname => {
         if (!realname) {
           throw new ApiError(400, 'empty realname');
         }
@@ -136,7 +136,7 @@ function createOrUpdatePro(isUpdate) {
         return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
       });
     }
-    return promise.then(doc => res.json(doc)).catch(next);
+    promise.then(doc => res.json(doc)).catch(next);
   };
 }
 
