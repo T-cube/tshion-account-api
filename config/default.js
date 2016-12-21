@@ -229,9 +229,9 @@ module.exports = {
       'explore.sort_by': '',
       'explore.view_type': '',
       'weather.areaid': '',
-      'announcement.panel': true,
-      'schedule.panel': true,
-      'task.panel': true,
+      'panel.announcement': true,
+      'panel.schedule': true,
+      'panel.task': true,
     }
   },
   plan: {
