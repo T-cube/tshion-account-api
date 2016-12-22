@@ -54,24 +54,19 @@ export default class PlanAuthModel extends Model {
       delete doc.company_id;
       let info = doc.info;
       const qiniu = this.model('qiniu').bucket('cdn-private');
-      let pics = [];
       if (info.enterprise && info.enterprise.certificate_pic) {
-        return Promise.all(info.enterprise.certificate_pic.map(file => {
-          return qiniu.makeLink(file.cdn_key).then(link => {
-            pics.push(link);
-          });
-        }))
-        .then(() => {
+        return Promise.map(info.enterprise.certificate_pic, file => {
+          return qiniu.makeLink(file);
+        })
+        .then(pics => {
           info.enterprise.certificate_pic = pics;
           return doc;
         });
       } else if (info.contact && info.contact.realname_ext) {
-        return Promise.all(info.contact.realname_ext.idcard_photo.map(file => {
-          return qiniu.makeLink(file.cdn_key).then(link => {
-            pics.push(link);
-          });
-        }))
-        .then(() => {
+        return Promise.map(info.contact.realname_ext.idcard_photo, file => {
+          return qiniu.makeLink(file);
+        })
+        .then(pics => {
           info.contact.realname_ext.idcard_photo = pics;
           return doc;
         });

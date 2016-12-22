@@ -153,9 +153,10 @@ function createOrUpdatePro(isUpdate) {
           throw new ApiError(400, 'user realname authed');
         }
         let postPicIds = realnameData.realname_ext.idcard_photo;
-        return req.model('auth-pic').pop({plan: C.TEAMPLAN.PRO, user_id, files: postPicIds})
+        return req.model('auth-pic')
+        .pop({plan: C.TEAMPLAN.PRO, user_id, files: postPicIds})
         .then(pics => {
-          realnameData.realname_ext.idcard_photo = pics;
+          realnameData.realname_ext.idcard_photo = _.pluck(pics, 'url');
           realnameData.status = 'posted';
           return realnameModel.persist(realnameData).then(() => {
             info.contact = user_id;
@@ -184,7 +185,7 @@ function createOrUpdateEnt(isUpdate) {
     req.model('auth-pic')
     .pop({plan: C.TEAMPLAN.PRO, company_id, files: info.enterprise.certificate_pic})
     .then(pics => {
-      info.enterprise.certificate_pic = pics;
+      info.enterprise.certificate_pic = _.pluck(pics, 'url');
       let auth = new Auth(company_id, req.user._id);
       let promise = isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.ENT, info);
       return promise.then(doc => res.json(doc)).catch(next);

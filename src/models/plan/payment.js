@@ -71,11 +71,11 @@ export default class Payment {
     return ChargeOrder.create(chargeType, order, payment);
   }
 
-  handlePaySuccess() {
+  handlePaySuccess(order, paymentInfo, transactionId) {
 
   }
 
-  commitPaySuccess() {
+  commitPaySuccess(order, paymentInfo, transactionId) {
 
   }
 

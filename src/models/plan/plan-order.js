@@ -74,7 +74,7 @@ export default class PlanOrder {
     let {order} = this;
     return Promise.all([
       new Plan(this.company_id).updatePaidFromOrder(order, transactionId),
-      new Payment().handlePaySuccess(paymentInfo, order, transactionId),
+      new Payment().handlePaySuccess(order, paymentInfo, transactionId),
     ]);
   }
 
@@ -82,7 +82,7 @@ export default class PlanOrder {
     let {order} = this;
     return Promise.all([
       new Plan(this.company_id).commitUpdatePaidFromOrder(order, transactionId),
-      new Payment().commitPaySuccess(paymentInfo, order, transactionId),
+      new Payment().commitPaySuccess(order, paymentInfo, transactionId),
     ]);
   }
 
