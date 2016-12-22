@@ -147,23 +147,6 @@ OUTPUT
 }
 ```
 
-
-### GET /auth/realname
-
-OUTPUT
-
-```javascript
-{
-  realname: String,
-  position: String,
-  phone: String,
-  address: String,
-  realname_ext: {
-    idcard: String,
-  }
-}
-```
-
 ### POST /auth
 
 提交认证

@@ -51,12 +51,6 @@ api.get('/history', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/realname', (req, res, next) => {
-  new Realname(req.user._id).get()
-  .then(doc => res.json(doc))
-  .catch(next);
-});
-
 api.post('/', checkValid(), (req, res, next) => {
   let {plan} = req.query;
   if (plan == C.TEAMPLAN.PRO) {

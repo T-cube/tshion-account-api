@@ -253,3 +253,20 @@ INPUT:
   type: String, // panel 恢复仪表盘默认
 }
 ```
+
+### GET /user/realname
+
+OUTPUT
+
+```javascript
+{
+  realname: String,
+  position: String,
+  phone: String,
+  address: String,
+  realname_ext: {
+    idcard: String,
+    idcard_photo: [Url]
+  }
+}
+```
