@@ -7,7 +7,7 @@ import db from 'lib/database';
 
 export default class Auth {
 
-  constructor({company_id}) {
+  constructor(company_id) {
     this.company_id = company_id;
   }
 

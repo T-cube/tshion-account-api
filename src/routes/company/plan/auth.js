@@ -40,7 +40,7 @@ export default api;
 
 api.get('/status', (req, res, next) => {
   let company_id = req.company._id;
-  new Auth({company_id}).getAuthStatus()
+  new Auth(company_id).getAuthStatus()
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -48,7 +48,7 @@ api.get('/status', (req, res, next) => {
 api.get('/history', (req, res, next) => {
   let {page, pagesize} = req.query;
   let company_id = req.company._id;
-  new Auth({company_id}).list(req.company._id, {page, pagesize})
+  new Auth(company_id).list(req.company._id, {page, pagesize})
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -77,7 +77,7 @@ api.put('/status', (req, res, next) => {
     throw new ApiError(400, 'invalid_status');
   }
   let company_id = req.company._id;
-  let authModel = new Auth({company_id});
+  let authModel = new Auth(company_id);
   return authModel.cancel(plan)
   .then(() => res.json({}))
   .catch(next);
@@ -112,7 +112,7 @@ function checkValid(isUpdate) {
       throw new ApiError(400, 'invalid_team_plan');
     }
     let company_id = req.company._id;
-    let authModel = new Auth({company_id});
+    let authModel = new Auth(company_id);
     if (isUpdate) {
       authModel.checkUpdate(plan).then(next).catch(next);
     } else {
@@ -170,7 +170,7 @@ function createOrUpdateEnt(isUpdate) {
     .pop({plan: C.TEAMPLAN.ENT, company_id, files: info.enterprise.certificate_pic})
     .then(pics => {
       info.enterprise.certificate_pic = _.pluck(pics, 'url');
-      let auth = new Auth({company_id});
+      let auth = new Auth(company_id);
       let promise = isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.ENT, info, user_id});
       return promise.then(doc => res.json(doc)).catch(next);
     });

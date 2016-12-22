@@ -26,6 +26,7 @@ export default class Plan {
       new PlanDegrade().get(company_id),
     ])
     .then(([planInfo, authed, degrade]) => {
+      console.log('authed', authed);
       let paid = _.values(C.TEAMPLAN_PAID);
       let trial = planInfo ? _.difference(paid, _.uniq(_.pluck(planInfo.list, 'plan'))) : paid;
       let current = this._getCurrent(planInfo);

@@ -79,7 +79,7 @@ OUTPUT
     trial: [TeamPlanPaid], // 可试用的（没有试用和购买）
     paid: [TeamPlanPaid], // 可购买的（认证过的，企业的认证覆盖专业版）
   },
-  authed: [TeamPlanPaid], // 已认证的
+  authed: TeamPlanPaid, // 已认证的
 }
 ```
 
