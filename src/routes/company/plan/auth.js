@@ -10,6 +10,7 @@ import { ApiError } from 'lib/error';
 import Auth from 'models/plan/auth';
 import Realname from 'models/plan/realname';
 import { saveCdn } from 'lib/upload';
+import { indexObjectId } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -98,8 +99,18 @@ api.post('/upload', (req, res, next) => {
   let uploadType = `plan-auth-${plan}`;
   upload({type: uploadType}).array('auth_pic')(req, res, next);
 }, saveCdn('cdn-private'), (req, res, next) => {
-  let url = req.files ? req.files.map(file => file.url) : [];
-  res.json({url});
+  let { plan } = req.query;
+  let files = req.files;
+  if (!files || !files.length) {
+    return res.json([]);
+  }
+  files = files.map(file => _.pick(file, 'mimetype', 'url', 'filename', 'path', 'size', 'cdn_bucket', 'cdn_key'));
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  req.model('auth-pic')
+  .save({plan, company_id, user_id, files})
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 function checkValid(isUpdate) {
@@ -112,14 +123,14 @@ function checkValid(isUpdate) {
     if (isUpdate) {
       preCriteriaPromise.then(info => {
         if (!info[plan] || info[plan].status != 'rejected') {
-          throw new ApiError(400, 'invalid_request');
+          return next(new ApiError(400, 'auth_cannot_update'));
         }
         next();
       });
     } else {
       preCriteriaPromise.then(info => {
         if (info[plan] && !_.contains(['rejected', 'cancelled'], info[plan].status)) {
-          throw new ApiError(400, 'invalid_request');
+          return next(new ApiError(400, 'auth_posted'));
         }
         next();
       });
@@ -130,20 +141,26 @@ function checkValid(isUpdate) {
 function createOrUpdatePro(isUpdate) {
   return (req, res, next) => {
     let info = req.body;
+    let user_id = req.user._id;
     validate('auth_pro', info);
     let auth = new Auth(req.company._id, req.user._id);
     let realnameData = info.contact;
     let realnameModel = new Realname(req.user._id);
     let promise = realnameModel.get();
     if (realnameData) {
-      realnameData.status = 'posted';
       promise = promise.then(realname => {
         if (realname) {
           throw new ApiError(400, 'user realname authed');
         }
-        return realnameModel.persist(realnameData).then(() => {
-          info.contact = req.user._id;
-          return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
+        let postPicIds = realnameData.realname_ext.idcard_photo;
+        return req.model('auth-pic').pop({plan: C.TEAMPLAN.PRO, user_id, files: postPicIds})
+        .then(pics => {
+          realnameData.realname_ext.idcard_photo = pics;
+          realnameData.status = 'posted';
+          return realnameModel.persist(realnameData).then(() => {
+            info.contact = user_id;
+            return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
+          });
         });
       });
     } else {
@@ -151,7 +168,7 @@ function createOrUpdatePro(isUpdate) {
         if (!realname) {
           throw new ApiError(400, 'empty realname');
         }
-        info.contact =  req.user._id;
+        info.contact = user_id;
         return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
       });
     }
@@ -163,8 +180,14 @@ function createOrUpdateEnt(isUpdate) {
   return (req, res, next) => {
     let info = req.body;
     validate('auth_ent', info);
-    let auth = new Auth(req.company._id, req.user._id);
-    let promise = isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.ENT, info);
-    return promise.then(doc => res.json(doc)).catch(next);
+    let company_id = req.company._id;
+    req.model('auth-pic')
+    .pop({plan: C.TEAMPLAN.PRO, company_id, files: info.enterprise.certificate_pic})
+    .then(pics => {
+      info.enterprise.certificate_pic = pics;
+      let auth = new Auth(company_id, req.user._id);
+      let promise = isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.ENT, info);
+      return promise.then(doc => res.json(doc)).catch(next);
+    });
   };
 }

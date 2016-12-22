@@ -68,6 +68,7 @@ const collections = [
   // payment & plan
   'plan',
   'plan.auth',
+  'plan.auth.pic',
   'plan.company',
   'payment.product',
   'payment.discount',

@@ -195,7 +195,7 @@ POST
     // 实名信息，仅在专业版认证时需要
     realname_ext: {
       idcard: String, // 身份证编码
-      idcard_photo: [Url],
+      idcard_photo: [ObjectId],
     },
   },
   // 团队信息
@@ -232,7 +232,7 @@ POST
     scale: String,
     description: String,
     certificate_type: String, // license, code
-    certificate_pic: [Url],
+    certificate_pic: [ObjectId],
   }
 }
 ```
@@ -253,6 +253,17 @@ POST
 {
   auth_pic: File, // 身份证或企业执照
 }
+```
+
+OUTPUT
+
+```javascript
+[
+  {
+    _id: ObjectId,
+    url: Url,
+  }
+]
 ```
 
 ### PUT /auth

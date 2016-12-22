@@ -178,7 +178,10 @@ const schema = {
             type: 'object',
             properties: {
               idcard: { type: 'string', rules: ['lower', 'trim'] },              // 身份证编码
-              idcard_photo: { type: 'array' },
+              idcard_photo: {
+                type: 'array',
+                items: {$objectId: 1}
+              },
             }
           },
         }
@@ -208,7 +211,10 @@ const schema = {
             type: 'object',
             properties: {
               idcard: { $idcard: 1 },
-              idcard_photo: { type: 'array' },
+              idcard_photo: {
+                type: 'array',
+                items: {$objectId: 1}
+              },
             }
           },
         }
@@ -246,7 +252,10 @@ const schema = {
           scale: { type: 'string' },
           description: { type: 'string' },
           certificate_type: { type: 'string' },
-          certificate_pic: { type: 'array' },
+          certificate_pic: {
+            type: 'array',
+            items: {$objectId: 1}
+          },
         }
       },
     },
@@ -269,7 +278,10 @@ const schema = {
           scale: { type: 'string' },
           description: { type: 'string', minLength: 3 },
           certificate_type: { $enum: ['license', 'code'] },
-          certificate_pic: { type: 'array' },
+          certificate_pic: {
+            type: 'array',
+            items: {$objectId: 1}
+          },
         }
       },
     },

@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
 
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
@@ -51,6 +52,30 @@ export default class PlanAuthModel extends Model {
       doc.company = doc.company_id;
       delete doc.user_id;
       delete doc.company_id;
+      let info = doc.info;
+      const qiniu = this.model('qiniu').bucket('cdn-private');
+      let pics = [];
+      if (info.enterprise && info.enterprise.certificate_pic) {
+        return Promise.all(info.enterprise.certificate_pic.map(file => {
+          return qiniu.makeLink(file.cdn_key).then(link => {
+            pics.push(link);
+          });
+        }))
+        .then(() => {
+          info.enterprise.certificate_pic = pics;
+          return doc;
+        });
+      } else if (info.contact && info.contact.realname_ext) {
+        return Promise.all(info.contact.realname_ext.idcard_photo.map(file => {
+          return qiniu.makeLink(file.cdn_key).then(link => {
+            pics.push(link);
+          });
+        }))
+        .then(() => {
+          info.contact.realname_ext.idcard_photo = pics;
+          return doc;
+        });
+      }
       return doc;
     });
   }

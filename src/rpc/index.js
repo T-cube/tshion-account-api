@@ -6,6 +6,7 @@ import planRoutes from './plan';
 import qrcodeRoutes from './qrcode';
 
 import QrcodeModel from './models/qrcode';
+import PlanAuthModel from './models/plan-auth';
 
 export default (socket, _loader) => {
 
@@ -20,5 +21,6 @@ export default (socket, _loader) => {
 
   // bind loader
   _loader.loadModel('qrcode-model', QrcodeModel);
+  _loader.loadModel('plan-auth', PlanAuthModel);
 
 };
