@@ -80,7 +80,7 @@ api.post('/pending/pay', (req, res, next) => {
       return planOrder.payWithBalance()
       .then(() => res.json({}));
     } else {
-      return Payment.pay(planOrder.order)
+      return planOrder.pay(payment_method)
       .then(doc => {
         if (doc) {
           let {code_url} = doc;

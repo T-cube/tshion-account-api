@@ -67,17 +67,28 @@ export default class Payment {
     });
   }
 
-  createChargeOrder(chargeType, order, payment) {
-    return ChargeOrder.create(chargeType, order, payment);
+  createChargeOrder(chargeType, order, payment_data) {
+    return ChargeOrder.create(chargeType, order, payment_data);
   }
 
-  handlePaySuccess(order, paymentInfo, transactionId) {
-
+  handleWechatPayResponse(response) {
+    let {return_code, result_code} = response;
+    if (return_code == 'SUCCESS' && result_code == 'SUCCESS') {
+      // savePaymentResponse
+      return ChargeOrder.savePaymentResponse(response)
+      .then(order_id => order_id);
+    } else {
+      // query order
+    }
   }
 
-  commitPaySuccess(order, paymentInfo, transactionId) {
-
-  }
+  // handlePaySuccess(order, paymentInfo, transactionId) {
+  //
+  // }
+  //
+  // commitPaySuccess(order, paymentInfo, transactionId) {
+  //
+  // }
 
   payWithBalance(order, transactionId) {
     let {paid_sum, company_id} = order;
@@ -105,6 +116,7 @@ export default class Payment {
           $push: {
             log: {
               amount: -paid_sum,
+              balance: doc.balance - paid_sum,
               order: order._id,
               date_create: new Date(),
             }

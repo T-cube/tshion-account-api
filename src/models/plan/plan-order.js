@@ -4,6 +4,9 @@ import {ApiError} from 'lib/error';
 import Plan from 'models/plan/plan';
 import Payment from 'models/plan/payment';
 
+import ChargeOrder from 'models/plan/charge-order';
+
+
 export default class PlanOrder {
 
   constructor(order) {
@@ -43,19 +46,29 @@ export default class PlanOrder {
     return this.order[key];
   }
 
-  payPendingOrder(company_id) {
-    return db.payment.order.findAndModify({
-      query: {
-        company_id: company_id,
-        status: C.ORDER_STATUS.CREATED,
-      },
-      update: {
-        status: C.ORDER_STATUS.PAYING
-      }
-    })
-    .then(doc => {
-      return doc.value;
-    });
+  pay(payment_method) {
+    let payment_data = {
+      appid: 'wx80bb623*******',
+      mch_id: '1348******',
+      nonce_str: 'uKJZUSzetduXALVN',
+      body: 'heiheihei',
+      detail: '',
+      out_trade_no: 'WX_14821479349944501',
+      total_fee: '100',
+      spbill_create_ip: '110.84.35.141',
+      notify_url: 'http%253A%252F%252Fwxtest.tlifang.com%252Fredirect',
+      trade_type: 'NATIVE',
+      return_code: 'SUCCESS',
+      return_msg: 'OK',
+      sign: '34029ED1B0E5C044ADA5E61FA6BC8CA1',
+      result_code: 'SUCCESS',
+      prepay_id: 'wx20161117103224e888877af80382167652',
+      code_url: 'weixin://wxpay/bizpayurl?pr=XpYtxsN',
+      timestamp: 1479349944,
+      payment_method
+    };
+    return ChargeOrder.create('plan', this.order, payment_data)
+    .then(() => payment_data);
   }
 
   handlePaySuccess(paymentInfo) {
@@ -64,7 +77,7 @@ export default class PlanOrder {
       return this.startTransaction(transactionId)
       .then(() => this.doHandlePaySuccess(paymentInfo, transactionId))
       .then(() => this.commitTransaction(transactionId))
-      .then(() => this.commitHandlePaySuccess(paymentInfo, transactionId))
+      .then(() => this.commitHandlePaySuccess(transactionId))
       .then(() => this.doneTransaction(transactionId));
     });
   }
@@ -74,15 +87,35 @@ export default class PlanOrder {
     let {order} = this;
     return Promise.all([
       new Plan(this.company_id).updatePaidFromOrder(order, transactionId),
-      new Payment().handlePaySuccess(order, paymentInfo, transactionId),
+      // new Payment().handlePaySuccess(order, paymentInfo, transactionId),
+      db.payment.order.update({
+        _id: order._id
+      }, {
+        $set: {
+          status: C.ORDER_STATUS.SUCCEED,
+          payment: {
+            date_paid: new Date()
+          },
+        },
+        $addToSet: {
+          transactions: transactionId
+        }
+      })
     ]);
   }
 
-  commitHandlePaySuccess(paymentInfo, transactionId) {
+  commitHandlePaySuccess(transactionId) {
     let {order} = this;
     return Promise.all([
       new Plan(this.company_id).commitUpdatePaidFromOrder(order, transactionId),
-      new Payment().commitPaySuccess(order, paymentInfo, transactionId),
+      // new Payment().commitPaySuccess(order, paymentInfo, transactionId),
+      db.payment.order.update({
+        _id: order._id
+      }, {
+        $pull: {
+          transactions: transactionId
+        }
+      })
     ]);
   }
 

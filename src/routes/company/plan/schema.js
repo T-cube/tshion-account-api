@@ -20,20 +20,20 @@ const addressSchema = {
   sanitization: {
     type: 'object',
     properties: {
+      country: { type: 'string' },
       province: { type: 'string' },
       city: { type: 'string' },
       district: { type: 'string' },
-      postcode: { type: 'string' },
       address: { type: 'string' },
     }
   },
   validation: {
     type: 'object',
     properties: {
+      country: { type: 'string' },
       province: { type: 'string' },
       city: { type: 'string' },
       district: { type: 'string' },
-      postcode: { type: 'string' },
       address: { type: 'string' },
     }
   },

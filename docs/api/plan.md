@@ -202,10 +202,10 @@ POST
   team: {
     team_name: String,
     location: {
+      country: String,
       province: String,
       city: String,
       district: String,
-      postcode: String,
       address: String,
     },
     industry: {
