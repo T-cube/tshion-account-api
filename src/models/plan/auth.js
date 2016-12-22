@@ -16,7 +16,7 @@ export default class Auth {
     let { plan } = data;
     data.company_id = company_id;
     data.date_apply = new Date();
-    data.status = 'posted';
+    data.status = C.AUTH_STATUS.POSTED;
     return this.checkCreate(plan).then(() => {
       return db.plan.auth.insert(data);
     });
@@ -28,17 +28,20 @@ export default class Auth {
     data.company_id = company_id;
     data.user_id = user_id;
     data.date_apply = new Date();
-    data.status = 'reposted';
+    data.status = C.AUTH_STATUS.REPOSTED;
     return db.plan.auth.update({
       company_id,
-      status: 'rejected'
+      status: C.AUTH_STATUS.REJECTED
     }, {
       $set: data
     });
   }
 
   getAuthStatus() {
-    let { company_id } = this;
+    let { company_id, auth_status } = this;
+    if (auth_status) {
+      return Promise.resolve(auth_status);
+    }
     let plansPaid = _.values(C.TEAMPLAN_PAID);
     return Promise.map(plansPaid, plan => {
       return db.plan.auth.find({company_id, plan}, {info: 0, log: 0})
@@ -60,7 +63,8 @@ export default class Auth {
       if (authed && (authed.plan == C.TEAMPLAN.ENT || (pending && authed.date_apply > pending.date_apply))) {
         pending = null;
       }
-      return {authed, pending};
+      this.auth_status = {authed, pending};
+      return this.auth_status;
     });
   }
 
@@ -80,7 +84,7 @@ export default class Auth {
   checkUpdate(plan) {
     return this.getAuthStatus()
     .then(({pending}) => {
-      if (!pending || pending.status != 'rejected' || plan != pending.plan) {
+      if (!pending || pending.status != C.AUTH_STATUS.EXPIRED || plan != pending.plan) {
         throw new ApiError(400, 'auth_cannot_update');
       }
     });
@@ -106,27 +110,11 @@ export default class Auth {
     let { company_id } = this;
     return db.plan.auth.findOne({
       company_id,
-      status: 'accepted'
+      status: C.AUTH_STATUS.ACCEPTED
     }, {
       plan: 1
     })
     .then(doc => doc && doc.plan);
-  }
-
-  list(options) {
-    let { page, pagesize } = options;
-    let { company_id } = this;
-    let criteria = company_id ? {company_id} : {};
-    return Promise.all([
-      db.plan.auth.count(criteria),
-      db.plan.auth.find(criteria).limit(pagesize).skip(pagesize * (page - 1)),
-    ])
-    .then(([totalRows, list]) => ({
-      page,
-      pagesize,
-      totalRows,
-      list,
-    }));
   }
 
 }

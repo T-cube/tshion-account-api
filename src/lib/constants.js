@@ -262,6 +262,7 @@ let constants = {
     POSTED: 'posted',
     cancelled: 'cancelled',
     REPOSTED: 'reposted',
+    EXPIRED: 'expired',
     ACCEPTED: 'accepted',
     REJECTED: 'rejected',
   },
