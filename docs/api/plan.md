@@ -106,7 +106,15 @@ OUTPUT
 
 ```javascript
 {
-  [TeamPlanPaid]: {
+  authed: {
+    _id: ObjectId,
+    plan: TeamPlanPaid,
+    company_id: ObjectId,
+    user_id: ObjectId,
+    date_apply: Date,
+    status: AuthStatus,
+  },
+  pending: {
     _id: ObjectId,
     plan: TeamPlanPaid,
     company_id: ObjectId,
@@ -114,7 +122,6 @@ OUTPUT
     date_apply: Date,
     status: AuthStatus,
   }
-  ...
 }
 ```
 
@@ -258,7 +265,7 @@ POST // 同 post
 
 ### PUT /auth/status
 
-取消认证
+取消认证，审核通过的认证不能取消
 
 INPUT
 

@@ -239,7 +239,7 @@ const schema = {
         properties: {
           realname: { type: 'string' },
           gender: { type: 'string' },               // Enum:F,M
-          position: { type: 'string' },
+          address: addressSchema.sanitization,
           phone: { type: 'string' },
         }
       },
@@ -265,7 +265,7 @@ const schema = {
         properties: {
           realname: { type: 'string', minLength: 2 },
           gender: { type: 'string', $enum: ENUMS.GENDER },
-          position: { type: 'string' },
+          address: addressSchema.validation,
           phone: { $phone: 1 },
         }
       },

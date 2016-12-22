@@ -33,7 +33,7 @@ export default class Plan {
         // history,
         company_id,
         current,
-        viable: {trial, paid: _.contains(authed, C.TEAMPLAN.ENT) ? paid : authed},
+        viable: {trial, paid: authed == C.TEAMPLAN.ENT ? paid : (authed ? [authed] : [])},
         authed,
         degrade,
       };

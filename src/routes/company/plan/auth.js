@@ -39,14 +39,16 @@ export default api;
 // });
 
 api.get('/status', (req, res, next) => {
-  Auth.getAuthStatus(req.company._id)
+  let company_id = req.company._id;
+  new Auth({company_id}).getAuthStatus()
   .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.get('/history', (req, res, next) => {
   let {page, pagesize} = req.query;
-  Auth.list(req.company._id, {page, pagesize})
+  let company_id = req.company._id;
+  new Auth({company_id}).list(req.company._id, {page, pagesize})
   .then(doc => res.json(doc))
   .catch(next);
 });
@@ -74,13 +76,9 @@ api.put('/status', (req, res, next) => {
   if (status != 'cancelled') {
     throw new ApiError(400, 'invalid_status');
   }
-  Auth.getAuthStatus(req.company._id, plan)
-  .then(info => {
-    if (!info[plan] || 'accepted' == info[plan].status) {
-      throw new ApiError(400, 'invalid_request');
-    }
-    return Auth.updateStatus(info[plan]._id, status);
-  })
+  let company_id = req.company._id;
+  let authModel = new Auth({company_id});
+  return authModel.cancel(plan)
   .then(() => res.json({}))
   .catch(next);
 });
@@ -113,21 +111,12 @@ function checkValid(isUpdate) {
     if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
       throw new ApiError(400, 'invalid_team_plan');
     }
-    let preCriteriaPromise = Auth.getAuthStatus(req.company._id, plan);
+    let company_id = req.company._id;
+    let authModel = new Auth({company_id});
     if (isUpdate) {
-      preCriteriaPromise.then(info => {
-        if (!info[plan] || info[plan].status != 'rejected') {
-          return next(new ApiError(400, 'auth_cannot_update'));
-        }
-        next();
-      });
+      authModel.checkUpdate(plan).then(next).catch(next);
     } else {
-      preCriteriaPromise.then(info => {
-        if (info[plan] && !_.contains(['rejected', 'cancelled'], info[plan].status)) {
-          return next(new ApiError(400, 'auth_posted'));
-        }
-        next();
-      });
+      authModel.checkCreate(plan).then(next).catch(next);
     }
   };
 }
@@ -154,7 +143,7 @@ function createOrUpdatePro(isUpdate) {
           realnameData.status = 'posted';
           return realnameModel.persist(realnameData).then(() => {
             info.contact = user_id;
-            return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
+            return isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.PRO, info, user_id});
           });
         });
       });
@@ -164,7 +153,7 @@ function createOrUpdatePro(isUpdate) {
           throw new ApiError(400, 'empty realname');
         }
         info.contact = user_id;
-        return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
+        return isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.PRO, info, user_id});
       });
     }
     promise.then(doc => res.json(doc)).catch(next);
@@ -176,12 +165,13 @@ function createOrUpdateEnt(isUpdate) {
     let info = req.body;
     validate('auth_ent', info);
     let company_id = req.company._id;
+    let user_id = req.user._id;
     req.model('auth-pic')
-    .pop({plan: C.TEAMPLAN.PRO, company_id, files: info.enterprise.certificate_pic})
+    .pop({plan: C.TEAMPLAN.ENT, company_id, files: info.enterprise.certificate_pic})
     .then(pics => {
       info.enterprise.certificate_pic = _.pluck(pics, 'url');
-      let auth = new Auth(company_id, req.user._id);
-      let promise = isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.ENT, info);
+      let auth = new Auth({company_id});
+      let promise = isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.ENT, info, user_id});
       return promise.then(doc => res.json(doc)).catch(next);
     });
   };
