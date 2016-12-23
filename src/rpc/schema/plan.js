@@ -1,4 +1,4 @@
-import { ENUMS } from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
 import { buildValidator } from 'lib/inspector';
 
 const schema = {
@@ -64,6 +64,7 @@ const schema = {
     sanitization: {
       title: { type: 'string' },
       description: { type: 'string' },
+      order_type: { type: 'array', items: { type: 'string' } },
       criteria: {
         type: 'object',
         properties: {
@@ -93,6 +94,7 @@ const schema = {
     validation: {
       title: { type: 'string' },
       description: { type: 'string' },
+      order_type: { type: 'array', items: { $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl] } },
       criteria: {
         type: 'object',
         someKeys: ['quantity', 'total_fee', 'times'],
@@ -126,6 +128,7 @@ const schema = {
     sanitization: {
       title: { type: 'string' },
       description: { type: 'string' },
+      order_type: { type: 'array', items: { type: 'string' } },
       criteria: {
         type: 'object',
         properties: {
@@ -156,6 +159,7 @@ const schema = {
     validation: {
       title: { type: 'string' },
       description: { type: 'string' },
+      order_type: { type: 'array', items: { $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl] } },
       criteria: {
         type: 'object',
         someKeys: ['quantity', 'total_fee', 'times'],

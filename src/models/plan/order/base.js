@@ -1,5 +1,7 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
+import crypto from 'crypto';
+import moment from 'moment';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -11,6 +13,7 @@ import Plan from '../plan';
 import PaymentDiscount from '../payment-discount';
 import CompanyLevel from 'models/company-level';
 
+export let randomBytes = Promise.promisify(crypto.randomBytes);
 
 export default class BaseOrder {
 
@@ -59,12 +62,18 @@ export default class BaseOrder {
       if (!isValid) {
         throw new ApiError(400, error);
       }
-      order.status = 'created';
-      return Promise.all([
-        this.updateUsedCoupon(),
-        db.payment.order.insert(order)
-      ])
-      .then(doc => doc[1]);
+      randomBytes(length)
+      .then(buffer => {
+        let randomStr = buffer.toString('hex');
+        order.status = 'created';
+        let date = moment();
+        order.order_no = date.format('YYYYMMDDHHmmssSSS') + randomStr;
+        return Promise.all([
+          this.updateUsedCoupon(),
+          db.payment.order.insert(order)
+        ])
+        .then(doc => doc[1]);
+      });
     });
   }
 
