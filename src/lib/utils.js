@@ -355,3 +355,14 @@ export function incId(tb) {
   })
   .then(doc => doc.value && doc.value.id);
 }
+
+export function cleanHtmlTags(content) {
+  if (!content || !_.isString(content)) {
+    return '';
+  }
+  return content
+    .replace(/<(\w+)?\/?[^>]*>/g, ' ')
+    .replace(/\s\s+/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/^\s+/, '');
+}

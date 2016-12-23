@@ -308,6 +308,9 @@ api.put('/preference/reset', (req, res, next) => {
 api.get('/realname', (req, res, next) => {
   new Realname(req.user._id).get()
   .then(doc => {
+    if (!doc) {
+      return res.json(null);
+    }
     const qiniu = req.model('qiniu').bucket('cdn-private');
     return Promise.all(doc.realname_ext.idcard_photo.map(file => {
       return qiniu.makeLink(file);

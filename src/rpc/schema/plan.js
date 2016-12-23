@@ -1,4 +1,4 @@
-import { ENUMS } from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
 import { buildValidator } from 'lib/inspector';
 
 const schema = {
@@ -64,6 +64,7 @@ const schema = {
     sanitization: {
       title: { type: 'string' },
       description: { type: 'string' },
+      order_type: { type: 'array', items: { type: 'string' } },
       criteria: {
         type: 'object',
         properties: {
@@ -93,6 +94,7 @@ const schema = {
     validation: {
       title: { type: 'string' },
       description: { type: 'string' },
+      order_type: { type: 'array', items: { $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl] } },
       criteria: {
         type: 'object',
         someKeys: ['quantity', 'total_fee', 'times'],
@@ -106,7 +108,7 @@ const schema = {
         type: 'object',
         someKeys: ['number', 'rate', 'amount', 'times'],
         properties: {
-          type: { $enum: [] },
+          type: { $enum: ['number', 'rate', 'amount', 'times'] },
           number: { type: 'integer', optional: true, min: 1 },
           rate: { type: 'number', optional: true, min: 0, max: 0.99 },
           amount: { type: 'integer', optional: true, min: 1 },
@@ -126,6 +128,7 @@ const schema = {
     sanitization: {
       title: { type: 'string' },
       description: { type: 'string' },
+      order_type: { type: 'array', items: { type: 'string' } },
       criteria: {
         type: 'object',
         properties: {
@@ -156,6 +159,7 @@ const schema = {
     validation: {
       title: { type: 'string' },
       description: { type: 'string' },
+      order_type: { type: 'array', items: { $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl] } },
       criteria: {
         type: 'object',
         someKeys: ['quantity', 'total_fee', 'times'],
@@ -169,7 +173,7 @@ const schema = {
         type: 'object',
         someKeys: ['number', 'rate', 'amount'],
         properties: {
-          type: { $enum: [] },
+          type: { $enum: ['number', 'rate', 'amount', 'times'] },
           number: { type: 'integer', optional: true, min: 1 },
           rate: { type: 'number', optional: true, min: 0, max: 0.99 },
           amount: { type: 'integer', optional: true, min: 1 },

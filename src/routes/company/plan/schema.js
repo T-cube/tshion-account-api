@@ -163,6 +163,16 @@ const schema = {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
     },
   },
+  cancel: {
+    sanitization: {
+      plan: { type: 'string' },
+      status: { type: 'string' },
+    },
+    validation: {
+      plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
+      status: { $enum: [C.AUTH_STATUS.CANCELLED] },
+    },
+  },
   auth_pro: {
     sanitization: {
       contact: {
@@ -239,7 +249,7 @@ const schema = {
         properties: {
           realname: { type: 'string' },
           gender: { type: 'string' },               // Enum:F,M
-          address: addressSchema.sanitization,
+          position: { type: 'string' },
           phone: { type: 'string' },
         }
       },
@@ -252,6 +262,7 @@ const schema = {
           scale: { type: 'string' },
           description: { type: 'string' },
           certificate_type: { type: 'string' },
+          certificate_number: { type: 'string' },
           certificate_pic: {
             type: 'array',
             items: {$objectId: 1}
@@ -265,7 +276,7 @@ const schema = {
         properties: {
           realname: { type: 'string', minLength: 2 },
           gender: { type: 'string', $enum: ENUMS.GENDER },
-          address: addressSchema.validation,
+          position: { type: 'string' },
           phone: { $phone: 1 },
         }
       },
@@ -278,6 +289,7 @@ const schema = {
           scale: { type: 'string' },
           description: { type: 'string', minLength: 3 },
           certificate_type: { $enum: ['license', 'code'] },
+          certificate_number: { type: 'string' },
           certificate_pic: {
             type: 'array',
             items: {$objectId: 1}

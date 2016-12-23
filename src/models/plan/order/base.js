@@ -1,5 +1,7 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
+import crypto from 'crypto';
+import moment from 'moment';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -11,6 +13,7 @@ import Plan from '../plan';
 import PaymentDiscount from '../payment-discount';
 import CompanyLevel from 'models/company-level';
 
+export let randomBytes = Promise.promisify(crypto.randomBytes);
 
 export default class BaseOrder {
 
@@ -42,7 +45,7 @@ export default class BaseOrder {
   }
 
   setTimes(times) {
-    this.times = times;
+    this.times = this.original_times = times;
   }
 
   withCoupon(coupon) {
@@ -59,12 +62,18 @@ export default class BaseOrder {
       if (!isValid) {
         throw new ApiError(400, error);
       }
-      order.status = 'created';
-      return Promise.all([
-        this.updateUsedCoupon(),
-        db.payment.order.insert(order)
-      ])
-      .then(doc => doc[1]);
+      randomBytes(length)
+      .then(buffer => {
+        let randomStr = buffer.toString('hex');
+        order.status = 'created';
+        let date = moment();
+        order.order_no = date.format('YYYYMMDDHHmmssSSS') + randomStr;
+        return Promise.all([
+          this.updateUsedCoupon(),
+          db.payment.order.insert(order)
+        ])
+        .then(doc => doc[1]);
+      });
     });
   }
 
@@ -100,6 +109,7 @@ export default class BaseOrder {
             products: this.products,
             member_count: this.member_count,
             times: this.times,
+            original_times: this.original_times,
             original_sum: this.original_sum,
             paid_sum: Math.round(this.paid_sum),
             coupon: this.coupon,
@@ -188,7 +198,7 @@ export default class BaseOrder {
         return;
       }
       delete product.discounts;
-      return Product.getDiscount(discounts, {quantity, total_fee: sum})
+      return Discount.getProductDiscount(discounts, {quantity, total_fee: sum, times: this.times})
       .then(discountItem => {
         if (!discountItem) {
           return;
@@ -205,7 +215,7 @@ export default class BaseOrder {
       if (!discounts || !discounts.length) {
         return;
       }
-      return Product.getDiscount(discounts)
+      return Discount.getProductDiscount(discounts)
       .then(discountList => {
         product.discounts = discountList;
       });
@@ -241,6 +251,10 @@ export default class BaseOrder {
       break;
     case 'number':
       product.quantity += discountInfo.number;
+      this.member_count += discountInfo.number;
+      break;
+    case 'times':
+      this.times += discountInfo.times;
       break;
     }
     product.discount = (product.discount || []).concat(discountInfo);

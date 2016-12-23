@@ -104,10 +104,8 @@ api.put('/', checkValid(true), (req, res, next) => {
 });
 
 api.put('/status', (req, res, next) => {
+  validate('cancel', req.body);
   let { plan, status } = req.body;
-  if (status != 'cancelled') {
-    throw new ApiError(400, 'invalid_status');
-  }
   let company_id = req.company._id;
   let authModel = new Auth(company_id);
   return authModel.cancel(plan)
