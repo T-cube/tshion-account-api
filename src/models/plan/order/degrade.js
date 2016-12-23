@@ -48,7 +48,7 @@ export default class DegradeOrder extends Base {
       if (this.plan != C.TEAMPLAN.FREE) {
         if (!_.contains(viable.paid, this.plan)) {
           isValid = false;
-          error.push('plan_not_authed');
+          error.push('plan_not_certified');
         }
         if (this.plan == current.plan && this.member_count == member_count.max) {
           isValid = false;

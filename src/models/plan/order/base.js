@@ -37,40 +37,8 @@ export default class BaseOrder {
     this.member_count = 0;
   }
 
-  init({plan, member_count, coupon, times}) {
-    if (coupon) {
-      this.withCoupon(coupon);
-    }
-    if (times) {
-      this.setTimes(times);
-    }
-    this.member_count = member_count || 0;
-    let getPlan = plan
-      ? Promise.resolve(plan)
-      : this.getPlanStatus().then(({current}) => {
-        if (current && C.TEAMPLAN.FREE != current.plan && current.type != 'trial') {
-          return current.plan;
-        }
-      });
-    return getPlan.then(plan => {
-      if (!plan) {
-        return;
-      }
-      this.plan = plan;
-      return Product.getByPlan(plan).then(planProducts => {
-        let products = [];
-        planProducts.forEach(product => {
-          if (product.product_no == 'P0002') {
-            product.quantity = member_count || 0;
-          } else if (product.product_no == 'P0001') {
-            product.quantity = 1;
-          }
-          product.sum = product.original_price * product.quantity;
-          products.push(product);
-        });
-        this.products = products;
-      });
-    });
+  init() {
+    return Promise.reject();
   }
 
   setTimes(times) {

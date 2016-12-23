@@ -46,8 +46,8 @@ api.post('/trial', (req, res, next) => {
   let planModel = new Plan(req.company._id);
   planModel.getStatus()
   .then(status => {
-    // if (!_.contains(status.authed, plan)) {
-    //   throw new ApiError(400, 'team_not_authed');
+    // if (!_.contains(status.certified, plan)) {
+    //   throw new ApiError(400, 'team_not_certified');
     // }
     if (!_.contains(status.viable.trial, plan)) {
       throw new ApiError(400, 'trial_exists');

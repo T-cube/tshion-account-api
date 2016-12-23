@@ -77,7 +77,7 @@ export default class UpgradeOrder extends Base {
       let isValid = true;
       if (!_.contains(viable.paid, this.plan)) {
         isValid = false;
-        error.push('plan_not_authed');
+        error.push('plan_not_certified');
       }
       if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || times <= 0) {
         isValid = false;

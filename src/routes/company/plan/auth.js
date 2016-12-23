@@ -56,8 +56,10 @@ api.get('/history', (req, res, next) => {
     db.plan.auth.count(criteria),
     db.plan.auth.find(criteria, {
       log: 0,
-      'info.contact': 0,
-    }).limit(pagesize).skip(pagesize * (page - 1)),
+      'data.info.contact': 0,
+    })
+    .limit(pagesize)
+    .skip(pagesize * (page - 1)),
   ])
   .then(([totalrows, list]) => {
     res.json({
@@ -66,6 +68,19 @@ api.get('/history', (req, res, next) => {
       totalrows,
       list,
     });
+  })
+  .catch(next);
+});
+
+api.get('/item/:authId', (req, res, next) => {
+  let company_id = req.company._id;
+  db.plan.auth.findOne({
+    company_id,
+    _id: ObjectId(req.params.authId)
+  })
+  .then(doc => {
+    doc.info = doc.data.pop();
+    res.json(doc);
   })
   .catch(next);
 });
@@ -150,7 +165,7 @@ function createOrUpdatePro(isUpdate) {
     if (realnameData) {
       promise = promise.then(realname => {
         if (realname) {
-          throw new ApiError(400, 'user realname authed');
+          throw new ApiError(400, 'user realname certified');
         }
         let postPicIds = realnameData.realname_ext.idcard_photo;
         return req.model('auth-pic')
@@ -160,7 +175,7 @@ function createOrUpdatePro(isUpdate) {
           realnameData.status = 'posted';
           return realnameModel.persist(realnameData).then(() => {
             info.contact = user_id;
-            return isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.PRO, info, user_id});
+            return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, {info, user_id});
           });
         });
       });
@@ -170,7 +185,7 @@ function createOrUpdatePro(isUpdate) {
           throw new ApiError(400, 'empty realname');
         }
         info.contact = user_id;
-        return isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.PRO, info, user_id});
+        return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, {info, user_id});
       });
     }
     promise.then(doc => res.json(doc)).catch(next);
@@ -188,7 +203,7 @@ function createOrUpdateEnt(isUpdate) {
     .then(pics => {
       info.enterprise.certificate_pic = _.pluck(pics, 'url');
       let auth = new Auth(company_id);
-      let promise = isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.ENT, info, user_id});
+      let promise = isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.ENT, {info, user_id});
       return promise.then(doc => res.json(doc)).catch(next);
     });
   };

@@ -69,6 +69,7 @@ const schema = {
         properties: {
           quantity: { type: 'integer', optional: true },
           total_fee: { type: 'integer', optional: true },
+          times: { type: 'integer', optional: true },
         }
       },
       discount: {
@@ -78,13 +79,14 @@ const schema = {
           number: { type: 'integer', optional: true },
           rate: { type: 'number', optional: true },
           amount: { type: 'integer', optional: true },
+          times: { type: 'integer', optional: true },
         }
       },
       period: {
         type: 'object',
         properties: {
           date_start: { type: 'date' },
-          data_end: { type: 'date' },
+          date_end: { type: 'date' },
         }
       }
     },
@@ -93,27 +95,29 @@ const schema = {
       description: { type: 'string' },
       criteria: {
         type: 'object',
-        someKeys: ['quantity', 'total_fee'],
+        someKeys: ['quantity', 'total_fee', 'times'],
         properties: {
           quantity: { type: 'integer', optional: true, min: 1 },
           total_fee: { type: 'integer', optional: true, min: 1 },
+          times: { type: 'integer', optional: true, min: 1 },
         }
       },
       discount: {
         type: 'object',
-        someKeys: ['number', 'rate', 'amount'],
+        someKeys: ['number', 'rate', 'amount', 'times'],
         properties: {
           type: { $enum: [] },
           number: { type: 'integer', optional: true, min: 1 },
           rate: { type: 'number', optional: true, min: 0, max: 0.99 },
           amount: { type: 'integer', optional: true, min: 1 },
+          times: { type: 'integer', optional: true, min: 1 },
         }
       },
       period: {
         type: 'object',
         properties: {
           date_start: { type: 'date' },
-          data_end: { type: 'date' },
+          date_end: { type: 'date' },
         }
       }
     },
@@ -127,6 +131,7 @@ const schema = {
         properties: {
           quantity: { type: 'integer', optional: true },
           total_fee: { type: 'integer', optional: true },
+          times: { type: 'integer', optional: true },
         }
       },
       discount: {
@@ -142,7 +147,7 @@ const schema = {
         type: 'object',
         properties: {
           date_start: { type: 'date' },
-          data_end: { type: 'date' },
+          date_end: { type: 'date' },
         }
       },
       stock_total: { type: 'integer' },
@@ -153,10 +158,11 @@ const schema = {
       description: { type: 'string' },
       criteria: {
         type: 'object',
-        someKeys: ['quantity', 'total_fee'],
+        someKeys: ['quantity', 'total_fee', 'times'],
         properties: {
           quantity: { type: 'integer', optional: true, min: 1 },
           total_fee: { type: 'integer', optional: true, min: 1 },
+          times: { type: 'integer', optional: true, min: 1 },
         }
       },
       discount: {
@@ -173,7 +179,7 @@ const schema = {
         type: 'object',
         properties: {
           date_start: { type: 'date' },
-          data_end: { type: 'date' },
+          date_end: { type: 'date' },
         }
       },
       stock_total: { type: 'integer' },

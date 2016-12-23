@@ -79,7 +79,7 @@ OUTPUT
     trial: [TeamPlanPaid], // 可试用的（没有试用和购买）
     paid: [TeamPlanPaid], // 可购买的（认证过的，企业的认证覆盖专业版）
   },
-  authed: TeamPlanPaid, // 已认证的
+  certified: TeamPlanPaid, // 已认证的
 }
 ```
 
@@ -106,14 +106,7 @@ OUTPUT
 
 ```javascript
 {
-  authed: {
-    _id: ObjectId,
-    plan: TeamPlanPaid,
-    company_id: ObjectId,
-    user_id: ObjectId,
-    date_apply: Date,
-    status: AuthStatus,
-  },
+  certified: TeamPlanPaid,
   pending: {
     _id: ObjectId,
     plan: TeamPlanPaid,
@@ -151,6 +144,23 @@ OUTPUT
   page: Int,
   pagesize: Int,
   totalRows: Int,
+}
+```
+
+### GET /auth/item/authId
+
+OUTPUT
+
+```javascript
+{
+  _id: ObjectId,
+  plan: TeamPlanPaid,
+  company_id: ObjectId,
+  user_id: ObjectId,
+  date_apply: Date,
+  status: AuthStatus,
+  info,
+  data: []
 }
 ```
 

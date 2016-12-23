@@ -20,7 +20,7 @@ export default class RpcRoute {
   }
 
   route(uri, callback) {
-    this.socket.on(`${this.prefix}${uri}`, (query) => {
+    this.socket.on(`${this.prefix}${uri}`, (query = {}) => {
       if (process.env.NODE_ENV != 'production') {
         console.log(`--- rpc call ${this.prefix}${uri}, query:`, query);
       }
