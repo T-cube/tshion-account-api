@@ -42,7 +42,7 @@ export default class BaseOrder {
   }
 
   setTimes(times) {
-    this.times = times;
+    this.times = this.original_times = times;
   }
 
   withCoupon(coupon) {
@@ -100,6 +100,7 @@ export default class BaseOrder {
             products: this.products,
             member_count: this.member_count,
             times: this.times,
+            original_times: this.original_times,
             original_sum: this.original_sum,
             paid_sum: Math.round(this.paid_sum),
             coupon: this.coupon,
@@ -188,7 +189,7 @@ export default class BaseOrder {
         return;
       }
       delete product.discounts;
-      return Discount.getProductDiscount(discounts, {quantity, total_fee: sum})
+      return Discount.getProductDiscount(discounts, {quantity, total_fee: sum, times: this.times})
       .then(discountItem => {
         if (!discountItem) {
           return;
@@ -241,6 +242,10 @@ export default class BaseOrder {
       break;
     case 'number':
       product.quantity += discountInfo.number;
+      this.member_count += discountInfo.number;
+      break;
+    case 'times':
+      this.times += discountInfo.times;
       break;
     }
     product.discount = (product.discount || []).concat(discountInfo);

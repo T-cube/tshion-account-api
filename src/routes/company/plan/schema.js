@@ -262,6 +262,7 @@ const schema = {
           scale: { type: 'string' },
           description: { type: 'string' },
           certificate_type: { type: 'string' },
+          certificate_number: { type: 'string' },
           certificate_pic: {
             type: 'array',
             items: {$objectId: 1}
@@ -288,6 +289,7 @@ const schema = {
           scale: { type: 'string' },
           description: { type: 'string', minLength: 3 },
           certificate_type: { $enum: ['license', 'code'] },
+          certificate_number: { type: 'string' },
           certificate_pic: {
             type: 'array',
             items: {$objectId: 1}

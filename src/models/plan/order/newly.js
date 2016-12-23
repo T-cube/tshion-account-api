@@ -32,7 +32,7 @@ export default class NewlyOrder extends Base {
       let products = [];
       planProducts.forEach(product => {
         if (product.product_no == 'P0002') {
-          product.quantity = member_count || 0;
+          product.original_quantity = product.quantity = member_count || 0;
         } else if (product.product_no == 'P0001') {
           product.quantity = 1;
         }
