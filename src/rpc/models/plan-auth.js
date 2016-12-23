@@ -15,7 +15,7 @@ export default class PlanAuthModel extends Model {
   fetchList(props) {
     let { page, pagesize, criteria } = props;
     return this.db.plan.auth.find(criteria, {
-      info: 0
+      'data': 0
     })
     .skip(page * pagesize)
     .limit(pagesize)
@@ -53,7 +53,7 @@ export default class PlanAuthModel extends Model {
       doc.company = doc.company_id;
       delete doc.user_id;
       delete doc.company_id;
-      let info = doc.info;
+      let info = doc.info = doc.data.pop();
       const qiniu = this.model('qiniu').bucket('cdn-private');
       if (info.enterprise && info.enterprise.certificate_pic) {
         return Promise.map(info.enterprise.certificate_pic, file => {
