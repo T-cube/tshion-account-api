@@ -84,7 +84,7 @@ const schema = {
         type: 'object',
         properties: {
           date_start: { type: 'date' },
-          data_end: { type: 'date' },
+          date_end: { type: 'date' },
         }
       }
     },
@@ -113,7 +113,7 @@ const schema = {
         type: 'object',
         properties: {
           date_start: { type: 'date' },
-          data_end: { type: 'date' },
+          date_end: { type: 'date' },
         }
       }
     },
@@ -142,7 +142,7 @@ const schema = {
         type: 'object',
         properties: {
           date_start: { type: 'date' },
-          data_end: { type: 'date' },
+          date_end: { type: 'date' },
         }
       },
       stock_total: { type: 'integer' },
@@ -173,7 +173,7 @@ const schema = {
         type: 'object',
         properties: {
           date_start: { type: 'date' },
-          data_end: { type: 'date' },
+          date_end: { type: 'date' },
         }
       },
       stock_total: { type: 'integer' },

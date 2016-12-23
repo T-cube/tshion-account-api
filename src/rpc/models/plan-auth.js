@@ -2,6 +2,7 @@ import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
+import C from 'lib/constants';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
@@ -76,9 +77,7 @@ export default class PlanAuthModel extends Model {
   }
 
   audit({auth_id, status, comment, operator_id}) {
-    return this.db.plan.auth.update({
-      _id: auth_id
-    }, {
+    let update = {
       $set: {
         status,
       },
@@ -89,9 +88,49 @@ export default class PlanAuthModel extends Model {
           comment,
           operator_id,
           creator: 'cs',
+          date_create: new Date()
         }
       }
-    });
+    };
+    if (status == C.AUTH_STATUS.ACCEPTED) {
+      return this.db.plan.auth.findAndModify({
+        query: {_id: auth_id},
+        update,
+      })
+      .then(doc => {
+        if (doc.value) {
+          let { company_id } = doc.value;
+          return Promise.all([
+            this.db.plan.company.update({
+              _id: company_id
+            }, {
+              $set: {
+                certified: {
+                  plan: doc.value.plan,
+                  date: new Date()
+                }
+              }
+            }),
+            this.db.plan.auth.update({
+              company_id,
+              _id: {$ne: auth_id},
+              status: {
+                $in: [C.AUTH_STATUS.REJECTED, C.AUTH_STATUS.ACCEPTED]
+              }
+            }, {
+              $set: {
+                status: C.AUTH_STATUS.EXPIRED
+              }
+            }, {
+              multi: true
+            })
+          ]);
+        }
+      });
+    }
+    return this.db.plan.auth.update({
+      _id: auth_id
+    }, update);
   }
 
 }

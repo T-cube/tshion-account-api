@@ -260,7 +260,7 @@ let constants = {
   },
   AUTH_STATUS: {
     POSTED: 'posted',
-    cancelled: 'cancelled',
+    CANCELLED: 'cancelled',
     REPOSTED: 'reposted',
     EXPIRED: 'expired',
     ACCEPTED: 'accepted',
@@ -277,7 +277,7 @@ let constants = {
     CREATED: 'created',
     PAYING: 'paying',
     EXPIRED: 'expired',
-    CANCELED: 'cancelled',
+    CANCELLED: 'cancelled',
     SUCCEED: 'succeed'
   },
   CHARGE_TYPE: {

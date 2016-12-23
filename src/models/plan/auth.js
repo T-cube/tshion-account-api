@@ -11,72 +11,69 @@ export default class Auth {
     this.company_id = company_id;
   }
 
-  create(data) {
+  create(plan, data) {
     let { company_id } = this;
-    let { plan } = data;
-    data.company_id = company_id;
-    data.date_apply = new Date();
-    data.status = C.AUTH_STATUS.POSTED;
-    return this.checkCreate(plan).then(() => {
-      return db.plan.auth.insert(data);
+    data.date_create = new Date();
+    return this.checkCreate(plan)
+    .then(() => this.getAuthStatus())
+    .then(({pending}) => {
+      return Promise.all([
+        db.plan.auth.insert({
+          company_id,
+          plan,
+          status: C.AUTH_STATUS.POSTED,
+          data: [data],
+          date_apply: new Date(),
+        }),
+        pending && db.plan.auth.update({
+          _id: pending._id
+        }, {
+          $set: {status: C.AUTH_STATUS.EXPIRED}
+        })
+      ])
+      .then(doc => doc[0]);
     });
   }
 
-  update(info) {
-    let { company_id, user_id } = this;
-    let data = {info};
-    data.company_id = company_id;
-    data.user_id = user_id;
-    data.date_apply = new Date();
-    data.status = C.AUTH_STATUS.REPOSTED;
+  update(data) {
+    let { company_id } = this;
+    data.date_create = new Date();
     return db.plan.auth.update({
       company_id,
       status: C.AUTH_STATUS.REJECTED
     }, {
-      $set: data
+      $set: {status: C.AUTH_STATUS.REPOSTED},
+      $push: {data}
     });
   }
 
   getAuthStatus() {
-    let { company_id, auth_status } = this;
+    let { auth_status } = this;
     if (auth_status) {
       return Promise.resolve(auth_status);
     }
-    let plansPaid = _.values(C.TEAMPLAN_PAID);
-    return Promise.map(plansPaid, plan => {
-      return db.plan.auth.find({company_id, plan}, {info: 0, log: 0})
-      .sort({date_apply: -1})
-      .limit(1)
-      .then(doc => doc[0]);
-    })
-    .then(list => {
-      list = _.filter(list);
-      let authed = _.find(list, item => item.status == C.AUTH_STATUS.ACCEPTED);
-      let pending =  _.find(list, item => _.contains(
-        [
-          C.AUTH_STATUS.POSTED,
-          C.AUTH_STATUS.REPOSTED,
-          C.AUTH_STATUS.REJECTED,
-        ],
-        item.status
-      ));
-      if (authed && (authed.plan == C.TEAMPLAN.ENT || (pending && authed.date_apply > pending.date_apply))) {
+    return Promise.all([
+      this.getCertified(),
+      this.getPendingAuth(),
+    ])
+    .then(([certified, pending]) => {
+      if (certified && (certified.plan == C.TEAMPLAN.ENT || (pending && certified.date > pending.date_apply))) {
         pending = null;
       }
-      this.auth_status = {authed, pending};
+      this.auth_status = {certified: certified.plan, pending};
       return this.auth_status;
     });
   }
 
   checkCreate(plan) {
     return this.getAuthStatus()
-    .then(({authed, pending}) => {
-      if ((authed && authed.plan == plan)
+    .then(({certified, pending}) => {
+      if ((certified == plan)
         || (pending && pending.status != C.AUTH_STATUS.REJECTED)) {
         throw new ApiError(400, 'auth_exists');
       }
-      if (authed && authed.plan == C.TEAMPLAN.ENT) {
-        throw new ApiError(400, 'ent_authed');
+      if (certified == C.TEAMPLAN.ENT) {
+        throw new ApiError(400, 'ent_certified');
       }
     });
   }
@@ -84,7 +81,7 @@ export default class Auth {
   checkUpdate(plan) {
     return this.getAuthStatus()
     .then(({pending}) => {
-      if (!pending || pending.status != C.AUTH_STATUS.EXPIRED || plan != pending.plan) {
+      if (!pending || pending.status != C.AUTH_STATUS.REJECTED || plan != pending.plan) {
         throw new ApiError(400, 'auth_cannot_update');
       }
     });
@@ -100,21 +97,42 @@ export default class Auth {
         _id: pending._id
       }, {
         $set: {
-          status: C.PLAN_STATUS.CANCELED
+          status: C.AUTH_STATUS.CANCELLED
         }
       });
     });
   }
 
-  getAuthedPlan() {
+  getCertified() {
     let { company_id } = this;
-    return db.plan.auth.findOne({
-      company_id,
-      status: C.AUTH_STATUS.ACCEPTED
+    return db.plan.company.findOne({
+      _id: company_id,
     }, {
-      plan: 1
+      certified: 1
     })
-    .then(doc => doc && doc.plan);
+    .then(doc => {
+      return doc && doc.certified;
+    });
+  }
+
+  getPendingAuth() {
+    let { company_id } =this;
+    return db.plan.auth.find({
+      company_id,
+      status: {
+        $in: [
+          C.AUTH_STATUS.POSTED,
+          C.AUTH_STATUS.REPOSTED,
+          C.AUTH_STATUS.REJECTED,
+        ]
+      }
+    }, {
+      info: 0,
+      log: 0
+    })
+    .sort({date_apply: -1})
+    .limit(1)
+    .then(doc => doc[0]);
   }
 
 }

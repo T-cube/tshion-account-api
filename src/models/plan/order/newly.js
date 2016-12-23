@@ -53,7 +53,7 @@ export default class NewlyOrder extends Base {
       let isValid = true;
       if (!_.contains(viable.paid, this.plan)) {
         isValid = false;
-        error.push('plan_not_authed');
+        error.push('plan_not_certified');
       }
       if (current && (current.type != 'trial') && current.plan != C.TEAMPLAN.FREE) {
         isValid = false;

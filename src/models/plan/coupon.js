@@ -20,7 +20,7 @@ export default class Coupon {
       return db.payment.coupon.find({
         _id: {$in: coupon.list},
         'period.date_start': {$lt: new Date()},
-        'period.data_end': {$gte: new Date()},
+        'period.date_end': {$gte: new Date()},
       });
     });
   }
@@ -34,7 +34,7 @@ export default class Coupon {
       db.payment.coupon.findOne({
         _id: couponId,
         'period.date_start': {$lt: new Date()},
-        'period.data_end': {$gte: new Date()},
+        'period.date_end': {$gte: new Date()},
       })
     ])
     .then(doc => doc[0] && doc[1]);
