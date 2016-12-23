@@ -95,7 +95,7 @@ const schema = {
       description: { type: 'string' },
       criteria: {
         type: 'object',
-        someKeys: ['quantity', 'total_fee'],
+        someKeys: ['quantity', 'total_fee', 'times'],
         properties: {
           quantity: { type: 'integer', optional: true, min: 1 },
           total_fee: { type: 'integer', optional: true, min: 1 },
@@ -131,6 +131,7 @@ const schema = {
         properties: {
           quantity: { type: 'integer', optional: true },
           total_fee: { type: 'integer', optional: true },
+          times: { type: 'integer', optional: true },
         }
       },
       discount: {
@@ -157,10 +158,11 @@ const schema = {
       description: { type: 'string' },
       criteria: {
         type: 'object',
-        someKeys: ['quantity', 'total_fee'],
+        someKeys: ['quantity', 'total_fee', 'times'],
         properties: {
           quantity: { type: 'integer', optional: true, min: 1 },
           total_fee: { type: 'integer', optional: true, min: 1 },
+          times: { type: 'integer', optional: true, min: 1 },
         }
       },
       discount: {
