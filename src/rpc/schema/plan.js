@@ -106,7 +106,7 @@ const schema = {
         type: 'object',
         someKeys: ['number', 'rate', 'amount', 'times'],
         properties: {
-          type: { $enum: [] },
+          type: { $enum: ['number', 'rate', 'amount', 'times'] },
           number: { type: 'integer', optional: true, min: 1 },
           rate: { type: 'number', optional: true, min: 0, max: 0.99 },
           amount: { type: 'integer', optional: true, min: 1 },
@@ -169,7 +169,7 @@ const schema = {
         type: 'object',
         someKeys: ['number', 'rate', 'amount'],
         properties: {
-          type: { $enum: [] },
+          type: { $enum: ['number', 'rate', 'amount', 'times'] },
           number: { type: 'integer', optional: true, min: 1 },
           rate: { type: 'number', optional: true, min: 0, max: 0.99 },
           amount: { type: 'integer', optional: true, min: 1 },

@@ -17,6 +17,7 @@ program
   .command('plan', 'init plan')
   .command('product', 'init product')
   .command('preference', 'reset preference')
+  .command('announcement', 'update announcement description')
   .parse(process.argv);
 
 console.log('TLifang API Command Line Tool');

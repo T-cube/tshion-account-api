@@ -188,7 +188,7 @@ export default class BaseOrder {
         return;
       }
       delete product.discounts;
-      return Product.getDiscount(discounts, {quantity, total_fee: sum})
+      return Discount.getProductDiscount(discounts, {quantity, total_fee: sum})
       .then(discountItem => {
         if (!discountItem) {
           return;
@@ -205,7 +205,7 @@ export default class BaseOrder {
       if (!discounts || !discounts.length) {
         return;
       }
-      return Product.getDiscount(discounts)
+      return Discount.getProductDiscount(discounts)
       .then(discountList => {
         product.discounts = discountList;
       });
