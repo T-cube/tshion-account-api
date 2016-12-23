@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import config from 'config';
+import moment from 'moment';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
@@ -14,7 +15,7 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
-  let { keyword, sort, order, status, type, page, pagesize, is_expired, p_id, is_loop } = req.query;
+  let { keyword, sort, order, status, type, page, pagesize, is_expired, p_id, is_loop, date } = req.query;
   page = parseInt(page) || 1;
   pagesize = parseInt(pagesize);
   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
@@ -73,6 +74,17 @@ api.get('/', (req, res, next) => {
         $ne: null
       }
     }];
+  }
+  if (date) {
+    date = moment(date, 'YYYY-MM-DD');
+    if (date.isValid()) {
+      condition['date_due'] = {
+        $gt: date.startOf('day').toDate()
+      };
+      condition['date_start'] = {
+        $lt: date.add(1, 'day').startOf('day').toDate()
+      };
+    }
   }
   let sortBy = { status: -1, date_update: -1 };
   if (_.contains(['date_create', 'date_update', 'priority'], sort)) {

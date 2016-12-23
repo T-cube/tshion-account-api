@@ -155,9 +155,7 @@ function getAnnouncementList(req, condition) {
       data.page = page;
       data.pagesize = pagesize;
     }),
-    db.announcement.find(condition, {
-      content: 0
-    })
+    db.announcement.find(condition)
     .skip((page - 1) * pagesize)
     .limit(pagesize)
     .sort({
@@ -169,7 +167,11 @@ function getAnnouncementList(req, condition) {
         if (announcement.from.department) {
           announcement.from.department = structure.findNodeById(announcement.from.department);
         }
-        announcement.description = announcement.content.length > 100 ? (announcement.content.substr(0, 100) + '...') : announcement.content.substr(0, 100);
+        announcement.description = announcement.content
+          ? (announcement.content.length > 100
+            ? (announcement.content.substr(0, 100) + '...')
+            : announcement.content.substr(0, 100))
+          : '';
       });
       return fetchCompanyMemberInfo(req.company, announcements, 'from.creator', 'to.member');
     })
