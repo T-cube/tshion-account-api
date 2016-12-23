@@ -65,7 +65,7 @@ OUTPUT
   //     date_end: Date,
   //   }
   // ],
-  _id: ObjectId, // company_id
+  company_id: ObjectId,
   current: {
     _id: ObjectId,
     type: String, // paid trial
@@ -76,10 +76,10 @@ OUTPUT
     date_end: Date,
   },
   viable: {
-    trial: [TeamPlanPaid],
-    paid: [TeamPlanPaid],
+    trial: [TeamPlanPaid], // 可试用的（没有试用和购买）
+    paid: [TeamPlanPaid], // 可购买的（认证过的，企业的认证覆盖专业版）
   },
-  authed: [TeamPlanPaid],
+  authed: TeamPlanPaid, // 已认证的
 }
 ```
 
@@ -106,7 +106,15 @@ OUTPUT
 
 ```javascript
 {
-  [TeamPlanPaid]: {
+  authed: {
+    _id: ObjectId,
+    plan: TeamPlanPaid,
+    company_id: ObjectId,
+    user_id: ObjectId,
+    date_apply: Date,
+    status: AuthStatus,
+  },
+  pending: {
     _id: ObjectId,
     plan: TeamPlanPaid,
     company_id: ObjectId,
@@ -114,7 +122,6 @@ OUTPUT
     date_apply: Date,
     status: AuthStatus,
   }
-  ...
 }
 ```
 
@@ -144,23 +151,6 @@ OUTPUT
   page: Int,
   pagesize: Int,
   totalRows: Int,
-}
-```
-
-
-### GET /auth/realname
-
-OUTPUT
-
-```javascript
-{
-  realname: String,
-  position: String,
-  phone: String,
-  address: String,
-  realname_ext: {
-    idcard: String,
-  }
 }
 ```
 
@@ -195,17 +185,17 @@ POST
     // 实名信息，仅在专业版认证时需要
     realname_ext: {
       idcard: String, // 身份证编码
-      idcard_photo: [Url],
+      idcard_photo: [ObjectId],
     },
   },
   // 团队信息
   team: {
     team_name: String,
     location: {
+      country: String,
       province: String,
       city: String,
       district: String,
-      postcode: String,
       address: String,
     },
     industry: {
@@ -232,7 +222,7 @@ POST
     scale: String,
     description: String,
     certificate_type: String, // license, code
-    certificate_pic: [Url],
+    certificate_pic: [ObjectId],
   }
 }
 ```
@@ -255,6 +245,17 @@ POST
 }
 ```
 
+OUTPUT
+
+```javascript
+[
+  {
+    _id: ObjectId,
+    url: Url,
+  }
+]
+```
+
 ### PUT /auth
 
 更新认证
@@ -264,7 +265,7 @@ POST // 同 post
 
 ### PUT /auth/status
 
-取消认证
+取消认证，审核通过的认证不能取消
 
 INPUT
 

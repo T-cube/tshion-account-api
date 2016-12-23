@@ -23,6 +23,7 @@ if (program.init) {
     return db.payment.product.insert([
       {
         title: '专业版',
+        description: '',
         plan: C.TEAMPLAN.PRO,
         product_no: C.PRODUCT_NO.PLAN,
         original_price: '9900',
@@ -36,6 +37,7 @@ if (program.init) {
       },
       {
         title: '企业版',
+        description: '',
         plan: C.TEAMPLAN.ENT,
         product_no: C.PRODUCT_NO.PLAN,
         original_price: '19900',
@@ -49,6 +51,7 @@ if (program.init) {
       },
       {
         title: '专业版人数续费',
+        description: '',
         plan: C.TEAMPLAN.PRO,
         product_no: C.PRODUCT_NO.MEMBER,
         original_price: '990',
@@ -62,6 +65,7 @@ if (program.init) {
       },
       {
         title: '企业版人数续费',
+        description: '',
         plan: C.TEAMPLAN.ENT,
         product_no: C.PRODUCT_NO.MEMBER,
         original_price: '1990',

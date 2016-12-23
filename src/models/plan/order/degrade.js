@@ -34,21 +34,21 @@ export default class DegradeOrder extends Base {
       this.getLimits(),
       this.getTimes(),
     ])
-    .then(([{current, authed}, {member_count}, times]) => {
+    .then(([{current, viable}, {member_count}, times]) => {
       let error = [];
       let isValid = true;
       if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || times <= 0) {
         isValid = false;
         error.push('invalid_plan_status');
       }
+      if (this.member_count < member_count.min || this.member_count > member_count.max) {
+        isValid = false;
+        error.push('invalid_member_count');
+      }
       if (this.plan != C.TEAMPLAN.FREE) {
-        if (!_.contains(authed, this.plan)) {
+        if (!_.contains(viable.paid, this.plan)) {
           isValid = false;
           error.push('plan_not_authed');
-        }
-        if (this.member_count < member_count.min || this.member_count > member_count.max) {
-          isValid = false;
-          error.push('invalid_member_count');
         }
         if (this.plan == current.plan && this.member_count == member_count.max) {
           isValid = false;
@@ -71,13 +71,22 @@ export default class DegradeOrder extends Base {
     return this.getCompanyLevelStatus()
     .then(companyLevelStatus => {
       let {setting, planInfo, levelInfo} = companyLevelStatus;
-      let minMember = levelInfo.member.count - setting.default_member;
-      this.limits = {
-        member_count: {
-          min: minMember > 0 ? minMember : 0,
-          max: planInfo.member_count || 0,
-        }
-      };
+      if (this.plan == C.TEAMPLAN.FREE) {
+        this.limits = {
+          member_count: {
+            min: 1,
+            max: setting.default_member,
+          }
+        };
+      } else {
+        let minMember = levelInfo.member.count - setting.default_member;
+        this.limits = {
+          member_count: {
+            min: minMember > 0 ? minMember : 0,
+            max: planInfo.member_count || 0,
+          }
+        };
+      }
       return this.limits;
     });
   }

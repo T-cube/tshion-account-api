@@ -9,9 +9,8 @@ import PlanAuthModel from '../models/plan-auth';
 const route = RpcRoute.router();
 export default route;
 
-const planAuthModel = new PlanAuthModel();
 
-route.on('/list', (query) => {
+route.on('/list', (query, loader) => {
   let criteria = {};
   let { status, plan, keyword, page, pagesize } = query;
   if (status) {
@@ -26,15 +25,15 @@ route.on('/list', (query) => {
       $regex: strToReg(keyword, 'i')
     };
   }
-  return planAuthModel.page({criteria, page, pagesize});
+  return loader.model('plan-auth').page({criteria, page, pagesize});
 });
 
-route.on('/detail', (query) => {
+route.on('/detail', (query, loader) => {
   let { auth_id } = query;
   if (!auth_id || !ObjectId.isValid(auth_id)) {
     throw new ApiError(400, 'invalid auth_id');
   }
-  return planAuthModel.fetchDetail(ObjectId(auth_id))
+  return loader.model('plan-auth').fetchDetail(ObjectId(auth_id))
   .then(info => {
     if (!info) {
       throw new ApiError(404);
@@ -43,7 +42,7 @@ route.on('/detail', (query) => {
   });
 });
 
-route.on('/audit', (query) => {
+route.on('/audit', (query, loader) => {
   validate('plan_audit', query);
-  return planAuthModel.audit(query).then(() => ({ok: 1}));
+  return loader.model('plan-auth').audit(query).then(() => ({ok: 1}));
 });

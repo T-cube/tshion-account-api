@@ -11,6 +11,7 @@ import { oauthCheck } from 'lib/middleware';
 import { upload, saveCdn } from 'lib/upload';
 import { comparePassword, hashPassword, maskEmail, maskMobile } from 'lib/utils';
 import UserLevel from 'models/user-level';
+import Realname from 'models/plan/realname';
 
 import { validate } from './schema';
 
@@ -301,6 +302,21 @@ api.put('/preference/reset', (req, res, next) => {
   validate('preference_reset', data);
   req.model('preference').reset(req.user._id, data.type)
   .then(() => res.json({}))
+  .catch(next);
+});
+
+api.get('/realname', (req, res, next) => {
+  new Realname(req.user._id).get()
+  .then(doc => {
+    const qiniu = req.model('qiniu').bucket('cdn-private');
+    return Promise.all(doc.realname_ext.idcard_photo.map(file => {
+      return qiniu.makeLink(file);
+    }))
+    .then(pics => {
+      doc.realname_ext.idcard_photo = pics;
+      return res.json(doc);
+    });
+  })
   .catch(next);
 });
 

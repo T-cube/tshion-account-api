@@ -8,30 +8,35 @@ export default class ChargeOrder {
 
   constructor() {}
 
-  static create(order, payment) {
+  static create(charge_type, order, payment_data) {
     let {company_id, paid_sum} = order;
-    let {payment_type, payment_method, date_create, title, code_url} = payment;
+    let {payment_type, payment_method, date_create} = payment_data;
 
     let data = {
       company_id,
       amount: paid_sum,
+      charge_type,
       payment_type,
       payment_method,
+      order_id: order._id,
       order_no: order._id,
       date_create,
-      payment_data: {
-        title,
-        code_url
-      }
+      payment_data,
     };
-    return db.payment.charge.order.update({
-      company_id,
-      order_no: order._id,
-    }, {
-      $set: data
-    }, {
-      upsert: true,
-    });
+    return db.payment.charge.order.insert(data);
+  }
+
+  static savePaymentResponse(payment_response) {
+    let {out_trade_no} = payment_response;
+    return db.payment.charge.order.findAndModify({
+      query: {
+        'payment_data.out_trade_no': out_trade_no,
+      },
+      update: {
+        $set: {payment_response}
+      }
+    })
+    .then(doc => doc.value && doc.value.order_id);
   }
 
     // _id: ObjectId,

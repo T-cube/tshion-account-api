@@ -48,10 +48,10 @@ export default class NewlyOrder extends Base {
       this.getPlanStatus(),
       this.getLimits(),
     ])
-    .then(([{current, authed}, {member_count, times}]) => {
+    .then(([{current, viable}, {member_count, times}]) => {
       let error = [];
       let isValid = true;
-      if (!_.contains(authed, this.plan)) {
+      if (!_.contains(viable.paid, this.plan)) {
         isValid = false;
         error.push('plan_not_authed');
       }

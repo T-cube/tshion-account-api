@@ -86,7 +86,8 @@ export default class BaseOrder {
   }
 
   save() {
-    return this.prepare().then(({order, isValid, error}) => {
+    return this.prepare()
+    .then(({order, isValid, error}) => {
       if (!isValid) {
         throw new ApiError(400, error);
       }
@@ -100,37 +101,47 @@ export default class BaseOrder {
   }
 
   prepare() {
-    return this.isValid().then(({error, isValid}) => {
+    return this.checkDegrade()
+    .then(isValid => {
       if (!isValid) {
         return {
-          isValid,
-          error: error && error.join(','),
-          limits: this.limits,
+          isValid: false,
+          error: 'exit_plan_degrade'
         };
       }
-      this.paid_sum = this.original_sum = this.getOriginalFeeOfProducts();
-      this.initProducts();
-      return this.getDiscount().then(() => ({
-        isValid,
-        limits: this.limits,
-        order: {
-          user_id: this.user_id,
-          company_id: this.company_id,
-          plan: this.plan,
-          original_plan: this.original_plan,
-          order_type: this.order_type,
-          products: this.products,
-          member_count: this.member_count,
-          times: this.times,
-          original_sum: this.original_sum,
-          paid_sum: Math.round(this.paid_sum),
-          coupon: this.coupon,
-          discount: this.discount,
-          status: this.status,
-          date_create: this.date_create,
-          date_update: this.date_update,
-        },
-      }));
+      return this.isValid()
+      .then(({error, isValid}) => {
+        if (!isValid) {
+          return {
+            isValid,
+            error: error && error.join(','),
+            limits: this.limits,
+          };
+        }
+        this.paid_sum = this.original_sum = this.getOriginalFeeOfProducts();
+        this.initProducts();
+        return this.getDiscount().then(() => ({
+          isValid,
+          limits: this.limits,
+          order: {
+            user_id: this.user_id,
+            company_id: this.company_id,
+            plan: this.plan,
+            original_plan: this.original_plan,
+            order_type: this.order_type,
+            products: this.products,
+            member_count: this.member_count,
+            times: this.times,
+            original_sum: this.original_sum,
+            paid_sum: Math.round(this.paid_sum),
+            coupon: this.coupon,
+            discount: this.discount,
+            status: this.status,
+            date_create: this.date_create,
+            date_update: this.date_update,
+          },
+        }));
+      });
     });
   }
 
@@ -311,6 +322,12 @@ export default class BaseOrder {
       this.planStatus = planStatus;
       return planStatus;
     });
+  }
+
+  checkDegrade() {
+    // or cancel degrade here
+    return this.getPlanStatus()
+    .then(({degrade}) => !degrade);
   }
 
   getCompanyLevelStatus() {

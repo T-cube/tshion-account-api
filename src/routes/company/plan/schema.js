@@ -20,20 +20,20 @@ const addressSchema = {
   sanitization: {
     type: 'object',
     properties: {
+      country: { type: 'string' },
       province: { type: 'string' },
       city: { type: 'string' },
       district: { type: 'string' },
-      postcode: { type: 'string' },
       address: { type: 'string' },
     }
   },
   validation: {
     type: 'object',
     properties: {
+      country: { type: 'string' },
       province: { type: 'string' },
       city: { type: 'string' },
       district: { type: 'string' },
-      postcode: { type: 'string' },
       address: { type: 'string' },
     }
   },
@@ -150,7 +150,10 @@ const schema = {
       amount: { type: 'integer' },
       payment_method: { type: 'string' },
     },
-    validation: {},
+    validation: {
+      amount: { type: 'integer' },
+      payment_method: { type: 'string' },
+    },
   },
   trial: {
     sanitization: {
@@ -175,7 +178,10 @@ const schema = {
             type: 'object',
             properties: {
               idcard: { type: 'string', rules: ['lower', 'trim'] },              // 身份证编码
-              idcard_photo: { type: 'array' },
+              idcard_photo: {
+                type: 'array',
+                items: {$objectId: 1}
+              },
             }
           },
         }
@@ -205,7 +211,10 @@ const schema = {
             type: 'object',
             properties: {
               idcard: { $idcard: 1 },
-              idcard_photo: { type: 'array' },
+              idcard_photo: {
+                type: 'array',
+                items: {$objectId: 1}
+              },
             }
           },
         }
@@ -230,7 +239,7 @@ const schema = {
         properties: {
           realname: { type: 'string' },
           gender: { type: 'string' },               // Enum:F,M
-          position: { type: 'string' },
+          address: addressSchema.sanitization,
           phone: { type: 'string' },
         }
       },
@@ -243,7 +252,10 @@ const schema = {
           scale: { type: 'string' },
           description: { type: 'string' },
           certificate_type: { type: 'string' },
-          certificate_pic: { type: 'array' },
+          certificate_pic: {
+            type: 'array',
+            items: {$objectId: 1}
+          },
         }
       },
     },
@@ -253,7 +265,7 @@ const schema = {
         properties: {
           realname: { type: 'string', minLength: 2 },
           gender: { type: 'string', $enum: ENUMS.GENDER },
-          position: { type: 'string' },
+          address: addressSchema.validation,
           phone: { $phone: 1 },
         }
       },
@@ -266,7 +278,10 @@ const schema = {
           scale: { type: 'string' },
           description: { type: 'string', minLength: 3 },
           certificate_type: { $enum: ['license', 'code'] },
-          certificate_pic: { type: 'array' },
+          certificate_pic: {
+            type: 'array',
+            items: {$objectId: 1}
+          },
         }
       },
     },

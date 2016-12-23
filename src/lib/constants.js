@@ -262,6 +262,7 @@ let constants = {
     POSTED: 'posted',
     cancelled: 'cancelled',
     REPOSTED: 'reposted',
+    EXPIRED: 'expired',
     ACCEPTED: 'accepted',
     REJECTED: 'rejected',
   },
@@ -278,6 +279,10 @@ let constants = {
     EXPIRED: 'expired',
     CANCELED: 'cancelled',
     SUCCEED: 'succeed'
+  },
+  CHARGE_TYPE: {
+    PLAN: 'plan',
+    RECHARGE: 'recharge',
   },
   PRODUCT_NO: {
     PLAN: 'P0001',

@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import config from 'config';
 
 import db from 'lib/database';
 import C, {ENUMS} from 'lib/constants';
@@ -10,6 +11,7 @@ import { ApiError } from 'lib/error';
 import Auth from 'models/plan/auth';
 import Realname from 'models/plan/realname';
 import { saveCdn } from 'lib/upload';
+import { indexObjectId } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -38,29 +40,38 @@ export default api;
 // });
 
 api.get('/status', (req, res, next) => {
-  Auth.getAuthStatus(req.company._id)
+  let company_id = req.company._id;
+  new Auth(company_id).getAuthStatus()
   .then(doc => res.json(doc))
   .catch(next);
 });
 
 api.get('/history', (req, res, next) => {
-  let {page, pagesize} = req.query;
-  Auth.list(req.company._id, {page, pagesize})
-  .then(doc => res.json(doc))
+  let company_id = req.company._id;
+  let { page, pagesize } = req.query;
+  page = (page && parseInt(page)) || 1;
+  pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? parseInt(pagesize) : config.get('view.listNum');
+  let criteria = company_id ? {company_id} : {};
+  return Promise.all([
+    db.plan.auth.count(criteria),
+    db.plan.auth.find(criteria, {
+      log: 0,
+      'info.contact': 0,
+    }).limit(pagesize).skip(pagesize * (page - 1)),
+  ])
+  .then(([totalrows, list]) => {
+    res.json({
+      page,
+      pagesize,
+      totalrows,
+      list,
+    });
+  })
   .catch(next);
 });
 
-api.get('/realname', (req, res, next) => {
-  new Realname(req.user._id).get()
-  .then(doc => res.json(doc))
-  .catch(next);
-});
-
-api.post('/', (req, res, next) => {
+api.post('/', checkValid(), (req, res, next) => {
   let {plan} = req.query;
-  if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
-    throw new ApiError(400, 'invalid_team_plan');
-  }
   if (plan == C.TEAMPLAN.PRO) {
     createOrUpdatePro()(req, res, next);
   } else if (plan == C.TEAMPLAN.ENT) {
@@ -68,11 +79,8 @@ api.post('/', (req, res, next) => {
   }
 });
 
-api.put('/', (req, res, next) => {
+api.put('/', checkValid(true), (req, res, next) => {
   let {plan} = req.query;
-  if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
-    throw new ApiError(400, 'invalid_team_plan');
-  }
   if (plan == C.TEAMPLAN.PRO) {
     createOrUpdatePro(true)(req, res, next);
   } else if (plan == C.TEAMPLAN.ENT) {
@@ -85,13 +93,9 @@ api.put('/status', (req, res, next) => {
   if (status != 'cancelled') {
     throw new ApiError(400, 'invalid_status');
   }
-  Auth.getAuthStatus(req.company._id, plan)
-  .then(info => {
-    if (!info[plan] || 'accepted' == info[plan].status) {
-      throw new ApiError(400, 'invalid_request');
-    }
-    return Auth.updateStatus(info[plan]._id, status);
-  })
+  let company_id = req.company._id;
+  let authModel = new Auth(company_id);
+  return authModel.cancel(plan)
   .then(() => res.json({}))
   .catch(next);
 });
@@ -102,29 +106,62 @@ api.post('/upload', (req, res, next) => {
     throw new ApiError(400, 'invalid_team_plan');
   }
   let uploadType = `plan-auth-${plan}`;
-  upload({type: uploadType}).single('auth_pic')(req, res, next);
+  upload({type: uploadType}).array('auth_pic')(req, res, next);
 }, saveCdn('cdn-private'), (req, res, next) => {
-  let url = req.file && req.file.url;
-  res.json({url});
+  let { plan } = req.query;
+  let files = req.files;
+  if (!files || !files.length) {
+    return res.json([]);
+  }
+  files = files.map(file => _.pick(file, 'mimetype', 'url', 'filename', 'path', 'size', 'cdn_bucket', 'cdn_key'));
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  req.model('auth-pic')
+  .save({plan, company_id, user_id, files})
+  .then(doc => res.json(doc))
+  .catch(next);
 });
+
+function checkValid(isUpdate) {
+  return (req, res, next) => {
+    let { plan } = req.query;
+    if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
+      throw new ApiError(400, 'invalid_team_plan');
+    }
+    let company_id = req.company._id;
+    let authModel = new Auth(company_id);
+    if (isUpdate) {
+      authModel.checkUpdate(plan).then(next).catch(next);
+    } else {
+      authModel.checkCreate(plan).then(next).catch(next);
+    }
+  };
+}
 
 function createOrUpdatePro(isUpdate) {
   return (req, res, next) => {
     let info = req.body;
+    let user_id = req.user._id;
     validate('auth_pro', info);
     let auth = new Auth(req.company._id, req.user._id);
     let realnameData = info.contact;
     let realnameModel = new Realname(req.user._id);
     let promise = realnameModel.get();
     if (realnameData) {
-      realnameData.status = 'posted';
       promise = promise.then(realname => {
         if (realname) {
           throw new ApiError(400, 'user realname authed');
         }
-        return realnameModel.persist(realnameData).then(() => {
-          info.contact = req.user._id;
-          return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
+        let postPicIds = realnameData.realname_ext.idcard_photo;
+        return req.model('auth-pic')
+        .pop({plan: C.TEAMPLAN.PRO, user_id, files: postPicIds})
+        .then(pics => {
+          realnameData.realname_ext.idcard_photo = _.pluck(pics, 'url');
+          realnameData.status = 'posted';
+          return realnameModel.persist(realnameData).then(() => {
+            info.contact = user_id;
+            return isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.PRO, info, user_id});
+          });
         });
       });
     } else {
@@ -132,8 +169,8 @@ function createOrUpdatePro(isUpdate) {
         if (!realname) {
           throw new ApiError(400, 'empty realname');
         }
-        info.contact =  req.user._id;
-        return isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.PRO, info);
+        info.contact = user_id;
+        return isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.PRO, info, user_id});
       });
     }
     promise.then(doc => res.json(doc)).catch(next);
@@ -144,8 +181,15 @@ function createOrUpdateEnt(isUpdate) {
   return (req, res, next) => {
     let info = req.body;
     validate('auth_ent', info);
-    let auth = new Auth(req.company._id, req.user._id);
-    let promise = isUpdate ? auth.update(info) : auth.create(C.TEAMPLAN.ENT, info);
-    return promise.then(doc => res.json(doc)).catch(next);
+    let company_id = req.company._id;
+    let user_id = req.user._id;
+    req.model('auth-pic')
+    .pop({plan: C.TEAMPLAN.ENT, company_id, files: info.enterprise.certificate_pic})
+    .then(pics => {
+      info.enterprise.certificate_pic = _.pluck(pics, 'url');
+      let auth = new Auth(company_id);
+      let promise = isUpdate ? auth.update(info) : auth.create({plan: C.TEAMPLAN.ENT, info, user_id});
+      return promise.then(doc => res.json(doc)).catch(next);
+    });
   };
 }

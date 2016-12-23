@@ -43,6 +43,7 @@ import NotificationSetting from 'models/notification-setting';
 import WechatUtil from 'lib/wechat-util';
 import UserActivity from 'models/user-activity';
 import Preference from 'models/preference';
+import AuthPic from 'models/plan/auth-pic';
 import C from 'lib/constants';
 
 // welcome messages and output corre config
@@ -86,6 +87,7 @@ app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
 app.loadModel('user-activity', UserActivity);
 app.loadModel('preference', Preference);
+app.loadModel('auth-pic', AuthPic);
 
 let _loader = {};
 app.bindLoader(_loader);

@@ -48,7 +48,7 @@ export default class Payment {
     let {notify_url, redirect_url} = this.getUrls();
     return this.pay.createPay({
       type:'wxpay',
-      opts:{
+      opts: {
         method: this.pay.wxpay.trade_type.NATIVE, // NATIVE | APP | JSAPI
         notify_url: encodeURIComponent(notify_url),
         redirect_url: encodeURIComponent(redirect_url),
@@ -60,16 +60,35 @@ export default class Payment {
     .then(data => {
       let {code_url} = data;
       if (code_url) {
-        return this.createChargeOrder(order, data).then(() => {
+        return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, data).then(() => {
           return {code_url};
         });
       }
     });
   }
 
-  createChargeOrder(order, payment) {
-    return ChargeOrder.create(order, payment);
+  createChargeOrder(chargeType, order, payment_data) {
+    return ChargeOrder.create(chargeType, order, payment_data);
   }
+
+  handleWechatPayResponse(response) {
+    let {return_code, result_code} = response;
+    if (return_code == 'SUCCESS' && result_code == 'SUCCESS') {
+      // savePaymentResponse
+      return ChargeOrder.savePaymentResponse(response)
+      .then(order_id => order_id);
+    } else {
+      // query order
+    }
+  }
+
+  // handlePaySuccess(order, paymentInfo, transactionId) {
+  //
+  // }
+  //
+  // commitPaySuccess(order, paymentInfo, transactionId) {
+  //
+  // }
 
   payWithBalance(order, transactionId) {
     let {paid_sum, company_id} = order;
@@ -97,6 +116,7 @@ export default class Payment {
           $push: {
             log: {
               amount: -paid_sum,
+              balance: doc.balance - paid_sum,
               order: order._id,
               date_create: new Date(),
             }
@@ -117,6 +137,10 @@ export default class Payment {
         transactions: transactionId
       }
     });
+  }
+
+  payRecharge(recharge) {
+    // C.CHARGE_TYPE.RECHARGE
   }
 
 }

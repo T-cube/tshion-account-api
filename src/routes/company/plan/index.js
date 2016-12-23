@@ -4,8 +4,10 @@ import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
+import { mapObjectIdToData } from 'lib/utils';
 import Plan from 'models/plan/plan';
 import Payment from 'models/plan/payment';
+import PlanDegrade from 'models/plan/plan-degrade';
 
 let api = express.Router();
 
@@ -28,7 +30,14 @@ api.get('/list', (req, res, next) => {
 
 api.get('/status', (req, res, next) => {
   new Plan(req.company._id).getStatus()
+  .then(info => mapObjectIdToData(info, 'payment.order', 'plan,member_count', 'degrade.order'))
   .then(info => res.json(info))
+  .catch(next);
+});
+
+api.delete('/degrade', (req, res, next) => {
+  new PlanDegrade().clear(req.company._id)
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
@@ -48,7 +57,7 @@ api.post('/trial', (req, res, next) => {
       user_id: req.user._id
     });
   })
-  .then(doc => res.json(doc))
+  .then(() => res.json({}))
   .catch(next);
 });
 

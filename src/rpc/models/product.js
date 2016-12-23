@@ -24,20 +24,10 @@ export default class ProductModel extends Model {
     .then(doc => mapObjectIdToData(doc, 'payment.discount', '', 'discount'));
   }
 
-  update(_id, {title, original_price}) {
-    let update = {};
-    if (title) {
-      update.title = title;
-    }
-    if (original_price) {
-      update.original_price = original_price;
-    }
-    if (_.isEmpty(update)) {
-      return;
-    }
-    update.date_update = new Date();
+  update(_id, fields) {
+    fields.date_update = new Date();
     return this.db.payment.product.update({_id}, {
-      $set: update
+      $set: fields
     });
   }
 

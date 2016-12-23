@@ -62,10 +62,10 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
       position: String,
       phone: String,
       address: {
+        country: String,
         province: String,
         city: String,
         district: String,
-        postcode: String,
         address: String,
       },
       // 实名信息，仅在专业版认证时需要
@@ -76,9 +76,12 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
     },
     // 团队信息
     team: {
-      location: {
+      location: address: {
+        country: String,
         province: String,
         city: String,
+        district: String,
+        address: String,
       },
       type: String[Enum:none-profit,workshop,startup],
       scale: Number[Enum:5,10,50,100],
@@ -86,9 +89,12 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
     }
     // 企业信息
     enterprise: {
-      location: {
+      location: address: {
+        country: String,
         province: String,
         city: String,
+        district: String,
+        address: String,
       },
       industry: String,               // 行业类型
       certificate_pic: URL,
