@@ -15,7 +15,8 @@ export default class PlanAuthModel extends Model {
   fetchList(props) {
     let { page, pagesize, criteria } = props;
     return this.db.plan.auth.find(criteria, {
-      'data': 0
+      data: 0,
+      log: 0
     })
     .skip(page * pagesize)
     .limit(pagesize)

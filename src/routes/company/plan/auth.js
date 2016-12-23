@@ -81,7 +81,8 @@ api.get('/item/:authId', (req, res, next) => {
   .then(doc => {
     doc.info = doc.data.pop();
     res.json(doc);
-  });
+  })
+  .catch(next);
 });
 
 api.post('/', checkValid(), (req, res, next) => {

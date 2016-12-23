@@ -60,7 +60,7 @@ export default class Auth {
       if (certified && (certified.plan == C.TEAMPLAN.ENT || (pending && certified.date > pending.date_apply))) {
         pending = null;
       }
-      this.auth_status = {certified: certified.plan, pending};
+      this.auth_status = {certified: certified && certified.plan, pending};
       return this.auth_status;
     });
   }
@@ -127,7 +127,7 @@ export default class Auth {
         ]
       }
     }, {
-      info: 0,
+      data: 0,
       log: 0
     })
     .sort({date_apply: -1})
