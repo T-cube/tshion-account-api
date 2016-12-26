@@ -4,7 +4,7 @@ import Promise from 'bluebird';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { mapObjectIdToData } from 'lib/utils';
+import { mapObjectIdToData, getPageInfo } from 'lib/utils';
 import Plan from 'models/plan/plan';
 import Payment from 'models/plan/payment';
 import PlanDegrade from 'models/plan/plan-degrade';
@@ -64,6 +64,31 @@ api.post('/trial', (req, res, next) => {
 api.get('/payment', (req, res, next) => {
   let methods = new Payment().getMethods();
   res.json(methods);
+});
+
+api.get('/charge', (req, res, next) => {
+  let company_id = req.company._id;
+  let { page, pagesize } = getPageInfo(req.query);
+  let criteria = {company_id};
+  return Promise.all([
+    db.payment.charge.order.count(criteria),
+    db.payment.charge.order.find(criteria, {
+      payment_data: 0,
+      payment_response: 0
+    })
+    .sort({_id: -1})
+    .limit(pagesize)
+    .skip(pagesize * (page - 1)),
+  ])
+  .then(([totalrows, list]) => {
+    res.json({
+      page,
+      pagesize,
+      totalrows,
+      list,
+    });
+  })
+  .catch(next);
 });
 
 

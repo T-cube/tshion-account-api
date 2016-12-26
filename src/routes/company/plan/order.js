@@ -1,9 +1,9 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import config from 'config';
 
 import db from 'lib/database';
+import { getPageInfo } from 'lib/utils';
 import C, {ENUMS} from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
@@ -99,9 +99,7 @@ api.post('/:order_id/pay', (req, res, next) => {
 
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
-  let { page, pagesize } = req.query;
-  page = (page && parseInt(page)) || 1;
-  pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? parseInt(pagesize) : config.get('view.listNum');
+  let { page, pagesize } = getPageInfo(req.query);
   let criteria = {company_id};
   return Promise.all([
     db.payment.order.count(criteria),

@@ -383,7 +383,7 @@ OUTPUT
 ```
 
 
-### GET /order/:orderId
+### GET /order
 
 订单列表
 
@@ -402,3 +402,10 @@ INPUT
   payment_method: String, // alipay|wechat
 }
 ```
+
+
+## charge
+
+### GET /charge
+
+支付记录

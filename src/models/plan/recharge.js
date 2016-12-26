@@ -25,7 +25,7 @@ export default class Recharge {
       this.getChargeDiscount(amount),
       this.createOrderNo(),
     ]))
-    .then(([discount, order_no]) => {
+    .then(([discount, charge_no]) => {
       let {extra_amount} = discount;
       let paid_sum = amount - extra_amount;
       let data = {
@@ -34,7 +34,7 @@ export default class Recharge {
         user_id,
         paid_sum,
         payment_method,
-        order_no,
+        charge_no,
         discount: extra_amount ? discount : null,
         status: C.ORDER_STATUS.CREATED,
         date_create: new Date(),
