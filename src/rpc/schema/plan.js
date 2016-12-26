@@ -41,7 +41,7 @@ const discountSchema = {
       type: 'array',
       uniqueness: true,
       items: {
-        $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl],
+        $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAL],
       }
     },
     criteria: {
