@@ -62,18 +62,16 @@ export default class BaseOrder {
       if (!isValid) {
         throw new ApiError(400, error);
       }
-      return randomBytes(2)
-      .then(buffer => {
-        let randomStr = (parseInt(buffer.toString('hex'), 16)).toString().substr(0, 4);
+      return this.createOrderNo()
+      .then(order_no => {
         order.status = 'created';
-        let date = moment();
-        order.order_no = 'T' + date.format('YYYYMMDDHHmmssSSS') + randomStr;
+        order.order_no = order_no;
         return Promise.all([
           db.payment.order.insert(order),
           this.updateUsedCoupon(),
-        ])
-        .then(doc => doc[0]);
-      });
+        ]);
+      })
+      .then(doc => doc[0]);
     });
   }
 
@@ -208,19 +206,19 @@ export default class BaseOrder {
       });
     });
   }
-
-  mapProductsDiscountList() {
-    return Promise.map(this.products, product => {
-      let { discounts } = product;
-      if (!discounts || !discounts.length) {
-        return;
-      }
-      return Discount.getProductDiscount(discounts)
-      .then(discountList => {
-        product.discounts = discountList;
-      });
-    });
-  }
+  //
+  // mapProductsDiscountList() {
+  //   return Promise.map(this.products, product => {
+  //     let { discounts } = product;
+  //     if (!discounts || !discounts.length) {
+  //       return;
+  //     }
+  //     return Discount.getProductDiscountList(discounts)
+  //     .then(discountList => {
+  //       product.discounts = discountList;
+  //     });
+  //   });
+  // }
 
   getPayDiscount() {
     return PaymentDiscount.getDiscount(this.paid_sum)
@@ -281,7 +279,8 @@ export default class BaseOrder {
 
   _getProductDiscount(product, discountItem) {
     let { quantity, sum } = product;
-    let origin = {quantity, total_fee: sum};
+    let { times } = this;
+    let origin = {quantity, total_fee: sum, times};
     return Discount.getDiscount(origin, discountItem);
   }
 
@@ -320,6 +319,14 @@ export default class BaseOrder {
     return new CompanyLevel(company_id).getStatus().then(companyLevelStatus => {
       this.companyLevelStatus = companyLevelStatus;
       return companyLevelStatus;
+    });
+  }
+
+  createOrderNo() {
+    return randomBytes(2)
+    .then(buffer => {
+      let randomStr = (parseInt(buffer.toString('hex'), 16)).toString().substr(0, 4);
+      return 'T' + moment().format('YYYYMMDDHHmmssSSS') + randomStr;
     });
   }
 

@@ -32,6 +32,8 @@ OUTPUT
   order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
   products: [], // product_no P0001 P0002
   criteria: {
+    type: DiscountType,
+    times: Number,
     quantity: Number,               // 最低数量
     total_fee: Currency,              // 最低金额
   },
@@ -39,7 +41,7 @@ OUTPUT
     type: DiscountType,             // 优惠类型：金额，
     number: Number,                 // 赠送数量
     rate: Number,                   // 折扣（0~0.99）
-    amount: Currency,                 // 优惠金额
+    total_fee: Currency,                 // 优惠金额
   },
   period: {
     date_start: Date,
@@ -59,6 +61,8 @@ QUERY
   description: String,
   order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
   criteria: {
+    type: [times, quantity, total_fee],
+    times: Number,
     quantity: Number,               // 最低数量
     total_fee: Currency,              // 最低金额
   },

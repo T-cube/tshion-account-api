@@ -59,7 +59,7 @@ Currency: Number;
 }
 ```
 
-### Collection `payment.product.discount`
+### Collection `payment.discount`
 
 优惠支付信息，可用于多个产品
 
@@ -69,6 +69,7 @@ Currency: Number;
   title: String,
   description: String,
   criteria: {
+    type: String,
     quantity: Number,               // 最低数量
     times: Number,               // 最低数量
     total_fee: Currency,              // 最低金额

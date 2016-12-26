@@ -1,10 +1,13 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
 import config from 'config';
+import crypto from 'crypto';
+import moment from 'moment';
 
 import ApiError from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
+export let randomBytes = Promise.promisify(crypto.randomBytes);
 
 export default class Recharge {
 
@@ -18,8 +21,11 @@ export default class Recharge {
   create({amount, payment_method}) {
     let {company_id, user_id} = this;
     return this.isValid()
-    .then(() => this.getChargeDiscount(amount))
-    .then(discount => {
+    .then(() => Promise.all([
+      this.getChargeDiscount(amount),
+      this.createOrderNo(),
+    ]))
+    .then(([discount, order_no]) => {
       let {extra_amount} = discount;
       let paid_sum = amount - extra_amount;
       let data = {
@@ -28,6 +34,7 @@ export default class Recharge {
         user_id,
         paid_sum,
         payment_method,
+        order_no,
         discount: extra_amount ? discount : null,
         status: C.ORDER_STATUS.CREATED,
         date_create: new Date(),
@@ -37,7 +44,7 @@ export default class Recharge {
     })
     .then(recharge => {
       // TODO pay recharge order here
-      
+
     });
   }
 
@@ -77,6 +84,14 @@ export default class Recharge {
 
   getChargeDiscounts() {
     return db.payment.recharge.discount.find();
+  }
+
+  createOrderNo() {
+    return randomBytes(2)
+    .then(buffer => {
+      let randomStr = (parseInt(buffer.toString('hex'), 16)).toString().substr(0, 4);
+      return 'R' + moment().format('YYYYMMDDHHmmssSSS') + randomStr;
+    });
   }
 
 }

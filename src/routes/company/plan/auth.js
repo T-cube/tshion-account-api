@@ -18,28 +18,6 @@ let api = express.Router();
 export default api;
 
 
-// api.get('/', (req, res, next) => {
-//   let { status, plan } = req.query;
-//   let criteria = {
-//     company_id: req.company._id
-//   };
-//   if (status && !_.isString(status)) {
-//     criteria.status = status;
-//   } else if (_.isArray[status])  {
-//     criteria.status = {$in: status};
-//   }
-//   if (plan) {
-//     criteria.plan = plan;
-//   }
-//   return db.plan.auth.find(criteria, {info: 0, log: 0})
-//   .sort({
-//     date_apply: -1
-//   })
-//   .limit(1)
-//   .then(doc => res.json(doc[0] || null))
-//   .catch(next);
-// });
-
 api.get('/status', (req, res, next) => {
   let company_id = req.company._id;
   new Auth(company_id).getAuthStatus()

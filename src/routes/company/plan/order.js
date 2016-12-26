@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import config from 'config';
 
 import db from 'lib/database';
 import C, {ENUMS} from 'lib/constants';
@@ -54,20 +55,21 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   .catch(next);
 });
 
-api.get('/pending', (req, res, next) => {
-  PlanOrder.init({company_id: req.company._id})
-  .then(planOrder => {
-    res.json(planOrder && planOrder.order);
-  })
-  .catch(next);
-});
+// api.get('/pending', (req, res, next) => {
+//   PlanOrder.init({company_id: req.company._id})
+//   .then(planOrder => {
+//     res.json(planOrder && planOrder.order);
+//   })
+//   .catch(next);
+// });
 
-api.post('/pending/pay', (req, res, next) => {
+api.post('/:order_id/pay', (req, res, next) => {
   let data = req.body;
   validate('pay', data);
   let {payment_method} = data;
   let company_id = req.company._id;
-  return PlanOrder.init({company_id})
+  let order_id = ObjectId(req.params.order_id);
+  return PlanOrder.init({company_id, order_id})
   .then(planOrder => {
     if (!planOrder) {
       throw new ApiError(400, 'invalid_order_status');
@@ -91,6 +93,46 @@ api.post('/pending/pay', (req, res, next) => {
         throw new ApiError(500);
       });
     }
+  })
+  .catch(next);
+});
+
+api.get('/', (req, res, next) => {
+  let company_id = req.company._id;
+  let { page, pagesize } = req.query;
+  page = (page && parseInt(page)) || 1;
+  pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? parseInt(pagesize) : config.get('view.listNum');
+  let criteria = {company_id};
+  return Promise.all([
+    db.payment.order.count(criteria),
+    db.payment.order.find(criteria)
+    .sort({_id: -1})
+    .limit(pagesize)
+    .skip(pagesize * (page - 1)),
+  ])
+  .then(([totalrows, list]) => {
+    res.json({
+      page,
+      pagesize,
+      totalrows,
+      list,
+    });
+  })
+  .catch(next);
+});
+
+api.get('/:order_id', (req, res, next) => {
+  let company_id = req.company._id;
+  let order_id = ObjectId(req.params.order_id);
+  return db.payment.order.findOne({
+    _id: order_id,
+    company_id
+  })
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(404);
+    }
+    return res.json(doc);
   })
   .catch(next);
 });

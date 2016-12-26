@@ -99,9 +99,13 @@ OUTPUT
 ### POST /trial
 
 试用
+
 可以试用没有购买且没有试用过的计划
+
 正在使用购买的计划也可以试用新的计划，当试用结束后恢复原来购买的状态，试用期的时间也计入原来购买计划的周期
+
 正在使用试用中的计划也可以试用新的计划，当前试用过期
+
 
 INPUT
 
@@ -121,9 +125,13 @@ INPUT
 ### GET /auth/status
 
 获取当前的认证状态
+
 certified为已认证过的计划，不能重复认证，如果certified == 'ent'，则不能认证pro，如果为pro则可以提交ent认证
+
 pending为正在处理中的认证，如果pending.status != 'rejected'，则不能提交相同计划的认证，此时如果可以提交新的认证，则该认证失效（提示用户）：status变成'expired'
+
 如果pending存在，可以取消该计划的认证
+
 
 OUTPUT
 
@@ -376,7 +384,7 @@ OUTPUT
 
 ### GET /order/pending
 
-### POST /order/pending/pay
+### POST /order/:orderId/pay
 
 INPUT
 

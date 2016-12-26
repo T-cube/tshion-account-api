@@ -1,5 +1,79 @@
+import _ from 'underscore';
 import C, { ENUMS } from 'lib/constants';
 import { buildValidator } from 'lib/inspector';
+
+const discountSchema = {
+  sanitization: {
+    title: { type: 'string' },
+    description: { type: 'string' },
+    order_type: { type: 'array', items: { type: 'string' } },
+    criteria: {
+      type: 'object',
+      properties: {
+        type: { type: 'string' },
+        quantity: { type: 'integer', optional: true },
+        total_fee: { type: 'integer', optional: true },
+        times: { type: 'integer', optional: true },
+      }
+    },
+    discount: {
+      type: 'object',
+      properties: {
+        type: { type: 'string' },
+        number: { type: 'integer', optional: true },
+        rate: { type: 'number', optional: true },
+        amount: { type: 'integer', optional: true },
+        times: { type: 'integer', optional: true },
+      }
+    },
+    period: {
+      type: 'object',
+      properties: {
+        date_start: { type: 'date' },
+        date_end: { type: 'date' },
+      }
+    }
+  },
+  validation: {
+    title: { type: 'string' },
+    description: { type: 'string' },
+    order_type: {
+      type: 'array',
+      items: {
+        $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl],
+        uniqueness: true
+      }
+    },
+    criteria: {
+      type: 'object',
+      someKeys: ['quantity', 'total_fee', 'times'],
+      properties: {
+        type: { $enum: ['quantity', 'total_fee', 'times'] },
+        quantity: { type: 'integer', optional: true, min: 1 },
+        total_fee: { type: 'integer', optional: true, min: 1 },
+        times: { type: 'integer', optional: true, min: 1 },
+      }
+    },
+    discount: {
+      type: 'object',
+      someKeys: ['number', 'rate', 'amount', 'times'],
+      properties: {
+        type: { $enum: ['number', 'rate', 'amount', 'times'] },
+        number: { type: 'integer', optional: true, min: 1 },
+        rate: { type: 'number', optional: true, min: 0, max: 0.99 },
+        amount: { type: 'integer', optional: true, min: 1 },
+        times: { type: 'integer', optional: true, min: 1 },
+      }
+    },
+    period: {
+      type: 'object',
+      properties: {
+        date_start: { type: 'date' },
+        date_end: { type: 'date' },
+      }
+    }
+  },
+};
 
 const schema = {
   plan_audit: {
@@ -60,147 +134,16 @@ const schema = {
       discount_id: { $objectId: 1 },
     },
   },
-  discount: {
-    sanitization: {
-      title: { type: 'string' },
-      description: { type: 'string' },
-      order_type: { type: 'array', items: { type: 'string' } },
-      criteria: {
-        type: 'object',
-        properties: {
-          quantity: { type: 'integer', optional: true },
-          total_fee: { type: 'integer', optional: true },
-          times: { type: 'integer', optional: true },
-        }
-      },
-      discount: {
-        type: 'object',
-        properties: {
-          type: { type: 'string' },
-          number: { type: 'integer', optional: true },
-          rate: { type: 'number', optional: true },
-          amount: { type: 'integer', optional: true },
-          times: { type: 'integer', optional: true },
-        }
-      },
-      period: {
-        type: 'object',
-        properties: {
-          date_start: { type: 'date' },
-          date_end: { type: 'date' },
-        }
-      }
-    },
-    validation: {
-      title: { type: 'string' },
-      description: { type: 'string' },
-      order_type: {
-        type: 'array',
-        items: {
-          $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl],
-          uniqueness: true
-        }
-      },
-      criteria: {
-        type: 'object',
-        someKeys: ['quantity', 'total_fee', 'times'],
-        properties: {
-          quantity: { type: 'integer', optional: true, min: 1 },
-          total_fee: { type: 'integer', optional: true, min: 1 },
-          times: { type: 'integer', optional: true, min: 1 },
-        }
-      },
-      discount: {
-        type: 'object',
-        someKeys: ['number', 'rate', 'amount', 'times'],
-        properties: {
-          type: { $enum: ['number', 'rate', 'amount', 'times'] },
-          number: { type: 'integer', optional: true, min: 1 },
-          rate: { type: 'number', optional: true, min: 0, max: 0.99 },
-          amount: { type: 'integer', optional: true, min: 1 },
-          times: { type: 'integer', optional: true, min: 1 },
-        }
-      },
-      period: {
-        type: 'object',
-        properties: {
-          date_start: { type: 'date' },
-          date_end: { type: 'date' },
-        }
-      }
-    },
-  },
+  discount: discountSchema,
   coupon: {
-    sanitization: {
-      title: { type: 'string' },
-      description: { type: 'string' },
-      order_type: { type: 'array', items: { type: 'string' } },
-      criteria: {
-        type: 'object',
-        properties: {
-          quantity: { type: 'integer', optional: true },
-          total_fee: { type: 'integer', optional: true },
-          times: { type: 'integer', optional: true },
-        }
-      },
-      discount: {
-        type: 'object',
-        properties: {
-          type: { type: 'string' },
-          number: { type: 'integer', optional: true },
-          rate: { type: 'number', optional: true },
-          amount: { type: 'integer', optional: true },
-        }
-      },
-      period: {
-        type: 'object',
-        properties: {
-          date_start: { type: 'date' },
-          date_end: { type: 'date' },
-        }
-      },
+    sanitization: _.extend({}, discountSchema.sanitization, {
       stock_total: { type: 'integer' },
       stock_current: { type: 'integer' },
-    },
-    validation: {
-      title: { type: 'string' },
-      description: { type: 'string' },
-      order_type: {
-        type: 'array',
-        items: {
-          $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl],
-          uniqueness: true
-        }
-      },
-      criteria: {
-        type: 'object',
-        someKeys: ['quantity', 'total_fee', 'times'],
-        properties: {
-          quantity: { type: 'integer', optional: true, min: 1 },
-          total_fee: { type: 'integer', optional: true, min: 1 },
-          times: { type: 'integer', optional: true, min: 1 },
-        }
-      },
-      discount: {
-        type: 'object',
-        someKeys: ['number', 'rate', 'amount'],
-        properties: {
-          type: { $enum: ['number', 'rate', 'amount', 'times'] },
-          number: { type: 'integer', optional: true, min: 1 },
-          rate: { type: 'number', optional: true, min: 0, max: 0.99 },
-          amount: { type: 'integer', optional: true, min: 1 },
-        }
-      },
-      period: {
-        type: 'object',
-        properties: {
-          date_start: { type: 'date' },
-          date_end: { type: 'date' },
-        }
-      },
+    }),
+    validation: _.extend({}, discountSchema.validation, {
       stock_total: { type: 'integer' },
       stock_current: { type: 'integer' },
-    },
+    }),
   },
   recharge_discount: {
     sanitization: {

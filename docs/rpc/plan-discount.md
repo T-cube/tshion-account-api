@@ -30,6 +30,8 @@ OUTPUT
   description: String,
   order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
   criteria: {
+    type: [times, quantity, total_fee],
+    times: Number,
     quantity: Number,               // 最低数量
     total_fee: Currency,              // 最低金额
   },
