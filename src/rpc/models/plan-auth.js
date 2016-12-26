@@ -83,6 +83,7 @@ export default class PlanAuthModel extends Model {
     let update = {
       $set: {
         status,
+        'data.$.status': status
       },
       $push: {
         log: {
@@ -99,6 +100,9 @@ export default class PlanAuthModel extends Model {
       return this.db.plan.auth.findAndModify({
         query: {_id: auth_id},
         update,
+        'data.status': {
+          $in: [C.AUTH_STATUS.POSTED, C.AUTH_STATUS.REPOSTED]
+        }
       })
       .then(doc => {
         if (doc.value) {
