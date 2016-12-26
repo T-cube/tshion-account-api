@@ -14,6 +14,7 @@ export default class Auth {
   create(plan, data) {
     let { company_id } = this;
     data.date_create = new Date();
+    data.status = C.AUTH_STATUS.POSTED;
     return this.checkCreate(plan)
     .then(() => this.getAuthStatus())
     .then(({pending}) => {
@@ -38,6 +39,7 @@ export default class Auth {
   update(data) {
     let { company_id } = this;
     data.date_create = new Date();
+    data.status = C.AUTH_STATUS.REPOSTED;
     return db.plan.auth.update({
       company_id,
       status: C.AUTH_STATUS.REJECTED
