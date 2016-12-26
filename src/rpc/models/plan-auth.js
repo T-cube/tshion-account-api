@@ -44,7 +44,7 @@ export default class PlanAuthModel extends Model {
     .then(doc => mapObjectIdToData(doc, [
       ['company', 'name,logo', 'company_id'],
       ['user', 'name,avatar', 'user_id'],
-      ['user.realname', '', 'data.contact'],
+      ['user.realname', '', 'data.info.contact'],
     ]))
     .then(doc => {
       if (!doc) {

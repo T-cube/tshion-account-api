@@ -81,7 +81,7 @@ api.get('/item/:authId', (req, res, next) => {
   })
   .then(doc => mapObjectIdToData(doc, [
     ['user', 'name,avatar', 'user_id'],
-    ['user.realname', '', 'data.contact'],
+    ['user.realname', '', 'data.info.contact'],
   ]))
   .then(doc => {
     if (!doc) {
