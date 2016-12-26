@@ -382,9 +382,18 @@ OUTPUT
 }
 ```
 
-### GET /order/pending
+
+### GET /order/:orderId
+
+订单列表
+
+### GET /order/:orderId
+
+订单详情
 
 ### POST /order/:orderId/pay
+
+支付
 
 INPUT
 

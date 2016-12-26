@@ -37,7 +37,7 @@ export default class CouponModel extends Model {
     if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.RENEWAl], order_type) && discount.type == 'times') {
       throw new ApiError(400, 'only newly and renewal can have times discount');
     }
-    data.criteria = _.pick(discount, 'type', criteria.type);
+    data.criteria = _.pick(criteria, 'type', criteria.type);
     data.discount = _.pick(discount, 'type', discount.type);
     data.coupon_no = ('C' + ((+new Date()).toString(32).substr(2) + Math.random().toString(32).substr(2)).toUpperCase()).substr(0, 10);
     return this.db.payment.coupon.insert(data);

@@ -37,7 +37,7 @@ export default class DiscountModel extends Model {
     if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.RENEWAl], order_type) && discount.type == 'times') {
       throw new ApiError(400, 'only newly and renewal can have times discount');
     }
-    data.criteria = _.pick(discount, 'type', criteria.type);
+    data.criteria = _.pick(criteria, 'type', criteria.type);
     data.discount = _.pick(discount, 'type', discount.type);
     return this.db.payment.discount.insert(data);
   }

@@ -55,13 +55,13 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   .catch(next);
 });
 
-// api.get('/pending', (req, res, next) => {
-//   PlanOrder.init({company_id: req.company._id})
-//   .then(planOrder => {
-//     res.json(planOrder && planOrder.order);
-//   })
-//   .catch(next);
-// });
+api.get('/pending', (req, res, next) => {
+  PlanOrder.init({company_id: req.company._id})
+  .then(planOrder => {
+    res.json(planOrder && planOrder.order);
+  })
+  .catch(next);
+});
 
 api.post('/:order_id/pay', (req, res, next) => {
   let data = req.body;
