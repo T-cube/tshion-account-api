@@ -67,7 +67,7 @@ export default class BaseOrder {
         let randomStr = (parseInt(buffer.toString('hex'), 16)).toString().substr(0, 4);
         order.status = 'created';
         let date = moment();
-        order.order_no = date.format('YYYYMMDDHHmmssSSS') + randomStr;
+        order.order_no = 'T' + date.format('YYYYMMDDHHmmssSSS') + randomStr;
         return Promise.all([
           db.payment.order.insert(order),
           this.updateUsedCoupon(),

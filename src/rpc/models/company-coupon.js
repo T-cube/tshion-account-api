@@ -1,6 +1,8 @@
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
+import {ApiError} from 'lib/error';
+
 export default class CompanyCouponModel extends Model {
 
   constructor(props) {
@@ -61,17 +63,27 @@ export default class CompanyCouponModel extends Model {
   }
 
   create({coupon_id, company_id}) {
-    return this.db.payment.company.coupon.update({
-      _id: company_id,
-    }, {
-      $addToSet: {
-        list: {
-          coupon: coupon_id,
-          date_create: new Date()
-        }
+    return this.db.payment.coupon.findOne({
+      _id: coupon_id
+    }, {coupon_no: 1})
+    .then(coupon => {
+      if (!coupon) {
+        throw new ApiError(400, 'invalid_coupon');
       }
-    }, {
-      upsert: true
+      let randomStr = (+new Date()).toString(32).substr(-6).toUpperCase();
+      return this.db.payment.company.coupon.update({
+        _id: company_id,
+      }, {
+        $addToSet: {
+          list: {
+            coupon: coupon_id,
+            coupon_no: coupon.coupon_no + randomStr,
+            date_create: new Date()
+          }
+        }
+      }, {
+        upsert: true
+      });
     });
   }
 
