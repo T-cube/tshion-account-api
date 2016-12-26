@@ -1,8 +1,5 @@
-
-
 import db from 'lib/database';
 import C from 'lib/constants';
-
 
 export default class ChargeOrder {
 
@@ -16,11 +13,12 @@ export default class ChargeOrder {
       company_id,
       amount: paid_sum,
       charge_type,
-      payment_type,
+      // payment_type,
       payment_method,
       order_id: order._id,
       order_no,
       date_create,
+      status: '',
       payment_data,
     };
     return db.payment.charge.order.insert(data);

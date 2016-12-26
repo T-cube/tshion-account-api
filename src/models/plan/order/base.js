@@ -10,7 +10,6 @@ import Coupon from '../coupon';
 import Product from '../product';
 import Discount from '../discount';
 import Plan from '../plan';
-import PaymentDiscount from '../payment-discount';
 import CompanyLevel from 'models/company-level';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
@@ -155,7 +154,6 @@ export default class BaseOrder {
   getDiscount() {
     return this.getProductsDiscount()
     .then(() => this.getCouponDiscount());
-    // .then(() => this.getPayDiscount());
   }
 
   initProducts() {
@@ -220,18 +218,6 @@ export default class BaseOrder {
   //   });
   // }
 
-  getPayDiscount() {
-    return PaymentDiscount.getDiscount(this.paid_sum)
-    .then(payDiscount => {
-      if (_.isNumber(payDiscount)) {
-        this.discount = (this.discount || []).concat({
-          pay_discount: 1,
-          fee: payDiscount
-        });
-        this.paid_sum -= payDiscount;
-      }
-    });
-  }
 
   _persistProductDiscount(ext, discountInfo, productId) {
     if (!discountInfo) {

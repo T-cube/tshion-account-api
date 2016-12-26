@@ -20,36 +20,36 @@ export default api;
 
 api.get('/status', (req, res, next) => {
   let company_id = req.company._id;
-  new Auth(company_id).getAuthStatus()
+  new Auth(company_id).getAuthStatusDetail()
   .then(doc => res.json(doc))
   .catch(next);
 });
 
-api.get('/history', (req, res, next) => {
-  let company_id = req.company._id;
-  let { page, pagesize } = req.query;
-  page = (page && parseInt(page)) || 1;
-  pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? parseInt(pagesize) : config.get('view.listNum');
-  let criteria = company_id ? {company_id} : {};
-  return Promise.all([
-    db.plan.auth.count(criteria),
-    db.plan.auth.find(criteria, {
-      log: 0,
-      'data.info.contact': 0,
-    })
-    .limit(pagesize)
-    .skip(pagesize * (page - 1)),
-  ])
-  .then(([totalrows, list]) => {
-    res.json({
-      page,
-      pagesize,
-      totalrows,
-      list,
-    });
-  })
-  .catch(next);
-});
+// api.get('/history', (req, res, next) => {
+//   let company_id = req.company._id;
+//   let { page, pagesize } = req.query;
+//   page = (page && parseInt(page)) || 1;
+//   pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ? parseInt(pagesize) : config.get('view.listNum');
+//   let criteria = company_id ? {company_id} : {};
+//   return Promise.all([
+//     db.plan.auth.count(criteria),
+//     db.plan.auth.find(criteria, {
+//       log: 0,
+//       'data.info.contact': 0,
+//     })
+//     .limit(pagesize)
+//     .skip(pagesize * (page - 1)),
+//   ])
+//   .then(([totalrows, list]) => {
+//     res.json({
+//       page,
+//       pagesize,
+//       totalrows,
+//       list,
+//     });
+//   })
+//   .catch(next);
+// });
 
 api.get('/item/:authId', (req, res, next) => {
   let company_id = req.company._id;

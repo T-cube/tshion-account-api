@@ -67,6 +67,27 @@ export default class Auth {
     });
   }
 
+  getAuthStatusDetail() {
+    let { company_id } = this;
+    return this.getAuthStatus().then(doc => {
+      if (!doc.certified) {
+        return doc;
+      }
+      return db.plan.auth.findOne({
+        company_id,
+        plan: doc.certified,
+        status: C.AUTH_STATUS.ACCEPTED
+      }, {
+        data: 0,
+        log: 0
+      })
+      .then(certified => {
+        doc.certified = certified;
+        return doc;
+      });
+    });
+  }
+
   checkCreate(plan) {
     return this.getAuthStatus()
     .then(({certified, pending}) => {

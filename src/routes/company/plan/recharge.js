@@ -1,7 +1,10 @@
 
 import express from 'express';
+import { ObjectId } from 'mongodb';
 
-// import Recharge from 'models/plan/recharge';
+import db from 'lib/database';
+import { ApiError } from 'lib/error';
+import { getPageInfo } from 'lib/utils';
 import { validate } from './schema';
 import Recharge from 'models/plan/recharge';
 
@@ -34,10 +37,27 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/:rechargeId', (req, res, next) => {
-
-});
-
-api.post('/:rechargeId/pay', (req, res, next) => {
-
+api.get('/', (req, res, next) => {
+  let company_id = req.company._id;
+  let { page, pagesize } = getPageInfo(req.query);
+  let criteria = {company_id};
+  return Promise.all([
+    db.payment.recharge.count(criteria),
+    db.payment.recharge.find(criteria, {
+      payment_data: 0,
+      payment_response: 0
+    })
+    .sort({_id: -1})
+    .limit(pagesize)
+    .skip(pagesize * (page - 1)),
+  ])
+  .then(([totalrows, list]) => {
+    res.json({
+      page,
+      pagesize,
+      totalrows,
+      list,
+    });
+  })
+  .catch(next);
 });

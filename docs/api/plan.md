@@ -4,6 +4,7 @@
 
 ```javascript
 TeamPlan: String[Enum:free,pro,ent] // 团队方案：免费版，专业版，企业版
+PaimentMethod: String[Enum:balance,alipay,wxpay,banktrans];
 TeamPlanPaid: String[Enum:pro,ent] // 专业版，企业版
 PlanStatus: String[Enum:actived,expired,overdue],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
@@ -137,9 +138,16 @@ OUTPUT
 
 ```javascript
 {
-  certified: TeamPlanPaid,
+  certified: {
+    _id: ObjectId,        // authId
+    plan: TeamPlanPaid,
+    company_id: ObjectId,
+    user_id: ObjectId,
+    date_apply: Date,
+    status: AuthStatus,
+  },
   pending: {
-    _id: ObjectId,
+    _id: ObjectId,        // authId
     plan: TeamPlanPaid,
     company_id: ObjectId,
     user_id: ObjectId,
@@ -148,7 +156,7 @@ OUTPUT
   }
 }
 ```
-
+<!--
 ### GET /auth/history
 
 QUERY
@@ -176,9 +184,9 @@ OUTPUT
   pagesize: Int,
   totalRows: Int,
 }
-```
+``` -->
 
-### GET /auth/item/authId
+### GET /auth/item/:authId
 
 OUTPUT
 
@@ -403,6 +411,80 @@ INPUT
 }
 ```
 
+
+## recharge
+
+充值
+
+### GET /recharge/info
+
+获取充值和优惠信息
+
+OUTPUT
+
+```javascript
+{
+  limits: {
+    amount: {
+      min: Number,      // 最低充值金额
+      max: Number       // 最高充值金额
+    }
+  },
+  discounts: [
+    {
+      _id: ObjectId,
+      title: String,
+      amount: Number,   // 充值金额
+      extra_amount: Number, // 优惠金额
+      date_update: Date,
+      date_create: Date
+    }
+  ]
+}
+```
+
+### GET /recharge
+
+获取充值记录列表
+
+INPUT
+
+```javascript
+{
+  page: Number,
+  pagesize: Number,
+}
+```
+
+OUTPUT
+
+```javascript
+{
+  page: Number,
+  pagesize: Number,
+  totalrows: Number,
+  list: [{}...]
+}
+```
+
+### POST /recharge
+
+充值
+
+INPUT
+
+```javascript
+{
+	amount: Number,
+	payment_method: String, // 支付方式 PaimentMethod
+}
+```
+
+OUTPUT
+
+```javascript
+
+```
 
 ## charge
 
