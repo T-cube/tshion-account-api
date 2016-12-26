@@ -60,6 +60,7 @@ QUERY
   title: String,
   description: String,
   order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
+  products: [String],                 // P0001 P0002
   criteria: {
     type: [times, quantity, total_fee],
     times: Number,
@@ -89,6 +90,8 @@ QUERY
   coupon_id: ObjectId,
   title: String,
   description: String,
+  order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
+  products: [String],                 // P0001 P0002
   criteria: {
     quantity: Number,               // 最低数量
     total_fee: Currency,              // 最低金额
@@ -117,7 +120,7 @@ QUERY
 }
 ```
 
-### /plan/coupon/product/add
+<!-- ### /plan/coupon/product/add
 
 添加优惠券适用的产品
 
@@ -139,7 +142,7 @@ QUERY
   coupon_id: ObjectId,
   product_no: String, // P0001 P0002
 }
-```
+``` -->
 
 ### /plan/coupon/company
 

@@ -40,17 +40,17 @@ route.on('/update', query => {
   return couponModel.update(coupon_id, query);
 });
 
-route.on('/product/add', query => {
-  let coupon_id = getObjectId(query, 'coupon_id');
-  let product_no = query.product_no;
-  return couponModel.addProduct(coupon_id, product_no);
-});
-
-route.on('/product/remove', query => {
-  let coupon_id = getObjectId(query, 'coupon_id');
-  let product_no = query.product_no;
-  return couponModel.removeProduct(coupon_id, product_no);
-});
+// route.on('/product/add', query => {
+//   let coupon_id = getObjectId(query, 'coupon_id');
+//   let product_no = query.product_no;
+//   return couponModel.addProduct(coupon_id, product_no);
+// });
+//
+// route.on('/product/remove', query => {
+//   let coupon_id = getObjectId(query, 'coupon_id');
+//   let product_no = query.product_no;
+//   return couponModel.removeProduct(coupon_id, product_no);
+// });
 
 route.on('/delete', query => {
   let coupon_id = getObjectId(query, 'coupon_id');

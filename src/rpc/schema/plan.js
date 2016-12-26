@@ -137,10 +137,24 @@ const schema = {
   discount: discountSchema,
   coupon: {
     sanitization: _.extend({}, discountSchema.sanitization, {
+      products: {
+        type: 'array',
+        items: {
+          type: 'string'
+        }
+      },
       stock_total: { type: 'integer' },
       stock_current: { type: 'integer' },
     }),
     validation: _.extend({}, discountSchema.validation, {
+      products: {
+        type: 'array',
+        uniqueness: true,
+        items: {
+          type: 'string',
+          $enum: ['P0001', 'P0002']
+        }
+      },
       stock_total: { type: 'integer' },
       stock_current: { type: 'integer' },
     }),
