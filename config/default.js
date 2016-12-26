@@ -29,7 +29,7 @@ module.exports = {
   avatar: {
     count: {
       company: 10,
-      project: 24,
+      project: 34,
       user: 8,
     },
   },
