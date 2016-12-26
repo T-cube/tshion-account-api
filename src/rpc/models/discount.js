@@ -35,8 +35,9 @@ export default class DiscountModel extends Model {
     let {order_type, discount} = data;
     data.date_create = data.date_update = new Date();
     if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.RENEWAl], order_type) && discount.type == 'times') {
-      throw new ApiError(400, 'obly newly and renewal can have times discount');
+      throw new ApiError(400, 'only newly and renewal can have times discount');
     }
+    data.discount = _.pick(discount, 'type', discount.type);
     return this.db.payment.discount.insert(data);
   }
 

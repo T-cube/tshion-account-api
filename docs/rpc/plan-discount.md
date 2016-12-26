@@ -28,6 +28,7 @@ OUTPUT
   _id: ObjectId,
   title: String,
   description: String,
+  order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
   criteria: {
     quantity: Number,               // 最低数量
     total_fee: Currency,              // 最低金额
@@ -52,6 +53,7 @@ QUERY
 {
   title: String,
   description: String,
+  order_type: [String],               // newly（新购） renewal（续费） upgrade（升级） 适用于某种类型的订单
   criteria: {
     quantity: Number,               // 最低数量
     total_fee: Currency,              // 最低金额

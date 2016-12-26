@@ -1,6 +1,8 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 
+import C from 'lib/constants';
+import { ApiError } from 'lib/error';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
@@ -30,7 +32,12 @@ export default class CouponModel extends Model {
   }
 
   create(data) {
+    let {order_type, discount} = data;
     data.date_create = data.date_update = new Date();
+    if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.RENEWAl], order_type) && discount.type == 'times') {
+      throw new ApiError(400, 'only newly and renewal can have times discount');
+    }
+    data.discount = _.pick(discount, 'type', discount.type);
     return this.db.payment.coupon.insert(data);
   }
 

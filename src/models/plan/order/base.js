@@ -62,17 +62,17 @@ export default class BaseOrder {
       if (!isValid) {
         throw new ApiError(400, error);
       }
-      randomBytes(length)
+      return randomBytes(2)
       .then(buffer => {
-        let randomStr = buffer.toString('hex');
+        let randomStr = (parseInt(buffer.toString('hex'), 16)).toString().substr(0, 4);
         order.status = 'created';
         let date = moment();
         order.order_no = date.format('YYYYMMDDHHmmssSSS') + randomStr;
         return Promise.all([
+          db.payment.order.insert(order),
           this.updateUsedCoupon(),
-          db.payment.order.insert(order)
         ])
-        .then(doc => doc[1]);
+        .then(doc => doc[0]);
       });
     });
   }

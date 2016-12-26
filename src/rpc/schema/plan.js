@@ -94,7 +94,13 @@ const schema = {
     validation: {
       title: { type: 'string' },
       description: { type: 'string' },
-      order_type: { type: 'array', items: { $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl] } },
+      order_type: {
+        type: 'array',
+        items: {
+          $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl],
+          uniqueness: true
+        }
+      },
       criteria: {
         type: 'object',
         someKeys: ['quantity', 'total_fee', 'times'],
@@ -159,7 +165,13 @@ const schema = {
     validation: {
       title: { type: 'string' },
       description: { type: 'string' },
-      order_type: { type: 'array', items: { $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl] } },
+      order_type: {
+        type: 'array',
+        items: {
+          $enum: [C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.UPGRADE, C.ORDER_TYPE.RENEWAl],
+          uniqueness: true
+        }
+      },
       criteria: {
         type: 'object',
         someKeys: ['quantity', 'total_fee', 'times'],
