@@ -182,8 +182,8 @@ OUTPUT
   user_id: ObjectId,
   date_apply: Date,
   status: AuthStatus,
-  info, // 最后一次修改的记录
-  data: [], // 历史修改记录
+  nearest_data: {}, // 最后一次修改的记录
+  history_data: [{}], // 历史修改记录
   log: [], // 客服处理日志
 }
 ```

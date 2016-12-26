@@ -6,7 +6,7 @@ import C from 'lib/constants';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
-export default class PlanAuthModel extends Model {
+export default class PlanOrder extends Model {
 
   constructor(props) {
     super(props);
@@ -44,7 +44,7 @@ export default class PlanAuthModel extends Model {
     .then(doc => mapObjectIdToData(doc, [
       ['company', 'name,logo', 'company_id'],
       ['user', 'name,avatar', 'user_id'],
-      ['user.realname', '', 'data.contact'],
+      ['user.realname', '', 'info.contact'],
     ]))
     .then(doc => {
       if (!doc) {
@@ -54,9 +54,7 @@ export default class PlanAuthModel extends Model {
       doc.company = doc.company_id;
       delete doc.user_id;
       delete doc.company_id;
-      let info = doc.nearest_data = doc.data.pop();
-      doc.history_data = doc.data;
-      delete doc.data;
+      let info = doc.info = doc.data.pop();
       const qiniu = this.model('qiniu').bucket('cdn-private');
       if (info.enterprise && info.enterprise.certificate_pic) {
         return Promise.map(info.enterprise.certificate_pic, file => {
@@ -77,63 +75,6 @@ export default class PlanAuthModel extends Model {
       }
       return doc;
     });
-  }
-
-  audit({auth_id, status, comment, operator_id}) {
-    let update = {
-      $set: {
-        status,
-      },
-      $push: {
-        log: {
-          _id: ObjectId(),
-          status,
-          comment,
-          operator_id,
-          creator: 'cs',
-          date_create: new Date()
-        }
-      }
-    };
-    if (status == C.AUTH_STATUS.ACCEPTED) {
-      return this.db.plan.auth.findAndModify({
-        query: {_id: auth_id},
-        update,
-      })
-      .then(doc => {
-        if (doc.value) {
-          let { company_id } = doc.value;
-          return Promise.all([
-            this.db.plan.company.update({
-              _id: company_id
-            }, {
-              $set: {
-                certified: {
-                  plan: doc.value.plan,
-                  date: new Date()
-                }
-              }
-            }),
-            this.db.plan.auth.update({
-              company_id,
-              _id: {$ne: auth_id},
-              status: {
-                $in: [C.AUTH_STATUS.REJECTED, C.AUTH_STATUS.ACCEPTED]
-              }
-            }, {
-              $set: {
-                status: C.AUTH_STATUS.EXPIRED
-              }
-            }, {
-              multi: true
-            })
-          ]);
-        }
-      });
-    }
-    return this.db.plan.auth.update({
-      _id: auth_id
-    }, update);
   }
 
 }

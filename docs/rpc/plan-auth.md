@@ -33,7 +33,7 @@ OUTPUT
   _id: ObjectId,
   plan: String,
   status: String,
-  info: {
+  nearest_data: {
     contact: {
       realname: String,
       gender: String[Enum:F,M],
@@ -89,7 +89,7 @@ OUTPUT
       certificate_pic: [ObjectId],
     }
   },
-  data: [{}], // history info
+  history_data: [{}], // 历史提交的记录
   date_apply: Date,
 }
 ```

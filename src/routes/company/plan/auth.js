@@ -2,6 +2,7 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import config from 'config';
+import Promise from 'bluebird';
 
 import db from 'lib/database';
 import C, {ENUMS} from 'lib/constants';
@@ -11,7 +12,7 @@ import { ApiError } from 'lib/error';
 import Auth from 'models/plan/auth';
 import Realname from 'models/plan/realname';
 import { saveCdn } from 'lib/upload';
-import { indexObjectId } from 'lib/utils';
+import { indexObjectId, mapObjectIdToData } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -78,10 +79,41 @@ api.get('/item/:authId', (req, res, next) => {
     company_id,
     _id: ObjectId(req.params.authId)
   })
+  .then(doc => mapObjectIdToData(doc, [
+    ['user', 'name,avatar', 'user_id'],
+    ['user.realname', '', 'data.contact'],
+  ]))
   .then(doc => {
-    doc.info = doc.data.pop();
-    res.json(doc);
+    if (!doc) {
+      return null;
+    }
+    doc.user = doc.user_id;
+    doc.company = doc.company_id;
+    delete doc.user_id;
+    delete doc.company_id;
+    let info = doc.nearest_data = doc.data.pop();
+    doc.history_data = doc.data;
+    delete doc.data;
+    const qiniu = req.model('qiniu').bucket('cdn-private');
+    if (info.enterprise && info.enterprise.certificate_pic) {
+      return Promise.map(info.enterprise.certificate_pic, file => {
+        return qiniu.makeLink(file);
+      })
+      .then(pics => {
+        info.enterprise.certificate_pic = pics;
+        return doc;
+      });
+    } else if (info.contact && info.contact.realname_ext) {
+      return Promise.map(info.contact.realname_ext.idcard_photo, file => {
+        return qiniu.makeLink(file);
+      })
+      .then(pics => {
+        info.contact.realname_ext.idcard_photo = pics;
+        return doc;
+      });
+    }
   })
+  .then(doc => res.json(doc))
   .catch(next);
 });
 
