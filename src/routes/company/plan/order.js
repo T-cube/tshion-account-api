@@ -79,16 +79,18 @@ api.post('/:order_id/pay', (req, res, next) => {
       return planOrder.payWithBalance()
       .then(() => res.json({}));
     } else {
-      return planOrder.pay(payment_method)
-      .then(doc => {
-        if (doc) {
-          let {code_url} = doc;
-          if (code_url) {
-            return res.json({code_url});
-          }
-        }
-        throw new ApiError(500);
-      });
+      // return planOrder.pay(payment_method)
+      // .then(doc => {
+      //   if (doc) {
+      //     let {code_url} = doc;
+      //     if (code_url) {
+      //       return res.json({code_url});
+      //     }
+      //   }
+      //   throw new ApiError(500);
+      // });
+      return new Payment().payWechat(planOrder.order)
+      .then(doc => res.json(doc));
     }
   })
   .catch(next);

@@ -8,7 +8,7 @@ export default class Coupon {
   }
 
   getCoupons(order_type) {
-    return db.company.coupon.findOne({
+    return db.payment.company.coupon.findOne({
       _id: this.company_id
     }, {
       list: 1
@@ -28,7 +28,7 @@ export default class Coupon {
 
   getCoupon(couponId) {
     return Promise.all([
-      db.company.coupon.count({
+      db.payment.company.coupon.count({
         _id: this.company_id,
         list: couponId
       }),

@@ -7,7 +7,7 @@ export default class ChargeOrder {
 
   static create(charge_type, order, payment_data) {
     let {company_id, paid_sum, order_no} = order;
-    let {payment_type, payment_method, date_create} = payment_data;
+    let {payment_type, payment_method} = payment_data;
 
     let data = {
       company_id,
@@ -17,24 +17,37 @@ export default class ChargeOrder {
       payment_method,
       order_id: order._id,
       order_no,
-      date_create,
+      date_create: new Date(),
       status: '',
       payment_data,
     };
     return db.payment.charge.order.insert(data);
   }
 
-  static savePaymentResponse(payment_response) {
-    let {out_trade_no} = payment_response;
+  static savePaymentNotifyAndGetData(payment_notify) {
+    let {out_trade_no} = payment_notify;
     return db.payment.charge.order.findAndModify({
       query: {
         'payment_data.out_trade_no': out_trade_no,
       },
       update: {
-        $set: {payment_response}
+        $set: {payment_notify}
       }
     })
-    .then(doc => doc.value && doc.value.order_id);
+    .then(doc => doc.value);
+  }
+
+  static savePaymentQueryAndGetData(payment_query) {
+    let {out_trade_no} = payment_query;
+    return db.payment.charge.order.findAndModify({
+      query: {
+        'payment_data.out_trade_no': out_trade_no,
+      },
+      update: {
+        $set: {payment_query}
+      }
+    })
+    .then(doc => doc.value);
   }
 
     // _id: ObjectId,

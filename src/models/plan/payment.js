@@ -7,6 +7,7 @@ import db from 'lib/database';
 import {indexObjectId} from 'lib/utils';
 
 import ChargeOrder from 'models/plan/charge-order';
+import PlanOrder from 'models/plan/plan-order';
 
 export default class Payment {
 
@@ -44,6 +45,13 @@ export default class Payment {
     return this.payWechat(order);
   }
 
+  getUrls() {
+    return {
+      notify_url: 'http://tlifang.com/hahaha',
+      redirect_url: 'http://tlifang.com/hahaha'
+    };
+  }
+
   payWechat(order) {
     let {notify_url, redirect_url} = this.getUrls();
     return this.pay.createPay({
@@ -53,11 +61,12 @@ export default class Payment {
         notify_url: encodeURIComponent(notify_url),
         redirect_url: encodeURIComponent(redirect_url),
         title: order.order_type,
-        total_fee: order.paid_sum,
+        total_fee: 1 || order.paid_sum, // TODO
         spbill_create_ip: '110.84.35.141'
       }
     })
     .then(data => {
+      console.log({data});
       let {code_url} = data;
       if (code_url) {
         return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, data).then(() => {
@@ -72,14 +81,9 @@ export default class Payment {
   }
 
   handleWechatPayResponse(response) {
-    let {return_code, result_code} = response;
-    if (return_code == 'SUCCESS' && result_code == 'SUCCESS') {
-      // savePaymentResponse
-      return ChargeOrder.savePaymentResponse(response)
-      .then(order_id => order_id);
-    } else {
-      // query order
-    }
+    // savePaymentResponse
+    return ChargeOrder.savePaymentNotifyAndGetData(response)
+    .then(chargeData => chargeData && chargeData.order_id);
   }
 
   // handlePaySuccess(order, paymentInfo, transactionId) {
@@ -141,6 +145,31 @@ export default class Payment {
 
   payRecharge(recharge) {
     // C.CHARGE_TYPE.RECHARGE
+  }
+
+  queryWechatOrder({out_trade_no, order_id}) {
+    return this.pay.query({
+      type: 'wxpay',
+      out_trade_no
+    }).then(payment_query => {
+      if (!payment_query) {
+        return;
+      }
+      console.log({payment_query});
+      let {trade_state} = payment_query;
+      if (trade_state == 'SUCCESS') {
+        return PlanOrder.init({order_id})
+        .then(planOrder => {
+          if (!planOrder) {
+            return;
+          }
+          return ChargeOrder.savePaymentQueryAndGetData(payment_query)
+          .then(() => {
+            return planOrder.handlePaySuccess();
+          });
+        });
+      }
+    });
   }
 
 }

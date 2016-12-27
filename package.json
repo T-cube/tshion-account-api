@@ -18,10 +18,11 @@
     "compile": "babel src --out-dir app",
     "nodemon": "nodemon -i src ./app/index.js",
     "watch": "babel src --out-dir app --watch",
-    "tcli": "node ./app/cli/tcli \"$@\""
+    "tcli": "node ./app/cli/tcli \"$@\"",
+    "cp": "babel node_modules/@ym/payment --out-dir pc"
   },
   "dependencies": {
-    "@ym/payment": "^0.2.2",
+    "@ym/payment": "^0.4.0",
     "@ym/redis": "^0.8.1",
     "@ym/rpc": "^0.5.1",
     "app-module-path": "^1.0.6",

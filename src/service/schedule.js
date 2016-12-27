@@ -10,6 +10,7 @@ import TaskReport from 'models/task-report';
 import db from 'lib/database';
 import C from 'lib/constants';
 import Plan from 'models/plan/plan';
+import Payment from 'models/plan/payment';
 
 import PlanOrder from 'models/plan/plan-order';
 
@@ -22,7 +23,7 @@ export default class ScheduleServer {
   init() {
     this.doJobs();
     this.recoverOrderTransaction();
-    
+
     this.updateTrialPlan();
   }
 
@@ -53,7 +54,11 @@ export default class ScheduleServer {
 
       update_trial_plan: {
         init: ['0 0 * * *', () => this.updateTrialPlan()]
-      }
+      },
+
+      // query_order: {
+      //   init: ['*/1 * * * *', () => this.queryOrder()]
+      // }
     };
   }
 
@@ -99,6 +104,19 @@ export default class ScheduleServer {
       let planModel = new Plan(item._id);
       planModel.planInfo = item;
       planModel.cleanTrial();
+    });
+  }
+
+  queryOrder() {
+    return db.payment.charge.order.find({
+      payment_notify: {$exists: false},
+      date_create: {$lt: moment().subtract(2, 'minutes').toDate()}
+    })
+    .forEach(item => {
+      new Payment().queryWechatOrder({
+        order_id: item.order_id,
+        out_trade_no: item.payment_data.out_trade_no
+      });
     });
   }
 
