@@ -347,9 +347,9 @@ INPUT
 ```javascript
 {
   plan: TeamPlanPaid,      // order_type 为 newly upgrade degrade 时有该字段
-  order_type: String,     // newly, renewal, upgrade, degrade, patch
-  times: Int,             // order_type 为 newly renewal 时有该字段
-  member_count            // order_type 为 newly upgrade degrade 时有该字段,
+  order_type: String,     // newly（新购）, renewal（续费）, upgrade（升级）, degrade（降级）, patch（补交欠费）
+  times: Int,             // order_type 为 newly renewal 时有该字段，购买的月数
+  member_count: Int,      // order_type 为 newly upgrade degrade 时有该字段,人数为购买的人数（总人数-基础人数）
   coupon: ObjectId,       // 满足优惠券条件的优惠券id
 }
 ```
