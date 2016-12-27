@@ -346,16 +346,11 @@ INPUT
 
 ```javascript
 {
-  plan: TeamPlanPaid,      // order_type 为 newly upgrade degrade
+  plan: TeamPlanPaid,      // order_type 为 newly upgrade degrade 时有该字段
   order_type: String,     // newly, renewal, upgrade, degrade, patch
-  times: Int,             // order_type 为 newly renewal
-  products: [             // order_type 为 newly upgrade degrade
-    {
-      product_no: String,
-      quantity: Number,
-    } ...
-  ],
-  coupon: ObjectId,       // 满足优惠券条件
+  times: Int,             // order_type 为 newly renewal 时有该字段
+  member_count            // order_type 为 newly upgrade degrade 时有该字段,
+  coupon: ObjectId,       // 满足优惠券条件的优惠券id
 }
 ```
 
