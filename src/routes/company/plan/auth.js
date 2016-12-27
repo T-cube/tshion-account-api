@@ -69,9 +69,11 @@ api.get('/item/:authId', (req, res, next) => {
     doc.company = doc.company_id;
     delete doc.user_id;
     delete doc.company_id;
-    doc.log = _.flatten(doc.data.map(i => _.extend({}, i.log, _.pick(i, '_id'))));
-    let info = doc.nearest_data = doc.data.pop();
+    doc.log = _.filter(_.flatten(doc.data.map(i => i.log && i.log.map(j => _.extend({}, _.pick(i, '_id'), j)))));
+    doc.data.forEach(i => delete i.log);
+    doc.nearest_data = doc.data.pop();
     doc.history_data = doc.data;
+    let {info} = doc.nearest_data;
     delete doc.data;
     const qiniu = req.model('qiniu').bucket('cdn-private');
     if (info.enterprise && info.enterprise.certificate_pic) {
@@ -91,6 +93,7 @@ api.get('/item/:authId', (req, res, next) => {
         return doc;
       });
     }
+    return doc;
   })
   .then(doc => res.json(doc))
   .catch(next);
