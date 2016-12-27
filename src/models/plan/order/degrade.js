@@ -11,7 +11,6 @@ import Payment from 'models/plan/payment';
 import Discount from 'models/plan/discount';
 import CompanyLevel from 'models/company-level';
 
-
 export default class DegradeOrder extends Base {
 
   constructor(props) {

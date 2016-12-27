@@ -28,7 +28,7 @@ export default class NewlyOrder extends Base {
     }
     this.plan = plan;
     this.member_count = member_count || 0;
-    return Product.getByPlan(plan).then(planProducts => {
+    return this.getProducts(plan).then(planProducts => {
       let products = [];
       planProducts.forEach(product => {
         if (product.product_no == 'P0002') {

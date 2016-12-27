@@ -27,7 +27,7 @@ export default class PatchOrder extends Base {
       this.member_count = member_count;
       return new Promise.all([
         this.getTimes(),
-        Product.getByPlan(plan),
+        this.getProducts(plan),
       ])
       .then(([times, planProducts]) => {
         let products = [];

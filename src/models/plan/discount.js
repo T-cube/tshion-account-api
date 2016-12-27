@@ -64,17 +64,6 @@ export default class Discount {
     .then(doc => doc[0]);
   }
 
-  static getProductDiscountList(discount) {
-    let criteria = {
-      _id: {
-        $in: discount
-      },
-      'period.date_start': {$lte: new Date()},
-      'period.date_end': {$gte: new Date()},
-    };
-    return db.payment.discount.find(criteria);
-  }
-
   static isMatch(origin, criteria) {
     for (let i in criteria) {
       if (_.contains(['quantity', 'total_fee', 'times'], i)) {

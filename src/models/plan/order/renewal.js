@@ -28,7 +28,7 @@ export default class RenewalOrder extends Base {
       let {plan, member_count} = current;
       this.plan = plan;
       this.member_count = member_count;
-      return Product.getByPlan(plan)
+      return this.getProducts(plan)
       .then(planProducts => {
         let products = [];
         planProducts.forEach(product => {

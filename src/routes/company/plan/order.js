@@ -28,9 +28,6 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   let user_id = req.user._id;
 
   let orderModel = OrderFactory.getInstance(order_type, {company_id, user_id});
-  if (!orderModel) {
-    next(new ApiError(400, 'invalid_order_type'));
-  }
   orderModel.init({plan, member_count, coupon, times})
   .then(() => {
     if (isPrepare) {

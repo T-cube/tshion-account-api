@@ -94,28 +94,33 @@ export default class BaseOrder {
         }
         this.paid_sum = this.original_sum = this.getOriginalFeeOfProducts();
         this.initProducts();
-        return this.getDiscount().then(() => ({
-          isValid,
-          limits: this.limits,
-          order: {
-            user_id: this.user_id,
-            company_id: this.company_id,
-            plan: this.plan,
-            original_plan: this.original_plan,
-            order_type: this.order_type,
-            products: this.products,
-            member_count: this.member_count,
-            times: this.times,
-            original_times: this.original_times,
-            original_sum: this.original_sum,
-            paid_sum: Math.round(this.paid_sum),
-            coupon: this.coupon,
-            discount: this.discount,
-            status: this.status,
-            date_create: this.date_create,
-            date_update: this.date_update,
-          },
-        }));
+        return this.getDiscount().then(() => {
+          this.products.forEach(product => {
+            delete product.discount;
+          });
+          return {
+            isValid,
+            limits: this.limits,
+            order: {
+              user_id: this.user_id,
+              company_id: this.company_id,
+              plan: this.plan,
+              original_plan: this.original_plan,
+              order_type: this.order_type,
+              products: this.products,
+              member_count: this.member_count,
+              times: this.times,
+              original_times: this.original_times,
+              original_sum: this.original_sum,
+              paid_sum: Math.round(this.paid_sum),
+              coupon: this.coupon,
+              discount: this.discount,
+              status: this.status,
+              date_create: this.date_create,
+              date_update: this.date_update,
+            },
+          };
+        });
       });
     });
   }
@@ -203,19 +208,6 @@ export default class BaseOrder {
       });
     });
   }
-
-  // mapProductsDiscountList() {
-  //   return Promise.map(this.products, product => {
-  //     let { discounts } = product;
-  //     if (!discounts || !discounts.length) {
-  //       return;
-  //     }
-  //     return Discount.getProductDiscountList(discounts)
-  //     .then(discountList => {
-  //       product.discounts = discountList;
-  //     });
-  //   });
-  // }
 
   _persistProductDiscount(ext, discountInfo, productId) {
     if (!discountInfo) {
@@ -312,6 +304,10 @@ export default class BaseOrder {
       let randomStr = (parseInt(buffer.toString('hex'), 16)).toString().substr(0, 4);
       return 'T' + moment().format('YYYYMMDDHHmmssSSS') + randomStr;
     });
+  }
+
+  getProducts(plan) {
+    return Product.getByPlan(plan);
   }
 
 }
