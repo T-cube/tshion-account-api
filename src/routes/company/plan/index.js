@@ -2,11 +2,12 @@ import _ from 'underscore';
 import express from 'express';
 import Promise from 'bluebird';
 
-import C from 'lib/constants';
+import C, {ENUMS} from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { mapObjectIdToData, getPageInfo } from 'lib/utils';
 import Plan from 'models/plan/plan';
+import Product from 'models/plan/product';
 import Payment from 'models/plan/payment';
 import PlanDegrade from 'models/plan/plan-degrade';
 import { checkUserType } from '../utils';
@@ -66,6 +67,13 @@ api.post('/trial', (req, res, next) => {
 api.get('/payment', (req, res, next) => {
   let methods = new Payment().getMethods();
   res.json(methods);
+});
+
+api.get('/product', (req, res, next) => {
+  let {plan, order_type} = req.query;
+  Product.getProductsWithDiscount({plan, order_type})
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
 api.get('/charge', (req, res, next) => {

@@ -91,7 +91,6 @@ export default class UpgradeOrder extends Base {
         isValid = false;
         error.push('eq_current_status');
       }
-      console.log(this.plan, current.plan);
       if (this.member_count != current.member_count && this.plan != current.plan) {
         isValid = false;
         error.push('cannot_update_multi');

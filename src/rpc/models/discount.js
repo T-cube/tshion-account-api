@@ -32,17 +32,13 @@ export default class DiscountModel extends Model {
   }
 
   create(data) {
-    let {order_type, discount, criteria} = data;
+    data = this._parseData(data);
     data.date_create = data.date_update = new Date();
-    if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.RENEWAl], order_type) && discount.type == 'times') {
-      throw new ApiError(400, 'only newly and renewal can have times discount');
-    }
-    data.criteria = _.pick(criteria, 'type', criteria.type);
-    data.discount = _.pick(discount, 'type', discount.type);
     return this.db.payment.discount.insert(data);
   }
 
   update(_id, data) {
+    data = this._parseData(data);
     data.date_update = new Date();
     return this.db.payment.discount.update({_id}, {
       $set: data
@@ -51,6 +47,16 @@ export default class DiscountModel extends Model {
 
   delete(_id) {
     return this.db.payment.discount.remove({_id});
+  }
+
+  _parseData(data) {
+    let {order_type, discount, criteria} = data;
+    if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.RENEWAl], order_type) && discount.type == 'times') {
+      throw new ApiError(400, 'only newly and renewal can have times discount');
+    }
+    data.criteria = _.pick(criteria, 'type', criteria.type);
+    data.discount = _.pick(discount, 'type', discount.type);
+    return data;
   }
 
 }

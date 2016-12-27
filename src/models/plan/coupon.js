@@ -7,18 +7,19 @@ export default class Coupon {
     this.company_id = company_id;
   }
 
-  getCoupons() {
+  getCoupons(order_type) {
     return db.company.coupon.findOne({
       _id: this.company_id
     }, {
       list: 1
     })
-    .then(coupon => {
-      if (!coupon) {
+    .then(doc => {
+      if (!doc) {
         return [];
       }
       return db.payment.coupon.find({
-        _id: {$in: coupon.list},
+        _id: {$in: doc.list.map(i => i.coupon)},
+        order_type,
         'period.date_start': {$lt: new Date()},
         'period.date_end': {$gte: new Date()},
       });

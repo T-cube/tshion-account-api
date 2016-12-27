@@ -177,7 +177,11 @@ function createOrUpdatePro(isUpdate) {
     if (realnameData) {
       promise = promise.then(realname => {
         if (realname) {
-          throw new ApiError(400, 'user realname certified');
+          if (realname.status == 'accepted') {
+            throw new ApiError(400, 'user realname certified');
+          } else {
+            throw new ApiError(400, 'user has pending auth');
+          }
         }
         let postPicIds = realnameData.realname_ext.idcard_photo;
         return req.model('auth-pic')

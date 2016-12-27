@@ -8,6 +8,7 @@ PaimentMethod: String[Enum:balance,alipay,wxpay,banktrans];
 TeamPlanPaid: String[Enum:pro,ent] // 专业版，企业版
 PlanStatus: String[Enum:actived,expired,overdue],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
+OrderTypes: String[newly（新购）, renewal（续费）, upgrade（升级）, degrade（降级）, patch（补交欠费）],
 ```
 
 ## 挂载点
@@ -46,6 +47,62 @@ OUTPUT
   ],
   ext_info: String,
 }...]
+```
+
+### GET /product
+
+查询产品和优惠
+
+QUERY
+
+```javascript
+{
+  plan: TeamPlan,
+  order_type: OrderTypes,
+}
+```
+
+OUTPUT
+
+```javascript
+[
+  {
+    _id: ObjectId,
+   title: String,
+   description: String,
+   plan: String,
+   product_no: String,
+   original_price: String,
+   discount: [
+     {
+       _id: ObjectId,
+       title: String,
+       description: String,
+       order_type: [OrderTypes],
+       criteria: {
+         type: String,
+         times: Number,
+       },
+       discount: {
+         type: String,
+         amount: Number,
+       },
+       period: {
+         date_start: Date,
+         date_end: Date,
+       },
+       date_update: Date,
+       date_create: Date,
+     }
+   ],
+   amount_min: Number,
+   amount_max: Number,
+   stock_total: Number,
+   stock_current: Number,
+   date_create: Date,
+   date_update: Date,
+  }
+]
 ```
 
 ### GET /status
@@ -374,14 +431,15 @@ OUTPUT
 ```javascript
 {
   isValid: Boolean,
-  error: String, // isValid为fasle时
+  error: String,  // isValid == fasle
   limits: {
     member_count: Int,
   },
-  order: {
+  order: {        // isValid == true
     _id: ObjectId,
     ...
-  }
+  },
+  coupon: []      // 优惠券列表
 }
 ```
 

@@ -134,7 +134,6 @@ export default class BaseOrder {
     });
   }
 
-  // TODO
   isCouponAvailable(coupon) {
     let { products } = coupon;
     let result = false;
@@ -189,12 +188,12 @@ export default class BaseOrder {
 
   getProductsDiscount() {
     return Promise.map(this.products, product => {
-      let { discounts, quantity, sum } = product;
-      if (!discounts || !discounts.length) {
+      let { discount, quantity, sum } = product;
+      if (!discount || !discount.length) {
         return;
       }
       delete product.discounts;
-      return Discount.getProductDiscount(discounts, {quantity, total_fee: sum, times: this.times})
+      return Discount.getProductDiscount(this.order_type, discount, {quantity, total_fee: sum, times: this.times})
       .then(discountItem => {
         if (!discountItem) {
           return;
@@ -204,7 +203,7 @@ export default class BaseOrder {
       });
     });
   }
-  //
+
   // mapProductsDiscountList() {
   //   return Promise.map(this.products, product => {
   //     let { discounts } = product;
@@ -217,7 +216,6 @@ export default class BaseOrder {
   //     });
   //   });
   // }
-
 
   _persistProductDiscount(ext, discountInfo, productId) {
     if (!discountInfo) {
@@ -241,7 +239,7 @@ export default class BaseOrder {
       this.times += discountInfo.times;
       break;
     }
-    product.discount = (product.discount || []).concat(discountInfo);
+    product.discount_using = (product.discount_using || []).concat(discountInfo);
   }
 
   _persistOrderDiscount(ext, discountInfo) {
