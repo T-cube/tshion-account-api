@@ -80,30 +80,28 @@ export default class PlanAuthModel extends Model {
   }
 
   audit({auth_id, status, comment, operator_id}) {
+    let query = {
+      _id: auth_id,
+      'data.status': {
+        $in: [C.AUTH_STATUS.POSTED, C.AUTH_STATUS.REPOSTED]
+      }
+    };
     let update = {
       $set: {
         status,
-        'data.$.status': status
-      },
-      $push: {
-        log: {
-          _id: ObjectId(),
+        'data.$.status': status,
+        'data.$.log': {
           status,
           comment,
           operator_id,
           creator: 'cs',
           date_create: new Date()
         }
-      }
+      },
     };
     if (status == C.AUTH_STATUS.ACCEPTED) {
       return this.db.plan.auth.findAndModify({
-        query: {
-          _id: auth_id,
-          'data.status': {
-            $in: [C.AUTH_STATUS.POSTED, C.AUTH_STATUS.REPOSTED]
-          }
-        },
+        query,
         update,
       })
       .then(doc => {
@@ -137,9 +135,7 @@ export default class PlanAuthModel extends Model {
         }
       });
     }
-    return this.db.plan.auth.update({
-      _id: auth_id
-    }, update);
+    return this.db.plan.auth.update(query, update);
   }
 
 }

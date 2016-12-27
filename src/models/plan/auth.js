@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import Promise from 'bluebird';
+import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
@@ -14,6 +15,7 @@ export default class Auth {
   create(plan, data) {
     let { company_id } = this;
     data.date_create = new Date();
+    data._id = ObjectId();
     data.status = C.AUTH_STATUS.POSTED;
     return this.checkCreate(plan)
     .then(() => this.getAuthStatus())
@@ -39,6 +41,7 @@ export default class Auth {
   update(data) {
     let { company_id } = this;
     data.date_create = new Date();
+    data._id = ObjectId();
     data.status = C.AUTH_STATUS.REPOSTED;
     return db.plan.auth.update({
       company_id,
