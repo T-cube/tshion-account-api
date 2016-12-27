@@ -2,17 +2,19 @@ import _ from 'underscore';
 import express from 'express';
 import Promise from 'bluebird';
 
+import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { mapObjectIdToData, getPageInfo } from 'lib/utils';
 import Plan from 'models/plan/plan';
 import Payment from 'models/plan/payment';
 import PlanDegrade from 'models/plan/plan-degrade';
+import { checkUserType } from '../utils';
 
 let api = express.Router();
-
 export default api;
 
+api.use(checkUserType(C.COMPANY_MEMBER_TYPE.OWNER));
 
 api.get('/list', (req, res, next) => {
   return Promise.all([

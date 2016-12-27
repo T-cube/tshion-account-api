@@ -18,8 +18,8 @@ export default class CouponModel extends Model {
     .skip(page * pagesize)
     .limit(pagesize)
     .sort({
-      'period.date_end': 1,
-      'period.date_start': 1,
+      'period.date_end': -1,
+      'period.date_start': -1,
     });
   }
 
