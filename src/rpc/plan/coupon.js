@@ -4,7 +4,7 @@ import { ApiError } from 'lib/error';
 import RpcRoute from 'models/rpc-route';
 import { validate } from '../schema/plan';
 import { getObjectId } from '../utils';
-import CouponModel from '../models/discount';
+import CouponModel from '../models/coupon';
 import CompanyCouponModel from '../models/company-coupon';
 
 const route = RpcRoute.router();
