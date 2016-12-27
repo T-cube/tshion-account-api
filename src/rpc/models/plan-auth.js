@@ -98,11 +98,13 @@ export default class PlanAuthModel extends Model {
     };
     if (status == C.AUTH_STATUS.ACCEPTED) {
       return this.db.plan.auth.findAndModify({
-        query: {_id: auth_id},
+        query: {
+          _id: auth_id,
+          'data.status': {
+            $in: [C.AUTH_STATUS.POSTED, C.AUTH_STATUS.REPOSTED]
+          }
+        },
         update,
-        'data.status': {
-          $in: [C.AUTH_STATUS.POSTED, C.AUTH_STATUS.REPOSTED]
-        }
       })
       .then(doc => {
         if (doc.value) {
