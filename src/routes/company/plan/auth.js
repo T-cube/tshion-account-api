@@ -69,6 +69,7 @@ api.get('/item/:authId', (req, res, next) => {
     doc.company = doc.company_id;
     delete doc.user_id;
     delete doc.company_id;
+    doc.log = _.flatten(doc.data.map(i => _.extend({}, i.log, _.pick(i, '_id'))));
     let info = doc.nearest_data = doc.data.pop();
     doc.history_data = doc.data;
     delete doc.data;

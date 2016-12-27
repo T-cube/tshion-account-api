@@ -90,6 +90,8 @@ export default class PlanAuthModel extends Model {
       $set: {
         status,
         'data.$.status': status,
+      },
+      $push: {
         'data.$.log': {
           status,
           comment,
@@ -97,7 +99,7 @@ export default class PlanAuthModel extends Model {
           creator: 'cs',
           date_create: new Date()
         }
-      },
+      }
     };
     if (status == C.AUTH_STATUS.ACCEPTED) {
       return this.db.plan.auth.findAndModify({
