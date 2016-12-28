@@ -1,7 +1,7 @@
 import _ from 'underscore';
-import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
-
+import C from 'lib/constants';
+import { mapObjectIdToData } from 'lib/utils';
 import {ApiError} from 'lib/error';
 
 export default class CompanyCouponModel extends Model {
@@ -86,12 +86,13 @@ export default class CompanyCouponModel extends Model {
       if (out_of_stock_coupon.length) {
         throw new ApiError(400, {out_of_stock_coupon});
       }
+      let date_create = new Date();
       coupons = coupons.map(i => ({
         coupon: i._id,
         coupon_no: i.coupon_no + (+new Date()).toString(32).substr(-6).toUpperCase(),
-        date_create
+        status: C.COMPANY_COUPON_STATUS.UNUSED,
+        date_create,
       }));
-      let date_create = new Date();
       return Promise.all([
         this.db.payment.company.coupon.update({
           _id: {$in: companies},

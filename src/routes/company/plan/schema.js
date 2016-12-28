@@ -63,14 +63,14 @@ const schema = {
       order_type: { type: 'string' },
       member_count: { type: 'integer', optional: true },
       times: { type: 'integer', optional: true },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
     validation: {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT], optional: true },
       order_type: { $enum: ENUMS.ORDER_TYPE },
       member_count: { type: 'integer', optional: true },
       times: { type: 'integer', optional: true },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
   },
   create_order_newly: {
@@ -79,24 +79,24 @@ const schema = {
       order_type: { type: 'string' },
       member_count: { type: 'integer' },
       times: { type: 'integer' },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
     validation: {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
       order_type: { $enum: ENUMS.ORDER_TYPE },
       member_count: { type: 'integer' },
       times: { type: 'integer' },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
   },
   create_order_patch: {
     sanitization: {
       order_type: { type: 'string' },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
     validation: {
       order_type: { $enum: ENUMS.ORDER_TYPE },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
   },
   create_order_degrade: {
@@ -116,25 +116,25 @@ const schema = {
       plan: { type: 'string' },
       order_type: { type: 'string' },
       member_count: { type: 'integer' },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
     validation: {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
       order_type: { $enum: ENUMS.ORDER_TYPE },
       member_count: { type: 'integer' },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
   },
   create_order_renewal: {
     sanitization: {
       order_type: { type: 'string' },
       times: { type: 'integer' },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
     validation: {
       order_type: { $enum: ENUMS.ORDER_TYPE },
       times: { type: 'integer' },
-      coupon: { $objectId: 1, optional: true },
+      coupon: { type: 'string', optional: true },
     },
   },
   pay: {

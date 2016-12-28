@@ -53,7 +53,14 @@ export default class BaseOrder {
   }
 
   updateUsedCoupon() {
-    this.coupon; // TODO
+    return db.payment.company.coupon.update({
+      _id: this.company_id,
+      'list.coupon_no': this.coupon,
+    }, {
+      $set: {
+        'list.$.status': C.COMPANY_COUPON_STATUS.USED,
+      }
+    });
   }
 
   save() {
@@ -146,8 +153,8 @@ export default class BaseOrder {
     if (products === null) {
       result = !!this._getOrderDiscount(coupon);
     } else {
-      products.forEach(product_no => {
-        let product = _.find(this.products, item => item.product_no == product_no);
+      products.forEach(product_id => {
+        let product = _.find(this.products, item => item._id.equals(product_id));
         if (product) {
           result = result || !!this._getProductDiscount(product, coupon);
         }

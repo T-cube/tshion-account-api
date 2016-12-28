@@ -312,6 +312,10 @@ let constants = {
     ARCHIVED: 'archived',
     DELETED: 'deleted',
   },
+  COMPANY_COUPON_STATUS: {
+    UNUSED: 'unused',
+    USED: 'used'
+  },
 
 };
 
