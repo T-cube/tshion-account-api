@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import db from 'lib/database';
-
+import C from 'lib/constants';
 
 export default class Discount {
 
@@ -39,6 +39,7 @@ export default class Discount {
         $in: discounts
       },
       order_type,
+      status: C.DISCOUNT_STATUS.NORMAL,
       'period.date_start': {$lte: new Date()},
       'period.date_end': {$gte: new Date()},
     };

@@ -185,7 +185,6 @@ export default class BaseOrder {
       } else {
         _.filter(this.products, item => _.contains(products, item.product_no)).map(product => {
           let discountProduct = this._getProductDiscount(product, coupon);
-          console.log(discountProduct);
           this._persistProductDiscount({coupon: coupon._id}, discountProduct, product._id);
         });
       }
@@ -233,6 +232,7 @@ export default class BaseOrder {
       break;
     }
     product.discount_using = (product.discount_using || []).concat(discountInfo);
+    this.discount = (this.discount || []).concat(_.extend({}, {product: product.product_no}, discountInfo));
   }
 
   _persistOrderDiscount(ext, discountInfo) {

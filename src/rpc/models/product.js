@@ -1,7 +1,9 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 
+import C from 'lib/constants';
 import { mapObjectIdToData } from 'lib/utils';
+import { ApiError } from 'lib/error';
 import Model from './model';
 
 export default class ProductModel extends Model {
@@ -26,8 +28,20 @@ export default class ProductModel extends Model {
 
   update(_id, fields) {
     fields.date_update = new Date();
-    return this.db.payment.product.update({_id}, {
-      $set: fields
+    if (!fields.discount.length) {
+      return this.db.payment.product.update({_id}, {
+        $set: fields
+      });
+    }
+    return this.db.payment.discount.find({
+      _id: {$in: fields.discount},
+      status: C.DISCOUNT_STATUS.NORMAL,
+    }, {_id: 1})
+    .then(discounts => {
+      fields.discount = _.pluck(discounts, '_id');
+      return this.db.payment.product.update({_id}, {
+        $set: fields
+      });
     });
   }
 

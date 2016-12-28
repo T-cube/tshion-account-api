@@ -11,6 +11,7 @@ QUERY
 {
   page: Int,
   pagesize: Int,
+  status: String, // normal, deleted (以‘,’分割)
 }
 ```
 
@@ -157,12 +158,12 @@ QUERY
 
 ### /plan/coupon/send
 
-给公司发优惠券
+给公司发优惠券，批量发
 
 QUERY
 ```javascript
 {
-  coupon_id: ObjectId,
-  company_id: ObjectId,
+  coupons: [ObjectId],
+  companies: [ObjectId],
 }
 ```

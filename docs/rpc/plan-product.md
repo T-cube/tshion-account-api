@@ -27,6 +27,7 @@ QUERY
   product_id: ObjectId,
   title: String,
   description: String,
+  discount: [ObjectId],
   original_price: Int,
   amount_min: (Int, null),
   amount_max: (Int, null),
@@ -35,7 +36,7 @@ QUERY
 }
 ```
 
-### /plan/product/discount/add
+<!-- ### /plan/product/discount/add
 
 QUERY
 ```javascript
@@ -53,4 +54,4 @@ QUERY
   product_id: ObjectId,
   discount_id: ObjectId,
 }
-```
+``` -->

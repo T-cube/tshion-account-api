@@ -1,7 +1,9 @@
+import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
+import {ENUMS} from 'models/constants';
 import { validate } from '../schema/plan';
 import { getObjectId } from '../utils';
 import CouponModel from '../models/coupon';
@@ -14,8 +16,15 @@ const couponModel = new CouponModel();
 const companyCoupon = new CompanyCouponModel();
 
 route.on('/list', (query) => {
-  let { page, pagesize } = query;
-  return couponModel.page({page, pagesize});
+  let { page, pagesize, status } = query;
+  status = status.split(',').filter(i => _.contains(ENUMS.COUPON_STATUS, i));
+  return couponModel.page({
+    page,
+    pagesize,
+    criteria: {
+      status: {$in: status}
+    }
+  });
 });
 
 route.on('/detail', (query) => {
@@ -63,7 +72,6 @@ route.on('/company', query => {
 });
 
 route.on('/send', query => {
-  let coupon_id = getObjectId(query, 'coupon_id');
-  let company_id = getObjectId(query, 'company_id');
-  return companyCoupon.create({coupon_id, company_id});
+  validate('send_coupon', query);
+  return companyCoupon.create(query);
 });

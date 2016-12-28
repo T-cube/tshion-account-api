@@ -46,7 +46,9 @@ export default class DiscountModel extends Model {
   }
 
   delete(_id) {
-    return this.db.payment.discount.remove({_id});
+    return this.db.payment.discount.update({_id}, {
+      $set: {status: C.DISCOUNT_STATUS.DELETED}
+    });
   }
 
   _parseData(data) {

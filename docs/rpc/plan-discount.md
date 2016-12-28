@@ -10,6 +10,7 @@ QUERY
 {
   page: Int,
   pagesize: Int,
+  status: String, // normal deleted (以‘,’分割)
 }
 ```
 

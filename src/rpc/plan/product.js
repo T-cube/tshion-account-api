@@ -32,14 +32,14 @@ route.on('/update', query => {
   return productModel.update(query.product_id, query);
 });
 
-route.on('/discount/add', query => {
-  validate('product_discount', query);
-  let { product_id, discount_id } = query;
-  return productModel.addDiscount(product_id, discount_id);
-});
-
-route.on('/discount/remove', query => {
-  validate('product_discount', query);
-  let { product_id, discount_id } = query;
-  return productModel.removeDiscount(product_id, discount_id);
-});
+// route.on('/discount/add', query => {
+//   validate('product_discount', query);
+//   let { product_id, discount_id } = query;
+//   return productModel.addDiscount(product_id, discount_id);
+// });
+//
+// route.on('/discount/remove', query => {
+//   validate('product_discount', query);
+//   let { product_id, discount_id } = query;
+//   return productModel.removeDiscount(product_id, discount_id);
+// });

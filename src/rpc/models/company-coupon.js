@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
@@ -62,27 +63,34 @@ export default class CompanyCouponModel extends Model {
     });
   }
 
-  create({coupon_id, company_id}) {
-    return this.db.payment.coupon.findOne({
-      _id: coupon_id
-    }, {coupon_no: 1})
-    .then(coupon => {
-      if (!coupon) {
-        throw new ApiError(400, 'invalid_coupon');
-      }
-      let randomStr = (+new Date()).toString(32).substr(-6).toUpperCase();
+  create({coupons, companies}) {
+    return Promise.all([
+      this.db.payment.coupon.find({
+        _id: {$in: coupons}
+      }, {
+        coupon_no: 1,
+      }),
+      this.db.company.find({
+        _id: {$in: companies}
+      }, {
+        _id: 1
+      }),
+    ])
+    .then(([coupons, companies]) => {
+      let date_create = new Date();
+      companies = _.pluck(companies, '_id');
+      coupons = coupons.map(i => ({
+        coupon: i._id,
+        coupon_no: i.coupon_no + (+new Date()).toString(32).substr(-6).toUpperCase(),
+        date_create
+      }));
       return this.db.payment.company.coupon.update({
-        _id: company_id,
+        _id: {$in: companies},
       }, {
-        $addToSet: {
-          list: {
-            coupon: coupon_id,
-            coupon_no: coupon.coupon_no + randomStr,
-            date_create: new Date()
-          }
-        }
+        $push: {$each: coupons}
       }, {
-        upsert: true
+        upsert: true,
+        multi: true,
       });
     });
   }

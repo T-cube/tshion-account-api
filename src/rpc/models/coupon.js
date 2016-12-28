@@ -34,6 +34,7 @@ export default class CouponModel extends Model {
   create(data) {
     data = this._parseData(data);
     data.date_create = data.date_update = new Date();
+    data.status = C.COUPON_STATUS.NORMAL;
     data.coupon_no = ('C' + ((+new Date()).toString(32).substr(2) + Math.random().toString(32).substr(2)).toUpperCase()).substr(0, 10);
     return this.db.payment.coupon.insert(data);
   }
@@ -46,25 +47,33 @@ export default class CouponModel extends Model {
     });
   }
 
+  archive(_id) {
+    return this.db.payment.coupon.update({_id}, {
+      $set: {status: C.COUPON_STATUS.ARCHIVED}
+    });
+  }
+
   delete(_id) {
-    return this.db.payment.coupon.remove({_id});
-  }
-
-  addProduct(_id, product_no) {
     return this.db.payment.coupon.update({_id}, {
-      $addToSet: {
-        products: product_no
-      }
+      $set: {status: C.COUPON_STATUS.DELETED}
     });
   }
 
-  removeProduct(_id, product_no) {
-    return this.db.payment.coupon.update({_id}, {
-      $pull: {
-        products: product_no
-      }
-    });
-  }
+  // addProduct(_id, product_no) {
+  //   return this.db.payment.coupon.update({_id}, {
+  //     $addToSet: {
+  //       products: product_no
+  //     }
+  //   });
+  // }
+  //
+  // removeProduct(_id, product_no) {
+  //   return this.db.payment.coupon.update({_id}, {
+  //     $pull: {
+  //       products: product_no
+  //     }
+  //   });
+  // }
 
   _parseData(data) {
     let {order_type, discount, criteria} = data;

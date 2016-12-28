@@ -98,6 +98,11 @@ const schema = {
       original_price: { type: 'integer' },
       amount_min: { type: ['integer', null] },
       amount_max: { type: ['integer', null] },
+      discount: {
+        type: 'array',
+        uniqueness: true,
+        item: { $objectId: 1 },
+      },
       stock_total: { type: ['integer', null] },
       stock_current: { type: ['integer', null] },
     },
@@ -108,6 +113,11 @@ const schema = {
       original_price: { type: 'integer', min: 0 },
       amount_min: { type: ['integer', null], min: 1 },
       amount_max: { type: ['integer', null], min: 1 },
+      discount: {
+        type: 'array',
+        uniqueness: true,
+        item: { $objectId: 1 },
+      },
       stock_total: { type: ['integer', null], min: 1 },
       stock_current: { type: ['integer', null], min: 1},
     },
@@ -170,6 +180,28 @@ const schema = {
       amount: { type: 'integer', min: 1 },
       extra_amount: { type: 'integer', min: 1 },
     },
+  },
+  send_coupon: {
+    sanitization: {
+      coupons: {
+        type: 'array',
+        items: { $ObjectId: 1 }
+      },
+      companies: {
+        type: 'array',
+        items: { $ObjectId: 1 }
+      },
+    },
+    validation: {
+      coupons: {
+        type: 'array',
+        items: { $ObjectId: 1 }
+      },
+      companies: {
+        type: 'array',
+        items: { $ObjectId: 1 }
+      },
+    }
   }
 };
 

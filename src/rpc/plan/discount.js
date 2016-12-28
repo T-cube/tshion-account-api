@@ -1,7 +1,9 @@
+import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
+import {ENUMS} from 'models/constants';
 import { validate } from '../schema/plan';
 import { getObjectId } from '../utils';
 import DiscountModel from '../models/discount';
@@ -11,8 +13,15 @@ export default route;
 const discountModel = new DiscountModel();
 
 route.on('/list', (query) => {
-  let { page, pagesize } = query;
-  return discountModel.page({page, pagesize});
+  let { page, pagesize, status } = query;
+  status = status.split(',').filter(i => _.contains(ENUMS.DISCOUNT_STATUS, i));
+  return discountModel.page({
+    page,
+    pagesize,
+    criteria: {
+      status: {$in: status}
+    }
+  });
 });
 
 route.on('/detail', (query) => {

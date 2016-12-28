@@ -302,7 +302,16 @@ let constants = {
     ALIPAY: 'alipay',
     WECHAT: 'wechat',
     BALANCE: 'balance',
-  }
+  },
+  DISCOUNT_STATUS: {
+    NORMAL: 'normal',
+    DELETED: 'deleted',
+  },
+  COUPON_STATUS: {
+    NORMAL: 'normal',
+    ARCHIVED: 'archived',
+    DELETED: 'deleted',
+  },
 
 };
 
