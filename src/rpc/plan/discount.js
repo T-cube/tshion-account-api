@@ -14,13 +14,17 @@ const discountModel = new DiscountModel();
 
 route.on('/list', (query) => {
   let { page, pagesize, status } = query;
-  status = status.split(',').filter(i => _.contains(ENUMS.DISCOUNT_STATUS, i));
+  let criteria;
+  if (status) {
+    status = status.split(',').filter(i => _.contains(ENUMS.DISCOUNT_STATUS, i));
+    criteria = {
+      status: {$in: status}
+    };
+  }
   return discountModel.page({
     page,
     pagesize,
-    criteria: {
-      status: {$in: status}
-    }
+    criteria,
   });
 });
 
