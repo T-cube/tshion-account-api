@@ -436,10 +436,46 @@ OUTPUT
     member_count: Int,
   },
   order: {        // isValid == true
-    _id: ObjectId,
-    ...
+    user_id: ObjectId,
+    company_id: ObjectId,
+    plan: Plan,
+    order_type: OrderTypes,
+    products: [
+      {
+        _id: ObjectId,
+        title: String,
+        plan: String,
+        product_no: String,
+        original_price: Number,
+        quantity: Number,
+        sum: Number,
+        paid_sum: Number
+      },
+    ],
+    member_count: Number,
+    times: Number,
+    original_times: Number,
+    original_sum: Number,
+    paid_sum: Number,
   },
-  coupon: []      // 优惠券列表
+  coupon: [
+    {
+      _id: ObjectId,
+      title: String,
+      description: String,
+      order_type: [OrderTypes],
+      products: [],
+      criteria: {},
+      discount: {},
+      period: {},
+      stock_current: Number,
+      stock_total: Number,
+      date_update: Date,
+      date_create: Date,
+      coupon_no: String,
+      isAvailable: Boolean, // 是否可用
+    }
+  ]      // 优惠券列表
 }
 ```
 
