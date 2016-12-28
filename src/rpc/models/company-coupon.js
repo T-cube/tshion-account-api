@@ -69,6 +69,7 @@ export default class CompanyCouponModel extends Model {
         _id: {$in: coupons}
       }, {
         coupon_no: 1,
+        stock_current: 1,
       }),
       this.db.company.find({
         _id: {$in: companies}
@@ -77,27 +78,41 @@ export default class CompanyCouponModel extends Model {
       }),
     ])
     .then(([coupons, companies]) => {
-      let date_create = new Date();
+      if (!coupons.length || !companies.length) {
+        return;
+      }
       companies = _.pluck(companies, '_id');
+      let out_of_stock_coupon = _.pluck(coupons.filter(coupon => coupon.stock_current < companies.length), '_id');
+      if (out_of_stock_coupon.length) {
+        throw new ApiError(400, {out_of_stock_coupon});
+      }
       coupons = coupons.map(i => ({
         coupon: i._id,
         coupon_no: i.coupon_no + (+new Date()).toString(32).substr(-6).toUpperCase(),
         date_create
       }));
-      if (!coupons.length || !companies.length) {
-        return;
-      }
-      return this.db.payment.company.coupon.update({
-        _id: {$in: companies},
-      }, {
-        $push: {
-          list: {$each: coupons}
-        }
-      }, {
-        upsert: true,
-        multi: true,
-      });
-    });
+      let date_create = new Date();
+      return Promise.all([
+        this.db.payment.company.coupon.update({
+          _id: {$in: companies},
+        }, {
+          $push: {
+            list: {$each: coupons}
+          }
+        }, {
+          upsert: true,
+          multi: true,
+        }),
+        this.db.payment.coupon.update({
+          _id: {$in: _.pluck(coupons, 'coupon')},
+        }, {
+          $inc: {
+            stock_current: -companies.length
+          }
+        })
+      ]);
+    })
+    .then(() => ({ok: 1}));
   }
 
 }

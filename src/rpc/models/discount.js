@@ -33,6 +33,7 @@ export default class DiscountModel extends Model {
 
   create(data) {
     data = this._parseData(data);
+    data.status = C.DISCOUNT_STATUS.NORMAL;
     data.date_create = data.date_update = new Date();
     return this.db.payment.discount.insert(data);
   }

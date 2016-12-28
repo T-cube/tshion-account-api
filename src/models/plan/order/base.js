@@ -200,6 +200,7 @@ export default class BaseOrder {
       delete product.discounts;
       return Discount.getProductDiscount(this.order_type, discount, {quantity, total_fee: sum, times: this.times})
       .then(discountItem => {
+        console.log({discountItem});
         if (!discountItem) {
           return;
         }
