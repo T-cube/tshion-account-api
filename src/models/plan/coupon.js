@@ -30,7 +30,7 @@ export default class Coupon {
     return Promise.all([
       db.payment.company.coupon.count({
         _id: this.company_id,
-        list: couponId
+        'list.coupon': couponId
       }),
       db.payment.coupon.findOne({
         _id: couponId,
