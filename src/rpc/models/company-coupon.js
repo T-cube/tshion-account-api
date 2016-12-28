@@ -84,10 +84,15 @@ export default class CompanyCouponModel extends Model {
         coupon_no: i.coupon_no + (+new Date()).toString(32).substr(-6).toUpperCase(),
         date_create
       }));
+      if (!coupons.length || !companies.length) {
+        return;
+      }
       return this.db.payment.company.coupon.update({
         _id: {$in: companies},
       }, {
-        $push: {$each: coupons}
+        $push: {
+          list: {$each: coupons}
+        }
       }, {
         upsert: true,
         multi: true,

@@ -185,21 +185,21 @@ const schema = {
     sanitization: {
       coupons: {
         type: 'array',
-        items: { $ObjectId: 1 }
+        items: { $objectId: 1 }
       },
       companies: {
         type: 'array',
-        items: { $ObjectId: 1 }
+        items: { $objectId: 1 }
       },
     },
     validation: {
       coupons: {
         type: 'array',
-        items: { $ObjectId: 1 }
+        items: { $objectId: 1 }
       },
       companies: {
         type: 'array',
-        items: { $ObjectId: 1 }
+        items: { $objectId: 1 }
       },
     }
   }

@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
-import {ENUMS} from 'models/constants';
+import {ENUMS} from 'lib/constants';
 import { validate } from '../schema/plan';
 import { getObjectId } from '../utils';
 import CouponModel from '../models/coupon';
