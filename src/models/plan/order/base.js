@@ -180,11 +180,12 @@ export default class BaseOrder {
         return;
       }
       let { products } = coupon;
-      if (coupon.products === null) {
+      if (coupon.products === null || coupon.products.length == 2) {
         this._persistOrderDiscount({coupon: coupon._id}, this._getOrderDiscount(coupon));
       } else {
         _.filter(this.products, item => _.contains(products, item.product_no)).map(product => {
           let discountProduct = this._getProductDiscount(product, coupon);
+          console.log(discountProduct);
           this._persistProductDiscount({coupon: coupon._id}, discountProduct, product._id);
         });
       }
