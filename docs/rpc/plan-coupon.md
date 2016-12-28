@@ -31,7 +31,7 @@ OUTPUT
   title: String,
   description: String,
   order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
-  products: [], // product_no P0001 P0002
+  products: [ObjectId],               // product._id
   criteria: {
     type: DiscountType,
     times: Number,
@@ -61,7 +61,7 @@ QUERY
   title: String,
   description: String,
   order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
-  products: [String],                 // P0001 P0002
+  products: [ObjectId],               // product._id
   criteria: {
     type: [times, quantity, total_fee],
     times: Number,
@@ -92,9 +92,9 @@ QUERY
   title: String,
   description: String,
   order_type: [String],               // newly renewal upgrade 适用于某种类型的订单
-  products: [String],                 // P0001 P0002
+  products: [ObjectId],               // product._id
   criteria: {
-    quantity: Number,               // 最低数量
+    quantity: Number,                  // 最低数量
     total_fee: Currency,              // 最低金额
   },
   discount: {

@@ -150,7 +150,7 @@ const schema = {
       products: {
         type: 'array',
         items: {
-          type: 'string'
+          $objectId: 1
         }
       },
       stock_total: { type: 'integer' },
@@ -161,8 +161,7 @@ const schema = {
         type: 'array',
         uniqueness: true,
         items: {
-          type: 'string',
-          $enum: ['P0001', 'P0002']
+          $objectId: 1
         }
       },
       stock_total: { type: 'integer' },

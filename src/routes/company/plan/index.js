@@ -15,7 +15,7 @@ import { checkUserType } from '../utils';
 let api = express.Router();
 export default api;
 
-api.use(checkUserType(C.COMPANY_MEMBER_TYPE.OWNER));
+// api.use(checkUserType(C.COMPANY_MEMBER_TYPE.OWNER));
 
 api.get('/list', (req, res, next) => {
   return Promise.all([

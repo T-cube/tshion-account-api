@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import moment from 'moment';
 
 import { ApiError } from 'lib/error';
+import { indexObjectId } from 'lib/utils';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Coupon from '../coupon';
@@ -183,7 +184,7 @@ export default class BaseOrder {
       if (coupon.products === null || coupon.products.length == 2) {
         this._persistOrderDiscount({coupon: coupon._id}, this._getOrderDiscount(coupon));
       } else {
-        _.filter(this.products, item => _.contains(products, item.product_no)).map(product => {
+        _.filter(this.products, product => indexObjectId(products, product._id) > -1).map(product => {
           let discountProduct = this._getProductDiscount(product, coupon);
           this._persistProductDiscount({coupon: coupon._id}, discountProduct, product._id);
         });
@@ -200,7 +201,6 @@ export default class BaseOrder {
       delete product.discounts;
       return Discount.getProductDiscount(this.order_type, discount, {quantity, total_fee: sum, times: this.times})
       .then(discountItem => {
-        console.log({discountItem});
         if (!discountItem) {
           return;
         }
@@ -232,7 +232,7 @@ export default class BaseOrder {
       this.times += discountInfo.times;
       break;
     }
-    product.discount_using = (product.discount_using || []).concat(discountInfo);
+    // product.discount_using = (product.discount_using || []).concat(discountInfo);
     this.discount = (this.discount || []).concat(_.extend({}, {product: product.product_no}, discountInfo));
   }
 
