@@ -130,7 +130,7 @@ export default class BaseOrder {
   }
 
   getCoupons() {
-    return new Coupon(this.company_id).getCoupons()
+    return new Coupon(this.company_id).getCoupons(this.order_type)
     .then(coupons => {
       coupons.forEach(coupon => {
         coupon.isAvailable = this.isCouponAvailable(coupon);
