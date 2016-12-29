@@ -1,11 +1,10 @@
 import _ from 'underscore';
+
 import C from 'lib/constants';
 import db from 'lib/database';
 import {ApiError} from 'lib/error';
 import Plan from 'models/plan/plan';
 import Payment from 'models/plan/payment';
-
-import ChargeOrder from 'models/plan/charge-order';
 
 
 export default class PlanOrder {
@@ -43,31 +42,6 @@ export default class PlanOrder {
     return this.order[key];
   }
 
-  pay(payment_method) {
-    let payment_data = {
-      appid: 'wx80bb623*******',
-      mch_id: '1348******',
-      nonce_str: 'uKJZUSzetduXALVN',
-      body: 'heiheihei',
-      detail: '',
-      out_trade_no: 'WX_14821479349944501',
-      total_fee: '100',
-      spbill_create_ip: '110.84.35.141',
-      notify_url: 'http%253A%252F%252Fwxtest.tlifang.com%252Fredirect',
-      trade_type: 'NATIVE',
-      return_code: 'SUCCESS',
-      return_msg: 'OK',
-      sign: '34029ED1B0E5C044ADA5E61FA6BC8CA1',
-      result_code: 'SUCCESS',
-      prepay_id: 'wx20161117103224e888877af80382167652',
-      code_url: 'weixin://wxpay/bizpayurl?pr=XpYtxsN',
-      timestamp: 1479349944,
-      payment_method
-    };
-    return ChargeOrder.create('plan', this.order, payment_method, payment_data)
-    .then(() => payment_data);
-  }
-
   handlePaySuccess(payment_method) {
     let {order} = this;
     return this.initTransaction(order.payment_method)
@@ -81,7 +55,6 @@ export default class PlanOrder {
   }
 
   doHandlePaySuccess(payment_method, transactionId) {
-    // update payment status
     let {order} = this;
     return Promise.all([
       new Plan(this.company_id).updatePaidFromOrder(order, transactionId),

@@ -71,5 +71,10 @@
   "user_exists": "用户已存在",
   "user_has_signed": "您已打卡",
   "update_failed": "更新失败",
-  "wrong_member_type": "错误的成员类型"
+  "wrong_member_type": "错误的成员类型",
+  "order_type_newly": "购买",
+  "order_type_upgrade": "升级",
+  "order_type_degrade": "降级",
+  "order_type_patch": "欠费",
+  "order_type_renewal": "续费"
 }

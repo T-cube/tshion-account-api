@@ -538,6 +538,12 @@ OUTPUT
 
 支付完成后查询订单状态
 
+```javascript
+{
+  order_id: ObjectId,
+  status: String,     // paying succeed
+}
+```
 
 ## recharge
 

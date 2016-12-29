@@ -47,6 +47,7 @@ import WechatUtil from 'lib/wechat-util';
 import UserActivity from 'models/user-activity';
 import Preference from 'models/preference';
 import AuthPic from 'models/plan/auth-pic';
+import Payment from 'models/plan/payment';
 import C from 'lib/constants';
 
 // welcome messages and output corre config
@@ -91,6 +92,7 @@ app.loadModel('socket', SocketServer, io);
 app.loadModel('user-activity', UserActivity);
 app.loadModel('preference', Preference);
 app.loadModel('auth-pic', AuthPic);
+app.loadModel('payment', Payment);
 
 let _loader = {};
 app.bindLoader(_loader);

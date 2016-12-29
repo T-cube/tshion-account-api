@@ -1,8 +1,8 @@
 import config from 'config';
 import Pay from '@ym/payment';
-import {ApiError} from 'lib/error';
 
 import C from 'lib/constants';
+import {ApiError} from 'lib/error';
 import db from 'lib/database';
 import {indexObjectId} from 'lib/utils';
 
@@ -41,8 +41,19 @@ export default class Payment {
     return this.methods[method].instance;
   }
 
-  pay(order, payMethod) {
-    return this.payWechat(order);
+  payOrder(order, payment_method) {
+    return ChargeOrder.getChargeInfo(order._id, payment_method)
+    .then(payment_data => {
+      if (payment_data) {
+        return payment_data;
+      }
+      switch (payment_method) {
+      case 'wxpay':
+        return this.payWechat(order);
+      case 'alipay':
+        return this.payAlipay(order);
+      }
+    });
   }
 
   getUrls() {
@@ -50,6 +61,10 @@ export default class Payment {
       notify_url: 'http://tlifang.com/hahaha',
       redirect_url: 'http://tlifang.com/hahaha'
     };
+  }
+
+  getOrderTitle(order_type) {
+    return __(`order_type_${order_type}`);
   }
 
   payWechat(order) {
@@ -60,16 +75,15 @@ export default class Payment {
         method: this.pay.wxpay.trade_type.NATIVE, // NATIVE | APP | JSAPI
         notify_url: encodeURIComponent(notify_url),
         redirect_url: encodeURIComponent(redirect_url),
-        title: order.order_type,
+        title: this.getOrderTitle(order.order_type),
         total_fee: 1 || order.paid_sum, // TODO
         spbill_create_ip: '110.84.35.141'
       }
     })
     .then(data => {
-      let {code_url} = data;
-      if (code_url) {
+      if (data.code_url) {
         return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, 'wxpay', data)
-        .then(() => ({code_url}));
+        .then(() => data);
       }
     });
   }
@@ -82,15 +96,14 @@ export default class Payment {
         method: this.pay.alipay.method.PC,  // WAP | PC
         notify_url: encodeURIComponent(notify_url),
         redirect_url: encodeURIComponent(redirect_url),
-        title: order.order_type,
+        title: this.getOrderTitle(order.order_type),
         total_fee: 1 || order.paid_sum, // TODO
       }
     })
     .then(data => {
-      let {url} = data;
-      if (url) {
+      if (data.url) {
         return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, 'alipay', data)
-        .then(() => ({url}));
+        .then(() => data);
       }
     });
   }
@@ -104,14 +117,6 @@ export default class Payment {
     return ChargeOrder.savePaymentNotifyAndGetData(response)
     .then(chargeData => chargeData && chargeData.order_id);
   }
-
-  // handlePaySuccess(order, paymentInfo, transactionId) {
-  //
-  // }
-  //
-  // commitPaySuccess(order, paymentInfo, transactionId) {
-  //
-  // }
 
   payWithBalance(order, transactionId) {
     let {paid_sum, company_id} = order;
@@ -203,7 +208,7 @@ export default class Payment {
         return {ok: 0, error: 'payment_not_found'};
       }
       console.log({payment_query, out_trade_no});
-      let {code, trade_status} = payment_query.alipay_trade_query_response;
+      let {trade_status} = payment_query.alipay_trade_query_response;
       if (trade_status != 'TRADE_SUCCESS') {
         return {ok: 0, trade_state: trade_status};
       }
@@ -222,5 +227,6 @@ export default class Payment {
       return {ok: 0, error: 'payment_not_found'};
     });
   }
+
 
 }

@@ -76,21 +76,26 @@ api.post('/:order_id/pay', (req, res, next) => {
       return planOrder.prepareDegrade()
       .then(() => res.json({}));
     }
-    switch (payment_method) {
-    case 'balance':
+    if (payment_method == 'balance') {
       return planOrder.payWithBalance()
       .then(() => res.json({order_id, status: C.ORDER_STATUS.SUCCEED}));
-    case 'wxpay':
-      return new Payment().payWechat(planOrder.order)
-      .then(({code_url}) => {
+    }
+    return req.model('payment').payOrder(planOrder.order, payment_method)
+    .then(payment_data => {
+      if (!payment_data) {
+        throw new ApiError(500);
+      }
+      if (payment_method == 'wxpay') {
+        let {code_url} = payment_data;
         let svg = Qr.imageSync(code_url, { type: 'svg' });
         let qr_url = 'data:image/svg+xml;base64,' + new Buffer(svg).toString('base64');
-        res.json({order_id, qr_url, status: C.ORDER_STATUS.PAYING});
-      });
-    case 'alipay':
-      return new Payment().payAlipay(planOrder.order)
-      .then(({url}) => res.json({order_id, url, status: C.ORDER_STATUS.PAYING}));
-    }
+        return res.json({order_id, qr_url, status: C.ORDER_STATUS.PAYING});
+      }
+      if (payment_method == 'alipay') {
+        let {url} = payment_data;
+        return res.json({order_id, url, status: C.ORDER_STATUS.PAYING});
+      }
+    });
   })
   .catch(next);
 });
@@ -168,6 +173,11 @@ api.get('/:order_id/query', (req, res, next) => {
       });
     }
   })
-  .then(doc => res.json(doc))
+  .then(({ok, trade_state}) => {
+    if (ok) {
+      return res.json({order_id, status: C.ORDER_STATUS.SUCCEED});
+    }
+    return res.json({order_id, trade_state, status: C.ORDER_STATUS.PAYING});
+  })
   .catch(next);
 });
