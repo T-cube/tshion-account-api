@@ -166,7 +166,7 @@ export default class PlanOrder {
       $set: {
         status: C.ORDER_STATUS.SUCCEED,
         payment: {
-          method: C.PAYMENT_METHOD.BALANCE,
+          method: 'balance',
           date_paid: new Date()
         },
       },

@@ -7,16 +7,17 @@ export default class ChargeOrder {
 
   static create(charge_type, order, payment_method, payment_data) {
     let {company_id, paid_sum, order_no} = order;
+    let {payment_type} = payment_data;
     let data = {
       company_id,
       amount: paid_sum,
       charge_type,
-      // payment_type,
+      payment_type,
       payment_method,
       order_id: order._id,
       order_no,
       date_create: new Date(),
-      status: '',
+      status: C.ORDER_STATUS.SUCCEED,
       payment_data,
     };
     return db.payment.charge.order.insert(data);

@@ -14,15 +14,15 @@ export default class Payment {
   constructor() {
     this.methods = [
       {
-        key: C.PAYMENT_METHOD.ALIPAY,
+        key: 'alipay',
         title: '支付宝'
       },
       {
-        key: C.PAYMENT_METHOD.WECHAT,
+        key: 'wxpay',
         title: '微信支付'
       },
       {
-        key: C.PAYMENT_METHOD.BALANCE,
+        key: 'balance',
         title: '余额'
       }
     ];
@@ -66,13 +66,31 @@ export default class Payment {
       }
     })
     .then(data => {
-      console.log({data});
       let {code_url} = data;
       if (code_url) {
-        return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, 'wechat', data)
-        .then(() => {
-          return {code_url};
-        });
+        return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, 'wxpay', data)
+        .then(() => ({code_url}));
+      }
+    });
+  }
+
+  payAlipay(order) {
+    let {notify_url, redirect_url} = this.getUrls();
+    return this.pay.createPay({
+      type:'alipay',
+      opts:{
+        method: this.pay.alipay.method.PC,  // WAP | PC
+        notify_url: encodeURIComponent(notify_url),
+        redirect_url: encodeURIComponent(redirect_url),
+        title: order.order_type,
+        total_fee: 1 || order.paid_sum, // TODO
+      }
+    })
+    .then(data => {
+      let {url} = data;
+      if (url) {
+        return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, 'alipay', data)
+        .then(() => ({url}));
       }
     });
   }
@@ -169,6 +187,39 @@ export default class Payment {
         .then(() => planOrder.handlePaySuccess())
         .then(() => ({ok: 1}));
       });
+    })
+    .catch(e => {
+      console.error(e);
+      return {ok: 0, error: 'payment_not_found'};
+    });
+  }
+
+  queryAlipayOrder({out_trade_no, order_id}) {
+    return this.pay.query({
+      type: 'alipay',
+      out_trade_no
+    }).then(payment_query => {
+      if (!payment_query) {
+        return {ok: 0, error: 'payment_not_found'};
+      }
+      console.log({payment_query, out_trade_no});
+      let {code, trade_status} = payment_query.alipay_trade_query_response;
+      if (trade_status != 'TRADE_SUCCESS') {
+        return {ok: 0, trade_state: trade_status};
+      }
+      return PlanOrder.init({order_id})
+      .then(planOrder => {
+        if (!planOrder) {
+          return {ok: 0, error: 'invalid_order_status'};
+        }
+        return ChargeOrder.savePaymentQueryAndGetData(payment_query)
+        .then(() => planOrder.handlePaySuccess())
+        .then(() => ({ok: 1}));
+      });
+    })
+    .catch(e => {
+      console.error(e);
+      return {ok: 0, error: 'payment_not_found'};
     });
   }
 

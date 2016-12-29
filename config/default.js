@@ -255,12 +255,13 @@ module.exports = {
       KEY: process.env.ALIPAY_KEY,
       PARTNER: process.env.ALIPAY_PARTNER,
       EMAIL: process.env.ALIPAY_EMAIL,
+      PRIVATE_KEY: process.env.ALIPAY_PRIVATE_KEY,
     },
     wxpay: {
       APIKEY: process.env.WXPAY_APIKEY,
       APPID: process.env.WXPAY_APPID,
       APPSECRET: process.env.WXPAY_APPSECRET,
-      MCHID: process.env.WXPAY_MCHID
+      MCHID: process.env.WXPAY_MCHID,
     }
   }
 };

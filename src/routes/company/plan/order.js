@@ -76,26 +76,20 @@ api.post('/:order_id/pay', (req, res, next) => {
       return planOrder.prepareDegrade()
       .then(() => res.json({}));
     }
-    if (payment_method == C.PAYMENT_METHOD.BALANCE) {
+    switch (payment_method) {
+    case 'balance':
       return planOrder.payWithBalance()
-      .then(() => res.json({}));
-    } else {
-      // return planOrder.pay(payment_method)
-      // .then(doc => {
-      //   if (doc) {
-      //     let {code_url} = doc;
-      //     if (code_url) {
-      //       return res.json({code_url});
-      //     }
-      //   }
-      //   throw new ApiError(500);
-      // });
+      .then(() => res.json({order_id, status: C.ORDER_STATUS.SUCCEED}));
+    case 'wxpay':
       return new Payment().payWechat(planOrder.order)
       .then(({code_url}) => {
         let svg = Qr.imageSync(code_url, { type: 'svg' });
-        let image_url = 'data:image/svg;base64,' + new Buffer(svg).toString('base64');
-        res.json({order_id, image_url});
+        let qr_url = 'data:image/svg+xml;base64,' + new Buffer(svg).toString('base64');
+        res.json({order_id, qr_url, status: C.ORDER_STATUS.PAYING});
       });
+    case 'alipay':
+      return new Payment().payAlipay(planOrder.order)
+      .then(({url}) => res.json({order_id, url, status: C.ORDER_STATUS.PAYING}));
     }
   })
   .catch(next);
@@ -161,10 +155,18 @@ api.get('/:order_id/query', (req, res, next) => {
     if (order.status == C.ORDER_STATUS.SUCCEED) {
       return {ok: 1};
     }
-    return new Payment().queryWechatOrder({
-      order_id: order_id,
-      out_trade_no: charge.payment_data.out_trade_no
-    });
+    switch (charge.payment_method) {
+    case 'wxpay':
+      return new Payment().queryWechatOrder({
+        order_id: order_id,
+        out_trade_no: charge.payment_data.out_trade_no
+      });
+    case 'alipay':
+      return new Payment().queryAlipayOrder({
+        order_id: order_id,
+        out_trade_no: charge.payment_data.out_trade_no
+      });
+    }
   })
   .then(doc => res.json(doc))
   .catch(next);
