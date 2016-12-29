@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import Qr from 'qr-image';
 
 import db from 'lib/database';
 import { getPageInfo } from 'lib/utils';
@@ -90,7 +91,11 @@ api.post('/:order_id/pay', (req, res, next) => {
       //   throw new ApiError(500);
       // });
       return new Payment().payWechat(planOrder.order)
-      .then(doc => res.json(doc));
+      .then(({code_url}) => {
+        let svg = Qr.imageSync(code_url, { type: 'svg' });
+        let image_url = 'data:image/svg;base64,' + new Buffer(svg).toString('base64');
+        res.json({order_id, image_url});
+      });
     }
   })
   .catch(next);
