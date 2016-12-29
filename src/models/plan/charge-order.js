@@ -44,7 +44,10 @@ export default class ChargeOrder {
         'payment_data.out_trade_no': out_trade_no,
       },
       update: {
-        $set: {payment_query}
+        $set: {
+          status: C.ORDER_STATUS.SUCCEED,
+          payment_query
+        }
       }
     })
     .then(doc => doc.value);

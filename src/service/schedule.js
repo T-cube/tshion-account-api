@@ -110,6 +110,7 @@ export default class ScheduleServer {
   queryOrder() {
     return db.payment.charge.order.find({
       payment_notify: {$exists: false},
+      payment_query: {$exists: false},
       date_create: {$lt: moment().subtract(2, 'minutes').toDate()}
     })
     .forEach(item => {

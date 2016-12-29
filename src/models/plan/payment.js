@@ -12,18 +12,20 @@ import PlanOrder from 'models/plan/plan-order';
 export default class Payment {
 
   constructor() {
-
-    this.methods = {
-      [C.PAYMENT_METHOD.ALIPAY]: {
+    this.methods = [
+      {
+        key: C.PAYMENT_METHOD.ALIPAY,
         title: '支付宝'
       },
-      [C.PAYMENT_METHOD.WECHAT]: {
+      {
+        key: C.PAYMENT_METHOD.WECHAT,
         title: '微信支付'
       },
-      [C.PAYMENT_METHOD.BALANCE]: {
+      {
+        key: C.PAYMENT_METHOD.BALANCE,
         title: '余额'
       }
-    };
+    ];
     this.init();
   }
 
@@ -31,9 +33,7 @@ export default class Payment {
     this.pay = new Pay(config.get('payment'));
   }
 
-  getMethods(orderId) {
-    // if (orderId)
-    // return db.plan.order.find({_id: orderId})
+  getMethods() {
     return this.methods;
   }
 
@@ -152,23 +152,18 @@ export default class Payment {
       type: 'wxpay',
       out_trade_no
     }).then(payment_query => {
-      if (!payment_query) {
-        return;
+      if (!payment_query || payment_query.trade_state != 'SUCCESS') {
+        return {ok: 0};
       }
-      console.log({payment_query});
-      let {trade_state} = payment_query;
-      if (trade_state == 'SUCCESS') {
-        return PlanOrder.init({order_id})
-        .then(planOrder => {
-          if (!planOrder) {
-            return;
-          }
-          return ChargeOrder.savePaymentQueryAndGetData(payment_query)
-          .then(() => {
-            return planOrder.handlePaySuccess();
-          });
-        });
-      }
+      return PlanOrder.init({order_id})
+      .then(planOrder => {
+        if (!planOrder) {
+          return {ok: 0};
+        }
+        return ChargeOrder.savePaymentQueryAndGetData(payment_query)
+        .then(() => planOrder.handlePaySuccess())
+        .then(() => ({ok: 1}));
+      });
     });
   }
 

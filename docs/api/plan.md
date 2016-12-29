@@ -105,6 +105,29 @@ OUTPUT
 ]
 ```
 
+### GET /payment
+
+获取支付方式
+
+OUTPUT
+
+```javascript
+[
+  {
+    key: 'alipay',
+    title: '支付宝'
+  },
+  {
+    key: 'wechat',
+    title: '微信支付'
+  },
+  {
+    key: 'balance',
+    title: '余额'
+  }
+]
+```
+
 ### GET /status
 
 获取当前的认证状态
@@ -499,6 +522,10 @@ INPUT
   payment_method: String, // alipay|wechat
 }
 ```
+
+### GET /order/:orderId/query
+
+支付完成后查询订单状态
 
 
 ## recharge

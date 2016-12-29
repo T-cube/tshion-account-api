@@ -253,10 +253,10 @@ module.exports = {
       EMAIL: 'email'
     },
     wxpay: {
-      APIKEY: '6HpsxReFVe09fqB',
-      APPID: 'wx7961afad7b487af1',
-      APPSECRET: '737',
-      MCHID: '71302'
+      APIKEY: 'apikey',
+      APPID: 'appid',
+      APPSECRET: 'appsecret',
+      MCHID: 'mchid'
     }
   }
 };

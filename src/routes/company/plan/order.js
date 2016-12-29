@@ -133,3 +133,36 @@ api.get('/:order_id', (req, res, next) => {
   })
   .catch(next);
 });
+
+api.get('/:order_id/query', (req, res, next) => {
+  let company_id = req.company._id;
+  let order_id = ObjectId(req.params.order_id);
+  return Promise.all([
+    db.payment.order.findOne({
+      _id: order_id,
+      company_id
+    }, {
+      status: 1
+    }),
+    db.payment.charge.order.findOne({
+      order_id,
+      company_id
+    }, {
+      out_trade_no: 1,
+    })
+  ])
+  .then(([order, charge]) => {
+    if (!order || !charge) {
+      throw new ApiError(404);
+    }
+    if (order.status == C.ORDER_STATUS.SUCCEED) {
+      return {ok: 1};
+    }
+    return new Payment().queryWechatOrder({
+      order_id: order_id,
+      out_trade_no: charge.payment_data.out_trade_no
+    });
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
