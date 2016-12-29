@@ -8,6 +8,9 @@
 // fix absolute path
 import './bootstrap';
 
+// .env
+require('dotenv').config();
+
 import Promise from 'bluebird';
 import http from 'http';
 import express from 'express';

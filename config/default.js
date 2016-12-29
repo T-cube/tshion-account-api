@@ -247,16 +247,16 @@ module.exports = {
   },
   payment: {
     alipay: {
-      APPID: 'appid',
-      KEY: 'key',
-      PARTNER: 'partner',
-      EMAIL: 'email'
+      APPID: process.env.WXPAY_APIKEY,
+      KEY: process.env.WXPAY_APPID,
+      PARTNER: process.env.WXPAY_APPSECRET,
+      EMAIL: process.env.WXPAY_MCHID
     },
     wxpay: {
-      APIKEY: 'apikey',
-      APPID: 'appid',
-      APPSECRET: 'appsecret',
-      MCHID: 'mchid'
+      APIKEY: process.env.ALIPAY_APPID,
+      APPID: process.env.ALIPAY_KEY,
+      APPSECRET: process.env.ALIPAY_PARTNER,
+      MCHID: process.env.ALIPAY_EMAIL
     }
   }
 };
