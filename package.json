@@ -34,6 +34,7 @@
     "config": "^1.20.1",
     "connect-redis": "^3.1.0",
     "cron-parser": "^2.0.3",
+    "dotenv": "^2.0.0",
     "easyimage": "^2.1.0",
     "ejs": "^2.4.2",
     "escape-regexp": "0.0.1",
