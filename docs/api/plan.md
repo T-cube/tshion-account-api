@@ -118,7 +118,7 @@ OUTPUT
     title: '支付宝'
   },
   {
-    key: 'wechat',
+    key: 'wxpay',
     title: '微信支付'
   },
   {
@@ -519,7 +519,18 @@ INPUT
 
 ```javascript
 {
-  payment_method: String, // alipay|wechat
+  payment_method: String, // alipay|wxpay/balance
+}
+```
+
+OUTPUT
+
+```javascript
+{
+  order_id: ObjectId,
+  qr_url: base64,     // 微信支付二维码地址
+  url: Url,           // 支付宝支付地址，打开新标签页
+  status: String,     // paying succeed (余额支付直接返回succeed)
 }
 ```
 
