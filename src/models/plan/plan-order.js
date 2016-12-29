@@ -64,7 +64,7 @@ export default class PlanOrder {
       timestamp: 1479349944,
       payment_method
     };
-    return ChargeOrder.create('plan', this.order, payment_data)
+    return ChargeOrder.create('plan', this.order, payment_method, payment_data)
     .then(() => payment_data);
   }
 

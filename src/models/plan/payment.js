@@ -69,15 +69,16 @@ export default class Payment {
       console.log({data});
       let {code_url} = data;
       if (code_url) {
-        return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, data).then(() => {
+        return this.createChargeOrder(C.CHARGE_TYPE.PLAN, order, 'wechat', data)
+        .then(() => {
           return {code_url};
         });
       }
     });
   }
 
-  createChargeOrder(chargeType, order, payment_data) {
-    return ChargeOrder.create(chargeType, order, payment_data);
+  createChargeOrder(chargeType, order, payment_method, payment_data) {
+    return ChargeOrder.create(chargeType, order, payment_method, payment_data);
   }
 
   handleWechatPayResponse(response) {
@@ -152,13 +153,17 @@ export default class Payment {
       type: 'wxpay',
       out_trade_no
     }).then(payment_query => {
-      if (!payment_query || payment_query.trade_state != 'SUCCESS') {
-        return {ok: 0};
+      if (!payment_query) {
+        return {ok: 0, error: 'payment_not_found'};
+      }
+      let {trade_state, trade_state_desc} = payment_query;
+      if (trade_state != 'SUCCESS') {
+        return {ok: 0, trade_state, trade_state_desc};
       }
       return PlanOrder.init({order_id})
       .then(planOrder => {
         if (!planOrder) {
-          return {ok: 0};
+          return {ok: 0, error: 'invalid_order_status'};
         }
         return ChargeOrder.savePaymentQueryAndGetData(payment_query)
         .then(() => planOrder.handlePaySuccess())

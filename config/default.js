@@ -1,3 +1,7 @@
+
+// load .env
+require('dotenv').config();
+
 module.exports = {
   apiUrl: 'https://tlifang.com/',
   webUrl: 'https://tlifang.com/',
@@ -247,16 +251,16 @@ module.exports = {
   },
   payment: {
     alipay: {
-      APPID: process.env.WXPAY_APIKEY,
-      KEY: process.env.WXPAY_APPID,
-      PARTNER: process.env.WXPAY_APPSECRET,
-      EMAIL: process.env.WXPAY_MCHID
+      APPID: process.env.ALIPAY_APPID,
+      KEY: process.env.ALIPAY_KEY,
+      PARTNER: process.env.ALIPAY_PARTNER,
+      EMAIL: process.env.ALIPAY_EMAIL,
     },
     wxpay: {
-      APIKEY: process.env.ALIPAY_APPID,
-      APPID: process.env.ALIPAY_KEY,
-      APPSECRET: process.env.ALIPAY_PARTNER,
-      MCHID: process.env.ALIPAY_EMAIL
+      APIKEY: process.env.WXPAY_APIKEY,
+      APPID: process.env.WXPAY_APPID,
+      APPSECRET: process.env.WXPAY_APPSECRET,
+      MCHID: process.env.WXPAY_MCHID
     }
   }
 };

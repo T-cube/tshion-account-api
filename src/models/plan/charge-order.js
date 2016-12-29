@@ -5,10 +5,8 @@ export default class ChargeOrder {
 
   constructor() {}
 
-  static create(charge_type, order, payment_data) {
+  static create(charge_type, order, payment_method, payment_data) {
     let {company_id, paid_sum, order_no} = order;
-    let {payment_type, payment_method} = payment_data;
-
     let data = {
       company_id,
       amount: paid_sum,

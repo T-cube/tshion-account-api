@@ -147,8 +147,6 @@ api.get('/:order_id/query', (req, res, next) => {
     db.payment.charge.order.findOne({
       order_id,
       company_id
-    }, {
-      out_trade_no: 1,
     })
   ])
   .then(([order, charge]) => {
