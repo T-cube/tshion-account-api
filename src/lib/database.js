@@ -57,8 +57,6 @@ const collections = [
   'wiki',
 
   // plan
-  'payment.order',
-  'company.coupon',
   'user.realname',
 
   'ids',                      // id 自增
@@ -71,10 +69,12 @@ const collections = [
   'plan.auth.pic',
   'plan.company',
   'payment.product',
+  'payment.token',
   'payment.discount',
   'payment.coupon',
   'payment.company.coupon',
   'payment.recharge',
+  'payment.order',
   'payment.recharge.discount',
   'payment.charge.order',
   'payment.product.history',

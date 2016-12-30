@@ -546,6 +546,19 @@ OUTPUT
 }
 ```
 
+### GET /order/:orderId/token
+
+获取支付token（暂时只支持支付宝）
+
+```javascript
+{
+  token: String,
+}
+```
+
+然后跳转到`/api/payment/plan/pay?token=token&payment_method=alipay`
+
+
 ## recharge
 
 充值

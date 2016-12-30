@@ -1,9 +1,10 @@
 import _ from 'underscore';
 import express from 'express';
+import moment from 'moment';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
-import { getPageInfo } from 'lib/utils';
+import { getPageInfo, generateToken, timestamp } from 'lib/utils';
 import C, {ENUMS} from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
@@ -167,6 +168,29 @@ api.get('/:order_id/query', (req, res, next) => {
       return res.json({order_id, status: C.ORDER_STATUS.SUCCEED});
     }
     return res.json({order_id, trade_state, status: C.ORDER_STATUS.PAYING});
+  })
+  .catch(next);
+});
+
+api.get('/:order_id/token', (req, res, next) => {
+  let order_id = ObjectId(req.params.order_id);
+  let company_id = req.company._id;
+  let user_id = req.user._id;
+  return PlanOrder.init({company_id, order_id})
+  .then(planOrder => {
+    if (!planOrder) {
+      throw new ApiError(400, 'invalid_order_status');
+    }
+    return generateToken(48).then(token => {
+      res.json({token});
+      return db.payment.token.insert({
+        _id: token,
+        company_id,
+        order_id,
+        user_id,
+        expires: moment().add(20, 'minutes').toDate(),
+      });
+    });
   })
   .catch(next);
 });
