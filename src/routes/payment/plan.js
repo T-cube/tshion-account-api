@@ -18,6 +18,9 @@ api.use(bodyParser.json());
 
 api.get('/pay', (req, res, next) => {
   let {payment_method, token} = req.query;
+  if (payment_method != 'alipay' || !token) {
+    throw new ApiError(400, 'invalid_params');
+  }
   return db.payment.token.findOne({_id: token})
   .then(doc => {
     if (!doc) {
@@ -27,10 +30,6 @@ api.get('/pay', (req, res, next) => {
       throw new ApiError(400, 'expired');
     }
     let {company_id, order_id} = doc;
-    // just alipay
-    if (payment_method != 'alipay') {
-      throw new ApiError(400, 'invalid_params');
-    }
     return PlanOrder.init({company_id, order_id})
     .then(planOrder => {
       if (!planOrder) {
@@ -50,7 +49,7 @@ api.get('/pay', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/wechat', (req, res, next) => {
+api.post('/notify/:charge_type/:payment_method', (req, res, next) => {
   let response = req.body;
   // checkSign(data).catch(next);
   let {return_code, result_code} = response;

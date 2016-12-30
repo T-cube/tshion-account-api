@@ -637,6 +637,8 @@ OUTPUT
 
 查询充值的状态
 
+OUTPUT
+
 ```javascript
 {
   recharge_id: ObjectId,

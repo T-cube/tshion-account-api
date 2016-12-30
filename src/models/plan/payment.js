@@ -49,7 +49,6 @@ export default class Payment {
     return ChargeOrder.getChargeInfo(order._id, payment_method)
     .then(payment_data => {
       if (payment_data) {
-        console.log(payment_data);
         return this.parseResponse(C.CHARGE_TYPE.PLAN, payment_method, order, payment_data);
       }
       return this._pay(C.CHARGE_TYPE.PLAN, payment_method, order);
@@ -58,8 +57,8 @@ export default class Payment {
 
   getUrls(charge_type, payment_method) {
     return {
-      notify_url: 'http://tlifang.com/hahaha',
-      redirect_url: 'http://tlifang.com/hahaha'
+      notify_url: `http://tlifang.com/api/payment/plan/${charge_type}/${payment_method}`,
+      redirect_url: `http://tlifang.com/api/payment/plan/${charge_type}/${payment_method}`,
     };
   }
 
