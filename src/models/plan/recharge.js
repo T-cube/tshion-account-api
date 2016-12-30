@@ -7,6 +7,7 @@ import moment from 'moment';
 import ApiError from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
+
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
 export default class Recharge {
@@ -22,10 +23,10 @@ export default class Recharge {
     let {company_id, user_id} = this;
     return this.isValid()
     .then(() => Promise.all([
-      this.getChargeDiscount(amount),
       this.createOrderNo(),
+      this.getChargeDiscount(amount),
     ]))
-    .then(([discount, charge_no]) => {
+    .then(([recharge_no, discount]) => {
       let {extra_amount} = discount;
       let paid_sum = amount - extra_amount;
       let data = {
@@ -34,17 +35,13 @@ export default class Recharge {
         user_id,
         paid_sum,
         payment_method,
-        charge_no,
+        recharge_no,
         discount: extra_amount ? discount : null,
         status: C.ORDER_STATUS.CREATED,
         date_create: new Date(),
         date_update: new Date(),
       };
       return db.payment.recharge.insert(data);
-    })
-    .then(recharge => {
-      // TODO pay recharge order here
-
     });
   }
 
@@ -66,24 +63,26 @@ export default class Recharge {
   }
 
   getChargeDiscount(amount) {
-    return db.payment.recharge.discount.find({
-      amount: {$lte: amount}
-    })
-    .sort({
-      amount: -1
-    })
-    .limit(1)
-    .then(doc => {
-      let discount = doc[0];
-      if (!discount) {
-        return {extra_amount: 0};
-      }
-      return _.pick(discount, 'extra_amount', '_id', 'amount');
-    });
+    return {extra_amount: 0};
+    // return db.payment.recharge.discount.find({
+    //   amount: {$lte: amount}
+    // })
+    // .sort({
+    //   amount: -1
+    // })
+    // .limit(1)
+    // .then(doc => {
+    //   let discount = doc[0];
+    //   if (!discount) {
+    //     return {extra_amount: 0};
+    //   }
+    //   return _.pick(discount, 'extra_amount', '_id', 'amount');
+    // });
   }
 
   getChargeDiscounts() {
-    return db.payment.recharge.discount.find();
+    return [];
+    // return db.payment.recharge.discount.find();
   }
 
   createOrderNo() {

@@ -528,6 +528,7 @@ OUTPUT
 ```javascript
 {
   order_id: ObjectId,
+  payment_method: String,
   qr_url: base64,     // 微信支付二维码地址
   url: Url,           // 支付宝支付地址，打开新标签页
   status: String,     // paying succeed (余额支付直接返回succeed)
@@ -618,6 +619,18 @@ OUTPUT
 ```javascript
 
 ```
+
+### GET /recharge/:rechargeId/query
+
+查询充值的状态
+
+```javascript
+{
+  recharge_id: ObjectId,
+  status: String,     // paying succeed
+}
+```
+
 
 ## charge
 

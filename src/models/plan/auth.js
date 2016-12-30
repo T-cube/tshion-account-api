@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 

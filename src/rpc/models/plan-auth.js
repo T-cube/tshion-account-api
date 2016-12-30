@@ -119,6 +119,8 @@ export default class PlanAuthModel extends Model {
                   date: new Date()
                 }
               }
+            }, {
+              upsert: true
             }),
             this.db.plan.auth.update({
               company_id,

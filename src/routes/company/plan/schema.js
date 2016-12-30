@@ -152,7 +152,7 @@ const schema = {
     },
     validation: {
       amount: { type: 'integer' },
-      payment_method: { type: 'string' },
+      payment_method: { $enum: ['wxpay', 'alipay'] },
     },
   },
   trial: {
