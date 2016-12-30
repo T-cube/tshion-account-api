@@ -49,7 +49,8 @@ export default class Payment {
     return ChargeOrder.getChargeInfo(order._id, payment_method)
     .then(payment_data => {
       if (payment_data) {
-        return payment_data;
+        console.log(payment_data);
+        return this.parseResponse(C.CHARGE_TYPE.PLAN, payment_method, order, payment_data);
       }
       return this._pay(C.CHARGE_TYPE.PLAN, payment_method, order);
     });
@@ -88,30 +89,32 @@ export default class Payment {
     })
     .then(payment_data => {
       return this.createChargeOrder(charge_type, order, payment_method, payment_data)
-      .then(() => {
-        let status = C.ORDER_STATUS.PAYING;
-        let response = {status, payment_method};
-        if (charge_type == C.CHARGE_TYPE.PLAN) {
-          response.order_id = order._id;
-          response.order_no = order.order_no;
-        } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
-          response.rechargr_id = order._id;
-          response.recharge_no = order.recharge_no;
-        }
-        if (payment_method == 'wxpay') {
-          let {code_url} = payment_data;
-          let svg = Qr.imageSync(code_url, { type: 'svg' });
-          let qr_url = 'data:image/svg+xml;base64,' + new Buffer(svg).toString('base64');
-          response.qr_url = qr_url;
-        }
-        if (payment_method == 'alipay') {
-          let {url} = payment_data;
-          response.url = url;
-        }
-        return response;
-      });
+      .then(() => this.parseResponse({charge_type, payment_method, order, payment_data}));
     })
     .catch(e => console.error(e));
+  }
+
+  parseResponse(charge_type, payment_method, order, payment_data) {
+    let status = C.ORDER_STATUS.PAYING;
+    let response = {status, payment_method};
+    if (charge_type == C.CHARGE_TYPE.PLAN) {
+      response.order_id = order._id;
+      response.order_no = order.order_no;
+    } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
+      response.rechargr_id = order._id;
+      response.recharge_no = order.recharge_no;
+    }
+    if (payment_method == 'wxpay') {
+      let {code_url} = payment_data;
+      let svg = Qr.imageSync(code_url, { type: 'svg' });
+      let qr_url = 'data:image/svg+xml;base64,' + new Buffer(svg).toString('base64');
+      response.qr_url = qr_url;
+    }
+    if (payment_method == 'alipay') {
+      let {url} = payment_data;
+      response.url = url;
+    }
+    return response;
   }
 
   createChargeOrder(charge_type, order, payment_method, payment_data) {
@@ -159,7 +162,7 @@ export default class Payment {
       if (recharge_id) {
         return this._accessQueryRechargeOk(recharge_id, payment_query);
       } else if (order_id) {
-        return this._accessQueryOrderOk(order_id, payment_query);
+        return this._accessQueryOrderOk(order_id, payment_query, 'wxpay');
       }
     })
     .catch(e => {
@@ -185,7 +188,7 @@ export default class Payment {
       if (recharge_id) {
         return this._accessQueryRechargeOk(recharge_id, payment_query);
       } else if (order_id) {
-        return this._accessQueryOrderOk(order_id, payment_query);
+        return this._accessQueryOrderOk(order_id, payment_query, 'alipay');
       }
     })
     .catch(e => {
@@ -194,14 +197,14 @@ export default class Payment {
     });
   }
 
-  _accessQueryOrderOk(order_id, payment_query) {
+  _accessQueryOrderOk(order_id, payment_query, payment_method) {
     return PlanOrder.init({order_id})
     .then(planOrder => {
       if (!planOrder) {
         return {ok: 0, error: 'invalid_order_status'};
       }
       return ChargeOrder.savePaymentQueryAndGetData(payment_query)
-      .then(() => planOrder.handlePaySuccess())
+      .then(() => planOrder.handlePaySuccess(payment_method))
       .then(() => ({ok: 1}));
     });
   }

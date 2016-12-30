@@ -8,11 +8,9 @@ import TaskLoop from 'models/task-loop';
 import AttendanceRemind from 'models/attendance-remind';
 import TaskReport from 'models/task-report';
 import db from 'lib/database';
-import C from 'lib/constants';
 import Plan from 'models/plan/plan';
-import Payment from 'models/plan/payment';
+import TransactionRecover from 'models/plan/transaction-recover';
 
-import PlanOrder from 'models/plan/plan-order';
 
 export default class ScheduleServer {
 
@@ -22,8 +20,7 @@ export default class ScheduleServer {
 
   init() {
     this.doJobs();
-    this.recoverOrderTransaction();
-
+    this.recoverTransaction();
     this.updateTrialPlan();
   }
 
@@ -69,27 +66,9 @@ export default class ScheduleServer {
     });
   }
 
-  recoverOrderTransaction() {
-    return db.transaction.find({
-      order: {$exists: true},
-      status: {$in: ['pending', 'commited']}
-    })
-    .forEach(transaction => {
-      return PlanOrder.init({order_id: transaction.order})
-      .then(planOrder => {
-        if (transaction.payment_method == 'balance') {
-          if (transaction.status == 'pending') {
-            return planOrder.doPayWithBalance(transaction._id)
-            .then(() => planOrder.commitTransaction(transaction._id))
-            .then(() => planOrder.commitPayWithBalance(transaction._id))
-            .then(() => planOrder.doneTransaction(transaction._id));
-          } else {
-            return planOrder.commitPayWithBalance(transaction._id)
-            .then(() => planOrder.doneTransaction(transaction._id));
-          }
-        }
-      });
-    });
+  recoverTransaction() {
+    TransactionRecover.orderPaySuccess();
+    TransactionRecover.rechargePaySuccess();
   }
 
   // 更新到期的试用
@@ -107,18 +86,18 @@ export default class ScheduleServer {
     });
   }
 
-  queryOrder() {
-    return db.payment.charge.order.find({
-      payment_notify: {$exists: false},
-      payment_query: {$exists: false},
-      date_create: {$lt: moment().subtract(2, 'minutes').toDate()}
-    })
-    .forEach(item => {
-      new Payment().queryWechatOrder({
-        order_id: item.order_id,
-        out_trade_no: item.payment_data.out_trade_no
-      });
-    });
-  }
+  // queryOrder() {
+  //   return db.payment.charge.order.find({
+  //     payment_notify: {$exists: false},
+  //     payment_query: {$exists: false},
+  //     date_create: {$lt: moment().subtract(2, 'minutes').toDate()}
+  //   })
+  //   .forEach(item => {
+  //     new Payment().queryWechatOrder({
+  //       order_id: item.order_id,
+  //       out_trade_no: item.payment_data.out_trade_no
+  //     });
+  //   });
+  // }
 
 }

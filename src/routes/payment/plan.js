@@ -13,6 +13,10 @@ export default api;
 api.use(bodyParser.json());
 // api.use(bodyParser.urlencoded({ extended: true }));
 
+api.get('/pay/:token', (req, res, next) => {
+
+});
+
 api.post('/wechat', (req, res, next) => {
   let response = req.body;
   // checkSign(data).catch(next);

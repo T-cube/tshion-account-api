@@ -1,7 +1,6 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import Qr from 'qr-image';
 
 import db from 'lib/database';
 import { getPageInfo } from 'lib/utils';
@@ -10,8 +9,6 @@ import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import PlanOrder from 'models/plan/plan-order';
 import OrderFactory from 'models/plan/order';
-import Plan from 'models/plan/plan';
-import Payment from 'models/plan/payment';
 
 let api = express.Router();
 export default api;

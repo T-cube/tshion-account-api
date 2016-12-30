@@ -5,6 +5,7 @@ import db from 'lib/database';
 import {ApiError} from 'lib/error';
 import Plan from 'models/plan/plan';
 import Payment from 'models/plan/payment';
+import Transaction from 'models/plan/transaction';
 
 
 export default class PlanOrder {
@@ -44,13 +45,16 @@ export default class PlanOrder {
 
   handlePaySuccess(payment_method) {
     let {order} = this;
-    return this.initTransaction(order.payment_method)
+    return Transaction.init('pay_order', {
+      order: order._id,
+      payment_method
+    })
     .then(transactionId => {
-      return this.startTransaction(transactionId)
+      return Transaction.start(transactionId)
       .then(() => this.doHandlePaySuccess(payment_method, transactionId))
-      .then(() => this.commitTransaction(transactionId))
+      .then(() => Transaction.commit(transactionId))
       .then(() => this.commitHandlePaySuccess(transactionId))
-      .then(() => this.doneTransaction(transactionId));
+      .then(() => Transaction.done(transactionId));
     });
   }
 
@@ -90,18 +94,20 @@ export default class PlanOrder {
   }
 
   payWithBalance() {
-    if (this.get('order_type') == C.ORDER_TYPE.RECHARGE) {
-      throw new ApiError(400, 'invalid_order_status');
-    }
-    if (this.get('transactions') && this.get('transactions').length) {
+    let {order} = this;
+    let {transactions} = order;
+    if (transactions && transactions.length) {
       throw new ApiError(400, 'transaction_exist');
     }
-    return this.initTransaction('balance').then(transactionId => {
-      return this.startTransaction(transactionId)
+    return Transaction.init('pay_order', {
+      order: order._id,
+      payment_method: 'balance'
+    }).then(transactionId => {
+      return Transaction.start(transactionId)
       .then(() => this.doPayWithBalance(transactionId))
-      .then(() => this.commitTransaction(transactionId))
+      .then(() => Transaction.commit(transactionId))
       .then(() => this.commitPayWithBalance(transactionId))
-      .then(() => this.doneTransaction(transactionId));
+      .then(() => Transaction.done(transactionId));
     });
   }
 
@@ -156,42 +162,6 @@ export default class PlanOrder {
       $pull: {
         transactions: transactionId
       }
-    });
-  }
-
-  initTransaction(payment_method) {
-    return db.transaction.insert({
-      type: 'pay_order',
-      order: this.get('_id'),
-      payment_method,
-      status: 'initial',
-      date_create: new Date()
-    })
-    .then(doc => doc._id);
-  }
-
-  startTransaction(transactionId) {
-    return this._updateTransactionStatus(transactionId, 'pending');
-  }
-
-  commitTransaction(transactionId) {
-    return this._updateTransactionStatus(transactionId, 'commited');
-  }
-
-  doneTransaction(transactionId) {
-    return this._updateTransactionStatus(transactionId, 'done');
-  }
-
-  cancelTransaction(transactionId) {
-    return this._updateTransactionStatus(transactionId, 'canceled');
-  }
-
-  _updateTransactionStatus(transactionId, status) {
-    return db.transaction.update({
-      _id: transactionId
-    }, {
-      $set: {status},
-      $currentDate: {lastModified: true}
     });
   }
 

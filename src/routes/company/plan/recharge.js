@@ -35,7 +35,6 @@ api.post('/', (req, res, next) => {
   let recharge = new Recharge({company_id, user_id});
   recharge.create(data)
   .then(recharge => {
-    console.log({recharge});
     return req.model('payment').payRecharge(recharge);
   })
   .then(doc => res.json(doc))
@@ -45,7 +44,7 @@ api.post('/', (req, res, next) => {
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);
-  let criteria = {company_id};
+  let criteria = {company_id, status: C.ORDER_STATUS.SUCCEED};
   return Promise.all([
     db.payment.recharge.count(criteria),
     db.payment.recharge.find(criteria, {
