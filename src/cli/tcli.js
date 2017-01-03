@@ -18,7 +18,8 @@ program
   .command('product', 'init product')
   .command('preference', 'reset preference')
   .command('announcement', 'update announcement description')
+  .command('config', 'config utils')
   .parse(process.argv);
 
-console.log('TLifang API Command Line Tool');
-console.log('--------------------------------------------------------------------------------');
+// console.log('TLifang API Command Line Tool');
+// console.log('--------------------------------------------------------------------------------');

@@ -1,21 +1,27 @@
+var fs = require('fs');
 
-// load .env
+// import enviroment variables from .env
+if (!fs.existsSync(__dirname + '/../.env')) {
+  console.error('missing .env config file');
+  process.exit(1);
+}
 require('dotenv').config();
+// DO NOT REMOVE THIS LINE process.env.NODE_ENV
 
 module.exports = {
   apiUrl: 'https://tlifang.com/',
   webUrl: 'https://tlifang.com/',
   mobileUrl: 'https://m.tlifang.com/',
   server: {
-    //host: '127.0.0.1',
-    port: 3000,
+    host: '127.0.0.1', // process.env.SERVER_HOST
+    port: 3000, // process.env.SERVER_PORT
   },
   rpc: {
-    protocol: 'http',
-    hostname: '192.168.1.18',
-    port: 2000,
-    appsecret: 'gvldWZTnQ8BIAReK',
-    appid: 'tlf-api'
+    protocol: 'http', // process.env.RPC_PROTOCOL
+    hostname: '127.0.0.1', // process.env.RPC_HOSTNAME
+    port: 2000, // process.env.RPC_PORT
+    appid: process.env.RPC_APPID,
+    appsecret: process.env.RPC_APPSECRET,
   },
   database: '127.0.0.1/tlf_core',
   locale: 'zh-CN',
@@ -134,8 +140,8 @@ module.exports = {
     },
     showapi: {
       weather: {
-        appid: '5653',
-        secret: 'f668fa7e626043b19b34a61743fcf271'
+        appid: process.env.SHOWAPI_APPID,
+        secret: process.env.SHOWAPI_SECRET,
       },
     },
     officeweb365: {
@@ -148,8 +154,8 @@ module.exports = {
     qiniu: {
       TOKEN_EXPIRE: 3600,
       TOKEN_CACHE_EXPIRE: 3000,
-      ACCESS_KEY: 'f_l5R_bNDR03QjAfqqGy7C3XRuaoMp2qpiHTfAOJ',
-      SECRET_KEY: 'Pp7fk2HmH2LUXa7VnUY1Av8FoUQCY_TPeSf_6Y_2',
+      ACCESS_KEY: process.env.QINIU_ACCESS_KEY,
+      SECRET_KEY: process.env.QINIU_SECRET_KEY,
       buckets: {
         'cdn-public': {
           name: 'cdn-public-test',
@@ -173,8 +179,8 @@ module.exports = {
     },
     sendcloud: {
       email: {
-        apiUser: 'tlf_api_production',
-        apiKey: 'UjWSflKRRJ52NEVi',
+        apiUser: process.env.SENDCLOUD_EMAIL_APIUSER,
+        apiKey: process.env.SENDCLOUD_EMAIL_APIKEY,
         url: 'http://api.sendcloud.net/apiv2/mail/sendtemplate',
         from: 'no-reply@tlifang.com',
         fromName: 'T立方',
@@ -194,8 +200,8 @@ module.exports = {
         },
       },
       sms: {
-        smsUser: 'tlifang_sms_prod',
-        smsKey: 'MFO8diU8qaqPWxicmFMJRPB7IXn5OEE0',
+        smsUser: process.env.SENDCLOUD_SMS_SMSUSER,
+        smsKey: process.env.SENDCLOUD_SMS_SMSKEY,
         url: 'http://sendcloud.sohu.com/smsapi/send',
         templates: {
           tlifang_mobile_activite: {
@@ -217,12 +223,11 @@ module.exports = {
   download: {
     tokenExpires: 30 * 60 * 1000, // half a hour
   },
-  // 测试账号T立方Oa的配置
   wechat: {
-    token: 'wechat',
-    appid: 'wx0215f16935043abf',
-    encodingAESKey: 'PuUMhTzz0JxYxV7bGw4aeNJdxXq3CIw2cTRVe56cTgP',
-    appsecret: '33e3cc720d35830e154a5eab8bc853d3',
+    appid: process.env.WECHAT_APPID,
+    appsecret: process.env.WECHAT_APPSECRET,
+    token: process.env.WECHAT_TOKEN,
+    encodingAESKey: process.env.WECHAT_ENCODINGAESKEY,
     auth_code_lifetime: 60 * 5,
     templates: {
       APPROVAL_ITEM_RESULT: '5SDcb0I1fEPbjpw0KRPzy0-xqmi92jNe5gajq3p32gk',

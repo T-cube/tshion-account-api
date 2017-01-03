@@ -8,11 +8,9 @@
 // fix absolute path
 import './bootstrap';
 
-// .env
-require('dotenv').config();
-
 import Promise from 'bluebird';
 import http from 'http';
+import fs from 'fs';
 import express from 'express';
 import socketio from 'socket.io';
 import oauthServer from 'oauth2-server';
