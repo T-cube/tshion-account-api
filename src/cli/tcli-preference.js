@@ -20,7 +20,7 @@ if (!program.reset) {
 if (program.reset) {
   let preference = new Preference();
   db.user.find().forEach(user => {
-    console.log('init user', user._id);
+    console.log('init user', user._id.toString());
     return preference.init(user._id);
   })
   .then(() => {
