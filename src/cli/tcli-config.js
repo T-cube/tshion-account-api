@@ -49,7 +49,7 @@ function writeConfig(config) {
 function extractConfigKeys() {
   let content = fs.readFileSync(CONFIG_FILE, {encoding: 'utf-8'});
   let keys = [];
-  let pattern = /process\.env\.([A-Z\_]+)/g;
+  let pattern = /process\.env\.([A-Z]\w+)/g;
   let match = pattern.exec(content);
   while (match) {
     keys.push(match[1]);
