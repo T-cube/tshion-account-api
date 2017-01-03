@@ -9,6 +9,7 @@ TeamPlanPaid: String[Enum:pro,ent] // 专业版，企业版
 PlanStatus: String[Enum:actived,expired,overdue],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 OrderTypes: String[newly（新购）, renewal（续费）, upgrade（升级）, degrade（降级）, patch（补交欠费）],
+ChargeType: String[plan, recharge],
 ```
 
 ## 挂载点
@@ -126,6 +127,19 @@ OUTPUT
     title: '余额'
   }
 ]
+```
+
+### GET /balance
+
+获取公司账户余额
+
+OUTPUT
+
+```javascript
+{
+  company_id: ObjectId,
+  balance: Currency
+}
 ```
 
 ### GET /status
@@ -507,6 +521,19 @@ OUTPUT
 
 订单列表
 
+### GET /order/pending
+
+OUTPUT
+
+```javascript
+{
+  _id: ObjectId,
+  order_type: OrderTypes,
+  plan: String,
+  member_count: Number,
+}
+```
+
 ### GET /order/:orderId
 
 订单详情
@@ -652,3 +679,29 @@ OUTPUT
 ### GET /charge
 
 支付记录
+
+OUTPUT
+
+```javascript
+{
+  page: Number,
+  pagesize: Number,
+  totalrows: Number,
+  list: [
+    {
+      _id: ObjectId,
+      company_id: ObjectId,
+      charge_type: ChargeType,  // 用于区分充值和产品
+      recharge_id: ObjectId,    // charge_type == recharge
+      recharge_no: String,      // charge_type == recharge
+      order_id: ObjectId,       // charge_type == plan
+      order_no: String,         // charge_type == plan
+      amount: Number,
+      payment_type: String,
+      payment_method: String,
+      date_create: Date,
+      status: String,
+    }
+  ]
+}
+```

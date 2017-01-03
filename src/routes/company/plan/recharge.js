@@ -89,18 +89,10 @@ api.get('/:recharge_id/query', (req, res, next) => {
       return {ok: 1};
     }
     let {out_trade_no} = charge.payment_data;
-    switch (charge.payment_method) {
-    case 'wxpay':
-      return req.model('payment').queryWechatOrder({
-        recharge_id,
-        out_trade_no,
-      });
-    case 'alipay':
-      return req.model('payment').queryAlipayOrder({
-        recharge_id,
-        out_trade_no,
-      });
-    }
+    return req.model('payment').query(charge.payment_method, {
+      recharge_id,
+      out_trade_no,
+    });
   })
   .then(({ok, trade_state}) => {
     if (ok) {

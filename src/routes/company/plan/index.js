@@ -65,8 +65,35 @@ api.post('/trial', (req, res, next) => {
 });
 
 api.get('/payment', (req, res, next) => {
-  let methods = new Payment().getMethods();
+  let methods = [
+    {
+      key: 'alipay',
+      title: '支付宝'
+    },
+    {
+      key: 'wxpay',
+      title: '微信支付'
+    },
+    {
+      key: 'balance',
+      title: '余额'
+    }
+  ];
   res.json(methods);
+});
+
+api.get('/balance', (req, res, next) => {
+  let company_id = req.company._id;
+  db.payment.balance.findOne({
+    _id: company_id
+  })
+  .then(doc => {
+    res.json({
+      company_id,
+      balance: doc ? doc.balance : 0
+    });
+  })
+  .catch(next);
 });
 
 api.get('/product', (req, res, next) => {
@@ -79,12 +106,20 @@ api.get('/product', (req, res, next) => {
 api.get('/charge', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);
-  let criteria = {company_id};
+  let { charge_type } = req.query;
+  let criteria = {
+    company_id,
+    status: C.ORDER_STATUS.SUCCEED,
+  };
+  if (ENUMS.CHARGE_TYPE.indexOf(charge_type) > -1) {
+    criteria.charge_type = charge_type;
+  }
   return Promise.all([
     db.payment.charge.order.count(criteria),
     db.payment.charge.order.find(criteria, {
       payment_data: 0,
-      payment_response: 0
+      payment_query: 0,
+      payment_notify: 0
     })
     .sort({_id: -1})
     .limit(pagesize)
