@@ -140,12 +140,11 @@ api.post('/upload', (req, res, next) => {
   if (!files || !files.length) {
     return res.json([]);
   }
-  files = files.map(file => _.pick(file, 'mimetype', 'url', 'filename', 'path', 'size', 'cdn_bucket', 'cdn_key'));
   let user_id = req.user._id;
   let company_id = req.company._id;
-  req.model('auth-pic')
-  .save({plan, company_id, user_id, files})
-  .then(doc => res.json(doc))
+  req.model('temp-file')
+  .save({info: {plan, company_id, user_id}, files})
+  .then(files => res.json(files.map(file => _.pick(file, '_id', 'url'))))
   .catch(next);
 });
 
@@ -184,8 +183,8 @@ function createOrUpdatePro(isUpdate) {
           }
         }
         let postPicIds = realnameData.realname_ext.idcard_photo;
-        return req.model('auth-pic')
-        .pop({plan: C.TEAMPLAN.PRO, user_id, files: postPicIds})
+        return req.model('temp-file')
+        .pop({plan: C.TEAMPLAN.PRO, user_id}, postPicIds)
         .then(pics => {
           realnameData.realname_ext.idcard_photo = _.pluck(pics, 'url');
           realnameData.status = 'posted';
@@ -214,8 +213,8 @@ function createOrUpdateEnt(isUpdate) {
     validate('auth_ent', info);
     let company_id = req.company._id;
     let user_id = req.user._id;
-    req.model('auth-pic')
-    .pop({plan: C.TEAMPLAN.ENT, company_id, files: info.enterprise.certificate_pic})
+    req.model('temp-file')
+    .pop({plan: C.TEAMPLAN.ENT, company_id}, info.enterprise.certificate_pic)
     .then(pics => {
       info.enterprise.certificate_pic = _.pluck(pics, 'url');
       let auth = new Auth(company_id);

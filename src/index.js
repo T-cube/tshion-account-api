@@ -44,7 +44,7 @@ import NotificationSetting from 'models/notification-setting';
 import WechatUtil from 'lib/wechat-util';
 import UserActivity from 'models/user-activity';
 import Preference from 'models/preference';
-import AuthPic from 'models/plan/auth-pic';
+import TempFile from 'models/temp-file';
 import Payment from 'models/plan/payment';
 import C from 'lib/constants';
 
@@ -89,7 +89,7 @@ app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
 app.loadModel('user-activity', UserActivity);
 app.loadModel('preference', Preference);
-app.loadModel('auth-pic', AuthPic);
+app.loadModel('temp-file', TempFile);
 app.loadModel('payment', Payment);
 
 let _loader = {};

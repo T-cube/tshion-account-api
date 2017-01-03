@@ -63,7 +63,7 @@ if (program.update) {
             size: parseFloat(knowledge_stroage.size) || 0
           };
           let size = knowledge_stroage.size + _.reduce(project_stroage.map(item => item.size), (memo, num) => (memo + num), 0);
-          console.log(company_id, {
+          console.log(company_id.toString(), {
             member: {
               count: companyInfo.members.length
             },

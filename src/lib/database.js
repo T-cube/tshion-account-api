@@ -84,6 +84,7 @@ const collections = [
 
   // transaction
   'transaction',
+  'temp.file',
 ];
 
 const dbConfig = config.get('database');
