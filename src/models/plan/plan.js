@@ -29,7 +29,6 @@ export default class Plan {
       let current = this._getCurrent(planInfo);
       let certified = planInfo && planInfo.certified && planInfo.certified.plan;
       return {
-        // history,
         company_id,
         current,
         viable: {trial, paid: certified == C.TEAMPLAN.ENT ? paid : (certified ? [certified] : [])},

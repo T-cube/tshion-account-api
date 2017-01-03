@@ -16,6 +16,7 @@ export default class PlanOrder {
     }
     this.order = order;
     this.company_id = order.company_id;
+    this.planModel = new Plan(this.company_id);
   }
 
   static init({company_id, order_id}) {
@@ -61,7 +62,7 @@ export default class PlanOrder {
   doHandlePaySuccess(payment_method, transactionId) {
     let {order} = this;
     return Promise.all([
-      new Plan(this.company_id).updatePaidFromOrder(order, transactionId),
+      this.planModel.updatePaidFromOrder(order, transactionId),
       db.payment.order.update({
         _id: order._id
       }, {
@@ -82,7 +83,7 @@ export default class PlanOrder {
   commitHandlePaySuccess(transactionId) {
     let {order} = this;
     return Promise.all([
-      new Plan(this.company_id).commitUpdatePaidFromOrder(order, transactionId),
+      this.planModel.commitUpdatePaidFromOrder(order, transactionId),
       db.payment.order.update({
         _id: order._id
       }, {
@@ -125,7 +126,7 @@ export default class PlanOrder {
       }
     })
     .then(() => {
-      return new Plan(this.company_id).updatePaidFromOrder(order, transactionId);
+      return this.planModel.updatePaidFromOrder(order, transactionId);
     });
   }
 
@@ -133,7 +134,7 @@ export default class PlanOrder {
     let order = this.order;
     return Promise.all([
       new Payment().commitPayWithBalance(order, transactionId),
-      new Plan(this.company_id).commitUpdatePaidFromOrder(order, transactionId),
+      this.planModel.commitUpdatePaidFromOrder(order, transactionId),
       this.commitUpdateOrderPaidWithBalance(transactionId),
     ]);
   }
@@ -167,7 +168,7 @@ export default class PlanOrder {
 
   prepareDegrade() {
     let orderId = this.get('_id');
-    return new Plan(this.company_id).getCurrent().then(current => {
+    return this.planModel.getCurrent().then(current => {
       if (!current.date_end || current.date_end < new Date()) {
         return db.payment.order.update({
           _id: orderId,

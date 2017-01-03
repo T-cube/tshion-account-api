@@ -16,33 +16,7 @@ import Balance from 'models/plan/balance';
 export default class Payment {
 
   constructor() {
-    this.methods = [
-      {
-        key: 'alipay',
-        title: '支付宝'
-      },
-      {
-        key: 'wxpay',
-        title: '微信支付'
-      },
-      {
-        key: 'balance',
-        title: '余额'
-      }
-    ];
-    this.init();
-  }
-
-  init() {
     this.pay = new Pay(config.get('payment'));
-  }
-
-  getMethods() {
-    return this.methods;
-  }
-
-  getInstance(method) {
-    return this.methods[method].instance;
   }
 
   payOrder(order, payment_method) {
@@ -55,10 +29,15 @@ export default class Payment {
     });
   }
 
+  payRecharge(recharge) {
+    let {payment_method} = recharge;
+    return this._pay(C.CHARGE_TYPE.RECHARGE, payment_method, recharge);
+  }
+
   getUrls(charge_type, payment_method) {
     return {
-      notify_url: `http://tlifang.com/api/payment/plan/${charge_type}/${payment_method}`,
-      redirect_url: `http://tlifang.com/api/payment/plan/${charge_type}/${payment_method}`,
+      notify_url: config.get('apiUrl') + `/api/payment/plan/${charge_type}/${payment_method}`,
+      redirect_url: config.get('apiUrl') + `/api/payment/plan/${charge_type}/${payment_method}`,
     };
   }
 
@@ -87,8 +66,8 @@ export default class Payment {
       }
     })
     .then(payment_data => {
-      return this.createChargeOrder(charge_type, order, payment_method, payment_data)
-      .then(() => this.parseResponse({charge_type, payment_method, order, payment_data}));
+      return this.createChargeOrder(charge_type, payment_method, order, payment_data)
+      .then(() => this.parseResponse(charge_type, payment_method, order, payment_data));
     })
     .catch(e => console.error(e));
   }
@@ -116,7 +95,7 @@ export default class Payment {
     return response;
   }
 
-  createChargeOrder(charge_type, order, payment_method, payment_data) {
+  createChargeOrder(charge_type, payment_method, order, payment_data) {
     return ChargeOrder.create(charge_type, order, payment_method, payment_data);
   }
 
@@ -146,54 +125,72 @@ export default class Payment {
     return Balance.commitIncBalance(company_id, transactionId);
   }
 
-  queryWechatOrder({out_trade_no, order_id, recharge_id}) {
+  query(payment_method, props) {
+    let promise;
+    switch (payment_method) {
+    case 'wxpay':
+      promise = this.queryWechatOrder(props.out_trade_no);
+      break;
+    case 'alipay':
+      promise = this.queryAlipayOrder(props.out_trade_no);
+      break;
+    }
+    return promise.then(({ok, payment_query}) => {
+      if (!payment_query || !ok) {
+        return C.ORDER_STATUS.PAYING;
+      }
+      return this.accessQueryOk(props, payment_query, payment_method)
+      .then(() => C.ORDER_STATUS.SUCCEED);
+    });
+  }
+
+  queryWechatOrder(out_trade_no) {
     return this.pay.query({
       type: 'wxpay',
       out_trade_no
     }).then(payment_query => {
       if (!payment_query) {
-        return {ok: 0, error: 'payment_not_found'};
+        return {ok: 0, info: 'payment_not_found'};
       }
-      let {trade_state, trade_state_desc} = payment_query;
-      if (trade_state != 'SUCCESS') {
-        return {ok: 0, trade_state, trade_state_desc};
-      }
-      if (recharge_id) {
-        return this._accessQueryRechargeOk(recharge_id, payment_query);
-      } else if (order_id) {
-        return this._accessQueryOrderOk(order_id, payment_query, 'wxpay');
-      }
+      let {trade_state} = payment_query;
+      let ok = trade_state != 'SUCCESS';
+      return {ok, payment_query};
     })
     .catch(e => {
-      console.error(e);
-      return {ok: 0, error: 'payment_not_found'};
+      if (e instanceof Error) {
+        console.error(e);
+      }
+      return {ok: 0, info: 'payment_not_found'};
     });
   }
 
-  queryAlipayOrder({out_trade_no, order_id, recharge_id}) {
+  queryAlipayOrder(out_trade_no) {
     return this.pay.query({
       type: 'alipay',
       out_trade_no
     }).then(payment_query => {
-      console.log({payment_query, out_trade_no});
       payment_query = payment_query && payment_query.alipay_trade_query_response;
       if (!payment_query) {
-        return {ok: 0, error: 'payment_not_found'};
+        return {ok: 0, info: 'payment_not_found'};
       }
       let {trade_status} = payment_query;
-      if (trade_status != 'TRADE_SUCCESS') {
-        return {ok: 0, trade_state: trade_status};
-      }
-      if (recharge_id) {
-        return this._accessQueryRechargeOk(recharge_id, payment_query);
-      } else if (order_id) {
-        return this._accessQueryOrderOk(order_id, payment_query, 'alipay');
-      }
+      let ok = trade_status != 'TRADE_SUCCESS';
+      return {ok, payment_query};
     })
     .catch(e => {
-      console.error(e);
-      return {ok: 0, error: 'payment_not_found'};
+      if (e instanceof Error) {
+        console.error(e);
+      }
+      return {ok: 0, info: 'payment_not_found'};
     });
+  }
+
+  accessQueryOk({order_id, recharge_id}, payment_query, payment_method) {
+    if (recharge_id) {
+      return this._accessQueryRechargeOk(recharge_id, payment_query);
+    } else if (order_id) {
+      return this._accessQueryOrderOk(order_id, payment_query, payment_method);
+    }
   }
 
   _accessQueryOrderOk(order_id, payment_query, payment_method) {
@@ -203,20 +200,13 @@ export default class Payment {
         return {ok: 0, error: 'invalid_order_status'};
       }
       return ChargeOrder.savePaymentQueryAndGetData(payment_query)
-      .then(() => planOrder.handlePaySuccess(payment_method))
-      .then(() => ({ok: 1}));
+      .then(() => planOrder.handlePaySuccess(payment_method));
     });
   }
 
   _accessQueryRechargeOk(recharge_id, payment_query) {
     return ChargeOrder.savePaymentQueryAndGetData(payment_query)
-    .then(() => RechargeOrder.handlePaySuccess(recharge_id))
-    .then(() => ({ok: 1}));
-  }
-
-  payRecharge(recharge) {
-    let {payment_method} = recharge;
-    return this._pay(C.CHARGE_TYPE.RECHARGE, payment_method, recharge);
+    .then(() => RechargeOrder.handlePaySuccess(recharge_id));
   }
 
 }

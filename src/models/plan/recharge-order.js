@@ -16,7 +16,7 @@ export default class RechargeOrder {
       if (!recharge) {
         throw new Error('invalid_recharge');
       }
-      return Transaction.init('recharge_success', {recharge_id})
+      return Transaction.init('recharge_success', {recharge: recharge_id})
       .then(transactionId => (
         Transaction.start(transactionId).then(() => (
           RechargeOrder.doHandlePaySuccess(recharge, transactionId)
