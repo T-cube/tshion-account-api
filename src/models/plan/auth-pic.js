@@ -35,7 +35,7 @@ export default class AuthPic {
     return db.plan.auth.pic.findAndModify({
       query,
       update: {$set: {files}},
-      new: true
+      upsert: true
     })
     .then(doc => {
       let oldFiles = doc.value && doc.value.files;

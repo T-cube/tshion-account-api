@@ -1,17 +1,15 @@
 import _ from 'underscore';
 import express from 'express';
+import moment from 'moment';
 import { ObjectId } from 'mongodb';
-import Qr from 'qr-image';
 
 import db from 'lib/database';
-import { getPageInfo } from 'lib/utils';
+import { getPageInfo, generateToken, timestamp } from 'lib/utils';
 import C, {ENUMS} from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import PlanOrder from 'models/plan/plan-order';
 import OrderFactory from 'models/plan/order';
-import Plan from 'models/plan/plan';
-import Payment from 'models/plan/payment';
 
 let api = express.Router();
 export default api;
@@ -78,23 +76,14 @@ api.post('/:order_id/pay', (req, res, next) => {
     }
     if (payment_method == 'balance') {
       return planOrder.payWithBalance()
-      .then(() => res.json({order_id, status: C.ORDER_STATUS.SUCCEED}));
+      .then(() => res.json({order_id, payment_method, status: C.ORDER_STATUS.SUCCEED}));
     }
     return req.model('payment').payOrder(planOrder.order, payment_method)
-    .then(payment_data => {
-      if (!payment_data) {
+    .then(data => {
+      if (!data) {
         throw new ApiError(500);
       }
-      if (payment_method == 'wxpay') {
-        let {code_url} = payment_data;
-        let svg = Qr.imageSync(code_url, { type: 'svg' });
-        let qr_url = 'data:image/svg+xml;base64,' + new Buffer(svg).toString('base64');
-        return res.json({order_id, qr_url, status: C.ORDER_STATUS.PAYING});
-      }
-      if (payment_method == 'alipay') {
-        let {url} = payment_data;
-        return res.json({order_id, url, status: C.ORDER_STATUS.PAYING});
-      }
+      res.json(data);
     });
   })
   .catch(next);
@@ -160,16 +149,17 @@ api.get('/:order_id/query', (req, res, next) => {
     if (order.status == C.ORDER_STATUS.SUCCEED) {
       return {ok: 1};
     }
+    let {out_trade_no} = charge.payment_data;
     switch (charge.payment_method) {
     case 'wxpay':
-      return new Payment().queryWechatOrder({
-        order_id: order_id,
-        out_trade_no: charge.payment_data.out_trade_no
+      return req.model('payment').queryWechatOrder({
+        order_id,
+        out_trade_no,
       });
     case 'alipay':
-      return new Payment().queryAlipayOrder({
-        order_id: order_id,
-        out_trade_no: charge.payment_data.out_trade_no
+      return req.model('payment').queryAlipayOrder({
+        order_id,
+        out_trade_no,
       });
     }
   })
@@ -178,6 +168,29 @@ api.get('/:order_id/query', (req, res, next) => {
       return res.json({order_id, status: C.ORDER_STATUS.SUCCEED});
     }
     return res.json({order_id, trade_state, status: C.ORDER_STATUS.PAYING});
+  })
+  .catch(next);
+});
+
+api.get('/:order_id/token', (req, res, next) => {
+  let order_id = ObjectId(req.params.order_id);
+  let company_id = req.company._id;
+  let user_id = req.user._id;
+  return PlanOrder.init({company_id, order_id})
+  .then(planOrder => {
+    if (!planOrder) {
+      throw new ApiError(400, 'invalid_order_status');
+    }
+    return generateToken(48).then(token => {
+      res.json({token});
+      return db.payment.token.insert({
+        _id: token,
+        company_id,
+        order_id,
+        user_id,
+        expires: moment().add(20, 'minutes').toDate(),
+      });
+    });
   })
   .catch(next);
 });

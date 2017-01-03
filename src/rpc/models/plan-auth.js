@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
 import C from 'lib/constants';
+import {ApiError} from 'lib/error';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
@@ -101,43 +102,49 @@ export default class PlanAuthModel extends Model {
         }
       }
     };
-    if (status == C.AUTH_STATUS.ACCEPTED) {
-      return this.db.plan.auth.findAndModify({
-        query,
-        update,
-      })
-      .then(doc => {
-        if (doc.value) {
-          let { company_id } = doc.value;
-          return Promise.all([
-            this.db.plan.company.update({
-              _id: company_id
-            }, {
-              $set: {
-                certified: {
-                  plan: doc.value.plan,
-                  date: new Date()
-                }
-              }
-            }),
-            this.db.plan.auth.update({
-              company_id,
-              _id: {$ne: auth_id},
-              status: {
-                $in: [C.AUTH_STATUS.REJECTED, C.AUTH_STATUS.ACCEPTED]
-              }
-            }, {
-              $set: {
-                status: C.AUTH_STATUS.EXPIRED
-              }
-            }, {
-              multi: true
-            })
-          ]);
-        }
-      });
-    }
-    return this.db.plan.auth.update(query, update);
+    return this.db.plan.auth.findAndModify({
+      query,
+      update,
+    })
+    .then(doc => {
+      if (!doc.value) {
+        throw new ApiError(400, 'invalid_auth_status');
+      }
+      let { company_id, plan, data } = doc.value;
+      return Promise.all([
+        status == C.AUTH_STATUS.ACCEPTED && this.db.plan.company.update({
+          _id: company_id
+        }, {
+          $set: {
+            certified: {
+              plan,
+              date: new Date()
+            }
+          }
+        }, {
+          upsert: true
+        }),
+        status == C.AUTH_STATUS.ACCEPTED && this.db.plan.auth.update({
+          company_id,
+          _id: {$ne: auth_id},
+          status: {
+            $in: [C.AUTH_STATUS.REJECTED, C.AUTH_STATUS.ACCEPTED]
+          }
+        }, {
+          $set: {
+            status: C.AUTH_STATUS.EXPIRED
+          }
+        }, {
+          multi: true
+        }),
+        plan == C.TEAMPLAN.PRO && this.db.user.realname.update({
+          _id: data[data.length - 1].info.contact,
+          status: {$ne: C.AUTH_STATUS.ACCEPTED}
+        }, {
+          $set: {status}
+        })
+      ]);
+    });
   }
 
 }

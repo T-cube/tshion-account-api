@@ -7,22 +7,26 @@ export default class ChargeOrder {
   constructor() {}
 
   static create(charge_type, order, payment_method, payment_data) {
-    let {company_id, paid_sum, order_no} = order;
+    let {company_id, paid_sum} = order;
     let {payment_type} = payment_data;
     let data = {
       amount: paid_sum,
       charge_type,
       payment_type,
       payment_method,
-      order_no,
       date_create: new Date(),
       status: C.ORDER_STATUS.PAYING,
       payment_data,
     };
-    return db.payment.charge.order.update({
-      company_id,
-      order_id: order._id,
-    }, {
+    let criteria = {company_id};
+    if (charge_type == C.CHARGE_TYPE.PLAN) {
+      criteria.order_id = order._id;
+      data.order_no = order.order_no;
+    } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
+      criteria.recharge_id = order._id;
+      data.recharge_no = order.recharge_no;
+    }
+    return db.payment.charge.order.update(criteria, {
       $set: data
     }, {
       upsert: true

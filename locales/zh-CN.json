@@ -76,5 +76,6 @@
   "order_type_upgrade": "升级",
   "order_type_degrade": "降级",
   "order_type_patch": "欠费",
-  "order_type_renewal": "续费"
+  "order_type_renewal": "续费",
+  "recharge_order": "充值"
 }

@@ -528,6 +528,7 @@ OUTPUT
 ```javascript
 {
   order_id: ObjectId,
+  payment_method: String,
   qr_url: base64,     // 微信支付二维码地址
   url: Url,           // 支付宝支付地址，打开新标签页
   status: String,     // paying succeed (余额支付直接返回succeed)
@@ -544,6 +545,19 @@ OUTPUT
   status: String,     // paying succeed
 }
 ```
+
+### GET /order/:orderId/token
+
+获取支付token（暂时只支持支付宝）
+
+```javascript
+{
+  token: String,
+}
+```
+
+然后跳转到`/api/payment/plan/pay?token=token&payment_method=alipay`
+
 
 ## recharge
 
@@ -618,6 +632,20 @@ OUTPUT
 ```javascript
 
 ```
+
+### GET /recharge/:rechargeId/query
+
+查询充值的状态
+
+OUTPUT
+
+```javascript
+{
+  recharge_id: ObjectId,
+  status: String,     // paying succeed
+}
+```
+
 
 ## charge
 
