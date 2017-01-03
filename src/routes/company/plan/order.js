@@ -143,11 +143,12 @@ api.get('/:order_id/query', (req, res, next) => {
     })
   ])
   .then(([order, charge]) => {
-    if (!order || !charge) {
+    if (!order) {
       throw new ApiError(404);
     }
-    if (order.status == C.ORDER_STATUS.SUCCEED) {
-      return {ok: 1};
+    // 未使用第三方支付 | 支付完成
+    if (!charge || order.status == C.ORDER_STATUS.SUCCEED) {
+      return order.status;
     }
     let {out_trade_no} = charge.payment_data;
     return req.model('payment').query(charge.payment_method, {
@@ -155,11 +156,8 @@ api.get('/:order_id/query', (req, res, next) => {
       out_trade_no,
     });
   })
-  .then(({ok, trade_state}) => {
-    if (ok) {
-      return res.json({order_id, status: C.ORDER_STATUS.SUCCEED});
-    }
-    return res.json({order_id, trade_state, status: C.ORDER_STATUS.PAYING});
+  .then(status => {
+    return res.json({order_id, status});
   })
   .catch(next);
 });

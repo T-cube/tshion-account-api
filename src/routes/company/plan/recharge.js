@@ -86,7 +86,7 @@ api.get('/:recharge_id/query', (req, res, next) => {
       throw new ApiError(404);
     }
     if (recharge.status == C.ORDER_STATUS.SUCCEED) {
-      return {ok: 1};
+      return C.ORDER_STATUS.SUCCEED;
     }
     let {out_trade_no} = charge.payment_data;
     return req.model('payment').query(charge.payment_method, {
@@ -94,11 +94,8 @@ api.get('/:recharge_id/query', (req, res, next) => {
       out_trade_no,
     });
   })
-  .then(({ok, trade_state}) => {
-    if (ok) {
-      return res.json({recharge_id, status: C.ORDER_STATUS.SUCCEED});
-    }
-    return res.json({recharge_id, trade_state, status: C.ORDER_STATUS.PAYING});
+  .then(status => {
+    return res.json({recharge_id, status});
   })
   .catch(next);
 });

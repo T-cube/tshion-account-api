@@ -135,13 +135,12 @@ export default class Payment {
       promise = this.queryAlipayOrder(props.out_trade_no);
       break;
     }
-    return promise.then(result => {
-      let {payment_query} = result;
-      if (!payment_query) {
-        return {ok: 0};
+    return promise.then(({ok, payment_query}) => {
+      if (!payment_query || !ok) {
+        return C.ORDER_STATUS.PAYING;
       }
       return this.accessQueryOk(props, payment_query, payment_method)
-      .then(() => ({ok: 1}));
+      .then(() => C.ORDER_STATUS.SUCCEED);
     });
   }
 
@@ -151,17 +150,17 @@ export default class Payment {
       out_trade_no
     }).then(payment_query => {
       if (!payment_query) {
-        return {ok: 0, error: 'payment_not_found'};
+        return {ok: 0, info: 'payment_not_found'};
       }
-      let {trade_state, trade_state_desc} = payment_query;
-      if (trade_state != 'SUCCESS') {
-        return {ok: 0, trade_state, trade_state_desc};
-      }
-      return {ok: 1, payment_query};
+      let {trade_state} = payment_query;
+      let ok = trade_state != 'SUCCESS';
+      return {ok, payment_query};
     })
     .catch(e => {
-      console.error(e);
-      return {ok: 0, error: 'payment_not_found'};
+      if (e instanceof Error) {
+        console.error(e);
+      }
+      return {ok: 0, info: 'payment_not_found'};
     });
   }
 
@@ -172,17 +171,17 @@ export default class Payment {
     }).then(payment_query => {
       payment_query = payment_query && payment_query.alipay_trade_query_response;
       if (!payment_query) {
-        return {ok: 0, error: 'payment_not_found'};
+        return {ok: 0, info: 'payment_not_found'};
       }
       let {trade_status} = payment_query;
-      if (trade_status != 'TRADE_SUCCESS') {
-        return {ok: 0, trade_state: trade_status};
-      }
-      return {ok: 1, payment_query};
+      let ok = trade_status != 'TRADE_SUCCESS';
+      return {ok, payment_query};
     })
     .catch(e => {
-      console.error(e);
-      return {ok: 0, error: 'payment_not_found'};
+      if (e instanceof Error) {
+        console.error(e);
+      }
+      return {ok: 0, info: 'payment_not_found'};
     });
   }
 
