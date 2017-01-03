@@ -9,8 +9,8 @@ module.exports = {
     protocol: 'http',
     hostname: '192.168.1.18',
     port: 2000,
+    appid: 'mayi',
     appsecret: 'Rneo8P6P09u4ZfdZ',
-    appid: 'mayi'
   },
   vendor: {
     officeweb365: {
