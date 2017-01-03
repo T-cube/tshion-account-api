@@ -137,6 +137,6 @@ api.get('/charge', (req, res, next) => {
 });
 
 
-// api.use('/order', require('./order').default);
-// api.use('/recharge', require('./recharge').default);
-// api.use('/auth', require('./auth').default);
+api.use('/order', require('./order').default);
+api.use('/recharge', require('./recharge').default);
+api.use('/auth', require('./auth').default);

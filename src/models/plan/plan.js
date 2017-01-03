@@ -55,17 +55,11 @@ export default class Plan {
         return _.extend({}, current, {status: C.PLAN_STATUS.EXPIRED});
       }
     }
-    // TODO preview版本，暂时不限制
     return {
-      plan: C.TEAMPLAN.PRO,
-      member_count: 90,
-      status: C.PLAN_STATUS.ACTIVED
+      plan: C.TEAMPLAN.FREE,
+      member_count: 0,
+      status: null
     };
-    // return {
-    //   plan: C.TEAMPLAN.FREE,
-    //   member_count: 0,
-    //   status: null
-    // };
   }
 
   getPlanInfo() {
