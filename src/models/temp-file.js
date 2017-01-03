@@ -5,8 +5,6 @@ import db from 'lib/database';
 import C from 'lib/constants';
 import {indexObjectId} from 'lib/utils';
 
-const qiniu = this.model('qiniu').bucket('cdn-private');
-
 export default class TempFile {
 
   constructor() {
@@ -18,8 +16,10 @@ export default class TempFile {
     if (!files || !files.length) {
       return Promise.resolve([]);
     }
+    files = files.map(file => _.extend({
+      _id: ObjectId()
+    }, _.pick(file, 'mimetype', 'url', 'filename', 'path', 'size', 'cdn_bucket')));
     let promise;
-    files.forEach(file => file._id = ObjectId());
     if (clear_prev) {
       promise = this.db.findAndModify({
         query,
@@ -34,49 +34,47 @@ export default class TempFile {
       });
     } else {
       promise = this.db.update(query, {
-        $push: {files}
+        $push: {files: {$each: files}}
+      }, {
+        upsert: true
       });
     }
-    return promise.then(() => {
-      if (!is_private) {
-        return files.map(file => _.pick(file, '_id', 'url'));
+    return promise.then(() => (
+      this.getPreviewLink(files, is_private)
+    ));
+  }
+
+  get({info, page, pagesize}) {
+    return this.db.findOne(info)
+    .then(doc => {
+      if (!doc) {
+        return [];
       }
-      return Promise.all(files.map(file => {
-        return qiniu.makeLink(file.cdn_key).then(link => {
-          return {
-            _id: file._id,
-            url: link
-          };
-        });
-      }));
+      return this.getPreviewLink(doc.files, doc.is_private);
     });
   }
 
-  pop({plan, user_id, company_id, files}) {
-    let criteria;
-    if (plan == C.TEAMPLAN.PRO) {
-      if (user_id) {
-        criteria = {user_id};
-      }
-    } else if (plan == C.TEAMPLAN.ENT) {
-      if (company_id) {
-        criteria = {company_id};
-      }
-    }
-    if (!criteria) {
-      throw new Error('invalid params');
-    }
-    return this._pop(criteria, files);
-  }
-
-  _pop(query, files) {
-    return db.plan.auth.pic.findAndModify({
-      query,
+  pop(info, files) {
+    return this.db.findAndModify({
+      query: info,
       update: {$pull: {files: {_id: {$in: files}}}},
     })
     .then(doc => {
-      return doc.value ? doc.value.files.filter(file => indexObjectId(files, file._id) > -1) : [];
+      console.log({info, files, doc});
+      let files = doc.value && doc.value.files;
+      files = files ? files.filter(file => indexObjectId(files, file._id) > -1) : [];
+      return files;
     });
+  }
+
+  getPreviewLink(files, is_private) {
+    if (!is_private) {
+      return Promise.resolve(files.map(file => _.pick(file, '_id', 'url')));
+    }
+    const qiniu = this.model('qiniu').bucket('cdn-private');
+    return Promise.all(files.map(file => (
+      qiniu.makeLink(file.url).then(url => _.extend(file, {url}))
+    )));
   }
 
 }
