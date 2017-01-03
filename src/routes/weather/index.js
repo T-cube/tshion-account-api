@@ -190,7 +190,7 @@ class WEATHER {
         } else {
           request.get(`${self.GET_WEATHER_FUTURE_URL}?${self.joinParam({areaid: areaid, needMoreDay: 1})}`, (err, response, body) => {
             if (err) return reject(err);
-            body = body.replace(/http\:\/\/.+?(day|night)/g, `${config.get('apiUrl')}cdn/system/weather/icon/$1`);
+            // body = body.replace(/http\:\/\/.+?(day|night)/g, `${config.get('apiUrl')}cdn/system/weather/icon/$1`);
             let data = JSON.parse(body);
             if (data.showapi_res_code != 0) return reject(new ApiError(400, data.showapi_res_error));
             resolve(data.showapi_res_body);
