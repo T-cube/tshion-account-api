@@ -87,8 +87,8 @@ export default class Payment {
       }
     })
     .then(payment_data => {
-      return this.createChargeOrder(charge_type, order, payment_method, payment_data)
-      .then(() => this.parseResponse({charge_type, payment_method, order, payment_data}));
+      return this.createChargeOrder(charge_type, payment_method, order, payment_data)
+      .then(() => this.parseResponse(charge_type, payment_method, order, payment_data));
     })
     .catch(e => console.error(e));
   }
@@ -116,7 +116,7 @@ export default class Payment {
     return response;
   }
 
-  createChargeOrder(charge_type, order, payment_method, payment_data) {
+  createChargeOrder(charge_type, payment_method, order, payment_data) {
     return ChargeOrder.create(charge_type, order, payment_method, payment_data);
   }
 

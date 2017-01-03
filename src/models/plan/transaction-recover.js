@@ -1,6 +1,7 @@
 
 import db from 'lib/database';
 import C from 'lib/constants';
+import { indexObjectId } from 'lib/utils';
 import PlanOrder from 'models/plan/plan-order';
 import RechargeOrder from 'models/plan/recharge-order';
 import Transaction from 'models/plan/transaction';
@@ -20,6 +21,9 @@ export default {
         }
         let {payment_method} = transaction;
         let transactionId = transaction._id;
+        if (!indexObjectId(planOrder.get('transactions'), transactionId)) {
+          return;
+        }
         let paidWithBalance = payment_method == 'balance';
         if (transaction.status == 'pending') {
           return (
@@ -52,16 +56,17 @@ export default {
       status: {$in: ['pending', 'commited']}
     })
     .forEach(transaction => {
+      let transactionId = transaction._id;
       return db.payment.recharge.findOne({
         _id: transaction.recharge,
-        status: C.ORDER_STATUS.PAYING
+        transactions: transactionId,
+        // status: C.ORDER_STATUS.PAYING,
       })
       .then(recharge => {
         console.log({recharge});
         if (!recharge) {
           return;
         }
-        let transactionId = transaction._id;
         if (transaction.status == 'pending') {
           return RechargeOrder.doHandlePaySuccess(recharge, transactionId)
           .then(() => Transaction.commit(transactionId))
@@ -75,4 +80,4 @@ export default {
     });
   }
 
-}
+};
