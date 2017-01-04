@@ -49,8 +49,8 @@ api.post('/', (req, res, next) => {
   sanitizeValidateObject(companySanitization, companyValidation, data);
 
   let userLevel = new UserLevel(req.user);
-  userLevel.canCreateCompany().then(canCreateCompany => {
-    if (false == canCreateCompany) {
+  userLevel.canOwnCompany().then(canOwnCompany => {
+    if (false == canOwnCompany) {
       throw new ApiError(400, 'over_company_num');
     }
     return db.user.findOne({
@@ -300,7 +300,6 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
     throw new ApiError(403, null, 'only owner can carry out this operation');
   }
   let member = _.find(company.members, m => m._id.equals(user_id));
-  console.log('user_id=', user_id, 'member=', member);
   if (!member) {
     throw new ApiError(404, 'member_not_exists');
   }
@@ -308,6 +307,12 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   .then(user => {
     if (!user) {
       throw new ApiError(404, 'user_not_exists');
+    }
+    return new UserLevel(user).canOwnCompany();
+  })
+  .then(canOwnCompany => {
+    if (false == canOwnCompany) {
+      throw new ApiError(400, 'over_company_num');
     }
     return Promise.all([
       db.company.update({

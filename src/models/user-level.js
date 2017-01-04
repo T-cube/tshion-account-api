@@ -43,7 +43,7 @@ export default class UserLevel {
     });
   }
 
-  canCreateCompany() {
+  canOwnCompany() {
     return this.getLevelInfo()
     .then(info => {
       return info.max_own_companies > info.own_companies;
