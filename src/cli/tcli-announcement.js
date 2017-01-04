@@ -29,7 +29,7 @@ if (program.update) {
   })
   .then(() => {
     console.log('announcement updated');
-    process.exit();
+    // process.exit();
   });
 
 }
