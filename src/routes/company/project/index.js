@@ -217,8 +217,15 @@ saveCdn('cdn-public'),
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');
   }
+  let { url } = req.file;
+  const crop = {
+    x: req.body.crop_x,
+    y: req.body.crop_y,
+    width: req.body.crop_width,
+    height: req.body.crop_height,
+  };
   let data = {
-    logo: req.file.url
+    logo: req.model('qiniu').image(url).setCrop(crop).toString(),
   };
   db.project.update({
     _id: req.project._id,
