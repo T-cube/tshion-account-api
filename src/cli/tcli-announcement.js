@@ -5,7 +5,7 @@ import '../bootstrap';
 import program from 'commander';
 import db from 'lib/database';
 import C from 'lib/constants';
-import {cleanHtmlTags} from 'lib/utils';
+import {cleanHtmlTags, textEllipsis} from 'lib/utils';
 
 program
   .option('--update', 'update announcement description')
@@ -16,23 +16,16 @@ if (!program.update) {
 }
 
 if (program.update) {
-  let promises = [];
   db.announcement.find({
-    description: {$exists: false}
+    // description: {$exists: false}
   })
   .forEach(announcement => {
-    promises.push(db.announcement.update({
+    let description = textEllipsis(cleanHtmlTags(announcement.content), 50);
+    db.announcement.update({
       _id: announcement._id
     }, {
-      $set: {
-        description: cleanHtmlTags(announcement.content)
-      }
-    }).then(() => {
-      console.log('update', announcement._id);
-    }));
-  })
-  .then(() => {
-    return Promise.all(promises);
+      $set: {description}
+    });
   })
   .then(() => {
     console.log('announcement updated');
