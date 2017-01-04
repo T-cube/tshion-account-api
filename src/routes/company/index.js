@@ -303,7 +303,7 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   if (!member) {
     throw new ApiError(404, 'member_not_exists');
   }
-  db.user.find({_id: user_id})
+  db.user.findOne({_id: user_id})
   .then(user => {
     if (!user) {
       throw new ApiError(404, 'user_not_exists');

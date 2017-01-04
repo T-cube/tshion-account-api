@@ -367,7 +367,7 @@ export function cleanHtmlTags(content) {
     .replace(/^\s+/, '');
 }
 
-export function textEllipsis(str, len) {
+export function textEllipsis(str, len = 50) {
   len *= 2;
   if (str.length * 2 <= len) {
     return str;
