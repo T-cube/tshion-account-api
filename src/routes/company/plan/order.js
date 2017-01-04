@@ -71,8 +71,7 @@ api.post('/:order_id/pay', (req, res, next) => {
       throw new ApiError(400, 'invalid_order_status');
     }
     if (planOrder.get('order_type') == C.ORDER_TYPE.DEGRADE) {
-      return planOrder.prepareDegrade()
-      .then(() => res.json({}));
+      throw new ApiError(400, 'invalid request');
     }
     if (payment_method == 'balance') {
       return planOrder.payWithBalance()
@@ -85,6 +84,23 @@ api.post('/:order_id/pay', (req, res, next) => {
       }
       res.json(data);
     });
+  })
+  .catch(next);
+});
+
+api.post('/:order_id/confirm', (req, res, next) => {
+  let company_id = req.company._id;
+  let order_id = ObjectId(req.params.order_id);
+  return PlanOrder.init({company_id, order_id})
+  .then(planOrder => {
+    if (!planOrder) {
+      throw new ApiError(400, 'invalid_order_status');
+    }
+    if (planOrder.get('order_type') != C.ORDER_TYPE.DEGRADE) {
+      throw new ApiError(400, 'invalid request');
+    }
+    return planOrder.prepareDegrade()
+    .then(() => res.json({}));
   })
   .catch(next);
 });

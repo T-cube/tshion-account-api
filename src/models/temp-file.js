@@ -19,7 +19,7 @@ export default class TempFile {
     }
     files = files.map(file => _.extend({
       _id: ObjectId()
-    }, _.pick(file, 'mimetype', 'url', 'filename', 'path', 'size', 'cdn_bucket')));
+    }, _.pick(file, 'mimetype', 'url', 'filename', 'path', 'size', 'cdn_bucket', 'cdn_key')));
     let promise;
     if (clear_prev) {
       promise = this.db.findAndModify({
@@ -81,12 +81,18 @@ export default class TempFile {
 
   _deleteFiles(files) {
     files.forEach(item => {
-      if (item.url && item.cdn_bucket) {
+      if (item.cdn_key && item.cdn_bucket) {
         this.model('qiniu').bucket(item.cdn_bucket)
-        .delete(item.url).catch(e => console.error(e));
+        .delete(item.cdn_key).catch(e => {
+          console.error('qiniu delete file error');
+          console.error(e);
+        });
       }
       fs.unlink(item.path, e => {
-        e && console.error(e);
+        if (e) {
+          console.error('unlink file error');
+          console.error(e);
+        }
       });
     });
   }
