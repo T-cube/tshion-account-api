@@ -54,15 +54,14 @@ export default class TempFile {
     });
   }
 
-  pop(info, files) {
+  pop(info, fileIds) {
     return this.db.findAndModify({
       query: info,
-      update: {$pull: {files: {_id: {$in: files}}}},
+      update: {$pull: {files: {_id: {$in: fileIds}}}},
     })
     .then(doc => {
-      console.log({info, files, doc});
       let files = doc.value && doc.value.files;
-      files = files ? files.filter(file => indexObjectId(files, file._id) > -1) : [];
+      files = files ? files.filter(file => indexObjectId(fileIds, file._id) > -1) : [];
       return files;
     });
   }
