@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import fs from 'fs';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
@@ -29,7 +30,7 @@ export default class TempFile {
       .then(doc => {
         let oldFiles = doc.value && doc.value.files;
         if (oldFiles && oldFiles.length) {
-          // TODO unlink temp files
+          this._deleteFiles(oldFiles);
         }
       });
     } else {
@@ -44,25 +45,49 @@ export default class TempFile {
     ));
   }
 
-  get({info, page, pagesize}) {
+  get({info, files, page, pagesize}) {
     return this.db.findOne(info)
     .then(doc => {
       if (!doc) {
         return [];
       }
-      return this.getPreviewLink(doc.files, doc.is_private);
+      let value = doc.files;
+      if (files) {
+        value = value.filter(file => indexObjectId(files, file._id) > -1);
+      }
+      return this.getPreviewLink(value, doc.is_private);
     });
   }
 
-  pop(info, fileIds) {
+  pop(info, files) {
     return this.db.findAndModify({
       query: info,
-      update: {$pull: {files: {_id: {$in: fileIds}}}},
+      update: {$pull: {files: {_id: {$in: files}}}},
     })
     .then(doc => {
-      let files = doc.value && doc.value.files;
-      files = files ? files.filter(file => indexObjectId(fileIds, file._id) > -1) : [];
+      let value = doc.value && doc.value.files;
+      value = value ? value.filter(file => indexObjectId(files, file._id) > -1) : [];
+      return value;
+    });
+  }
+
+  delete(info, files) {
+    return this.pop(info, files)
+    .then(files => {
+      this._deleteFiles(files);
       return files;
+    });
+  }
+
+  _deleteFiles(files) {
+    files.forEach(item => {
+      if (item.url && item.cdn_bucket) {
+        this.model('qiniu').bucket(item.cdn_bucket)
+        .delete(item.url).catch(e => console.error(e));
+      }
+      fs.unlink(item.path, e => {
+        e && console.error(e);
+      });
     });
   }
 

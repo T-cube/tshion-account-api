@@ -107,7 +107,7 @@ export function saveCdn(bucket) {
 
     function cdnUpload(file, key, path) {
       return qiniu.upload(key, path).then(data => {
-        file.cdn_bucket = data.bucket;
+        file.cdn_bucket = bucket;
         file.cdn_key = key;
         file.url = `${data.server_url}${key}`;
       });
