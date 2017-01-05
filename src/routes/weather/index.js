@@ -1,9 +1,11 @@
+import _ from 'underscore';
 import express from 'express';
 import request from 'request';
 import config from 'config';
 import escapeRegexp from 'escape-regexp';
 import crypto from 'crypto';
 import querystring from 'querystring';
+
 import { ApiError } from 'lib/error';
 import db from 'lib/database';
 
@@ -62,64 +64,21 @@ class WEATHER {
    * @return {Promise}
    */
   fuzzyQuery(keyword) {
-    return new Promise((resolve, reject) => {
-      let result = [];
-      let minWeight = 0;
-      db.weather.area.find({
-        $or: [
-          { nameen: { $regex: escapeRegexp(keyword), $options: 'i' } },
-          { namecn: { $regex: escapeRegexp(keyword), $options: 'i' } },
-          // { districten: { $regex: escapeRegexp(keyword), $options: 'i' } },
-          // { districtcn: { $regex: escapeRegexp(keyword), $options: 'i' } },
-        ],
-      }, {
-        fields: {
-          areaid: 1,
-          nameen: 1,
-          namecn: 1,
-          districtcn: 1,
-          provcn: 1,
-          nationcn: 1
-        }
-      }).forEach((err, doc) => {
-        if (err) return reject(err);
-        if (!doc) return resolve(result.sort(((a, b) => {
-          return a.weight - b.weight;
-        })).map(item => {
-          return item.doc;
-        }));
-        // 权重
-        let [
-          weight_a,
-          weight_b,
-          // weight_c,
-          // weight_d
-        ] = [
-          doc.nameen.indexOf(keyword),
-          doc.namecn.indexOf(keyword),
-          // doc.districten.indexOf(keyword),
-          // doc.districtcn.indexOf(keyword)
-        ];
-        let weight = Math.min.apply(Math, [
-          weight_a,
-          weight_b,
-          // weight_c,
-          // weight_d
-        ].filter(item => { return item > -1; }));
-        if (result.length < 20) {
-          weight > minWeight && (minWeight = weight);
-          result.push({ doc: doc, weight: minWeight });
-        } else {
-          if (weight < minWeight) {
-            result[result.findIndex(item => { return item.weight == minWeight; })] = { doc: doc, weight: weight };
-            let list = result.filter(item => {
-              return item.weight > weight;
-            });
-            if (!list.length) minWeight = weight;
-          }
-        }
-      });
-    });
+    const keys = 'nameen,namecn,districten,districtcn,proven,provcn'.split(',');
+    const kw = escapeRegexp(keyword);
+    const conditions = _.map(keys, key => ({
+      [key]: { $regex: kw, $options: 'i' },
+    }));
+    return db.weather.area.find({
+      $or: conditions,
+    }, {
+      _id: 0,
+      areaid: 1,
+      namecn: 1,
+      districtcn: 1,
+      provcn: 1,
+      nationcn: 1,
+    }).sort({areaid: 1}).limit(20);
   }
 
   /**
@@ -182,21 +141,36 @@ class WEATHER {
     let self = this;
     return new Promise((resolve, reject) => {
       let key = `weather_${areaid}`;
-      redis.exists(key).then(rs => {
-        if (rs) {
+      redis.exists(key).then(exists => {
+        if (exists) {
           redis.get(key).then(cache => {
             resolve(JSON.parse(cache));
           }).catch(reject);
         } else {
-          request.get(`${self.GET_WEATHER_FUTURE_URL}?${self.joinParam({areaid: areaid, needMoreDay: 1})}`, (err, response, body) => {
-            if (err) return reject(err);
-            // body = body.replace(/http\:\/\/.+?(day|night)/g, `${config.get('apiUrl')}cdn/system/weather/icon/$1`);
-            let data = JSON.parse(body);
-            if (data.showapi_res_code != 0) return reject(new ApiError(400, data.showapi_res_error));
-            resolve(data.showapi_res_body);
-            redis.set(key, JSON.stringify(data.showapi_res_body)).then(() => {
-              redis.expire(key, 60 * 60);
-            }).catch(reject);
+          db.weather.area.findOne({areaid: parseInt(areaid)}, {_id: 0}).then(cityInfo => {
+            console.log(areaid, cityInfo);
+            const url = `${self.GET_WEATHER_FUTURE_URL}?${self.joinParam({areaid: areaid, needMoreDay: 1})}`;
+            request.get(url, (err, response, body) => {
+              if (err) return reject(err);
+              body = body.replace(/http\:\/\/.+?(day|night)/g, `${config.get('apiUrl')}cdn/system/weather/icon/$1`);
+              body = JSON.parse(body);
+              if (body.showapi_res_code != 0) return reject(new ApiError(400, body.showapi_res_error));
+              let data = body.showapi_res_body;
+              data = {
+                cityInfo: {
+                  ...cityInfo,
+                  latitude: data.cityInfo.latitude,
+                  longitude: data.cityInfo.longitude,
+                },
+                now: data.now,
+                forecast: [data.f1, data.f2, data.f3, data.f4, data.f5, data.f6, data.f7],
+                time: data.time,
+              };
+              resolve(data.showapi_res_body);
+              redis.set(key, JSON.stringify(data)).then(() => {
+                redis.expire(key, 60 * 60);
+              }).catch(reject);
+            });
           });
         }
       }).catch(reject);
