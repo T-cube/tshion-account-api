@@ -44,7 +44,7 @@ api.get('/keyword/:keyword', (req, res, next) => {
  * @author xuezi
  * @Time 2016-12-01
  */
-class WEATHER {
+class Weather {
   /**
    * constructor
    * @param {Object} options include appid, secret
@@ -166,7 +166,7 @@ class WEATHER {
                 forecast: [data.f1, data.f2, data.f3, data.f4, data.f5, data.f6, data.f7],
                 time: data.time,
               };
-              resolve(data.showapi_res_body);
+              resolve(data);
               redis.set(key, JSON.stringify(data)).then(() => {
                 redis.expire(key, 60 * 60);
               }).catch(reject);
@@ -195,4 +195,4 @@ class WEATHER {
   }
 }
 
-var weather = new WEATHER(config.get('vendor.showapi.weather'));
+var weather = new Weather(config.get('vendor.showapi.weather'));
