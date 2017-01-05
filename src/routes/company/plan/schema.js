@@ -298,6 +298,34 @@ const schema = {
       },
     },
   },
+  address: {
+    sanitization: {
+      province: { type: 'string' },
+      city: { type: 'string' },
+      district: { type: 'string' },
+      postcode: { type: 'string' },
+      address: { type: 'string' },
+      contact: { type: 'string' },
+      phone: { type: 'string' },
+    },
+    validation: {
+      province: { type: 'string' },
+      city: { type: 'string' },
+      district: { type: 'string' },
+      postcode: { type: 'string' },
+      address: { type: 'string' },
+      contact: { type: 'string' },
+      phone: { type: 'string' },
+    },
+  },
+  address_default: {
+    sanitization: {
+      address_id: { $objectId: 1 },
+    },
+    validation: {
+      address_id: { $objectId: 1 },
+    },
+  },
 };
 
 export const validate = buildValidator(schema);

@@ -16,6 +16,16 @@ import CompanyLevel from 'models/company-level';
 import UserLevel from 'models/user-level';
 import { COMPANY_MEMBER_UPDATE } from 'models/notification-setting';
 
+import {
+  MODULE_PROJECT,
+  MODULE_TASK,
+  MODULE_DOCUMENT,
+  MODULE_APPROVAL,
+  MODULE_ANNOUNCEMENT,
+  MODULE_ATTENDANCE,
+  MODULE_STRUCTURE,
+} from 'models/plan/auth-config';
+
 /* company collection */
 let api = express.Router();
 export default api;
@@ -120,6 +130,7 @@ api.param('company_id', (req, res, next, id) => {
       throw new ApiError(404);
     }
     req.company = company;
+    req.companyLevel = new CompanyLevel(company_id);
     next();
   })
   .catch(next);
@@ -129,17 +140,21 @@ api.param('company_id', (req, res, next, id) => {
 api.get('/:company_id', (req, res, next) => {
   const members = req.company.members;
   const memberIds = _.pluck(members, '_id');
-  db.user.find({
-    _id: {$in: memberIds},
-  }, {
-    avatar: 1,
-  })
-  .then(users => {
+  Promise.all([
+    req.companyLevel.getPlanInfo(true),
+    db.user.find({
+      _id: {$in: memberIds},
+    }, {
+      avatar: 1,
+    })
+  ])
+  .then(([planInfo, users]) => {
     _.each(members, m => {
       let user = _.find(users, u => u._id.equals(m._id));
       _.extend(m, user);
       m.avatar = m.avatar || defaultAvatar('user');
     });
+    req.company.plan = planInfo;
     res.json(req.company);
   })
   .catch(next);
@@ -400,13 +415,38 @@ api.post('/:company_id/exit', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/:company_id/modules', (req, res, next) => {
+  req.companyLevel.getModules()
+  .then(modules => {
+    res.json(modules);
+  })
+  .catch(next);
+});
+
+let ckeckAuth = (_module) => (req, res, next) => {
+  req.companyLevel.getModules()
+  .then(modules => {
+    if (_module && !_.contains(modules, _module)) {
+      // throw new ApiError(400, 'module_permission_deny'); // TODO
+    }
+    return req.companyLevel.getPlanInfo();
+  })
+  .then(planInfo => {
+    if (planInfo.status == C.PLAN_STATUS.EXPIRED && req.method != 'GET') {
+      throw new ApiError(400, 'plan_expired');
+    }
+    next();
+  })
+  .catch(next);
+};
+
+api.use('/:company_id/project', ckeckAuth(MODULE_PROJECT), require('./project').default);
+api.use('/:company_id/task', ckeckAuth(MODULE_TASK), require('../task').default);
+api.use('/:company_id/document', ckeckAuth(MODULE_DOCUMENT), require('./document').default);
+api.use('/:company_id/approval', ckeckAuth(MODULE_APPROVAL), require('./approval').default);
+api.use('/:company_id/announcement', ckeckAuth(MODULE_ANNOUNCEMENT), require('./announcement').default);
+api.use('/:company_id/attendance', ckeckAuth(MODULE_ATTENDANCE), require('./attendance').default);
+api.use('/:company_id/structure', ckeckAuth(MODULE_STRUCTURE), require('./structure').default);
 api.use('/:company_id/activity', require('./activity').default);
-api.use('/:company_id/announcement', require('./announcement').default);
-api.use('/:company_id/approval', require('./approval').default);
-api.use('/:company_id/attendance', require('./attendance').default);
-api.use('/:company_id/document', require('./document').default);
 api.use('/:company_id/member', require('./member').default);
-api.use('/:company_id/project', require('./project').default);
-api.use('/:company_id/structure', require('./structure').default);
-api.use('/:company_id/task', require('../task').default);
 api.use('/:company_id/plan', require('./plan').default);

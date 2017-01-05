@@ -131,6 +131,7 @@ let constants = {
   LEVEL_ERROR: {
     OVER_STORE_MAX_FILE_SIZE: 1,
     OVER_STORE_MAX_TOTAL_SIZE: 2,
+    PLAN_STATUS_UNEXPECTED: 3,
   },
 
   NOTICE: {

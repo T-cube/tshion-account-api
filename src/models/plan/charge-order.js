@@ -38,6 +38,7 @@ export default class ChargeOrder {
     return db.payment.charge.order.findAndModify({
       query: {
         'payment_data.out_trade_no': out_trade_no,
+        status: {$ne: C.ORDER_STATUS.SUCCEED}
       },
       update: {
         $set: {payment_notify}

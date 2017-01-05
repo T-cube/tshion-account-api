@@ -30,15 +30,15 @@ export default class Payment {
     return this._pay(C.CHARGE_TYPE.RECHARGE, payment_method, recharge);
   }
 
-  getUrls(charge_type, payment_method) {
+  getUrls(payment_method) {
     return {
-      notify_url: config.get('apiUrl') + `/api/payment/plan/${charge_type}/${payment_method}`,
-      redirect_url: config.get('apiUrl') + `/api/payment/plan/${charge_type}/${payment_method}`,
+      notify_url: config.get('apiUrl') + `/api/payment/plan/${payment_method}`,
+      redirect_url: config.get('apiUrl') + `/api/payment/plan/${payment_method}`,
     };
   }
 
   _pay(charge_type, payment_method, order) {
-    let {notify_url, redirect_url} = this.getUrls(charge_type, payment_method);
+    let {notify_url, redirect_url} = this.getUrls(payment_method);
     let title, method;
     if (charge_type == C.CHARGE_TYPE.PLAN) {
       title = __(`order_type_${order.order_type}`) + order.plan;
@@ -95,12 +95,6 @@ export default class Payment {
     return ChargeOrder.create(charge_type, order, payment_method, payment_data);
   }
 
-  handleWechatPayResponse(response) {
-    // savePaymentResponse
-    return ChargeOrder.savePaymentNotifyAndGetData(response)
-    .then(chargeData => chargeData && chargeData.order_id);
-  }
-
   payWithBalance(order, transactionId) {
     let {paid_sum, company_id} = order;
     return Balance.incBalance(company_id, paid_sum, transactionId, {
@@ -119,6 +113,39 @@ export default class Payment {
   commitPayWithBalance(order, transactionId) {
     let {company_id} = order;
     return Balance.commitIncBalance(company_id, transactionId);
+  }
+
+  processNotify(payment_method, notify) {
+    let success;
+    if (payment_method == 'wxpay') {
+      success = notify.result_code == 'SUCCESS';
+    } else if (payment_method == 'alipay') {
+      success = notify.trade_status == 'TRADE_SUCCESS' || notify.trade_status == 'TRADE_FINISHED';
+    }
+    if (!success) {
+      return Promise.resolve();
+    }
+    return ChargeOrder.savePaymentNotifyAndGetData(notify)
+    .then(chargeData => {
+      if (!chargeData) {
+        return;
+      }
+      let {charge_type, order_id, recharge_id} = chargeData;
+      if (charge_type == C.CHARGE_TYPE.PLAN) {
+        return PlanOrder.init({order_id})
+        .then(planOrder => {
+          return planOrder && planOrder.handlePaySuccess(payment_method);
+        });
+      } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
+        return RechargeOrder.handlePaySuccess(recharge_id);
+      }
+    });
+  }
+
+  handleWechatPayResponse(response) {
+    // savePaymentResponse
+    return ChargeOrder.savePaymentNotifyAndGetData(response)
+    .then(chargeData => chargeData && chargeData.order_id);
   }
 
   query(payment_method, props) {

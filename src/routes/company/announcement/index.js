@@ -12,12 +12,10 @@ import { sanitization, validation } from './schema';
 import C from 'lib/constants';
 import { checkUserType } from '../utils';
 import { ANNOUNCEMENT } from 'models/notification-setting';
-import { checkPlan } from 'lib/middleware';
 
 let api = express.Router();
 export default api;
 
-// api.use(checkPlan(C.TEAMPLAN.PRO, C.TEAMPLAN.ENT));
 
 api.get('/', (req, res, next) => {
   let condition = {

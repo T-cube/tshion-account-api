@@ -6,6 +6,8 @@ import db from 'lib/database';
 import { indexObjectId } from 'lib/utils';
 import Plan from 'models/plan/plan';
 
+import authConfig from 'models/plan/auth-config';
+
 export default class CompanyLevel {
 
   constructor(company_id) {
@@ -13,6 +15,7 @@ export default class CompanyLevel {
       throw new Error('invalid company_id');
     }
     this.company_id = company_id;
+    this.planModel = new Plan(company_id);
   }
 
   canUpload(size) {
@@ -24,7 +27,7 @@ export default class CompanyLevel {
       size = [size];
     }
     return this.getStatus().then(status => {
-      let {levelInfo} = status;
+      let {levelInfo, planInfo} = status;
       let {store_max_total_size, store_max_file_size} = levelInfo.file;
       for (let i in size) {
         if (size[i] > store_max_file_size) {
@@ -38,6 +41,12 @@ export default class CompanyLevel {
         return {
           ok: 0,
           code: C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE,
+        };
+      }
+      if (planInfo.status == C.PLAN_STATUS.OVERDUE) {
+        return {
+          ok: 0,
+          code: C.LEVEL_ERROR.PLAN_STATUS_UNEXPECTED
         };
       }
       return {
@@ -58,15 +67,16 @@ export default class CompanyLevel {
     if (status) {
       return Promise.resolve(status);
     }
-    let planModel = new Plan(company_id);
     return Promise.all([
-      planModel.getCurrent().then(planInfo => {
-        return db.plan.findOne({type: planInfo.plan})
+      this.planModel.getCurrent()
+      .then(planInfo => {
+        return this.planModel.getSetting(planInfo.plan)
         .then(setting => {
-          return {
+          this.companyPlan = {
             setting,
             planInfo,
           };
+          return this.companyPlan;
         });
       }),
       db.company.level.findOne({
@@ -140,6 +150,16 @@ export default class CompanyLevel {
           'file.size': size,
         }
       });
+    });
+  }
+
+  getPlanInfo() {
+    return this.planModel.getCurrent(true);
+  }
+
+  getModules() {
+    return this.planModel.getCurrent(true).then(planInfo => {
+      return authConfig[planInfo.plan];
     });
   }
 

@@ -8,7 +8,6 @@ import { ApiError } from 'lib/error';
 import { mapObjectIdToData, getPageInfo } from 'lib/utils';
 import Plan from 'models/plan/plan';
 import Product from 'models/plan/product';
-import Payment from 'models/plan/payment';
 import PlanDegrade from 'models/plan/plan-degrade';
 import { checkUserType } from '../utils';
 
@@ -140,3 +139,4 @@ api.get('/charge', (req, res, next) => {
 api.use('/order', require('./order').default);
 api.use('/recharge', require('./recharge').default);
 api.use('/auth', require('./auth').default);
+api.use('/address', require('./address').default);
