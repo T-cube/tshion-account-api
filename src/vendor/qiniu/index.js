@@ -1,5 +1,7 @@
-import Qiniu from './qiniu';
 import _ from 'underscore';
+
+import Qiniu from './qiniu';
+import QiniuImage from './qiniu-image';
 
 export class QiniuTools {
 
@@ -21,6 +23,10 @@ export class QiniuTools {
     let domain = config.domain;
     let baseUrl = `http${https ? 's' : ''}://${domain}/`;
     return _.extend({}, config, {baseUrl});
+  }
+
+  image(url) {
+    return new QiniuImage(url);
   }
 
   bucket(bucket, https = true) {

@@ -6,7 +6,7 @@ import fs from 'fs';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
-import { upload, saveCdn, randomAvatar, defaultAvatar } from 'lib/upload';
+import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -273,9 +273,8 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
 });
 
 api.put('/:company_id/logo', (req, res, next) => {
-  let { logo } = req.body;
-  let data = {
-    logo: logo,
+  const data = {
+    logo: cropAvatar(req),
   };
   db.company.update({
     _id: req.company._id
@@ -293,13 +292,13 @@ saveCdn('cdn-public'),
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');
   }
-  let data = {
-    logo: req.file.url
+  const data = {
+    logo: cropAvatar(req),
   };
   db.company.update({
     _id: req.company._id
   }, {
-    $set: data
+    $set: data,
   })
   .then(() => res.json(data))
   .catch(next);
