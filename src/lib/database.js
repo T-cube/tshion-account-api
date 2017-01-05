@@ -79,6 +79,7 @@ const collections = [
   'payment.recharge.discount',
   'payment.charge.order',
   'payment.address',
+  'payment.invoice',
   'payment.product.history',
   'payment.balance',
   'payment.transaction.log',

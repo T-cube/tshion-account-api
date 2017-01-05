@@ -157,10 +157,8 @@ export default class CompanyLevel {
     return this.planModel.getCurrent(true);
   }
 
-  getModules() {
-    return this.planModel.getCurrent(true).then(planInfo => {
-      return authConfig[planInfo.plan];
-    });
+  getModules(plan) {
+    return authConfig[plan];
   }
 
   static incMemberCount(company_id, count) {

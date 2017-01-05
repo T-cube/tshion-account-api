@@ -326,6 +326,22 @@ const schema = {
       address_id: { $objectId: 1 },
     },
   },
+  create_invoice: {
+    sanitization: {
+      charge_list: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
+      address_id: { $objectId: 1 },
+    },
+    validation: {
+      charge_list: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
+      address_id: { $objectId: 1 },
+    },
+  },
 };
 
 export const validate = buildValidator(schema);

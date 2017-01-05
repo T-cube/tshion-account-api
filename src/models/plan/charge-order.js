@@ -14,6 +14,7 @@ export default class ChargeOrder {
       charge_type,
       payment_type,
       payment_method,
+      invoice_issued: false,
       date_create: new Date(),
       status: C.ORDER_STATUS.PAYING,
       payment_data,

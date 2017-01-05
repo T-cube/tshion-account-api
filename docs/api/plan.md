@@ -687,6 +687,17 @@ OUTPUT
 
 支付记录
 
+INPUT
+
+```javascript
+{
+  page: Number,
+  pagesize: Number,
+  invoice_issued: Enum[Int:0,1],
+  charge_type: ChargeType,
+}
+```
+
 OUTPUT
 
 ```javascript
@@ -772,3 +783,64 @@ INPUT
 同 POST
 
 ### DELETE /address/:address_id
+
+
+## invoice
+
+发票管理
+
+### GET /invoice
+
+### GET /invoice/pending
+
+### GET /invoice/:invoice_id
+
+### POST /invoice
+
+INPUT
+
+```javascript
+{
+  charge_list: [ObjectId...],
+  address_id: ObjectId
+}
+```
+
+OUTPUT
+
+```javascript
+{
+  _id: ObjectId,
+  invoice_no: String,
+  company_id: ObjectId,
+  title: String,                    // 只能为认证公司名称
+  total_amount: Currency,           // （税后）总金额，为实际充值金额
+  tax_rate: Float,                  // 税率
+  charge_list: [{
+    _id: ObjectId,
+    charge_no: String,
+    charge_type: ChargeType,
+    amount: Currency,
+  }],
+  // 地址信息
+  address: {
+    _id: ObjectId,
+    province: String,
+    city: String,
+    district: String,
+    postcode: String,
+    address: String,
+    contact: String,
+    phone: String,
+  },
+  // 快递单追踪
+  chip_info: {
+    brand: String,                  // 快递品牌
+    track_no: String,               // 快递跟踪单号
+  },
+  // 状态跟踪
+  status: String[Enum:created,verifing,sent,finished],
+  date_create: Date,
+  date_update: Date,
+}
+```

@@ -105,13 +105,16 @@ api.get('/product', (req, res, next) => {
 api.get('/charge', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);
-  let { charge_type } = req.query;
+  let { charge_type, invoice_issued } = req.query;
   let criteria = {
     company_id,
     status: C.ORDER_STATUS.SUCCEED,
   };
   if (ENUMS.CHARGE_TYPE.indexOf(charge_type) > -1) {
     criteria.charge_type = charge_type;
+  }
+  if (invoice_issued !== undefined) {
+    criteria.invoice_issued == !!invoice_issued;
   }
   return Promise.all([
     db.payment.charge.order.count(criteria),
@@ -140,3 +143,4 @@ api.use('/order', require('./order').default);
 api.use('/recharge', require('./recharge').default);
 api.use('/auth', require('./auth').default);
 api.use('/address', require('./address').default);
+api.use('/invoice', require('./invoice').default);

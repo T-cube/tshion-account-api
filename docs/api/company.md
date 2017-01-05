@@ -63,6 +63,16 @@ OUTPUT
     children: [<Structure>...],
   },
   projects: [<ObjectId>...],
+  plan: {}
+  modules: [
+    MODULE_PROJECT
+    MODULE_TASK
+    MODULE_DOCUMENT
+    MODULE_APPROVAL
+    MODULE_ANNOUNCEMENT
+    MODULE_ATTENDANCE
+    MODULE_STRUCTURE
+  ]
 }
 ```
 
@@ -341,22 +351,3 @@ INPUT
 ### POST /company/:company_id/exit
 
 退出公司
-
-
-### GET /company/:company_id/modules
-
-获取公司可以使用的模块
-
-OUTPUT
-
-```javascript
-[
-  MODULE_PROJECT
-  MODULE_TASK
-  MODULE_DOCUMENT
-  MODULE_APPROVAL
-  MODULE_ANNOUNCEMENT
-  MODULE_ATTENDANCE
-  MODULE_STRUCTURE
-]
-```

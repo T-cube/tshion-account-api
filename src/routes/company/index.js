@@ -155,6 +155,7 @@ api.get('/:company_id', (req, res, next) => {
       m.avatar = m.avatar || defaultAvatar('user');
     });
     req.company.plan = planInfo;
+    req.company.modules = req.companyLevel.getModules(planInfo.plan);
     res.json(req.company);
   })
   .catch(next);
@@ -411,14 +412,6 @@ api.post('/:company_id/exit', (req, res, next) => {
       to
     }), COMPANY_MEMBER_UPDATE)
     .catch(e => console.error(e));
-  })
-  .catch(next);
-});
-
-api.get('/:company_id/modules', (req, res, next) => {
-  req.companyLevel.getModules()
-  .then(modules => {
-    res.json(modules);
   })
   .catch(next);
 });
