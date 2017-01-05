@@ -59,6 +59,7 @@ api.all('/notify/:charge_type/:payment_method', (req, res, next) => {
     || !_.contains([C.CHARGE_TYPE.PLAN, C.CHARGE_TYPE.RECHARGE])) {
     throw new ApiError(404);
   }
+  console.log({notify});
   // checkSign(data).catch(next);
   return req.model('payment').processNotify(charge_type, payment_method, notify)
   .then(() => {
