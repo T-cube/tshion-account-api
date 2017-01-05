@@ -180,7 +180,7 @@ OUTPUT:
 }
 ```
 
-### PUT /document/move
+### POST /document/move
 
 移动文件和文件夹
 
