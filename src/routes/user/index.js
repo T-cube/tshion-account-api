@@ -8,8 +8,8 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
-import { upload, saveCdn } from 'lib/upload';
-import { comparePassword, hashPassword, maskEmail, maskMobile } from 'lib/utils';
+import { upload, saveCdn, cropAvatar } from 'lib/upload';
+import { maskEmail, maskMobile } from 'lib/utils';
 import UserLevel from 'models/user-level';
 import Realname from 'models/plan/realname';
 
@@ -124,14 +124,13 @@ api.put('/options/notification', (req, res, next) => {
 });
 
 api.put('/avatar', (req, res, next) => {
-  let { avatar } = req.body;
-  let data = {
-    avatar: avatar
+  const data = {
+    avatar: cropAvatar(req),
   };
   db.user.update({
     _id: req.user._id
   }, {
-    $set: data
+    $set: data,
   })
   .then(() => res.json(data))
   .catch(next);
@@ -144,8 +143,8 @@ saveCdn('cdn-public'),
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');
   }
-  let data = {
-    avatar: req.file.url
+  const data = {
+    avatar: cropAvatar(req),
   };
   db.user.update({
     _id: req.user._id

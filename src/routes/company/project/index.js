@@ -5,7 +5,7 @@ import Promise from 'bluebird';
 import fs from 'fs';
 
 import db from 'lib/database';
-import { upload, saveCdn, randomAvatar } from 'lib/upload';
+import { upload, saveCdn, randomAvatar, cropAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { authCheck } from 'lib/middleware';
@@ -191,9 +191,8 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
 });
 
 api.put('/:project_id/logo', (req, res, next) => {
-  let { logo } = req.body;
-  let data = {
-    logo: logo,
+  const data = {
+    logo: cropAvatar(req),
   };
   db.project.update({
     _id: req.project._id,
@@ -217,15 +216,8 @@ saveCdn('cdn-public'),
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');
   }
-  let { url } = req.file;
-  const crop = {
-    x: req.body.crop_x,
-    y: req.body.crop_y,
-    width: req.body.crop_width,
-    height: req.body.crop_height,
-  };
-  let data = {
-    logo: req.model('qiniu').image(url).setCrop(crop).toString(),
+  const data = {
+    logo: cropAvatar(req),
   };
   db.project.update({
     _id: req.project._id,

@@ -128,3 +128,18 @@ export function saveCdn(bucket) {
     .catch(next);
   };
 }
+
+export function cropAvatar(req) {
+  let url;
+  if (req.file) {
+    url = req.file.url;
+  } else {
+    url = req.body.avatar || req.body.logo;
+  }
+  const {crop_x: x,crop_y: y, crop_width: width, crop_height: height} = req.body;
+  if (x && y && width && height) {
+    const crop = { x, y, width, height };
+    url = req.model('qiniu').image(url).setCrop(crop).toString();
+  }
+  return url;
+}
