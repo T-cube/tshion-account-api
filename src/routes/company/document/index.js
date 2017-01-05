@@ -402,7 +402,7 @@ saveCdn('cdn-file'),
   .catch(next);
 });
 
-api.put('/move', (req, res, next) => {
+api.post('/move', (req, res, next) => {
   let data = req.body;
   validate('move', data);
   let { files, dirs, dest_dir } = data;
