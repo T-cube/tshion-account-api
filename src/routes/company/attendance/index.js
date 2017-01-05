@@ -5,7 +5,6 @@ import Promise from 'bluebird';
 import moment from 'moment';
 import config from 'config';
 
-import { checkPlan } from 'lib/middleware';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
@@ -34,7 +33,6 @@ import Approval from 'models/approval';
 let api = express.Router();
 export default api;
 
-// api.use(checkPlan(C.TEAMPLAN.ENT));
 
 api.get('/jsapi', (req, res, next) => {
   req.model('wechat-util').getWechatApi().getJsConfig({

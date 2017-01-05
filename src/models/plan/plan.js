@@ -72,6 +72,10 @@ export default class Plan {
     });
   }
 
+  getSetting(type) {
+    return db.plan.findOne({type});
+  }
+
   getUpgradeStatus() {
     return this.getCurrent(true)
     .then(current => {
