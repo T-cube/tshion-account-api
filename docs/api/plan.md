@@ -542,6 +542,8 @@ OUTPUT
 
 支付
 
+当订单类型为degrade，不需要支付，使用确认降级的接口
+
 INPUT
 
 ```javascript
@@ -561,6 +563,11 @@ OUTPUT
   status: String,     // paying succeed (余额支付直接返回succeed)
 }
 ```
+
+### POST /order/:orderId/confirm
+
+确认降级
+
 
 ### GET /order/:orderId/query
 

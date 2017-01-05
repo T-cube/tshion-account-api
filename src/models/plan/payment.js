@@ -4,10 +4,6 @@ import Pay from '@ym/payment';
 import Qr from 'qr-image';
 
 import C from 'lib/constants';
-import {ApiError} from 'lib/error';
-import db from 'lib/database';
-import {indexObjectId} from 'lib/utils';
-
 import ChargeOrder from 'models/plan/charge-order';
 import RechargeOrder from 'models/plan/recharge-order';
 import PlanOrder from 'models/plan/plan-order';

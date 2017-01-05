@@ -29,6 +29,7 @@
     "bcrypt": "^0.8.5",
     "bluebird": "^3.1.1",
     "body-parser": "^1.14.2",
+    "bson": "^1.0.3",
     "canvas": "^1.6.2",
     "change-case": "^2.3.1",
     "config": "^1.20.1",

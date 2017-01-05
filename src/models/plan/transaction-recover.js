@@ -10,6 +10,7 @@ export default {
 
   orderPaySuccess() {
     return db.transaction.find({
+      type: 'pay_order',
       order: {$exists: true},
       status: {$in: ['pending', 'commited']}
     })
@@ -52,6 +53,7 @@ export default {
 
   rechargePaySuccess() {
     return db.transaction.find({
+      type: 'recharge_success',
       recharge: {$exists: true},
       status: {$in: ['pending', 'commited']}
     })
@@ -63,7 +65,6 @@ export default {
         // status: C.ORDER_STATUS.PAYING,
       })
       .then(recharge => {
-        console.log({recharge});
         if (!recharge) {
           return;
         }
