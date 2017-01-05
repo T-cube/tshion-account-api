@@ -68,6 +68,7 @@ const collections = [
   'plan.auth',
   'plan.auth.pic',
   'plan.company',
+  'plan.degrade',
   'payment.product',
   'payment.token',
   'payment.discount',
@@ -77,10 +78,10 @@ const collections = [
   'payment.order',
   'payment.recharge.discount',
   'payment.charge.order',
+  'payment.address',
   'payment.product.history',
   'payment.balance',
   'payment.transaction.log',
-  'plan.degrade',
 
   // transaction
   'transaction',

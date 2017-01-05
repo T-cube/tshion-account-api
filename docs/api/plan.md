@@ -712,3 +712,63 @@ OUTPUT
   ]
 }
 ```
+
+
+## address
+
+发票地址管理（最多提交10个地址）
+
+### GET /address
+
+OUTPUT
+
+```javascript
+{
+  _id: ObjectId, // company_id
+  default_address: ObjectId,
+  address_list: [{
+    _id: ObjectId,
+    province: String,
+    city: String,
+    district: String,
+    postcode: String,
+    address: String,
+    contact: String,
+    phone: String,
+  }...],
+}
+```
+
+### POST /address
+
+INPUT
+
+```javascript
+{
+  province: String,
+  city: String,
+  district: String,
+  postcode: String,
+  address: String,
+  contact: String,
+  phone: String,
+}
+```
+
+### PUT /address/default
+
+INPUT
+
+```javascript
+{
+  address_id: ObjectId
+}
+```
+
+### PUT /address/:address_id
+
+INPUT
+
+同 POST
+
+### DELETE /address/:address_id

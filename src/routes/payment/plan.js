@@ -70,7 +70,7 @@ api.all('/notify/:payment_method', (req, res, next) => {
         '</xml>'
       );
     } else {
-      return res.send();
+      return res.send('success');
     }
   })
   .catch(next);
