@@ -49,19 +49,18 @@ api.get('/pay', (req, res, next) => {
   .catch(next);
 });
 
-api.all('/notify/:charge_type/:payment_method', (req, res, next) => {
+api.all('/notify/:payment_method', (req, res, next) => {
   let notify = !_.isEmpty(req.body) ? req.body : req.query;
   if (!_.isEmpty(notify)) {
     throw new ApiError(400);
   }
-  let {charge_type, payment_method} = req.params;
-  if (!_.contains(['wxpay', 'alipay'], payment_method)
-    || !_.contains([C.CHARGE_TYPE.PLAN, C.CHARGE_TYPE.RECHARGE])) {
+  let {payment_method} = req.params;
+  if (!_.contains(['wxpay', 'alipay'], payment_method)) {
     throw new ApiError(404);
   }
   console.log({notify});
   // checkSign(data).catch(next);
-  return req.model('payment').processNotify(charge_type, payment_method, notify)
+  return req.model('payment').processNotify(payment_method, notify)
   .then(() => {
     if (payment_method == 'wxpay') {
       return res.send(

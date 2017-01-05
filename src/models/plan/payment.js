@@ -30,15 +30,15 @@ export default class Payment {
     return this._pay(C.CHARGE_TYPE.RECHARGE, payment_method, recharge);
   }
 
-  getUrls(charge_type, payment_method) {
+  getUrls(payment_method) {
     return {
-      notify_url: config.get('apiUrl') + `/api/payment/plan/${charge_type}/${payment_method}`,
-      redirect_url: config.get('apiUrl') + `/api/payment/plan/${charge_type}/${payment_method}`,
+      notify_url: config.get('apiUrl') + `/api/payment/plan/${payment_method}`,
+      redirect_url: config.get('apiUrl') + `/api/payment/plan/${payment_method}`,
     };
   }
 
   _pay(charge_type, payment_method, order) {
-    let {notify_url, redirect_url} = this.getUrls(charge_type, payment_method);
+    let {notify_url, redirect_url} = this.getUrls(payment_method);
     let title, method;
     if (charge_type == C.CHARGE_TYPE.PLAN) {
       title = __(`order_type_${order.order_type}`) + order.plan;
@@ -115,7 +115,7 @@ export default class Payment {
     return Balance.commitIncBalance(company_id, transactionId);
   }
 
-  processNotify(charge_type, payment_method, notify) {
+  processNotify(payment_method, notify) {
     let success;
     if (payment_method == 'wxpay') {
       success = notify.result_code == 'SUCCESS';
@@ -130,14 +130,14 @@ export default class Payment {
       if (!chargeData) {
         return;
       }
+      let {charge_type, order_id, recharge_id} = chargeData;
       if (charge_type == C.CHARGE_TYPE.PLAN) {
-        let {order_id} = chargeData;
         return PlanOrder.init({order_id})
         .then(planOrder => {
           return planOrder && planOrder.handlePaySuccess(payment_method);
         });
       } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
-        return RechargeOrder.handlePaySuccess(chargeData.recharge_id);
+        return RechargeOrder.handlePaySuccess(recharge_id);
       }
     });
   }
