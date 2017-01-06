@@ -29,6 +29,17 @@ export class QiniuTools {
     return new QiniuImage(url);
   }
 
+  parse(url) {
+    const pattern = /^https?:\/\/(cdn-[\w\-]+)\.tlifang\.com\/(.+?)(\?.+)$/;
+    const result = pattern.exec(url);
+    if (result) {
+      const [, cdn_bucket, cdn_key, processor] = result;
+      return {cdn_bucket, cdn_key, processor};
+    } else {
+      return null;
+    }
+  }
+
   bucket(bucket, https = true) {
     const conf = this.conf;
     const instances = this.instances;
