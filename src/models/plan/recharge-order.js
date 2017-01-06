@@ -10,7 +10,7 @@ export default class RechargeOrder {
 
   constructor() {}
 
-  static handlePaySuccess(recharge_id) {
+  static handlePaySuccess(recharge_id, charge_id) {
     return db.payment.recharge.findOne({_id: recharge_id})
     .then(recharge => {
       if (!recharge) {
@@ -19,7 +19,7 @@ export default class RechargeOrder {
       return Transaction.init('recharge_success', {recharge: recharge_id})
       .then(transactionId => (
         Transaction.start(transactionId).then(() => (
-          RechargeOrder.doHandlePaySuccess(recharge, transactionId)
+          RechargeOrder.doHandlePaySuccess(recharge, charge_id, transactionId)
         ))
         .then(() => Transaction.commit(transactionId))
         .then(() => (
@@ -30,7 +30,7 @@ export default class RechargeOrder {
     });
   }
 
-  static doHandlePaySuccess(recharge, transactionId) {
+  static doHandlePaySuccess(recharge, charge_id, transactionId) {
     let {company_id, amount, payment_method} = recharge;
     return Promise.all([
       Balance.incBalance(company_id, amount, transactionId, {
@@ -39,6 +39,7 @@ export default class RechargeOrder {
       db.payment.recharge.update({_id: recharge._id}, {
         $set: {
           status: C.ORDER_STATUS.SUCCEED,
+          charge_id,
           payment: {
             date_paid: new Date(),
             method: payment_method

@@ -281,6 +281,12 @@ let constants = {
     CANCELLED: 'cancelled',
     SUCCEED: 'succeed'
   },
+  CHARGE_STATUS: {
+    PAYING: 'paying',
+    EXPIRED: 'expired',
+    CANCELLED: 'cancelled',
+    SUCCEED: 'succeed'
+  },
   CHARGE_TYPE: {
     PLAN: 'plan',
     RECHARGE: 'recharge',

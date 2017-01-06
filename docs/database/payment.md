@@ -153,10 +153,6 @@ Currency: Number;
 }
 ```
 
-### Collection `payment.transaction.log`
-
-
-
 ### Collection `payment.order`
 
 记录用户充值、付款记录
@@ -188,6 +184,7 @@ Currency: Number;
   charge_no: ObjectId               // 关联支付记录
   original_sum: Currency          // 原始价格
   paid_sum: Currency,            // 支付金额
+  invoice_id: ObjectId,           // 发票id
   // 订单状态
   status: OrderStatus,
   comment: String,
@@ -204,22 +201,6 @@ Currency: Number;
 }
 ```
 
-### Collection `payment.charge.discount`
-
-充值优惠
-
-```javascript
-{
-  _id: ObjectId,
-  discount_no: String,
-  title: String,
-  amount: Currency,
-  extra_amount: Currency,
-  date_create: Date,
-  date_update: Date,
-}
-```
-
 ### Collection `payment.charge.order`
 
 帐户充值记录，实际转入资金，包含预充值或直接消费
@@ -227,10 +208,9 @@ Currency: Number;
 ```javascript
 {
   _id: ObjectId,
-  charge_no: String,                        // 帐户收入流水号
+  charge_no: String,                // 帐户收入流水号
   company_id: ObjectId,             // 关联公司
   amount: Currency,                 // 充值金额
-  invoice_issued: Boolean           // 发票是否已开具
   payment_type: PaymentType         // 支付类型
   payment_method: PaymentMethod,    // 支付方式
   order_no: String,                 // 关联订单
@@ -288,6 +268,7 @@ Currency: Number;
   }],
   // 地址信息
   address: {
+    _id: ObjectId,
     province: String,
     city: String,
     district: String,

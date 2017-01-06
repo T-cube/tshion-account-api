@@ -238,18 +238,18 @@ const schema = {
   },
   invoice_list: {
     sanitization: {
-      page: {type: 'integer'},
-      pagesize: {type: 'integer'},
-      status: {type: 'string'},
-      invoice_no: {type: 'string'},
-      company_id: {$objectId: 1},
+      page: {type: 'integer', optional: true},
+      pagesize: {type: 'integer', optional: true},
+      status: {type: 'string', optional: true},
+      invoice_no: {type: 'string', optional: true},
+      company_id: {$objectId: 1, optional: true},
     },
     validation: {
-      page: {type: 'integer'},
-      pagesize: {type: 'integer'},
-      status: {type: 'string'},
-      invoice_no: {$enum: ENUMS.INVOICE_STATUS},
-      company_id: {$objectId: 1},
+      page: {type: 'integer', optional: true},
+      pagesize: {type: 'integer', optional: true},
+      status: {type: 'string', optional: true},
+      invoice_no: {$enum: ENUMS.INVOICE_STATUS, optional: true},
+      company_id: {$objectId: 1, optional: true},
     },
   },
 };

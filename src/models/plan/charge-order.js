@@ -10,26 +10,35 @@ export default class ChargeOrder {
     let {company_id, paid_sum} = order;
     let {payment_type} = payment_data;
     let data = {
+      company_id,
       amount: paid_sum,
       charge_type,
       payment_type,
       payment_method,
       date_create: new Date(),
-      status: C.ORDER_STATUS.PAYING,
+      status: C.CHARGE_STATUS.PAYING,
       payment_data,
     };
-    let criteria = {company_id};
+    let query = {company_id, status: C.CHARGE_STATUS.PAYING};
     if (charge_type == C.CHARGE_TYPE.PLAN) {
-      criteria.order_id = order._id;
+      query.order_id = order._id;
+      data.order_id = order._id;
       data.order_no = order.order_no;
     } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
-      criteria.recharge_id = order._id;
+      query.recharge_id = order._id;
+      data.recharge_id = order._id;
       data.recharge_no = order.recharge_no;
     }
-    return db.payment.charge.order.update(criteria, {
-      $set: data
-    }, {
-      upsert: true
+    return db.payment.charge.order.findAndModify({
+      query,
+      update: {$set: {status: C.CHARGE_STATUS.CANCELLED}}
+    })
+    .then(payingCharge => {
+      if (payingCharge.value) {
+        // cancel order
+        return db.payment.charge.order.insert(data);
+      }
+      return db.payment.charge.order.insert(data);
     });
   }
 
@@ -38,7 +47,7 @@ export default class ChargeOrder {
     return db.payment.charge.order.findAndModify({
       query: {
         'payment_data.out_trade_no': out_trade_no,
-        status: {$ne: C.ORDER_STATUS.SUCCEED}
+        status: {$ne: C.CHARGE_STATUS.SUCCEED}
       },
       update: {
         $set: {payment_notify}
@@ -52,10 +61,11 @@ export default class ChargeOrder {
     return db.payment.charge.order.findAndModify({
       query: {
         'payment_data.out_trade_no': out_trade_no,
+        status: {$ne: C.CHARGE_STATUS.SUCCEED}
       },
       update: {
         $set: {
-          status: C.ORDER_STATUS.SUCCEED,
+          status: C.CHARGE_STATUS.SUCCEED,
           payment_query
         }
       }
@@ -67,7 +77,7 @@ export default class ChargeOrder {
     return db.payment.charge.order.findOne({
       order_id,
       payment_method,
-      status: C.ORDER_STATUS.PAYING,
+      status: C.CHARGE_STATUS.PAYING,
       date_create: {$gt: moment().subtract(1, 'hour').toDate()}
     })
     .then(doc => {

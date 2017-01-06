@@ -44,22 +44,23 @@ export default class PlanOrder {
     return this.order[key];
   }
 
-  handlePaySuccess(payment_method) {
+  handlePaySuccess(payment_method, charge_id) {
     let {order} = this;
     return Transaction.init('pay_order', {
       order: order._id,
+      charge: charge_id,
       payment_method
     })
     .then(transactionId => {
       return Transaction.start(transactionId)
-      .then(() => this.doHandlePaySuccess(payment_method, transactionId))
+      .then(() => this.doHandlePaySuccess(payment_method, charge_id, transactionId))
       .then(() => Transaction.commit(transactionId))
       .then(() => this.commitHandlePaySuccess(transactionId))
       .then(() => Transaction.done(transactionId));
     });
   }
 
-  doHandlePaySuccess(payment_method, transactionId) {
+  doHandlePaySuccess(payment_method, charge_id, transactionId) {
     let {order} = this;
     return Promise.all([
       this.planModel.updatePaidFromOrder(order, transactionId),
@@ -68,9 +69,10 @@ export default class PlanOrder {
       }, {
         $set: {
           status: C.ORDER_STATUS.SUCCEED,
+          charge_id,
           payment: {
             date_paid: new Date(),
-            method: payment_method
+            method: payment_method,
           },
         },
         $addToSet: {

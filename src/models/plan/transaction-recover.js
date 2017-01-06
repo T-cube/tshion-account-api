@@ -30,7 +30,7 @@ export default {
           return (
             paidWithBalance
               ? planOrder.doPayWithBalance(transactionId)
-              : planOrder.doHandlePaySuccess(payment_method, transactionId)
+              : planOrder.doHandlePaySuccess(payment_method, transaction.charge, transactionId)
           )
           .then(() => Transaction.commit(transactionId))
           .then(() => (

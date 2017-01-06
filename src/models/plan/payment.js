@@ -131,13 +131,16 @@ export default class Payment {
         return;
       }
       let {charge_type, order_id, recharge_id} = chargeData;
+      let charge_id = chargeData._id;
       if (charge_type == C.CHARGE_TYPE.PLAN) {
         return PlanOrder.init({order_id})
         .then(planOrder => {
-          return planOrder && planOrder.handlePaySuccess(payment_method);
+          if (planOrder && planOrder.get('status') != C.ORDER_STATUS.SUCCEED) {
+            return planOrder.handlePaySuccess(payment_method, charge_id);
+          }
         });
       } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
-        return RechargeOrder.handlePaySuccess(recharge_id);
+        return RechargeOrder.handlePaySuccess(recharge_id, charge_id);
       }
     });
   }
@@ -222,14 +225,20 @@ export default class Payment {
       if (!planOrder) {
         return {ok: 0, error: 'invalid_order_status'};
       }
-      return ChargeOrder.savePaymentQueryAndGetData(payment_query)
-      .then(() => planOrder.handlePaySuccess(payment_method));
+      if (planOrder.get('status') != C.ORDER_STATUS.SUCCEED) {
+        return ChargeOrder.savePaymentQueryAndGetData(payment_query)
+        .then(chargeData => planOrder.handlePaySuccess(payment_method, chargeData._id));
+      }
     });
   }
 
   _accessQueryRechargeOk(recharge_id, payment_query) {
     return ChargeOrder.savePaymentQueryAndGetData(payment_query)
-    .then(() => RechargeOrder.handlePaySuccess(recharge_id));
+    .then(chargeData => {
+      if (chargeData) {
+        return RechargeOrder.handlePaySuccess(recharge_id, chargeData._id);
+      }
+    });
   }
 
 }
