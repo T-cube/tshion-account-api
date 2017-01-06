@@ -41,7 +41,7 @@ if (program.init) {
         default_member: 10,
         project_actived: 50,
         project_all: 50,
-        store: 2147483648, // 20G
+        store: 21474836480, // 20G
         project_store: 524288000, // 500M
         inc_member_store: 0,
         max_file_size: 10485760, // 10M

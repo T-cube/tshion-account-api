@@ -130,7 +130,6 @@ api.param('company_id', (req, res, next, id) => {
       throw new ApiError(404);
     }
     req.company = company;
-    req.companyLevel = new CompanyLevel(company_id);
     next();
   })
   .catch(next);
@@ -140,8 +139,9 @@ api.param('company_id', (req, res, next, id) => {
 api.get('/:company_id', (req, res, next) => {
   const members = req.company.members;
   const memberIds = _.pluck(members, '_id');
+  let companyLevel = new CompanyLevel(req.company._id);
   Promise.all([
-    req.companyLevel.getPlanInfo(true),
+    companyLevel.getPlanInfo(true),
     db.user.find({
       _id: {$in: memberIds},
     }, {
@@ -155,7 +155,7 @@ api.get('/:company_id', (req, res, next) => {
       m.avatar = m.avatar || defaultAvatar('user');
     });
     req.company.plan = planInfo;
-    req.company.modules = req.companyLevel.getModules(planInfo.plan);
+    req.company.modules = companyLevel.getModulesByPlan(planInfo.plan);
     res.json(req.company);
   })
   .catch(next);
@@ -417,17 +417,15 @@ api.post('/:company_id/exit', (req, res, next) => {
 });
 
 let ckeckAuth = (_module) => (req, res, next) => {
-  req.companyLevel.getPlanInfo()
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.getPlanInfo()
   .then(planInfo => {
-    let modules = req.companyLevel.getModules(planInfo.plan);
-    if (_module && !_.contains(modules, _module)) {
-      // throw new ApiError(400, 'module_permission_deny'); // TODO
-    }
-    return req.companyLevel.getPlanInfo();
-  })
-  .then(planInfo => {
+    let modules = companyLevel.getModulesByPlan(planInfo.plan);
     if (planInfo.status == C.PLAN_STATUS.EXPIRED && req.method != 'GET') {
       throw new ApiError(400, 'plan_expired');
+    }
+    if (_module && !_.contains(modules, _module)) {
+      // throw new ApiError(400, 'module_permission_deny'); // TODO
     }
     next();
   })

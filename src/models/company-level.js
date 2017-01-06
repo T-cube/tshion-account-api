@@ -157,7 +157,7 @@ export default class CompanyLevel {
     return this.planModel.getCurrent(true);
   }
 
-  getModules(plan) {
+  getModulesByPlan(plan) {
     return authConfig[plan];
   }
 
