@@ -417,8 +417,9 @@ api.post('/:company_id/exit', (req, res, next) => {
 });
 
 let ckeckAuth = (_module) => (req, res, next) => {
-  req.companyLevel.getModules()
-  .then(modules => {
+  req.companyLevel.getPlanInfo()
+  .then(planInfo => {
+    let modules = req.companyLevel.getModules(planInfo.plan);
     if (_module && !_.contains(modules, _module)) {
       // throw new ApiError(400, 'module_permission_deny'); // TODO
     }
