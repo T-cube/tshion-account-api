@@ -201,7 +201,57 @@ const schema = {
         items: { $objectId: 1 }
       },
     }
-  }
+  },
+  invoice_status: {
+    sanitization: {
+      invoice_id: {$objectId: 1},
+      status: {type: 'string'}
+    },
+    validation: {
+      invoice_id: {$objectId: 1},
+      status: {
+        $enum: [C.INVOICE_STATUS.VERIFIED, C.INVOICE_STATUS.REJECTED]
+      }
+    },
+  },
+  invoice_send: {
+    sanitization: {
+      invoice_id: {$objectId: 1},
+      chip_info: {
+        type: 'object',
+        properties: {
+          track_no: {type: 'string'},
+          brand: {type: 'string'}
+        }
+      }
+    },
+    validation: {
+      invoice_id: {$objectId: 1},
+      chip_info: {
+        type: 'object',
+        properties: {
+          track_no: {type: 'string'},
+          brand: {type: 'string'}
+        }
+      }
+    },
+  },
+  invoice_list: {
+    sanitization: {
+      page: {type: 'integer'},
+      pagesize: {type: 'integer'},
+      status: {type: 'string'},
+      invoice_no: {type: 'string'},
+      company_id: {$objectId: 1},
+    },
+    validation: {
+      page: {type: 'integer'},
+      pagesize: {type: 'integer'},
+      status: {type: 'string'},
+      invoice_no: {$enum: ENUMS.INVOICE_STATUS},
+      company_id: {$objectId: 1},
+    },
+  },
 };
 
 export const validate = buildValidator(schema);

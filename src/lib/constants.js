@@ -317,6 +317,15 @@ let constants = {
     UNUSED: 'unused',
     USED: 'used'
   },
+  INVOICE_STATUS: {
+    CREATING: 'creating',
+    CREATED: 'created',
+    SENT: 'sent',
+    FINISHED: 'finished',
+    VERIFIED: 'verified',
+    REJECTED: 'rejected',
+    CANCELLED: 'cancelled',
+  }
 
 };
 

@@ -791,9 +791,17 @@ INPUT
 
 ### GET /invoice
 
-### GET /invoice/pending
-
 ### GET /invoice/:invoice_id
+
+### PUT /invoice/:invoice_id/status
+
+INPUT
+
+```javascript
+{
+  status: String, // cancelled
+}
+```
 
 ### POST /invoice
 
@@ -801,7 +809,7 @@ INPUT
 
 ```javascript
 {
-  charge_list: [ObjectId...],
+  order_list: [ObjectId...],
   address_id: ObjectId
 }
 ```
@@ -816,12 +824,7 @@ OUTPUT
   title: String,                    // 只能为认证公司名称
   total_amount: Currency,           // （税后）总金额，为实际充值金额
   tax_rate: Float,                  // 税率
-  charge_list: [{
-    _id: ObjectId,
-    charge_no: String,
-    charge_type: ChargeType,
-    amount: Currency,
-  }],
+  order_list: [ObjectId],
   // 地址信息
   address: {
     _id: ObjectId,

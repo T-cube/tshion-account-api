@@ -328,14 +328,14 @@ const schema = {
   },
   create_invoice: {
     sanitization: {
-      charge_list: {
+      order_list: {
         type: 'array',
         items: { $objectId: 1 }
       },
       address_id: { $objectId: 1 },
     },
     validation: {
-      charge_list: {
+      order_list: {
         type: 'array',
         items: { $objectId: 1 }
       },
