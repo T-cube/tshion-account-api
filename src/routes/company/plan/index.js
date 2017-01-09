@@ -85,11 +85,30 @@ api.get('/balance', (req, res, next) => {
   let company_id = req.company._id;
   db.payment.balance.findOne({
     _id: company_id
+  }, {
+    log: 0
   })
   .then(doc => {
     res.json({
       company_id,
       balance: doc ? doc.balance : 0
+    });
+  })
+  .catch(next);
+});
+
+api.get('/balance/log', (req, res, next) => {
+  let company_id = req.company._id;
+  let { page, pagesize } = getPageInfo(req.query);
+  db.payment.balance.findOne({
+    _id: company_id
+  })
+  .then(doc => {
+    res.json({
+      page,
+      pagesize,
+      totalrows: doc ? doc.log.length : 0,
+      list: doc && doc.log ? doc.log.slice(pagesize * (page - 1), pagesize * page) : []
     });
   })
   .catch(next);
@@ -105,16 +124,13 @@ api.get('/product', (req, res, next) => {
 api.get('/charge', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);
-  let { charge_type, invoice_issued } = req.query;
+  let { charge_type } = req.query;
   let criteria = {
     company_id,
     status: C.ORDER_STATUS.SUCCEED,
   };
   if (ENUMS.CHARGE_TYPE.indexOf(charge_type) > -1) {
     criteria.charge_type = charge_type;
-  }
-  if (invoice_issued !== undefined) {
-    criteria.invoice_issued == !!invoice_issued;
   }
   return Promise.all([
     db.payment.charge.order.count(criteria),

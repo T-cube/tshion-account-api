@@ -2,6 +2,8 @@ import moment from 'moment';
 import db from 'lib/database';
 import C from 'lib/constants';
 
+const chrgeExpireMinutes = 60;
+
 export default class ChargeOrder {
 
   constructor() {}
@@ -22,12 +24,14 @@ export default class ChargeOrder {
     let query = {company_id, status: C.CHARGE_STATUS.PAYING};
     if (charge_type == C.CHARGE_TYPE.PLAN) {
       query.order_id = order._id;
+      query.date_create = {$gt: moment().subtract(chrgeExpireMinutes, 'minutes').toDate()};
       data.order_id = order._id;
       data.order_no = order.order_no;
     } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
       query.recharge_id = order._id;
       data.recharge_id = order._id;
       data.recharge_no = order.recharge_no;
+      return db.payment.charge.order.insert(data);
     }
     return db.payment.charge.order.findAndModify({
       query,
@@ -36,7 +40,6 @@ export default class ChargeOrder {
     .then(payingCharge => {
       if (payingCharge.value) {
         // cancel order
-        return db.payment.charge.order.insert(data);
       }
       return db.payment.charge.order.insert(data);
     });
@@ -78,7 +81,7 @@ export default class ChargeOrder {
       order_id,
       payment_method,
       status: C.CHARGE_STATUS.PAYING,
-      date_create: {$gt: moment().subtract(1, 'hour').toDate()}
+      date_create: {$gt: moment().subtract(chrgeExpireMinutes, 'minutes').toDate()}
     })
     .then(doc => {
       if (!doc) {

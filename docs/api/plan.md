@@ -142,6 +142,30 @@ OUTPUT
 }
 ```
 
+### GET /balance/log
+
+获取公司账户余额日志
+
+INPUT
+
+```javascript
+{
+  page: Number,
+  pagesize: Number,
+}
+```
+
+OUTPUT
+
+```javascript
+{
+  page: Number,
+  pagesize: Number,
+  totalrows: Number,
+  log: []
+}
+```
+
 ### GET /status
 
 获取当前的认证状态
@@ -150,18 +174,6 @@ OUTPUT
 
 ```javascript
 {
-  // history: [
-  //   {
-  //     _id: ObjectId,
-  //     type: String, // paid trial
-  //     company_id: ObjectId,
-  //     user_id: ObjectId,
-  //     plan: TeamPlanPaid,
-  //     status: PlanStatus,
-  //     date_start: Date,
-  //     date_end: Date,
-  //   }
-  // ],
   company_id: ObjectId,
   current: {
     _id: ObjectId,
@@ -518,6 +530,16 @@ OUTPUT
 
 
 ### GET /order
+
+INPUT
+
+```javascript
+{
+  page: Number,
+  pagesize: Number,
+  invoice_issued: Number[Enum:0,1], //是否开过发票
+}
+```
 
 订单列表
 
