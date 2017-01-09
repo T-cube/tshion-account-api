@@ -97,7 +97,7 @@ export default class Payment {
 
   payWithBalance(order, transactionId) {
     let {paid_sum, company_id} = order;
-    return Balance.incBalance(company_id, paid_sum, transactionId, {
+    return Balance.incBalance(company_id, -paid_sum, transactionId, {
       order: _.pick(order, '_id', 'order_no', 'member_count', 'plan', 'order_type')
     })
     .then(() => ({ok: 1}))

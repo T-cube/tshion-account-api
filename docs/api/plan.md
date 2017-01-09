@@ -703,7 +703,7 @@ OUTPUT
 ```
 
 
-## charge
+<!-- ## charge
 
 ### GET /charge
 
@@ -744,7 +744,7 @@ OUTPUT
     }
   ]
 }
-```
+``` -->
 
 
 ## address
