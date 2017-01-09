@@ -52,7 +52,7 @@ api.get('/pay', (req, res, next) => {
 
 api.all('/notify/:payment_method', (req, res, next) => {
   let notify = !_.isEmpty(req.body) ? req.body : req.query;
-  if (!_.isEmpty(notify)) {
+  if (_.isEmpty(notify)) {
     throw new ApiError(400);
   }
   let {payment_method} = req.params;

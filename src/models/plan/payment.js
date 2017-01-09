@@ -32,8 +32,8 @@ export default class Payment {
 
   getUrls(payment_method) {
     return {
-      notify_url: config.get('apiUrl') + `api/payment/plan/${payment_method}`,
-      redirect_url: config.get('apiUrl') + `api/payment/plan/${payment_method}`,
+      notify_url: config.get('apiUrl') + `api/payment/plan/notify/${payment_method}`,
+      redirect_url: config.get('apiUrl') + `api/payment/plan/notify/${payment_method}`,
     };
   }
 
