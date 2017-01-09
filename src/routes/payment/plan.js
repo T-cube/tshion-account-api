@@ -3,6 +3,7 @@ import express from 'express';
 import Promise from 'bluebird';
 import config from 'config';
 import bodyParser from 'body-parser';
+import {ObjectId} from 'mongodb';
 
 import {ApiError} from 'lib/error';
 import db from 'lib/database';
@@ -21,15 +22,15 @@ api.get('/pay', (req, res, next) => {
   if (payment_method != 'alipay' || !token) {
     throw new ApiError(400, 'invalid_params');
   }
-  return db.payment.token.findOne({_id: token})
+  let tokenKey = `pay-token-${token}`;
+  return req.model('redis').hmget(tokenKey)
   .then(doc => {
     if (!doc) {
       throw new ApiError(404);
     }
-    if (new Date() > doc.expires) {
-      throw new ApiError(400, 'expired');
-    }
     let {company_id, order_id} = doc;
+    company_id = ObjectId(company_id);
+    order_id = ObjectId(order_id);
     return PlanOrder.init({company_id, order_id})
     .then(planOrder => {
       if (!planOrder) {

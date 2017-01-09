@@ -158,7 +158,10 @@ api.get('/:order_id/query', (req, res, next) => {
     }),
     db.payment.charge.order.findOne({
       order_id,
-      company_id
+      company_id,
+      status: {
+        $in: [C.CHARGE_STATUS.PAYING, C.CHARGE_STATUS.SUCCEED]
+      }
     })
   ])
   .then(([order, charge]) => {
@@ -191,14 +194,16 @@ api.get('/:order_id/token', (req, res, next) => {
       throw new ApiError(400, 'invalid_order_status');
     }
     return generateToken(48).then(token => {
-      res.json({token});
-      return db.payment.token.insert({
-        _id: token,
-        company_id,
-        order_id,
-        user_id,
-        expires: moment().add(20, 'minutes').toDate(),
-      });
+      let tokenKey = `pay-token-${token}`;
+      let data = {
+        token,
+        company_id: company_id.toString(),
+        order_id: order_id.toString(),
+        user_id: user_id.toString(),
+      };
+      req.model('redis').hmset(tokenKey, data);
+      req.model('redis').expire(tokenKey, 30 * 60);
+      res.json(data);
     });
   })
   .catch(next);
