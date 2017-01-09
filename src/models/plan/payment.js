@@ -179,7 +179,7 @@ export default class Payment {
         return {ok: 0, info: 'payment_not_found'};
       }
       let {trade_state} = payment_query;
-      let ok = trade_state != 'SUCCESS';
+      let ok = trade_state == 'SUCCESS';
       return {ok, payment_query};
     })
     .catch(e => {
@@ -200,7 +200,7 @@ export default class Payment {
         return {ok: 0, info: 'payment_not_found'};
       }
       let {trade_status} = payment_query;
-      let ok = trade_status != 'TRADE_SUCCESS';
+      let ok = trade_status == 'TRADE_SUCCESS';
       return {ok, payment_query};
     })
     .catch(e => {
