@@ -62,16 +62,28 @@ api.all('/notify/:payment_method', (req, res, next) => {
   console.log({notify});
   // checkSign(data).catch(next);
   return req.model('payment').processNotify(payment_method, notify)
-  .then(() => {
-    if (payment_method == 'wxpay') {
-      return res.send(
-        '<xml>' +
+  .then(doc => {
+    if (req.method == 'GET') {
+      let {company_id, order_id, recharge_id} = doc;
+      if (doc.order_id) {
+        let url = config.get('webUrl') + `oa/company/${company_id}/profile/expense/order/detail/${order_id}`;
+        return res.redirect(url);
+      }
+      if (doc.recharge_id) {
+        let url = config.get('webUrl') + `oa/company/${company_id}/profile/expense/order/detail/${order_id}`;
+        return res.redirect(url);
+      }
+    } else {
+      if (payment_method == 'wxpay') {
+        return res.send(
+          '<xml>' +
           '<return_code><![CDATA[SUCCESS]]></return_code>' +
           '<return_msg><![CDATA[OK]]></return_msg>' +
-        '</xml>'
-      );
-    } else {
-      return res.send('success');
+          '</xml>'
+        );
+      } else {
+        return res.send('success');
+      }
     }
   })
   .catch(next);

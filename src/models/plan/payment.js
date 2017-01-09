@@ -130,7 +130,7 @@ export default class Payment {
       if (!chargeData) {
         return;
       }
-      let {charge_type, order_id, recharge_id} = chargeData;
+      let {charge_type, order_id, recharge_id, company_id} = chargeData;
       let charge_id = chargeData._id;
       if (charge_type == C.CHARGE_TYPE.PLAN) {
         return PlanOrder.init({order_id})
@@ -138,9 +138,11 @@ export default class Payment {
           if (planOrder && planOrder.get('status') != C.ORDER_STATUS.SUCCEED) {
             return planOrder.handlePaySuccess(payment_method, charge_id);
           }
-        });
+        })
+        .then(() => ({order_id, company_id}));
       } else if (charge_type == C.CHARGE_TYPE.RECHARGE) {
-        return RechargeOrder.handlePaySuccess(recharge_id, charge_id);
+        return RechargeOrder.handlePaySuccess(recharge_id, charge_id)
+        .then(() => ({recharge_id, company_id}));
       }
     });
   }

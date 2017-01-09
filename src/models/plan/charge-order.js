@@ -53,7 +53,10 @@ export default class ChargeOrder {
         status: {$ne: C.CHARGE_STATUS.SUCCEED}
       },
       update: {
-        $set: {payment_notify}
+        $set: {
+          payment_notify,
+          status: C.CHARGE_STATUS.SUCCEED,
+        }
       }
     })
     .then(doc => doc.value);
