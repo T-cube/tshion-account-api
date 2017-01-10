@@ -76,6 +76,7 @@ const schema = {
       'panel.schedule': { type: 'boolean', optional: true },
       'panel.weather': { type: 'boolean', optional: true },
       'panel.locked': { type: 'boolean', optional: true },
+      'panel.open': { type: 'boolean', optional: true },
     },
     validation: {
       'explore.sort_by': { type: 'string', optional: true },
@@ -85,6 +86,7 @@ const schema = {
       'panel.schedule': { type: 'boolean', optional: true },
       'panel.weather': { type: 'boolean', optional: true },
       'panel.locked': { type: 'boolean', optional: true },
+      'panel.open': { type: 'boolean', optional: true },
     }
   },
   preference_reset: {
