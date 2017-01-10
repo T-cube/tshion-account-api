@@ -64,13 +64,16 @@ api.all('/notify/:payment_method', (req, res, next) => {
   return req.model('payment').processNotify(payment_method, notify)
   .then(doc => {
     if (req.method == 'GET') {
+      if (!doc) {
+        return res.redirect(config.get('webUrl'));
+      }
       let {company_id, order_id, recharge_id} = doc;
       if (doc.order_id) {
         let url = config.get('webUrl') + `oa/company/${company_id}/profile/expense/order/detail/${order_id}`;
         return res.redirect(url);
       }
       if (doc.recharge_id) {
-        let url = config.get('webUrl') + `oa/company/${company_id}/profile/expense/order/detail/${order_id}`;
+        let url = config.get('webUrl') + `oa/company/${company_id}/profile/expense/order/detail/${recharge_id}`;
         return res.redirect(url);
       }
     } else {
