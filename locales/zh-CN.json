@@ -67,6 +67,7 @@
   "tag_not_exists": "标签不存在",
   "tag_exists": "标签已存在",
   "token_expired": "已过期",
+  "user_not_confirmed": "用户未验证",
   "user_not_exists": "用户不存在",
   "user_exists": "用户已存在",
   "user_has_signed": "您已打卡",

@@ -148,7 +148,6 @@ class Weather {
           }).catch(reject);
         } else {
           db.weather.area.findOne({areaid: parseInt(areaid)}, {_id: 0}).then(cityInfo => {
-            console.log(areaid, cityInfo);
             const url = `${self.GET_WEATHER_FUTURE_URL}?${self.joinParam({areaid: areaid, needMoreDay: 1})}`;
             request.get(url, (err, response, body) => {
               if (err) return reject(err);
