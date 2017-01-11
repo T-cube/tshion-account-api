@@ -110,6 +110,7 @@ api.get('/', (req, res, next) => {
   let { page, pagesize, invoice_issued } = getPageInfo(req.query);
   let criteria = {company_id};
   if (invoice_issued !== undefined) {
+    criteria.status = C.ORDER_STATUS.SUCCEED;
     criteria.invoice_id = {$exists: !!invoice_issued};
   }
   return Promise.all([
