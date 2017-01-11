@@ -107,8 +107,12 @@ api.post('/:order_id/confirm', (req, res, next) => {
 
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
-  let { page, pagesize } = getPageInfo(req.query);
+  let { page, pagesize, invoice_issued } = getPageInfo(req.query);
   let criteria = {company_id};
+  if (invoice_issued !== undefined) {
+    criteria.status = C.ORDER_STATUS.SUCCEED;
+    criteria.invoice_id = {$exists: !!invoice_issued};
+  }
   return Promise.all([
     db.payment.order.count(criteria),
     db.payment.order.find(criteria)
@@ -155,7 +159,10 @@ api.get('/:order_id/query', (req, res, next) => {
     }),
     db.payment.charge.order.findOne({
       order_id,
-      company_id
+      company_id,
+      status: {
+        $in: [C.CHARGE_STATUS.PAYING, C.CHARGE_STATUS.SUCCEED]
+      }
     })
   ])
   .then(([order, charge]) => {
@@ -188,14 +195,16 @@ api.get('/:order_id/token', (req, res, next) => {
       throw new ApiError(400, 'invalid_order_status');
     }
     return generateToken(48).then(token => {
-      res.json({token});
-      return db.payment.token.insert({
-        _id: token,
-        company_id,
-        order_id,
-        user_id,
-        expires: moment().add(20, 'minutes').toDate(),
-      });
+      let tokenKey = `pay-token-${token}`;
+      let data = {
+        token,
+        company_id: company_id.toString(),
+        order_id: order_id.toString(),
+        user_id: user_id.toString(),
+      };
+      req.model('redis').hmset(tokenKey, data);
+      req.model('redis').expire(tokenKey, 30 * 60);
+      res.json(data);
     });
   })
   .catch(next);

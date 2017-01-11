@@ -3,6 +3,7 @@ import express from 'express';
 import Promise from 'bluebird';
 import config from 'config';
 import bodyParser from 'body-parser';
+import {ObjectId} from 'mongodb';
 
 import {ApiError} from 'lib/error';
 import db from 'lib/database';
@@ -21,15 +22,15 @@ api.get('/pay', (req, res, next) => {
   if (payment_method != 'alipay' || !token) {
     throw new ApiError(400, 'invalid_params');
   }
-  return db.payment.token.findOne({_id: token})
+  let tokenKey = `pay-token-${token}`;
+  return req.model('redis').hmget(tokenKey)
   .then(doc => {
     if (!doc) {
       throw new ApiError(404);
     }
-    if (new Date() > doc.expires) {
-      throw new ApiError(400, 'expired');
-    }
     let {company_id, order_id} = doc;
+    company_id = ObjectId(company_id);
+    order_id = ObjectId(order_id);
     return PlanOrder.init({company_id, order_id})
     .then(planOrder => {
       if (!planOrder) {
@@ -51,7 +52,7 @@ api.get('/pay', (req, res, next) => {
 
 api.all('/notify/:payment_method', (req, res, next) => {
   let notify = !_.isEmpty(req.body) ? req.body : req.query;
-  if (!_.isEmpty(notify)) {
+  if (_.isEmpty(notify)) {
     throw new ApiError(400);
   }
   let {payment_method} = req.params;
@@ -61,16 +62,31 @@ api.all('/notify/:payment_method', (req, res, next) => {
   console.log({notify});
   // checkSign(data).catch(next);
   return req.model('payment').processNotify(payment_method, notify)
-  .then(() => {
-    if (payment_method == 'wxpay') {
-      return res.send(
-        '<xml>' +
+  .then(doc => {
+    if (req.method == 'GET') {
+      if (!doc) {
+        return res.redirect(config.get('webUrl'));
+      }
+      let {company_id, order_id, recharge_id} = doc;
+      if (doc.order_id) {
+        let url = config.get('webUrl') + `oa/company/${company_id}/profile/expense/order/detail/${order_id}`;
+        return res.redirect(url);
+      }
+      if (doc.recharge_id) {
+        let url = config.get('webUrl') + `oa/company/${company_id}/profile/expense/order/detail/${recharge_id}`;
+        return res.redirect(url);
+      }
+    } else {
+      if (payment_method == 'wxpay') {
+        return res.send(
+          '<xml>' +
           '<return_code><![CDATA[SUCCESS]]></return_code>' +
           '<return_msg><![CDATA[OK]]></return_msg>' +
-        '</xml>'
-      );
-    } else {
-      return res.send('success');
+          '</xml>'
+        );
+      } else {
+        return res.send('success');
+      }
     }
   })
   .catch(next);

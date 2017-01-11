@@ -14,7 +14,7 @@ import { checkUserType } from '../utils';
 let api = express.Router();
 export default api;
 
-// api.use(checkUserType(C.COMPANY_MEMBER_TYPE.OWNER));
+const checkOwner = checkUserType(C.COMPANY_MEMBER_TYPE.OWNER);
 
 api.get('/list', (req, res, next) => {
   return Promise.all([
@@ -37,13 +37,13 @@ api.get('/status', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/degrade', (req, res, next) => {
+api.delete('/degrade', checkOwner, (req, res, next) => {
   new PlanDegrade().clear(req.company._id)
   .then(doc => res.json(doc))
   .catch(next);
 });
 
-api.post('/trial', (req, res, next) => {
+api.post('/trial', checkOwner, (req, res, next) => {
   let { plan } = req.body;
   let planModel = new Plan(req.company._id);
   planModel.getStatus()
@@ -81,15 +81,34 @@ api.get('/payment', (req, res, next) => {
   res.json(methods);
 });
 
-api.get('/balance', (req, res, next) => {
+api.get('/balance', checkOwner, (req, res, next) => {
   let company_id = req.company._id;
   db.payment.balance.findOne({
     _id: company_id
+  }, {
+    log: 0
   })
   .then(doc => {
     res.json({
       company_id,
       balance: doc ? doc.balance : 0
+    });
+  })
+  .catch(next);
+});
+
+api.get('/balance/log', checkOwner, (req, res, next) => {
+  let company_id = req.company._id;
+  let { page, pagesize } = getPageInfo(req.query);
+  db.payment.balance.findOne({
+    _id: company_id
+  })
+  .then(doc => {
+    res.json({
+      page,
+      pagesize,
+      totalrows: doc ? doc.log.length : 0,
+      list: doc && doc.log ? doc.log.slice(pagesize * (page - 1), pagesize * page) : []
     });
   })
   .catch(next);
@@ -102,45 +121,42 @@ api.get('/product', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/charge', (req, res, next) => {
-  let company_id = req.company._id;
-  let { page, pagesize } = getPageInfo(req.query);
-  let { charge_type, invoice_issued } = req.query;
-  let criteria = {
-    company_id,
-    status: C.ORDER_STATUS.SUCCEED,
-  };
-  if (ENUMS.CHARGE_TYPE.indexOf(charge_type) > -1) {
-    criteria.charge_type = charge_type;
-  }
-  if (invoice_issued !== undefined) {
-    criteria.invoice_issued == !!invoice_issued;
-  }
-  return Promise.all([
-    db.payment.charge.order.count(criteria),
-    db.payment.charge.order.find(criteria, {
-      payment_data: 0,
-      payment_query: 0,
-      payment_notify: 0
-    })
-    .sort({_id: -1})
-    .limit(pagesize)
-    .skip(pagesize * (page - 1)),
-  ])
-  .then(([totalrows, list]) => {
-    res.json({
-      page,
-      pagesize,
-      totalrows,
-      list,
-    });
-  })
-  .catch(next);
-});
+// api.get('/charge', checkOwner, (req, res, next) => {
+//   let company_id = req.company._id;
+//   let { page, pagesize } = getPageInfo(req.query);
+//   let { charge_type } = req.query;
+//   let criteria = {
+//     company_id,
+//     status: C.ORDER_STATUS.SUCCEED,
+//   };
+//   if (ENUMS.CHARGE_TYPE.indexOf(charge_type) > -1) {
+//     criteria.charge_type = charge_type;
+//   }
+//   return Promise.all([
+//     db.payment.charge.order.count(criteria),
+//     db.payment.charge.order.find(criteria, {
+//       payment_data: 0,
+//       payment_query: 0,
+//       payment_notify: 0
+//     })
+//     .sort({_id: -1})
+//     .limit(pagesize)
+//     .skip(pagesize * (page - 1)),
+//   ])
+//   .then(([totalrows, list]) => {
+//     res.json({
+//       page,
+//       pagesize,
+//       totalrows,
+//       list,
+//     });
+//   })
+//   .catch(next);
+// });
 
 
-api.use('/order', require('./order').default);
-api.use('/recharge', require('./recharge').default);
-api.use('/auth', require('./auth').default);
-api.use('/address', require('./address').default);
-api.use('/invoice', require('./invoice').default);
+api.use('/order', checkOwner, require('./order').default);
+api.use('/recharge', checkOwner, require('./recharge').default);
+api.use('/auth', checkOwner, require('./auth').default);
+api.use('/address', checkOwner, require('./address').default);
+api.use('/invoice', checkOwner, require('./invoice').default);

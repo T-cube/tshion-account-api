@@ -798,6 +798,8 @@
   'panel.announcement': <Boolean>,
   'panel.schedule': <Boolean>,
   'panel.weather': <Boolean>,
+  'panel.locked': <Boolean>,
+  'panel.open': <Boolean>,
   ...
 }
 ```
