@@ -300,20 +300,12 @@ const schema = {
   },
   address: {
     sanitization: {
-      province: { type: 'string' },
-      city: { type: 'string' },
-      district: { type: 'string' },
-      postcode: { type: 'string' },
-      address: { type: 'string' },
+      location: addressSchema.sanitization,
       contact: { type: 'string' },
       phone: { type: 'string' },
     },
     validation: {
-      province: { type: 'string' },
-      city: { type: 'string' },
-      district: { type: 'string' },
-      postcode: { type: 'string' },
-      address: { type: 'string' },
+      location: addressSchema.validation,
       contact: { type: 'string' },
       phone: { type: 'string' },
     },
