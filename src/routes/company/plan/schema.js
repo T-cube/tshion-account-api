@@ -39,6 +39,27 @@ const addressSchema = {
   },
 };
 
+const addressWithoutCountrySchema = {
+  sanitization: {
+    type: 'object',
+    properties: {
+      province: { type: 'string' },
+      city: { type: 'string' },
+      district: { type: 'string' },
+      address: { type: 'string' },
+    }
+  },
+  validation: {
+    type: 'object',
+    properties: {
+      province: { type: 'string' },
+      city: { type: 'string' },
+      district: { type: 'string' },
+      address: { type: 'string' },
+    }
+  },
+};
+
 const industry = {
   sanitization: {
     type: 'object',
@@ -300,12 +321,12 @@ const schema = {
   },
   address: {
     sanitization: {
-      location: addressSchema.sanitization,
+      location: addressWithoutCountrySchema.sanitization,
       contact: { type: 'string' },
       phone: { type: 'string' },
     },
     validation: {
-      location: addressSchema.validation,
+      location: addressWithoutCountrySchema.validation,
       contact: { type: 'string' },
       phone: { type: 'string' },
     },

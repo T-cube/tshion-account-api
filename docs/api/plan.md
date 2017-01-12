@@ -761,11 +761,12 @@ OUTPUT
   default_address: ObjectId,
   address_list: [{
     _id: ObjectId,
-    province: String,
-    city: String,
-    district: String,
-    postcode: String,
-    address: String,
+    location: {
+      province: String,
+      city: String,
+      district: String,
+      address: String,
+    },
     contact: String,
     phone: String,
   }...],
@@ -778,11 +779,12 @@ INPUT
 
 ```javascript
 {
-  province: String,
-  city: String,
-  district: String,
-  postcode: String,
-  address: String,
+  location: {
+    province: String,
+    city: String,
+    district: String,
+    address: String,
+  },
   contact: String,
   phone: String,
 }
