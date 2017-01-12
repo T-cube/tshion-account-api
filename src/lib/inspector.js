@@ -65,8 +65,8 @@ const validationCustom = {
     }
   },
   mobile: function(schema, candidate) {
-    if (!_.isString(candidate) ||
-      !/^1[3|4|5|7|8]\d{9}$/.test(candidate)) {
+    if (_.isString(candidate) && candidate !== ''
+      && !/^1[3|4|5|7|8]\d{9}$/.test(candidate)) {
       this.report('invalid mobile: ' + candidate);
     }
   },

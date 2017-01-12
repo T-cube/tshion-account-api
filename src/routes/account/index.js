@@ -19,14 +19,16 @@ api.post('/check', (req, res, next) => {
   let data = req.body;
   let { type } = req.body;
   validate('register', data, ['type', type]);
-  db.user.find({[type]: req.body[type]}).count()
-  .then(count => {
-    if (count > 0) {
-      throw new ValidationError({
-        [type]: 'user_exists',
-      });
+  db.user.findOne({[type]: req.body[type]}, {activiated: 1})
+  .then(user => {
+    if (!user) {
+      return res.json({});
     }
-    res.json({});
+    if (type == 'email' && !user.activiated) {
+      throw new ValidationError({[type]: 'user_not_confirmed'});
+    } else {
+      throw new ValidationError({[type]: 'user_exists'});
+    }
   }).catch(next);
 });
 
@@ -37,13 +39,17 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let { password, code } = data;
   let id = data[type];
   data = _.pick(data, 'type', type, 'password', 'code');
-  db.user.find({[type]: id}).count()
-  .then(count => {
-    if (count > 0) {
-      console.log(count);
-      throw new ValidationError({
-        [type]: 'user_exists',
-      });
+  db.user.findOne({[type]: id}, {activiated: 1})
+  .then(user => {
+    if (user) {
+      if (type == 'email' && !user.activiated) {
+        return req.model('account').sendRegisterEmail(id)
+        .then(() => {
+          throw new Error('resend_code');
+        });
+      } else {
+        throw new ValidationError({[type]: 'user_exists'});
+      }
     }
     if (type == 'email') {
       return req.model('account').sendRegisterEmail(id);
@@ -100,7 +106,13 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       req.model('preference').init(user._id);
     }
   })
-  .catch(next);
+  .catch(err => {
+    if (err.message == 'resend_code') {
+      res.json({resend: true});
+    } else {
+      next(err);
+    }
+  });
 });
 
 api.post('/confirm', (req, res, next) => {
