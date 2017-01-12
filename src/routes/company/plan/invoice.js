@@ -15,7 +15,7 @@ export default api;
 api.post('/', (req, res, next) => {
   let invoiceInfo = req.body;
   validate('create_invoice', invoiceInfo);
-  let {address_id, order_list} = invoiceInfo;
+  let {address_id, order_list, title, subject} = invoiceInfo;
   if (!order_list.length) {
     throw new ApiError(400, 'invalid_order_list');
   }
@@ -65,7 +65,8 @@ api.post('/', (req, res, next) => {
       company_id,
       user_id,
       invoice_no,
-      title: req.company.name,
+      title,
+      subject,
       order_list,
       address: addressInfo.list[0],
       total_amount: orderInfo.total_amount,

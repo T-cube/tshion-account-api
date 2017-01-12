@@ -328,6 +328,8 @@ const schema = {
   },
   create_invoice: {
     sanitization: {
+      title: { type: 'string', minLength: 1 },
+      subject: { type: 'string', minLength: 1 },
       order_list: {
         type: 'array',
         items: { $objectId: 1 }
@@ -335,6 +337,8 @@ const schema = {
       address_id: { $objectId: 1 },
     },
     validation: {
+      title: { type: 'string', minLength: 1 },
+      subject: { type: 'string', minLength: 1 },
       order_list: {
         type: 'array',
         items: { $objectId: 1 }

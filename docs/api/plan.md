@@ -831,8 +831,10 @@ INPUT
 
 ```javascript
 {
+  title: String; // 抬头
+  subject: String; // 详情
   order_list: [ObjectId...],
-  address_id: ObjectId
+  address_id: ObjectId,
 }
 ```
 
