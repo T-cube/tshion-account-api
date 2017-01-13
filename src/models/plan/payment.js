@@ -15,19 +15,19 @@ export default class Payment {
     this.pay = new Pay(config.get('payment'));
   }
 
-  payOrder(order, payment_method) {
-    return ChargeOrder.getChargeInfo(order._id, payment_method)
+  payOrder(order, payment_method, ip) {
+    return ChargeOrder.getPayingChargeInfo(order._id, payment_method)
     .then(payment_data => {
       if (payment_data) {
         return this.parseResponse(C.CHARGE_TYPE.PLAN, payment_method, order, payment_data);
       }
-      return this._pay(C.CHARGE_TYPE.PLAN, payment_method, order);
+      return this._pay({charge_type: C.CHARGE_TYPE.PLAN, payment_method, order, ip});
     });
   }
 
-  payRecharge(recharge) {
+  payRecharge(recharge, ip) {
     let {payment_method} = recharge;
-    return this._pay(C.CHARGE_TYPE.RECHARGE, payment_method, recharge);
+    return this._pay({charge_type: C.CHARGE_TYPE.RECHARGE, payment_method, recharge, ip});
   }
 
   getUrls(payment_method) {
@@ -37,7 +37,7 @@ export default class Payment {
     };
   }
 
-  _pay(charge_type, payment_method, order) {
+  _pay({charge_type, payment_method, order, ip}) {
     let {notify_url, redirect_url} = this.getUrls(payment_method);
     let title, method;
     if (charge_type == C.CHARGE_TYPE.PLAN) {
@@ -58,7 +58,7 @@ export default class Payment {
         redirect_url,
         title,
         total_fee: 1 || order.paid_sum, // TODO
-        spbill_create_ip: '110.84.35.141'
+        spbill_create_ip: ip
       }
     })
     .then(payment_data => {
@@ -133,9 +133,9 @@ export default class Payment {
       let {charge_type, order_id, recharge_id, company_id} = chargeData;
       let charge_id = chargeData._id;
       if (charge_type == C.CHARGE_TYPE.PLAN) {
-        return PlanOrder.init({order_id})
+        return PlanOrder.init(order_id)
         .then(planOrder => {
-          if (planOrder && planOrder.get('status') != C.ORDER_STATUS.SUCCEED) {
+          if (planOrder && !planOrder.isSucceed()) {
             return planOrder.handlePaySuccess(payment_method, charge_id);
           }
         })
@@ -222,12 +222,12 @@ export default class Payment {
   }
 
   _accessQueryOrderOk(order_id, payment_query, payment_method) {
-    return PlanOrder.init({order_id})
+    return PlanOrder.init(order_id)
     .then(planOrder => {
       if (!planOrder) {
         return {ok: 0, error: 'invalid_order_status'};
       }
-      if (planOrder.get('status') != C.ORDER_STATUS.SUCCEED) {
+      if (!planOrder.isSucceed()) {
         return ChargeOrder.savePaymentQueryAndGetData(payment_query)
         .then(chargeData => planOrder.handlePaySuccess(payment_method, chargeData._id));
       }

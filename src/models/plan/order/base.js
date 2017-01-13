@@ -2,6 +2,7 @@ import _ from 'underscore';
 import Promise from 'bluebird';
 import crypto from 'crypto';
 import moment from 'moment';
+import config from 'config';
 
 import { ApiError } from 'lib/error';
 import { indexObjectId } from 'lib/utils';
@@ -14,6 +15,8 @@ import Plan from '../plan';
 import CompanyLevel from 'models/company-level';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
+
+const ORDER_EXPIRE_MINUTES = config.get('order.expire_minutes');
 
 export default class BaseOrder {
 
@@ -37,6 +40,7 @@ export default class BaseOrder {
     this.original_plan = undefined;
     this.date_create = new Date();
     this.date_update = new Date();
+    this.date_expires = moment().subtract(ORDER_EXPIRE_MINUTES, 'minute').toDate();
     this.member_count = 0;
   }
 
@@ -64,14 +68,18 @@ export default class BaseOrder {
   }
 
   save() {
-    return this.prepare()
+    return Promise.all([
+      this.ensureNotDegradeProcessing(),
+      this.ensureHasNotPendingOrder(),
+    ])
+    .then(() => this.prepare())
     .then(({order, isValid, error}) => {
       if (!isValid) {
         throw new ApiError(400, error);
       }
+      order.status = C.ORDER_STATUS.CREATED;
       return this.createOrderNo()
       .then(order_no => {
-        order.status = 'created';
         order.order_no = order_no;
         return Promise.all([
           db.payment.order.insert(order),
@@ -83,52 +91,44 @@ export default class BaseOrder {
   }
 
   prepare() {
-    return this.checkDegrade()
-    .then(isValid => {
+    return this.isValid()
+    .then(({error, isValid}) => {
       if (!isValid) {
         return {
-          isValid: false,
-          error: 'exit_plan_degrade'
+          isValid,
+          error: error && error.join(','),
+          limits: this.limits,
         };
       }
-      return this.isValid()
-      .then(({error, isValid}) => {
-        if (!isValid) {
-          return {
-            isValid,
-            error: error && error.join(','),
-            limits: this.limits,
-          };
-        }
-        this.paid_sum = this.original_sum = this.getOriginalFeeOfProducts();
-        this.initProducts();
-        return this.getDiscount().then(() => {
-          this.products.forEach(product => {
-            delete product.discount;
-          });
-          return {
-            isValid,
-            limits: this.limits,
-            order: {
-              user_id: this.user_id,
-              company_id: this.company_id,
-              plan: this.plan,
-              original_plan: this.original_plan,
-              order_type: this.order_type,
-              products: this.products,
-              member_count: this.member_count,
-              times: this.times,
-              original_times: this.original_times,
-              original_sum: this.original_sum,
-              paid_sum: Math.round(this.paid_sum),
-              coupon: this.coupon,
-              discount: this.discount,
-              status: this.status,
-              date_create: this.date_create,
-              date_update: this.date_update,
-            },
-          };
+      this.paid_sum = this.original_sum = this.getOriginalFeeOfProducts();
+      this.initProducts();
+      return this.getDiscount().then(() => {
+        this.products.forEach(product => {
+          delete product.discount;
         });
+        return {
+          isValid,
+          limits: this.limits,
+          order: {
+            user_id: this.user_id,
+            company_id: this.company_id,
+            plan: this.plan,
+            original_plan: this.original_plan,
+            order_type: this.order_type,
+            products: this.products,
+            member_count: this.member_count,
+            times: this.times,
+            original_times: this.original_times,
+            original_sum: this.original_sum,
+            paid_sum: Math.round(this.paid_sum),
+            coupon: this.coupon,
+            discount: this.discount,
+            status: this.status,
+            date_create: this.date_create,
+            date_update: this.date_update,
+            date_expires: this.date_expires,
+          },
+        };
       });
     });
   }
@@ -290,10 +290,26 @@ export default class BaseOrder {
     });
   }
 
-  checkDegrade() {
-    // or cancel degrade here
+  ensureNotDegradeProcessing() {
     return this.getPlanStatus()
-    .then(({degrade}) => !degrade);
+    .then(({degrade}) => {
+      if (degrade) {
+        throw new ApiError(400, 'exit_plan_degrade');
+      }
+    });
+  }
+
+  ensureHasNotPendingOrder() {
+    return db.payment.order.count({
+      company_id: this.company_id,
+      status: {$in: [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING]},
+      date_expires: {$lt: new Date()}
+    })
+    .then(pendingCount => {
+      if (pendingCount) {
+        throw new ApiError(400, 'exist_pending_order');
+      }
+    });
   }
 
   getCompanyLevelStatus() {

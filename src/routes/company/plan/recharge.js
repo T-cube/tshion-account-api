@@ -1,11 +1,10 @@
-
 import express from 'express';
 import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { getPageInfo } from 'lib/utils';
+import { getPageInfo, getClientIp } from 'lib/utils';
 import { validate } from './schema';
 import Recharge from 'models/plan/recharge';
 
@@ -19,10 +18,9 @@ api.get('/info', (req, res, next) => {
   let recharge = new Recharge({company_id, user_id});
   Promise.all([
     recharge.getLimits(),
-    recharge.getChargeDiscounts(),
   ])
-  .then(([limits, discounts]) => {
-    res.json({limits, discounts});
+  .then(([limits]) => {
+    res.json({limits});
   })
   .catch(next);
 });
@@ -35,7 +33,7 @@ api.post('/', (req, res, next) => {
   let recharge = new Recharge({company_id, user_id});
   recharge.create(data)
   .then(recharge => {
-    return req.model('payment').payRecharge(recharge);
+    return req.model('payment').payRecharge(recharge, getClientIp(req));
   })
   .then(doc => res.json(doc))
   .catch(next);
@@ -44,7 +42,7 @@ api.post('/', (req, res, next) => {
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);
-  let criteria = {company_id, status: C.ORDER_STATUS.SUCCEED};
+  let criteria = {company_id};
   return Promise.all([
     db.payment.recharge.count(criteria),
     db.payment.recharge.find(criteria, {

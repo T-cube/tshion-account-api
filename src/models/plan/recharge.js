@@ -1,6 +1,4 @@
-import _ from 'underscore';
 import Promise from 'bluebird';
-import config from 'config';
 import crypto from 'crypto';
 import moment from 'moment';
 
@@ -22,13 +20,9 @@ export default class Recharge {
   create({amount, payment_method}) {
     let {company_id, user_id} = this;
     return this.isValid()
-    .then(() => Promise.all([
-      this.createOrderNo(),
-      this.getChargeDiscount(amount),
-    ]))
-    .then(([recharge_no, discount]) => {
-      let {extra_amount} = discount;
-      let paid_sum = amount - extra_amount;
+    .then(() => this.createOrderNo())
+    .then(recharge_no => {
+      let paid_sum = amount;
       let data = {
         amount,
         company_id,
@@ -36,7 +30,6 @@ export default class Recharge {
         paid_sum,
         payment_method,
         recharge_no,
-        discount: extra_amount ? discount : null,
         status: C.ORDER_STATUS.CREATED,
         date_create: new Date(),
         date_update: new Date(),
@@ -60,29 +53,6 @@ export default class Recharge {
         max: 1000000000,
       }
     });
-  }
-
-  getChargeDiscount(amount) {
-    return {extra_amount: 0};
-    // return db.payment.recharge.discount.find({
-    //   amount: {$lte: amount}
-    // })
-    // .sort({
-    //   amount: -1
-    // })
-    // .limit(1)
-    // .then(doc => {
-    //   let discount = doc[0];
-    //   if (!discount) {
-    //     return {extra_amount: 0};
-    //   }
-    //   return _.pick(discount, 'extra_amount', '_id', 'amount');
-    // });
-  }
-
-  getChargeDiscounts() {
-    return [];
-    // return db.payment.recharge.discount.find();
   }
 
   createOrderNo() {

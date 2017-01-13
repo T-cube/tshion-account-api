@@ -268,5 +268,8 @@ module.exports = {
       APPSECRET: process.env.WXPAY_APPSECRET,
       MCHID: process.env.WXPAY_MCHID,
     }
+  },
+  order: {
+    expire_minutes: 30, // 订单有效期
   }
 };

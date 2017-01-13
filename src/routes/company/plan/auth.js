@@ -1,7 +1,6 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import config from 'config';
 import Promise from 'bluebird';
 
 import db from 'lib/database';
@@ -12,7 +11,7 @@ import { ApiError } from 'lib/error';
 import Auth from 'models/plan/auth';
 import Realname from 'models/plan/realname';
 import { saveCdn } from 'lib/upload';
-import { indexObjectId, mapObjectIdToData } from 'lib/utils';
+import { mapObjectIdToData } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -93,7 +92,7 @@ api.put('/', checkValid(true), (req, res, next) => {
 
 api.put('/status', (req, res, next) => {
   validate('cancel', req.body);
-  let { plan, status } = req.body;
+  let { plan } = req.body;
   let company_id = req.company._id;
   let authModel = new Auth(company_id);
   return authModel.cancel(plan)
@@ -128,12 +127,11 @@ function checkValid(isUpdate) {
     if (!_.contains(ENUMS.TEAMPLAN_PAID, plan)) {
       throw new ApiError(400, 'invalid_team_plan');
     }
-    let company_id = req.company._id;
-    let authModel = new Auth(company_id);
+    let authModel = new Auth(req.company._id);
     if (isUpdate) {
-      authModel.checkUpdate(plan).then(next).catch(next);
+      authModel.ensureCanUpdateAuth(plan).then(next).catch(next);
     } else {
-      authModel.checkCreate(plan).then(next).catch(next);
+      authModel.ensureCanPostAuth(plan).then(next).catch(next);
     }
   };
 }

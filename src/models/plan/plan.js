@@ -4,7 +4,6 @@ import moment from 'moment';
 import config from 'config';
 import { ObjectId } from 'mongodb';
 
-import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 import {indexObjectId} from 'lib/utils';

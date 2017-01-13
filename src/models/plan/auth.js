@@ -16,7 +16,7 @@ export default class Auth {
     data.date_create = new Date();
     data._id = ObjectId();
     data.status = C.AUTH_STATUS.POSTED;
-    return this.checkCreate(plan)
+    return this.ensureCanPostAuth(plan)
     .then(() => this.getAuthStatus())
     .then(({pending}) => {
       return Promise.all([
@@ -90,7 +90,7 @@ export default class Auth {
     });
   }
 
-  checkCreate(plan) {
+  ensureCanPostAuth(plan) {
     return this.getAuthStatus()
     .then(({certified, pending}) => {
       if ((certified == plan)
@@ -103,7 +103,7 @@ export default class Auth {
     });
   }
 
-  checkUpdate(plan) {
+  ensureCanUpdateAuth(plan) {
     return this.getAuthStatus()
     .then(({pending}) => {
       if (!pending || pending.status != C.AUTH_STATUS.REJECTED || plan != pending.plan) {

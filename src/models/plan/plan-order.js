@@ -1,5 +1,3 @@
-import _ from 'underscore';
-
 import C from 'lib/constants';
 import db from 'lib/database';
 import {ApiError} from 'lib/error';
@@ -19,17 +17,15 @@ export default class PlanOrder {
     this.planModel = new Plan(this.company_id);
   }
 
-  static init({company_id, order_id}) {
-    let criteria = {};
-    if (order_id) {
-      criteria._id = order_id;
+  static init(order_id, company_id) {
+    if (!order_id) {
+      throw new Error('invalid_order');
     }
+    let criteria = {
+      _id: order_id
+    };
     if (company_id) {
       criteria.company_id = company_id;
-      criteria.status = {$in: [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING]};
-    }
-    if (_.isEmpty(criteria)) {
-      throw new Error('invalid_params');
     }
     return db.payment.order.findOne(criteria)
     .then(order => {
@@ -42,6 +38,14 @@ export default class PlanOrder {
 
   get(key) {
     return this.order[key];
+  }
+
+  isSucceed() {
+    return this.get('status') == C.ORDER_STATUS.SUCCEED;
+  }
+
+  isPending() {
+    return [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING].indexOf(this.get('status')) > -1;
   }
 
   handlePaySuccess(payment_method, charge_id) {

@@ -1,6 +1,4 @@
-
 import db from 'lib/database';
-import C from 'lib/constants';
 import { indexObjectId } from 'lib/utils';
 import PlanOrder from 'models/plan/plan-order';
 import RechargeOrder from 'models/plan/recharge-order';
@@ -15,7 +13,7 @@ export default {
       status: {$in: ['pending', 'commited']}
     })
     .forEach(transaction => {
-      return PlanOrder.init({order_id: transaction.order})
+      return PlanOrder.init(transaction.order)
       .then(planOrder => {
         if (!planOrder) {
           return;

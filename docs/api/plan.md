@@ -602,7 +602,7 @@ OUTPUT
 }
 ```
 
-### GET /order/:orderId/token
+<!-- ### GET /order/:orderId/token
 
 获取支付token（暂时只支持支付宝）
 
@@ -612,7 +612,7 @@ OUTPUT
 }
 ```
 
-然后跳转到`/api/payment/plan/pay?token=token&payment_method=alipay`
+然后跳转到`/api/payment/plan/pay?token=token&payment_method=alipay` -->
 
 
 ## recharge

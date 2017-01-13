@@ -17,38 +17,38 @@ api.use(express.query());
 // api.use(bodyParser.json());
 api.use(bodyParser.urlencoded({ extended: true }));
 
-api.get('/pay', (req, res, next) => {
-  let {payment_method, token} = req.query;
-  if (payment_method != 'alipay' || !token) {
-    throw new ApiError(400, 'invalid_params');
-  }
-  let tokenKey = `pay-token-${token}`;
-  return req.model('redis').hmget(tokenKey)
-  .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
-    }
-    let {company_id, order_id} = doc;
-    company_id = ObjectId(company_id);
-    order_id = ObjectId(order_id);
-    return PlanOrder.init({company_id, order_id})
-    .then(planOrder => {
-      if (!planOrder) {
-        throw new ApiError(400, 'invalid_order_status');
-      }
-      return req.model('payment').payOrder(planOrder.order, payment_method)
-      .then(data => {
-        if (!data) {
-          throw new ApiError(500);
-        }
-        if (data.url) {
-          return res.redirect(data.url);
-        }
-      });
-    });
-  })
-  .catch(next);
-});
+// api.get('/pay', (req, res, next) => {
+//   let {payment_method, token} = req.query;
+//   if (payment_method != 'alipay' || !token) {
+//     throw new ApiError(400, 'invalid_params');
+//   }
+//   let tokenKey = `pay-token-${token}`;
+//   return req.model('redis').hmget(tokenKey)
+//   .then(doc => {
+//     if (!doc) {
+//       throw new ApiError(404);
+//     }
+//     let {company_id, order_id} = doc;
+//     company_id = ObjectId(company_id);
+//     order_id = ObjectId(order_id);
+//     return PlanOrder.init(order_id, company_id)
+//     .then(planOrder => {
+//       if (!planOrder) {
+//         throw new ApiError(400, 'invalid_order_status');
+//       }
+//       return req.model('payment').payOrder(planOrder.order, payment_method)
+//       .then(data => {
+//         if (!data) {
+//           throw new ApiError(500);
+//         }
+//         if (data.url) {
+//           return res.redirect(data.url);
+//         }
+//       });
+//     });
+//   })
+//   .catch(next);
+// });
 
 api.all('/notify/:payment_method', (req, res, next) => {
   let notify = !_.isEmpty(req.body) ? req.body : req.query;

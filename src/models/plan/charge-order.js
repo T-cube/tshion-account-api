@@ -79,7 +79,7 @@ export default class ChargeOrder {
     .then(doc => doc.value);
   }
 
-  static getChargeInfo(order_id, payment_method) {
+  static getPayingChargeInfo(order_id, payment_method) {
     return db.payment.charge.order.findOne({
       order_id,
       payment_method,
