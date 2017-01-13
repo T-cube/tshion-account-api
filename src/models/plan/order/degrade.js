@@ -37,7 +37,7 @@ export default class DegradeOrder extends Base {
         }, {
           $set: {
             degrade: {
-              order: order._id,
+              order: _.pick(order, '_id', 'plan', 'member_count'),
               time: current.date_end,
               date_create,
             }

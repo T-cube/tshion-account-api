@@ -53,9 +53,10 @@ export default class ScheduleServer {
         init: ['0 0 * * *', () => this.updateTrialPlan()]
       },
 
-      // query_order: {
-      //   init: ['*/1 * * * *', () => this.queryOrder()]
-      // }
+      plan_degrade: {
+        init: ['0 0 * * *', () => this.doDegrade()]
+      },
+
     };
   }
 
@@ -86,18 +87,30 @@ export default class ScheduleServer {
     });
   }
 
-  // queryOrder() {
-  //   return db.payment.charge.order.find({
-  //     payment_notify: {$exists: false},
-  //     payment_query: {$exists: false},
-  //     date_create: {$lt: moment().subtract(2, 'minutes').toDate()}
-  //   })
-  //   .forEach(item => {
-  //     new Payment().queryWechatOrder({
-  //       order_id: item.order_id,
-  //       out_trade_no: item.payment_data.out_trade_no
-  //     });
-  //   });
-  // }
+  doDegrade() {
+    return db.plan.company.find({
+      'degrade.time': {$lte: new Date()}
+    }, {
+      degrade: 1
+    })
+    .forEach(item => {
+      // may send notification here
+      // ...
+      let order_id = item.degrade.order._id;
+      return db.payment.order.findOne({
+        _id: order_id
+      })
+      .then(order => {
+        if (!order) {
+          return;
+        }
+        let planModel = new Plan(order.company_id);
+        return Promise.all([
+          planModel.updatePaidFromOrder(order),
+          planModel.clearDegrade(),
+        ]);
+      });
+    });
+  }
 
 }

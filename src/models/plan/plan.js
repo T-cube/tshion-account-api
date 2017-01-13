@@ -119,7 +119,7 @@ export default class Plan {
     let { company_id } = this;
     let { plan, order_type, times, date_create, member_count, user_id } = order;
     return this.getPlanInfo().then(planInfo => {
-      if (planInfo && planInfo.transactions && indexObjectId(planInfo.transactions, transactionId) > -1) {
+      if (transactionId && planInfo && planInfo.transactions && indexObjectId(planInfo.transactions, transactionId) > -1) {
         return true;
       }
       let current = this._getCurrent(planInfo);
@@ -142,12 +142,17 @@ export default class Plan {
             type: 'paid',
           }
         },
-        $addToSet: {
-          transactions: transactionId
-        },
       };
+      if (transactionId) {
+        _.extend(updates, {
+          $addToSet: {
+            transactions: transactionId
+          }
+        });
+      }
       if ((order_type == C.ORDER_TYPE.NEWLY && current.status != C.PLAN_STATUS.ACTIVED)
-        || order_type == C.ORDER_TYPE.PATCH) {
+        || order_type == C.ORDER_TYPE.PATCH
+        || order_type == C.ORDER_TYPE.DEGRADE) {
         criteria = {
           _id: company_id,
         };
@@ -162,7 +167,7 @@ export default class Plan {
             date_end
           }
         };
-      } else if (order_type == C.ORDER_TYPE.UPGRADE || order_type == C.ORDER_TYPE.DEGRADE
+      } else if (order_type == C.ORDER_TYPE.UPGRADE
           || (order_type == C.ORDER_TYPE.NEWLY && current.status == C.PLAN_STATUS.ACTIVED)) {
         criteria = {
           _id: company_id,
