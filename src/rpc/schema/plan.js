@@ -205,18 +205,21 @@ const schema = {
   invoice_status: {
     sanitization: {
       invoice_id: {$objectId: 1},
-      status: {type: 'string'}
+      status: {type: 'string'},
+      operator_id: {$objectId: 1},
     },
     validation: {
       invoice_id: {$objectId: 1},
       status: {
         $enum: [C.INVOICE_STATUS.VERIFING, C.INVOICE_STATUS.REJECTED, C.INVOICE_STATUS.FINISHED]
-      }
+      },
+      operator_id: {$objectId: 1},
     },
   },
   invoice_send: {
     sanitization: {
       invoice_id: {$objectId: 1},
+      operator_id: {$objectId: 1},
       chip_info: {
         type: 'object',
         properties: {
@@ -227,6 +230,7 @@ const schema = {
     },
     validation: {
       invoice_id: {$objectId: 1},
+      operator_id: {$objectId: 1},
       chip_info: {
         type: 'object',
         properties: {

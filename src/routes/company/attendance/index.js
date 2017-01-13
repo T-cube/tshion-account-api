@@ -302,7 +302,7 @@ api.get('/setting', (req, res, next) => {
       mapObjectIdToData(doc, 'approval.template', 'name,status', 'approval_template'),
     ])
     .then(() => res.json(doc || {
-      is_open: true,
+      is_open: false,
       time_start: '09:00',
       time_end: '18:00',
       ahead_time: 0,
