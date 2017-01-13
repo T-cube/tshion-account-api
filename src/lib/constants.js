@@ -279,7 +279,7 @@ let constants = {
     PAYING: 'paying',
     EXPIRED: 'expired',
     CANCELLED: 'cancelled',
-    SUCCEED: 'succeed'
+    SUCCEED: 'succeed',
   },
   CHARGE_STATUS: {
     PAYING: 'paying',

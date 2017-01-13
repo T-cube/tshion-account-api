@@ -124,6 +124,20 @@ api.get('/:order_id', (req, res, next) => {
   .catch(next);
 });
 
+api.put('/:order_id/status', (req, res, next) => {
+  let company_id = req.company._id;
+  let order_id = ObjectId(req.params.order_id);
+  let status = C.ORDER_STATUS.CANCELLED;
+  return db.payment.order.update({
+    _id: order_id,
+    company_id
+  }, {
+    $set: {status}
+  })
+  .then(() => res.json({}))
+  .catch(next);
+});
+
 api.get('/:order_id/query', (req, res, next) => {
   let company_id = req.company._id;
   let order_id = ObjectId(req.params.order_id);

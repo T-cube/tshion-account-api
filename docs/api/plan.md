@@ -610,6 +610,19 @@ OUTPUT
 然后跳转到`/api/payment/plan/pay?token=token&payment_method=alipay` -->
 
 
+### PUT /order/:orderId/status
+
+取消订单
+
+INPUT
+
+```javascript
+{
+  status: String, // cancelled
+}
+```
+
+
 ## recharge
 
 充值
