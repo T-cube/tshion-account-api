@@ -28,7 +28,7 @@ export default class InvoiceModel extends Model {
 
   fetchDetail(_id) {
     return this.db.payment.invoice.findOne({_id})
-    .then(doc => mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment', 'order_list'));
+    .then(doc => mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment,paid_sum', 'order_list'));
   }
 
   updateStatus({invoice_id, status}) {
