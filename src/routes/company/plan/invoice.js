@@ -7,7 +7,7 @@ import db from 'lib/database';
 import C from 'lib/constants';
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
-import { getPageInfo } from 'lib/utils';
+import { getPageInfo, mapObjectIdToData } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -107,7 +107,10 @@ api.get('/', (req, res, next) => {
     db.payment.invoice.find(criteria, {order_list: 0})
     .sort({_id: -1})
     .limit(pagesize)
-    .skip(pagesize * (page - 1)),
+    .skip(pagesize * (page - 1))
+    .then(doc => (
+      mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment', 'order_list')
+    )),
   ])
   .then(([totalrows, list]) => {
     res.json({

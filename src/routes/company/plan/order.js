@@ -37,6 +37,7 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
     ])
     .then(([info, coupons]) => {
       info.coupons = coupons;
+      info.status = null;
       return info;
     });
   })
@@ -65,9 +66,6 @@ api.post('/:order_id/pay', (req, res, next) => {
     if (!planOrder || !planOrder.isPending()) {
       throw new ApiError(400, 'invalid_order_status');
     }
-    if (planOrder.get('order_type') == C.ORDER_TYPE.DEGRADE) {
-      throw new ApiError(400, 'invalid request');
-    }
     if (payment_method == 'balance') {
       return planOrder.payWithBalance()
       .then(() => res.json({order_id, payment_method, status: C.ORDER_STATUS.SUCCEED}));
@@ -80,23 +78,6 @@ api.post('/:order_id/pay', (req, res, next) => {
       res.json(data);
     });
   })
-  .catch(next);
-});
-
-api.post('/:order_id/confirm', (req, res, next) => {
-  let company_id = req.company._id;
-  let order_id = ObjectId(req.params.order_id);
-  return PlanOrder.init(order_id, company_id)
-  .then(planOrder => {
-    if (!planOrder || !planOrder.isPending()) {
-      throw new ApiError(400, 'invalid_order_status');
-    }
-    if (planOrder.get('order_type') != C.ORDER_TYPE.DEGRADE) {
-      throw new ApiError(400, 'invalid request');
-    }
-    return planOrder.prepareDegrade();
-  })
-  .then(() => res.json({}))
   .catch(next);
 });
 

@@ -190,7 +190,6 @@ OUTPUT
   },
   certified: TeamPlanPaid, // 已认证的
   degrade: {              // 正在降级的信息，如果存在，则提交新的订单前需要取消降级
-    _id: ObjectId,
     order: {
       _id: ObjectId,
       plan: String,
@@ -222,7 +221,7 @@ INPUT
 }
 ```
 
-### DELETE /degrade
+### POST /degrade/cancel
 
 取消降级的预约
 
@@ -585,10 +584,6 @@ OUTPUT
   status: String,     // paying succeed (余额支付直接返回succeed)
 }
 ```
-
-### POST /order/:orderId/confirm
-
-确认降级
 
 
 ### GET /order/:orderId/query

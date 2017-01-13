@@ -17,6 +17,7 @@ export default class DegradeOrder extends Base {
     super(props);
     this.times = undefined;
     this.order_type = C.ORDER_TYPE.DEGRADE;
+    this.status = C.ORDER_STATUS.SUCCEED;
   }
 
   init({member_count, plan}) {
@@ -24,6 +25,26 @@ export default class DegradeOrder extends Base {
     this.member_count = plan == C.TEAMPLAN.FREE ? 0 : member_count;
     return this.getPlanStatus().then(({current}) => {
       this.original_plan = current.plan;
+    });
+  }
+
+  save() {
+    return super.save().then(order => {
+      this.getPlanStatus().then(({current}) => {
+        let {company_id, date_create} = this;
+        return db.plan.company.update({
+          _id: company_id,
+        }, {
+          $set: {
+            degrade: {
+              order: order._id,
+              time: current.date_end,
+              date_create,
+            }
+          }
+        });
+      });
+      return order;
     });
   }
 

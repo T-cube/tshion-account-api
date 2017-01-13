@@ -36,7 +36,7 @@ export default class BaseOrder {
     this.original_sum = 0;
     this.paid_sum = 0;
     this.coupon = undefined;
-    this.status = undefined;
+    this.status = C.ORDER_STATUS.CREATED;
     this.original_plan = undefined;
     this.date_create = new Date();
     this.date_update = new Date();
@@ -77,7 +77,6 @@ export default class BaseOrder {
       if (!isValid) {
         throw new ApiError(400, error);
       }
-      order.status = C.ORDER_STATUS.CREATED;
       return this.createOrderNo()
       .then(order_no => {
         order.order_no = order_no;

@@ -7,7 +7,6 @@ import { ObjectId } from 'mongodb';
 import C from 'lib/constants';
 import db from 'lib/database';
 import {indexObjectId} from 'lib/utils';
-import PlanDegrade from 'models/plan/plan-degrade';
 
 export default class Plan {
 
@@ -18,11 +17,8 @@ export default class Plan {
 
   getStatus() {
     let {company_id} = this;
-    return Promise.all([
-      this.getPlanInfo(),
-      new PlanDegrade().get(company_id),
-    ])
-    .then(([planInfo, degrade]) => {
+    return this.getPlanInfo()
+    .then(planInfo => {
       let paid = _.values(C.TEAMPLAN_PAID);
       let trial = planInfo ? _.difference(paid, _.uniq(_.pluck(planInfo.list, 'plan'))) : paid;
       let current = this._getCurrent(planInfo);
@@ -32,7 +28,7 @@ export default class Plan {
         current,
         viable: {trial, paid: certified == C.TEAMPLAN.ENT ? paid : (certified ? [certified] : [])},
         certified,
-        degrade,
+        degrade: planInfo && planInfo.degrade,
       };
     });
   }
@@ -242,6 +238,17 @@ export default class Plan {
       return db.plan.company.update({
         _id: this.company_id,
       }, {$set});
+    });
+  }
+
+  clearDegrade() {
+    let {company_id} = this;
+    return db.plan.company.update({
+      _id: company_id,
+    }, {
+      $unset: {
+        degrade: 1
+      }
     });
   }
 

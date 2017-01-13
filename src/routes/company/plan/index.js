@@ -8,7 +8,6 @@ import { ApiError } from 'lib/error';
 import { mapObjectIdToData, getPageInfo } from 'lib/utils';
 import Plan from 'models/plan/plan';
 import Product from 'models/plan/product';
-import PlanDegrade from 'models/plan/plan-degrade';
 import { checkUserType } from '../utils';
 
 let api = express.Router();
@@ -33,13 +32,18 @@ api.get('/list', (req, res, next) => {
 api.get('/status', (req, res, next) => {
   new Plan(req.company._id).getStatus()
   .then(info => mapObjectIdToData(info, 'payment.order', 'plan,member_count', 'degrade.order'))
-  .then(info => res.json(info))
+  .then(info => {
+    if (info.degrade) {
+      info.viable.paid = [];
+    }
+    res.json(info);
+  })
   .catch(next);
 });
 
-api.delete('/degrade', checkOwner, (req, res, next) => {
-  new PlanDegrade().clear(req.company._id)
-  .then(doc => res.json(doc))
+api.post('/degrade/cancel', checkOwner, (req, res, next) => {
+  new Plan(req.company._id).clearDegrade()
+  .then(() => res.json({}))
   .catch(next);
 });
 
