@@ -102,7 +102,8 @@ api.post('/:order_id/confirm', (req, res, next) => {
 
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
-  let { page, pagesize, invoice_issued } = getPageInfo(req.query);
+  let { page, pagesize } = getPageInfo(req.query);
+  let { invoice_issued } = req.query;
   let criteria = {company_id};
   if (invoice_issued !== undefined) {
     criteria.status = C.ORDER_STATUS.SUCCEED;
