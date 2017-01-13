@@ -109,7 +109,6 @@ api.get('/', (req, res, next) => {
     criteria.status = C.ORDER_STATUS.SUCCEED;
     criteria.invoice_id = {$exists: !!parseInt(invoice_issued)};
   }
-  console.log({criteria});
   return Promise.all([
     db.payment.order.count(criteria),
     db.payment.order.find(criteria)

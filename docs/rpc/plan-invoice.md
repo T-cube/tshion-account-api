@@ -7,7 +7,7 @@
 
 ```javascript
 {
-  InvoiceStatus: String[Enum:created, sent, finished, verified, rejected, cancelled]
+  InvoiceStatus: String[Enum:created(已提交), sent(已发送), finished(已完成), verifing(处理中), cancelled(已取消)]
 }
 ```
 
@@ -35,7 +35,7 @@ QUERY
 
 ### /plan/invoice/update
 
-当原status == created，新status为verified, rejected
+当原status == created，新status为verifing
 当原status == sent，新status为finished
 
 QUERY

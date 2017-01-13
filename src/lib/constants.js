@@ -328,7 +328,7 @@ let constants = {
     CREATED: 'created',
     SENT: 'sent',
     FINISHED: 'finished',
-    VERIFIED: 'verified',
+    VERIFING: 'verifing',
     REJECTED: 'rejected',
     CANCELLED: 'cancelled',
   }
