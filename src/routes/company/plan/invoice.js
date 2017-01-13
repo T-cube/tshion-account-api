@@ -108,9 +108,6 @@ api.get('/', (req, res, next) => {
     .sort({_id: -1})
     .limit(pagesize)
     .skip(pagesize * (page - 1))
-    .then(doc => (
-      mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment', 'order_list')
-    )),
   ])
   .then(([totalrows, list]) => {
     res.json({
@@ -128,9 +125,10 @@ api.get('/:invoice_id', (req, res, next) => {
   db.payment.invoice.findOne({
     company_id,
     _id: ObjectId(req.params.invoice_id)
-  }, {
-    order_list: 0
   })
+  .then(doc => (
+    mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment', 'order_list')
+  ))
   .then(doc => res.json(doc))
   .catch(next);
 });
