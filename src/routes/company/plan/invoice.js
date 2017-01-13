@@ -144,7 +144,14 @@ api.put('/:invoice_id/status', (req, res, next) => {
     status: C.INVOICE_STATUS.CREATED,
     _id: ObjectId(req.params.invoice_id)
   }, {
-    $set: {status}
+    $set: {status},
+    $push: {
+      log: {
+        status,
+        date_create: new Date(),
+        creator: 'user',
+      }
+    }
   })
   .then(() => res.json({}))
   .catch(next);

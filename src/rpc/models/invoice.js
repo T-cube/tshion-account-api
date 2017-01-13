@@ -31,7 +31,7 @@ export default class InvoiceModel extends Model {
     .then(doc => mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment,paid_sum', 'order_list'));
   }
 
-  updateStatus({invoice_id, status}) {
+  updateStatus({invoice_id, status, operator_id}) {
     let criteria = {
       _id: invoice_id
     };
@@ -41,11 +41,19 @@ export default class InvoiceModel extends Model {
       criteria.status = {$ne: C.INVOICE_STATUS.CREATING};
     }
     return this.db.payment.invoice.update(criteria, {
-      $set: {status}
+      $set: {status},
+      $push: {
+        log: {
+          status,
+          date_create: new Date(),
+          creator: 'cs',
+          operator_id,
+        }
+      }
     });
   }
 
-  send({invoice_id, chip_info}) {
+  send({invoice_id, chip_info, operator_id}) {
     return this.db.payment.invoice.update({
       _id: invoice_id,
       status: C.INVOICE_STATUS.VERIFING
@@ -53,6 +61,14 @@ export default class InvoiceModel extends Model {
       $set: {
         chip_info,
         status: C.INVOICE_STATUS.SENT
+      },
+      $push: {
+        log: {
+          status: C.INVOICE_STATUS.SENT,
+          date_create: new Date(),
+          creator: 'cs',
+          operator_id,
+        }
       }
     });
   }

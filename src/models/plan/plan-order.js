@@ -172,36 +172,4 @@ export default class PlanOrder {
     });
   }
 
-  prepareDegrade() {
-    let orderId = this.get('_id');
-    return this.planModel.getCurrent().then(current => {
-      if (!current.date_end || current.date_end < new Date()) {
-        return db.payment.order.update({
-          _id: orderId,
-        }, {
-          status: C.ORDER_STATUS.EXPIRED
-        })
-        .then(() => {
-          throw new ApiError(400, 'order_expired');
-        });
-      }
-      return Promise.all([
-        db.plan.degrade.insert({
-          _id: this.get('company_id'),
-          order: orderId,
-          time: current.date_end,
-          date_create: new Date(),
-          status: 'actived'
-        }),
-        db.payment.order.update({
-          _id: orderId,
-        }, {
-          $set: {
-            status: C.ORDER_STATUS.SUCCEED,
-          }
-        })
-      ]);
-    });
-  }
-
 }
