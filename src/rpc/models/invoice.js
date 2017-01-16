@@ -73,4 +73,8 @@ export default class InvoiceModel extends Model {
     });
   }
 
+  static isInvoiceNoLike(keyword) {
+    return /^I?\d{4,21}/i.test(keyword);
+  }
+
 }

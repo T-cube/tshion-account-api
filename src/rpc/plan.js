@@ -9,6 +9,7 @@ import companyRoutes from './plan/company';
 import orderRoutes from './plan/order';
 import rechargeDiscountRoutes from './plan/recharge-discount';
 import invoiceRoutes from './plan/invoice';
+import rechargeRoutes from './plan/recharge';
 
 import PlanModel from './models/plan';
 import { getObjectId } from './utils';
@@ -26,8 +27,9 @@ route.use('/recharge-discount', rechargeDiscountRoutes);
 route.use('/coupon', couponRoutes);
 route.use('/payment', paymentRoutes);
 route.use('/company', companyRoutes);
-route.use('/order', orderRoutes);
 route.use('/invoice', invoiceRoutes);
+route.use('/order', orderRoutes);
+route.use('/recharge', rechargeRoutes);
 
 route.on('/type/list', query => {
   return planModel.page();

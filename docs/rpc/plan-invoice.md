@@ -19,7 +19,7 @@ QUERY
   page: Int,
   pagesize: Int,
   status: InvoiceStatus,    // optional
-  invoice_no: String,       // optional
+  keyword: String,          // optional 模糊匹配发票号,抬头
   company_id: String,       // optional
 }
 ```
@@ -35,8 +35,8 @@ QUERY
 
 ### /plan/invoice/update
 
-当原status == created，新status为verifing
-当原status == sent，新status为finished
+更新发票状态
+created->verifing, sent->finished
 
 QUERY
 ```javascript

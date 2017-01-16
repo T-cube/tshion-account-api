@@ -8,7 +8,8 @@ PaimentMethod: String[Enum:balance,alipay,wxpay,banktrans];
 TeamPlanPaid: String[Enum:pro,ent] // 专业版，企业版
 PlanStatus: String[Enum:actived,expired,overdue],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
-OrderTypes: String[newly（新购）, renewal（续费）, upgrade（升级）, degrade（降级）, patch（补交欠费）],
+OrderTypes: String[Enum: newly(新购), renewal(续费), upgrade(升级), degrade(降级), patch(补交欠费)],
+OrderStatus: String[Enum:created(待支付), paying(待支付), expired(过期), cancelled(取消), succeed(成功)],
 ChargeType: String[plan, recharge],
 ```
 

@@ -9,3 +9,5 @@
 * [ 充值折扣 /plan/recharge-discount](plan-recharge-discount.md)
 * [ 使用情况 /plan/plan-company](plan-company.md)
 * [ 发票 /plan/invoice](plan-invoice.md)
+* [ 订单 /plan/order](plan-order.md)
+* [ 充值 /plan/recharge](plan-recharge.md)

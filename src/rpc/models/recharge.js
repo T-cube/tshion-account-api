@@ -1,14 +1,14 @@
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
 
-export default class PlanOrderModel extends Model {
+export default class RehargeModel extends Model {
 
   constructor(props) {
     super(props);
   }
 
   fetchList({page, pagesize, criteria}) {
-    return this.db.payment.order.find(criteria, {
+    return this.db.payment.recharge.find(criteria, {
       products: 0,
       discount: 0,
       transactions: 0,
@@ -28,11 +28,11 @@ export default class PlanOrderModel extends Model {
   }
 
   count(criteria) {
-    return this.db.payment.order.count(criteria);
+    return this.db.payment.recharge.count(criteria);
   }
 
   fetchDetail(_id) {
-    return this.db.payment.order.findOne({_id})
+    return this.db.payment.recharge.findOne({_id})
     .then(doc => {
       doc.company = doc.company_id;
       doc.user = doc.user_id;
@@ -43,8 +43,8 @@ export default class PlanOrderModel extends Model {
     });
   }
 
-  static isOrderNoLike(keyword) {
-    return /^T?\d{4,21}/i.test(keyword);
+  static isRechargeNoLike(keyword) {
+    return /^R?\d{4,21}/i.test(keyword);
   }
 
 }

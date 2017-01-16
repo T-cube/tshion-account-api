@@ -1,4 +1,5 @@
-import _ from 'underscore';
+import { ObjectId } from 'mongodb';
+import { strToReg } from 'lib/utils';
 import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
@@ -13,16 +14,22 @@ const invoiceModel = new InvoiceModel();
 
 route.on('/list', (query) => {
   validate('invoice_list', query);
-  let { page, pagesize, status, invoice_no, company_id } = query;
+  let { page, pagesize, status, keyword, company_id } = query;
   let criteria;
   if (status) {
     criteria = {status};
   }
-  if (invoice_no) {
-    criteria.invoice_no = invoice_no;
+  if (ObjectId.isValid(company_id)) {
+    criteria.company_id = ObjectId(company_id);
   }
-  if (company_id) {
-    criteria.company_id = company_id;
+  if (InvoiceModel.isInvoiceNoLike(keyword)) {
+    criteria.invoice_no = {
+      $regex: keyword
+    };
+  } else if (keyword) {
+    criteria.title = {
+      $regex: strToReg(keyword)
+    };
   }
   return invoiceModel.page({
     page,
