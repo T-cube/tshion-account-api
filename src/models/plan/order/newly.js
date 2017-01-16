@@ -6,8 +6,6 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Base from './base';
-import Product from '../product';
-import Plan from '../plan';
 
 export default class NewlyOrder extends Base {
 
@@ -44,11 +42,9 @@ export default class NewlyOrder extends Base {
   }
 
   isValid() {
-    return Promise.all([
-      this.getPlanStatus(),
-      this.getLimits(),
-    ])
-    .then(([{current, viable}, {member_count, times}]) => {
+    let {current, viable} = this.getPlanStatus();
+    return this.getLimits()
+    .then(({member_count, times}) => {
       let error = [];
       let isValid = true;
       if (!_.contains(viable.paid, this.plan)) {

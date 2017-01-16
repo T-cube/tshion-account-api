@@ -25,12 +25,20 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   let company_id = req.company._id;
   let user_id = req.user._id;
 
-  let orderModel = OrderFactory.getInstance(order_type, {company_id, user_id});
-  orderModel.init({plan, member_count, coupon, times})
-  .then(() => {
+  OrderFactory.getInstance({
+    order_type,
+    company_id,
+    user_id,
+    plan,
+    member_count,
+    coupon,
+    times,
+  })
+  .then(orderModel => {
     if (!isPrepare) {
       return orderModel.save();
     }
+
     return Promise.all([
       orderModel.prepare(),
       orderModel.getCoupons(),

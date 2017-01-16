@@ -6,7 +6,6 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Base from './base';
-import Product from '../product';
 
 
 export default class UpgradeOrder extends Base {
@@ -23,56 +22,53 @@ export default class UpgradeOrder extends Base {
     }
     this.plan = plan;
     this.member_count = member_count;
-    return this.getPlanStatus().then(({current}) => {
-      this.original_plan = current.plan;
-      let fetchNewPlanProducts = this.getProducts(plan);
-      let fetchOriPlanProducts = current.plan == plan ? fetchNewPlanProducts : this.getProducts(current.plan);
-      return new Promise.all([
-        this.getTimes(),
-        fetchNewPlanProducts,
-        fetchOriPlanProducts,
-      ])
-      .then(([times, planProducts, oriProducts]) => {
-        let products = [];
-        this.times = times;
-        if (member_count > current.member_count) {
-          let incMember = _.find(planProducts, product => product.product_no == 'P0002');
-          if (incMember) {
-            products.push(_.extend(incMember, {quantity: member_count - current.member_count}));
-          }
+    let {current} = this.getPlanStatus();
+    this.original_plan = current.plan;
+    let fetchNewPlanProducts = this.getProducts(plan);
+    let fetchOriPlanProducts = current.plan == plan || this.getProducts(current.plan);
+    let times = this.getTimes();
+    return new Promise.all([
+      fetchNewPlanProducts,
+      fetchOriPlanProducts,
+    ])
+    .then(([planProducts, oriProducts]) => {
+      let products = [];
+      this.times = times;
+      if (member_count > current.member_count) {
+        let incMember = _.find(planProducts, product => product.product_no == 'P0002');
+        if (incMember) {
+          products.push(_.extend(incMember, {quantity: member_count - current.member_count}));
         }
-        if (plan != current.plan) {
-          let incPlan = _.find(planProducts, product => product.product_no == 'P0001');
-          let oriIncPlan = _.find(oriProducts, product => product.product_no == 'P0001');
-          if (incPlan && oriIncPlan) {
-            products.push(_.extend({}, incPlan, {
-              original_price: incPlan.original_price - oriIncPlan.original_price,
-              quantity: 1,
+      }
+      if (plan != current.plan) {
+        let incPlan = _.find(planProducts, product => product.product_no == 'P0001');
+        let oriIncPlan = _.find(oriProducts, product => product.product_no == 'P0001');
+        if (incPlan && oriIncPlan) {
+          products.push(_.extend({}, incPlan, {
+            original_price: incPlan.original_price - oriIncPlan.original_price,
+            quantity: 1,
+          }));
+        }
+        if (current.member_count) {
+          let incMember = _.find(planProducts, product => product.product_no == 'P0002');
+          let oriIncMember = _.find(oriProducts, product => product.product_no == 'P0002');
+          if (incMember && oriIncMember) {
+            products.push(_.extend({}, incMember, {
+              original_price: incMember.original_price - oriIncMember.original_price,
+              quantity: current.member_count,
             }));
           }
-          if (current.member_count) {
-            let incMember = _.find(planProducts, product => product.product_no == 'P0002');
-            let oriIncMember = _.find(oriProducts, product => product.product_no == 'P0002');
-            if (incMember && oriIncMember) {
-              products.push(_.extend({}, incMember, {
-                original_price: incMember.original_price - oriIncMember.original_price,
-                quantity: current.member_count,
-              }));
-            }
-          }
         }
-        this.products = products;
-      });
+      }
+      this.products = products;
     });
   }
 
   isValid() {
-    return Promise.all([
-      this.getPlanStatus(),
-      this.getLimits(),
-      this.getTimes(),
-    ])
-    .then(([{current, viable}, {member_count}, times]) => {
+    let times = this.getTimes();
+    let {current, viable} = this.getPlanStatus();
+    return this.getLimits()
+    .then(({member_count}) => {
       let error = [];
       let isValid = true;
       if (!_.contains(viable.paid, this.plan)) {
@@ -118,18 +114,14 @@ export default class UpgradeOrder extends Base {
   }
 
   getTimes() {
-    if (this.times !== undefined) {
-      return this.times;
+    let {current} = this.getPlanStatus();
+    let times;
+    if (!current || current.type == 'trial' || !current.date_end) {
+      times = 0;
+    } else {
+      times = moment(current.date_end).diff(moment(), 'month', true);
     }
-    return this.getPlanStatus().then(({current}) => {
-      let times;
-      if (!current || current.type == 'trial' || !current.date_end) {
-        times = 0;
-      } else {
-        times = moment(current.date_end).diff(moment(), 'month', true);
-      }
-      return times > 0 ? (Math.round(times * 100) / 100) : times;
-    });
+    return times > 0 ? (Math.round(times * 100) / 100) : times;
   }
 
 }

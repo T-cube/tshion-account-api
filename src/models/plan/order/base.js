@@ -11,7 +11,6 @@ import db from 'lib/database';
 import Coupon from '../coupon';
 import Product from '../product';
 import Discount from '../discount';
-import Plan from '../plan';
 import CompanyLevel from 'models/company-level';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
@@ -21,13 +20,14 @@ const ORDER_EXPIRE_MINUTES = config.get('order.expire_minutes');
 export default class BaseOrder {
 
   constructor(props) {
-    let { user_id, company_id } = props;
-    if (!user_id) {
-      throw new Error('invalid user_id');
+    if (!props
+      || !_.has(props, 'user_id')
+      || !_.has(props, 'company_id')
+      || !_.has(props, 'planStatus')) {
+      throw new Error('invalid params');
     }
-    if (!company_id) {
-      throw new Error('invalid company_id');
-    }
+    let { user_id, company_id, planStatus } = props;
+    this._planStatus = planStatus;
     this.user_id = user_id;
     this.company_id = company_id;
     this.order_type = null;
@@ -45,26 +45,11 @@ export default class BaseOrder {
   }
 
   init() {
-    return Promise.reject();
+    return Promise.reject(new Error('please override init method'));
   }
 
-  setTimes(times) {
-    this.times = this.original_times = times;
-  }
-
-  withCoupon(coupon) {
-    this.coupon = coupon;
-  }
-
-  updateUsedCoupon() {
-    return db.payment.company.coupon.update({
-      _id: this.company_id,
-      'list.coupon_no': this.coupon,
-    }, {
-      $set: {
-        'list.$.status': C.COMPANY_COUPON_STATUS.USED,
-      }
-    });
+  isValid() {
+    return Promise.reject(new Error('please override isValid method'));
   }
 
   save() {
@@ -132,8 +117,23 @@ export default class BaseOrder {
     });
   }
 
-  isValid() {
-    return Promise.resolve({});
+  setTimes(times) {
+    this.times = this.original_times = times;
+  }
+
+  withCoupon(coupon) {
+    this.coupon = coupon;
+  }
+
+  updateUsedCoupon() {
+    return db.payment.company.coupon.update({
+      _id: this.company_id,
+      'list.coupon_no': this.coupon,
+    }, {
+      $set: {
+        'list.$.status': C.COMPANY_COUPON_STATUS.USED,
+      }
+    });
   }
 
   getCoupons() {
@@ -276,26 +276,16 @@ export default class BaseOrder {
     return Discount.getDiscount(origin, discountItem);
   }
 
-  getLimits() {}
-
   getPlanStatus() {
-    let {planStatus, company_id} = this;
-    if (planStatus) {
-      return Promise.resolve(planStatus);
-    }
-    return new Plan(company_id).getStatus().then(planStatus => {
-      this.planStatus = planStatus;
-      return planStatus;
-    });
+    return this._planStatus;
   }
 
   ensureNotDegradeProcessing() {
-    return this.getPlanStatus()
-    .then(({degrade}) => {
-      if (degrade) {
-        throw new ApiError(400, 'exit_plan_degrade');
-      }
-    });
+    let {degrade} = this.getPlanStatus();
+    if (degrade) {
+      return Promise.reject(new ApiError(400, 'exit_plan_degrade'));
+    }
+    Promise.resolve();
   }
 
   ensureHasNotPendingOrder() {

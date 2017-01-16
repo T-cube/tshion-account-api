@@ -23,38 +23,35 @@ export default class DegradeOrder extends Base {
   init({member_count, plan}) {
     this.plan = plan;
     this.member_count = plan == C.TEAMPLAN.FREE ? 0 : member_count;
-    return this.getPlanStatus().then(({current}) => {
-      this.original_plan = current.plan;
-    });
+    let {current} = this.getPlanStatus();
+    this.original_plan = current.plan;
+    return Promise.resolve();
   }
 
   save() {
     return super.save().then(order => {
-      this.getPlanStatus().then(({current}) => {
-        let {company_id, date_create} = this;
-        return db.plan.company.update({
-          _id: company_id,
-        }, {
-          $set: {
-            degrade: {
-              order: _.pick(order, '_id', 'plan', 'member_count'),
-              time: current.date_end,
-              date_create,
-            }
+      let {current} = this.getPlanStatus();
+      let {company_id, date_create} = this;
+      db.plan.company.update({
+        _id: company_id,
+      }, {
+        $set: {
+          degrade: {
+            order: _.pick(order, '_id', 'plan', 'member_count'),
+            time: current.date_end,
+            date_create,
           }
-        });
+        }
       });
       return order;
     });
   }
 
   isValid() {
-    return Promise.all([
-      this.getPlanStatus(),
-      this.getLimits(),
-      this.getTimes(),
-    ])
-    .then(([{current, viable}, {member_count}, times]) => {
+    let {current, viable} = this.getPlanStatus();
+    let times = this.getTimes();
+    return this.getLimits()
+    .then(({member_count}) => {
       let error = [];
       let isValid = true;
       if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || times <= 0) {
@@ -112,16 +109,15 @@ export default class DegradeOrder extends Base {
   }
 
   getTimes() {
-    return this.getPlanStatus().then(({current}) => {
-      let times;
-      if (!current || current.type == 'trial' || !current.date_end) {
-        times = 0;
-      } else {
-        times = moment(current.date_end).diff(moment(), 'month', true);
-      }
-      this.times = times > 0 ? (Math.round(times * 100) / 100) : times;
-      return this.times;
-    });
+    let {current} = this.getPlanStatus();
+    let times;
+    if (!current || current.type == 'trial' || !current.date_end) {
+      times = 0;
+    } else {
+      times = moment(current.date_end).diff(moment(), 'month', true);
+    }
+    this.times = times > 0 ? (Math.round(times * 100) / 100) : times;
+    return this.times;
   }
 
 }
