@@ -52,9 +52,11 @@ QUERY
 ```javascript
 {
   invoice_id: ObjectId,
-  chip_info: {
-    brand: String,
-    track_no: String
-  }
+  // 快递信息
+  chip_info: {      
+    brand: String,    // 快递商家
+    track_no: String  // 订单号
+  },
+  operator_id: ObjectId,
 }
 ```
