@@ -444,15 +444,6 @@ INPUT
 
 ## order
 
-订单的几种形式：
-
-1. 未购买过，新购，order_type = new
-2. 已购买，增加周期，人数方案不变，order_type = renewal
-3. 已购买，升级人数或方案（付款成功后生效），order_type = upgrade
-4. 已购买，降级人数或方案（预约的形式，可以取消），order_type = degrade
-5. 已过期，同新购（方案不变，人数不变），order_type = patch
-
-
 ### POST /order
 
 INPUT
