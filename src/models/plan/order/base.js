@@ -169,12 +169,12 @@ export default class BaseOrder {
 
   initProducts() {
     this.products.forEach(product => {
-      product.paid_sum = product.sum = this.times * product.quantity * product.original_price;
+      product.paid_sum = product.sum = Math.round(this.times * product.quantity * product.original_price);
     });
   }
 
   getOriginalFeeOfProducts() {
-    return _.reduce(this.products.map(product => product.quantity * product.original_price * this.times), (memo, num) => memo + num, 0);
+    return Math.round(_.reduce(this.products.map(product => product.quantity * product.original_price * this.times), (memo, num) => memo + num, 0));
   }
 
   getCouponDiscount() {

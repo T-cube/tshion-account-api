@@ -26,7 +26,7 @@ export default class UpgradeOrder extends Base {
     return this.getPlanStatus().then(({current}) => {
       this.original_plan = current.plan;
       let fetchNewPlanProducts = this.getProducts(plan);
-      let fetchOriPlanProducts = current.plan == plan || Product.getByPlan(current.plan);
+      let fetchOriPlanProducts = current.plan == plan ? fetchNewPlanProducts : this.getProducts(current.plan);
       return new Promise.all([
         this.getTimes(),
         fetchNewPlanProducts,
