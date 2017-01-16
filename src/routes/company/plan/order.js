@@ -35,19 +35,18 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
     times,
   })
   .then(orderModel => {
-    if (!isPrepare) {
-      return orderModel.save();
+    if (isPrepare) {
+      return Promise.all([
+        orderModel.prepare(),
+        orderModel.getCoupons(),
+      ])
+      .then(([info, coupons]) => {
+        info.coupons = coupons;
+        info.order && (info.order.status = null);
+        return info;
+      });
     }
-
-    return Promise.all([
-      orderModel.prepare(),
-      orderModel.getCoupons(),
-    ])
-    .then(([info, coupons]) => {
-      info.coupons = coupons;
-      info.status = null;
-      return info;
-    });
+    return orderModel.save();
   })
   .then(doc => res.json(doc))
   .catch(next);
