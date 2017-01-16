@@ -48,7 +48,7 @@ export default class RenewalOrder extends Base {
     let {times} = this.getLimits();
     let error = [];
     let isValid = true;
-    if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || current.date_end < new Date()) {
+    if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE) {
       isValid = false;
       error.push('invalid_plan_status');
     } else {
@@ -72,7 +72,7 @@ export default class RenewalOrder extends Base {
     }
     let max;
     if (current.date_end < new Date()) {
-      max = 0;
+      max = config.get('plan.max_times');
     } else {
       max = moment().add(config.get('plan.max_times'), 'month').diff(current.date_end, 'month');
       max = Math.floor(max);

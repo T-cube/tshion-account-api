@@ -4,7 +4,6 @@ import Plan from '../plan';
 import NewlyOrder from './newly';
 import UpgradeOrder from './upgrade';
 import DegradeOrder from './degrade';
-import PatchOrder from './patch';
 import RenewalOrder from './renewal';
 
 
@@ -36,9 +35,6 @@ export default class OrderFactory {
         break;
       case C.ORDER_TYPE.DEGRADE:
         orderModel = new DegradeOrder(props);
-        break;
-      case C.ORDER_TYPE.PATCH:
-        orderModel = new PatchOrder(props);
         break;
       case C.ORDER_TYPE.RENEWAL:
         orderModel = new RenewalOrder(props);

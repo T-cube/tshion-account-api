@@ -8,7 +8,7 @@ PaimentMethod: String[Enum:balance,alipay,wxpay,banktrans];
 TeamPlanPaid: String[Enum:pro,ent] // 专业版，企业版
 PlanStatus: String[Enum:actived,expired,overdue],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
-OrderTypes: String[Enum: newly(新购), renewal(续费), upgrade(升级), degrade(降级), patch(补交欠费)],
+OrderTypes: String[Enum: newly(新购), renewal(续费), upgrade(升级), degrade(降级)],
 OrderStatus: String[Enum:created(待支付), paying(待支付), expired(过期), cancelled(取消), succeed(成功)],
 ChargeType: String[plan, recharge],
 ```
@@ -18,6 +18,7 @@ ChargeType: String[plan, recharge],
 ```javascript
 /company/:companyId/plan
 ```
+
 ### 认证购买的流程
 1. 获取所有计划的列表 `GET /plan/list`
 2. 获取公司当前的计划状态 `GET /plan/status`
@@ -26,8 +27,14 @@ ChargeType: String[plan, recharge],
 5. 试用 `POST /plan/trial`
 6. 购买，订单预查询（用户操作刷新状态）：`POST /plan/order/prepare`，生成订单：`POST /plan/order`
 7. 查看当前正在处理的订单 `GET /plan/order/pending`
-8. 支付处理的订单 `POST /plan/order/pending/pay?`
-9. ...
+8. 支付处理的订单 `POST /plan/order/:orderId/pay?`
+9. 查询订单 `POST /plan/order/:orderId/query`
+
+### 各种订单类型
+1. newly(新购)，包含未购买过产品的新用户购买，产品到期并降级到免费版再次购买产品
+2. renewal(续费)，购买了产品并在使用周期内续费，或者过期后续费，产品的套餐内容不变，仅增加使用的周期（周期不能超过最大值）
+3. upgrade(升级)，用户在产品使用周期内，提高方案或者人数，不能同时修改人数和方案，其中人数代表总的购买数
+4. degrade(降级)，用户在产品使用周期内，减少方案或者人数，不能同时修改人数和方案，其中人数代表总的购买数
 
 
 ### GET /list
