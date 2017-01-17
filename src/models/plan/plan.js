@@ -122,10 +122,12 @@ export default class Plan {
       if (transactionId && planInfo && planInfo.transactions && indexObjectId(planInfo.transactions, transactionId) > -1) {
         return true;
       }
+      
       let current = this._getCurrent(planInfo);
       let {date_start, date_end} = current;
       let isActive = current.status == C.PLAN_STATUS.ACTIVED;
       let isRenewalAndSkipMonth = false;
+
       if (order_type == C.ORDER_TYPE.NEWLY) {
         date_end = moment(date_create).startOf('day').add(times, 'month').toDate();
       } else if (order_type == C.ORDER_TYPE.RENEWAL) {
@@ -138,17 +140,12 @@ export default class Plan {
           date_end = moment().startOf('day').date(date_end.getDate()).add(times, 'month').toDate();
         }
       }
+
       let newId = ObjectId();
       let today = moment().startOf('day').toDate();
-      let criteria;
-      let updates = {
-        $set: {
-          current: {
-            plan,
-            type: 'paid',
-          }
-        },
-      };
+      let criteria = {_id: company_id};
+      let updates = {};
+
       if (transactionId) {
         _.extend(updates, {
           $addToSet: {
@@ -156,13 +153,17 @@ export default class Plan {
           }
         });
       }
+
       if ((order_type == C.ORDER_TYPE.NEWLY && !isActive)
-        || order_type == C.ORDER_TYPE.DEGRADE
+        || (order_type == C.ORDER_TYPE.DEGRADE && plan != C.TEAMPLAN.FREE)
         || isRenewalAndSkipMonth) {
-        criteria = {
-          _id: company_id,
+        updates['$set'] = {
+          current: {
+            _id: newId,
+            plan,
+            type: 'paid',
+          }
         };
-        updates['$set']['current']['_id'] = newId;
         updates['$push'] = {
           list: {
             _id: newId,
@@ -174,11 +175,12 @@ export default class Plan {
             date_end
           }
         };
+      } else if (order_type == C.ORDER_TYPE.DEGRADE && plan == C.TEAMPLAN.FREE) {
+        updates['$unset'] = {
+          current: 1
+        };
       } else if (order_type == C.ORDER_TYPE.UPGRADE
           || (order_type == C.ORDER_TYPE.NEWLY && isActive)) {
-        criteria = {
-          _id: company_id,
-        };
         let {list} = planInfo;
         list.forEach(item => {
           if (item._id.equals(current._id)) {
@@ -194,17 +196,22 @@ export default class Plan {
           date_start: today,
           date_end
         });
-        updates['$set'].list = list;
-        updates['$set']['current']['_id'] = newId;
-      } else if (order_type == C.ORDER_TYPE.RENEWAL && !isRenewalAndSkipMonth) {
-        criteria = {
-          _id: company_id,
-          'list._id': current._id,
+        updates['$set'] = {
+          current: {
+            _id: newId,
+            plan,
+            type: 'paid',
+          },
+          list
         };
-        updates['$set']['current']['_id'] = current._id;
-        updates['$set']['list.$.date_start'] = date_start;
-        updates['$set']['list.$.date_end'] = date_end;
+      } else if (order_type == C.ORDER_TYPE.RENEWAL && !isRenewalAndSkipMonth) {
+        criteria['list._id'] = current._id;
+        updates['$set'] = {
+          'list.$.date_start': date_start,
+          'list.$.date_end': date_end,
+        };
       }
+
       return db.plan.company.update(criteria, updates, {
         upsert: true
       });

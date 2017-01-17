@@ -2,14 +2,9 @@ import _ from 'underscore';
 import Promise from 'bluebird';
 import moment from 'moment';
 
-import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Base from './base';
-import Coupon from 'models/plan/coupon';
-import Payment from 'models/plan/payment';
-import Discount from 'models/plan/discount';
-import CompanyLevel from 'models/company-level';
 
 export default class DegradeOrder extends Base {
 
@@ -91,8 +86,8 @@ export default class DegradeOrder extends Base {
       if (this.plan == C.TEAMPLAN.FREE) {
         this.limits = {
           member_count: {
-            min: 1,
-            max: setting.default_member,
+            min: 0,
+            max: 0,
           }
         };
       } else {
