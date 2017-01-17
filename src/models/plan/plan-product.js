@@ -81,7 +81,7 @@ export default class PlanProduct {
   diff({plan, member_count}) {
     if (this.plan == plan) {
       this.setMemberCount(this.member_count - member_count);
-      return Promise.resolve(this.getMemberProduct());
+      return Promise.resolve([this.getMemberProduct()]);
     } else if (member_count == this._member_count) {
       return PlanProduct.init({plan, member_count, times: this._times})
       .then(another => {

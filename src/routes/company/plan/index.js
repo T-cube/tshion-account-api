@@ -5,9 +5,8 @@ import Promise from 'bluebird';
 import C, {ENUMS} from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { mapObjectIdToData, getPageInfo } from 'lib/utils';
+import { mapObjectIdToData, getPageInfo, indexObjectId } from 'lib/utils';
 import Plan from 'models/plan/plan';
-import Product from 'models/plan/product';
 import PlanProduct from 'models/plan/plan-product';
 import { checkUserType } from '../utils';
 
@@ -130,11 +129,46 @@ api.get('/balance/log', checkOwner, (req, res, next) => {
 
 api.get('/product', (req, res, next) => {
   let {plan, order_type} = req.query;
-  Product.getProductsWithDiscount(plan, order_type)
+  getProductsWithDiscount(plan, order_type)
   .then(doc => res.json(doc))
   .catch(next);
 });
 
+function getProductsWithDiscount(plan, order_type) {
+  let criteria;
+  if (plan && _.contains(ENUMS.TEAMPLAN_PAID, plan)) {
+    criteria = {plan};
+  }
+  return db.payment.product.find(criteria)
+  .then(products => {
+    let discountIds = _.flatten(_.pluck(products, 'discount'));
+    if (!discountIds) {
+      products.forEach(product => {
+        product.discount = [];
+      });
+      return products;
+    }
+    let criteria = {
+      _id: {
+        $in: discountIds
+      },
+      'period.date_start': {$lt: new Date()},
+      'period.date_end': {$gt: new Date()},
+    };
+    if (order_type) {
+      criteria.order_type = order_type;
+    }
+    return db.payment.discount.find(criteria)
+    .then(discounts => {
+      products.forEach(product => {
+        product.discount = discounts.filter(d => indexObjectId(product.discount, d._id) > -1);
+      });
+      return products;
+    });
+  });
+}
+
+// charge list
 // api.get('/charge', checkOwner, (req, res, next) => {
 //   let company_id = req.company._id;
 //   let { page, pagesize } = getPageInfo(req.query);

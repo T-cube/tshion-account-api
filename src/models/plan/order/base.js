@@ -278,9 +278,9 @@ export default class BaseOrder {
   ensureNotDegradeProcessing() {
     let {degrade} = this.getPlanStatus();
     if (degrade) {
-      return Promise.reject(new ApiError(400, 'exit_plan_degrade'));
+      return Promise.reject(new ApiError(400, 'exist_plan_degrade'));
     }
-    Promise.resolve();
+    return Promise.resolve();
   }
 
   ensureHasNotPendingOrder() {
