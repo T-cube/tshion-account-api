@@ -105,9 +105,9 @@ api.get('/', (req, res, next) => {
     .skip(pagesize * (page - 1)),
   ])
   .then(([totalrows, list]) => {
-    list.forEach(o => {
-      if (o.date_expires < new Date()) {
-        o.status = C.ORDER_STATUS.EXPIRED;
+    list.forEach(order => {
+      if (isOrderExpired(order)) {
+        order.status = C.ORDER_STATUS.EXPIRED;
       }
     });
     res.json({
@@ -131,7 +131,7 @@ api.get('/:order_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
-    if (doc.date_expires < new Date()) {
+    if (isOrderExpired(doc)) {
       doc.status = C.ORDER_STATUS.EXPIRED;
     }
     return res.json(doc);
@@ -183,6 +183,9 @@ api.get('/:order_id/query', (req, res, next) => {
     if (!charge || order.status == C.ORDER_STATUS.SUCCEED) {
       return order.status;
     }
+    if (isOrderExpired(order)) {
+      return C.ORDER_STATUS.EXPIRED;
+    }
     let {out_trade_no} = charge.payment_data;
     return req.model('payment').query(charge.payment_method, {
       order_id,
@@ -219,3 +222,8 @@ api.get('/:order_id/query', (req, res, next) => {
 //   })
 //   .catch(next);
 // });
+
+function isOrderExpired(order) {
+  return (order.status == C.ORDER_STATUS.CREATED || order.status == C.ORDER_STATUS.PAYING)
+    && order.date_expires < new Date();
+}

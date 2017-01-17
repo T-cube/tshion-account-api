@@ -41,7 +41,6 @@ export default class PlanProduct {
   }
 
   setMemberCount(member_count) {
-    console.log({member_count});
     this._member_count = parseInt(member_count) || 0;
   }
 
