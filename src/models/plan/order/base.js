@@ -9,7 +9,6 @@ import { indexObjectId } from 'lib/utils';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Coupon from '../coupon';
-import Product from '../product';
 import Discount from '../discount';
 import CompanyLevel from 'models/company-level';
 
@@ -85,7 +84,9 @@ export default class BaseOrder {
         };
       }
       this.paid_sum = this.original_sum = this.getOriginalFeeOfProducts();
-      this.initProducts();
+      this.products.forEach(product => {
+        product.paid_sum = product.sum;
+      });
       return this.getDiscount().then(() => {
         this.products.forEach(product => {
           delete product.discount;
@@ -165,12 +166,6 @@ export default class BaseOrder {
   getDiscount() {
     return this.getProductsDiscount()
     .then(() => this.getCouponDiscount());
-  }
-
-  initProducts() {
-    this.products.forEach(product => {
-      product.paid_sum = product.sum = Math.round(this.times * product.quantity * product.original_price);
-    });
   }
 
   getOriginalFeeOfProducts() {
@@ -318,10 +313,6 @@ export default class BaseOrder {
       let randomStr = (parseInt(buffer.toString('hex'), 16)).toString().substr(0, 4);
       return 'T' + moment().format('YYYYMMDDHHmmssSSS') + randomStr;
     });
-  }
-
-  getProducts(plan) {
-    return Product.getByPlan(plan);
   }
 
 }

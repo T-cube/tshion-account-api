@@ -205,7 +205,6 @@ export default class Plan {
         updates['$set']['list.$.date_start'] = date_start;
         updates['$set']['list.$.date_end'] = date_end;
       }
-      console.log({criteria, updates});
       return db.plan.company.update(criteria, updates, {
         upsert: true
       });

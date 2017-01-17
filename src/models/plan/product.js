@@ -4,9 +4,7 @@ import C, {ENUMS} from 'lib/constants';
 
 export default class Product {
 
-  constructor() {
-
-  }
+  constructor() {}
 
   static getByPlan(plan) {
     let fields = {
@@ -21,7 +19,7 @@ export default class Product {
     }, fields);
   }
 
-  static getProductsWithDiscount({plan, order_type}) {
+  static getProductsWithDiscount(plan, order_type) {
     let criteria;
     if (plan && _.contains(ENUMS.TEAMPLAN_PAID, plan)) {
       criteria = {plan};
@@ -45,6 +43,5 @@ export default class Product {
       .then(() => products);
     });
   }
-
 
 }

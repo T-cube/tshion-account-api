@@ -8,6 +8,7 @@ import { ApiError } from 'lib/error';
 import { mapObjectIdToData, getPageInfo } from 'lib/utils';
 import Plan from 'models/plan/plan';
 import Product from 'models/plan/product';
+import PlanProduct from 'models/plan/plan-product';
 import { checkUserType } from '../utils';
 
 let api = express.Router();
@@ -34,9 +35,18 @@ api.get('/status', (req, res, next) => {
   .then(info => mapObjectIdToData(info, 'payment.order', 'plan,member_count', 'degrade.order'))
   .then(info => {
     if (info.degrade) {
-      info.viable.paid = [];
+      info.viable.paid = info.viable.trial = [];
     }
-    res.json(info);
+    let {plan, member_count} = info.current;
+    if (plan == C.TEAMPLAN.FREE) {
+      info.fee_monthly = 0;
+      return res.json(info);
+    }
+    return PlanProduct.init({plan, member_count})
+    .then(planProduct => {
+      info.fee_monthly = planProduct.getTotalFee();
+      return res.json(info);
+    });
   })
   .catch(next);
 });
@@ -120,7 +130,7 @@ api.get('/balance/log', checkOwner, (req, res, next) => {
 
 api.get('/product', (req, res, next) => {
   let {plan, order_type} = req.query;
-  Product.getProductsWithDiscount({plan, order_type})
+  Product.getProductsWithDiscount(plan, order_type)
   .then(doc => res.json(doc))
   .catch(next);
 });

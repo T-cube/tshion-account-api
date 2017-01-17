@@ -6,6 +6,7 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Base from './base';
+import PlanProduct from '../plan-product';
 
 export default class NewlyOrder extends Base {
 
@@ -21,23 +22,13 @@ export default class NewlyOrder extends Base {
     if (coupon) {
       this.withCoupon(coupon);
     }
-    if (times) {
-      this.setTimes(times);
-    }
+    member_count = member_count || 0;
     this.plan = plan;
-    this.member_count = member_count || 0;
-    return this.getProducts(plan).then(planProducts => {
-      let products = [];
-      planProducts.forEach(product => {
-        if (product.product_no == 'P0002') {
-          product.original_quantity = product.quantity = member_count || 0;
-        } else if (product.product_no == 'P0001') {
-          product.quantity = 1;
-        }
-        product.sum = product.original_price * product.quantity;
-        products.push(product);
-      });
-      this.products = products;
+    this.member_count = member_count;
+    this.times = times;
+    return PlanProduct.init({plan, times, member_count})
+    .then(planProduct => {
+      this.products = planProduct.getProducts();
     });
   }
 

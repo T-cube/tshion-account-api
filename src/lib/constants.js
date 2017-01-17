@@ -272,7 +272,6 @@ let constants = {
     RENEWAL: 'renewal',
     UPGRADE: 'upgrade',
     DEGRADE: 'degrade',
-    PATCH: 'patch',
   },
   ORDER_STATUS: {
     CREATED: 'created',
@@ -307,7 +306,7 @@ let constants = {
   },
   PAYMENT_METHOD: {
     ALIPAY: 'alipay',
-    WECHAT: 'wechat',
+    WXPAY: 'wxpay',
     BALANCE: 'balance',
   },
   DISCOUNT_STATUS: {

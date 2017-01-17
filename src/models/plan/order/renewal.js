@@ -7,7 +7,7 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Base from './base';
-
+import PlanProduct from '../plan-product';
 
 export default class RenewalOrder extends Base {
 
@@ -20,26 +20,14 @@ export default class RenewalOrder extends Base {
     if (coupon) {
       this.withCoupon(coupon);
     }
-    if (times) {
-      this.setTimes(times);
-    }
     let {current} = this.getPlanStatus();
     let {plan, member_count} = current;
     this.plan = plan;
+    this.times = times;
     this.member_count = member_count;
-    return this.getProducts(plan)
-    .then(planProducts => {
-      let products = [];
-      planProducts.forEach(product => {
-        if (product.product_no == 'P0002') {
-          product.quantity = member_count || 0;
-        } else if (product.product_no == 'P0001') {
-          product.quantity = 1;
-        }
-        product.sum = product.original_price * product.quantity;
-        products.push(product);
-      });
-      this.products = products;
+    return PlanProduct.init({plan, member_count, times})
+    .then(planProduct => {
+      this.products = planProduct.getProducts();
     });
   }
 
