@@ -127,7 +127,7 @@ api.get('/:invoice_id', (req, res, next) => {
     _id: ObjectId(req.params.invoice_id)
   })
   .then(doc => (
-    mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment,paid_sum', 'order_list')
+    mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment,paid_sum,order_no', 'order_list')
   ))
   .then(doc => res.json(doc))
   .catch(next);
