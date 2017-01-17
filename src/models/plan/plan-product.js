@@ -30,7 +30,7 @@ export default class PlanProduct {
         model.setTimes(parseInt(times));
       }
       if (member_count !== undefined) {
-        model.setMemberCount(parseInt(member_count));
+        model.setMemberCount(member_count);
       }
       return model;
     });
@@ -80,7 +80,7 @@ export default class PlanProduct {
 
   diff({plan, member_count}) {
     if (this.plan == plan) {
-      this.setMemberCount(this.member_count - member_count);
+      this.setMemberCount(this._member_count - member_count);
       return Promise.resolve([this.getMemberProduct()]);
     } else if (member_count == this._member_count) {
       return PlanProduct.init({plan, member_count, times: this._times})

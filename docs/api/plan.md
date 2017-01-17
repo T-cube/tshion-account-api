@@ -535,6 +535,7 @@ INPUT
 {
   page: Number,
   pagesize: Number,
+  last_id: ObjectId, // 使用last_id分页
   invoice_issued: Number[Enum:0,1], //是否开过发票
 }
 ```

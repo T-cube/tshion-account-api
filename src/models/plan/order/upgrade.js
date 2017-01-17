@@ -21,7 +21,7 @@ export default class UpgradeOrder extends Base {
     if (coupon) {
       this.withCoupon(coupon);
     }
-    
+
     this.plan = plan;
     this.member_count = member_count;
     let {current} = this.getPlanStatus();
@@ -30,7 +30,7 @@ export default class UpgradeOrder extends Base {
     this.times = times;
 
     return PlanProduct.init({plan, times, member_count})
-    .then(planProduct => planProduct.diff({plan: current.plan, member_count}))
+    .then(planProduct => planProduct.diff({plan: current.plan, member_count: current.member_count}))
     .then(products => {
       this.products = products;
     });

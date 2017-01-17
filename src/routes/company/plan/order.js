@@ -91,25 +91,41 @@ api.post('/:order_id/pay', (req, res, next) => {
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);
-  let { invoice_issued } = req.query;
+  let { invoice_issued, last_id } = req.query;
   let criteria = {company_id};
   if (invoice_issued !== undefined) {
     criteria.status = C.ORDER_STATUS.SUCCEED;
     criteria.invoice_id = {$exists: !!parseInt(invoice_issued)};
   }
+
+  let fetchByLastId = last_id && ObjectId.isValid(last_id);
+  if (fetchByLastId) {
+    return db.payment.order.find({
+      _id: {$lt: last_id},
+      company_id,
+    })
+    .sort({_id: -1})
+    .limit(pagesize)
+    .then(list => {
+      parseListStatus(list);
+      return res.json({
+        pagesize,
+        list,
+        last_id: list[list.length - 1]._id,
+        has_more: list.length == pagesize
+      });
+    });
+  }
+
   return Promise.all([
     db.payment.order.count(criteria),
     db.payment.order.find(criteria)
     .sort({_id: -1})
     .limit(pagesize)
-    .skip(pagesize * (page - 1)),
+    .skip(pagesize * (page - 1))
   ])
   .then(([totalrows, list]) => {
-    list.forEach(order => {
-      if (isOrderExpired(order)) {
-        order.status = C.ORDER_STATUS.EXPIRED;
-      }
-    });
+    parseListStatus(list);
     res.json({
       page,
       pagesize,
@@ -118,6 +134,14 @@ api.get('/', (req, res, next) => {
     });
   })
   .catch(next);
+
+  function parseListStatus(list) {
+    list.forEach(order => {
+      if (isOrderExpired(order)) {
+        order.status = C.ORDER_STATUS.EXPIRED;
+      }
+    });
+  }
 });
 
 api.get('/:order_id', (req, res, next) => {
