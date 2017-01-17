@@ -39,7 +39,7 @@ export default class BaseOrder {
     this.original_plan = undefined;
     this.date_create = new Date();
     this.date_update = new Date();
-    this.date_expires = moment().subtract(ORDER_EXPIRE_MINUTES, 'minute').toDate();
+    this.date_expires = moment().add(ORDER_EXPIRE_MINUTES, 'minute').toDate();
     this.member_count = 0;
   }
 
@@ -287,7 +287,7 @@ export default class BaseOrder {
     return db.payment.order.count({
       company_id: this.company_id,
       status: {$in: [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING]},
-      date_expires: {$lt: new Date()}
+      date_expires: {$gt: new Date()}
     })
     .then(pendingCount => {
       if (pendingCount) {

@@ -41,6 +41,7 @@ export default class PlanProduct {
   }
 
   setMemberCount(member_count) {
+    console.log({member_count});
     this._member_count = parseInt(member_count) || 0;
   }
 
@@ -68,13 +69,13 @@ export default class PlanProduct {
 
   getTotalFee() {
     let _planProduct = this.getPlanProduct();
-    let memberProduct = this.getPlanProduct();
+    let memberProduct = this.getMemberProduct();
     return _planProduct.sum + memberProduct.sum;
   }
 
   getProducts() {
     let _planProduct = this.getPlanProduct();
-    let memberProduct = this.getPlanProduct();
+    let memberProduct = this.getMemberProduct();
     return [_planProduct, memberProduct];
   }
 

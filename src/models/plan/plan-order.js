@@ -45,7 +45,8 @@ export default class PlanOrder {
   }
 
   isPending() {
-    return [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING].indexOf(this.get('status')) > -1;
+    return [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING].indexOf(this.get('status')) > -1
+      && this.get('date_expires') > new Date();
   }
 
   handlePaySuccess(payment_method, charge_id) {

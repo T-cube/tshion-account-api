@@ -33,13 +33,15 @@ export default class ChargeOrder {
       data.recharge_no = order.recharge_no;
       return db.payment.charge.order.insert(data);
     }
+    // cancel charge
     return db.payment.charge.order.findAndModify({
       query,
-      update: {$set: {status: C.CHARGE_STATUS.CANCELLED}}
+      update: {$set: {status: C.CHARGE_STATUS.CANCELLED}},
+      multi: true
     })
     .then(payingCharge => {
       if (payingCharge.value) {
-        // cancel order
+        // cancel order of thirdparty
       }
       return db.payment.charge.order.insert(data);
     });

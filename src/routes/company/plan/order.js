@@ -56,7 +56,7 @@ api.get('/pending', (req, res, next) => {
   db.payment.order.findOne({
     company_id: req.company._id,
     status: {$in: [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING]},
-    date_expires: {$lt: new Date()}
+    date_expires: {$gt: new Date()}
   })
   .then(order => res.json(order))
   .catch(next);
@@ -105,6 +105,11 @@ api.get('/', (req, res, next) => {
     .skip(pagesize * (page - 1)),
   ])
   .then(([totalrows, list]) => {
+    list.forEach(o => {
+      if (o.date_expires < new Date()) {
+        o.status = C.ORDER_STATUS.EXPIRED;
+      }
+    });
     res.json({
       page,
       pagesize,
@@ -126,6 +131,9 @@ api.get('/:order_id', (req, res, next) => {
     if (!doc) {
       throw new ApiError(404);
     }
+    if (doc.date_expires < new Date()) {
+      doc.status = C.ORDER_STATUS.EXPIRED;
+    }
     return res.json(doc);
   })
   .catch(next);
@@ -137,7 +145,11 @@ api.put('/:order_id/status', (req, res, next) => {
   let status = C.ORDER_STATUS.CANCELLED;
   return db.payment.order.update({
     _id: order_id,
-    company_id
+    company_id,
+    status: {
+      $in: [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING]
+    },
+    date_expires: {$gt: new Date()}
   }, {
     $set: {status}
   })
