@@ -42,7 +42,13 @@ api.post('/', (req, res, next) => {
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);
-  let criteria = {company_id};
+  let criteria = {
+    company_id,
+    $or: [
+      {status: C.ORDER_STATUS.SUCCEED},
+      {date_expires: {$gt: new Date()}}
+    ]
+  };
   return Promise.all([
     db.payment.recharge.count(criteria),
     db.payment.recharge.find(criteria, {

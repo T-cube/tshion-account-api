@@ -1,12 +1,14 @@
 import Promise from 'bluebird';
 import crypto from 'crypto';
 import moment from 'moment';
+import config from 'config';
 
 import ApiError from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 
-export let randomBytes = Promise.promisify(crypto.randomBytes);
+const ORDER_EXPIRE_MINUTES = config.get('order.expire_minutes');
+let randomBytes = Promise.promisify(crypto.randomBytes);
 
 export default class Recharge {
 
@@ -33,6 +35,7 @@ export default class Recharge {
         status: C.ORDER_STATUS.CREATED,
         date_create: new Date(),
         date_update: new Date(),
+        date_expires: moment().add(ORDER_EXPIRE_MINUTES, 'minute').toDate(),
       };
       return db.payment.recharge.insert(data);
     });
