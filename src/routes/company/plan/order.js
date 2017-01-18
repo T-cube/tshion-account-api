@@ -90,6 +90,7 @@ api.get('/', (req, res, next) => {
   let criteria = {company_id};
   if (invoice_issued !== undefined) {
     criteria.status = C.ORDER_STATUS.SUCCEED;
+    criteria.paid_sum = {$gt: 0};
     criteria.invoice_id = {$exists: !!parseInt(invoice_issued)};
   }
 

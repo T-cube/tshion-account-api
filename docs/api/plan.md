@@ -823,7 +823,11 @@ INPUT
 
 ### GET /invoice
 
+开票的列表
+
 ### GET /invoice/info
+
+开票的配置
 
 OUTPUT
 
