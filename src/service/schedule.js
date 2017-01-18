@@ -1,8 +1,7 @@
 import _ from 'underscore';
 import scheduleService from 'node-schedule';
-import moment from 'moment';
-import config from 'config';
 
+import C from 'lib/constants';
 import ScheduleModel from 'models/schedule';
 import TaskLoop from 'models/task-loop';
 import AttendanceRemind from 'models/attendance-remind';
@@ -10,13 +9,13 @@ import TaskReport from 'models/task-report';
 import db from 'lib/database';
 import Plan from 'models/plan/plan';
 import TransactionRecover from 'models/plan/transaction-recover';
+import PlanOrder from 'models/plan/plan-order';
+import OrderFactory from 'models/plan/order';
 
 
 export default class ScheduleServer {
 
-  constructor() {
-
-  }
+  constructor() {}
 
   init() {
     this.doJobs();
@@ -57,6 +56,10 @@ export default class ScheduleServer {
         init: ['0 0 * * *', () => this.doDegrade()]
       },
 
+      auto_renewal: {
+        init: ['0 0 * * *', () => this.autoRenewal()]
+      },
+
     };
   }
 
@@ -84,6 +87,50 @@ export default class ScheduleServer {
       let planModel = new Plan(item._id);
       planModel.planInfo = item;
       planModel.cleanTrial();
+    });
+  }
+
+  // 自动续费
+  autoRenewal() {
+    return db.plan.company.find({
+      'current.type': 'paid',
+      'current.date_end': {$lte: new Date()},
+      auto_renewal: true
+    })
+    .forEach(item => {
+
+      console.log('auto_renewal', {item});
+      let order_type = C.ORDER_TYPE.RENEWAL;
+      let times = 1;
+      let { plan, member_count } = _.find(item.list, i => i._id.equals(item.current._id));
+      let company_id = item._id;
+      let user_id = null;
+
+      OrderFactory.getInstance({
+        order_type,
+        company_id,
+        user_id,
+        plan,
+        member_count,
+        times,
+      })
+      .then(orderModel => orderModel.save())
+      .then(order => {
+        return PlanOrder.init(order._id)
+        .then(planOrder => planOrder.payWithBalance())
+        .then(() => {
+          // send notification here
+          console.log('auto renewal pay with balance succeed');
+        });
+      })
+      .catch(e => {
+        console.log('auto renewal pay with balance failed');
+        console.error(e);
+        // send notification here
+        if (e.message == 'balance_insufficient') {
+          // balance_insufficient
+        }
+      });
     });
   }
 

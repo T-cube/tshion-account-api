@@ -58,12 +58,16 @@ export default class Plan {
   }
 
   getPlanInfo() {
-    let { company_id, planIonfo } = this;
-    if (planIonfo !== undefined) {
-      return Promise.resolve(planIonfo);
+    let { company_id, planInfo } = this;
+    if (planInfo !== undefined) {
+      return Promise.resolve(planInfo);
     }
     return db.plan.company.findOne({
       _id: company_id,
+    })
+    .then(planInfo => {
+      this.planInfo = planInfo;
+      return planInfo;
     });
   }
 
@@ -122,9 +126,9 @@ export default class Plan {
       if (transactionId && planInfo && planInfo.transactions && indexObjectId(planInfo.transactions, transactionId) > -1) {
         return true;
       }
-      
+
       let current = this._getCurrent(planInfo);
-      let {date_start, date_end} = current;
+      let {date_end} = current;
       let isActive = current.status == C.PLAN_STATUS.ACTIVED;
       let isRenewalAndSkipMonth = false;
 
@@ -162,6 +166,7 @@ export default class Plan {
             _id: newId,
             plan,
             type: 'paid',
+            date_end,
           }
         };
         updates['$push'] = {
@@ -201,13 +206,14 @@ export default class Plan {
             _id: newId,
             plan,
             type: 'paid',
+            date_end,
           },
           list
         };
       } else if (order_type == C.ORDER_TYPE.RENEWAL && !isRenewalAndSkipMonth) {
         criteria['list._id'] = current._id;
         updates['$set'] = {
-          'list.$.date_start': date_start,
+          'current.date_end': date_end,
           'list.$.date_end': date_end,
         };
       }
@@ -251,7 +257,7 @@ export default class Plan {
         return;
       }
       let $set = {
-        current: paid ? _.pick(paid, '_id', 'plan', 'type') : null,
+        current: paid ? _.pick(paid, '_id', 'plan', 'type', 'date_end') : null,
       };
       if (stop) {
         $set['list.$.date_end'] = now;

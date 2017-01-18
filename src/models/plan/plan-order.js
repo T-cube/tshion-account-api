@@ -126,7 +126,7 @@ export default class PlanOrder {
       if (ok) {
         return this.updateOrderPaidWithBalance(transactionId);
       } else {
-        return this.cancelTransaction(transactionId)
+        return Transaction.cancel(transactionId)
         .then(() => {
           throw new ApiError(400, error);
         });
