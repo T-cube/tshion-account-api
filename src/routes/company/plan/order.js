@@ -78,12 +78,7 @@ api.post('/:order_id/pay', (req, res, next) => {
       .then(() => res.json({order_id, payment_method, status: C.ORDER_STATUS.SUCCEED}));
     }
     return req.model('payment').payOrder(planOrder.order, payment_method, getClientIp(req))
-    .then(data => {
-      if (!data) {
-        throw new ApiError(500);
-      }
-      res.json(data);
-    });
+    .then(data => res.json(data));
   })
   .catch(next);
 });

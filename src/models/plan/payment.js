@@ -65,7 +65,10 @@ export default class Payment {
       return this.createChargeOrder(charge_type, payment_method, order, payment_data)
       .then(() => this.parseResponse(charge_type, payment_method, order, payment_data));
     })
-    .catch(e => console.error(e));
+    .catch(e => {
+      console.error(e);
+      throw e;
+    });
   }
 
   parseResponse(charge_type, payment_method, order, payment_data) {

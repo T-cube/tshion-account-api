@@ -1,6 +1,7 @@
 import Promise from 'bluebird';
 import express from 'express';
 import moment from 'moment';
+import config from 'config';
 import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
@@ -11,6 +12,16 @@ import { getPageInfo, mapObjectIdToData } from 'lib/utils';
 
 let api = express.Router();
 export default api;
+
+const MIN_TAX_FREE_AMOUNT = config.get('invoice.min_tax_free_amount');
+const TAX_RATE = config.get('invoice.tax_rate');
+
+api.get('/info', (req, res, next) => {
+  res.json({
+    min_tax_free_amount: MIN_TAX_FREE_AMOUNT,
+    tax_rate: TAX_RATE,
+  });
+});
 
 api.post('/', (req, res, next) => {
   let invoiceInfo = req.body;
@@ -61,6 +72,12 @@ api.post('/', (req, res, next) => {
       throw new ApiError(400, 'invalid_order_list');
     }
     let invoice_no = 'I' + moment().format('YYYYMMDDHHmmssSSS') + Math.random().toString().substr(2, 4);
+    let total_amount = orderInfo.total_amount;
+    let tax_rate = 0;
+    if (total_amount < MIN_TAX_FREE_AMOUNT) {
+      tax_rate = TAX_RATE;
+      total_amount += TAX_RATE;
+    }
     let data = {
       company_id,
       user_id,
@@ -69,8 +86,8 @@ api.post('/', (req, res, next) => {
       subject,
       order_list,
       address: addressInfo.list[0],
-      total_amount: orderInfo.total_amount,
-      tax_rate: undefined,
+      total_amount,
+      tax_rate,
       status: C.INVOICE_STATUS.CREATING,
       date_create: new Date(),
       date_update: new Date(),

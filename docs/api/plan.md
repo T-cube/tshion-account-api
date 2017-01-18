@@ -823,6 +823,17 @@ INPUT
 
 ### GET /invoice
 
+### GET /invoice/info
+
+OUTPUT
+
+```javascript
+{
+  min_tax_free_amount: Number,  // 开票最低免邮金额
+  tax_rate: Number,             // 快递费用
+}
+```
+
 ### GET /invoice/:invoice_id
 
 ### PUT /invoice/:invoice_id/status

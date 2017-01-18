@@ -271,5 +271,9 @@ module.exports = {
   },
   order: {
     expire_minutes: 30, // 订单有效期
+  },
+  invoice: {
+    min_tax_free_amount: 100000,  // 1000元免快递费
+    tax_rate: 2000,               // 快递费20元
   }
 };
