@@ -169,7 +169,7 @@ export default class BaseOrder {
   }
 
   getOriginalFeeOfProducts() {
-    return Math.round(_.reduce(this.products.map(product => product.quantity * product.original_price * this.times), (memo, num) => memo + num, 0));
+    return Math.round(_.reduce(this.products.map(product => product.sum), (memo, num) => memo + num, 0));
   }
 
   getCouponDiscount() {

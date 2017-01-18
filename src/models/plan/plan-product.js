@@ -27,7 +27,7 @@ export default class PlanProduct {
     .then(products => {
       let model = new PlanProduct(plan, products);
       if (times !== undefined) {
-        model.setTimes(parseInt(times));
+        model.setTimes(parseFloat(times));
       }
       if (member_count !== undefined) {
         model.setMemberCount(member_count);
@@ -37,7 +37,7 @@ export default class PlanProduct {
   }
 
   setTimes(times) {
-    this._times = parseInt(times) || 1;
+    this._times = parseFloat(times) || 1;
   }
 
   setMemberCount(member_count) {
@@ -79,6 +79,7 @@ export default class PlanProduct {
   }
 
   diff({plan, member_count}) {
+    member_count = parseInt(member_count);
     if (this.plan == plan) {
       this.setMemberCount(this._member_count - member_count);
       return Promise.resolve([this.getMemberProduct()]);
