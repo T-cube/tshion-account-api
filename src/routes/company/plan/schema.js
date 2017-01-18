@@ -1,21 +1,6 @@
 import { buildValidator } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
 
-// const logSchema = {
-//   sanitization: {
-//     status: { type: 'string' },
-//     user_id: { $objectId: 1 },
-//     comment: { type: 'string' },
-//     date_create: { type: 'date' },
-//   },
-//   validation: {
-//     status: { type: 'string' },
-//     user_id: { $objectId: 1 },
-//     comment: { type: 'string' },
-//     date_create: { type: 'date' },
-//   },
-// };
-
 const addressSchema = {
   sanitization: {
     type: 'object',

@@ -28,24 +28,31 @@ export default class UserLevel {
     if (!this.userId) {
       return this._rejectWhenMissingCompany();
     }
-    return db.company.count({
-      owner: this.userId
-    })
-    .then(own_companies => {
-      return this.getLevel().then(level => {
-        let max_own_companies = config.get(`accountLevel.${level}.max_own_companies`);
-        return {
-          level,
-          max_own_companies,
-          own_companies,
-        };
-      });
+    return Promise.all([
+      db.company.count({
+        owner: this.userId
+      }),
+      this.getLevel()
+    ])
+    .then(([own_companies, level]) => {
+      if (!level) {
+        return null;
+      }
+      let max_own_companies = config.get(`accountLevel.${level}.max_own_companies`);
+      return {
+        level,
+        max_own_companies,
+        own_companies,
+      };
     });
   }
 
   canOwnCompany() {
     return this.getLevelInfo()
     .then(info => {
+      if (!info) {
+        return false;
+      }
       return info.max_own_companies > info.own_companies;
     });
   }
@@ -72,7 +79,7 @@ export default class UserLevel {
     if (user && user.level) {
       return Promise.resolve(user.level);
     }
-    return this.getUserInfo().then(user => user.level || 'free');
+    return this.getUserInfo().then(user => user ? (user.level || 'free') : null);
   }
 
   _rejectWhenMissingCompany() {

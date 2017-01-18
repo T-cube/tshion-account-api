@@ -15,7 +15,12 @@ export default class Banlance {
       if (transactionReach) {
         return;
       }
-      if (!doc || ((doc.balance + amount) < 0) && amount < 0) {
+      if (!doc) {
+        doc = {
+          balance: 0
+        };
+      }
+      if ((doc.balance + amount) < 0 && amount < 0) {
         throw new Error('balance_insufficient');
       }
       log.amount = amount;
@@ -33,6 +38,8 @@ export default class Banlance {
         $push: {
           log
         }
+      }, {
+        upsert: true
       });
     });
   }
