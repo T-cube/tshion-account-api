@@ -19,7 +19,7 @@ export default class Recharge {
 
   create({amount, payment_method}) {
     let {company_id, user_id} = this;
-    return this.isValid()
+    return this.ensureIsValid()
     .then(() => this.createOrderNo())
     .then(recharge_no => {
       let paid_sum = amount;
@@ -38,7 +38,7 @@ export default class Recharge {
     });
   }
 
-  isValid(amount) {
+  ensureIsValid(amount) {
     return this.getLimits().then(limits => {
       if (amount > limits.amount.max || amount < limits.amount.min) {
         throw new ApiError(400, 'invalid_recharge_amount');

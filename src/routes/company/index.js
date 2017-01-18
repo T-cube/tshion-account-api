@@ -15,6 +15,7 @@ import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
 import UserLevel from 'models/user-level';
 import { COMPANY_MEMBER_UPDATE } from 'models/notification-setting';
+import Plan from 'models/plan/plan';
 
 import {
   MODULE_PROJECT,
@@ -308,55 +309,60 @@ saveCdn('cdn-public'),
 api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   let user_id = ObjectId(req.body.user_id);
   let company = req.company;
-  if (req.user._id.equals(user_id)) {
-    throw new ApiError(400, 'can_not_transfer_to_yourself');
-  }
-  if (!req.user._id.equals(company.owner)) {
-    throw new ApiError(403, null, 'only owner can carry out this operation');
-  }
-  let member = _.find(company.members, m => m._id.equals(user_id));
-  if (!member) {
-    throw new ApiError(404, 'member_not_exists');
-  }
-  db.user.findOne({_id: user_id})
-  .then(user => {
-    if (!user) {
-      throw new ApiError(404, 'user_not_exists');
+  new Plan(company._id).getPlanInfo().then(({certified}) => {
+    if (certified) {
+      throw new ApiError(400, 'certified_company_cannot_transfer');
     }
-    return new UserLevel(user).canOwnCompany();
-  })
-  .then(canOwnCompany => {
-    if (false == canOwnCompany) {
-      throw new ApiError(400, 'over_company_num');
+    if (req.user._id.equals(user_id)) {
+      throw new ApiError(400, 'cannot_transfer_to_yourself');
     }
-    return Promise.all([
-      db.company.update({
-        _id: company._id,
-        'members._id': user_id,
-      }, {
-        $set: {
-          owner: user_id,
-          'members.$.type': C.COMPANY_MEMBER_TYPE.OWNER,
-        }
-      }),
-      db.company.update({
-        _id: company._id,
-        'members._id': req.user._id,
-      }, {
-        $set: {
-          'members.$.type': C.COMPANY_MEMBER_TYPE.ADMIN,
-        }
-      })
-    ]);
-  })
-  .then(() => {
-    res.json({});
-    req.model('activity').insert({
-      creator: req.user._id,
-      company: company._id,
-      action: C.ACTIVITY_ACTION.TRANSFER,
-      target_type: C.OBJECT_TYPE.COMPANY,
-      user: user_id,
+    if (!req.user._id.equals(company.owner)) {
+      throw new ApiError(403, null, 'not_company_owner');
+    }
+    let member = _.find(company.members, m => m._id.equals(user_id));
+    if (!member) {
+      throw new ApiError(404, 'member_not_exists');
+    }
+    return db.user.findOne({_id: user_id})
+    .then(user => {
+      if (!user) {
+        throw new ApiError(404, 'user_not_exists');
+      }
+      return new UserLevel(user).canOwnCompany();
+    })
+    .then(canOwnCompany => {
+      if (false == canOwnCompany) {
+        throw new ApiError(400, 'over_company_num');
+      }
+      return Promise.all([
+        db.company.update({
+          _id: company._id,
+          'members._id': user_id,
+        }, {
+          $set: {
+            owner: user_id,
+            'members.$.type': C.COMPANY_MEMBER_TYPE.OWNER,
+          }
+        }),
+        db.company.update({
+          _id: company._id,
+          'members._id': req.user._id,
+        }, {
+          $set: {
+            'members.$.type': C.COMPANY_MEMBER_TYPE.ADMIN,
+          }
+        })
+      ]);
+    })
+    .then(() => {
+      res.json({});
+      req.model('activity').insert({
+        creator: req.user._id,
+        company: company._id,
+        action: C.ACTIVITY_ACTION.TRANSFER,
+        target_type: C.OBJECT_TYPE.COMPANY,
+        user: user_id,
+      });
     });
   })
   .catch(next);

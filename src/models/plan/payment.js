@@ -27,7 +27,7 @@ export default class Payment {
 
   payRecharge(recharge, ip) {
     let {payment_method} = recharge;
-    return this._pay({charge_type: C.CHARGE_TYPE.RECHARGE, payment_method, recharge, ip});
+    return this._pay({charge_type: C.CHARGE_TYPE.RECHARGE, payment_method, order: recharge, ip});
   }
 
   getUrls(payment_method) {
@@ -84,8 +84,8 @@ export default class Payment {
     if (payment_method == 'wxpay') {
       let {code_url} = payment_data;
       let svg = Qr.imageSync(code_url, { type: 'svg' });
-      let qr_url = 'data:image/svg+xml;base64,' + new Buffer(svg).toString('base64');
-      response.qr_url = qr_url;
+      let qr = 'data:image/svg+xml;base64,' + new Buffer(svg).toString('base64');
+      response.qr = qr;
     }
     if (payment_method == 'alipay') {
       let {url} = payment_data;
