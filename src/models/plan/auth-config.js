@@ -10,7 +10,7 @@ export const MODULE_ATTENDANCE = 'attendance';
 export const MODULE_STRUCTURE = 'structure';
 export const MODULE_PROFILE = 'profile';
 
-export default {
+const AUTH_CONFIG = {
 
   [C.TEAMPLAN.FREE]: [
     MODULE_HOME,
@@ -44,3 +44,9 @@ export default {
   ],
 
 };
+
+// TODO remove the following 2 lines later
+AUTH_CONFIG[C.TEAMPLAN.FREE] = AUTH_CONFIG[C.TEAMPLAN.ENT];
+AUTH_CONFIG[C.TEAMPLAN.PRO] = AUTH_CONFIG[C.TEAMPLAN.ENT];
+
+export default AUTH_CONFIG;
