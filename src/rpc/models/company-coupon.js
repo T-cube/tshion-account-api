@@ -1,4 +1,6 @@
 import _ from 'underscore';
+import Promise from 'bluebird';
+
 import Model from './model';
 import C from 'lib/constants';
 import { mapObjectIdToData } from 'lib/utils';
@@ -87,23 +89,25 @@ export default class CompanyCouponModel extends Model {
         throw new ApiError(400, {out_of_stock_coupon});
       }
       let date_create = new Date();
-      coupons = coupons.map(i => ({
-        coupon: i._id,
-        coupon_no: i.coupon_no + (+new Date()).toString(32).substr(-6).toUpperCase(),
-        status: C.COMPANY_COUPON_STATUS.UNUSED,
-        date_create,
-      }));
       return Promise.all([
-        this.db.payment.company.coupon.update({
-          _id: {$in: companies},
-        }, {
-          $push: {
-            list: {$each: coupons}
-          }
-        }, {
-          upsert: true,
-          multi: true,
-        }),
+        Promise.all(companies.map(company_id => {
+          return this.db.payment.company.coupon.update({
+            _id: company_id,
+          }, {
+            $push: {
+              list: {
+                $each: coupons.map(i => ({
+                  coupon: i._id,
+                  coupon_no: i.coupon_no + (+new Date()).toString(32).substr(-6).toUpperCase(),
+                  status: C.COMPANY_COUPON_STATUS.UNUSED,
+                  date_create,
+                }))
+              }
+            }
+          }, {
+            upsert: true,
+          });
+        })),
         this.db.payment.coupon.update({
           _id: {$in: _.pluck(coupons, 'coupon')},
         }, {

@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import moment from 'moment';
 import config from 'config';
 
-import ApiError from 'lib/error';
+import {ApiError} from 'lib/error';
 import C from 'lib/constants';
 import db from 'lib/database';
 
@@ -21,7 +21,8 @@ export default class Recharge {
 
   create({amount, payment_method}) {
     let {company_id, user_id} = this;
-    return this.ensureIsValid()
+    amount = parseInt(amount);
+    return this.ensureIsValid(amount)
     .then(() => this.createOrderNo())
     .then(recharge_no => {
       let paid_sum = amount;
@@ -43,7 +44,7 @@ export default class Recharge {
 
   ensureIsValid(amount) {
     return this.getLimits().then(limits => {
-      if (amount > limits.amount.max || amount < limits.amount.min) {
+      if (!amount || amount > limits.amount.max || amount < limits.amount.min) {
         throw new ApiError(400, 'invalid_recharge_amount');
       }
     });
