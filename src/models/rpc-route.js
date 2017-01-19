@@ -11,7 +11,6 @@ export default class RpcRoute {
   }
 
   on(uri, callback) {
-    // this.socket.on(`${this.prefix}${uri}`, callback);
     this.route(uri, callback);
   }
 
@@ -45,11 +44,6 @@ export default class RpcRoute {
       });
     });
   }
-
-  // use(prefix, routes) {
-  //   routes(this.socket, this.prefix + (prefix || ''));
-  //   return this;
-  // }
 
   isPromise(value) {
     return value && typeof value.then === 'function';

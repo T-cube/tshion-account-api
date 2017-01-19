@@ -1,9 +1,13 @@
 import _ from 'underscore';
 import db from 'lib/database';
+import C from 'lib/constants';
 
 export default class PlanProduct {
 
   constructor(plan, productsOfSpecificPlan) {
+    if (plan == C.TEAMPLAN.FREE) {
+      throw new Error('invalid plan', plan);
+    }
     this.plan = plan;
     this.products = productsOfSpecificPlan;
     this._times = 1;
