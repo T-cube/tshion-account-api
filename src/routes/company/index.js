@@ -157,9 +157,6 @@ api.get('/:company_id', (req, res, next) => {
     });
     req.company.plan = planInfo;
     req.company.modules = companyLevel.getModulesByPlan(planInfo.plan);
-    if (req.company._id.toString() == '574f84726a400ffd0f40d121') {
-      req.company.flags = ['payment_test'];
-    }
     res.json(req.company);
   })
   .catch(next);
