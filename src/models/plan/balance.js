@@ -3,7 +3,7 @@ import {indexObjectId} from 'lib/utils';
 
 export default class Banlance {
 
-  static incBalance(company_id, amount, transactionId, log) {
+  static incBalance(company_id, amount, log, transactionId) {
     if (0 == amount) {
       return Promise.resolve();
     }

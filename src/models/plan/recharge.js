@@ -8,6 +8,8 @@ import C from 'lib/constants';
 import db from 'lib/database';
 
 const ORDER_EXPIRE_MINUTES = config.get('order.expire_minutes');
+const RECHARGE_AMOUNT_LIMITS = config.get('recharge.amount');
+
 let randomBytes = Promise.promisify(crypto.randomBytes);
 
 export default class Recharge {
@@ -52,10 +54,7 @@ export default class Recharge {
 
   getLimits() {
     return Promise.resolve({
-      amount: {
-        min: 100,
-        max: 1000000000,
-      }
+      amount: RECHARGE_AMOUNT_LIMITS
     });
   }
 

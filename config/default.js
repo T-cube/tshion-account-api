@@ -275,5 +275,11 @@ module.exports = {
   invoice: {
     min_tax_free_amount: 100000,  // 1000元免快递费
     tax_rate: 2000,               // 快递费20元
+  },
+  recharge: {
+    amount: {
+      min: 100,
+      max: 500000,
+    }
   }
 };

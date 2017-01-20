@@ -33,9 +33,9 @@ export default class RechargeOrder {
   static doHandlePaySuccess(recharge, charge_id, transactionId) {
     let {company_id, amount, payment_method} = recharge;
     return Promise.all([
-      Balance.incBalance(company_id, amount, transactionId, {
+      Balance.incBalance(company_id, amount, {
         recharge: _.pick(recharge, '_id', 'amount', 'recharge_no')
-      }),
+      }, transactionId),
       db.payment.recharge.update({_id: recharge._id}, {
         $set: {
           status: C.ORDER_STATUS.SUCCEED,
