@@ -313,7 +313,7 @@ const schema = {
     validation: {
       location: addressWithoutCountrySchema.validation,
       contact: { type: 'string' },
-      phone: { type: 'string' },
+      phone: { $phone: 1 },
     },
   },
   address_default: {

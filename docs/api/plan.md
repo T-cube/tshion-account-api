@@ -4,7 +4,7 @@
 
 ```javascript
 TeamPlan: String[Enum:free,pro,ent] // 团队方案：免费版，专业版，企业版
-PaimentMethod: String[Enum:balance,alipay,wxpay,banktrans];
+PaymentMethod: String[Enum:balance,alipay,wxpay,banktrans];
 TeamPlanPaid: String[Enum:pro,ent] // 专业版，企业版
 PlanStatus: String[Enum:actived,expired,overdue],
 AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
@@ -27,7 +27,7 @@ ChargeType: String[plan, recharge],
 5. 试用 `POST /plan/trial`
 6. 购买，订单预查询（用户操作刷新状态）：`POST /plan/order/prepare`，生成订单：`POST /plan/order`
 7. 查看当前正在处理的订单 `GET /plan/order/pending`
-8. 支付处理的订单 `POST /plan/order/:orderId/pay?`
+8. 支付处理的订单 `POST /plan/order/:orderId/pay`
 9. 查询订单 `POST /plan/order/:orderId/query`
 
 ### 各种订单类型
@@ -269,35 +269,6 @@ OUTPUT
   }
 }
 ```
-<!--
-### GET /auth/history
-
-QUERY
-
-```javascript
-{
-  page: Int,
-  pagesize: Int,
-}
-```
-
-OUTPUT
-
-```javascript
-{
-  list: [{
-    _id: ObjectId,
-    plan: TeamPlanPaid,
-    company_id: ObjectId,
-    user_id: ObjectId,
-    date_apply: Date,
-    status: AuthStatus,
-  }],
-  page: Int,
-  pagesize: Int,
-  totalRows: Int,
-}
-``` -->
 
 ### GET /auth/item/:authId
 
@@ -320,7 +291,6 @@ OUTPUT
 ### POST /auth
 
 提交认证
-
 
 QUERY
 
@@ -535,8 +505,8 @@ INPUT
 {
   page: Number,
   pagesize: Number,
-  last_id: ObjectId, // 使用last_id分页
-  invoice_issued: Number[Enum:0,1], //是否开过发票
+  last_id: ObjectId,                // 使用last_id分页
+  invoice_issued: Number[Enum:0,1], // 是否开过发票
 }
 ```
 
@@ -563,7 +533,7 @@ OUTPUT
 
 支付
 
-当订单类型为degrade，不需要支付，使用确认降级的接口
+当订单类型为degrade，不需要支付
 
 INPUT
 
@@ -579,7 +549,7 @@ OUTPUT
 {
   order_id: ObjectId,
   payment_method: String,
-  qr: base64,     // 微信支付二维码地址
+  qr: base64,         // 微信支付二维码地址
   url: Url,           // 支付宝支付地址，打开新标签页
   status: String,     // paying succeed (余额支付直接返回succeed)
 }
@@ -593,21 +563,9 @@ OUTPUT
 ```javascript
 {
   order_id: ObjectId,
-  status: String,     // paying succeed
+  status: String,     // paying succeed expired
 }
 ```
-
-<!-- ### GET /order/:orderId/token
-
-获取支付token（暂时只支持支付宝）
-
-```javascript
-{
-  token: String,
-}
-```
-
-然后跳转到`/api/payment/plan/pay?token=token&payment_method=alipay` -->
 
 
 ### PUT /order/:orderId/status
@@ -640,17 +598,7 @@ OUTPUT
       min: Number,      // 最低充值金额
       max: Number       // 最高充值金额
     }
-  },
-  discounts: [
-    {
-      _id: ObjectId,
-      title: String,
-      amount: Number,   // 充值金额
-      extra_amount: Number, // 优惠金额
-      date_update: Date,
-      date_create: Date
-    }
-  ]
+  }
 }
 ```
 
@@ -687,7 +635,7 @@ INPUT
 ```javascript
 {
 	amount: Number,
-	payment_method: String, // 支付方式 PaimentMethod
+	payment_method: String, // 支付方式 PaymentMethod
 }
 ```
 

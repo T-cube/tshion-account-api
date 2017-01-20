@@ -2,7 +2,7 @@ import _ from 'underscore';
 import Promise from 'bluebird';
 import schemaInspector from 'schema-inspector';
 import { ObjectId } from 'mongodb';
-import { isEmail } from './utils';
+import { idCodeValid, isEmail } from './utils';
 import { ApiError } from './error';
 import moment from 'moment-timezone';
 
@@ -74,7 +74,7 @@ const validationCustom = {
     if (!schema.$idcard) {
       return;
     }
-    if (candidate && !/^([0-9]{15}[\dx]|[0-9]{17}[\dx])$/.test(candidate)) {
+    if (candidate && !idCodeValid(candidate)) {
       this.report('invalid idcard: ' + candidate);
     }
   },
@@ -82,7 +82,7 @@ const validationCustom = {
     if (!schema.$phone) {
       return;
     }
-    if (candidate && !/^\d[\d-]{4,16}\d$/.test(candidate)) {
+    if (candidate && !/^(\d{3,4}-?\d{7,8}(-\d{3,4})?|[1][3578][0-9]{9})$/.test(candidate)) {
       this.report('invalid phone: ' + candidate);
     }
   },

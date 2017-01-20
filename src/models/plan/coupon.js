@@ -27,6 +27,14 @@ export default class Coupon {
         order_type,
         'period.date_start': {$lt: new Date()},
         'period.date_end': {$gte: new Date()},
+      }, {
+        title: 1,
+        description: 1,
+        order_type: 1,
+        criteria: 1,
+        discount: 1,
+        period: 1,
+        coupon_no: 1,
       })
       .then(coupons => {
         coupons.forEach(coupon => {

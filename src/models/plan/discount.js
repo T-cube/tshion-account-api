@@ -4,9 +4,7 @@ import C from 'lib/constants';
 
 export default class Discount {
 
-  constructor() {
-
-  }
+  constructor() {}
 
   static getDiscount(origin, discountItem) {
     let { discount, criteria } = discountItem;
