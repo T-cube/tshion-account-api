@@ -39,13 +39,13 @@ export default class ScheduleServer {
         init: ['*/5 * * * *', () => scheduleModel.remindingJob()]
       },
       task_loop: {
-        init: ['0 0 * * *', () => taskLoop.loopJob()]
+        init: ['*/1 * * * *', () => taskLoop.loopJob()]
       },
       attendance_remind: {
         init: ['*/5 * * * *', () => attendanceRemind.doJob()]
       },
       task_report: {
-        init: ['00 10 * * *', () => taskReport.doJob()]
+        init: ['0 10 * * *', () => taskReport.doJob()]
       },
 
       update_trial_plan: {
