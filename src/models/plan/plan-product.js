@@ -101,7 +101,7 @@ export default class PlanProduct {
         return [selfPlanProduct, selfMemberProduct];
       });
     } else {
-      throw new Error('cann not diff');
+      throw new Error('cannot_diff');
     }
   }
 

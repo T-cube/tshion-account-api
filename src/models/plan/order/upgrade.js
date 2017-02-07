@@ -33,6 +33,13 @@ export default class UpgradeOrder extends Base {
     .then(planProduct => planProduct.diff({plan: current.plan, member_count: current.member_count}))
     .then(products => {
       this.products = products;
+    })
+    .catch(e => {
+      if (e.message == 'cannot_diff') {
+        this.products = [];
+      } else {
+        throw e;
+      }
     });
   }
 

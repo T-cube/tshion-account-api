@@ -150,7 +150,7 @@ export default class BaseOrder {
   isCouponAvailable(coupon) {
     let { products } = coupon;
     let result = false;
-    if (products === null) {
+    if (!_.isArray(products)) {
       result = !!this._getOrderDiscount(coupon);
     } else {
       products.forEach(product_id => {
