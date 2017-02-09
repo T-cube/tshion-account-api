@@ -40,7 +40,7 @@ module.exports = {
     count: {
       company: 10,
       project: 34,
-      user: 8,
+      user: 32,
     },
   },
   oauth: {
