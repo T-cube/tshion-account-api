@@ -21,7 +21,7 @@ const discountSchema = {
       properties: {
         type: { type: 'string' },
         number: { type: 'integer', optional: true },
-        rate: { type: 'number', optional: true },
+        rate: { type: 'number', optional: true, min: 0, max: 0.99 },
         amount: { type: 'integer', optional: true },
         times: { type: 'integer', optional: true },
       }
@@ -60,7 +60,7 @@ const discountSchema = {
       properties: {
         type: { $enum: ['number', 'rate', 'amount', 'times'] },
         number: { type: 'integer', optional: true, min: 1 },
-        rate: { type: 'number', optional: true, min: 0, max: 0.99 },
+        rate: { type: 'number', optional: true },
         amount: { type: 'integer', optional: true, min: 1 },
         times: { type: 'integer', optional: true, min: 1 },
       }
