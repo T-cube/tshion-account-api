@@ -8,9 +8,10 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
-import { upload, saveCdn } from 'lib/upload';
-import { comparePassword, hashPassword, maskEmail, maskMobile } from 'lib/utils';
+import { upload, saveCdn, cropAvatar } from 'lib/upload';
+import { maskEmail, maskMobile } from 'lib/utils';
 import UserLevel from 'models/user-level';
+import Realname from 'models/plan/realname';
 
 import { validate } from './schema';
 
@@ -48,9 +49,13 @@ api.get('/info', (req, res, next) => {
     _id: req.user._id
   }, BASIC_FIELDS)
   .then(data => {
-    return new UserLevel(data).getLevelInfo()
-    .then(levelInfo => {
+    return Promise.all([
+      new UserLevel(data).getLevelInfo(),
+      req.model('preference').get(req.user._id)
+    ])
+    .then(([levelInfo, preference]) => {
       data.level_info = levelInfo;
+      data.preference = preference;
       if (data.email) {
         data.email = maskEmail(data.email);
       }
@@ -119,14 +124,13 @@ api.put('/options/notification', (req, res, next) => {
 });
 
 api.put('/avatar', (req, res, next) => {
-  let { avatar } = req.body;
-  let data = {
-    avatar: avatar
+  const data = {
+    avatar: cropAvatar(req),
   };
   db.user.update({
     _id: req.user._id
   }, {
-    $set: data
+    $set: data,
   })
   .then(() => res.json(data))
   .catch(next);
@@ -139,8 +143,8 @@ saveCdn('cdn-public'),
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');
   }
-  let data = {
-    avatar: req.file.url
+  const data = {
+    avatar: cropAvatar(req),
   };
   db.user.update({
     _id: req.user._id
@@ -278,6 +282,43 @@ api.post('/guide', (req, res, next) => {
   let data = req.body;
   db.guide.insert(data)
   .then(() => res.json({}))
+  .catch(next);
+});
+
+api.post('/preference', (req, res, next) => {
+  let data = req.body;
+  validate('preference', data);
+  if (_.isEmpty(data)) {
+    throw new ApiError(400);
+  }
+  req.model('preference').set(req.user._id, data)
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.put('/preference/reset', (req, res, next) => {
+  let data = req.body;
+  validate('preference_reset', data);
+  req.model('preference').reset(req.user._id, data.type)
+  .then(() => res.json({}))
+  .catch(next);
+});
+
+api.get('/realname', (req, res, next) => {
+  new Realname(req.user._id).get()
+  .then(doc => {
+    if (!doc) {
+      return res.json(null);
+    }
+    const qiniu = req.model('qiniu').bucket('cdn-private');
+    return Promise.all(doc.realname_ext.idcard_photo.map(file => {
+      return qiniu.makeLink(file);
+    }))
+    .then(pics => {
+      doc.realname_ext.idcard_photo = pics;
+      return res.json(doc);
+    });
+  })
   .catch(next);
 });
 

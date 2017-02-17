@@ -14,7 +14,7 @@ export default class AttendanceRemind {
     this.remindSign(now, 0);
   }
 
-  remindSign(now, last_id) {
+  remindSign(now) {
     let criteria = {
       is_open: true,
       $or: [
@@ -32,16 +32,11 @@ export default class AttendanceRemind {
         },
       ]
     };
-    if (last_id) {
-      criteria._id = {
-        $gt: last_id
-      };
-    }
     let year = now.year();
     let month = now.month() + 1;
     let date = now.date();
-    this._findSetting(criteria)
-    .then(setting => {
+    let cursor = db.attendance.setting.find(criteria);
+    cursor.forEach((err, setting) => {
       if (!setting) {
         return;
       }
@@ -87,21 +82,10 @@ export default class AttendanceRemind {
           });
         });
       })
-      .then(() => companyId)
-      .catch(e => {
-        console.error(e);
-        return companyId;
-      });
-    })
-    .then(last_id => {
-      last_id && this.remindSign(now, last_id);
-    })
-    .catch(e => console.error(e));
+      .catch(e => console.error(e));
+    });
   }
 
-  _findSetting(criteria) {
-    return db.attendance.setting.findOne(criteria);
-  }
 
   _findCompanyMembers(companyId) {
     return db.company.findOne({

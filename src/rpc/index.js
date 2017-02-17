@@ -2,15 +2,25 @@ import RpcRoute from 'models/rpc-route';
 
 import accountRoutes from './account';
 import companyRoutes from './company';
+import planRoutes from './plan';
+import qrcodeRoutes from './qrcode';
 
-export default (socket) => {
+import QrcodeModel from './models/qrcode';
+import PlanAuthModel from './models/plan-auth';
 
-  const rpcRoute = new RpcRoute(socket);
-  const route = rpcRoute.route.bind(rpcRoute);
+export default (socket, _loader) => {
 
-  route('pid', () => process.pid);
+  const route = new RpcRoute(socket, '', _loader);
 
-  rpcRoute.use('/account', accountRoutes);
-  rpcRoute.use('/company', companyRoutes);
+  route.on('pid', () => process.pid);
+
+  route.use('/account', accountRoutes);
+  route.use('/company', companyRoutes);
+  route.use('/plan', planRoutes);
+  route.use('/qrcode', qrcodeRoutes);
+
+  // bind loader
+  _loader.loadModel('qrcode-model', QrcodeModel);
+  _loader.loadModel('plan-auth', PlanAuthModel);
 
 };

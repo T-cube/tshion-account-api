@@ -6,14 +6,26 @@ import fs from 'fs';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
-import { upload, saveCdn, randomAvatar, defaultAvatar } from 'lib/upload';
+import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { time } from 'lib/utils';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { companySanitization, companyValidation } from './schema';
 import Structure from 'models/structure';
+import CompanyLevel from 'models/company-level';
 import UserLevel from 'models/user-level';
 import { COMPANY_MEMBER_UPDATE } from 'models/notification-setting';
+import Plan from 'models/plan/plan';
+
+import {
+  MODULE_PROJECT,
+  MODULE_TASK,
+  MODULE_DOCUMENT,
+  MODULE_APPROVAL,
+  MODULE_ANNOUNCEMENT,
+  MODULE_ATTENDANCE,
+  MODULE_STRUCTURE,
+} from 'models/plan/auth-config';
 
 /* company collection */
 let api = express.Router();
@@ -48,8 +60,8 @@ api.post('/', (req, res, next) => {
   sanitizeValidateObject(companySanitization, companyValidation, data);
 
   let userLevel = new UserLevel(req.user);
-  userLevel.canCreateCompany().then(canCreateCompany => {
-    if (false == canCreateCompany) {
+  userLevel.canOwnCompany().then(canOwnCompany => {
+    if (false == canOwnCompany) {
       throw new ApiError(400, 'over_company_num');
     }
     return db.user.findOne({
@@ -95,6 +107,8 @@ api.post('/', (req, res, next) => {
       target_type: C.OBJECT_TYPE.COMPANY,
       company: company._id
     });
+    // init company level
+    CompanyLevel.init(company._id);
     // add company to user
     return db.user.update({
       _id: req.user._id
@@ -126,17 +140,23 @@ api.param('company_id', (req, res, next, id) => {
 api.get('/:company_id', (req, res, next) => {
   const members = req.company.members;
   const memberIds = _.pluck(members, '_id');
-  db.user.find({
-    _id: {$in: memberIds},
-  }, {
-    avatar: 1,
-  })
-  .then(users => {
+  let companyLevel = new CompanyLevel(req.company._id);
+  Promise.all([
+    companyLevel.getPlanInfo(true),
+    db.user.find({
+      _id: {$in: memberIds},
+    }, {
+      avatar: 1,
+    })
+  ])
+  .then(([planInfo, users]) => {
     _.each(members, m => {
       let user = _.find(users, u => u._id.equals(m._id));
       _.extend(m, user);
       m.avatar = m.avatar || defaultAvatar('user');
     });
+    req.company.plan = planInfo;
+    req.company.modules = companyLevel.getModulesByPlan(planInfo.plan);
     res.json(req.company);
   })
   .catch(next);
@@ -255,9 +275,8 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
 });
 
 api.put('/:company_id/logo', (req, res, next) => {
-  let { logo } = req.body;
-  let data = {
-    logo: logo,
+  const data = {
+    logo: cropAvatar(req),
   };
   db.company.update({
     _id: req.company._id
@@ -275,13 +294,13 @@ saveCdn('cdn-public'),
   if (!req.file) {
     throw new ApiError(400, 'file_type_error');
   }
-  let data = {
-    logo: req.file.url
+  const data = {
+    logo: cropAvatar(req),
   };
   db.company.update({
     _id: req.company._id
   }, {
-    $set: data
+    $set: data,
   })
   .then(() => res.json(data))
   .catch(next);
@@ -291,20 +310,30 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   let user_id = ObjectId(req.body.user_id);
   let company = req.company;
   if (req.user._id.equals(user_id)) {
-    throw new ApiError(400, 'can_not_transfer_to_yourself');
+    throw new ApiError(400, 'cannot_transfer_to_yourself');
   }
   if (!req.user._id.equals(company.owner)) {
-    throw new ApiError(403, null, 'only owner can carry out this operation');
+    throw new ApiError(403, null, 'not_company_owner');
   }
   let member = _.find(company.members, m => m._id.equals(user_id));
-  console.log('user_id=', user_id, 'member=', member);
   if (!member) {
     throw new ApiError(404, 'member_not_exists');
   }
-  db.user.find({_id: user_id})
+  new Plan(company._id).getPlanInfo().then(({certified}) => {
+    if (certified) {
+      throw new ApiError(400, 'certified_company_cannot_transfer');
+    }
+    return db.user.findOne({_id: user_id});
+  })
   .then(user => {
     if (!user) {
       throw new ApiError(404, 'user_not_exists');
+    }
+    return new UserLevel(user).canOwnCompany();
+  })
+  .then(canOwnCompany => {
+    if (false == canOwnCompany) {
+      throw new ApiError(400, 'over_own_company_num');
     }
     return Promise.all([
       db.company.update({
@@ -393,12 +422,29 @@ api.post('/:company_id/exit', (req, res, next) => {
   .catch(next);
 });
 
+let ckeckAuth = (_module) => (req, res, next) => {
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.getPlanInfo()
+  .then(planInfo => {
+    let modules = companyLevel.getModulesByPlan(planInfo.plan);
+    if (planInfo.status == C.PLAN_STATUS.EXPIRED && req.method != 'GET') {
+      throw new ApiError(400, 'plan_expired');
+    }
+    if (_module && !_.contains(modules, _module)) {
+      // throw new ApiError(400, 'module_permission_deny'); // TODO
+    }
+    next();
+  })
+  .catch(next);
+};
+
+api.use('/:company_id/project', ckeckAuth(MODULE_PROJECT), require('./project').default);
+api.use('/:company_id/task', ckeckAuth(MODULE_TASK), require('../task').default);
+api.use('/:company_id/document', ckeckAuth(MODULE_DOCUMENT), require('./document').default);
+api.use('/:company_id/approval', ckeckAuth(MODULE_APPROVAL), require('./approval').default);
+api.use('/:company_id/announcement', ckeckAuth(MODULE_ANNOUNCEMENT), require('./announcement').default);
+api.use('/:company_id/attendance', ckeckAuth(MODULE_ATTENDANCE), require('./attendance').default);
+api.use('/:company_id/structure', ckeckAuth(MODULE_STRUCTURE), require('./structure').default);
 api.use('/:company_id/activity', require('./activity').default);
-api.use('/:company_id/announcement', require('./announcement').default);
-api.use('/:company_id/approval', require('./approval').default);
-api.use('/:company_id/attendance', require('./attendance').default);
-api.use('/:company_id/document', require('./document').default);
 api.use('/:company_id/member', require('./member').default);
-api.use('/:company_id/project', require('./project').default);
-api.use('/:company_id/structure', require('./structure').default);
-api.use('/:company_id/task', require('../task').default);
+api.use('/:company_id/plan', require('./plan').default);

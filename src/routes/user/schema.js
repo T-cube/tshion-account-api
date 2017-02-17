@@ -67,6 +67,36 @@ const schema = {
       on: { type: 'boolean' },
     },
   },
+  preference: {
+    sanitization: {
+      'explore.sort_by': { type: 'string', optional: true },
+      'explore.view_type': { type: 'string', optional: true },
+      'weather.areaid': { type: 'string', optional: true },
+      'panel.announcement': { type: 'boolean', optional: true },
+      'panel.schedule': { type: 'boolean', optional: true },
+      'panel.weather': { type: 'boolean', optional: true },
+      'panel.locked': { type: 'boolean', optional: true },
+      'panel.open': { type: 'boolean', optional: true },
+    },
+    validation: {
+      'explore.sort_by': { type: 'string', optional: true },
+      'explore.view_type': { type: 'string', optional: true },
+      'weather.areaid': { type: 'string', optional: true },
+      'panel.announcement': { type: 'boolean', optional: true },
+      'panel.schedule': { type: 'boolean', optional: true },
+      'panel.weather': { type: 'boolean', optional: true },
+      'panel.locked': { type: 'boolean', optional: true },
+      'panel.open': { type: 'boolean', optional: true },
+    }
+  },
+  preference_reset: {
+    sanitization: {
+      type: { type: 'string' },
+    },
+    validation: {
+      type: { $enum: ['panel'] },
+    },
+  }
 };
 
 export const validate = buildValidator(schema);

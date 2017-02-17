@@ -8,7 +8,7 @@ import path from 'path';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { validate } from './schema';
-import { upload, saveCdn, isImageFile ,getCdnThumbnail } from 'lib/upload';
+import { upload, saveCdn, isImageFile, getCdnThumbnail } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo,
   generateToken, timestamp, indexObjectId, uniqObjectId } from 'lib/utils';
 import config from 'config';
@@ -368,7 +368,7 @@ saveCdn('cdn-file'),
   }
   getParentPaths(dir_id)
   .then(path => {
-    return Promise.map(req.files, file => {
+    return _.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
       _.extend(fileData, {
         [req.document.posKey]: req.document.posVal,
@@ -382,35 +382,6 @@ saveCdn('cdn-file'),
         path: undefined,
       });
       data.push(fileData);
-      // if (fileData.mimetype != 'text/plain') {
-      //   return;
-      // }
-      // return new Promise(function (resolve, reject) {
-      //   fs.readFile(file.path, 'utf8', (err, content) => {
-      //     if (err) {
-      //       reject(err);
-      //     }
-      //     resolve(content.replace(/\r\n/g, '<br>'));
-      //   });
-      // })
-      // .then(content => {
-      //   let file_path = file.path;
-      //   _.extend(fileData, {
-      //     content,
-      //     path: null,
-      //     url: null,
-      //     relpath: null,
-      //   });
-      //   data.push(fileData);
-      //   new Promise(function (resolve, reject) {
-      //     fs.unlink(file_path, (err) => {
-      //       if (err) {
-      //         reject(err);
-      //       }
-      //       resolve();
-      //     });
-      //   });
-      // });
     });
   })
   .then(() => createFile(req, data, dir_id))
@@ -431,12 +402,15 @@ saveCdn('cdn-file'),
   .catch(next);
 });
 
-api.put('/move', (req, res, next) => {
+api.post('/move', (req, res, next) => {
   let data = req.body;
   validate('move', data);
   let { files, dirs, dest_dir } = data;
   let moveInfo = _.clone(data);
   let parent_dir;
+  if (indexObjectId(dirs, dest_dir) >= 0) {
+    throw new ApiError(400, 'invalid_dest_dir');
+  }
   mapObjectIdToData(moveInfo, [
     ['document.dir', `name,files,parent_dir,dirs,path,${req.document.posKey}`, 'dest_dir'],
     ['document.dir', `name,parent_dir,${req.document.posKey}`, 'dirs'],
@@ -537,16 +511,9 @@ api.put('/move', (req, res, next) => {
 });
 
 api.get('/storage', (req, res, next) => {
-  let companyLevel = new CompanyLevel(req.company);
-  return companyLevel.getStorageInfo()
-  .then(storage => res.json(storage))
-  .catch(next);
-});
-
-api.get('/used-size', (req, res, next) => {
-  let companyLevel = new CompanyLevel(req.company);
-  return companyLevel.getUsedStorageSize(req.document.posKey == 'company_id' ? 'knowledge' : 'project', req.document.posKey)
-  .then(used_size => res.json({used_size}))
+  let companyLevel = new CompanyLevel(req.company._id);
+  return companyLevel.getStatus()
+  .then(status => res.json(status.levelInfo.file))
   .catch(next);
 });
 
@@ -626,7 +593,7 @@ function createFile(req, data, dir_id) {
   data.forEach(item => {
     total_size += parseFloat(item.size);
   });
-  let companyLevel = new CompanyLevel(req.company);
+  let companyLevel = new CompanyLevel(req.company._id);
   return companyLevel.canUpload(sizes).then(info => {
     if (!info.ok) {
       _.map(data, item => {
@@ -763,7 +730,7 @@ function deleteFiles(req, files, dirCheckAndPull) {
     });
   }))
   .then(() => {
-    let companyLevel = new CompanyLevel(req.company);
+    let companyLevel = new CompanyLevel(req.company._id);
     return companyLevel.updateUpload({
       size: incSize,
       target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
@@ -790,12 +757,12 @@ function checkMoveable(dest_dir, dirs, files) {
     let dirNameList = doc.dirs ? doc.dirs.map(item => item.name) : [];
     let fileNameList = doc.files ? doc.files.map(item => item.name) : [];
     dirs.forEach(dir => {
-      if (_.find(dirNameList, dir.name)) {
+      if (_.contains(dirNameList, dir.name)) {
         throw new ApiError(400, 'folder_name_exists');
       }
     });
     files.forEach(file => {
-      if (_.find(fileNameList, file.name)) {
+      if (_.contains(fileNameList, file.name)) {
         throw new ApiError(400, 'file_name_exists');
       }
     });
@@ -901,10 +868,20 @@ function generateFileToken(user_id, file_id) {
 
 function attachFileUrls(req, file, thumb_size) {
   const qiniu = req.model('qiniu').bucket('cdn-file');
-  const sizes = [16, 32, 48, 128];
-  let size = sizes[1];
-  if (_.contains(sizes), thumb_size) {
-    size = thumb_size;
+  if (!_.isString(thumb_size)) {
+    thumb_size = '32';
+  }
+  if (!/^\d+(,\d+)?/.test(thumb_size)) {
+    return Promise.reject('invalid thumbnail size!');
+  }
+  let sizes = thumb_size.split(',');
+  let thumb_width = parseInt(sizes[0]);
+  let thumb_height = parseInt(sizes[1]);
+  if (!thumb_height) {
+    thumb_height = thumb_width;
+  }
+  if (thumb_width > 1000 || thumb_height > 1000) {
+    return Promise.reject('thumbnail size should less than 1000!');
   }
   if (!file.cdn_key) {
     if (path.extname(file.name) == '.html') {
@@ -926,7 +903,7 @@ function attachFileUrls(req, file, thumb_size) {
   ];
   if (isImageFile(file.name)) {
     promises.push(
-      qiniu.getThumnailUrl(file.cdn_key, size).then(link => {
+      qiniu.getThumnailUrl(file.cdn_key, thumb_width, thumb_height).then(link => {
         file.thumbnail_url = link;
       })
     );

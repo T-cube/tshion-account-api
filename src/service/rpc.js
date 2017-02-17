@@ -1,12 +1,12 @@
 import RPC from '@ym/rpc';
-import config from 'config';
 
-import rpcRoutes from '../rpc';
+import initRoutes from '../rpc';
 
-RPC
-.register(config.get('rpc'))
-.then((clientRpc) => rpcRoutes(clientRpc))
-.catch(e => {
-  console.error(e);
-  // throw e;
-});
+export function initRPC(rpcConfig, _loader) {
+  return RPC
+  .register(rpcConfig)
+  .then(clientRpc => {
+    initRoutes(clientRpc, _loader);
+    return rpcConfig;
+  });
+}

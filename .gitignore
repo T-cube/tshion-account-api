@@ -26,12 +26,25 @@ build/Release
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
 
+# Local config
+config/local.*
+
 # Application runtime
 app
 runtime
 
 # User upload files
 public/cdn/upload
+public/cdn/resource/qrcode
 
 # temp
 temp/*
+
+# mac dstore
+.DS_Store
+
+# yarn
+.yarn.*
+yarn.lock
+yarn-error.*
+/.env

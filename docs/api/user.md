@@ -43,6 +43,17 @@ OUTPUT:
   locale: <String>,
   timezone: <String>,
   current_company: <ObjectId>,
+  preference: {
+    'explore.sort_by': String,
+    'explore.view_type': String,
+    'weather.areaid': String,
+    'panel.announcement': Boolean,
+    'panel.schedule': Boolean,
+    'panel.weather': Boolean,
+    'panel.locked': Boolean,
+    'panel.open': Boolean,
+    ...
+  }
 }
 ```
 
@@ -214,5 +225,50 @@ INPUT:
   code: <String>,                     // 验证码
   old_<type>: <String[optional]>,     // 旧账号，当原来未绑定账号时不需要指定此项
   new_<type>: <String>,               // 新账号
+}
+```
+
+### POST /user/preference
+
+修改用户的偏好设置
+
+INPUT:
+```javascript
+{
+  'explore.sort_by': String,
+  'explore.view_type': String,
+  'weather.areaid': String,
+  'panel.announcement': Boolean,
+  'panel.schedule': Boolean,
+  'panel.weather': Boolean,
+  ...
+}
+```
+
+### PUT /user/preference/reset
+
+恢复默认的设置
+
+INPUT:
+```javascript
+{
+  type: String, // panel 恢复仪表盘默认
+}
+```
+
+### GET /user/realname
+
+OUTPUT
+
+```javascript
+{
+  realname: String,
+  position: String,
+  phone: String,
+  address: String,
+  realname_ext: {
+    idcard: String,
+    idcard_photo: [Url]
+  }
 }
 ```

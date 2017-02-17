@@ -2,7 +2,7 @@ import _ from 'underscore';
 import Promise from 'bluebird';
 import schemaInspector from 'schema-inspector';
 import { ObjectId } from 'mongodb';
-import { isEmail } from './utils';
+import { idCodeValid, isEmail } from './utils';
 import { ApiError } from './error';
 import moment from 'moment-timezone';
 
@@ -44,8 +44,10 @@ const validationCustom = {
     if (!_.isArray(schema.$enum) || !schema.$enum.length) {
       return;
     }
-    if (-1 == schema.$enum.indexOf(candidate) && true !== schema.optional) {
-      this.report('invalid value: ' + candidate);
+    if (-1 == schema.$enum.indexOf(candidate)) {
+      if (candidate || true !== schema.optional) {
+        this.report('invalid value: ' + candidate);
+      }
     }
   },
   timezone: function(schema, candidate) {
@@ -63,11 +65,27 @@ const validationCustom = {
     }
   },
   mobile: function(schema, candidate) {
-    if (!_.isString(candidate) ||
-      !/^1[3|4|5|7|8]\d{9}$/.test(candidate)) {
+    if (_.isString(candidate) && candidate !== ''
+      && !/^1[3|4|5|7|8]\d{9}$/.test(candidate)) {
       this.report('invalid mobile: ' + candidate);
     }
-  }
+  },
+  idcard: function (schema, candidate) {
+    if (!schema.$idcard) {
+      return;
+    }
+    if (candidate && !idCodeValid(candidate)) {
+      this.report('invalid idcard: ' + candidate);
+    }
+  },
+  phone: function (schema, candidate) {
+    if (!schema.$phone) {
+      return;
+    }
+    if (candidate && !/^(\d{3,4}-?\d{7,8}(-\d{3,4})?|[1][3578][0-9]{9})$/.test(candidate)) {
+      this.report('invalid phone: ' + candidate);
+    }
+  },
 };
 schemaInspector.Validation.extend(validationCustom);
 schemaInspector.Sanitization.extend(sanitizationCustom);

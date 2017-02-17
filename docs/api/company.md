@@ -63,6 +63,16 @@ OUTPUT
     children: [<Structure>...],
   },
   projects: [<ObjectId>...],
+  plan: {}
+  modules: [
+    MODULE_PROJECT
+    MODULE_TASK
+    MODULE_DOCUMENT
+    MODULE_APPROVAL
+    MODULE_ANNOUNCEMENT
+    MODULE_ATTENDANCE
+    MODULE_STRUCTURE
+  ]
 }
 ```
 

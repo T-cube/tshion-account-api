@@ -8,8 +8,8 @@ export default class CompanyModel extends Model {
     super();
   }
 
-  fetchList(criteria, query) {
-    let { page, pagesize } = this.getPageInfo(query);
+  fetchList(props) {
+    let { page, pagesize, criteria } = props;
     return this.db.company.aggregate([
       { $match: criteria },
       {

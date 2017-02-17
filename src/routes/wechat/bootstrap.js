@@ -40,7 +40,7 @@ api.use('/', wechat(wechatConfig, function (req, res) {
     if (message.Event == 'subscribe') {
       if (message.EventKey && message.Ticket) {
         let key = message.EventKey.replace('qrscene_', '');
-        db.wechat.from.insert({
+        db.qrcode.scan.insert({
           openid,
           key,
           date: new Date(),

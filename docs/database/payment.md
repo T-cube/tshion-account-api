@@ -15,7 +15,7 @@ Currency: Number;
 
 ## Tables
 
-### Table `payment.product`
+### Collection payment.product
 
 商品信息
 
@@ -42,10 +42,10 @@ Currency: Number;
 | ---------- | ----- | ----------- | -------------- |
 | P0001 | Pro Edition Monthly Fee | 专业版月费 | 99.00 |
 | P0002 | Pro Edition Per User Fee | 专业版用户升级月费 | 9.90 |
-| P0001 | Cooperate Edition Monthly Fee | 专业版月费 | 199.00 |
-| P0002 | Cooperate Edition Per User Fee | 专业版用户升级月费 | 19.90 |
+| P0001 | Cooperate Edition Monthly Fee |  企业版月费 | 199.00 |
+| P0002 | Cooperate Edition Per User Fee | 企业版用户升级月费 | 19.90 |
 
-### Table `payment.product.history`
+### Collection payment.product.history
 
 商品历史版本，除列举字段，同商品信息
 
@@ -59,7 +59,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.discount`
+### Collection payment.discount
 
 优惠支付信息，可用于多个产品
 
@@ -69,7 +69,9 @@ Currency: Number;
   title: String,
   description: String,
   criteria: {
+    type: String,
     quantity: Number,               // 最低数量
+    times: Number,               // 最低数量
     total_fee: Currency,              // 最低金额
   },
   discount: {
@@ -87,7 +89,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.coupon`
+### Collection payment.coupon
 
 商家发布的优惠券
 
@@ -119,7 +121,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.coupon.item`
+### Collection payment.coupon.item
 
 已使用的优惠券
 
@@ -136,7 +138,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.balance`
+### Collection payment.balance
 
 记录帐户余额
 
@@ -147,10 +149,11 @@ Currency: Number;
   balance: Currency,                  // 帐户剩余金额
   freezed: Currency,                  // 冻结金额
   date_update: Date,
+  log: []
 }
 ```
 
-### Table `payment.order`
+### Collection payment.order
 
 记录用户充值、付款记录
 
@@ -162,11 +165,12 @@ Currency: Number;
   user_id: ObjectId,
   company_id: ObjectId,
   // 商品信息
+  times: Number,
   product: [{
+    _id: ObjectId,
     product_no: String,
     title: String,
     quantity: Number,
-    times: Number,
     price: Currency,
     sum: Currency,
     // 打折信息
@@ -178,8 +182,9 @@ Currency: Number;
   }...],
   // 支付信息
   charge_no: ObjectId               // 关联支付记录
-  original_price: Currency          // 原始价格
-  paid_amount: Currency,            // 支付金额
+  original_sum: Currency          // 原始价格
+  paid_sum: Currency,            // 支付金额
+  invoice_id: ObjectId,           // 发票id
   // 订单状态
   status: OrderStatus,
   comment: String,
@@ -196,33 +201,16 @@ Currency: Number;
 }
 ```
 
-### Table `payment.charge.discount`
-
-充值优惠
-
-```javascript
-{
-  _id: ObjectId,
-  discount_no: String,
-  title: String,
-  amount: Currency,
-  extra_amount: Currency,
-  date_create: Date,
-  date_update: Date,
-}
-```
-
-### Table `payment.charge.order`
+### Collection payment.charge.order
 
 帐户充值记录，实际转入资金，包含预充值或直接消费
 
 ```javascript
 {
   _id: ObjectId,
-  charge_no: String,                        // 帐户收入流水号
+  charge_no: String,                // 帐户收入流水号
   company_id: ObjectId,             // 关联公司
   amount: Currency,                 // 充值金额
-  invoice_issued: Boolean           // 发票是否已开具
   payment_type: PaymentType         // 支付类型
   payment_method: PaymentMethod,    // 支付方式
   order_no: String,                 // 关联订单
@@ -252,7 +240,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.invoice`
+### Collection payment.invoice
 
 发票记录跟踪记录信息
 
@@ -280,6 +268,7 @@ Currency: Number;
   }],
   // 地址信息
   address: {
+    _id: ObjectId,
     province: String,
     city: String,
     district: String,
@@ -300,7 +289,7 @@ Currency: Number;
 }
 ```
 
-### Table `payment.address`
+### Collection payment.address
 
 企业联系人收货地址列表，用于邮寄发票、礼品
 

@@ -10,12 +10,14 @@ import './bootstrap';
 
 import Promise from 'bluebird';
 import http from 'http';
+import fs from 'fs';
 import express from 'express';
 import socketio from 'socket.io';
 import oauthServer from 'oauth2-server';
 import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
+import git from 'git-rev-sync';
 import session from 'express-session';
 const sessionRedis = require('connect-redis')(session);
 
@@ -29,7 +31,7 @@ import corsHandler from 'lib/cors';
 import SocketServer from 'service/socket';
 import ScheduleServer from 'service/schedule';
 import { SocketClient } from 'service/socket';
-import rpc from 'service/rpc';
+import { initRPC } from 'service/rpc';
 import Notification from 'models/notification';
 import Account from 'models/account';
 import Document from 'models/document';
@@ -41,6 +43,9 @@ import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import NotificationSetting from 'models/notification-setting';
 import WechatUtil from 'lib/wechat-util';
 import UserActivity from 'models/user-activity';
+import Preference from 'models/preference';
+import TempFile from 'models/temp-file';
+import Payment from 'models/plan/payment';
 import C from 'lib/constants';
 
 // welcome messages and output corre config
@@ -49,9 +54,12 @@ console.log();
 console.log('--------------------------------------------------------------------------------');
 console.log('Tlifang API Service v%s', version);
 console.log('--------------------------------------------------------------------------------');
-console.log('NODE_ENV=' + process.env.NODE_ENV);
+console.log(`GIT_REV=${git.short()}`);
+const NODE_ENV = process.env.NODE_ENV || 'default';
+console.log(`NODE_ENV=${NODE_ENV}`);
 console.log('loaded config:');
-console.log(JSON.stringify(_.pick(config, ['apiUrl', 'webUrl', 'server', 'database']), (key, value) => {
+const selectedConfigItems = ['apiUrl', 'webUrl', 'server', 'database'];
+console.log(JSON.stringify(_.pick(config, selectedConfigItems), (key, value) => {
   return _.isArray(value) ? value.join(';') : value;
 }, 2));
 console.log('initializing service...');
@@ -80,6 +88,17 @@ app.loadModel('notification-setting', NotificationSetting);
 app.loadModel('schedule', ScheduleServer);
 app.loadModel('socket', SocketServer, io);
 app.loadModel('user-activity', UserActivity);
+app.loadModel('preference', Preference);
+app.loadModel('temp-file', TempFile);
+app.loadModel('payment', Payment);
+
+let _loader = {};
+app.bindLoader(_loader);
+initRPC(config.get('rpc'), _loader).then(cfg => {
+  console.log(`rpc connected to ${cfg.protocol}://${cfg.hostname}:${cfg.port}`);
+}).catch(e => {
+  console.error('rpc:', e);
+});
 
 // model loader
 app.use((req, res, next) => {

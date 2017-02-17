@@ -10,7 +10,7 @@ import C from 'lib/constants';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation } from './schema';
 import { checkUserType, checkUserTypeFunc } from '../utils';
-import { isEmail, time } from 'lib/utils';
+import { maskEmail, maskMobile, isEmail, isMobile, time } from 'lib/utils';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
 import {
@@ -49,29 +49,50 @@ api.get('/', (req, res, next) => {
 });
 
 api.get('/level-info', (req, res, next) => {
-  let companyLevel = new CompanyLevel(req.company);
-  companyLevel.getMemberLevelInfo().then(info => {
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.getStatus().then(status => {
+    let {levelInfo, planInfo, setting} = status;
+    let info = {
+      max_members: setting.default_member + (planInfo.member_count || 0),
+      member_num: levelInfo.member.count,
+    };
     return res.json(info);
   })
   .catch(next);
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
-  let companyLevel = new CompanyLevel(req.company);
-  companyLevel.canAddMember().then(isCanAddmement => {
-    if (!isCanAddmement) {
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.canAddMember().then(isCanAddMember => {
+    if (!isCanAddMember) {
       throw new ApiError(400, 'over_member_num');
     }
   })
   .then(() => {
     let data = req.body;
+    const { id } = data;
+    let type;
+    if (isEmail(id)) {
+      type = 'email';
+    } else if (isMobile(id)) {
+      type = 'mobile';
+    } else {
+      throw new ApiError(400, 'invalid_account');
+    }
+    data[type] = id;
+    delete data.id;
     sanitizeValidateObject(sanitization, validation, data);
     data.type = C.COMPANY_MEMBER_TYPE.NORMAL;
     let member = _.find(req.company.members, m => m.email == data.email);
     if (member) {
       throw new ApiError(400, 'member_exists');
     }
-    return db.user.findOne({email: data.email}, {_id: 1, name: 1})
+    return db.user.findOne({
+      [type]: id,
+    }, {
+      _id: 1,
+      name: 1,
+    })
     .then(user => {
       data.status = C.COMPANY_MEMBER_STATUS.PENDING;
       if (user) {
@@ -110,7 +131,8 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
           _id: req.company._id,
         }, {
           $push: {members: data}
-        })
+        }),
+        CompanyLevel.incMemberCount(req.company._id, 1),
       ]);
     })
     .then(() => res.json(data));
@@ -119,33 +141,45 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
 });
 
 api.post('/check', (req, res, next) => {
-  let email = req.body.email;
-  if (!isEmail(email)) {
-    return res.json({});
+  const { id } = req.body;
+  let type;
+  if (isEmail(id)) {
+    type = 'email';
+  } else if (isMobile(id)) {
+    type = 'mobile';
+  } else {
+    throw new ApiError(400, 'invalid_account');
   }
-  let member = _.find(req.company.members, m => m.email == email);
   db.user.findOne({
-    email: email
+    [type]: id,
   }, {
     _id: 0,
     name: 1,
     avatar: 1,
     email: 1,
+    mobile: 1,
   })
   .then(doc => {
     let data = {
-      is_registered: !!doc
+      is_registered: !!doc,
+      type,
     };
+    let member;
     if (doc) {
-      _.extend(data, doc);
+      _.extend(data, {
+        email: maskEmail(doc.email),
+        mobile: maskMobile(doc.mobile),
+        avatar: doc.avatar,
+        name: doc.name,
+      });
+      member = _.find(req.company.members, m => m._id.equals(doc._id));
     }
+    data.is_member = !!member;
     if (member) {
       data.name = member.name;
-      data.is_member = true;
       data.status = member.status;
-    } else {
-      data.is_member = false;
     }
+    console.log(typeof !!member);
     res.json(data);
   })
   .catch(next);
@@ -266,6 +300,7 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
     }, {
       multi: true
     }),
+    CompanyLevel.incMemberCount(req.company._id, -1),
     save(req),
   ])
   .then(() => {
@@ -313,6 +348,7 @@ api.post('/exit', (req, res, next) => {
     }, {
       upsert: true
     }),
+    CompanyLevel.incMemberCount(req.company._id, -1),
   ])
   .then(() => {
     res.json({});
