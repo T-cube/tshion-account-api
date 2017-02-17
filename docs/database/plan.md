@@ -12,7 +12,7 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 
 ## Tables
 
-### Collection `plan.trial`
+### Collection plan.trial
 
 团队试用信息
 
@@ -28,7 +28,7 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 }
 ```
 
-### Collection `plan.paid`
+### Collection plan.paid
 
 付费团队信息
 
@@ -44,7 +44,7 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 }
 ```
 
-### Collection `plan.auth`
+### Collection plan.auth
 
 公司升级信息
 

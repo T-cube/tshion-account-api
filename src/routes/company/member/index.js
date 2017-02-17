@@ -79,6 +79,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
     } else {
       throw new ApiError(400, 'invalid_account');
     }
+    data[type] = id;
     delete data.id;
     sanitizeValidateObject(sanitization, validation, data);
     data.type = C.COMPANY_MEMBER_TYPE.NORMAL;
