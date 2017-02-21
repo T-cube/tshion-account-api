@@ -12,9 +12,8 @@ export default class CompanyCouponModel extends Model {
     super(props);
   }
 
-  pageCompanyCoupon(props) {
-    let {company_id} = props;
-    let { page, pagesize } = this.getPageInfo(props);
+  pageCompanyCoupon(company_id, query) {
+    let { page, pagesize } = this.getPageInfo(query);
     return this.db.payment.company.coupon.findOne({
       _id: company_id
     })
