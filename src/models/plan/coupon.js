@@ -35,6 +35,7 @@ export default class Coupon {
         discount: 1,
         period: 1,
         coupon_no: 1,
+        products: 1
       })
       .then(coupons => {
         coupons.forEach(coupon => {

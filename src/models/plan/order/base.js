@@ -150,7 +150,7 @@ export default class BaseOrder {
   isCouponAvailable(coupon) {
     let { products } = coupon;
     let result = false;
-    if (!_.isArray(products)) {
+    if (!products.length) {
       result = !!this._getOrderDiscount(coupon);
     } else {
       products.forEach(product_id => {
@@ -182,7 +182,7 @@ export default class BaseOrder {
         return;
       }
       let { products } = coupon;
-      if (coupon.products === null || coupon.products.length == 2) {
+      if (!products.length) {
         this._persistOrderDiscount({coupon: coupon._id}, this._getOrderDiscount(coupon));
       } else {
         _.filter(this.products, product => indexObjectId(products, product._id) > -1).map(product => {

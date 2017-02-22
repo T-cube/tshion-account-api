@@ -46,8 +46,8 @@ route.on('/detail/member', (query) => {
 });
 
 route.on('/detail/coupon', (query) => {
-  let _id = getObjectId(query, '_id');
-  return companyCoupon.pageCompanyCoupon(_id, query);
+  let company_id = getObjectId(query, '_id');
+  return companyCoupon.pageCompanyCoupon(company_id, query);
 });
 
 function fetchSubInfo(target, query) {
