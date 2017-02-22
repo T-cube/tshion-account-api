@@ -27,20 +27,77 @@ export default class ProductModel extends Model {
   }
 
   update(_id, fields) {
-    fields.date_update = new Date();
-    if (!fields.discount.length) {
-      return this.db.payment.product.update({_id}, {
-        $set: fields
+    let date_update = new Date();
+    return this.db.payment.product.findOne({_id})
+    .then(lastVersionProduct => {
+      if (!lastVersionProduct) {
+        throw new ApiError(400, 'invalid product');
+      }
+      let originalProduct = _.pick(lastVersionProduct, ..._.keys(fields));
+      if (_.isEqual(originalProduct, fields)) {
+        return false;
+      }
+      delete lastVersionProduct._id;
+      lastVersionProduct.date_update = date_update;
+      return this.db.payment.product.history.insert(lastVersionProduct)
+      .then(() => true);
+    })
+    .then(isModified => {
+      if (!isModified) {
+        return {
+          ok: 1,
+          nModified: 0
+        };
+      }
+      fields.date_update = date_update;
+      let promise;
+      if (!fields.discount.length) {
+        promise = Promise.resolve([]);
+      } else {
+        promise = this.db.payment.discount.find({
+          _id: {$in: fields.discount},
+          status: C.DISCOUNT_STATUS.NORMAL,
+        }, {_id: 1})
+        .then(discounts =>  _.pluck(discounts, '_id'));
+      }
+      return promise.then(discounts => {
+        fields.discounts = discounts;
+        return this.db.payment.product.update({_id}, {
+          $set: fields,
+          $inc: {
+            version: 1
+          }
+        });
       });
-    }
-    return this.db.payment.discount.find({
-      _id: {$in: fields.discount},
-      status: C.DISCOUNT_STATUS.NORMAL,
-    }, {_id: 1})
-    .then(discounts => {
-      fields.discount = _.pluck(discounts, '_id');
-      return this.db.payment.product.update({_id}, {
-        $set: fields
+    });
+  }
+
+  getHistory(product_id, {page, pagesize}) {
+    return this.db.payment.product.findOne({
+      _id: product_id
+    }, {
+      product_id: 1
+    })
+    .then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid product');
+      }
+
+      let criteria = {product_id: doc.product_id};
+      return Promise.all([
+        this.db.payment.product.history.find(criteria, {_id: 0})
+        .sort({version: -1})
+        .skip(page * pagesize)
+        .limit(pagesize),
+        this.db.payment.product.history.count(criteria)
+      ])
+      .then(([list, totalRows]) => {
+        return {
+          list,
+          page,
+          pagesize,
+          totalRows
+        };
       });
     });
   }

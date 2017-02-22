@@ -36,6 +36,34 @@ QUERY
 }
 ```
 
+### /plan/product/history
+
+获取商品的历史版本
+
+QUERY
+```javascript
+{
+  product_id: ObjectId,
+  page: Int,
+  pagesize: Int,
+}
+```
+
+OUTPUT
+```javascript
+{
+  list: [{
+    title: String,
+    description: String,
+    version: Int,
+    ...
+  }...],
+  page: Int,
+  pagesize: Int,
+  totalRows: Int,
+}
+```
+
 <!-- ### /plan/product/discount/add
 
 QUERY
