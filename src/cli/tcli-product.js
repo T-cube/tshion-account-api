@@ -30,6 +30,7 @@ if (program.init) {
         product_id: C.TEAMPLAN.PRO.toUpperCase() + '_' + C.PRODUCT_NO.PLAN,
         original_price: '9900',
         discount: [],
+        version: 0,
         amount_min: null,
         amount_max: null,
         stock_total: null,
@@ -45,6 +46,7 @@ if (program.init) {
         product_id: C.TEAMPLAN.ENT.toUpperCase() + '_' + C.PRODUCT_NO.PLAN,
         original_price: '19900',
         discount: [],
+        version: 0,
         amount_min: null,
         amount_max: null,
         stock_total: null,
@@ -60,6 +62,7 @@ if (program.init) {
         product_id: C.TEAMPLAN.PRO.toUpperCase() + '_' + C.PRODUCT_NO.MEMBER,
         original_price: '990',
         discount: [],
+        version: 0,
         amount_min: null,
         amount_max: null,
         stock_total: null,
@@ -75,6 +78,7 @@ if (program.init) {
         product_id: C.TEAMPLAN.ENT.toUpperCase() + '_' + C.PRODUCT_NO.MEMBER,
         original_price: '1990',
         discount: [],
+        version: 0,
         amount_min: null,
         amount_max: null,
         stock_total: null,
@@ -84,6 +88,7 @@ if (program.init) {
       },
     ]);
   })
+  .then(() => db.payment.product.history.remove({}))
   .then(() => {
     console.log('payment.product inserted.');
     process.exit();
