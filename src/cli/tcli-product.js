@@ -8,11 +8,12 @@ import C from 'lib/constants';
 
 program
   .option('--init', 'insert products')
+  .option('--initversion', 'insert products version to version 0')
   .parse(process.argv);
 
 console.log('database initialization');
 
-if (!program.init) {
+if (!program.init && !program.initversion) {
   program.outputHelp();
 }
 
@@ -88,4 +89,21 @@ if (program.init) {
     process.exit();
   });
 
+}
+
+if (program.initversion) {
+  Promise.all([
+    db.payment.product.update({}, {
+      $set: {
+        version: 0
+      }
+    }, {
+      multi: true
+    }),
+    db.payment.product.history.remove({})
+  ])
+  .then(() => {
+    console.log('products version init successful.');
+    process.exit();
+  });
 }

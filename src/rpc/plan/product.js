@@ -4,6 +4,7 @@ import { ApiError } from 'lib/error';
 import RpcRoute from 'models/rpc-route';
 import { validate } from '../schema/plan';
 import ProductModel from '../models/product';
+import { getObjectId } from '../utils';
 
 const route = RpcRoute.router();
 export default route;
@@ -29,7 +30,15 @@ route.on('/detail', (query) => {
 
 route.on('/update', query => {
   validate('update_product', query);
-  return productModel.update(query.product_id, query);
+  let { product_id } = query;
+  delete query.product_id;
+  return productModel.update(product_id, query);
+});
+
+route.on('/history', (query) => {
+  let product_id = getObjectId(query, 'product_id');
+  let { page, pagesize } = productModel.getPageInfo(query);
+  return productModel.getHistory(product_id, {page, pagesize});
 });
 
 // route.on('/discount/add', query => {
