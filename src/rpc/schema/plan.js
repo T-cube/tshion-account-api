@@ -101,7 +101,7 @@ const schema = {
       discount: {
         type: 'array',
         uniqueness: true,
-        item: { $objectId: 1 },
+        items: { $objectId: 1 },
       },
       stock_total: { type: ['integer', null] },
       stock_current: { type: ['integer', null] },
@@ -116,7 +116,7 @@ const schema = {
       discount: {
         type: 'array',
         uniqueness: true,
-        item: { $objectId: 1 },
+        items: { $objectId: 1 },
       },
       stock_total: { type: ['integer', null], min: 1 },
       stock_current: { type: ['integer', null], min: 1},
