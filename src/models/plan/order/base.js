@@ -26,12 +26,12 @@ export default class BaseOrder {
       throw new Error('invalid params');
     }
     let { user_id, company_id, planStatus } = props;
+    this.setTimes(0);
     this._planStatus = planStatus;
     this.user_id = user_id;
     this.company_id = company_id;
     this.order_type = null;
     this.products = [];
-    this.times = 0;
     this.original_sum = 0;
     this.paid_sum = 0;
     this.coupon = undefined;

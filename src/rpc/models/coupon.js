@@ -32,18 +32,23 @@ export default class CouponModel extends Model {
   }
 
   create(data) {
-    data = this._parseData(data);
-    data.date_create = data.date_update = new Date();
-    data.status = C.COUPON_STATUS.NORMAL;
-    data.coupon_no = ('C' + ((+new Date()).toString(32).substr(2) + Math.random().toString(32).substr(2)).toUpperCase()).substr(0, 10);
-    return this.db.payment.coupon.insert(data);
+    return this._parseData(data)
+    .then(data => {
+      data.date_create = data.date_update = new Date();
+      data.status = C.COUPON_STATUS.NORMAL;
+      data.coupon_no = ('C' + ((+new Date()).toString(32).substr(2) + Math.random().toString(32).substr(2)).toUpperCase()).substr(0, 10);
+      return this.db.payment.coupon.insert(data);
+    });
   }
 
   update(_id, data) {
-    data = this._parseData(data);
-    data.date_update = new Date();
-    return this.db.payment.coupon.update({_id}, {
-      $set: data
+    return this._parseData(data)
+    .then(data => {
+      data = this._parseData(data);
+      data.date_update = new Date();
+      return this.db.payment.coupon.update({_id}, {
+        $set: data
+      });
     });
   }
 
@@ -76,13 +81,31 @@ export default class CouponModel extends Model {
   // }
 
   _parseData(data) {
-    let {order_type, discount, criteria} = data;
+    let {order_type, discount, criteria, products} = data;
     if (_.contains([C.ORDER_TYPE.NEWLY, C.ORDER_TYPE.RENEWAl], order_type) && discount.type == 'times') {
       throw new ApiError(400, 'only newly and renewal can have times discount');
     }
     data.criteria = _.pick(criteria, 'type', criteria.type);
     data.discount = _.pick(discount, 'type', discount.type);
-    return data;
+    if (discount.type != 'number') {
+      return Promise.resolve(data);
+    }
+    // 非人数续费不能有数量的优惠
+    if (!products.length) {
+      throw new ApiError(400, 'plan cannot has number discount');
+    }
+    return this.db.payment.product.count({
+      _id: {
+        $in: products
+      },
+      product_no: C.PRODUCT_NO.PLAN
+    })
+    .then(planProductCount => {
+      if (planProductCount > 0) {
+        throw new ApiError(400, 'plan cannot has number discount');
+      }
+      return data;
+    });
   }
 
 }

@@ -25,7 +25,7 @@ export default class NewlyOrder extends Base {
     member_count = member_count || 0;
     this.plan = plan;
     this.member_count = member_count;
-    this.times = times;
+    this.setTimes(times);
     return PlanProduct.init({plan, times, member_count})
     .then(planProduct => {
       this.products = planProduct.getProducts();
