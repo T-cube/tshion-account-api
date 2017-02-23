@@ -163,75 +163,36 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
   validate('authorise', input);
   let password = input.password;
   let _token = null;
-  let redis = req.model('redis');
-  let wrong = `${req.user._id}_pwd_wrong_times`;
 
-  redis.exists(wrong).then(result => {
-    if(!result){
-      login();
-    }else {
-      redis.get(wrong).then(data => {
-        if(data.times < 2) {
-          login();
-        }else {
-          if(req.body.captcha == data.captcha){
-            login();
-          }else {
-            throw new ApiError('');
-          }
-        }
-      });
+  db.user.findOne({_id: req.user._id})
+  .then(user => {
+    return comparePassword(password, user.password);
+  })
+  .then(result => {
+    if (!result) {
+      throw new ApiError('401', 'invalid_password');
     }
-  }).catch(next);
-
-  function login() {
-    db.user.findOne({_id: req.user._id})
-    .then(user => {
-      return comparePassword(password, user.password);
-    })
-    .then(result => {
-      if (!result) {
-        redis.exists(wrong).then(result => {
-          if(result) {
-            redis.get(wrong).then(data => {
-              if(data.times > 2) {
-
-              }else {
-                redis.set(wrong, {times: data.times+1}).then(() => {
-                  redis.expire(wrong, 60* 60);
-                });
-              }
-            });
-          }else {
-            redis.set(wrong, {time: 1}).then(() => {
-              redis.expire(wrong, 60 * 60);
-            });
-          }
-        });
-        throw new ApiError('401', 'invalid_password');
-      }
-      return generateToken(48);
-    })
-    .then(token => {
-      _token = token;
-      let data = {
-        user_id: req.user._id,
-        token: token,
-        expires: new Date(timestamp() + 60000),
-      };
-      return db.auth_check_token.update({
-        user_id: req.user._id,
-      }, data, {
-        upsert: true,
-      });
-    })
-    .then(() => {
-      res.json({
-        auth_check_token: _token,
-      });
-    })
-    .catch(next);
-  }
+    return generateToken(48);
+  })
+  .then(token => {
+    _token = token;
+    let data = {
+      user_id: req.user._id,
+      token: token,
+      expires: new Date(timestamp() + 60000),
+    };
+    return db.auth_check_token.update({
+      user_id: req.user._id,
+    }, data, {
+      upsert: true,
+    });
+  })
+  .then(() => {
+    res.json({
+      auth_check_token: _token,
+    });
+  })
+  .catch(next);
 });
 
 api.post('/change-pass', oauthCheck(), (req, res, next) => {
