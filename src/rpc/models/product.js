@@ -28,10 +28,17 @@ export default class ProductModel extends Model {
 
   update(_id, fields) {
     let date_update = new Date();
+
+    // 非人数续费不能有数量的优惠
+    let canHasNumberDiscount = true;
+
     return this.db.payment.product.findOne({_id})
     .then(lastVersionProduct => {
       if (!lastVersionProduct) {
         throw new ApiError(400, 'invalid product');
+      }
+      if (lastVersionProduct.product_no == C.PRODUCT_NO.PLAN) {
+        canHasNumberDiscount = false;
       }
       let originalProduct = _.pick(lastVersionProduct, ..._.keys(fields));
       if (_.isEqual(originalProduct, fields)) {
@@ -39,6 +46,7 @@ export default class ProductModel extends Model {
       }
       delete lastVersionProduct._id;
       lastVersionProduct.date_update = date_update;
+
       return this.db.payment.product.history.insert(lastVersionProduct)
       .then(() => true);
     })
@@ -57,8 +65,18 @@ export default class ProductModel extends Model {
         promise = this.db.payment.discount.find({
           _id: {$in: fields.discount},
           status: C.DISCOUNT_STATUS.NORMAL,
-        }, {_id: 1})
-        .then(discounts =>  _.pluck(discounts, '_id'));
+        }, {
+          _id: 1,
+          discount: 1
+        })
+        .then(discounts => {
+          canHasNumberDiscount || discounts.forEach(item => {
+            if (item.discount.type == 'number') {
+              throw new ApiError(400, 'plan cannot has number discount');
+            }
+          });
+          return _.pluck(discounts, '_id');
+        });
       }
       return promise.then(discounts => {
         fields.discounts = discounts;
