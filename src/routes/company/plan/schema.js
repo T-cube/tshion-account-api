@@ -31,7 +31,6 @@ const addressWithoutCountrySchema = {
       province: { type: 'string' },
       city: { type: 'string' },
       district: { type: 'string' },
-      zipcode: { type: 'string', optional: true },
       address: { type: 'string' },
     }
   },
@@ -41,7 +40,6 @@ const addressWithoutCountrySchema = {
       province: { type: 'string' },
       city: { type: 'string' },
       district: { type: 'string' },
-      zipcode: { type: 'string', optional: true },
       address: { type: 'string' },
     }
   },
@@ -309,11 +307,13 @@ const schema = {
   address: {
     sanitization: {
       location: addressWithoutCountrySchema.sanitization,
+      zipcode: { type: 'string', optional: true },
       contact: { type: 'string' },
       phone: { type: 'string' },
     },
     validation: {
       location: addressWithoutCountrySchema.validation,
+      zipcode: { type: 'string', optional: true },
       contact: { type: 'string' },
       phone: { $phone: 1 },
     },
