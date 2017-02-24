@@ -313,7 +313,6 @@ POST
       province: String,
       city: String,
       district: String,
-      postcode: String,
       address: String,
     },
     // 实名信息，仅在专业版认证时需要
@@ -346,7 +345,6 @@ POST
       province: String,
       city: String,
       district: String,
-      postcode: String,
       address: String,
     },
     industry: {
@@ -830,8 +828,8 @@ OUTPUT
     province: String,
     city: String,
     district: String,
-    postcode: String,
     address: String,
+    postcode: String,
     contact: String,
     phone: String,
   },
