@@ -206,6 +206,7 @@ const schema = {
     sanitization: {
       invoice_id: {$objectId: 1},
       status: {type: 'string'},
+      comment: {type: 'string'},
       operator_id: {$objectId: 1},
     },
     validation: {
@@ -213,6 +214,7 @@ const schema = {
       status: {
         $enum: [C.INVOICE_STATUS.VERIFING, C.INVOICE_STATUS.REJECTED, C.INVOICE_STATUS.FINISHED]
       },
+      comment: {type: 'string'},
       operator_id: {$objectId: 1},
     },
   },

@@ -43,6 +43,7 @@ QUERY
 {
   invoice_id: ObjectId,
   status: String, // verified, rejected, finished
+  comment: String // 操作的说明
 }
 ```
 
