@@ -6,6 +6,7 @@ import db from 'lib/database';
 import { getPageInfo, generateToken, getClientIp } from 'lib/utils';
 import C, {ENUMS} from 'lib/constants';
 import { ApiError } from 'lib/error';
+import { authCheck } from 'lib/middleware';
 import { validate } from './schema';
 import PlanOrder from 'models/plan/plan-order';
 import OrderFactory from 'models/plan/order';
@@ -63,6 +64,11 @@ api.get('/pending', (req, res, next) => {
 });
 
 api.post('/:order_id/pay', (req, res, next) => {
+  if (req.body.payment_method == 'balance') {
+    return authCheck()(req, res, next);
+  }
+  next();
+}, (req, res, next) => {
   let data = req.body;
   validate('pay', data);
   let {payment_method} = data;
