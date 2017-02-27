@@ -115,36 +115,3 @@ export function authCodeCheck(req, next) {
     next(null, false);
   }
 }
-
-export function getCaptchaByToken(req, res, next) {
-  let captcha = req.model('canvas-captcha');
-  let username = req.query.username;
-  let client_id = req.query.client_id;
-  let captchaToken = req.query.captchaToken;
-  let captchaKey = `${username}_${client_id}`;
-  let redis = req.model('redis');
-  redis.hmget(captchaKey).then(captchaData => {
-    if(captchaData){
-      if(captchaToken !== captchaData.captchaToken) {
-        generateToken(48).then(newCaptchaToken => {
-          redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: newCaptchaToken}).then(() => {
-            redis.expire(captchaKey, 60 * 60);
-            throw new ApiError(400, 'missing_captcha_token', newCaptchaToken);
-          });
-        });
-      }else {
-        captcha.create().then(captchaContent => {
-          redis.hmset(captchaKey, {times: parseInt(captchaData.times), captchaToken: captchaData.captchaToken, captcha: captchaContent.captcha}).then(() => {
-            redis.expire(captchaKey, 60 * 60);
-            res.status(200);
-            res.set('content-type', 'image/png');
-            return captchaContent.canvas.pngStream().pipe(res);
-          });
-        });
-      }
-    }else {
-      throw new ApiError(400, 'no_need_captcha');
-    }
-  })
-  .catch(next);
-}

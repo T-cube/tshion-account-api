@@ -3,11 +3,16 @@ import Promise from 'bluebird';
 
 export default class Captcha {
 
-  constructor() {
+  /**
+   * constructor
+   * @param {Object} options include captchaNumber, lineNumber, circleNumber
+   */
+
+  constructor(options) {
     let self = this;
-    self.captchaNumber = 4;
-    self.lineNumber = 4;
-    self.circleNumber = 4;
+    self.captchaNumber = options.captchaNumber;
+    self.lineNumber = options.lineNumber;
+    self.circleNumber = options.circleNumber;
   }
 
   create() {
@@ -58,7 +63,7 @@ export default class Captcha {
         ctx.lineWidth = 2;
         ctx.stroke();
       }
-      resolve({captcha, canvas});
+      resolve({captcha, canvas: canvas.toDataURL()});
     });
   }
 }

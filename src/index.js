@@ -138,30 +138,14 @@ app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 app.use('/oauth/login', oauthRoute.login);
 app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
-app.all('/oauth/token', (req, res, next) => {
-  oauthModel.captchaCheck(req, res, next);
-}, app.oauth.grant(), (req, res, next) => {
+app.all('/oauth/token', oauthModel.captchaCheck(), app.oauth.grant(), (req, res, next) => {
   let redis = req.model('redis');
   let captchaKey = `${req.body.username}_${req.body.client_id}`;
   redis.delete(captchaKey);
   req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
-}, (err, req, res, next) => {
-  oauthModel.wrongCheck(req, res, next).then(() => {
-    let {body: {grant_type}} = req;
-    if (grant_type == 'password') {
-      oauthModel._getUser(req.body.username)
-      .then(user => {
-        req.user = user;
-        return req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN_FAIL);
-      });
-    }
-    next(err);
-  })
-  .catch(next);
-});
+}, oauthModel.errorSolve());
 app.all('/oauth/revoke', oauthRoute.revokeToken);
 
-app.get('/oauth/captcha', oauthRoute.getCaptchaByToken);
 
 // use nginx for static resource
 // app.use('/', express.static('./public'));

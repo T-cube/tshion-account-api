@@ -222,7 +222,7 @@ module.exports = {
     captcha:{
       captchaNumber: 4,
       lineNumber: 4,
-      circleNumbe: 4,
+      circleNumber: 4,
     },
   },
   download: {

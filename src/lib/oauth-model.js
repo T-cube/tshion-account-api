@@ -3,6 +3,7 @@ import Promise from 'bluebird';
 import Joi from 'joi';
 import _ from 'underscore';
 import { ApiError } from 'lib/error';
+import C from 'lib/constants';
 
 import db from 'lib/database';
 import { comparePassword, camelCaseObjectKey, generateToken } from 'lib/utils';
@@ -174,42 +175,48 @@ export default {
   },
 
   captchaCheck(req, res, next) {
-    let captchaKey = `${req.body.username}_${req.body.client_id}`;
-    let redis = req.model('redis');
-    redis.hmget(captchaKey).then(captchaData => {
-      if(captchaData) {
-        if(parseInt(captchaData.times) > 2) {
-          if(!req.body.captcha) {
-            generateToken(48).then(captchaToken => {
-              redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
-                redis.expire(captchaKey, 60 * 60);
-                throw new ApiError(400, 'login_need_captcha', captchaToken);
+    return (req, res, next) => {
+      let captchaKey = `${req.body.username}_${req.body.client_id}`;
+      let redis = req.model('redis');
+      redis.hmget(captchaKey).then(captchaData => {
+        if(captchaData) {
+          if(parseInt(captchaData.times) > 2) {
+            if(!req.body.captcha) {
+              generateToken(48).then(captchaToken => {
+                redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
+                  redis.expire(captchaKey, 60 * 60);
+                  throw new ApiError(400, 'login_need_captcha', captchaToken);
+                }).catch(next);
               });
-            });
-          }
-          if(req.body.captcha.toLowerCase() == captchaData.captcha.toLowerCase()) {
-            next();
+            }else {
+              redis.hmset(captchaKey, {captchaToken: '', captcha: ''});
+              if(req.body.captcha.toLowerCase() == captchaData.captcha.toLowerCase() && req.body.captchaToken == captchaData.captchaToken) {
+                next();
+              }else {
+                generateToken(48).then(captchaToken => {
+                  redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
+                    redis.expire(captchaKey, 60 * 60);
+                    throw new ApiError(400, 'captcha_wrong_reget_captcha', captchaToken);
+                  }).catch(next);
+                });
+              }
+            }
           }else {
-            console.log(req.body);
-            generateToken(48).then(captchaToken => {
-              redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
-                redis.expire(captchaKey, 60 * 60);
-                throw new ApiError(400, 'captcha_wrong_reget_captcha', captchaToken);
-              });
-            });
+            next();
           }
         }else {
           next();
         }
-      }else {
-        next();
-      }
-    })
-    .catch(next);
+      })
+      .catch(next);
+    };
   },
 
-  wrongCheck(req, res, next) {
+  wrongCheck(err, req, res, next) {
     return new Promise((resolve, reject) => {
+      if(err.error == 'captcha_wrong_reget_captcha' || err.error =='login_need_captcha'){
+        return resolve();
+      }
       let redis = req.model('redis');
       let captchaKey = `${req.body.username}_${req.body.client_id}`;
       redis.hmget(captchaKey).then(captchaData => {
@@ -236,4 +243,20 @@ export default {
       });
     });
   },
+
+  errorSolve(err, req, res, next) {
+    return (err, req, res, next) => {
+      this.wrongCheck(err, req, res, next).then(() => {
+        let {body: {grant_type}} = req;
+        if (grant_type == 'password') {
+          this._getUser(req.body.username)
+          .then(user => {
+            req.user = user;
+            return req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN_FAIL);
+          });
+        }
+        next(err);
+      }).catch(next);
+    };
+  }
 };
