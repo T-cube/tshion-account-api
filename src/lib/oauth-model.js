@@ -2,9 +2,10 @@ import bcrypt from 'bcrypt';
 import Promise from 'bluebird';
 import Joi from 'joi';
 import _ from 'underscore';
+import { ApiError } from 'lib/error';
 
 import db from 'lib/database';
-import { comparePassword, camelCaseObjectKey } from 'lib/utils';
+import { comparePassword, camelCaseObjectKey, generateToken } from 'lib/utils';
 
 export default {
   getAccessToken(bearerToken, callback) {
@@ -169,5 +170,69 @@ export default {
       callback(null);
     })
     .catch(e => callback(e));
+  },
+
+  captchaCheck(req, res, next) {
+    let captchaKey = `${req.body.username}_${req.body.client_id}`;
+    let redis = req.model('redis');
+    redis.hmget(captchaKey).then(captchaData => {
+      if(captchaData) {
+        if(parseInt(captchaData.times) > 2) {
+          if(!req.body.captcha) {
+            generateToken(48).then(captchaToken => {
+              redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
+                redis.expire(captchaKey, 60 * 60);
+                throw new ApiError(400, 'login_need_captcha', captchaToken);
+              });
+            });
+          }
+          if(req.body.captcha.toLowerCase() == captchaData.captcha.toLowerCase()) {
+            next();
+          }else {
+            console.log(req.body);
+            generateToken(48).then(captchaToken => {
+              redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
+                redis.expire(captchaKey, 60 * 60);
+                throw new ApiError(400, 'captcha_wrong_reget_captcha', captchaToken);
+              });
+            });
+          }
+        }else {
+          next();
+        }
+      }else {
+        next();
+      }
+    })
+    .catch(next);
+  },
+
+  wrongCheck(req, res, next) {
+    return new Promise((resolve, reject) => {
+      let redis = req.model('redis');
+      let captchaKey = `${req.body.username}_${req.body.client_id}`;
+      redis.hmget(captchaKey).then(captchaData => {
+        if(captchaData){
+          if(captchaData.times > 1){
+            generateToken(48).then(captchaToken => {
+              redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
+                redis.expire(captchaKey, 60 * 60);
+                reject(new ApiError(400, 'login_failed_frequently_relogin_need_captcha', captchaToken));
+              });
+            });
+          }else {
+            redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1}).then(() => {
+              redis.expire(captchaKey, 60 * 60);
+              resolve();
+            });
+          }
+        }else {
+          redis.hmset(captchaKey, {times: 1}).then(() => {
+            redis.expire(captchaKey, 60 * 60);
+            resolve();
+          });
+        }
+      });
+    });
   },
 };
