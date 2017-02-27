@@ -50,6 +50,7 @@ export default {
     if (grantType === 'password') {
       const authorized_clients = [
         'com_tlifang_web',
+        'com_tlifang_web_old',
         'com_tlifang_mobile',
         'com_tlifang_wcapp_attendance',
       ];

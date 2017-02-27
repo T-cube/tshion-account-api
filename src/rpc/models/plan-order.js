@@ -18,7 +18,9 @@ export default class PlanOrderModel extends Model {
     .then(doc => {
       doc.forEach(item => {
         item.company = item.company_id;
+        delete item.company_id;
         item.user = item.user_id;
+        delete item.user_id;
       });
       return mapObjectIdToData(doc, [
         ['company', 'name,logo', 'company'],
@@ -36,6 +38,8 @@ export default class PlanOrderModel extends Model {
     .then(doc => {
       doc.company = doc.company_id;
       doc.user = doc.user_id;
+      delete doc.company_id;
+      delete doc.user_id;
       return mapObjectIdToData(doc, [
         ['company', 'name,logo', 'company'],
         ['user', 'name,avatar', 'user'],

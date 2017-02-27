@@ -111,7 +111,7 @@ export default class DegradeOrder extends Base {
     } else {
       times = moment(current.date_end).diff(moment(), 'month', true);
     }
-    this.times = times > 0 ? (Math.round(times * 100) / 100) : times;
+    this.setTimes(times > 0 ? (Math.round(times * 100) / 100) : times);
     return this.times;
   }
 

@@ -23,7 +23,7 @@ export default class RenewalOrder extends Base {
     let {current} = this.getPlanStatus();
     let {plan, member_count} = current;
     this.plan = plan;
-    this.times = times;
+    this.setTimes(times);
     this.member_count = member_count;
     return PlanProduct.init({plan, member_count, times})
     .then(planProduct => {

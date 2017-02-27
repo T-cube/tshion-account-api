@@ -31,7 +31,7 @@ export default class InvoiceModel extends Model {
     .then(doc => mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment,paid_sum,order_no', 'order_list'));
   }
 
-  updateStatus({invoice_id, status, operator_id}) {
+  updateStatus({invoice_id, status, operator_id, comment}) {
     let criteria = {
       _id: invoice_id
     };
@@ -45,6 +45,7 @@ export default class InvoiceModel extends Model {
       $push: {
         log: {
           status,
+          comment,
           date_create: new Date(),
           creator: 'cs',
           operator_id,

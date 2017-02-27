@@ -9,6 +9,13 @@ module.exports = {
     appsecret: 'gvldWZTnQ8BIAReK',
     appid: 'tlf-api'
   },
+  vendor: {
+    officeweb365: {
+      siteId: '11137',
+      encodeUrl: false,
+      deleteAfterView: false,
+    },
+  },
   upload: {
     url: 'http://api.tlf.test.tlifang.cn/cdn/',
   },

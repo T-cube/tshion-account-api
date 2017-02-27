@@ -27,7 +27,7 @@ export default class UpgradeOrder extends Base {
     let {current} = this.getPlanStatus();
     this.original_plan = current.plan;
     let times = this.getTimes();
-    this.times = times;
+    this.setTimes(times);
 
     return PlanProduct.init({plan, times, member_count})
     .then(planProduct => planProduct.diff({plan: current.plan, member_count: current.member_count}))
