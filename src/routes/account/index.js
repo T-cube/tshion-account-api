@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import config from 'config';
+import Canvas from 'canvas';
 
 import db from 'lib/database';
 import {
