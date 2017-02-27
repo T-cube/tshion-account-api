@@ -7,7 +7,7 @@ import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import oauthModel from 'lib/oauth-model';
-import { camelCaseObjectKey, getClientIp } from 'lib/utils';
+import { camelCaseObjectKey, getClientIp, generateToken } from 'lib/utils';
 
 const token_types = ['access_token', 'refresh_token'];
 
