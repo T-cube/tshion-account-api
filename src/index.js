@@ -48,6 +48,7 @@ import Preference from 'models/preference';
 import TempFile from 'models/temp-file';
 import Payment from 'models/plan/payment';
 import C from 'lib/constants';
+import Captcha from 'lib/canvas-captcha';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -79,6 +80,7 @@ app.loadModel('ow365', OfficeWeb365, config.get('vendor.officeweb365'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
 app.loadModel('weather', Weather, config.get('vendor.showapi.weather'));
+app.loadModel('canvas-captcha', Captcha, config.get('vendor.captcha'));
 app.loadModel('html-helper', HtmlHelper);
 app.loadModel('notification', Notification);
 app.loadModel('account', Account);

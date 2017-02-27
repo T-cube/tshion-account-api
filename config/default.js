@@ -219,6 +219,11 @@ module.exports = {
         },
       },
     },
+    captcha:{
+      captchaNumber: 4,
+      lineNumber: 4,
+      circleNumbe: 4,
+    },
   },
   download: {
     tokenExpires: 30 * 60 * 1000, // half a hour
