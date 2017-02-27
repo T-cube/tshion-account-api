@@ -5,6 +5,8 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import http from 'http';
+import uuid from 'uuid';
 import objectPath from 'object-path';
 import { camelCase } from 'change-case';
 import escapeRegexp from 'escape-regexp';
@@ -440,4 +442,53 @@ export function idCodeValid(code) {
     }
   }
   return pass;
+}
+
+export function downloadFile(url, folder) {
+
+  let filename = uuid.v4() + path.extname(url);
+  let key = 'upload/' + folder + '/' + filename;
+  let filepath = config.get('upload.path') + key;
+
+  return new Promise((resolve, reject) => {
+
+    http.get(url, (res) => {
+      let bufferList = [];
+      res.on('data', (chunk) => {
+        bufferList.push(new Buffer(chunk));
+      });
+      res.on('end', () => {
+        let data = Buffer.concat(bufferList);
+        fs.writeFile(filepath, data, function(err) {
+          if (err) {
+            return reject(err);
+          }
+          resolve({key, path: filepath});
+        });
+      });
+    });
+  });
+
+}
+
+export function saveCdnInBucket(bucketInstance, files) {
+
+  if (!_.isArray(files)) {
+    files = [files];
+  }
+
+  function cdnUpload(key, path) {
+    return bucketInstance.upload(key, path).then(data => {
+      return {
+        key,
+        path,
+        url: `${data.server_url}${key}`
+      };
+    });
+  }
+
+  return Promise.map(files, file => {
+    const { key, path } = file;
+    return cdnUpload(key, path);
+  });
 }
