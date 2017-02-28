@@ -474,8 +474,14 @@ export function downloadFile(url, folder) {
 export function saveCdnInBucket(bucketInstance, files) {
 
   if (!_.isArray(files)) {
-    files = [files];
+    const { key, path } = files;
+    return cdnUpload(key, path);
   }
+  
+  return Promise.map(files, file => {
+    const { key, path } = file;
+    return cdnUpload(key, path);
+  });
 
   function cdnUpload(key, path) {
     return bucketInstance.upload(key, path).then(data => {
@@ -486,9 +492,4 @@ export function saveCdnInBucket(bucketInstance, files) {
       };
     });
   }
-
-  return Promise.map(files, file => {
-    const { key, path } = file;
-    return cdnUpload(key, path);
-  });
 }
