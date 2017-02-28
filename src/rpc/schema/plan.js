@@ -212,7 +212,7 @@ const schema = {
     validation: {
       invoice_id: {$objectId: 1},
       status: {
-        $enum: [C.INVOICE_STATUS.VERIFING, C.INVOICE_STATUS.REJECTED, C.INVOICE_STATUS.FINISHED]
+        $enum: [C.INVOICE_STATUS.CONFIRMED, C.INVOICE_STATUS.REJECTED, C.INVOICE_STATUS.ISSUED, C.INVOICE_STATUS.COMPLETED]
       },
       comment: {type: 'string'},
       operator_id: {$objectId: 1},

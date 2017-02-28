@@ -7,7 +7,7 @@
 
 ```javascript
 {
-  InvoiceStatus: String[Enum:created(已提交), sent(已发送), finished(已完成), verifing(处理中), cancelled(已取消), rejected(拒绝)]
+  InvoiceStatus: String[Enum:created(已提交), shipped(已发送), completed(已完成), confirmed(处理中), cancelled(已取消), rejected(拒绝), issued(已开票)]
 }
 ```
 
@@ -36,14 +36,19 @@ QUERY
 ### /plan/invoice/update
 
 更新发票状态，状态可以在以下状态中发生转移
-created->verifing, created->rejected, verifing->rejected, sent->finished
+
+created->confirmed 
+created->rejected
+confirmed->issued
+shipped->completed
 
 QUERY
 ```javascript
 {
   invoice_id: ObjectId,
-  status: String, // verifing, rejected, finished
-  comment: String // 操作的说明
+  status: String,   // confirmed, rejected, completed, issued
+  comment: String， // 操作的说明
+  operator_id: ObjectId, // 操作人员_id
 }
 ```
 

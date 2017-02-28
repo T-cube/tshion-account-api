@@ -35,9 +35,20 @@ export default class InvoiceModel extends Model {
     let criteria = {
       _id: invoice_id
     };
-    if (status == C.INVOICE_STATUS.FINISHED) {
-      criteria.status = C.INVOICE_STATUS.SENT;
-    } else {
+    switch (status) {
+    case C.INVOICE_STATUS.COMPLETED:
+      criteria.status = C.INVOICE_STATUS.SHIPPED;
+      break;
+    case C.INVOICE_STATUS.CONFIRMED:
+      criteria.status = C.INVOICE_STATUS.CREATED;
+      break;
+    case C.INVOICE_STATUS.REJECTED:
+      criteria.status = C.INVOICE_STATUS.CREATED;
+      break;
+    case C.INVOICE_STATUS.ISSUED:
+      criteria.status = C.INVOICE_STATUS.CONFIRMED;
+      break;
+    default:
       criteria.status = {$ne: C.INVOICE_STATUS.CREATING};
     }
     return this.db.payment.invoice.update(criteria, {
@@ -51,26 +62,38 @@ export default class InvoiceModel extends Model {
           operator_id,
         }
       }
+    })
+    .then(result => {
+      if (!result.nMatched) {
+        throw new ApiError(400, 'invalid invoice status');
+      }
+      return result;
     });
   }
 
   send({invoice_id, chip_info, operator_id}) {
     return this.db.payment.invoice.update({
       _id: invoice_id,
-      status: C.INVOICE_STATUS.VERIFING
+      status: C.INVOICE_STATUS.ISSUED
     }, {
       $set: {
         chip_info,
-        status: C.INVOICE_STATUS.SENT
+        status: C.INVOICE_STATUS.SHIPPED
       },
       $push: {
         log: {
-          status: C.INVOICE_STATUS.SENT,
+          status: C.INVOICE_STATUS.SHIPPED,
           date_create: new Date(),
           creator: 'cs',
           operator_id,
         }
       }
+    })
+    .then(result => {
+      if (!result.nMatched) {
+        throw new ApiError(400, 'invalid invoice status');
+      }
+      return result;
     });
   }
 

@@ -325,11 +325,12 @@ let constants = {
   INVOICE_STATUS: {
     CREATING: 'creating',
     CREATED: 'created',
-    SENT: 'sent',
-    FINISHED: 'finished',
-    VERIFING: 'verifing',
+    SHIPPED: 'shipped',
+    CONFIRMED: 'confirmed',
     REJECTED: 'rejected',
     CANCELLED: 'cancelled',
+    ISSUED: 'issued',
+    COMPLETED: 'completed',
   }
 
 };
