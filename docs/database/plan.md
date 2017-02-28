@@ -12,35 +12,33 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 
 ## Tables
 
-### Collection plan.trial
+### Collection plan.company
 
-团队试用信息
-
-```javascript
-{
-  _id: ObjectId,
-  company_id: ObjectId,             // 团队
-  user_id: ObjectId,                // 申请用户
-  plan: TeamPlan,                   // 升级方案
-  status: PlanStatus                // 状态
-  date_start: Date,                 // 申请日期
-  date_end: Date,                   // 申请日期
-}
-```
-
-### Collection plan.paid
-
-付费团队信息
+团队计划（包括购买和试用的信息）
 
 ```javascript
 {
-  _id: ObjectId,
-  company_id: ObjectId,             // 团队
-  user_id: ObjectId,                // 申请用户
-  plan: TeamPlan,                   // 升级方案
-  status: PlanStatus                // 状态
-  date_start: Date,                 // 申请日期
-  date_end: Date,                   // 申请日期
+  _id: ObjectId,                    // company_id
+  certificated: {
+    plan: TeamPlan,
+    date: Date,
+  },
+  current: {
+    _id: ObjectId,                  // 下面list中对应的_id
+    plan: TeamPlan,
+    type: String[Enum: paid, trial],
+  },
+  list: [{
+    _id: ObjectId,
+    plan: TeamPlan,
+    type: String[Enum: paid, trial],
+    user_id: ObjectId,                // 申请用户
+    plan: TeamPlan,                   // 升级方案
+    member_count: Number,             // 购买的人数
+    status: PlanStatus                // 状态
+    date_start: Date,                 // 申请日期
+    date_end: Date,                   // 申请日期
+  }...]
 }
 ```
 

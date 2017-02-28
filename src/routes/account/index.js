@@ -1,14 +1,25 @@
 import _ from 'underscore';
 import express from 'express';
 import config from 'config';
+import Canvas from 'canvas';
 
 import db from 'lib/database';
-import { time, timestamp, expire, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
+import {
+  time,
+  timestamp,
+  expire,
+  comparePassword,
+  hashPassword,
+  generateToken,
+  getEmailName,
+  downloadFile,
+  saveCdnInBucket,
+} from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
 import { validate } from './schema';
-import { randomAvatar } from 'lib/upload';
+import { randomAvatar, cropAvatar } from 'lib/upload';
 import { ValidationError } from 'lib/inspector';
 
 let api = express.Router();
@@ -90,9 +101,6 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       date_create: time(),
       current_company: null,
     };
-    if (req.openUserinfo) {
-      _.extend(doc, req.openUserinfo);
-    }
     return db.user.insert(doc);
   })
   .then(user => {
@@ -104,6 +112,24 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
     if (type == C.USER_ID_TYPE.MOBILE) {
       req.model('notification-setting').initUserDefaultSetting(user._id);
       req.model('preference').init(user._id);
+    }
+    // 保存第三方账户的图片
+    if (req.openUserinfo && req.openUserinfo.avatar) {
+      return downloadFile(req.openUserinfo.avatar, 'avatar').then(downloadFile => {
+        return saveCdnInBucket(req.model('qiniu').bucket('cdn-public'), downloadFile);
+      })
+      .then(cdnFile => {
+        req.file = cdnFile;
+        let avatar = cropAvatar(req);
+        return db.user.update({
+          _id: user._id
+        }, {
+          $set: {avatar}
+        });
+      })
+      .catch(e => {
+        console.error(e);
+      });
     }
   })
   .catch(err => {
@@ -126,7 +152,7 @@ api.post('/confirm', (req, res, next) => {
     res.json(data);
     // init notification setting when user activiated
     req.model('notification-setting').initUserDefaultSetting(data.user_id);
-    req.model('preference').init(data.user._id);
+    req.model('preference').init(data.user_id);
   })
   .catch(next);
 });
