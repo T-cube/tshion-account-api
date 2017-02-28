@@ -10,6 +10,7 @@
 PaimentMethod: String[Enum:balance,alipay,wxpay,banktrans];
 DiscountType: String[Enum:number,rate,amount];
 OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
+InvoiceOrderStatus: String[Enum:created,confirmed,rejected,issued,shipped,completed];
 Currency: Number;
 ```
 
@@ -249,6 +250,8 @@ Currency: Number;
   _id: ObjectId,
   invoice_no: String,
   company_id: ObjectId,
+  // 状态跟踪
+  status: InvoiceOrderStatus,
   title: String,                    // 只能为认证公司名称
   total_amount: Currency,           // （税后）总金额，为实际充值金额
   tax_rate: Float,                  // 税率
@@ -282,8 +285,6 @@ Currency: Number;
     brand: String,                  // 快递品牌
     track_no: String,               // 快递跟踪单号
   },
-  // 状态跟踪
-  status: String[Enum:created,verifing,sent,finished],
   date_create: Date,
   date_update: Date,
 }
