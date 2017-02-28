@@ -152,7 +152,7 @@ api.post('/confirm', (req, res, next) => {
     res.json(data);
     // init notification setting when user activiated
     req.model('notification-setting').initUserDefaultSetting(data.user_id);
-    req.model('preference').init(data.user._id);
+    req.model('preference').init(data.user_id);
   })
   .catch(next);
 });
