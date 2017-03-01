@@ -174,70 +174,97 @@ export default {
     .catch(e => callback(e));
   },
 
-  captchaCheck(req, res, next) {
+  ipCheck() {
     return (req, res, next) => {
-      let captchaKey = `${req.body.username}_${req.body.client_id}`;
+      let ip = req.ip;
+      let ipKey = `${ip}_error_times`;
       let redis = req.model('redis');
-      redis.hmget(captchaKey).then(captchaData => {
-        if(captchaData) {
-          if(parseInt(captchaData.times) > 2) {
-            if(!req.body.captcha) {
-              generateToken(48).then(captchaToken => {
-                redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
-                  redis.expire(captchaKey, 60 * 60);
-                  throw new ApiError(400, 'login_need_captcha', captchaToken);
-                }).catch(next);
-              });
-            }else {
-              redis.hmset(captchaKey, {captchaToken: '', captcha: ''});
-              if(req.body.captcha.toLowerCase() == captchaData.captcha.toLowerCase() && req.body.captchaToken == captchaData.captchaToken) {
-                next();
-              }else {
-                generateToken(48).then(captchaToken => {
-                  redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
-                    redis.expire(captchaKey, 60 * 60);
-                    throw new ApiError(400, 'captcha_wrong_reget_captcha', captchaToken);
-                  }).catch(next);
-                });
-              }
-            }
-          }else {
-            next();
-          }
+      redis.get(ipKey).then(times => {
+        if(times>99) {
+          throw new ApiError(400, 'ip_invalid');
         }else {
           next();
         }
-      })
-      .catch(next);
+      }).catch(next);
     };
   },
 
-  wrongCheck(err, req, res, next) {
-    return new Promise((resolve, reject) => {
-      if(err.error == 'captcha_wrong_reget_captcha' || err.error =='login_need_captcha'){
-        return resolve();
-      }
+  userCheck() {
+    return (req, res, next) => {
+      let username = req.body.username;
+      let userKey = `${username}_error_times`;
+      let ip = req.ip;
+      let ipKey = `${ip}_error_times`;
+      let userCaptcha = `${username}_login_captcha`;
       let redis = req.model('redis');
-      let captchaKey = `${req.body.username}_${req.body.client_id}`;
-      redis.hmget(captchaKey).then(captchaData => {
-        if(captchaData){
-          if(captchaData.times > 1){
-            generateToken(48).then(captchaToken => {
-              redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: captchaToken}).then(() => {
-                redis.expire(captchaKey, 60 * 60);
-                reject(new ApiError(400, 'login_failed_frequently_relogin_need_captcha', captchaToken));
-              });
-            });
+      redis.get(userKey).then(times => {
+        if(times < 3){
+          next();
+        }else if (times > 2 && times < 11) {
+          if(!req.body.captcha){
+            redis.incr(userKey);
+            redis.incr(ipKey);
+            throw new ApiError(400, 'missing_captcha');
           }else {
-            redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1}).then(() => {
-              redis.expire(captchaKey, 60 * 60);
-              resolve();
-            });
+            redis.get(userCaptcha).then(captcha => {
+              if(req.body.captcha.toLowerCase() == captcha.toLowerCase()){
+                next();
+              }else {
+                redis.incr(userKey);
+                redis.incr(ipKey);
+                throw new ApiError(400, 'wrong_captcha');
+              }
+            }).catch(next);
           }
         }else {
-          redis.hmset(captchaKey, {times: 1}).then(() => {
-            redis.expire(captchaKey, 60 * 60);
-            resolve();
+          redis.incr(ipKey);
+          throw new ApiError(400, 'account_locked');
+        }
+      }).catch(next);
+    };
+  },
+
+
+  wrongCheck(err, req, res, next) {
+    return new Promise((resolve, reject) => {
+      let redis = req.model('redis');
+      let username = req.body.username;
+      let userKey = `${username}_error_times`;
+      let ip = req.ip;
+      let ipKey = `${ip}_error_times`;
+      if(err.error == 'ip_invalid' || err.error == 'missing_captcha' || err.error == 'wrong_captcha' || err.error == 'account_locked'){
+        return resolve();
+      }
+      redis.get(ipKey).then(times => {
+        if(times){
+          redis.incr(ipKey);
+          redis.get(userKey).then(usertimes =>{
+            if(usertimes > 1) {
+              redis.incr(userKey).then(() => {
+                reject(new ApiError(400, 'login_fail_need_captcha'));
+              });
+            }else {
+              redis.incr(userKey).then(() => {
+                redis.expire(userKey, 60 * 60);
+                resolve();
+              });
+            }
+          });
+        }else {
+          redis.incr(ipKey).then(() => {
+            redis.expire(ipKey, 60 * 60);
+            redis.get(userKey).then(usertimes => {
+              if(usertimes > 2) {
+                redis.incr(userKey).then(() => {
+                  reject(new ApiError(400, 'login_fail_need_captcha'));
+                });
+              }else {
+                redis.incr(userKey).then(() => {
+                  redis.expire(userKey, 60 * 60);
+                  resolve();
+                });
+              }
+            });
           });
         }
       });

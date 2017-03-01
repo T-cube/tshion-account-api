@@ -35,32 +35,12 @@ api.get('/avatar-list/:type', (req, res, next) => {
 });
 
 api.get('/captcha', (req, res, next) => {
-  let captcha = req.model('canvas-captcha');
-  let username = req.query.username;
-  let client_id = req.query.client_id;
-  let captchaToken = req.query.captchaToken;
-  let captchaKey = `${username}_${client_id}`;
+  let captcha = req.model('captcha');
   let redis = req.model('redis');
-  redis.hmget(captchaKey).then(captchaData => {
-    if(captchaData){
-      if(captchaToken !== captchaData.captchaToken) {
-        generateToken(48).then(newCaptchaToken => {
-          redis.hmset(captchaKey, {times: parseInt(captchaData.times)+1, captchaToken: newCaptchaToken}).then(() => {
-            redis.expire(captchaKey, 60 * 60);
-            throw new ApiError(400, 'missing_or_wrong_captcha_token', newCaptchaToken);
-          }).catch(next);
-        });
-      }else {
-        captcha.create().then(captchaContent => {
-          redis.hmset(captchaKey, {captcha: captchaContent.captcha}).then(() => {
-            redis.expire(captchaKey, 60 * 60);
-            return res.send({captcha: captchaContent.canvas});
-          });
-        });
-      }
-    }else {
-      throw new ApiError(400, 'no_need_captcha');
-    }
-  })
-  .catch(next);
+  let username = req.query.username;
+  let captchaType = req.query.captchaType;
+  let userCaptcha = `${username}_${captchaType}_captcha`;
+  captcha.request(userCaptcha, redis).then(canvasURL => {
+    res.send(canvasURL);
+  });
 });
