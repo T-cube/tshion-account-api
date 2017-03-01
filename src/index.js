@@ -140,14 +140,12 @@ app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 app.use('/oauth/login', oauthRoute.login);
 app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
-app.all('/oauth/token', oauthModel.ipCheck(), oauthModel.userCheck(), app.oauth.grant(), (req, res, next) => {
-  let redis = req.model('redis');
-  let userKey = `${req.body.username}_error_times`;
-  let userCaptcha = `${req.body.username}_captcha`;
-  redis.delete(userKey);
-  redis.delete(userCaptcha);
-  req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
-}, oauthModel.errorSolve());
+app.all('/oauth/token',
+  oauthRoute.ipCheck(),
+  oauthRoute.userCheck(),
+  app.oauth.grant(),
+  oauthRoute.tokenSuccess(),
+  oauthRoute.errorSolve());
 app.all('/oauth/revoke', oauthRoute.revokeToken);
 
 
