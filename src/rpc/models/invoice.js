@@ -46,7 +46,7 @@ export default class InvoiceModel extends Model {
       doc.user = doc.user_id;
       delete doc.company_id;
       delete doc.user_id;
-      mapObjectIdToData(doc, [
+      return mapObjectIdToData(doc, [
         ['payment.order', 'plan,order_type,member_count,date_create,payment,paid_sum,order_no', 'order_list'],
         ['company', 'name,logo', 'company'],
         ['user', 'name,avatar', 'user'],
