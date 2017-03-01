@@ -1,4 +1,5 @@
 import C from 'lib/constants';
+import _ from 'underscore';
 import { mapObjectIdToData } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import Model from './model';
@@ -19,6 +20,18 @@ export default class InvoiceModel extends Model {
     .limit(pagesize)
     .sort({
       _id: -1,
+    })
+    .then(list => {
+      list.forEach(item => {
+        item.company = _.clone(item.company_id);
+        item.user = item.user_id;
+        delete item.company_id;
+        delete item.user_id;
+      });
+      return mapObjectIdToData(list, [
+        ['company', 'name,logo', 'company'],
+        ['user', 'name,avatar', 'user'],
+      ]);
     });
   }
 
@@ -28,7 +41,17 @@ export default class InvoiceModel extends Model {
 
   fetchDetail(_id) {
     return this.db.payment.invoice.findOne({_id})
-    .then(doc => mapObjectIdToData(doc, 'payment.order', 'plan,order_type,member_count,date_create,payment,paid_sum,order_no', 'order_list'));
+    .then(doc => {
+      doc.company = doc.company_id;
+      doc.user = doc.user_id;
+      delete doc.company_id;
+      delete doc.user_id;
+      mapObjectIdToData(doc, [
+        ['payment.order', 'plan,order_type,member_count,date_create,payment,paid_sum,order_no', 'order_list'],
+        ['company', 'name,logo', 'company'],
+        ['user', 'name,avatar', 'user'],
+      ]);
+    });
   }
 
   updateStatus({invoice_id, status, operator_id, comment}) {

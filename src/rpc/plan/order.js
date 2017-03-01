@@ -14,7 +14,7 @@ const orderModel = new PlanOrderModel();
 
 route.on('/list', query => {
   let criteria = {};
-  let { status, plan, page, pagesize, keyword, order_type, company_id, amount } = query;
+  let { status, plan, page, pagesize, keyword, order_type, company_id, amount, company_name } = query;
   if (status) {
     if (status == C.ORDER_STATUS.PAYING) {
       status = {
@@ -32,17 +32,20 @@ route.on('/list', query => {
   if (ObjectId.isValid(company_id)) {
     criteria.company_id = ObjectId(company_id);
   }
-  if (PlanOrderModel.isOrderNoLike(keyword)) {
-    criteria.order_no = {
-      $regex: keyword
-    };
-  }
   if (amount && /\d+[\d,]?\d*/.test(amount)) {
     amount = amount.split(',').sort().map(i => parseInt(i));
     criteria.paid_sum = amount.length == 1 ? amount[0] : {
       $gte: amount[0],
       $lte: amount[1],
     };
+  }
+  if (PlanOrderModel.isOrderNoLike(keyword)) {
+    criteria.order_no = {
+      $regex: keyword
+    };
+  } else if (company_name || PlanOrderModel.isCompanyNameLike(keyword)) {
+    company_name = company_name || keyword;
+    return orderModel.page({page, pagesize, criteria, company_name});
   }
   return orderModel.page({page, pagesize, criteria});
 });

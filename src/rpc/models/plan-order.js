@@ -1,4 +1,4 @@
-import { mapObjectIdToData } from 'lib/utils';
+import { mapObjectIdToData, strToReg } from 'lib/utils';
 import Model from './model';
 
 export default class PlanOrderModel extends Model {
@@ -47,8 +47,37 @@ export default class PlanOrderModel extends Model {
     });
   }
 
+  pageByCompanyName({company_name, page, pagesize, criteria}) {
+    return this.db.company.find({
+      name: {
+        $regex: strToReg(company_name, 'i')
+      }
+    }, {
+      _id: 1
+    })
+    .then(doc => {
+      if (!doc.length) {
+        return {
+          page,
+          pagesize,
+          totalrows: 0,
+          list: []
+        };
+      }
+      let companyIdList = doc.map(i => i._id);
+      criteria.company_id = {
+        $in: companyIdList
+      };
+      return this.page({page, pagesize, criteria});
+    });
+  }
+
   static isOrderNoLike(keyword) {
     return /^T?\d{4,21}/i.test(keyword);
+  }
+
+  static isCompanyNameLike(keyword) {
+    return !!keyword;
   }
 
 }
