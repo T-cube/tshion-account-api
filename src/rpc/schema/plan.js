@@ -249,7 +249,7 @@ const schema = {
       status: {type: 'string', optional: true},
       invoice_no: {type: 'string', optional: true},
       company_id: {$objectId: 1, optional: true},
-      company_name: {type: 'string', optional: true},
+      type: {type: 'string', optional: true},
       keyword: {type: 'string', optional: true},
     },
     validation: {
@@ -259,7 +259,7 @@ const schema = {
       invoice_no: {$objectId: 1, optional: true},
       company_id: {$enum: ENUMS.INVOICE_STATUS, optional: true},
       keyword: {type: 'string', optional: true},
-      company_name: {type: 'string', optional: true},
+      type: {type: 'string', optional: true},
     },
   },
 };

@@ -14,7 +14,7 @@ const invoiceModel = new InvoiceModel();
 
 route.on('/list', (query) => {
   validate('invoice_list', query);
-  let { page, pagesize, status, keyword, company_id, company_name } = query;
+  let { page, pagesize, status, keyword, company_id, type } = query;
   let criteria = {};
   if (status) {
     criteria = {status};
@@ -22,16 +22,21 @@ route.on('/list', (query) => {
   if (ObjectId.isValid(company_id)) {
     criteria.company_id = ObjectId(company_id);
   }
-  if (InvoiceModel.isInvoiceNoLike(keyword)) {
+  if(type == 'invoice_no') {
     criteria.invoice_no = {
       $regex: keyword
     };
   }
-  if (company_name) {
+  if(type == 'company_id') {
     criteria.title = {
-      $regex: strToReg(company_name)
+      $regex: strToReg(keyword)
     };
   }
+  // if (InvoiceModel.isInvoiceNoLike(keyword)) {
+  //   criteria.invoice_no = {
+  //     $regex: keyword
+  //   };
+  // }
   return invoiceModel.page({
     page,
     pagesize,
