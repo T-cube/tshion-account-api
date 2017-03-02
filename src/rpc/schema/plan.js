@@ -255,9 +255,9 @@ const schema = {
     validation: {
       page: {type: 'integer', optional: true},
       pagesize: {type: 'integer', optional: true},
-      status: {type: 'string', optional: true},
-      invoice_no: {$objectId: 1, optional: true},
-      company_id: {$enum: ENUMS.INVOICE_STATUS, optional: true},
+      status: {$enum: ENUMS.INVOICE_STATUS, optional: true},
+      invoice_no: {type: 'string', optional: true},
+      company_id: {$objectId: 1, optional: true},
       keyword: {type: 'string', optional: true},
       type: {type: 'string', optional: true},
     },

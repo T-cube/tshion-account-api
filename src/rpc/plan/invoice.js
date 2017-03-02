@@ -22,12 +22,12 @@ route.on('/list', (query) => {
   if (ObjectId.isValid(company_id)) {
     criteria.company_id = ObjectId(company_id);
   }
-  if(type == 'invoice_no') {
+  if (type == 'invoice_no') {
     criteria.invoice_no = {
       $regex: keyword
     };
   }
-  if(type == 'company_id') {
+  if (type == 'company_id') {
     criteria.title = {
       $regex: strToReg(keyword)
     };

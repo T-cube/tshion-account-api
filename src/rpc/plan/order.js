@@ -39,12 +39,12 @@ route.on('/list', query => {
       $lte: amount[1],
     };
   }
-  if(type == 'order_no') {
+  if (type == 'order_no') {
     criteria.order_no = {
       $regex: keyword
     };
   }
-  if(type == 'company_name') {
+  if (type == 'company_name') {
     // return this.db.company.find({
     //   name: keyword
     // }).then(company => {
