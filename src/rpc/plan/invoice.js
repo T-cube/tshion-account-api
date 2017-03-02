@@ -14,8 +14,8 @@ const invoiceModel = new InvoiceModel();
 
 route.on('/list', (query) => {
   validate('invoice_list', query);
-  let { page, pagesize, status, keyword, company_id } = query;
-  let criteria;
+  let { page, pagesize, status, keyword, company_id, company_name } = query;
+  let criteria = {};
   if (status) {
     criteria = {status};
   }
@@ -26,9 +26,10 @@ route.on('/list', (query) => {
     criteria.invoice_no = {
       $regex: keyword
     };
-  } else if (keyword) {
+  }
+  if (company_name) {
     criteria.title = {
-      $regex: strToReg(keyword)
+      $regex: strToReg(company_name)
     };
   }
   return invoiceModel.page({

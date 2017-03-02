@@ -7,7 +7,7 @@ export default class PlanOrderModel extends Model {
     super(props);
   }
 
-  fetchList({page, pagesize, criteria}) {
+  fetchList({criteria, page, pagesize}) {
     return this.db.payment.order.find(criteria, {
       products: 0,
       discount: 0,
@@ -15,6 +15,7 @@ export default class PlanOrderModel extends Model {
     })
     .skip(page * pagesize)
     .limit(pagesize)
+    .sort({_id:-1})
     .then(doc => {
       doc.forEach(item => {
         item.company = item.company_id;

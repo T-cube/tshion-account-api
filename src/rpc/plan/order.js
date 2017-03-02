@@ -43,14 +43,23 @@ route.on('/list', query => {
     criteria.order_no = {
       $regex: keyword
     };
-  } else if (company_name || PlanOrderModel.isCompanyNameLike(keyword)) {
-    company_name = company_name || keyword;
-    return orderModel.page({page, pagesize, criteria, company_name});
   }
+  if(company_name) {
+    criteria.company = {
+      name: {
+        $regex: company_name
+      }
+    };
+  }
+  console.log(criteria);
+  // else if (company_name || PlanOrderModel.isCompanyNameLike(keyword)) {
+  //   company_name = company_name || keyword;
+  //   return orderModel.page({page, pagesize, criteria, company_name});
+  // }
   return orderModel.page({page, pagesize, criteria});
 });
 
-route.on('/detail', query => {
+route.on('/detail', (query) => {
   let order_id = getObjectId(query, 'order_id');
   return orderModel.fetchDetail(order_id)
   .then(order => {
