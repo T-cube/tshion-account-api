@@ -14,13 +14,13 @@ const orderModel = new PlanOrderModel();
 
 route.on('/list', query => {
   let criteria = {};
-  let { status, plan, page, pagesize, keyword, order_type, company_id, amount, company_name } = query;
+  let { status, plan, page, pagesize, keyword, order_type, company_id, amount, type } = query;
   if (status) {
-    if (status == C.ORDER_STATUS.PAYING) {
-      status = {
-        $in: [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING]
-      };
-    }
+    // if (status == C.ORDER_STATUS.PAYING) {
+    //   status = {
+    //     $in: [C.ORDER_STATUS.CREATED, C.ORDER_STATUS.PAYING]
+    //   };
+    // }
     criteria.status = status;
   }
   if (plan) {
@@ -30,7 +30,7 @@ route.on('/list', query => {
     criteria.order_type = order_type;
   }
   if (ObjectId.isValid(company_id)) {
-    criteria.company_id = ObjectId(company_id);
+    criteria.company_id = (company_id);
   }
   if (amount && /\d+[\d,]?\d*/.test(amount)) {
     amount = amount.split(',').sort().map(i => parseInt(i));
@@ -39,18 +39,35 @@ route.on('/list', query => {
       $lte: amount[1],
     };
   }
-  if (PlanOrderModel.isOrderNoLike(keyword)) {
+  if (type == 'order_no') {
     criteria.order_no = {
       $regex: keyword
     };
-  } else if (company_name || PlanOrderModel.isCompanyNameLike(keyword)) {
-    company_name = company_name || keyword;
-    return orderModel.page({page, pagesize, criteria, company_name});
   }
+  if (type == 'company_name') {
+    // return this.db.company.find({
+    //   name: keyword
+    // }).then(company => {
+    //   criteria._id = company._id;
+    //   console.log(criteria);
+    //   orderModel.page({page, pagesize, criteria});
+    // });
+    let company_name = keyword;
+    return orderModel.pageByCompanyName({page, pagesize, criteria, company_name});
+  }
+  // if (PlanOrderModel.isOrderNoLike(keyword)) {
+  //   criteria.order_no = {
+  //     $regex: keyword
+  //   };
+  // }
+  // else if (company_name || PlanOrderModel.isCompanyNameLike(keyword)) {
+  //   company_name = company_name || keyword;
+  //   return orderModel.page({page, pagesize, criteria, company_name});
+  // }
   return orderModel.page({page, pagesize, criteria});
 });
 
-route.on('/detail', query => {
+route.on('/detail', (query) => {
   let order_id = getObjectId(query, 'order_id');
   return orderModel.fetchDetail(order_id)
   .then(order => {
