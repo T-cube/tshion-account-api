@@ -27,7 +27,7 @@ route.on('/list', (query) => {
       $regex: keyword
     };
   }
-  if (type == 'company_id') {
+  if (type == 'company_name') {
     criteria.title = {
       $regex: strToReg(keyword)
     };
