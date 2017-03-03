@@ -177,7 +177,8 @@ api.put('/:order_id/status', (req, res, next) => {
     },
     date_expires: {$gt: new Date()}
   }, {
-    $set: {status}
+    $set: {status},
+    date_update: new Date()
   })
   .then(() => res.json({}))
   .catch(next);

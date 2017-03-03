@@ -87,7 +87,7 @@ export default class InvoiceModel extends Model {
       }
     })
     .then(result => {
-      if (!result.nMatched) {
+      if (!result.nModified) {
         throw new ApiError(400, 'invalid invoice status');
       }
       return result;
