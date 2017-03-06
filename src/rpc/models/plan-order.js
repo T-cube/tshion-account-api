@@ -80,8 +80,16 @@ export default class PlanOrderModel extends Model {
     let { company_name } = props;
     let { page, pagesize } = this.getPageInfo(props);
     return this.db.company.findOne({
-      name: company_name
+      name: {$regex: company_name}
     }).then(company => {
+      if(!company){
+        return {
+          list: [],
+          page,
+          pagesize,
+          totalRows: 0
+        };
+      }
       criteria.company_id = new ObjectId(company._id);
       return Promise.all([
         this.count(criteria),
@@ -94,7 +102,7 @@ export default class PlanOrderModel extends Model {
           pagesize,
           totalRows
         };
-      });;
+      });
     });
   }
 

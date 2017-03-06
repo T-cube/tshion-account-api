@@ -79,6 +79,7 @@ export default class PlanOrder {
             date_paid: new Date(),
             method: payment_method,
           },
+          date_update: new Date()
         },
         $addToSet: {
           transactions: transactionId
@@ -156,6 +157,7 @@ export default class PlanOrder {
           method: 'balance',
           date_paid: new Date()
         },
+        date_update: new Date()
       },
       $addToSet: {
         transactions: transactionId

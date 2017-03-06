@@ -98,7 +98,7 @@ export default class UpgradeOrder extends Base {
     if (!current || current.type == 'trial' || !current.date_end) {
       times = 0;
     } else {
-      times = moment(current.date_end).diff(moment(), 'month', true);
+      times = moment(current.date_end).diff(moment().startOf('day'), 'month', true);
     }
     return times > 0 ? (Math.round(times * 100) / 100) : times;
   }
