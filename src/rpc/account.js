@@ -18,6 +18,25 @@ route.on('/list', (query) => {
     criteria['name'] = {
       $regex: strToReg(keyword, 'i')
     };
+    criteria = {
+      $or : [
+        {
+          name: {
+            $regex: strToReg(keyword, 'i')
+          }
+        },
+        {
+          email: {
+            $regex: strToReg(keyword, 'i')
+          }
+        },
+        {
+          mobile: {
+            $regex: strToReg(keyword, 'i')
+          }
+        },
+      ]
+    };
   }
   let { page, pagesize } = query;
   return accountModel.page({criteria, page, pagesize});

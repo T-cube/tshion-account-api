@@ -23,8 +23,9 @@ export default class CompanyModel extends Model {
           project_count: {$size: '$projects'},
         }
       },
+      { $sort: {_id: -1}},
       { $skip: page * pagesize },
-      { $limit: pagesize }
+      { $limit: pagesize },
     ]);
   }
 
