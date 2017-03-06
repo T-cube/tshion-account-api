@@ -27,6 +27,11 @@ export default class InvoiceModel extends Model {
         item.user = item.user_id;
         delete item.company_id;
         delete item.user_id;
+        delete item.subject;
+        delete item.address;
+        delete item.tax_rate;
+        delete item.log;
+        delete item.date_update;
       });
       return mapObjectIdToData(list, [
         ['company', 'name,logo', 'company'],
