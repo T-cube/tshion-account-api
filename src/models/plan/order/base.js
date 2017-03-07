@@ -34,7 +34,7 @@ export default class BaseOrder {
     this.products = [];
     this.original_sum = 0;
     this.paid_sum = 0;
-    this.coupon = undefined;
+    this.serial_no = undefined;
     this.status = C.ORDER_STATUS.CREATED;
     this.original_plan = undefined;
     this.date_create = new Date();
@@ -106,7 +106,7 @@ export default class BaseOrder {
             original_times: this.original_times,
             original_sum: this.original_sum,
             paid_sum: Math.round(this.paid_sum),
-            coupon: this.coupon,
+            serial_no: this.serial_no,
             discount: this.discount,
             status: this.status,
             date_create: this.date_create,
@@ -122,14 +122,14 @@ export default class BaseOrder {
     this.times = this.original_times = times;
   }
 
-  withCoupon(coupon) {
-    this.coupon = coupon;
+  withCoupon(serial_no) {
+    this.serial_no = serial_no;
   }
 
   updateUsedCoupon() {
     return db.payment.coupon.item.update({
       _id: this.company_id,
-      serial_no: this.coupon,
+      serial_no: this.serial_no,
     }, {
       $set: {
         is_used: true,
@@ -173,12 +173,12 @@ export default class BaseOrder {
   }
 
   getCouponDiscount() {
-    if (!this.coupon) {
+    if (!this.serial_no) {
       return Promise.resolve();
     }
-    return new Coupon(this.company_id).getCoupon(this.coupon).then(coupon => {
+    return new Coupon(this.company_id).getCoupon(this.serial_no).then(coupon => {
       if (!coupon || !this.isCouponAvailable(coupon)) {
-        this.coupon = undefined;
+        this.serial_no = undefined;
         return;
       }
       let { products } = coupon;
