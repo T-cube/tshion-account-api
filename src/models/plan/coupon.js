@@ -9,21 +9,19 @@ export default class Coupon {
   }
 
   getCoupons(order_type) {
-    return db.payment.company.coupon.findOne({
-      _id: this.company_id,
-    }, {
-      list: 1
+    return db.payment.coupon.item.find({
+      company_id: this.company_id,
+      is_used: false,
+      order_type: {$in: order_type},
+      'period.date_start': {$lte: new Date()},
+      'period.date_end': {$gte: new Date()},
     })
-    .then(doc => {
-      if (!doc) {
-        return [];
-      }
-      let list = doc.list.filter(i => i.status == C.COMPANY_COUPON_STATUS.UNUSED);
-      if (!list.length) {
+    .then(couponsItems => {
+      if (!couponsItems) {
         return [];
       }
       return db.payment.coupon.find({
-        _id: {$in: _.pluck(list, 'coupon')},
+        coupon_no: {$in: _.pluck(couponsItems, 'coupon_no')},
         order_type,
         'period.date_start': {$lt: new Date()},
         'period.date_end': {$gte: new Date()},
@@ -39,7 +37,7 @@ export default class Coupon {
       })
       .then(coupons => {
         coupons.forEach(coupon => {
-          coupon.coupon_no = _.find(list, i => i.status == C.COMPANY_COUPON_STATUS.UNUSED && i.coupon.equals(coupon._id)).coupon_no;
+          coupon.coupon_no = _.find(couponsItems, i => i.coupon_no.equals(coupon.coupon_no)).serial_no;
         });
         return coupons;
       });
@@ -47,16 +45,12 @@ export default class Coupon {
   }
 
   getCoupon(coupon_no) {
-    return db.payment.company.coupon.findOne({
+    return db.payment.coupon.item.findOne({
       _id: this.company_id,
-      list: {
-        $elemMatch: {
-          coupon_no,
-          status: C.COMPANY_COUPON_STATUS.UNUSED
-        }
-      }
-    }, {
-      'list.$': 1
+      serial_no: coupon_no,
+      is_used: false,
+      'period.date_start': {$lt: new Date()},
+      'period.date_end': {$gte: new Date()},
     })
     .then(doc => {
       if (!doc || !doc.list[0]) {

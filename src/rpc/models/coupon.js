@@ -126,22 +126,21 @@ export default class CouponModel extends Model {
         return;
       }
       companies = _.pluck(companies, '_id');
-      let out_of_stock_coupon = _.pluck(coupons.filter(coupon => coupon.stock_current < companies.length), '_id');
-      if (out_of_stock_coupon.length) {
-        throw new ApiError(400, {out_of_stock_coupon});
+      if (coupon.stock_current < companies.length) {
+        throw new ApiError(400, 'out_of_stock_coupon');
       }
-      let date_create = new Date();
       return Promise.all([
         Promise.all(companies.map(company_id => {
-          return this.db.coupon.item.insert({
+          return this.db.payment.coupon.item.insert({
             coupon_no: coupon.coupon_no,
             serial_no: coupon.coupon_no,
+            order_type: coupon.order_type,
             company_id,
             is_used: false,
             date_create: new Date(),
             date_used: null,
             period: coupon.period
-          })
+          });
         })),
         this.db.payment.coupon.update({
           _id: coupon.coupon_id,

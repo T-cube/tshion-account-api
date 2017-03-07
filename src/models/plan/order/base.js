@@ -127,12 +127,12 @@ export default class BaseOrder {
   }
 
   updateUsedCoupon() {
-    return db.payment.company.coupon.update({
+    return db.payment.coupon.item.update({
       _id: this.company_id,
-      'list.coupon_no': this.coupon,
+      serial_no: this.coupon,
     }, {
       $set: {
-        'list.$.status': C.COMPANY_COUPON_STATUS.USED,
+        is_used: true,
       }
     });
   }
