@@ -1,6 +1,6 @@
 .auth-body {
   margin-top: 20px;
-  max-width: 500px;
+  width: 500px;
 }
 .auth-logo {
   text-align: center;
@@ -42,11 +42,12 @@
   margin-top: 20px;
 }
 .login-form .tlf-account {
-  width: 340px;
+  width: 360px;
   margin: auto;
 }
 .tlf-account .in-lable {
   line-height: 34px;
+  margin-bottom: 10px;
 }
 .tlf-account .in-area {
   float: right;
@@ -60,11 +61,11 @@
   float: left;
   background: #00a4ff;
   border: none;
-  margin: 20px 40px;
+  margin: 20px 20px 20px 50px;
 }
 .form-group .tlf-register {
   float: right;
-  margin: 20px 66px 0 0;
+  margin: 20px 36px 0 0;
   background: none;
   border: none;
   color: #00a4ff;
