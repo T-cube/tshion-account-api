@@ -48,7 +48,7 @@ import Preference from 'models/preference';
 import TempFile from 'models/temp-file';
 import Payment from 'models/plan/payment';
 import C from 'lib/constants';
-import Captcha from 'lib/canvas-captcha';
+import Captcha from 'lib/captcha';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -70,6 +70,8 @@ const app = express();
 const server = http.Server(app);
 const io = socketio(server, { path: '/api/socket' });
 
+app.enable('trust proxy');
+
 // bind model loader
 bindLoader(app);
 
@@ -80,7 +82,7 @@ app.loadModel('ow365', OfficeWeb365, config.get('vendor.officeweb365'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
 app.loadModel('weather', Weather, config.get('vendor.showapi.weather'));
-app.loadModel('canvas-captcha', Captcha, config.get('vendor.captcha'));
+app.loadModel('captcha', Captcha, config.get('vendor.captcha'));
 app.loadModel('html-helper', HtmlHelper);
 app.loadModel('notification', Notification);
 app.loadModel('account', Account);
@@ -138,12 +140,12 @@ app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 app.use('/oauth/login', oauthRoute.login);
 app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
-app.all('/oauth/token', oauthModel.captchaCheck(), app.oauth.grant(), (req, res, next) => {
-  let redis = req.model('redis');
-  let captchaKey = `${req.body.username}_${req.body.client_id}`;
-  redis.delete(captchaKey);
-  req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
-}, oauthModel.errorSolve());
+app.all('/oauth/token',
+  oauthRoute.ipCheck(),
+  oauthRoute.userCheck(),
+  app.oauth.grant(),
+  oauthRoute.tokenSuccess(),
+  oauthRoute.errorSolve());
 app.all('/oauth/revoke', oauthRoute.revokeToken);
 
 
