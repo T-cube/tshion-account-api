@@ -44,10 +44,10 @@ export default class Coupon {
     });
   }
 
-  getCoupon(coupon_no) {
+  getCoupon(serial_no) {
     return db.payment.coupon.item.findOne({
       _id: this.company_id,
-      serial_no: coupon_no,
+      serial_no: serial_no,
       is_used: false,
       'period.date_start': {$lt: new Date()},
       'period.date_end': {$gte: new Date()},

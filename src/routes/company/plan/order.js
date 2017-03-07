@@ -22,7 +22,7 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   }
   validate(`create_order_${order_type}`, data);
   let isPrepare = /prepare\/?$/.test(req.url);
-  let { plan, member_count, coupon, times } = data;
+  let { plan, member_count, serial_no, times } = data;
   let company_id = req.company._id;
   let user_id = req.user._id;
 
@@ -32,7 +32,7 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
     user_id,
     plan,
     member_count,
-    coupon,
+    serial_no,
     times,
   })
   .then(orderModel => {

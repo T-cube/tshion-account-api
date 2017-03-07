@@ -17,9 +17,9 @@ export default class UpgradeOrder extends Base {
     this.order_type = C.ORDER_TYPE.UPGRADE;
   }
 
-  init({member_count, plan, coupon}) {
-    if (coupon) {
-      this.withCoupon(coupon);
+  init({member_count, plan, serial_no}) {
+    if (serial_no) {
+      this.withCoupon(serial_no);
     }
 
     this.plan = plan;
