@@ -20,15 +20,12 @@
   <body>
     <div class="container auth-body">
       <div class="auth-logo">
-        <div class="logo-wrap">
-          <img src="/cdn/oauth/img/logo.png" alt="tlf" class="site-logo">
-          <span class="logo-title">T立方OA</span>
-        </div>
-        <span class="relation-icon glyphicon glyphicon-resize-horizontal"></span>
-        <div class="logo-wrap">
-          <img src="/cdn/oauth/img/logo.png" alt="tlf" class="site-logo">
-          <span class="logo-title">T立方官网</span>
-        </div>
+        <img src="/cdn/oauth/img/login.png" alt="T立方" />
+      </div>
+      <div class="login-banner">
+        <span>T立方OA</span>
+        <span><img src="/cdn/oauth/img/arrow.png" alt="T立方账号登录" /></span>
+        <span>T立方官网</span>
       </div>
       <form class="login-form" method="post" class="form-horizontal">
         <input type="hidden" name="response_type" value="<%= response_type %>">
@@ -41,16 +38,16 @@
             用户名或密码错误
           </div>
         <% } %>
-        <div class="form-group">
-          <label for="username" class="col-sm-2 control-label">账户</label>
-          <div class="col-sm-10">
-            <input type="text" class="form-control" id="username" name="username" placeholder="请输入邮箱或手机号">
+        <div class="form-group tlf-account">
+          <label for="username" class="col-sm-2 control-label in-lable">账户</label>
+          <div class="col-sm-10 in-area">
+            <input type="text" class="form-control in-control" id="username" name="username" placeholder="请输入邮箱或手机号">
           </div>
         </div>
-        <div class="form-group">
-          <label for="password" class="col-sm-2 control-label">密码</label>
-          <div class="col-sm-10">
-            <input type="password" class="form-control" id="password" name="password" placeholder="请输入账号密码">
+        <div class="form-group tlf-account">
+          <label for="password" class="col-sm-2 control-label in-lable">密码</label>
+          <div class="col-sm-10 in-area">
+            <input type="password" class="form-control in-control" id="password" name="password" placeholder="请输入账号密码">
           </div>
         </div>
         <%# <div class="form-group">
@@ -63,9 +60,9 @@
           </div>
         </div>%>
         <div class="form-group">
-          <div class="col-sm-offset-2 col-sm-10">
-            <a href="/account/register" class="btn btn-default">注册</a>
-            <button type="submit" class="btn btn-primary">登录并授权</button>
+          <div class="col-sm-offset-2 col-sm-10 in-control">
+            <a href="/account/register" class="btn btn-default tlf-register">注册</a>
+            <button type="submit" class="btn btn-primary tlf-login">登录并授权 >></button>
           </div>
         </div>
       </form>

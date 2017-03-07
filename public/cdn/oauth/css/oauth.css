@@ -5,6 +5,20 @@
 .auth-logo {
   text-align: center;
 }
+.auth-logo img {
+  max-width: 100px;
+}
+.login-banner {
+  text-align: center;
+  margin: 30px 0;
+}
+.login-banner span {
+  font-size: 18px;
+  margin: 0 20px;
+}
+.login-banner span img {
+  max-width: 80px;
+}
 .logo-wrap {
   margin-top: 20px;
   width: 80px;
@@ -26,6 +40,34 @@
 }
 .login-form {
   margin-top: 20px;
+}
+.login-form .tlf-account {
+  width: 340px;
+  margin: auto;
+}
+.tlf-account .in-lable {
+  line-height: 34px;
+}
+.tlf-account .in-area {
+  float: right;
+  width: 80%;
+}
+.tlf-account .in-control {
+  border-radius: 0;
+  box-shadow: none;
+}
+.form-group .tlf-login {
+  float: left;
+  background: #00a4ff;
+  border: none;
+  margin: 20px 40px;
+}
+.form-group .tlf-register {
+  float: right;
+  margin: 20px 66px 0 0;
+  background: none;
+  border: none;
+  color: #00a4ff;
 }
 .error-message {
   margin: 15px;
