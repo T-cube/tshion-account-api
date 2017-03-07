@@ -79,3 +79,8 @@ route.on('/send', query => {
   validate('send_coupon', query);
   return companyCoupon.create(query);
 });
+
+route.on('/distribute', query => {
+  validate('distribute_coupon', query);
+  return couponModel.distribute(query);
+});

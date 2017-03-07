@@ -140,6 +140,10 @@ Currency: Number;
   is_used: Boolean,                 // 是否已使用
   date_create: Date,                // 申请日期
   date_used: Date,                  // 使用日期
+  period: {
+    date_create: string,
+    date_end: string
+  }
 }
 ``` -->
 

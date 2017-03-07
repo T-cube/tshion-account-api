@@ -202,6 +202,26 @@ const schema = {
       },
     }
   },
+  distribute_coupon: {
+    sanitization: {
+      coupon_no: {
+        type: 'string',
+      },
+      companies: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
+    },
+    validation: {
+      coupon_no: {
+        type: 'string',
+      },
+      companies: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
+    }
+  },
   invoice_status: {
     sanitization: {
       invoice_id: {$objectId: 1},

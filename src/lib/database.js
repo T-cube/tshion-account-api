@@ -73,6 +73,7 @@ const collections = [
   'payment.token',
   'payment.discount',
   'payment.coupon',
+  'payment.coupon.item',
   'payment.company.coupon',
   'payment.recharge',
   'payment.order',
