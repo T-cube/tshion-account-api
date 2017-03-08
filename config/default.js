@@ -23,11 +23,11 @@ module.exports = {
     appid: process.env.RPC_APPID,
     appsecret: process.env.RPC_APPSECRET,
   },
-  database: '127.0.0.1/tlf_core',
+  database: '127.0.0.1/tlf_core', // process.env.DATABASE
   locale: 'zh-CN',
-  // 前端展示配置
+  // list view config
   view: {
-    // 每页默认显式条目数量
+    // list view number
     listNum: 20,
     taskListNum: 10,
     approvalListNum: 10,
@@ -252,6 +252,7 @@ module.exports = {
       'panel.announcement': true,
       'panel.schedule': true,
       'panel.weather': true,
+      new_user_guide_showed: false,
     }
   },
   plan: {

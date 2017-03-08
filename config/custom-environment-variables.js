@@ -8,4 +8,5 @@ module.exports = {
     hostname: 'RPC_HOSTNAME',
     port: 'RPC_PORT',
   },
+  database: 'DATABASE',
 };

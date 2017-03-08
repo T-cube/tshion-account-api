@@ -289,14 +289,14 @@ api.post('/preference', (req, res, next) => {
   let data = req.body;
   validate('preference', data);
   if (_.isEmpty(data)) {
-    throw new ApiError(400);
+    throw new ApiError(400, 'invalid_preference_data');
   }
   req.model('preference').set(req.user._id, data)
   .then(() => res.json({}))
   .catch(next);
 });
 
-api.put('/preference/reset', (req, res, next) => {
+api.post('/preference/reset', (req, res, next) => {
   let data = req.body;
   validate('preference_reset', data);
   req.model('preference').reset(req.user._id, data.type)

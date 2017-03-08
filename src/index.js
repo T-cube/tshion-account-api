@@ -56,7 +56,7 @@ console.log();
 console.log('--------------------------------------------------------------------------------');
 console.log('Tlifang API Service v%s', version);
 console.log('--------------------------------------------------------------------------------');
-console.log(`GIT_REV=${git.short()}`);
+console.log(`GIT_SHA1=${git.short()}`);
 const NODE_ENV = process.env.NODE_ENV || 'default';
 console.log(`NODE_ENV=${NODE_ENV}`);
 console.log('loaded config:');
