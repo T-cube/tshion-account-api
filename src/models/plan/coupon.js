@@ -52,11 +52,11 @@ export default class Coupon {
       'period.date_start': {$lt: new Date()},
       'period.date_end': {$gte: new Date()},
     })
-    .then(doc => {
-      if (!doc || !doc.list[0]) {
+    .then(couponItem => {
+      if (!couponItem) {
         return null;
       }
-      let couponId = doc.list[0].coupon;
+      let couponId = coupon.coupon_no;
       return couponId && db.payment.coupon.findOne({
         _id: couponId,
         'period.date_start': {$lt: new Date()},

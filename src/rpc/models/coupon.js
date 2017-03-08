@@ -5,6 +5,7 @@ import C from 'lib/constants';
 import { ApiError } from 'lib/error';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
+import crypto from 'crypto';
 
 export default class CouponModel extends Model {
 
@@ -108,12 +109,10 @@ export default class CouponModel extends Model {
     });
   }
 
-  distribute({coupon_no, companies}) {
+  distributeCompany({coupon_no, companies}) {
     return Promise.all([
       this.db.payment.coupon.findOne({
         coupon_no: coupon_no
-      }, {
-        stock_current: 1,
       }),
       this.db.company.find({
         _id: {$in: companies}
@@ -131,9 +130,11 @@ export default class CouponModel extends Model {
       }
       return Promise.all([
         Promise.all(companies.map(company_id => {
+          let buffer = crypto.randomBytes(64).toString('hex');
+          let serial_no = coupon.coupon_no + buffer;
           return this.db.payment.coupon.item.insert({
             coupon_no: coupon.coupon_no,
-            serial_no: coupon.coupon_no,
+            serial_no: serial_no.toUpperCase(),
             order_type: coupon.order_type,
             company_id,
             is_used: false,
@@ -152,5 +153,102 @@ export default class CouponModel extends Model {
       ]);
     })
     .then(() => ({ok: 1}));
+  }
+
+  distributeUsers({coupon_no, users}) {
+    return Promise.all([
+      this.db.payment.coupon.findOne({
+        coupon_no: coupon_no
+      }),
+      this.db.user.find({
+        _id: {$in: users}
+      }, {
+        _id: 1
+      }),
+    ])
+    .then(([coupon, users]) => {
+      if (!coupon || !users.length) {
+        return;
+      }
+      users = _.pluck(users, '_id');
+      if (coupon.stock_current < users.length) {
+        throw new ApiError(400, 'out_of_stock_coupon');
+      }
+      return Promise.all([
+        Promise.all(users.map(user_id => {
+          let buffer = crypto.randomBytes(64).toString('hex');
+          let serial_no = coupon.coupon_no + buffer;
+          return this.db.payment.coupon.item.insert({
+            coupon_no: coupon.coupon_no,
+            serial_no: serial_no.toUpperCase(),
+            order_type: coupon.order_type,
+            user_id,
+            is_used: false,
+            date_create: new Date(),
+            date_used: null,
+            period: coupon.period
+          });
+        })),
+        this.db.payment.coupon.update({
+          _id: coupon.coupon_id,
+        }, {
+          $inc: {
+            stock_current: -users.length
+          }
+        })
+      ]);
+    })
+    .then(() => ({ok: 1}));
+  }
+
+  companyFetchList(props) {
+    let { page, pagesize, criteria } = props;
+    return this.db.company.aggregate([
+      { $match: criteria },
+      {
+        $project: {
+          name: 1,
+          description: 1,
+          owner: 1,
+          logo: 1,
+          date_create: 1,
+          member_count: {$size: '$members'},
+          project_count: {$size: '$projects'},
+        }
+      },
+      { $sort: {_id: -1}},
+      { $skip: page * pagesize },
+      { $limit: pagesize },
+    ])
+    .then(list=>{
+      return Promise.all(list.map(item => {
+        return this.db.payment.coupon.item.find({company_id: item._id})
+        .then(coupons => {
+          item.coupons = coupons;
+          return Promise.resolve(item);
+        });
+      }));
+    });
+  }
+
+  companyCount(criteria) {
+    return this.db.company.count(criteria);
+  }
+
+  listWithCoupon(props = {}) {
+    let { criteria } = props;
+    let { page, pagesize } = this.getPageInfo(props);
+    return Promise.all([
+      this.companyCount(criteria),
+      this.companyFetchList({criteria, page, pagesize})
+    ])
+    .then(([totalRows, list]) => {
+      return {
+        list,
+        page,
+        pagesize,
+        totalRows
+      };
+    });
   }
 }

@@ -152,7 +152,7 @@ QUERY
 QUERY
 ```javascript
 {
-  coupon_id: ObjectId,
+  coupon_no: ObjectId,
 }
 ```
 
@@ -165,5 +165,42 @@ QUERY
 {
   coupons: [ObjectId],
   companies: [ObjectId],
+}
+```
+
+### /plan/coupon/distribute/company
+
+给多个公司发某种优惠券
+
+QUERY
+```javascript
+{
+  coupon_no: String,
+  companies: [ObjectId]
+}
+```
+
+### /plan/coupon/distribute/users
+
+给多个公司发某种优惠券
+
+QUERY
+```javascript
+{
+  coupon_no: String,
+  users: [ObjectId]
+}
+```
+
+### /plan/coupon/company/list
+
+查公司列表带有coupons
+
+QUERY
+```javascript
+{
+  page: <Int>,
+  pagesize: <Int>,
+  keyword: <String>,
 }
 ```

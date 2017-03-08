@@ -3,9 +3,9 @@ import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
-import {ENUMS} from 'lib/constants';
+import C , {ENUMS} from 'lib/constants';
 import { validate } from '../schema/plan';
-import { getObjectId } from '../utils';
+import { getObjectId , strToReg} from '../utils';
 import CouponModel from '../models/coupon';
 import CompanyCouponModel from '../models/company-coupon';
 
@@ -71,8 +71,8 @@ route.on('/delete', query => {
 });
 
 route.on('/company', query => {
-  let coupon_id = getObjectId(query, 'coupon_id');
-  return companyCoupon.pageCompanyHasCoupon(coupon_id, query);
+  let coupon_no = getObjectId(query, 'coupon_no');
+  return companyCoupon.pageCompanyHasCoupon(coupon_no, query);
 });
 
 route.on('/send', query => {
@@ -80,7 +80,24 @@ route.on('/send', query => {
   return companyCoupon.create(query);
 });
 
-route.on('/distribute', query => {
+route.on('/distribute/company', query => {
   validate('distribute_coupon', query);
-  return couponModel.distribute(query);
+  return couponModel.distributeCompany(query);
+});
+
+route.on('/distribute/users', query => {
+  validate('distribute_coupon_users', query);
+  return couponModel.distributeUsers(query);
+});
+
+route.on('/company/list', query => {
+  let { keyword } = query;
+  let criteria = {};
+  if (keyword) {
+    criteria['name'] = {
+      $regex: strToReg(keyword, 'i')
+    };
+  }
+  let { page, pagesize } = query;
+  return couponModel.listWithCoupon({page, pagesize, criteria});
 });
