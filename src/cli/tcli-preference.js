@@ -25,5 +25,6 @@ if (program.reset) {
   })
   .then(() => {
     console.log('preference inserted.');
+    process.exit(0);
   });
 }
