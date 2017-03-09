@@ -168,7 +168,7 @@ QUERY
 }
 ```
 
-### /plan/coupon/distribute/company
+### /plan/coupon/distribute/companies
 
 给多个公司发某种优惠券
 
