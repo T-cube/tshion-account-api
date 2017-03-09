@@ -70,8 +70,8 @@ route.on('/delete', query => {
   return couponModel.delete(coupon_id);
 });
 
-route.on('/company', query => {
-  let coupon_no = getObjectId(query, 'coupon_no');
+route.on('/companies', query => {
+  let { coupon_no } = query;
   return companyCoupon.pageCompanyHasCoupon(coupon_no, query);
 });
 

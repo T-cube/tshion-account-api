@@ -152,7 +152,7 @@ QUERY
 QUERY
 ```javascript
 {
-  coupon_no: ObjectId,
+  coupon_no: String,
 }
 ```
 
@@ -182,7 +182,7 @@ QUERY
 
 ### /plan/coupon/distribute/users
 
-给多个公司发某种优惠券
+给多个用户发某种优惠券
 
 QUERY
 ```javascript
