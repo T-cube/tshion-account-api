@@ -112,7 +112,9 @@ export default class CouponModel extends Model {
   distributeCompany({coupon_no, companies}) {
     return Promise.all([
       this.db.payment.coupon.findOne({
-        coupon_no: coupon_no
+        coupon_no: coupon_no,
+        'period.date_start': {$lt: new Date()},
+        'period.date_end': {$gte: new Date()},
       }),
       this.db.company.find({
         _id: {$in: companies}
@@ -122,12 +124,14 @@ export default class CouponModel extends Model {
     ])
     .then(([coupon, companies]) => {
       if (!coupon || !companies.length) {
-        return;
+        throw new ApiError(400, 'coupon_out_of_date');
+        // return;
       }
       companies = _.pluck(companies, '_id');
       if (coupon.stock_current < companies.length) {
         throw new ApiError(400, 'out_of_stock_coupon');
       }
+      console.log(coupon, companies.length);
       return Promise.all([
         Promise.all(companies.map(company_id => {
           let buffer = crypto.randomBytes(64).toString('hex');
@@ -144,7 +148,7 @@ export default class CouponModel extends Model {
           });
         })),
         this.db.payment.coupon.update({
-          _id: coupon.coupon_id,
+          _id: coupon._id,
         }, {
           $inc: {
             stock_current: -companies.length

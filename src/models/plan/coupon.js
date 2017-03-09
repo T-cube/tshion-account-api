@@ -12,7 +12,7 @@ export default class Coupon {
     return db.payment.coupon.item.find({
       company_id: this.company_id,
       is_used: false,
-      order_type: {$in: order_type},
+      order_type: {$in: [order_type]},
       'period.date_start': {$lte: new Date()},
       'period.date_end': {$gte: new Date()},
     })
@@ -37,7 +37,7 @@ export default class Coupon {
       })
       .then(coupons => {
         coupons.forEach(coupon => {
-          coupon.coupon_no = _.find(couponsItems, i => i.coupon_no.equals(coupon.coupon_no)).serial_no;
+          coupon.serial_no = _.find(couponsItems, i => i.coupon_no == coupon.coupon_no ).serial_no;
         });
         return coupons;
       });
@@ -56,9 +56,9 @@ export default class Coupon {
       if (!couponItem) {
         return null;
       }
-      let couponId = coupon.coupon_no;
-      return couponId && db.payment.coupon.findOne({
-        _id: couponId,
+      let coupon_no = couponItem.coupon_no;
+      return coupon_no && db.payment.coupon.findOne({
+        coupon_no: coupon_no,
         'period.date_start': {$lt: new Date()},
         'period.date_end': {$gte: new Date()},
       });
