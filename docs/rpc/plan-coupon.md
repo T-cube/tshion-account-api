@@ -145,7 +145,7 @@ QUERY
 }
 ``` -->
 
-### /plan/coupon/company
+### /plan/coupon/companies
 
 有该优惠券的公司列表
 

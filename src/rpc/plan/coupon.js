@@ -80,7 +80,7 @@ route.on('/send', query => {
   return companyCoupon.create(query);
 });
 
-route.on('/distribute/company', query => {
+route.on('/distribute/companies', query => {
   validate('distribute_coupon', query);
   return couponModel.distributeCompany(query);
 });
