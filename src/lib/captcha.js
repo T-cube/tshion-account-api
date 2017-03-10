@@ -15,17 +15,45 @@ export default class Captcha {
     self.circleNumber = options.circleNumber;
   }
 
-  create() {
+  request(userCaptcha, redis) {
+    let self = this;
+    return new Promise((resolve) => {
+      self.createCode().then(code => {
+        Promise.all([self.save(code, userCaptcha, redis), self.create(code)]).then(([save, captchaURL]) => {
+          resolve(captchaURL);
+        });
+      });
+    });
+  }
+
+  createCode() {
+    let self = this;
+    return new Promise((resolve) => {
+      let str = 'ABCDEFGHJKLMNPQRSTUVWXYabcdefhijkmnpqrstuvwxy345678';
+      let captcha = '';
+      for(let i = 0; i < self.captchaNumber; i++) {
+        let singleCaptcha = str.charAt(Math.floor(Math.random() * str.length));
+        captcha += singleCaptcha;
+      }
+      resolve(captcha.toLowerCase());
+    });
+  }
+
+  save(code, userCaptcha, redis) {
+    return redis.set(userCaptcha, code).then(() => {
+      redis.expire(userCaptcha, 60 * 60);
+    });
+  }
+
+  create(code) {
     let self = this;
     return new Promise((resolve) => {
       let captchaWidth = self.captchaNumber * 30 + 5;
       let canvas = new Canvas(captchaWidth, 60);
       let ctx = canvas.getContext('2d');
-      let str = 'ABCDEFGHJKLMNPQRSTUVWXYabcdefhijkmnpqrstuvwxy345678';
+      let xaxisStart = 10;
       let fontStyle = ['normal', 'oblique'];
       let fontFamily = ['Arial', 'sans-serif'];
-      let xaxisStart = 10;
-      let captcha = '';
       function colorRandom() {
         return 'rgb(' + Math.floor(Math.random() * 200) + ',' + Math.floor(Math.random() * 200) + ',' + Math.floor(Math.random() * 200) + ')';
       }
@@ -38,12 +66,10 @@ export default class Captcha {
       let color = colorRandom();
       for(let i = 0; i < self.captchaNumber; i++) {
         ctx.save();
-        let singleCaptcha = str.charAt(Math.floor(Math.random() * str.length));
         let rotateChange = Math.random() * 1-0.5;
-        captcha += singleCaptcha;
         ctx.font = fontStyle[Math.floor(Math.random()*2)] + ' ' + Math.ceil(Math.ceil(Math.random()*15)+35)+'px ' + + fontFamily[Math.floor(Math.random()*2)];
         ctx.fillStyle =  color;
-        ctx.fillText(singleCaptcha, xaxisStart+Math.ceil(Math.random()*5 - 10), 50+Math.ceil(Math.random()*5 - 10));
+        ctx.fillText(code[i], xaxisStart+Math.ceil(Math.random()*5 - 10), 50+Math.ceil(Math.random()*5 - 10));
         ctx.rotate(rotateChange);
         xaxisStart += 30;
         ctx.restore();
@@ -63,7 +89,7 @@ export default class Captcha {
         ctx.lineWidth = 2;
         ctx.stroke();
       }
-      resolve({captcha, canvas: canvas.toDataURL()});
+      resolve({canvasURL: canvas.toDataURL()});
     });
   }
 }
