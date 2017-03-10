@@ -53,5 +53,6 @@ api.get('/captcha', (req, res, next) => {
     } else {
       throw new ApiError(400, 'no_need_captcha');
     }
-  });
+  })
+  .catch(next);
 });
