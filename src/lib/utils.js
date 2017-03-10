@@ -30,7 +30,7 @@ export function generateToken(length = 48) {
 }
 
 export function hashPassword(password) {
-  const rounds = config.get('oauth.passwordHashRounds');
+  const rounds = config.get('security.passwordHashRounds');
   const genSalt = Promise.promisify(bcrypt.genSalt);
   const hash = Promise.promisify(bcrypt.hash);
   return genSalt(rounds)

@@ -46,6 +46,8 @@ module.exports = {
     accessTokenLifetime: 30 * 60,
     refreshTokenLifetime: 15 * 24 * 3600,
     wechat_client_id: 'com_tlifang_wechat',
+  },
+  security: {
     passwordHashRounds: 10,
     attemptTimes: {
       ipTimes: 150,

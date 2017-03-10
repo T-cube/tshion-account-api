@@ -11,7 +11,7 @@ import { camelCaseObjectKey, getClientIp, generateToken } from 'lib/utils';
 import config from 'config';
 import { validate } from './oauth-routes.schema';
 
-const attemptTimes = config.get('oauth.attemptTimes');
+const attemptTimes = config.get('security.attemptTimes');
 
 const token_types = ['access_token', 'refresh_token'];
 

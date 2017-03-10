@@ -17,7 +17,7 @@ export default api;
 
 // api.use(oauthCheck());
 
-const attemptTimes = config.get('oauth.attemptTimes');
+const attemptTimes = config.get('security.attemptTimes');
 
 
 api.get('/avatar-list/:type', (req, res, next) => {
