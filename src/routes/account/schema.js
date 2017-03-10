@@ -25,7 +25,7 @@ const schema = {
     validation: {
       password: { type: 'string', minLength: 6, maxLength: 20 },
     },
-  }
+  },
 };
 
 export const validate = buildValidator(schema);

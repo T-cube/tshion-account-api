@@ -10,15 +10,6 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { authCheck } from 'lib/middleware';
 import { time, fetchCompanyMemberInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
-import { sanitizeValidateObject } from 'lib/inspector';
-import {
-  projectSanitization,
-  projectValidation,
-  memberSanitization,
-  memberValidation,
-  tagSanitization,
-  tagValidation,
-} from './schema';
 import {
   PROJECT_TRANSFER,
   PROJECT_QUIT,
@@ -27,6 +18,7 @@ import {
   PROJECT_MEMBER_SETADMIN,
   PROJECT_MEMBER_REMOVEADMIN,
 } from 'models/notification-setting';
+import { validate } from './schema';
 
 /* company collection */
 let api = express.Router();
@@ -46,7 +38,7 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(projectSanitization, projectValidation, data);
+  validate('project', data);
 
   _.extend(data, {
     company_id: req.company._id,
@@ -111,7 +103,7 @@ api.get('/:project_id', (req, res, next) => {
 
 api.put('/:project_id', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(projectSanitization, projectValidation, data);
+  validate('project', data);
 
   db.project.update({
     _id: ObjectId(req.params.project_id),
@@ -253,7 +245,7 @@ api.post('/:project_id/member', (req, res, next) => {
   let project_id = req.project._id;
   let data = req.body;
   data.map(item => {
-    sanitizeValidateObject(memberSanitization, memberValidation, item);
+    validate('member', item);
     item.type = C.PROJECT_MEMBER_TYPE.NORMAL;
   });
   let members = data.map(item => item._id);
@@ -674,7 +666,7 @@ function ensureProjectAdmin(project, user_id) {
 function fetchTagAndValidTag(req, tag_id) {
   let project_id = req.project._id;
   let data = req.body;
-  sanitizeValidateObject(tagSanitization, tagValidation, data);
+  validate('tag', data);
   return db.project.findOne({
     _id: project_id,
     'tags.name': data.name
