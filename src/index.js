@@ -82,7 +82,7 @@ app.loadModel('ow365', OfficeWeb365, config.get('vendor.officeweb365'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
 app.loadModel('weather', Weather, config.get('vendor.showapi.weather'));
-app.loadModel('captcha', Captcha, config.get('vendor.captcha'));
+app.loadModel('captcha', Captcha, config.get('userVerifyCode.captcha'));
 app.loadModel('html-helper', HtmlHelper);
 app.loadModel('notification', Notification);
 app.loadModel('account', Account);

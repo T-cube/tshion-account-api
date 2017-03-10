@@ -17,7 +17,7 @@ export default api;
 
 // api.use(oauthCheck());
 
-const attemptTimes = config.get('vendor.attemptTimes');
+const attemptTimes = config.get('oauth.attemptTimes');
 
 
 api.get('/avatar-list/:type', (req, res, next) => {
@@ -40,11 +40,12 @@ api.get('/avatar-list/:type', (req, res, next) => {
 
 api.get('/captcha', (req, res, next) => {
   let { username, captchaType } = req.query;
-  validate('captcha', {username, captchaType});
+  let data = { username: req.query.username, captchaType: req.query.captchaType };
+  validate('captcha', data);
   let captcha = req.model('captcha');
   let redis = req.model('redis');
-  let userCaptcha = `${username}_${captchaType}_captcha`;
-  let userKey = `${username}_error_times`;
+  let userCaptcha = `captcha_${data.username}_${data.captchaType}`;
+  let userKey = `error_times_${data.username}`;
   redis.get(userKey).then(times => {
     if (times > attemptTimes.userCaptchaTimes - 1) {
       captcha.request(userCaptcha, redis).then(canvasURL => {

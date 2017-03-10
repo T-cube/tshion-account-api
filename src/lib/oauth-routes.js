@@ -11,7 +11,7 @@ import { camelCaseObjectKey, getClientIp, generateToken } from 'lib/utils';
 import config from 'config';
 import { validate } from './oauth-routes.schema';
 
-const attemptTimes = config.get('vendor.attemptTimes');
+const attemptTimes = config.get('oauth.attemptTimes');
 
 const token_types = ['access_token', 'refresh_token'];
 
@@ -123,11 +123,11 @@ export function authCodeCheck(req, next) {
 export function ipCheck() {
   return (req, res, next) => {
     let ip = req.ip;
-    let ipKey = `${ip}_error_times`;
+    let ipKey = `attempt_times_${ip}`;
     let redis = req.model('redis');
     redis.incr(ipKey).then(ipTimes => {
       if (ipTimes == 2) {
-        redis.expire(ipKey, 60 * 60);
+        redis.expire(ipKey, attemptTimes.ipTTL);
       }
       if (ipTimes> attemptTimes.ipTimes) {
         throw new ApiError(400, 'ip_invalid');
@@ -141,15 +141,15 @@ export function ipCheck() {
 export function userCheck() {
   return (req, res, next) => {
     let username = req.body.username;
-    let userKey = `${username}_error_times`;
-    let userCaptcha = `${username}_login_captcha`;
+    let userKey = `error_times_${username}`;
+    let userCaptcha = `captcha_${username}_login`;
     let redis = req.model('redis');
     try {
       validate('params', req.body);
     } catch (err) {
       redis.incr(userKey).then(times => {
         if (times == 2) {
-          redis.expire(userKey, 60 * 60);
+          redis.expire(userKey, attemptTimes.userTTL);
         }
         if (times > attemptTimes.userLockTimes){
           return next(new ApiError(400, 'account_locked'));
@@ -186,16 +186,17 @@ export function errorSolve(err, req, res, next) {
     new Promise((resolve, reject) => {
       let redis = req.model('redis');
       let username = req.body.username;
-      let userKey = `${username}_error_times`;
+      let userKey = `error_times_${username}`;
       if (err.error == 'invalid_grant') {
         redis.incr(userKey).then(userTimes => {
           if (userTimes > attemptTimes.userCaptchaTimes - 1) {
-            reject(new ApiError(400, 'login_fail_need_captcha'));
+            throw new ApiError(400, 'login_fail_need_captcha');
           } else {
-            redis.expire(userKey, 60 * 60);
+            redis.expire(userKey, attemptTimes.userTTL);
             resolve();
           }
-        });
+        })
+        .catch(next);
       }
     })
     .then(() => {
@@ -215,8 +216,8 @@ export function errorSolve(err, req, res, next) {
 export function tokenSuccess(req, res, next) {
   return (req, res, next) => {
     let redis = req.model('redis');
-    let userKey = `${req.body.username}_error_times`;
-    let userCaptcha = `${req.body.username}_captcha`;
+    let userKey = `error_times_${req.body.username}`;
+    let userCaptcha = `captcha_${req.body.username}_login`;
     redis.delete(userKey);
     redis.delete(userCaptcha);
     req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);

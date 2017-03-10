@@ -30,7 +30,7 @@ export function generateToken(length = 48) {
 }
 
 export function hashPassword(password) {
-  const rounds = config.get('passwordHashRounds');
+  const rounds = config.get('oauth.passwordHashRounds');
   const genSalt = Promise.promisify(bcrypt.genSalt);
   const hash = Promise.promisify(bcrypt.hash);
   return genSalt(rounds)
@@ -477,7 +477,7 @@ export function saveCdnInBucket(bucketInstance, files) {
     const { key, path } = files;
     return cdnUpload(key, path);
   }
-  
+
   return Promise.map(files, file => {
     const { key, path } = file;
     return cdnUpload(key, path);
