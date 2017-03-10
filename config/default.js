@@ -219,10 +219,15 @@ module.exports = {
         },
       },
     },
-    captcha:{
+    captcha: {
       captchaNumber: 4,
       lineNumber: 4,
       circleNumber: 4,
+    },
+    attemptTimes: {
+      ipTimes: 150,
+      userCaptchaTimes: 3,
+      userLockTimes: 10, 
     },
   },
   download: {

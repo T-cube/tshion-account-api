@@ -8,6 +8,10 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import oauthModel from 'lib/oauth-model';
 import { camelCaseObjectKey, getClientIp, generateToken } from 'lib/utils';
+import config from 'config';
+import { validate } from './oauth-routes.schema';
+
+const attemptTimes = config.get('vendor.attemptTimes');
 
 const token_types = ['access_token', 'refresh_token'];
 
@@ -122,9 +126,12 @@ export function ipCheck() {
     let ipKey = `${ip}_error_times`;
     let redis = req.model('redis');
     redis.incr(ipKey).then(ipTimes => {
-      if(ipTimes> 99) {
+      if (ipTimes == 2) {
+        redis.expire(ipKey, 60 * 60);
+      }
+      if (ipTimes> attemptTimes.ipTimes) {
         throw new ApiError(400, 'ip_invalid');
-      }else {
+      } else {
         next();
       }
     }).catch(next);
@@ -137,53 +144,61 @@ export function userCheck() {
     let userKey = `${username}_error_times`;
     let userCaptcha = `${username}_login_captcha`;
     let redis = req.model('redis');
+    try {
+      validate('params', req.body);
+    } catch (err) {
+      redis.incr(userKey).then(times => {
+        if (times == 2) {
+          redis.expire(userKey, 60 * 60);
+        }
+        if (times > attemptTimes.userLockTimes){
+          return next(new ApiError(400, 'account_locked'));
+        }
+        return next(err);
+      });
+    }
     redis.get(userKey).then(times => {
-      if(times < 3){
+      if (times < attemptTimes.userCaptchaTimes) {
         next();
-      }else if (times > 2 && times < 11) {
-        if(!req.body.captcha){
+      } else if (times > attemptTimes.userCaptchaTimes - 1 && times < attemptTimes.userLockTimes) {
+        if (!req.body.captcha) {
           redis.incr(userKey);
           throw new ApiError(400, 'missing_captcha');
-        }else {
+        } else {
           redis.get(userCaptcha).then(captcha => {
-            if(req.body.captcha.toLowerCase() == captcha.toLowerCase()){
+            if (req.body.captcha == captcha) {
               next();
-            }else {
+            } else {
               redis.incr(userKey);
               throw new ApiError(400, 'wrong_captcha');
             }
           }).catch(next);
         }
-      }else {
+      } else {
         throw new ApiError(400, 'account_locked');
       }
     }).catch(next);
   };
 }
 
-
-export function wrongCheck(err, req, res, next) {
-  return new Promise((resolve, reject) => {
-    let redis = req.model('redis');
-    let username = req.body.username;
-    let userKey = `${username}_error_times`;
-    if(err.error == 'ip_invalid' || err.error == 'missing_captcha' || err.error == 'wrong_captcha' || err.error == 'account_locked'){
-      return resolve();
-    }
-    redis.incr(userKey).then(userTimes => {
-      if(userTimes > 2){
-        reject(new ApiError(400, 'login_fail_need_captcha'));
-      }else {
-        redis.expire(userKey, 60 * 60);
-        resolve();
-      }
-    });
-  });
-}
-
 export function errorSolve(err, req, res, next) {
   return (err, req, res, next) => {
-    this.wrongCheck(err, req, res, next).then(() => {
+    new Promise((resolve, reject) => {
+      let redis = req.model('redis');
+      let username = req.body.username;
+      let userKey = `${username}_error_times`;
+      if (err.error == 'invalid_grant') {
+        redis.incr(userKey).then(userTimes => {
+          if (userTimes > attemptTimes.userCaptchaTimes - 1) {
+            reject(new ApiError(400, 'login_fail_need_captcha'));
+          } else {
+            redis.expire(userKey, 60 * 60);
+            resolve();
+          }
+        });
+      }
+    })
+    .then(() => {
       let {body: {grant_type}} = req;
       if (grant_type == 'password') {
         oauthModel._getUser(req.body.username)
