@@ -46,7 +46,7 @@ export default class Coupon {
 
   getCoupon(serial_no) {
     return db.payment.coupon.item.findOne({
-      _id: this.company_id,
+      company_id: this.company_id,
       serial_no: serial_no,
       is_used: false,
       'period.date_start': {$lt: new Date()},
