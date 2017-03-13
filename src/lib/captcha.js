@@ -35,7 +35,7 @@ export default class Captcha {
         let singleCaptcha = str.charAt(Math.floor(Math.random() * str.length));
         captcha += singleCaptcha;
       }
-      resolve(captcha);
+      resolve(captcha.toLowerCase());
     });
   }
 

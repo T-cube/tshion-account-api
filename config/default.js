@@ -35,7 +35,6 @@ module.exports = {
     maxListNum: 100,
     userLoginListNum: 10,
   },
-  passwordHashRounds: 10,
   avatar: {
     count: {
       company: 10,
@@ -46,7 +45,17 @@ module.exports = {
   oauth: {
     accessTokenLifetime: 30 * 60,
     refreshTokenLifetime: 15 * 24 * 3600,
-    wechat_client_id: 'com_tlifang_wechat'
+    wechat_client_id: 'com_tlifang_wechat',
+  },
+  security: {
+    passwordHashRounds: 10,
+    attemptTimes: {
+      ipTimes: 150,
+      userCaptchaTimes: 3,
+      userLockTimes: 10,
+      ipTTL: 3600,
+      userTTL: 3600
+    },
   },
   userVerifyCode: {
     email: {
@@ -56,7 +65,12 @@ module.exports = {
     sms: {
       codeLength: 6,
       expires: 15 * 60, // 15 minutes in seconds
-    }
+    },
+    captcha: {
+      captchaNumber: 4,
+      lineNumber: 4,
+      circleNumber: 4,
+    },
   },
   accountLevel: {
     free: {
@@ -218,11 +232,6 @@ module.exports = {
           },
         },
       },
-    },
-    captcha:{
-      captchaNumber: 4,
-      lineNumber: 4,
-      circleNumber: 4,
     },
   },
   download: {

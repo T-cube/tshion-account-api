@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import config from 'config';
+import { validate } from './schema';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -15,6 +16,9 @@ let api = require('express').Router();
 export default api;
 
 // api.use(oauthCheck());
+
+const attemptTimes = config.get('security.attemptTimes');
+
 
 api.get('/avatar-list/:type', (req, res, next) => {
   let type = req.params.type;
@@ -35,12 +39,21 @@ api.get('/avatar-list/:type', (req, res, next) => {
 });
 
 api.get('/captcha', (req, res, next) => {
+  let { username, captchaType } = req.query;
+  let data = { username: req.query.username, captchaType: req.query.captchaType };
+  validate('captcha', data);
   let captcha = req.model('captcha');
   let redis = req.model('redis');
-  let username = req.query.username;
-  let captchaType = req.query.captchaType;
-  let userCaptcha = `${username}_${captchaType}_captcha`;
-  captcha.request(userCaptcha, redis).then(canvasURL => {
-    res.send(canvasURL);
-  });
+  let userCaptcha = `captcha_${data.username}_${data.captchaType}`;
+  let userKey = `error_times_${data.username}`;
+  redis.get(userKey).then(times => {
+    if (times > attemptTimes.userCaptchaTimes - 1) {
+      captcha.request(userCaptcha, redis).then(canvasURL => {
+        res.send(canvasURL);
+      });
+    } else {
+      throw new ApiError(400, 'no_need_captcha');
+    }
+  })
+  .catch(next);
 });

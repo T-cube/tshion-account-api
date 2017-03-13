@@ -331,6 +331,9 @@ let constants = {
     CANCELLED: 'cancelled',
     ISSUED: 'issued',
     COMPLETED: 'completed',
+  },
+  CAPTCHA_TYPE: {
+    LOGIN: 'login',
   }
 
 };
