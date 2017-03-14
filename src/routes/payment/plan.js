@@ -52,6 +52,7 @@ api.use(bodyParser.urlencoded({ extended: true }));
 
 api.all('/notify/:payment_method', (req, res, next) => {
   let notify = !_.isEmpty(req.body) ? req.body : req.query;
+  console.log({notify});
   if (_.isEmpty(notify)) {
     throw new ApiError(400);
   }
@@ -59,7 +60,6 @@ api.all('/notify/:payment_method', (req, res, next) => {
   if (!_.contains(['wxpay', 'alipay'], payment_method)) {
     throw new ApiError(404);
   }
-  console.log({notify});
   // checkSign(data).catch(next);
   return req.model('payment').processNotify(payment_method, notify)
   .then(doc => {

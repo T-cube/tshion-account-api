@@ -6,19 +6,11 @@ import Promise from 'bluebird';
 import C from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { sanitizeValidateObject } from 'lib/inspector';
-import {
-  discussionSanitization,
-  discussionValidation,
-  commentSanitization,
-  commentValidation,
-  followSanitization,
-  followValidation,
-} from './schema';
 import { fetchCompanyMemberInfo } from 'lib/utils';
 import {
   PROJECT_DISCUSSION
 } from 'models/notification-setting';
+import { validate } from './schema';
 
 let api = express.Router();
 export default api;
@@ -64,7 +56,7 @@ api.get('/count', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   let project_id = req.project._id;
-  sanitizeValidateObject(discussionSanitization, discussionValidation, data);
+  validate('discussion', data);
   _.extend(data, {
     project_id: project_id,
     creator: req.user._id,
@@ -89,7 +81,7 @@ api.post('/', (req, res, next) => {
 api.put('/:discussion_id', (req, res, next) => {
   let data = req.body;
   let discussion_id = ObjectId(req.params.discussion_id);
-  sanitizeValidateObject(discussionSanitization, discussionValidation, data);
+  validate('discussion', data);
   data.date_update = new Date();
   req.model('html-helper').sanitize(data.content)
   .then(content => {
@@ -173,7 +165,7 @@ api.post('/:discussion_id/follow', (req, res, next) => {
   let data = req.body;
   let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
-  sanitizeValidateObject(followSanitization, followValidation, data);
+  validate('follow', data);
   db.discussion.update({
     _id: discussion_id,
     project_id: project_id,
@@ -206,7 +198,7 @@ api.post('/:discussion_id/comment', (req, res, next) => {
   let project_id = req.project._id;
   let discussion_id = ObjectId(req.params.discussion_id);
   let data = req.body;
-  sanitizeValidateObject(commentSanitization, commentValidation, data);
+  validate('comment', data);
   _.extend(data, {
     discussion_id: discussion_id,
     creator: req.user._id,
