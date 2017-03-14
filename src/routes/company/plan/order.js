@@ -182,6 +182,26 @@ api.put('/:order_id/status', (req, res, next) => {
       date_update: new Date()
     },
   })
+  .then(() => {
+    return db.payment.order.findOne({
+      _id: order_id,
+      company_id,
+    })
+    .then(order => {
+      if (order.serial_no) {
+        return db.payment.coupon.item.update({
+          company_id,
+          serial_no: order.serial_no
+        }, {
+          $set: {
+            is_used: false
+          }
+        });
+      } else {
+        return Promise.resolve();
+      }
+    });
+  })
   .then(() => res.json({}))
   .catch(next);
 });

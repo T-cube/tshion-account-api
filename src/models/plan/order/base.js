@@ -128,7 +128,6 @@ export default class BaseOrder {
 
   updateUsedCoupon() {
     return db.payment.coupon.item.update({
-      _id: this.company_id,
       serial_no: this.serial_no,
     }, {
       $set: {
