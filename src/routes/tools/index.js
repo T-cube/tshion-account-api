@@ -60,8 +60,7 @@ api.get('/captcha', (req, res, next) => {
 
 api.get('/broadcast/list', (req, res, next) => {
   let rpc = req.model('clientRpc');
-  let { page, pagesize, status } = req.query;
-  rpc.route('/broadcast/list', { page, pagesize, status }, data => {
+  rpc.route('/broadcast/list', { status: 1 }, data => {
     res.json(data);
   });
 });
