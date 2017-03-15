@@ -7,6 +7,6 @@ export function initRPC(rpcConfig, _loader) {
   .register(rpcConfig)
   .then(clientRpc => {
     initRoutes(clientRpc, _loader);
-    return rpcConfig;
+    return {rpcConfig, clientRpc};
   });
 }

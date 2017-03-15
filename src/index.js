@@ -100,7 +100,10 @@ app.loadModel('payment', Payment);
 
 let _loader = {};
 app.bindLoader(_loader);
-initRPC(config.get('rpc'), _loader).then(cfg => {
+initRPC(config.get('rpc'), _loader).then(rpc => {
+  let cfg = rpc.rpcConfig;
+  let ClientRpc = rpc.clientRpc;
+  app.bindModel('clientRpc', ClientRpc);
   console.log(`rpc connected to ${cfg.protocol}://${cfg.hostname}:${cfg.port}`);
 }).catch(e => {
   console.error('rpc:', e);
