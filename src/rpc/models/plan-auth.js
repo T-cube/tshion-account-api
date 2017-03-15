@@ -55,7 +55,8 @@ export default class PlanAuthModel extends Model {
       doc.company = doc.company_id;
       delete doc.user_id;
       delete doc.company_id;
-      let info = doc.nearest_data = doc.data.pop();
+      const data = doc.nearest_data = doc.data.pop();
+      const { info } = data;
       doc.history_data = doc.data;
       delete doc.data;
       const qiniu = this.model('qiniu').bucket('cdn-private');
