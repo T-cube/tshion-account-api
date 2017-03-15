@@ -87,12 +87,16 @@ OUTPUT
   token_type: 'baerer',
 }
 ```
+
 失败
-1.`ip_invalid` , 此ip登录尝试次数过多，锁定ip。
-2.`account_locked` , 此账号登录失败次数果断，锁定账号。
-3.`login_fail_need_captcha` , 账号登录密码错误三次，返回该错误时，前端应自动调用获取验证码接口 请求的QUERY中 `captchaType` 为 `login`。
-4.`missing_captcha` , 账号登录失败次数多，登录需要有`captcha` , 返回该错误前端应自动调用验证码接口， QUERY要求同上一条。
-5.`wrong_captcha` , 账号登录校验验证码时，验证码错误， 返回该错误前端自动调用验证码接口， QUERY同上一条。
+
+| code | error | description |
+| ---- | ----- | ----------- |
+| 429  | `too_many_requests` | 单位时间内，用户请求次数过多 |
+| 400  | `account_locked` | 此账号登录失败次数过多，锁定账号。|
+| 400  | `login_fail_need_captcha` | 账号登录密码错误三次，返回该错误时，前端应自动调用获取验证码接口 请求的QUERY中 `captchaType` 为 `login`。|
+| 400  | `missing_captcha` | 账号登录失败次数多，登录需要有`captcha` , 返回该错误前端应自动调用验证码接口， QUERY要求同上一条。 |
+| 400  | `wrong_captcha` |  账号登录校验验证码时，验证码错误， 返回该错误前端自动调用验证码接口， QUERY同上一条。|
 
 当 grant_type == 'authorization_code' 时，如无 redirect_uri 参数，正常返回，否则做跳转并把结果放入URL参数：
 

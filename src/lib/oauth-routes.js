@@ -131,7 +131,7 @@ export function ipCheck() {
           redis.expire(ipKey, attemptTimes.ipTTL);
         }
         if (ipTimes> attemptTimes.ipTimes) {
-          throw new ApiError(400, 'ip_invalid');
+          throw new ApiError(429, 'too_many_requests');
         } else {
           next();
         }
