@@ -66,9 +66,9 @@ api.get('/broadcast/list', (req, res, next) => {
 });
 
 api.get('/broadcast/detail', (req, res, next) => {
-  let { braodcast_id } = req.query;
+  let { broadcast_id } = req.query;
   let rpc = req.model('clientRpc');
-  rpc.route('/broadcast/detail', {braodcast_id}, data => {
+  rpc.route('/broadcast/detail', {broadcast_id}, data => {
     res.json(data);
   });
 });

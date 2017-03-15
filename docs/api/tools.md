@@ -39,4 +39,4 @@ OUTPUT：
 ### GET /tools/broadcast/detail
 
 QUERY:
-`braodcast_id` 
+`broadcast_id`
