@@ -32,14 +32,11 @@ OUTPUT：
 }
 ```
 
-### GET /broadcast/list
+### GET /tools/broadcast/list
 
-QUERY:
-`page` `pagesize` `status`
 
-`status` 枚举['1', '0']
 
-### GET /broadcast/detail
+### GET /tools/broadcast/detail
 
 QUERY:
 `braodcast_id` 
