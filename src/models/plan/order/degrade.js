@@ -33,7 +33,7 @@ export default class DegradeOrder extends Base {
         $set: {
           degrade: {
             order: _.pick(order, '_id', 'plan', 'member_count'),
-            time: current.date_end,
+            time: current.date_end - new Date() > 0 ? current.date_end : new Date(),
             date_create,
           }
         }
@@ -49,7 +49,7 @@ export default class DegradeOrder extends Base {
     .then(({member_count}) => {
       let error = [];
       let isValid = true;
-      if (!current || current.type == 'trial' || current.plan == C.TEAMPLAN.FREE || times <= 0) {
+      if (!current || current.plan == C.TEAMPLAN.FREE || times <= 0) {
         isValid = false;
         error.push('invalid_plan_status');
       }
@@ -106,9 +106,13 @@ export default class DegradeOrder extends Base {
   getTimes() {
     let {current} = this.getPlanStatus();
     let times;
-    if (!current || current.type == 'trial' || !current.date_end) {
+    if (!current || !current.date_end) {
       times = 0;
     } else {
+      if (current.type == 'trial') {
+        times = 1;
+        return;
+      }
       times = moment(current.date_end).diff(moment().startOf('day'), 'month', true);
     }
     this.setTimes(times > 0 ? (Math.round(times * 100) / 100) : times);
