@@ -34,10 +34,7 @@ OUTPUT：
 
 ### GET /tools/broadcast/list
 
-QUERY:
-`page` `pagesize` `status`
 
-`status` 参数只能为1
 
 ### GET /tools/broadcast/detail
 
