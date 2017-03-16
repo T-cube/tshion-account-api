@@ -143,12 +143,14 @@ app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 app.use('/oauth/login', oauthRoute.login);
 app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
-app.all('/oauth/token',
+app.post('/oauth/token',
   oauthRoute.ipCheck(),
   oauthRoute.userCheck(),
   app.oauth.grant(),
   oauthRoute.tokenSuccess(),
-  oauthRoute.errorSolve());
+  oauthRoute.captchaErrorResolve(),
+  oauthRoute.logError()
+);
 app.all('/oauth/revoke', oauthRoute.revokeToken);
 
 
@@ -163,7 +165,11 @@ app.use(app.oauth.errorHandler());
 app.use(apiErrorHandler);
 
 // starting server
-server.listen(config.get('server'), () => {
+server.listen(config.get('server'), err => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
   console.log('listening on ', server.address());
   console.log('--------------------------------------------------------------------------------');
 });
