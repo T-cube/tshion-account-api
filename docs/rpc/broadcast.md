@@ -29,7 +29,7 @@ QUERY
 ```javascript
 {
   broadcast_id: <String>,
-  status: <String>,
+  status: <String>, // ENUM :'active', 'expired'
 }
 ```
 
