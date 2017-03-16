@@ -334,6 +334,11 @@ let constants = {
   },
   CAPTCHA_TYPE: {
     LOGIN: 'login',
+  },
+
+  BROADCAST_STATUS: {
+    ACTIVE: 'active',
+    INACTIVE: 'inactive'
   }
 
 };

@@ -4,6 +4,7 @@ import accountRoutes from './account';
 import companyRoutes from './company';
 import planRoutes from './plan';
 import qrcodeRoutes from './qrcode';
+import broadcastRoutes from './broadcast';
 
 import QrcodeModel from './models/qrcode';
 import PlanAuthModel from './models/plan-auth';
@@ -18,6 +19,7 @@ export default (socket, _loader) => {
   route.use('/company', companyRoutes);
   route.use('/plan', planRoutes);
   route.use('/qrcode', qrcodeRoutes);
+  route.use('/broadcast', broadcastRoutes);
 
   // bind loader
   _loader.loadModel('qrcode-model', QrcodeModel);

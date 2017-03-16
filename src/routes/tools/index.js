@@ -58,17 +58,18 @@ api.get('/captcha', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/broadcast/list', (req, res, next) => {
-  let rpc = req.model('clientRpc');
-  rpc.route('/broadcast/list', { status: '1' }, data => {
+api.get('/broadcast', (req, res, next) => {
+  let broadcast = req.model('broadcast');
+  broadcast.list().then(data => {
     res.json(data);
   });
 });
 
-api.get('/broadcast/detail', (req, res, next) => {
-  let { braodcast_id } = req.query;
-  let rpc = req.model('clientRpc');
-  rpc.route('/broadcast/detail', {braodcast_id}, data => {
+api.get('/broadcast/:broadcast_id', (req, res, next) => {
+  let data = req.params;
+  validate('broadcast_id', data);
+  let broadcast = req.model('broadcast');
+  broadcast.detail(data.broadcast_id).then(data => {
     res.json(data);
   });
 });

@@ -32,11 +32,6 @@ OUTPUT：
 }
 ```
 
-### GET /tools/broadcast/list
+### GET /tools/broadcast
 
-
-
-### GET /tools/broadcast/detail
-
-QUERY:
-`braodcast_id` 
+### GET /tools/broadcast/:broadcast_id

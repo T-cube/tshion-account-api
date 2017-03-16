@@ -17,6 +17,14 @@ const schema = {
       captchaType: { $enum: ENUMS.CAPTCHA_TYPE },
     },
   },
+  broadcast_id: {
+    sanitization: {
+      broadcast_id: { $objectId: 1 },
+    },
+    validation: {
+      broadcast_id: { $objectId: 1 },
+    },
+  }
 };
 
 export const validate = buildValidator(schema);
