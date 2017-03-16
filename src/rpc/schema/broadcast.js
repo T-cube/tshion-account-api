@@ -3,7 +3,7 @@ import C, { ENUMS } from 'lib/constants';
 import { buildValidator } from 'lib/inspector';
 
 const schema = {
-  broadcast: {
+  broadcast_check: {
     sanitization: {
       title: { type: 'string' },
       content: { type: 'string' },
@@ -19,7 +19,7 @@ const schema = {
   },
   broadcast_status: {
     sanitization: {
-      broadcast_id: { type: 'string'},
+      broadcast_id: {  $objectId: 1 },
       status: { type: 'string' }
     },
     validation: {
@@ -29,10 +29,11 @@ const schema = {
   },
   broadcast_id: {
     sanitization: {
-      broadcast_id: { type: 'string'},
+      broadcast_id: { $objectId: 1 },
     },
     validation: {
       broadcast_id: { $objectId: 1 },
     },
   }
 };
+export const validate = buildValidator(schema);

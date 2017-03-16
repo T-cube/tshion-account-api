@@ -21,7 +21,7 @@ route.on('/list', query => {
 });
 
 route.on('/create', query  => {
-  validate('broadcast', query);
+  validate('broadcast_check', query);
   let { title, content, link, creator } = query;
   return broadcastModel.create({ title, content, link, creator});
 });

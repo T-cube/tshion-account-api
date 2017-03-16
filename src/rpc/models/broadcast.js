@@ -23,7 +23,7 @@ export default class BroadcastModel extends Model {
     });
   }
 
-  udpate(props) {
+  update(props) {
     let { status, broadcast_id } = props;
     return this.db.broadcast.update({ _id: broadcast_id}, {
       $set: {
