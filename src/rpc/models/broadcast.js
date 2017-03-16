@@ -32,6 +32,11 @@ export default class BroadcastModel extends Model {
     });
   }
 
+  detail(props) {
+    let { broadcast_id } =props;
+    return this.db.broadcast.findOne({ _id: broadcast_id });
+  }
+
   delete(props) {
     let { broadcast_id } =props;
     return this.db.broadcast.remove({ _id: broadcast_id });

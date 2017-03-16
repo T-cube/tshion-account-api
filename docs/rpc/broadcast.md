@@ -29,11 +29,20 @@ QUERY
 ```javascript
 {
   broadcast_id: <String>,
-  status: <String>,
+  status: <String>, // ENUM : 'active', 'expired'
 }
 ```
 
 ### /broadcast/delete
+
+QUERY
+```javascript
+{
+  broadcast_id: <String>,
+}
+```
+
+### /broadcast/detail
 
 QUERY
 ```javascript

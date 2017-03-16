@@ -37,3 +37,9 @@ route.on('/delete', query => {
   let { broadcast_id } = query;
   return broadcastModel.delete({ broadcast_id });
 });
+
+route.on('/detail', query => {
+  validate('broadcast_id', query);
+  let { broadcast_id } = query;
+  return broadcastModel.detail({ broadcast_id });
+});
