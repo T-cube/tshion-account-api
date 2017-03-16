@@ -29,7 +29,11 @@ QUERY
 ```javascript
 {
   broadcast_id: <String>,
+<<<<<<< HEAD
   status: <String>, // ENUM : 'active', 'expired'
+=======
+  status: <String>, // ENUM :'active', 'expired'
+>>>>>>> 87027d59d0f8962cb1150b7f906beb9c6e8a9502
 }
 ```
 
