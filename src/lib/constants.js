@@ -338,7 +338,7 @@ let constants = {
 
   BROADCAST_STATUS: {
     ACTIVE: 'active',
-    EXPIRED: 'expired'
+    INACTIVE: 'inactive'
   }
 
 };

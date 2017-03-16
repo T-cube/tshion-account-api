@@ -49,6 +49,7 @@ import TempFile from 'models/temp-file';
 import Payment from 'models/plan/payment';
 import C from 'lib/constants';
 import Captcha from 'lib/captcha';
+import Broadcast from 'models/broadcast';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -89,6 +90,7 @@ app.loadModel('account', Account);
 app.loadModel('document', Document);
 app.loadModel('wechat-util', WechatUtil);
 app.loadModel('notification-setting', NotificationSetting);
+app.loadModel('broadcast', Broadcast);
 
 // load services;
 app.loadModel('schedule', ScheduleServer);
