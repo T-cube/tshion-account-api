@@ -87,6 +87,8 @@ const collections = [
   // transaction
   'transaction',
   'temp.file',
+
+  'broadcast',
 ];
 
 const dbConfig = config.get('database');
