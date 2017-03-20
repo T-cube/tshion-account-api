@@ -186,7 +186,7 @@ export default class BaseOrder {
       } else {
         _.filter(this.products, product => indexObjectId(products, product._id) > -1).map(product => {
           let discountProduct = this._getProductDiscount(product, coupon);
-          this._persistProductDiscount({coupon: coupon._id}, discountProduct, product._id);
+          this._couponProductDiscount({discount: {coupon_id: coupon._id, coupon_title: coupon.title, coupon_description: coupon.description}}, discountProduct, product._id);
         });
       }
     });
@@ -200,17 +200,47 @@ export default class BaseOrder {
       }
       delete product.discounts;
       return Discount.getProductDiscount(this.order_type, discount, {quantity, total_fee: sum, times: this.times})
-      .then(discountItem => {
-        if (!discountItem) {
+      .then(discountList => {
+        if (_.isEmpty(discountList)) {
           return;
         }
-        let discountInfo = this._getProductDiscount(product, discountItem);
-        this._persistProductDiscount({product_discount: discountItem._id}, discountInfo, product._id);
+        const result = _.map(discountList, discountItem => {
+          let discountInfo = this._getProductDiscount(product, discountItem);
+          return this._calcProductDiscount({discount: discountItem}, discountInfo, product);
+        });
+        let sortResult = _.sortBy(result, 'discountAmount');
+        let bestDiscount = sortResult[sortResult.length - 1];
+        let bsetDiscountItem = bestDiscount.discountInfo.discount;
+        this.paid_sum -= bestDiscount.discountAmount;
+        this.discount = (this.discount || []).concat(_.extend({}, {discount_type: 'product'}, {product: product.product_no}, {discount: {discount_id: bsetDiscountItem._id, discount_title: bsetDiscountItem.title, discount_description: bsetDiscountItem.description}}, {type: 'amount', fee: bestDiscount.discountAmount}));
       });
     });
   }
 
-  _persistProductDiscount(ext, discountInfo, productId) {
+  _calcProductDiscount(ext, discountInfo, product) {
+    if (!discountInfo) {
+      return { discountAmount: 0, product};
+    }
+    _.extend(discountInfo, ext);
+    let { type } = discountInfo;
+    let discountAmount = 0;
+    switch (type) {
+    case 'amount':
+    case 'rate':
+      discountAmount = discountInfo.fee;
+      break;
+    case 'number':
+      discountAmount = discountInfo.number * product.original_price;
+      break;
+    case 'times':
+      discountAmount = discountInfo.times * product.original_price;
+      break;
+    }
+    return { discountAmount, discountInfo };
+  }
+
+  //TODO remove this method
+  _couponProductDiscount(ext, discountInfo, productId) {
     if (!discountInfo) {
       return;
     }
@@ -233,7 +263,7 @@ export default class BaseOrder {
       break;
     }
     // product.discount_using = (product.discount_using || []).concat(discountInfo);
-    this.discount = (this.discount || []).concat(_.extend({}, {product: product.product_no}, discountInfo));
+    this.discount = (this.discount || []).concat(_.extend({}, {discount_type: 'coupon'},{product: product.product_no}, discountInfo));
   }
 
   _persistOrderDiscount(ext, discountInfo) {
