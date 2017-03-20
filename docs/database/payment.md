@@ -351,6 +351,19 @@ Currency: Number;
 }
 ```
 
+``发票状态更改``
+
+| 当前状态 | 可转换状态 | 操作用户 |
+| ---------- | ----- | ----------- |
+| created | cancelled | 前台用户 |
+| created | rejected或者confirmed | 客服 |
+| cancelled |  |  |
+| rejected |  |  |
+| confirmed | issued | 财务 |
+| issued | shipped |  |
+| shipped | completed |  |
+| completed |  |  |
+
 ### Collection payment.address
 
 企业联系人收货地址列表，用于邮寄发票、礼品
