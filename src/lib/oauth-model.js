@@ -2,9 +2,11 @@ import bcrypt from 'bcrypt';
 import Promise from 'bluebird';
 import Joi from 'joi';
 import _ from 'underscore';
+import { ApiError } from 'lib/error';
+import C from 'lib/constants';
 
 import db from 'lib/database';
-import { comparePassword, camelCaseObjectKey } from 'lib/utils';
+import { comparePassword, camelCaseObjectKey, generateToken } from 'lib/utils';
 
 export default {
   getAccessToken(bearerToken, callback) {
@@ -47,7 +49,13 @@ export default {
   grantTypeAllowed(clientId, grantType, callback) {
     // console.log('# grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');
     if (grantType === 'password') {
-      let valid = _.contains(['com_tlifang_web', 'com_tlifang_mobile'], clientId);
+      const authorized_clients = [
+        'com_tlifang_web',
+        'com_tlifang_web_old',
+        'com_tlifang_mobile',
+        'com_tlifang_wcapp_attendance',
+      ];
+      let valid = _.contains(authorized_clients, clientId);
       return callback(null, valid);
     }
     callback(null, true);
@@ -165,4 +173,5 @@ export default {
     })
     .catch(e => callback(e));
   },
+
 };

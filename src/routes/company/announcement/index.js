@@ -5,7 +5,7 @@ import config from 'config';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { indexObjectId, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
+import { indexObjectId, fetchCompanyMemberInfo, uniqObjectId, cleanHtmlTags, textEllipsis } from 'lib/utils';
 import inspector from 'lib/inspector';
 import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
@@ -15,6 +15,7 @@ import { ANNOUNCEMENT } from 'models/notification-setting';
 
 let api = express.Router();
 export default api;
+
 
 api.get('/', (req, res, next) => {
   let condition = {
@@ -44,6 +45,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   .then(data => {
     data.company_id = req.company._id;
     data.date_create = new Date();
+    data.description = textEllipsis(cleanHtmlTags(data.content), 50);
     db.announcement.insert(data)
     .then(doc => {
       res.json(doc);
@@ -100,6 +102,7 @@ api.put('/:announcement_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, r
     }
     fetchAnnouncementData(req)
     .then(data => {
+      data.description = cleanHtmlTags(data.content).substr(0, 100);
       return db.announcement.update({
         _id: announcement_id
       }, {
@@ -152,9 +155,7 @@ function getAnnouncementList(req, condition) {
       data.page = page;
       data.pagesize = pagesize;
     }),
-    db.announcement.find(condition, {
-      content: 0
-    })
+    db.announcement.find(condition, {content: 0})
     .skip((page - 1) * pagesize)
     .limit(pagesize)
     .sort({

@@ -1,23 +1,33 @@
+var fs = require('fs');
+
+// import enviroment variables from .env
+if (!fs.existsSync(__dirname + '/../.env')) {
+  console.error('missing .env config file');
+  process.exit(1);
+}
+require('dotenv').config();
+// DO NOT REMOVE THIS LINE process.env.NODE_ENV
+
 module.exports = {
   apiUrl: 'https://tlifang.com/',
   webUrl: 'https://tlifang.com/',
   mobileUrl: 'https://m.tlifang.com/',
   server: {
-    //host: '127.0.0.1',
-    port: 3000,
+    host: '127.0.0.1', // process.env.SERVER_HOST
+    port: 3000, // process.env.SERVER_PORT
   },
   rpc: {
-    protocol: 'http',
-    hostname: '192.168.1.18',
-    port: 2000,
-    appsecret: 'gvldWZTnQ8BIAReK',
-    appid: 'tlf-api'
+    protocol: 'http', // process.env.RPC_PROTOCOL
+    hostname: '127.0.0.1', // process.env.RPC_HOSTNAME
+    port: 2000, // process.env.RPC_PORT
+    appid: process.env.RPC_APPID,
+    appsecret: process.env.RPC_APPSECRET,
   },
-  database: '127.0.0.1/tlf_core',
+  database: '127.0.0.1/tlf_core', // process.env.DATABASE
   locale: 'zh-CN',
-  // 前端展示配置
+  // list view config
   view: {
-    // 每页默认显式条目数量
+    // list view number
     listNum: 20,
     taskListNum: 10,
     approvalListNum: 10,
@@ -25,18 +35,27 @@ module.exports = {
     maxListNum: 100,
     userLoginListNum: 10,
   },
-  passwordHashRounds: 10,
   avatar: {
     count: {
       company: 10,
-      project: 24,
-      user: 8,
+      project: 34,
+      user: 32,
     },
   },
   oauth: {
     accessTokenLifetime: 30 * 60,
     refreshTokenLifetime: 15 * 24 * 3600,
-    wechat_client_id: 'com_tlifang_wechat'
+    wechat_client_id: 'com_tlifang_wechat',
+  },
+  security: {
+    passwordHashRounds: 10,
+    attemptTimes: {
+      ipTimes: 150,
+      userCaptchaTimes: 3,
+      userLockTimes: 10,
+      ipTTL: 3600,
+      userTTL: 3600
+    },
   },
   userVerifyCode: {
     email: {
@@ -46,16 +65,15 @@ module.exports = {
     sms: {
       codeLength: 6,
       expires: 15 * 60, // 15 minutes in seconds
-    }
+    },
+    captcha: {
+      captchaNumber: 4,
+      lineNumber: 4,
+      circleNumber: 4,
+    },
   },
   accountLevel: {
     free: {
-      max_members: 100,
-      max_own_companies: 3,
-      store_max_total_size: 2 * 1024 * 1024 * 1024,
-      store_max_file_size: 20 * 1024 * 1024,
-    },
-    standard: {
       max_members: 100,
       max_own_companies: 3,
       store_max_total_size: 2 * 1024 * 1024 * 1024,
@@ -67,15 +85,27 @@ module.exports = {
       store_max_total_size: 2 * 1024 * 1024 * 1024,
       store_max_file_size: 20 * 1024 * 1024,
     },
+    ent: {
+      max_members: 100,
+      max_own_companies: 3,
+      store_max_total_size: 2 * 1024 * 1024 * 1024,
+      store_max_file_size: 20 * 1024 * 1024,
+    },
   },
   upload: {
     path: 'public/cdn/',
     url: 'http://api.tlifang.com/cdn/',
-    types: ['avatar', 'attachment'],
+    types: ['avatar', 'attachment', 'plan-auth-pro', 'plan-auth-ent'],
     defaultType: 'attachment',
     allowed: {
       avatar: [
         '.png', '.jpg', '.jpeg', '.gif',
+      ],
+      'plan-auth-pro': [
+        '.png', '.jpg', '.jpeg',
+      ],
+      'plan-auth-ent': [
+        '.png', '.jpg', '.jpeg',
       ],
       attachment: [
         // images
@@ -124,8 +154,8 @@ module.exports = {
     },
     showapi: {
       weather: {
-        appid: '5653',
-        secret: 'f668fa7e626043b19b34a61743fcf271'
+        appid: process.env.SHOWAPI_APPID,
+        secret: process.env.SHOWAPI_SECRET,
       },
     },
     officeweb365: {
@@ -138,8 +168,8 @@ module.exports = {
     qiniu: {
       TOKEN_EXPIRE: 3600,
       TOKEN_CACHE_EXPIRE: 3000,
-      ACCESS_KEY: 'f_l5R_bNDR03QjAfqqGy7C3XRuaoMp2qpiHTfAOJ',
-      SECRET_KEY: 'Pp7fk2HmH2LUXa7VnUY1Av8FoUQCY_TPeSf_6Y_2',
+      ACCESS_KEY: process.env.QINIU_ACCESS_KEY,
+      SECRET_KEY: process.env.QINIU_SECRET_KEY,
       buckets: {
         'cdn-public': {
           name: 'cdn-public-test',
@@ -152,13 +182,19 @@ module.exports = {
           domain: 'cdn-file-test.tlifang.com',
           https: false,
           private: true,
+        },
+        'cdn-private': {
+          name: 'cdn-private-test',
+          domain: 'cdn-private-test.tlifang.com',
+          https: false,
+          private: true,
         }
       }
     },
     sendcloud: {
       email: {
-        apiUser: 'tlf_api_production',
-        apiKey: 'UjWSflKRRJ52NEVi',
+        apiUser: process.env.SENDCLOUD_EMAIL_APIUSER,
+        apiKey: process.env.SENDCLOUD_EMAIL_APIKEY,
         url: 'http://api.sendcloud.net/apiv2/mail/sendtemplate',
         from: 'no-reply@tlifang.com',
         fromName: 'T立方',
@@ -178,8 +214,8 @@ module.exports = {
         },
       },
       sms: {
-        smsUser: 'tlifang_sms_prod',
-        smsKey: 'MFO8diU8qaqPWxicmFMJRPB7IXn5OEE0',
+        smsUser: process.env.SENDCLOUD_SMS_SMSUSER,
+        smsKey: process.env.SENDCLOUD_SMS_SMSKEY,
         url: 'http://sendcloud.sohu.com/smsapi/send',
         templates: {
           tlifang_mobile_activite: {
@@ -201,12 +237,11 @@ module.exports = {
   download: {
     tokenExpires: 30 * 60 * 1000, // half a hour
   },
-  // 测试账号T立方Oa的配置
   wechat: {
-    token: 'wechat',
-    appid: 'wx0215f16935043abf',
-    encodingAESKey: 'PuUMhTzz0JxYxV7bGw4aeNJdxXq3CIw2cTRVe56cTgP',
-    appsecret: '33e3cc720d35830e154a5eab8bc853d3',
+    appid: process.env.WECHAT_APPID,
+    appsecret: process.env.WECHAT_APPSECRET,
+    token: process.env.WECHAT_TOKEN,
+    encodingAESKey: process.env.WECHAT_ENCODINGAESKEY,
     auth_code_lifetime: 60 * 5,
     templates: {
       APPROVAL_ITEM_RESULT: '5SDcb0I1fEPbjpw0KRPzy0-xqmi92jNe5gajq3p32gk',
@@ -220,11 +255,46 @@ module.exports = {
   },
   preference: {
     default: {
-      explore: {
-        sort_by: '',
-        view_type: '',
-      },
+      'explore.sort_by': '',
+      'explore.view_type': '',
       'weather.areaid': '',
+      'panel.announcement': true,
+      'panel.schedule': true,
+      'panel.weather': true,
+      new_user_guide_showed: false,
+    }
+  },
+  plan: {
+    max_times: 12,
+    trial_times: 1,
+    expire_days: 7,
+  },
+  payment: {
+    alipay: {
+      APPID: process.env.ALIPAY_APPID,
+      KEY: process.env.ALIPAY_KEY,
+      PARTNER: process.env.ALIPAY_PARTNER,
+      EMAIL: process.env.ALIPAY_EMAIL,
+      PRIVATE_KEY: process.env.ALIPAY_PRIVATE_KEY,
+    },
+    wxpay: {
+      APIKEY: process.env.WXPAY_APIKEY,
+      APPID: process.env.WXPAY_APPID,
+      APPSECRET: process.env.WXPAY_APPSECRET,
+      MCHID: process.env.WXPAY_MCHID,
+    }
+  },
+  order: {
+    expire_minutes: 30, // 订单有效期
+  },
+  invoice: {
+    min_tax_free_amount: 100000,  // 1000元免快递费
+    tax_rate: 2000,               // 快递费20元
+  },
+  recharge: {
+    amount: {
+      min: 100,
+      max: 500000,
     }
   }
 };

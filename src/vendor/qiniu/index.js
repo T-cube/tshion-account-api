@@ -1,5 +1,7 @@
-import Qiniu from './qiniu';
 import _ from 'underscore';
+
+import Qiniu from './qiniu';
+import QiniuImage from './qiniu-image';
 
 export class QiniuTools {
 
@@ -21,6 +23,21 @@ export class QiniuTools {
     let domain = config.domain;
     let baseUrl = `http${https ? 's' : ''}://${domain}/`;
     return _.extend({}, config, {baseUrl});
+  }
+
+  image(url) {
+    return new QiniuImage(url);
+  }
+
+  parse(url) {
+    const pattern = /^https?:\/\/(cdn-[\w\-]+)\.tlifang\.com\/(.+?)(\?.+)$/;
+    const result = pattern.exec(url);
+    if (result) {
+      const [, cdn_bucket, cdn_key, processor] = result;
+      return {cdn_bucket, cdn_key, processor};
+    } else {
+      return null;
+    }
   }
 
   bucket(bucket, https = true) {

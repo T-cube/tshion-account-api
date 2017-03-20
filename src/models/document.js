@@ -22,7 +22,7 @@ class Document {
   }
 
   buildTree(dirs) {
-    let dir = _.findWhere(dirs, {parent_dir: null});
+    let dir = _.find(dirs, dir => !dir.parent_dir);
     dir.children = this.getChildren(dirs, dir.dirs);
     return _.pick(dir, '_id', 'name', 'children');
   }

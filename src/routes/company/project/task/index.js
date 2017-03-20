@@ -7,21 +7,14 @@ import config from 'config';
 import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { sanitizeValidateObject } from 'lib/inspector';
 import C, { ENUMS } from 'lib/constants';
 import { fetchCompanyMemberInfo, indexObjectId, strToReg } from 'lib/utils';
-import {
-  sanitization,
-  validation,
-  commentSanitization,
-  commentValidation,
-  validate,
-} from './schema';
 import {
   TASK_ASSIGNED,
   TASK_UPDATE,
   TASK_REPLY,
 } from 'models/notification-setting';
+import { validate } from './schema';
 
 let api = express.Router();
 export default api;
@@ -128,7 +121,7 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title'];
-  sanitizeValidateObject(_.pick(sanitization, ...fields), _.pick(validation, ...fields), data);
+  validate('task', data, fields);
   if (data.date_due < data.date_start) {
     throw new ApiError(400, 'invalid_date');
   }
@@ -376,7 +369,7 @@ api.get('/:task_id/comment', (req, res, next) => {
 
 api.post('/:task_id/comment', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(commentSanitization, commentValidation, data);
+  validate('comment', data);
   _.extend(data, {
     task_id: req.task._id,
     creator: req.user._id,
@@ -443,7 +436,7 @@ api.post('/:task_id/subtask', (req, res, next) => {
   }, {
     $push: {subtask}
   })
-  .then(doc => {
+  .then(() => {
     res.json(subtask);
     addActivity(req, C.ACTIVITY_ACTION.ADD, {
       target_type: C.OBJECT_TYPE.SUBTASK,
@@ -515,7 +508,7 @@ api.put('/:task_id/subtask/:subtask', (req, res, next) => {
   }, {
     $set: update
   })
-  .then(doc => {
+  .then(() => {
     res.json({});
     activityAction && addActivity(req, activityAction, {
       target_type: C.OBJECT_TYPE.SUBTASK,
@@ -608,11 +601,7 @@ function doUpdateField(req, field) {
 
 function validField(field, val) {
   let data = {[field]: val};
-  let fieldSanitization = _.pick(sanitization, field);
-  let fieldValidation = _.pick(validation, field);
-  fieldSanitization[field].optional = false;
-  fieldValidation[field].optional = false;
-  sanitizeValidateObject(fieldSanitization, fieldValidation, data);
+  validate('task', data, field);
   return data;
 }
 

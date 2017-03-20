@@ -131,6 +131,7 @@ let constants = {
   LEVEL_ERROR: {
     OVER_STORE_MAX_FILE_SIZE: 1,
     OVER_STORE_MAX_TOTAL_SIZE: 2,
+    PLAN_STATUS_UNEXPECTED: 3,
   },
 
   NOTICE: {
@@ -243,6 +244,102 @@ let constants = {
     MOBILE: 'com_tlifang_mobile',
     WECHAT: 'com_tlifang_wechat',
   },
+
+  TEAMPLAN: {
+    FREE: 'free',
+    PRO: 'pro',
+    ENT: 'ent',
+  },
+  TEAMPLAN_PAID: {
+    PRO: 'pro',
+    ENT: 'ent',
+  },
+  PLAN_STATUS: {
+    ACTIVED: 'actived',
+    EXPIRED: 'expired',
+    OVERDUE: 'overdue',
+  },
+  AUTH_STATUS: {
+    POSTED: 'posted',
+    CANCELLED: 'cancelled',
+    REPOSTED: 'reposted',
+    EXPIRED: 'expired',
+    ACCEPTED: 'accepted',
+    REJECTED: 'rejected',
+  },
+  ORDER_TYPE: {
+    NEWLY: 'newly',
+    RENEWAL: 'renewal',
+    UPGRADE: 'upgrade',
+    DEGRADE: 'degrade',
+  },
+  ORDER_STATUS: {
+    CREATED: 'created',
+    PAYING: 'paying',
+    EXPIRED: 'expired',
+    CANCELLED: 'cancelled',
+    SUCCEED: 'succeed',
+  },
+  CHARGE_STATUS: {
+    PAYING: 'paying',
+    EXPIRED: 'expired',
+    CANCELLED: 'cancelled',
+    SUCCEED: 'succeed'
+  },
+  CHARGE_TYPE: {
+    PLAN: 'plan',
+    RECHARGE: 'recharge',
+  },
+  PRODUCT_NO: {
+    PLAN: 'P0001',
+    MEMBER: 'P0002',
+  },
+
+  GENDER: {
+    FEMALE: 'F',
+    MALE: 'M',
+  },
+  TEAM_TYPE: {
+    NONE_PROFIT: 'none-profit',
+    WORKSHOP: 'workshop',
+    STARTUP: 'startup',
+  },
+  PAYMENT_METHOD: {
+    ALIPAY: 'alipay',
+    WXPAY: 'wxpay',
+    BALANCE: 'balance',
+  },
+  DISCOUNT_STATUS: {
+    NORMAL: 'normal',
+    DELETED: 'deleted',
+  },
+  COUPON_STATUS: {
+    NORMAL: 'normal',
+    ARCHIVED: 'archived',
+    DELETED: 'deleted',
+  },
+  COMPANY_COUPON_STATUS: {
+    UNUSED: 'unused',
+    USED: 'used'
+  },
+  INVOICE_STATUS: {
+    CREATING: 'creating',
+    CREATED: 'created',
+    SHIPPED: 'shipped',
+    CONFIRMED: 'confirmed',
+    REJECTED: 'rejected',
+    CANCELLED: 'cancelled',
+    ISSUED: 'issued',
+    COMPLETED: 'completed',
+  },
+  CAPTCHA_TYPE: {
+    LOGIN: 'login',
+  },
+
+  BROADCAST_STATUS: {
+    ACTIVE: 'active',
+    INACTIVE: 'inactive'
+  }
 
 };
 

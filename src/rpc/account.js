@@ -1,80 +1,87 @@
-import config from 'config';
-import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import { ApiError } from 'lib/error';
 
 import RpcRoute from 'models/rpc-route';
-import db from 'lib/database';
-import { mapObjectIdToData, strToReg } from 'lib/utils';
-
+import { strToReg } from 'lib/utils';
 import AccountModel from './models/account';
+import { getObjectId } from './utils';
 
-export default (socket, prefix) => {
+const route = RpcRoute.router();
+export default route;
 
-  const rpcRoute = new RpcRoute(socket, prefix);
-  const route = rpcRoute.route.bind(rpcRoute);
-  const accountModel = new AccountModel();
+const accountModel = new AccountModel();
 
-  route('/list', (query) => {
-    let criteria = {};
-    let { keyword } = query;
-    if (keyword) {
-      criteria['name'] = {
-        $regex: strToReg(keyword, 'i')
-      };
-    }
-    let { page, pagesize } = accountModel.getPageInfo(query);
-    return accountModel.page({criteria, page, pagesize});
-  });
-
-  route('/detail', (query) => {
-    let { _id } = query;
-    if (!_id || !ObjectId.isValid(_id)) {
-      throw new ApiError(400);
-    }
-    return accountModel.fetchDetail(ObjectId(_id))
-    .then(user => {
-      if (!user) {
-        throw new ApiError(404);
-      }
-      return user;
-    });
-  });
-
-  route('/detail/project', (query) => {
-    return fetchSubInfo('project', query);
-  });
-
-  route('/detail/company', (query) => {
-    return fetchSubInfo('company', query);
-  });
-
-  function fetchSubInfo(target, query) {
-    let { _id } = query;
-    if (!_id || !ObjectId.isValid(_id)) {
-      throw new ApiError(400);
-    }
-    let { page, pagesize } = accountModel.getPageInfo(query);
-    let props = {
-      _id: ObjectId(_id),
-      pagesize,
-      page
+route.on('/list', (query) => {
+  let criteria = {};
+  let { keyword } = query;
+  if (keyword) {
+    criteria['name'] = {
+      $regex: strToReg(keyword, 'i')
     };
-    let fetch;
-    switch (target) {
-    case 'company':
-      fetch = accountModel.fetchCompanyList(props);
-      break;
-    case 'project':
-      fetch = accountModel.fetchProjectList(props);
-      break;
-    }
-    return fetch.then(doc => {
-      if (null === doc) {
-        throw new ApiError(404);
-      }
-      return doc;
-    });
+    criteria = {
+      $or : [
+        {
+          name: {
+            $regex: strToReg(keyword, 'i')
+          }
+        },
+        {
+          email: {
+            $regex: strToReg(keyword, 'i')
+          }
+        },
+        {
+          mobile: {
+            $regex: strToReg(keyword, 'i')
+          }
+        },
+      ]
+    };
   }
+  let { page, pagesize } = query;
+  return accountModel.page({criteria, page, pagesize});
+});
 
-};
+route.on('/detail', (query) => {
+  let _id = getObjectId(query, '_id');
+  return accountModel.fetchDetail(ObjectId(_id))
+  .then(user => {
+    if (!user) {
+      throw new ApiError(404);
+    }
+    return user;
+  });
+});
+
+route.on('/detail/project', (query) => {
+  return fetchSubInfo('project', query);
+});
+
+route.on('/detail/company', (query) => {
+  return fetchSubInfo('company', query);
+});
+
+function fetchSubInfo(target, query) {
+  let _id = getObjectId(query, '_id');
+  let { page, pagesize } = accountModel.getPageInfo(query);
+  let props = {
+    _id: ObjectId(_id),
+    pagesize,
+    page
+  };
+  let fetch;
+  switch (target) {
+  case 'company':
+    fetch = accountModel.fetchCompanyList(props);
+    break;
+  case 'project':
+    fetch = accountModel.fetchProjectList(props);
+    break;
+  }
+  return fetch.then(doc => {
+    if (null === doc) {
+      throw new ApiError(404);
+    }
+    return doc;
+  });
+}

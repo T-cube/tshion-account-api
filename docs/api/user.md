@@ -47,6 +47,11 @@ OUTPUT:
     'explore.sort_by': String,
     'explore.view_type': String,
     'weather.areaid': String,
+    'panel.announcement': Boolean,
+    'panel.schedule': Boolean,
+    'panel.weather': Boolean,
+    'panel.locked': Boolean,
+    'panel.open': Boolean,
     ...
   }
 }
@@ -233,6 +238,37 @@ INPUT:
   'explore.sort_by': String,
   'explore.view_type': String,
   'weather.areaid': String,
+  'panel.announcement': Boolean,
+  'panel.schedule': Boolean,
+  'panel.weather': Boolean,
   ...
+}
+```
+
+### PUT /user/preference/reset
+
+恢复默认的设置
+
+INPUT:
+```javascript
+{
+  type: String, // panel 恢复仪表盘默认
+}
+```
+
+### GET /user/realname
+
+OUTPUT
+
+```javascript
+{
+  realname: String,
+  position: String,
+  phone: String,
+  address: String,
+  realname_ext: {
+    idcard: String,
+    idcard_photo: [Url]
+  }
 }
 ```

@@ -1,7 +1,6 @@
 import _ from 'underscore';
 import moment from 'moment';
 import Promise from 'bluebird';
-import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import db from 'lib/database';
@@ -23,9 +22,10 @@ export default class TaskLoop {
         $lt: moment().add(1, 'd').startOf('day').toDate(),
       }
     };
+    let now = moment().startOf('day').toDate();
     let cursor = db.task.find(criteria);
     cursor.forEach((err, doc) => {
-      if (!doc) {
+      if (!doc || doc.loop.next >= now) {
         return;
       }
       this.addLoopTasks([doc]).catch(e => console.error(e));
@@ -41,19 +41,18 @@ export default class TaskLoop {
 
   addLoopTasks(tasks) {
     let now = moment().startOf('day').toDate();
-    let newTasks = tasks.filter(task => task.loop.next >= now).map(task => {
+    let date_due = moment().add(1, 'd').startOf('day').toDate();
+    let newTasks = tasks.map(task => {
       let newTask = _.clone(task);
       newTask.p_id = newTask._id;
       newTask.status = C.TASK_STATUS.PROCESSING;
-      newTask.date_create = now;
-      newTask.date_update = now;
-      newTask.date_start = now;
-      newTask.date_due = moment().add(1, 'd').startOf('day').toDate();
+      newTask.date_create = newTask.date_update = newTask.date_start = now;
+      newTask.date_due = date_due;
       delete newTask._id;
       delete newTask.loop;
       return newTask;
     });
-    return newTasks.length && db.task.insert(newTasks);
+    return db.task.insert(newTasks);
   }
 
   static getTaskNextGenerateTime(task) {

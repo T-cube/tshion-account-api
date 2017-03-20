@@ -38,6 +38,7 @@ export default class QrcodeModel extends Model {
             description,
             wechat_url,
             ticket,
+            status: 'normal'
           };
           return this.db.qrcode.insert(data);
         });
@@ -45,12 +46,18 @@ export default class QrcodeModel extends Model {
     });
   }
 
-  update({_id, name, description}) {
+  update(_id, {name, description}) {
     return this.db.qrcode.update({_id}, {
       $set: {
         name,
         description,
       }
+    });
+  }
+
+  updateStatus(_id, status) {
+    return this.db.qrcode.update({_id}, {
+      $set: {status}
     });
   }
 
@@ -72,28 +79,14 @@ export default class QrcodeModel extends Model {
     });
   }
 
-  page(props) {
-    let { page, pagesize, criteria } = props;
-    return Promise.all([
-      this.count(criteria),
-      this.fetchList(props)
-    ])
-    .then(doc => {
-      let [totalRows, list] = doc;
-      return {
-        list,
-        page,
-        pagesize,
-        totalRows
-      };
-    });
-  }
-
   fetchList(props) {
-    let { page, pagesize } = props;
-    return this.db.qrcode.find({})
+    let { page, pagesize, criteria } = props;
+    return this.db.qrcode.find(criteria)
     .skip(page * pagesize)
     .limit(pagesize)
+    .sort({
+      _id: -1
+    })
     .then(list => {
       return Promise.map(list, item => {
         return this.createQrWhenNotExists(item.wechat_url, item.filename).then(() => item);
@@ -115,8 +108,8 @@ export default class QrcodeModel extends Model {
     });
   }
 
-  count() {
-    return this.db.qrcode.count({});
+  count(criteria) {
+    return this.db.qrcode.count(criteria);
   }
 
   fetchDetail(_id) {
@@ -146,17 +139,17 @@ export default class QrcodeModel extends Model {
     };
     let data = {};
     return Promise.all([
-      this.qrcode.scan.from.count(condition)
+      this.db.qrcode.scan.count(condition)
       .then(sum => {
-        data.totalrows = sum;
+        data.totalRows = sum;
         data.page = page;
         data.pagesize = pagesize;
       }),
-      this.qrcode.scan.from.find(condition)
+      this.db.qrcode.scan.find(condition)
       .sort({
         _id: -1
       })
-      .skip((page - 1) * pagesize)
+      .skip(page * pagesize)
       .limit(pagesize)
       .then(list => data.list = list)
     ])

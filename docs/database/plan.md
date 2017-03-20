@@ -12,39 +12,37 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
 
 ## Tables
 
-### Table `plan.trial`
+### Collection plan.company
 
-团队试用信息
-
-```javascript
-{
-  _id: ObjectId,
-  company_id: ObjectId,             // 团队
-  user_id: ObjectId,                // 申请用户
-  plan: TeamPlan,                   // 升级方案
-  status: PlanStatus                // 状态
-  date_start: Date,                 // 申请日期
-  date_end: Date,                   // 申请日期
-}
-```
-
-### Table `plan.paid`
-
-付费团队信息
+团队计划（包括购买和试用的信息）
 
 ```javascript
 {
-  _id: ObjectId,
-  company_id: ObjectId,             // 团队
-  user_id: ObjectId,                // 申请用户
-  plan: TeamPlan,                   // 升级方案
-  status: PlanStatus                // 状态
-  date_start: Date,                 // 申请日期
-  date_end: Date,                   // 申请日期
+  _id: ObjectId,                    // company_id
+  certificated: {
+    plan: TeamPlan,
+    date: Date,
+  },
+  current: {
+    _id: ObjectId,                  // 下面list中对应的_id
+    plan: TeamPlan,
+    type: String[Enum: paid, trial],
+  },
+  list: [{
+    _id: ObjectId,
+    plan: TeamPlan,
+    type: String[Enum: paid, trial],
+    user_id: ObjectId,                // 申请用户
+    plan: TeamPlan,                   // 升级方案
+    member_count: Number,             // 购买的人数
+    status: PlanStatus                // 状态
+    date_start: Date,                 // 申请日期
+    date_end: Date,                   // 申请日期
+  }...]
 }
 ```
 
-### Table `plan.auth`
+### Collection plan.auth
 
 公司升级信息
 
@@ -62,10 +60,10 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
       position: String,
       phone: String,
       address: {
+        country: String,
         province: String,
         city: String,
         district: String,
-        postcode: String,
         address: String,
       },
       // 实名信息，仅在专业版认证时需要
@@ -76,9 +74,12 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
     },
     // 团队信息
     team: {
-      location: {
+      location: address: {
+        country: String,
         province: String,
         city: String,
+        district: String,
+        address: String,
       },
       type: String[Enum:none-profit,workshop,startup],
       scale: Number[Enum:5,10,50,100],
@@ -86,20 +87,25 @@ AuthStatus: String[Enum:posted,cancelled,reposted,accepted,rejected],
     }
     // 企业信息
     enterprise: {
-      location: {
+      location: address: {
+        country: String,
         province: String,
         city: String,
+        district: String,
+        address: String,
       },
       industry: String,               // 行业类型
+      certificate_pic: URL,
       scale: Number[Enum:5,10,50,100,500],
       description: String,
     }
   },
   log: [{
-    status: AuthStatus,
-    user_id: ObjectId,
-    comment: String,
+    _id: ObjectId,
+    status: OrderStatus,
     date_create: Date,
+    creator: String[Enum:user,system,cs], // 用户，系统，客服
+    operator_id: String,
   }]
   date_apply: Date,                 // 申请日期
 }

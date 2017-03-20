@@ -3,12 +3,22 @@ import express from 'express';
 import config from 'config';
 
 import db from 'lib/database';
-import { time, timestamp, expire, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
+import {
+  time,
+  timestamp,
+  expire,
+  comparePassword,
+  hashPassword,
+  generateToken,
+  getEmailName,
+  downloadFile,
+  saveCdnInBucket,
+} from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
 import { validate } from './schema';
-import { randomAvatar } from 'lib/upload';
+import { randomAvatar, cropAvatar } from 'lib/upload';
 import { ValidationError } from 'lib/inspector';
 
 let api = express.Router();
@@ -19,14 +29,16 @@ api.post('/check', (req, res, next) => {
   let data = req.body;
   let { type } = req.body;
   validate('register', data, ['type', type]);
-  db.user.find({[type]: req.body[type]}).count()
-  .then(count => {
-    if (count > 0) {
-      throw new ValidationError({
-        [type]: 'user_exists',
-      });
+  db.user.findOne({[type]: req.body[type]}, {activiated: 1})
+  .then(user => {
+    if (!user) {
+      return res.json({});
     }
-    res.json({});
+    if (type == 'email' && !user.activiated) {
+      throw new ValidationError({[type]: 'user_not_confirmed'});
+    } else {
+      throw new ValidationError({[type]: 'user_exists'});
+    }
   }).catch(next);
 });
 
@@ -37,13 +49,17 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let { password, code } = data;
   let id = data[type];
   data = _.pick(data, 'type', type, 'password', 'code');
-  db.user.find({[type]: id}).count()
-  .then(count => {
-    if (count > 0) {
-      console.log(count);
-      throw new ValidationError({
-        [type]: 'user_exists',
-      });
+  db.user.findOne({[type]: id}, {activiated: 1})
+  .then(user => {
+    if (user) {
+      if (type == 'email' && !user.activiated) {
+        return req.model('account').sendRegisterEmail(id)
+        .then(() => {
+          throw new Error('resend_code');
+        });
+      } else {
+        throw new ValidationError({[type]: 'user_exists'});
+      }
     }
     if (type == 'email') {
       return req.model('account').sendRegisterEmail(id);
@@ -84,9 +100,6 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       date_create: time(),
       current_company: null,
     };
-    if (req.openUserinfo) {
-      _.extend(doc, req.openUserinfo);
-    }
     return db.user.insert(doc);
   })
   .then(user => {
@@ -99,8 +112,32 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       req.model('notification-setting').initUserDefaultSetting(user._id);
       req.model('preference').init(user._id);
     }
+    // 保存第三方账户的图片
+    if (req.openUserinfo && req.openUserinfo.avatar) {
+      return downloadFile(req.openUserinfo.avatar, 'avatar').then(downloadFile => {
+        return saveCdnInBucket(req.model('qiniu').bucket('cdn-public'), downloadFile);
+      })
+      .then(cdnFile => {
+        req.file = cdnFile;
+        let avatar = cropAvatar(req);
+        return db.user.update({
+          _id: user._id
+        }, {
+          $set: {avatar}
+        });
+      })
+      .catch(e => {
+        console.error(e);
+      });
+    }
   })
-  .catch(next);
+  .catch(err => {
+    if (err.message == 'resend_code') {
+      res.json({resend: true});
+    } else {
+      next(err);
+    }
+  });
 });
 
 api.post('/confirm', (req, res, next) => {
@@ -114,7 +151,7 @@ api.post('/confirm', (req, res, next) => {
     res.json(data);
     // init notification setting when user activiated
     req.model('notification-setting').initUserDefaultSetting(data.user_id);
-    req.model('preference').init(data.user._id);
+    req.model('preference').init(data.user_id);
   })
   .catch(next);
 });

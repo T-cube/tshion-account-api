@@ -1,15 +1,17 @@
+import _ from 'underscore';
 import { ValidationError } from 'lib/inspector';
 import { ApiError } from 'lib/error';
 
 export default class RpcRoute {
 
-  constructor(socket, prefix) {
+  constructor(socket, prefix, loader) {
     this.socket = socket;
     this.prefix = prefix || '';
+    this.loader = loader;
   }
 
   on(uri, callback) {
-    this.socket.on(`${this.prefix}${uri}`, callback);
+    this.route(uri, callback);
   }
 
   emit(uri, data) {
@@ -17,10 +19,13 @@ export default class RpcRoute {
   }
 
   route(uri, callback) {
-    this.socket.on(`${this.prefix}${uri}`, (query) => {
+    this.socket.on(`${this.prefix}${uri}`, (query = {}) => {
+      if (process.env.NODE_ENV != 'production') {
+        console.log(`--- rpc call ${this.prefix}${uri}, query:`, query);
+      }
       let value;
       try {
-        value = callback(query);
+        value = callback(query, this.loader);
       } catch (e) {
         return this.emit(uri, this.errorHandler(e));
       }
@@ -40,11 +45,6 @@ export default class RpcRoute {
     });
   }
 
-  use(prefix, routes) {
-    routes(this.socket, this.prefix + (prefix || ''));
-    return this;
-  }
-
   isPromise(value) {
     return value && typeof value.then === 'function';
   }
@@ -59,9 +59,41 @@ export default class RpcRoute {
     }
     return {
       status: err.code,
-      error: err.name,
-      error_description: err.message,
+      name: err.name,
+      error: err.error,
+      error_description: err.error_description,
     };
+  }
+
+  use(prefix, routeBag) {
+    let newInstance = new RpcRoute(this.socket, this.prefix + (prefix || ''), this.loader);
+    _.each(routeBag.uses, (childRouteBag, sub_prefix) => {
+      newInstance.use(sub_prefix, childRouteBag);
+    });
+    _.each(routeBag.routes, (callback, uri) => {
+      newInstance.route(uri, callback);
+    });
+  }
+
+  static router() {
+    return new RouteBag();
+  }
+
+}
+
+class RouteBag {
+
+  constructor() {
+    this.routes = {};
+    this.uses = {};
+  }
+
+  on(uri, callback) {
+    this.routes[uri] = callback;
+  }
+
+  use(prefix, childRouteBag) {
+    this.uses[prefix] = childRouteBag;
   }
 
 }

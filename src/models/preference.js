@@ -7,7 +7,9 @@ import db from 'lib/database';
 
 export default class Preference {
 
-  constructor() {}
+  constructor() {
+    this.config = config.get('preference.default');
+  }
 
   // @key string array object or undefined
   get(userId, key) {
@@ -15,11 +17,10 @@ export default class Preference {
     if (key) {
       if (_.isString(key)) {
         fields = {[key]: 1};
-      }
-      if (_.isObject(key)) {
+      } else if (_.isObject(key)) {
         let tempKey;
         if (!_.isArray(key)) {
-          tempKey = _.keys(key).sort().reverse();
+          tempKey = _.keys(key);
         } else {
           tempKey = _.clone(key);
         }
@@ -48,11 +49,32 @@ export default class Preference {
       _id: userId
     }, {
       $set: cover ? data : this._flattenValues(data)
+    }, {
+      upsert: true
+    });
+  }
+
+  reset(userId, type) {
+    let conf = this.config;
+    let data = {};
+    if (type == 'panel') {
+      for (let i in conf) {
+        if (/panel/.test(i)) {
+          data[i] = conf[i];
+        }
+      }
+    }
+    return db.preference.update({
+      _id: userId
+    }, {
+      $set: data
+    }, {
+      upsert: true
     });
   }
 
   init(userId) {
-    let data = config.get('preference.default');
+    let data = this.config;
     return db.preference.update({
       _id: userId
     }, {

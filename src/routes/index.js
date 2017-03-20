@@ -32,6 +32,7 @@ let routes = [
   'user',
   'weather',
   'wechat',
+  'payment',
 ];
 
 _.each(routes, route => {

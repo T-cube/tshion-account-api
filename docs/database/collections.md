@@ -4,7 +4,7 @@
 
 ## Collections
 
-### `auth_check_token`
+### Collection `auth_check_token`
 
 用户临时校验 token
 
@@ -17,7 +17,7 @@
 }
 ```
 
-### `user`
+### Collection `user`
 
 用户信息
 
@@ -59,7 +59,7 @@
 }
 ```
 
-### `user.confirm.email`
+### Collection `user.confirm.email`
 
 用户邮箱验证
 
@@ -73,7 +73,7 @@
 }
 ```
 
-### `user.confirm.mobile`
+### Collection `user.confirm.mobile`
 
 用户邮箱验证
 
@@ -87,7 +87,7 @@
 }
 ```
 
-### `company`
+### Collection `company`
 
 企业信息
 
@@ -153,7 +153,7 @@
 | `normal` | 普通成员 | 可操作任务、评论等常规任务 |
 | `admin` | 管理员 | 可添加、移除成员 |
 
-### `project`
+### Collection `project`
 
 项目
 
@@ -188,7 +188,7 @@
 | `owner` | 所有者 | 除管理员权限外，可设置设置其他管理员，可移交项目 |
 | `supervisor` | 监察者 | 与访客一致，但对其他成员不可见（此种类型待定） |
 
-### `request`
+### Collection `request`
 
 关系申请（公司成员、好友关系）
 
@@ -218,7 +218,7 @@
 | `accepted` | 已通过 | 被申请人通过了申请 |
 | `rejected` | 已拒绝 | 被申请人通过了申请 |
 
-### `discussion`
+### Collection `discussion`
 
 项目讨论
 
@@ -237,7 +237,7 @@
 }
 ```
 
-### `discussion.comments`
+### Collection `discussion.comments`
 
 项目评论
 
@@ -253,7 +253,7 @@
 }    
 ```    
 
-### `tags`
+### Collection `tags`
 
 项目标签
 
@@ -266,7 +266,7 @@
 }
 ```
 
-### `task`
+### Collection `task`
 
 任务
 
@@ -301,7 +301,7 @@
 | paused | 暂停 | 任务处于暂停状态 |
 | deleted | 已删除 | 任务位于垃圾篓 |
 
-### `task.comments`
+### Collection `task.comments`
 
 任务评论
 ```javascript
@@ -315,7 +315,7 @@
 }
 ```
 
-### `task.log`
+### Collection `task.log`
 
 任务活动记录
 
@@ -338,7 +338,7 @@
 }
 ```
 
-### `article.category`
+### Collection `article.category`
 
 文章分类
 
@@ -353,7 +353,7 @@
 }
 ```
 
-### `article`
+### Collection `article`
 
 知识
 ```javascript
@@ -371,7 +371,7 @@
 }
 ```
 
-### `article.comments`
+### Collection `article.comments`
 
 文章评论
 ```javascript
@@ -385,7 +385,7 @@
 }
 ```
 
-### `announcement`
+### Collection `announcement`
 
 公告
 
@@ -410,7 +410,7 @@
 }
 ```
 
-### `file`
+### Collection `file`
 
 文件
 
@@ -426,9 +426,9 @@
 }
 ```
 
-### `approval`
+### Approval
 
-#### `approval.template.master`
+#### Collection `approval.template.master`
 
 ```javascript
 {
@@ -439,7 +439,7 @@
 }
 ```
 
-#### `approval.template`
+#### Collection `approval.template`
 
 审批类型
 
@@ -471,7 +471,7 @@
 }
 ```
 
-#### `approval.item`
+#### Collection `approval.item`
 
 用户审批
 
@@ -502,7 +502,7 @@
 }
 ```
 
-### `approval.user`
+### Collection `approval.user`
 
 用户对应flow
 
@@ -516,7 +516,7 @@
 }
 ```
 
-#### `approval.flow`
+#### Collection `approval.flow`
 
 审批流程
 
@@ -532,9 +532,9 @@
 }
 ```
 
-### `document`
+### Document
 
-#### `document.dir`
+#### Collection `document.dir`
 
 ```javascript
 {
@@ -549,7 +549,7 @@
 }
 ```
 
-#### `document.file`
+#### Collection `document.file`
 
 文档
 
@@ -570,7 +570,7 @@
 }
 ```
 
-#### `document.token`
+#### Collection `document.token`
 
 下载token
 
@@ -584,7 +584,7 @@
 }
 ```
 
-### `notification`
+### Collection `notification`
 
 消息
 
@@ -610,7 +610,7 @@
 | `project` | 项目 | 项目消息 |
 | `task` | 任务 | 任务消息 |
 
-### `activity`
+### Collection `activity`
 
 日志（活动）
 
@@ -627,7 +627,7 @@
 }
 ```
 
-### `attendance.setting`
+### Collection `attendance.setting`
 
 ```javascript
 {
@@ -651,7 +651,7 @@
 }
 ```
 
-### `attendance.sign`
+### Collection `attendance.sign`
 
 ```javascript
 {
@@ -667,7 +667,7 @@
 }
 ```
 
-### `attendance.audit`
+### Collection `attendance.audit`
 
 ```javascript
 {
@@ -687,7 +687,7 @@
 }
 ```
 
-### `attendance.record`
+### Collection `attendance.record`
 
 ```javascript
 {
@@ -712,7 +712,7 @@
 }
 ```
 
-### `schedule`
+### Collection `schedule`
 
 日程
 
@@ -739,7 +739,7 @@
 }
 ```
 
-### `user.reminding`
+### Collection `user.reminding`
 
 提醒
 
@@ -752,7 +752,7 @@
 }
 ```
 
-### `company.level`
+### Collection `company.level`
 
 ```javascript
 {
@@ -770,16 +770,39 @@
 }
 ```
 
-### `user.activity`
+### Collection `user.activity`
 
 ```javascript
 {
-  _id: <ObjectId>,
-  user: <ObjectId>,
-  action: <String>,     // login logout login_fail change_passw bind_wechat unbind_wechat
-  client_id: <String>,  // com_tlifang_web com_tlifang_mobile
-  user_agent: <String>,
-  ip: <String>,
-  time: <Date>,
+  _id: ObjectId,
+  user: ObjectId,
+  action: String,     // login logout login_fail change_passw bind_wechat unbind_wechat
+  client_id: String,  // com_tlifang_web com_tlifang_mobile
+  user_agent: String,
+  ip: String,
+  time: Date,
+}
+```
+
+### Collection `user.preference`
+
+```javascript
+{
+  explore: {
+    sort_by: String,
+    view_type: String,
+  }
+  weather: {
+    areaid: String,
+  },
+  panel: {
+    announcement: Boolean,
+    schedule: Boolean,
+    weather: Boolean,
+    locked: Boolean,
+    open: Boolean,
+  },
+  new_user_guide_showed: Boolean,
+  ...
 }
 ```

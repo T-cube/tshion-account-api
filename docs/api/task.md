@@ -185,6 +185,7 @@ QUERY
 | is_expired | int | 0 / 1 |
 | is_loop | int | 0 / 1 |
 | p_id | ObjectId | |
+| date | date | task of this day |
 
 OUTPUT
 ```javascript

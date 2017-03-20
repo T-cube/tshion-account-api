@@ -26,6 +26,9 @@ build/Release
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
 
+# Local config
+config/local.*
+
 # Application runtime
 app
 runtime
@@ -44,3 +47,4 @@ temp/*
 .yarn.*
 yarn.lock
 yarn-error.*
+/.env

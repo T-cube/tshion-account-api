@@ -17,3 +17,21 @@ OUTPUT:
 ```javascript
 [<URL>...]
 ```
+### GET /tools/captcha
+
+获得验证码图片64位码
+
+QUERY:必须有`uesrname`,`captchaType`两个参数
+
+成功
+
+OUTPUT：
+```javascript
+{
+  'captcha': '...'
+}
+```
+
+### GET /tools/broadcast
+
+### GET /tools/broadcast/:broadcast_id

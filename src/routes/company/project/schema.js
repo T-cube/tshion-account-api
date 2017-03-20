@@ -1,52 +1,49 @@
-import _ from 'underscore';
-import { ENUMS } from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
+import { buildValidator } from 'lib/inspector';
 
-export let projectSanitization = {
-  name: { type: 'string' },
-  description: { type: 'string', optional: true }
-}
-
-export let projectValidation = {
-  name: {
-		type: 'string',
-		minLength: 1,
-		maxLength: 100,
-	},
-  description: {
-		type: 'string',
-		maxLength: 1000,
-    optional: true
-	}
-}
-
-export let memberSanitization = {
-  _id: { $objectId: 1 },
-	title: { type: 'string', optional: true }
-}
-
-export let memberValidation = {
-	_id: { $objectId: 1 },
-	title: { type: 'string', optional: true }
-}
-
-export let tagSanitization = {
-  name: { type: 'string' },             // 标签名称
-  color: { type: 'string' },            // 标签颜色
-}
-
-export let tagValidation = {
-  name: { type: 'string', minLength: 1 },
-  color: { type: 'string' },
-}
-
-export let fileSanitization = {
-	title: {  type: 'string' },
-	description: {  type: 'string', optional: true },
-	content: {  type: 'string', optional: true },
+const schema = {
+  project: {
+    sanitization: {
+      name: { type: 'string' },
+      description: { type: 'string', optional: true }
+    },
+    validation: {
+      name: { type: 'string', minLength: 1, maxLength: 100 },
+      description: { type: 'string', maxLength: 1000, optional: true },
+    },
+  },
+  member: {
+    sanitization: {
+      _id: { $objectId: 1 },
+      title: { type: 'string', optional: true }
+    },
+    validation: {
+      _id: { $objectId: 1 },
+      title: { type: 'string', optional: true }
+    },
+  },
+  tag: {
+    sanitization: {
+      name: { type: 'string' },
+      color: { type: 'string' },
+    },
+    validation: {
+      name: { type: 'string', minLength: 1 },
+      color: { type: 'string' },
+    },
+  },
+  file: {
+    sanitization: {
+      title: {  type: 'string' },
+      description: {  type: 'string', optional: true },
+      content: {  type: 'string', optional: true },
+    },
+    validation: {
+      title: {  type: 'string', minLength: 1 },
+      description: {  type: 'string', optional: true },
+      content: {  type: 'string', optional: true },
+    },
+  },
 };
 
-export let fileValidation = {
-	title: {  type: 'string', minLength: 1 },
-	description: {  type: 'string', optional: true },
-	content: {  type: 'string', optional: true },
-};
+export const validate = buildValidator(schema);

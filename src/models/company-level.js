@@ -1,30 +1,21 @@
 import _ from 'underscore';
-import config from 'config';
 import { ObjectId } from 'mongodb';
 
-import db from 'lib/database';
 import C from 'lib/constants';
-import { ApiError } from 'lib/error';
+import db from 'lib/database';
 import { indexObjectId } from 'lib/utils';
+import Plan from 'models/plan/plan';
+
+import authConfig from 'models/plan/auth-config';
 
 export default class CompanyLevel {
 
-  constructor(company) {
-    if (ObjectId.isValid(company)) {
-      this.setCompanyId(company);
-    } else {
-      this.setCompanyInfo(company);
+  constructor(company_id) {
+    if (!company_id || !ObjectId.isValid(company_id)) {
+      throw new Error('invalid company_id');
     }
-  }
-
-  setCompanyInfo(company) {
-    this.company = company;
-    this.companyId = company._id;
-  }
-
-  setCompanyId(companyId) {
-    this.companyId = ObjectId(companyId);
-    this.company = null;
+    this.company_id = company_id;
+    this.planModel = new Plan(company_id);
   }
 
   canUpload(size) {
@@ -35,82 +26,90 @@ export default class CompanyLevel {
       total_size = size;
       size = [size];
     }
-    return this.getCompanyInfo().then(() => {
-      let level = this.getLevel();
-
-      let store_max_file_size = config.get(`accountLevel.${level}.store_max_file_size`);
-      let store_max_total_size = config.get(`accountLevel.${level}.store_max_total_size`);
-
+    return this.getStatus().then(status => {
+      let {levelInfo, planInfo} = status;
+      let {store_max_total_size, store_max_file_size} = levelInfo.file;
       for (let i in size) {
         if (size[i] > store_max_file_size) {
-          return Promise.resolve({
-            ok: 0,
-            code: C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE,
-          });
-        }
-      }
-
-      return this.getLevelInfo().then(info => {
-        let size = info.file.size;
-        if ((size + total_size) > store_max_total_size) {
           return {
             ok: 0,
-            code: C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE,
+            code: C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE,
           };
         }
-        return {
-          ok: 1
-        };
-      });
-    });
-
-  }
-
-  getLevelInfo() {
-    if (!this.companyId) {
-      return this._rejectWhenMissingCompany();
-    }
-    if (this.company && this.company.cached_level_info) {
-      return Promise.resolve(this.company.cached_level_info);
-    }
-    return db.company.level.findOne({
-      _id: this.companyId
-    })
-    .then(info => {
-      if (info) {
-        return info;
       }
-      info = {
-        _id: this.company._id,
-        file: {
-          size: 0,
-          knowledge: {
-            size: 0
-          },
-          project: []
-        }
+      if ((levelInfo.file.size + total_size) > store_max_total_size) {
+        return {
+          ok: 0,
+          code: C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE,
+        };
+      }
+      if (planInfo.status == C.PLAN_STATUS.OVERDUE) {
+        return {
+          ok: 0,
+          code: C.LEVEL_ERROR.PLAN_STATUS_UNEXPECTED
+        };
+      }
+      return {
+        ok: 1
       };
-      return db.company.level.insert(info).then(() => info);
     });
   }
 
-  clearCachedLevelInfo() {
-    this.company && delete this.company.cached_level_info;
+  canAddMember() {
+    return this.getStatus().then(status => {
+      let {setting, planInfo, levelInfo} = status;
+      return levelInfo.member.count < (setting.max_member + planInfo.member_count);
+    });
+  }
+
+  getStatus() {
+    let { company_id, status } = this;
+    if (status) {
+      return Promise.resolve(status);
+    }
+    return Promise.all([
+      this.planModel.getCurrent()
+      .then(planInfo => {
+        return this.planModel.getSetting(planInfo.plan)
+        .then(setting => {
+          this.companyPlan = {
+            setting,
+            planInfo,
+          };
+          return this.companyPlan;
+        });
+      }),
+      db.company.level.findOne({
+        _id: company_id
+      })
+    ])
+    .then(([{setting, planInfo}, levelInfo]) => {
+      let {max_file_size, store, inc_member_store} = setting;
+      planInfo.member_count = planInfo.member_count || 0;
+      _.extend(levelInfo.file, {
+        store_max_file_size: max_file_size,
+        store_max_total_size: store + planInfo.member_count * inc_member_store,
+      });
+      this.status = {setting, planInfo, levelInfo};
+      return this.status;
+    });
   }
 
   updateUpload(args) {
-    if (!this.companyId) {
-      return this._rejectWhenMissingCompany();
-    }
+    let { company_id } = this;
     let { size, target_type, target_id } = args;
     target_id = ObjectId(target_id);
     if (!size) {
       return Promise.resolve(true);
     }
-    return this.getLevelInfo().then(info => {
+    return this.getStatus().then(status => {
+      let {levelInfo} = status;
+      if (!target_type || !target_id) {
+        throw new Error('missing target_type or target_id');
+      }
       if (target_type == 'knowledge') {
         return db.company.level.update({
-          _id: this.companyId,
+          _id: company_id,
         }, {
           $inc: {
             'file.size': size,
@@ -118,15 +117,12 @@ export default class CompanyLevel {
           }
         });
       }
-      if (!target_type || !target_id) {
-        throw new ApiError('missing target_type or target_id');
-      }
 
-      if (info.file[target_type]) {
-        let existItems = info.file[target_type].map(item => item._id);
+      if (levelInfo.file[target_type]) {
+        let existItems = levelInfo.file[target_type].map(item => item._id);
         if (indexObjectId(existItems, target_id) > -1) {
           return db.company.level.update({
-            _id: this.companyId,
+            _id: company_id,
             [`file.${target_type}._id`]: target_id
           }, {
             $inc: {
@@ -142,7 +138,7 @@ export default class CompanyLevel {
       }
 
       return db.company.level.update({
-        _id: this.companyId,
+        _id: company_id,
       }, {
         $push: {
           [`file.${target_type}`]: {
@@ -154,96 +150,42 @@ export default class CompanyLevel {
           'file.size': size,
         }
       });
-    })
-    .then(() => this.clearCachedLevelInfo());
-  }
-
-  canAddMember() {
-    return this.getMemberLevelInfo().then(info => {
-      let {
-        max_members,
-        member_num
-      } = info;
-      return max_members > member_num;
     });
   }
 
-  getMemberLevelInfo() {
-    return this.getCompanyInfo().then(() => {
-      let level = this.getLevel();
-      let max_members = config.get(`accountLevel.${level}.max_members`);
-      return {
-        max_members,
-        member_num: this.company.members.length,
-      };
-    });
+  getPlanInfo() {
+    return this.planModel.getCurrent(true);
   }
 
-  getStorageInfo() {
-    return this.getCompanyInfo().then(() => {
-      let level = this.getLevel();
-
-      let store_max_file_size = config.get(`accountLevel.${level}.store_max_file_size`);
-      let store_max_total_size = config.get(`accountLevel.${level}.store_max_total_size`);
-
-      return this.getLevelInfo().then(levelInfo => {
-        return _.extend(levelInfo.file, {
-          store_max_file_size,
-          store_max_total_size,
-        });
-      });
-    });
-
+  getModulesByPlan(plan) {
+    return authConfig[plan];
   }
 
-  getUsedStorageSize(target_type, target_id) {
-    return this.getLevelInfo().then(info => {
-      if (!target_type) {
-        return info.file.size || 0;
-      }
-      if (target_type == 'knowledge') {
-        return info.file.knowledge.size || 0;
-      }
-      if (target_type == 'project') {
-        let existItems = info.file[target_type].map(item => item._id);
-        let index = indexObjectId(existItems, target_id);
-        if (index > -1) {
-          return info.file[target_type][index].size;
-        } else {
-          return 0;
-        }
-      }
-    });
-  }
-
-  getLevel() {
-    if (!this.company) {
-      throw new Error('CompanyLevel: missing company');
-    }
-    return this.company.level || 'free';
-  }
-
-  getCompanyInfo() {
-    let company = this.company;
-    if (company && company.members && company.level) {
-      return Promise.resolve(company);
-    }
-    if (!this.companyId) {
-      return this._rejectWhenMissingCompany();
-    }
-    return db.company.findOne({
-      _id: this.companyId
+  static incMemberCount(company_id, count) {
+    return db.company.level.update({
+      _id: company_id
     }, {
-      structure: 0,
-    })
-    .then(company => {
-      this.company = company;
-      return company;
+      $inc: {
+        'member.count': count
+      }
     });
   }
 
-  _rejectWhenMissingCompany() {
-    return Promise.reject(new Error('CompanyLevel: missing company'));
+  static init(company_id) {
+    let info = {
+      _id: company_id,
+      member: {
+        count: 1
+      },
+      file: {
+        size: 0,
+        knowledge: {
+          size: 0
+        },
+        project: []
+      }
+    };
+    return db.company.level.insert(info);
   }
 
 }

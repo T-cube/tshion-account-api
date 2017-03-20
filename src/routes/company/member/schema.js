@@ -5,7 +5,7 @@ export let sanitization = {
   email: { type: 'string', rules: ['trim', 'lower'] },
   mobile: { type: 'string', def: '' },
   birthdate: { type: 'date', def: '' },
-  joindate: { type: 'date', def: '2012-12-20' },
+  joindate: { type: 'date', def: '' },
   address: { type: 'string', def: '' },
   sex: { type: 'string', def: C.SEX.MALE },
   type: { type: 'string', def: C.COMPANY_MEMBER_TYPE.NORMAL },
@@ -14,7 +14,7 @@ export let sanitization = {
 export let validation = {
   name: { type: 'string', minLength: 2, maxLength: 50 },
   email: { type: 'string', $email: 1, optional: true },
-  mobile: { type: 'string', optional: true },
+  mobile: { type: 'string', $mobile: 1, optional: true },
   birthdate: { type: 'date', optional: true },
   joindate: { type: 'date', optional: true },
   address: { type: 'string', optional: true },

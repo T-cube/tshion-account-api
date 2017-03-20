@@ -8,8 +8,8 @@ export default class CompanyModel extends Model {
     super();
   }
 
-  fetchList(criteria, query) {
-    let { page, pagesize } = this.getPageInfo(query);
+  fetchList(props) {
+    let { page, pagesize, criteria } = props;
     return this.db.company.aggregate([
       { $match: criteria },
       {
@@ -23,8 +23,9 @@ export default class CompanyModel extends Model {
           project_count: {$size: '$projects'},
         }
       },
+      { $sort: {_id: -1}},
       { $skip: page * pagesize },
-      { $limit: pagesize }
+      { $limit: pagesize },
     ]);
   }
 

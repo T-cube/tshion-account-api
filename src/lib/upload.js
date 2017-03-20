@@ -107,7 +107,7 @@ export function saveCdn(bucket) {
 
     function cdnUpload(file, key, path) {
       return qiniu.upload(key, path).then(data => {
-        file.cdn_bucket = data.bucket;
+        file.cdn_bucket = bucket;
         file.cdn_key = key;
         file.url = `${data.server_url}${key}`;
       });
@@ -121,8 +121,25 @@ export function saveCdn(bucket) {
         const { relpath, path } = file;
         return cdnUpload(file, relpath, path);
       });
+    } else {
+      promise = Promise.resolve();
     }
     promise.then(() => next())
     .catch(next);
   };
+}
+
+export function cropAvatar(req) {
+  let url;
+  if (req.file) {
+    url = req.file.url;
+  } else {
+    url = req.body.avatar || req.body.logo;
+  }
+  const {crop_x: x,crop_y: y, crop_width: width, crop_height: height} = req.body;
+  if (x && y && width && height) {
+    const crop = { x, y, width, height };
+    url = req.model('qiniu').image(url).setCrop(crop).toString();
+  }
+  return url;
 }

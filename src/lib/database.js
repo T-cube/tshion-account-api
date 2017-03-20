@@ -1,8 +1,7 @@
 import pmongo from 'pmongo';
 import config from 'config';
 
-export { ObjectId }
-from 'mongodb';
+export { ObjectId } from 'mongodb';
 
 const collections = [
   'announcement',
@@ -56,9 +55,41 @@ const collections = [
   'wechat.oauth',
   'wechat.user',
   'wiki',
+
+  // plan
+  'user.realname',
+
   'ids',                      // id 自增
   'qrcode',
   'qrcode.scan',
+
+  // payment & plan
+  'plan',
+  'plan.auth',
+  'plan.auth.pic',
+  'plan.company',
+  'plan.degrade',
+  'payment.product',
+  'payment.token',
+  'payment.discount',
+  'payment.coupon',
+  'payment.coupon.item',
+  'payment.company.coupon',
+  'payment.recharge',
+  'payment.order',
+  'payment.recharge.discount',
+  'payment.charge.order',
+  'payment.address',
+  'payment.invoice',
+  'payment.product.history',
+  'payment.balance',
+  'payment.transaction.log',
+
+  // transaction
+  'transaction',
+  'temp.file',
+
+  'broadcast',
 ];
 
 const dbConfig = config.get('database');
