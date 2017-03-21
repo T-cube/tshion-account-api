@@ -90,6 +90,7 @@ const collections = [
   'temp.file',
 
   'broadcast',
+  'order.coupon'
 ];
 
 const dbConfig = config.get('database');

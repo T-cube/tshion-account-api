@@ -5,6 +5,7 @@ import moment from 'moment';
 import db from 'lib/database';
 import C from 'lib/constants';
 import { SCHEDULE_REMIND } from 'models/notification-setting';
+import { ObjectId } from 'mongodb';
 
 export default class Schedule {
 
@@ -196,6 +197,46 @@ export default class Schedule {
       target_id: schedule._id,
     }, {
       $set: reminding
+    });
+  }
+
+  releaseCoupon() {
+    let criteria = {
+      status : 'active'
+    };
+    db.order.coupon.find(criteria).then(list => {
+      if (!list.length) {
+        return;
+      }
+      _.map(list, item => {
+        db.payment.order.findOne({
+          order_no: item.order_no,
+          date_expires: {
+            $lt: new Date()
+          }
+        }).then(doc => {
+          if (!doc) {
+            return;
+          }
+          db.order.coupon.update({
+            order_no: item.order_no
+          }, {
+            $set: {
+              status: 'inactive',
+              date_update: new Date()
+            }
+          });
+          if (doc.status == 'created' || doc.status == 'paying') {
+            db.payment.coupon.item.update({
+              serial_no: item.serial_no
+            }, {
+              $set: {
+                is_used: false
+              }
+            });
+          }
+        });
+      });
     });
   }
 

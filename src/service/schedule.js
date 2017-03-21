@@ -60,6 +60,10 @@ export default class ScheduleServer {
         init: ['0 0 * * *', () => this.autoRenewal()]
       },
 
+      release_coupon: {
+        init: ['*/1 * * * *', () => scheduleModel.releaseCoupon()]
+      },
+
     };
   }
 

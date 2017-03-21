@@ -64,6 +64,15 @@ export default class BaseOrder {
       return this.createOrderNo()
       .then(order_no => {
         order.order_no = order_no;
+        if (this.serial_no) {
+          db.order.coupon.insert({
+            order_no: order_no,
+            serial_no: this.serial_no,
+            status: 'active',
+            date_create: new Date(),
+            date_update: new Date()
+          });
+        }
         return Promise.all([
           db.payment.order.insert(order),
           this.updateUsedCoupon(),
@@ -233,7 +242,7 @@ export default class BaseOrder {
       discountAmount = discountInfo.number * product.original_price;
       break;
     case 'times':
-      discountAmount = discountInfo.times * product.original_price;
+      discountAmount = discountInfo.times * product.original_price * product.quantity;
       break;
     }
     return { discountAmount, discountInfo };
