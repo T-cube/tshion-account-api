@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import scheduleService from 'node-schedule';
+import moment from 'moment';
 
 import C from 'lib/constants';
 import ScheduleModel from 'models/schedule';
@@ -21,6 +22,7 @@ export default class ScheduleServer {
     this.doJobs();
     this.recoverTransaction();
     this.updateTrialPlan();
+    this.expireOrders();
   }
 
   initJobs() {
@@ -60,9 +62,6 @@ export default class ScheduleServer {
         init: ['0 0 * * *', () => this.autoRenewal()]
       },
 
-      release_coupon: {
-        init: ['*/1 * * * *', () => scheduleModel.releaseCoupon()]
-      },
 
     };
   }
@@ -160,6 +159,23 @@ export default class ScheduleServer {
           planModel.updatePaidFromOrder(order),
           planModel.clearDegrade(),
         ]);
+      });
+    });
+  }
+
+  expireOrders() {
+    let notificationModel = this.model('notification');
+    let scheduleModel = new ScheduleModel(notificationModel);
+    return db.payment.order.schedule.find().then(list => {
+      if (!list.length) {
+        return;
+      }
+      _.map(list, item => {
+        if (moment().diff(moment(item.date)) > 0) {
+          scheduleModel.expireOrder(item.order_no);
+        } else {
+          scheduleModel.expireOrderSchedule(item.date, item.order_no);
+        }
       });
     });
   }

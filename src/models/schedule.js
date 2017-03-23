@@ -1,11 +1,11 @@
 import _ from 'underscore';
 import cronParser from 'cron-parser';
 import moment from 'moment';
+import scheduleService from 'node-schedule';
 
 import db from 'lib/database';
 import C from 'lib/constants';
 import { SCHEDULE_REMIND } from 'models/notification-setting';
-import { ObjectId } from 'mongodb';
 
 export default class Schedule {
 
@@ -200,43 +200,27 @@ export default class Schedule {
     });
   }
 
-  releaseCoupon() {
-    let criteria = {
-      status : 'active'
-    };
-    db.order.coupon.find(criteria).then(list => {
-      if (!list.length) {
-        return;
-      }
-      _.map(list, item => {
-        db.payment.order.findOne({
-          order_no: item.order_no,
-          date_expires: {
-            $lt: new Date()
-          }
-        }).then(doc => {
-          if (!doc) {
-            return;
-          }
-          db.order.coupon.update({
-            order_no: item.order_no
+  expireOrderSchedule(date, order_no) {
+    scheduleService.scheduleJob(date, () => {
+      this.expireOrder(order_no);
+    });
+  }
+
+  expireOrder(order_no) {
+    db.payment.order.findOne({order_no}).then(doc => {
+      db.order.coupon.remove({order_no});
+      if (doc.status == 'created' || doc.status == 'paying') {
+        if (doc.coupon_serial_no) {
+          db.payment.coupon.item.update({
+            serial_no: doc.coupon_serial_no
           }, {
             $set: {
-              status: 'inactive',
-              date_update: new Date()
+              is_used: false
             }
           });
-          if (doc.status == 'created' || doc.status == 'paying') {
-            db.payment.coupon.item.update({
-              serial_no: item.serial_no
-            }, {
-              $set: {
-                is_used: false
-              }
-            });
-          }
-        });
-      });
+        }
+        db.payment.order.update({order_no},{$set: {status: C.ORDER_STATUS.EXPIRED}});
+      }
     });
   }
 

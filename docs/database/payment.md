@@ -126,7 +126,7 @@ Currency: Number;
 }
 ```
 
-<!-- ### Collection payment.coupon.item
+### Collection payment.coupon.item
 
 已使用的优惠券
 
@@ -146,9 +146,9 @@ Currency: Number;
     date_end: string
   }
 }
-``` -->
+```
 
-### Collection payment.company.coupon
+<!-- ### Collection payment.company.coupon
 
 公司优惠券
 
@@ -163,7 +163,7 @@ Currency: Number;
     date_used: Date,
   }...]
 }
-```
+``` -->
 
 ### Collection payment.balance
 
@@ -222,7 +222,7 @@ Currency: Number;
     title: String,
     amount: Currency        // 降低的价格
   }],
-  coupon: String,                // 优惠券编号
+  coupon_serial_no: String,                // 优惠券编号
   // 支付信息
   original_sum: Currency         // 原始价格
   paid_sum: Currency,            // 支付金额
@@ -243,6 +243,18 @@ Currency: Number;
     creator: String[Enum:user,system,cs], // 用户，系统，客服
     operator_id: String,                  // when creator == 'cs'
   }]
+}
+```
+
+### Collection payment.order.schedule
+
+订单任务记录，用于过期订单和释放优惠券
+
+```javascript
+{
+  _id:ObjectId,
+  date: Date,                       //任务执行时间
+  order_no: String                  //订单号
 }
 ```
 
