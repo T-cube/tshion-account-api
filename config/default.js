@@ -7,6 +7,7 @@ if (!fs.existsSync(__dirname + '/../.env')) {
 }
 require('dotenv').config();
 // DO NOT REMOVE THIS LINE process.env.NODE_ENV
+// DO NOT REMOVE THIS LINE process.env.JZJ_CONFIG
 
 module.exports = {
   apiUrl: 'https://tlifang.com/',
@@ -38,7 +39,7 @@ module.exports = {
   avatar: {
     count: {
       company: 10,
-      project: 34,
+      project: 32,
       user: 32,
     },
   },
@@ -285,11 +286,11 @@ module.exports = {
     }
   },
   order: {
-    expire_minutes: 30, // 订单有效期
+    expire_minutes: 30, // order expire
   },
   invoice: {
-    min_tax_free_amount: 100000,  // 1000元免快递费
-    tax_rate: 2000,               // 快递费20元
+    min_tax_free_amount: 100000,  // free ship limit
+    tax_rate: 2000,               // ship charge under limit
   },
   recharge: {
     amount: {
