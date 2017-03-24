@@ -10,6 +10,7 @@ import uuid from 'uuid';
 import objectPath from 'object-path';
 import { camelCase } from 'change-case';
 import escapeRegexp from 'escape-regexp';
+import { ApiError } from 'lib/error';
 
 import db from 'lib/database';
 import config from 'config';
@@ -492,4 +493,21 @@ export function saveCdnInBucket(bucketInstance, files) {
       };
     });
   }
+}
+
+export function checkRequestFrequency(redis, {type, data, interval}) {
+  return new Promise((resolve, reject) => {
+    let account = data[type];
+    let frequency = `frequency_${type}_${account}`;
+    redis.exists(frequency).then(exist => {
+      if (exist) {
+        reject(new ApiError(400, 'request_too_often'));
+      } else {
+        redis.set(frequency, account).then(() => {
+          redis.expire(frequency, interval);
+          resolve();
+        });
+      }
+    });
+  });
 }
