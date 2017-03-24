@@ -39,6 +39,7 @@
   "invalid_account_type": "错误的帐户类型",
   "invalid_email": "邮箱错误",
   "invalid_mobile": "手机号码错误",
+  "invalid_verify_code": "验证码错误",
   "invalid_sms_code": "短信验证码错误",
   "invalid_email_code": "邮箱验证码错误",
   "invalid_date": "日期错误",

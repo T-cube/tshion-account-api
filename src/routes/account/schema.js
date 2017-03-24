@@ -15,7 +15,7 @@ const schema = {
       email: { $email: true, code: 'invalid_email' },
       mobile: { $mobile: {country: 'cn'}, code: 'invalid_mobile' },
       password: { type: 'string', minLength: 6, maxLength: 20, code: 'bad_password_format' },
-      code: { type: 'string', pattern: /\d{6}/, optional: true, code: 'invalid_sms_code' },
+      code: { type: 'string', pattern: /\d{6}/, optional: true, code: 'invalid_verify_code' },
     },
   },
   authorise: {
