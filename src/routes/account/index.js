@@ -79,7 +79,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       mobile_verified: type == C.USER_ID_TYPE.MOBILE,
       name: type == C.USER_ID_TYPE.MOBILE ? data.mobile : getEmailName(data.email),
       description: '',
-      avatar: randomAvatar('user', 8),
+      avatar: randomAvatar('user'),
       password: hash,
       birthdate: null,
       address: {
