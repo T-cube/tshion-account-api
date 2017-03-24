@@ -501,7 +501,7 @@ export function checkRequestFrequency(redis, {type, data, interval}) {
     let frequency = `frequency_${type}_${account}`;
     redis.exists(frequency).then(exist => {
       if (exist) {
-        reject(new ApiError(400, 'request_too_often'));
+        reject(new ApiError(429, 'too_many_requests'));
       } else {
         redis.set(frequency, account).then(() => {
           redis.expire(frequency, interval);

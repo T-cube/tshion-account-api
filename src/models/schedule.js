@@ -208,7 +208,7 @@ export default class Schedule {
 
   expireOrder(order_no) {
     db.payment.order.findOne({order_no}).then(doc => {
-      db.order.coupon.remove({order_no});
+      db.payment.order.schedule.remove({order_no});
       if (doc.status == 'created' || doc.status == 'paying') {
         if (doc.coupon_serial_no) {
           db.payment.coupon.item.update({
