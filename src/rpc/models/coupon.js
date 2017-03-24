@@ -134,7 +134,7 @@ export default class CouponModel extends Model {
       console.log(coupon, companies.length);
       return Promise.all([
         Promise.all(companies.map(company_id => {
-          let buffer = crypto.randomBytes(64).toString('hex');
+          let buffer = crypto.randomBytes(16).toString('hex');
           let serial_no = coupon.coupon_no + buffer;
           return this.db.payment.coupon.item.insert({
             coupon_no: coupon.coupon_no,
