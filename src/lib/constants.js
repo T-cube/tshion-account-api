@@ -339,6 +339,10 @@ let constants = {
   BROADCAST_STATUS: {
     ACTIVE: 'active',
     INACTIVE: 'inactive'
+  },
+
+  FREQUENCY_CHECK: {
+    CODE: 60
   }
 
 };

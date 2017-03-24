@@ -11,6 +11,7 @@ import db from 'lib/database';
 import Coupon from '../coupon';
 import Discount from '../discount';
 import CompanyLevel from 'models/company-level';
+import ScheduleModel from 'models/schedule';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
@@ -64,6 +65,13 @@ export default class BaseOrder {
       return this.createOrderNo()
       .then(order_no => {
         order.order_no = order_no;
+        let scheduleModel = new ScheduleModel('notificationModel');
+        let date = moment().add(ORDER_EXPIRE_MINUTES, 'minute').toDate();
+        db.payment.order.schedule.insert({
+          order_no,
+          date
+        });
+        scheduleModel.expireOrderSchedule(date, order_no);
         return Promise.all([
           db.payment.order.insert(order),
           this.updateUsedCoupon(),
@@ -106,7 +114,7 @@ export default class BaseOrder {
             original_times: this.original_times,
             original_sum: this.original_sum,
             paid_sum: Math.round(this.paid_sum),
-            serial_no: this.serial_no,
+            coupon_serial_no: this.serial_no,
             discount: this.discount,
             status: this.status,
             date_create: this.date_create,
@@ -233,7 +241,7 @@ export default class BaseOrder {
       discountAmount = discountInfo.number * product.original_price;
       break;
     case 'times':
-      discountAmount = discountInfo.times * product.original_price;
+      discountAmount = discountInfo.times * product.original_price * product.quantity;
       break;
     }
     return { discountAmount, discountInfo };

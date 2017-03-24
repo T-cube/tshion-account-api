@@ -90,6 +90,7 @@ const collections = [
   'temp.file',
 
   'broadcast',
+  'payment.order.schedule'
 ];
 
 const dbConfig = config.get('database');
