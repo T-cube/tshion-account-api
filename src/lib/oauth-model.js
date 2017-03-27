@@ -75,6 +75,9 @@ export default {
 
   getUser(username, password, callback) {
     // console.log('# getUser (username: ' + username + ', password: ' + password + ')');
+    if (_.isString(username)) {
+      username = username.trim();
+    }
     this._getUser(username)
     .then(doc => {
       if (!doc) {
