@@ -5,8 +5,8 @@ const schema = {
   register: {
     sanitization: {
       type: { type: 'string' },
-      email: { type: 'string' },
-      mobile: { type: 'string' },
+      email: { type: 'string', rules: ['trim'] },
+      mobile: { type: 'string', rules: ['trim'] },
       password: { type: 'string' },
       code: { type: 'string' },
     },
