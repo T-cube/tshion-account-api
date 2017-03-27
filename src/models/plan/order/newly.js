@@ -15,12 +15,12 @@ export default class NewlyOrder extends Base {
     this.order_type = C.ORDER_TYPE.NEWLY;
   }
 
-  init({plan, member_count, coupon, times}) {
+  init({plan, member_count, serial_no, times}) {
     if (!plan) {
       return Promise.reject();
     }
-    if (coupon) {
-      this.withCoupon(coupon);
+    if (serial_no) {
+      this.withCoupon(serial_no);
     }
     member_count = member_count || 0;
     this.plan = plan;

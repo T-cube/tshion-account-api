@@ -8,8 +8,11 @@
 
 ```javascript
 PaimentMethod: String[Enum:balance,alipay,wxpay,banktrans];
+DiscountCriteria: String[Enum:quantity,total_fee,times];
 DiscountType: String[Enum:number,rate,amount];
 OrderStatus: String[Enum:created,paying,expired,cancelled,succeeded];
+InvoiceOrderStatus: String[Enum:created,confirmed,rejected,issued,shipped,completed];
+TeamPlan: String[Enum:free,pro,ent];
 Currency: Number;
 ```
 
@@ -27,6 +30,7 @@ Currency: Number;
   description: String,
   original_price: Currency,
   discount: [ObjectId...],
+  version: Number,
   amount_min: Number,
   amount_max: Number,
   stock_total: Number,
@@ -52,9 +56,8 @@ Currency: Number;
 ```javascript
 {
   _id: ObjectId,
-  product_no: String,
-  index: Number,
-  version: String,
+  // index: Number,
+  version: Number,
   ... // 同商品信息
 }
 ```
@@ -69,16 +72,16 @@ Currency: Number;
   title: String,
   description: String,
   criteria: {
-    type: String,
-    quantity: Number,               // 最低数量
+    type: DiscountCriteria,
+    quantity: Number,            // 最低数量
     times: Number,               // 最低数量
-    total_fee: Currency,              // 最低金额
+    total_fee: Currency,         // 最低金额
   },
   discount: {
-    type: DiscountType,             // 优惠类型：金额，
-    number: Number,                 // 赠送数量
-    rate: Number,                   // 折扣（0~0.99）
-    amount: Currency,                 // 优惠金额
+    type: DiscountType,          // 优惠类型：金额，
+    number: Number,              // 赠送数量
+    rate: Number,                // 折扣（0~0.99）
+    amount: Currency,            // 优惠金额
   },
   period: {
     date_start: Date,
@@ -96,19 +99,21 @@ Currency: Number;
 ```javascript
 {
   _id: ObjectId,
-  coupon_no: String,                // 优惠券编号
-  products: [String(product_no)...],// 适用产品
+  coupon_no: String,                   // 优惠券编号
+  products: [ObjectId(product_id)...], // 适用产品
   title: String,
   description: String,
   criteria: {
-    quantity: Number,               // 最低数量
-    total_fee: Currency,              // 最低金额
+    type: DiscountCriteria,
+    quantity: Number,            // 最低数量
+    times: Number,               // 最低数量
+    total_fee: Currency,         // 最低金额
   },
   discount: {
     type: DiscountType,             // 优惠类型：金额，
     number: Number,                 // 赠送数量
     rate: Number,                   // 折扣（0~0.99）
-    amount: Currency,                 // 优惠金额
+    amount: Currency,               // 优惠金额
   },
   period: {
     date_start: Date,
@@ -135,8 +140,30 @@ Currency: Number;
   is_used: Boolean,                 // 是否已使用
   date_create: Date,                // 申请日期
   date_used: Date,                  // 使用日期
+  order_type: array[string]
+  period: {
+    date_create: string,
+    date_end: string
+  }
 }
 ```
+
+<!-- ### Collection payment.company.coupon
+
+公司优惠券
+
+```javascript
+{
+  _id: ObjectId,                    // company_id
+  list: [{
+    coupon: ObjectId,               // coupon_id
+    coupon_no: String,              // 优惠券序列号（由优惠券编号追加随机数字）
+    status: String[Enum: used, unused],
+    date_create: Date,
+    date_used: Date,
+  }...]
+}
+``` -->
 
 ### Collection payment.balance
 
@@ -144,53 +171,71 @@ Currency: Number;
 
 ```javascript
 {
-  _id: ObjectId,
-  company_id: ObjectId,             // 关联公司
+  _id: ObjectId,                      // company_id
   balance: Currency,                  // 帐户剩余金额
-  freezed: Currency,                  // 冻结金额
-  date_update: Date,
-  log: []
+  log: [{
+    // optional
+    recharge: {                       // 充值信息
+      _id: ObjectId,
+      amount: Currency,
+      recharge_no: String,
+    },
+    // optional
+    order: {                          // 订单信息
+      _id: ObjectId,
+      amount: Currency,
+      order_no: String
+    }
+    amount: Currency,                 // 充值或消费的金额
+    balance: Currency,                // 当前的余额
+    date_create: Date
+  }]
 }
 ```
 
 ### Collection payment.order
 
-记录用户充值、付款记录
+用户购买产品额记录
 
 ```javascript
 {
   _id: ObjectId,
-  order_no,
-  // 客户信息
+  order_no: String,
   user_id: ObjectId,
   company_id: ObjectId,
+  original_times: Number,   // 用户购买的月数
+  times: Number,            // 用户购买的月数 + 优惠赠送的月数
+  plan: TeamPlan,           // 用户购买的计划
+  original_plan,            // 用户之前的计划
   // 商品信息
-  times: Number,
   product: [{
     _id: ObjectId,
     product_no: String,
     title: String,
     quantity: Number,
-    price: Currency,
+    original_price: Currency,
     sum: Currency,
-    // 打折信息
-    discount: [{
-      type: DiscountType,
-      title: String,
-      reduced_amount: Currency        // 降低的价格
-    }],
   }...],
+  // 打折信息
+  discount: [{
+    type: DiscountType,
+    title: String,
+    amount: Currency        // 降低的价格
+  }],
+  coupon_serial_no: String,                // 优惠券编号
   // 支付信息
-  charge_no: ObjectId               // 关联支付记录
-  original_sum: Currency          // 原始价格
+  original_sum: Currency         // 原始价格
   paid_sum: Currency,            // 支付金额
-  invoice_id: ObjectId,           // 发票id
-  // 订单状态
-  status: OrderStatus,
-  comment: String,
+  invoice_id: ObjectId,          // 发票id
+  status: OrderStatus,           // 订单状态
   date_create: Date,
   date_update: Date,
+  date_expires: Date,
   // 订单状态历史变更记录
+  payment: {
+    date_paid: Date,
+    method: PaymentMethod
+  },
   log: [{
     _id: ObjectId,
     status: OrderStatus,
@@ -201,20 +246,54 @@ Currency: Number;
 }
 ```
 
-### Collection payment.charge.order
+### Collection payment.order.schedule
 
-帐户充值记录，实际转入资金，包含预充值或直接消费
+订单任务记录，用于过期订单和释放优惠券
+
+```javascript
+{
+  _id:ObjectId,
+  date: Date,                       //任务执行时间
+  order_no: String                  //订单号
+}
+```
+
+### Collection payment.recharge
+
+帐户充值记录
 
 ```javascript
 {
   _id: ObjectId,
-  charge_no: String,                // 帐户收入流水号
+  recharge_no: String,              // 帐户收入流水号
+  user_id: ObjectId,
   company_id: ObjectId,             // 关联公司
   amount: Currency,                 // 充值金额
-  payment_type: PaymentType         // 支付类型
+  paid_sum: Currency,
   payment_method: PaymentMethod,    // 支付方式
-  order_no: String,                 // 关联订单
+  status: String,                   // OrderStatus
+  payment: {
+    date_paid: Date,
+    method: PaymentMethod
+  }
   date_create: Date,
+  date_update: Date,
+  date_expires: Date,
+}
+```
+
+### Collection payment.charge.order
+
+支付记录
+
+```javascript
+{
+  _id: ObjectId,
+  company_id: ObjectId,
+  charge_type: String[Enum:plan,recharge], // 订单或者充值
+  payment_method: PaymentMethod,
+  date_create: Date,
+  status: OrderStatus,
   // 支付接口信息（可选），参考 @ym-modules/payment
   payment_data: {
     title: String,                  // 标题
@@ -237,6 +316,10 @@ Currency: Number;
     limit_pay: String,              // 指定支付方式
     openid: String                  // 用户标识    
   },
+  // 查询支付状态的结果
+  payment_query: {},
+  // 第三方支付结果通知
+  payment_notify: {},
 }
 ```
 
@@ -248,32 +331,25 @@ Currency: Number;
 {
   _id: ObjectId,
   invoice_no: String,
+  user_id: ObjectId,
   company_id: ObjectId,
+  // 状态跟踪
+  status: InvoiceOrderStatus,
   title: String,                    // 只能为认证公司名称
+  subject: String,
   total_amount: Currency,           // （税后）总金额，为实际充值金额
   tax_rate: Float,                  // 税率
-  // 项目明细
-  item_list: [{
-    category: String,
-    description: String,
-    amount: Currency,
-    comment: String,
-  }],
-  // 对应充值信息
-  charge_list: [{
-    _id: ObjectId,
-    charge_no: String,
-    title: String,
-    amount: Currency,
-  }],
+  order_list: [ObjectId],           // 项目明细
   // 地址信息
   address: {
     _id: ObjectId,
-    province: String,
-    city: String,
-    district: String,
+    location: {
+      province: String,
+      city: String,
+      district: String,
+      address: String,
+    },
     postcode: String,
-    address: String,
     contact: String,
     phone: String,
   },
@@ -282,12 +358,23 @@ Currency: Number;
     brand: String,                  // 快递品牌
     track_no: String,               // 快递跟踪单号
   },
-  // 状态跟踪
-  status: String[Enum:created,verifing,sent,finished],
   date_create: Date,
   date_update: Date,
 }
 ```
+
+``发票状态更改``
+
+| 当前状态 | 可转换状态 | 操作用户 |
+| ---------- | ----- | ----------- |
+| created | cancelled | 前台用户 |
+| created | rejected或者confirmed | 客服 |
+| cancelled |  |  |
+| rejected |  |  |
+| confirmed | issued | 财务 |
+| issued | shipped |  |
+| shipped | completed |  |
+| completed |  |  |
 
 ### Collection payment.address
 
@@ -298,13 +385,15 @@ Currency: Number;
   _id: ObjectId,
   company_id: ObjectId,
   default_address: ObjectId,
-  address_list: [{
+  list: [{
     _id: ObjectId,
-    province: String,
-    city: String,
-    district: String,
+    location: {
+      province: String,
+      city: String,
+      district: String,
+      address: String,
+    },
     postcode: String,
-    address: String,
     contact: String,
     phone: String,
   }...],

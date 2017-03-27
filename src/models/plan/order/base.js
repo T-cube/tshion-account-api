@@ -11,6 +11,7 @@ import db from 'lib/database';
 import Coupon from '../coupon';
 import Discount from '../discount';
 import CompanyLevel from 'models/company-level';
+import ScheduleModel from 'models/schedule';
 
 export let randomBytes = Promise.promisify(crypto.randomBytes);
 
@@ -34,7 +35,7 @@ export default class BaseOrder {
     this.products = [];
     this.original_sum = 0;
     this.paid_sum = 0;
-    this.coupon = undefined;
+    this.serial_no = undefined;
     this.status = C.ORDER_STATUS.CREATED;
     this.original_plan = undefined;
     this.date_create = new Date();
@@ -64,6 +65,13 @@ export default class BaseOrder {
       return this.createOrderNo()
       .then(order_no => {
         order.order_no = order_no;
+        let scheduleModel = new ScheduleModel('notificationModel');
+        let date = moment().add(ORDER_EXPIRE_MINUTES, 'minute').toDate();
+        db.payment.order.schedule.insert({
+          order_no,
+          date
+        });
+        scheduleModel.expireOrderSchedule(date, order_no);
         return Promise.all([
           db.payment.order.insert(order),
           this.updateUsedCoupon(),
@@ -106,7 +114,7 @@ export default class BaseOrder {
             original_times: this.original_times,
             original_sum: this.original_sum,
             paid_sum: Math.round(this.paid_sum),
-            coupon: this.coupon,
+            coupon_serial_no: this.serial_no,
             discount: this.discount,
             status: this.status,
             date_create: this.date_create,
@@ -122,17 +130,16 @@ export default class BaseOrder {
     this.times = this.original_times = times;
   }
 
-  withCoupon(coupon) {
-    this.coupon = coupon;
+  withCoupon(serial_no) {
+    this.serial_no = serial_no;
   }
 
   updateUsedCoupon() {
-    return db.payment.company.coupon.update({
-      _id: this.company_id,
-      'list.coupon_no': this.coupon,
+    return db.payment.coupon.item.update({
+      serial_no: this.serial_no,
     }, {
       $set: {
-        'list.$.status': C.COMPANY_COUPON_STATUS.USED,
+        is_used: true,
       }
     });
   }
@@ -173,12 +180,12 @@ export default class BaseOrder {
   }
 
   getCouponDiscount() {
-    if (!this.coupon) {
+    if (!this.serial_no) {
       return Promise.resolve();
     }
-    return new Coupon(this.company_id).getCoupon(this.coupon).then(coupon => {
+    return new Coupon(this.company_id).getCoupon(this.serial_no).then(coupon => {
       if (!coupon || !this.isCouponAvailable(coupon)) {
-        this.coupon = undefined;
+        this.serial_no = undefined;
         return;
       }
       let { products } = coupon;
@@ -187,7 +194,7 @@ export default class BaseOrder {
       } else {
         _.filter(this.products, product => indexObjectId(products, product._id) > -1).map(product => {
           let discountProduct = this._getProductDiscount(product, coupon);
-          this._persistProductDiscount({coupon: coupon._id}, discountProduct, product._id);
+          this._couponProductDiscount({discount: {coupon_id: coupon._id, coupon_title: coupon.title, coupon_description: coupon.description}}, discountProduct, product._id);
         });
       }
     });
@@ -201,17 +208,47 @@ export default class BaseOrder {
       }
       delete product.discounts;
       return Discount.getProductDiscount(this.order_type, discount, {quantity, total_fee: sum, times: this.times})
-      .then(discountItem => {
-        if (!discountItem) {
+      .then(discountList => {
+        if (_.isEmpty(discountList)) {
           return;
         }
-        let discountInfo = this._getProductDiscount(product, discountItem);
-        this._persistProductDiscount({product_discount: discountItem._id}, discountInfo, product._id);
+        const result = _.map(discountList, discountItem => {
+          let discountInfo = this._getProductDiscount(product, discountItem);
+          return this._calcProductDiscount({discount: discountItem}, discountInfo, product);
+        });
+        let sortResult = _.sortBy(result, 'discountAmount');
+        let bestDiscount = sortResult[sortResult.length - 1];
+        let bsetDiscountItem = bestDiscount.discountInfo.discount;
+        this.paid_sum -= bestDiscount.discountAmount;
+        this.discount = (this.discount || []).concat(_.extend({}, {discount_type: 'product'}, {product: product.product_no}, {discount: {discount_id: bsetDiscountItem._id, discount_title: bsetDiscountItem.title, discount_description: bsetDiscountItem.description}}, {type: 'amount', fee: bestDiscount.discountAmount}));
       });
     });
   }
 
-  _persistProductDiscount(ext, discountInfo, productId) {
+  _calcProductDiscount(ext, discountInfo, product) {
+    if (!discountInfo) {
+      return { discountAmount: 0, product};
+    }
+    _.extend(discountInfo, ext);
+    let { type } = discountInfo;
+    let discountAmount = 0;
+    switch (type) {
+    case 'amount':
+    case 'rate':
+      discountAmount = discountInfo.fee;
+      break;
+    case 'number':
+      discountAmount = discountInfo.number * product.original_price;
+      break;
+    case 'times':
+      discountAmount = discountInfo.times * product.original_price * product.quantity;
+      break;
+    }
+    return { discountAmount, discountInfo };
+  }
+
+  //TODO remove this method
+  _couponProductDiscount(ext, discountInfo, productId) {
     if (!discountInfo) {
       return;
     }
@@ -234,7 +271,7 @@ export default class BaseOrder {
       break;
     }
     // product.discount_using = (product.discount_using || []).concat(discountInfo);
-    this.discount = (this.discount || []).concat(_.extend({}, {product: product.product_no}, discountInfo));
+    this.discount = (this.discount || []).concat(_.extend({}, {discount_type: 'coupon'},{product: product.product_no}, discountInfo));
   }
 
   _persistOrderDiscount(ext, discountInfo) {

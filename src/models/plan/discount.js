@@ -31,10 +31,10 @@ export default class Discount {
     return result;
   }
 
-  static getProductDiscount(order_type, discounts, matchs) {
+  static getProductDiscount(order_type, discountIds, matchs) {
     let criteria = {
       _id: {
-        $in: discounts
+        $in: discountIds
       },
       order_type,
       status: C.DISCOUNT_STATUS.NORMAL,
@@ -54,13 +54,16 @@ export default class Discount {
       }
     ];
     return db.payment.discount.find(criteria)
-    .sort({
-      'criteria.quantity': 1,
-      'criteria.total_fee': 1,
-      'criteria.times': 1,
-    })
-    .limit(1)
-    .then(doc => doc[0]);
+    // .sort({
+    //   'criteria.quantity': 1,
+    //   'criteria.total_fee': 1,
+    //   'criteria.times': 1,
+    // })
+    // .limit(1)
+    .then(list => {
+      // doc[0];
+      return list;
+    });
   }
 
   static isMatch(origin, criteria) {

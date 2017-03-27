@@ -6,6 +6,7 @@ import db from 'lib/database';
 import { getPageInfo, generateToken, getClientIp } from 'lib/utils';
 import C, {ENUMS} from 'lib/constants';
 import { ApiError } from 'lib/error';
+import { authCheck } from 'lib/middleware';
 import { validate } from './schema';
 import PlanOrder from 'models/plan/plan-order';
 import OrderFactory from 'models/plan/order';
@@ -21,7 +22,7 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
   }
   validate(`create_order_${order_type}`, data);
   let isPrepare = /prepare\/?$/.test(req.url);
-  let { plan, member_count, coupon, times } = data;
+  let { plan, member_count, serial_no, times } = data;
   let company_id = req.company._id;
   let user_id = req.user._id;
 
@@ -31,7 +32,7 @@ api.post(/\/(prepare\/?)?$/, (req, res, next) => {
     user_id,
     plan,
     member_count,
-    coupon,
+    serial_no,
     times,
   })
   .then(orderModel => {
@@ -63,6 +64,11 @@ api.get('/pending', (req, res, next) => {
 });
 
 api.post('/:order_id/pay', (req, res, next) => {
+  if (req.body.payment_method == 'balance') {
+    return authCheck()(req, res, next);
+  }
+  next();
+}, (req, res, next) => {
   let data = req.body;
   validate('pay', data);
   let {payment_method} = data;
@@ -171,7 +177,30 @@ api.put('/:order_id/status', (req, res, next) => {
     },
     date_expires: {$gt: new Date()}
   }, {
-    $set: {status}
+    $set: {
+      status,
+      date_update: new Date()
+    },
+  })
+  .then(() => {
+    return db.payment.order.findOne({
+      _id: order_id,
+      company_id,
+    })
+    .then(order => {
+      if (order.serial_no) {
+        return db.payment.coupon.item.update({
+          company_id,
+          serial_no: order.serial_no
+        }, {
+          $set: {
+            is_used: false
+          }
+        });
+      } else {
+        return Promise.resolve();
+      }
+    });
   })
   .then(() => res.json({}))
   .catch(next);

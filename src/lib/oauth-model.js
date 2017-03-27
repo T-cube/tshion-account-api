@@ -2,9 +2,11 @@ import bcrypt from 'bcrypt';
 import Promise from 'bluebird';
 import Joi from 'joi';
 import _ from 'underscore';
+import { ApiError } from 'lib/error';
+import C from 'lib/constants';
 
 import db from 'lib/database';
-import { comparePassword, camelCaseObjectKey } from 'lib/utils';
+import { comparePassword, camelCaseObjectKey, generateToken } from 'lib/utils';
 
 export default {
   getAccessToken(bearerToken, callback) {
@@ -73,6 +75,9 @@ export default {
 
   getUser(username, password, callback) {
     // console.log('# getUser (username: ' + username + ', password: ' + password + ')');
+    if (_.isString(username)) {
+      username = username.trim();
+    }
     this._getUser(username)
     .then(doc => {
       if (!doc) {
@@ -171,4 +176,5 @@ export default {
     })
     .catch(e => callback(e));
   },
+
 };

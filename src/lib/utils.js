@@ -5,9 +5,12 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import http from 'http';
+import uuid from 'uuid';
 import objectPath from 'object-path';
 import { camelCase } from 'change-case';
 import escapeRegexp from 'escape-regexp';
+import { ApiError } from 'lib/error';
 
 import db from 'lib/database';
 import config from 'config';
@@ -28,7 +31,7 @@ export function generateToken(length = 48) {
 }
 
 export function hashPassword(password) {
-  const rounds = config.get('passwordHashRounds');
+  const rounds = config.get('security.passwordHashRounds');
   const genSalt = Promise.promisify(bcrypt.genSalt);
   const hash = Promise.promisify(bcrypt.hash);
   return genSalt(rounds)
@@ -440,4 +443,71 @@ export function idCodeValid(code) {
     }
   }
   return pass;
+}
+
+export function downloadFile(url, folder) {
+
+  let filename = uuid.v4() + path.extname(url);
+  let key = 'upload/' + folder + '/' + filename;
+  let filepath = config.get('upload.path') + key;
+
+  return new Promise((resolve, reject) => {
+
+    http.get(url, (res) => {
+      let bufferList = [];
+      res.on('data', (chunk) => {
+        bufferList.push(new Buffer(chunk));
+      });
+      res.on('end', () => {
+        let data = Buffer.concat(bufferList);
+        fs.writeFile(filepath, data, function(err) {
+          if (err) {
+            return reject(err);
+          }
+          resolve({key, path: filepath});
+        });
+      });
+    });
+  });
+
+}
+
+export function saveCdnInBucket(bucketInstance, files) {
+
+  if (!_.isArray(files)) {
+    const { key, path } = files;
+    return cdnUpload(key, path);
+  }
+
+  return Promise.map(files, file => {
+    const { key, path } = file;
+    return cdnUpload(key, path);
+  });
+
+  function cdnUpload(key, path) {
+    return bucketInstance.upload(key, path).then(data => {
+      return {
+        key,
+        path,
+        url: `${data.server_url}${key}`
+      };
+    });
+  }
+}
+
+export function checkRequestFrequency(redis, {type, data, interval}) {
+  return new Promise((resolve, reject) => {
+    let account = data[type];
+    let frequency = `frequency_${type}_${account}`;
+    redis.exists(frequency).then(exist => {
+      if (exist) {
+        reject(new ApiError(429, 'too_many_requests'));
+      } else {
+        redis.set(frequency, account).then(() => {
+          redis.expire(frequency, interval);
+          resolve();
+        });
+      }
+    });
+  });
 }

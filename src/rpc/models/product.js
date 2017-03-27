@@ -79,7 +79,7 @@ export default class ProductModel extends Model {
         });
       }
       return promise.then(discounts => {
-        fields.discounts = discounts;
+        fields.discount = discounts;
         return this.db.payment.product.update({_id}, {
           $set: fields,
           $inc: {

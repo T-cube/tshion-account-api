@@ -59,29 +59,64 @@ ERROR
 "validation error" //校验错误
 ```
 
-### POST /account/send_sms
+### POST /account/send-sms
+
 发送短信验证码 NOT READY
 
 INPUT
+
 ```javascript
 {
   "mobile": "{mobile}"    // 电子邮件
 }
 ```
+
 OUTPUT
+
 ```javascript
 {}
 ```
+
 ERROR
+
+| code | error | error_description |
+| ---- | ----- | ----------------- |
+| 400 | `invalid_mobile` | mobile number invalid |
+| 400 | `user_exists` | user exists |
+| 429 | `too_many_requests` | request too often |
+
+### POST account/recover/send-code
+
+忘记密码，发送短信和邮箱验证码给用户
+
+INUPT
+
 ```javascript
-"bad mobile format" //ID格式错误
+{
+  "type": ["email", "mobile"],
+  "mobile": <String>  //optional depend on type
+  "email": <String>   //optional depend on type
+}
 ```
 
-### POST account/verify_email
+OUTPUT
+
+```javascript
+{}
+```
+
+ERROR
+
+| code | error | error_description |
+| ---- | ----- | ----------------- |
+| 429 | `too_many_requests` | request too often |
+
+### POST account/verify-email
 
 校验邮件验证码
 
 INPUT
+
 ```javascript
 {
   "code": "{code}"     //URL中的验证码
@@ -98,7 +133,7 @@ ERROR
 "bad verification code" //验证码错误
 ```
 
-### POST /account/verify_sms
+### POST /account/verify-sms
 校验短信验证码
 
 TODO

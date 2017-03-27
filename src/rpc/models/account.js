@@ -22,7 +22,10 @@ export default class CompanyModel extends Model {
       sex: 1,
     })
     .skip(page * pagesize)
-    .limit(pagesize);
+    .limit(pagesize)
+    .sort({
+      _id: -1,
+    });
   }
 
   count(criteria) {

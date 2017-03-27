@@ -85,14 +85,14 @@ const schema = {
       order_type: { type: 'string' },
       member_count: { type: 'integer' },
       times: { type: 'integer' },
-      coupon: { type: 'string', optional: true },
+      serial_no: { type: 'string', optional: true },
     },
     validation: {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
       order_type: { $enum: ENUMS.ORDER_TYPE },
       member_count: { type: 'integer' },
       times: { type: 'integer' },
-      coupon: { type: 'string', optional: true },
+      serial_no: { type: 'string', optional: true },
     },
   },
   create_order_patch: {
@@ -122,25 +122,25 @@ const schema = {
       plan: { type: 'string' },
       order_type: { type: 'string' },
       member_count: { type: 'integer' },
-      coupon: { type: 'string', optional: true },
+      serial_no: { type: 'string', optional: true },
     },
     validation: {
       plan: { $enum: [C.TEAMPLAN.PRO, C.TEAMPLAN.ENT] },
       order_type: { $enum: ENUMS.ORDER_TYPE },
       member_count: { type: 'integer' },
-      coupon: { type: 'string', optional: true },
+      serial_no: { type: 'string', optional: true },
     },
   },
   create_order_renewal: {
     sanitization: {
       order_type: { type: 'string' },
       times: { type: 'integer' },
-      coupon: { type: 'string', optional: true },
+      serial_no: { type: 'string', optional: true },
     },
     validation: {
       order_type: { $enum: ENUMS.ORDER_TYPE },
       times: { type: 'integer' },
-      coupon: { type: 'string', optional: true },
+      serial_no: { type: 'string', optional: true },
     },
   },
   pay: {
@@ -307,11 +307,13 @@ const schema = {
   address: {
     sanitization: {
       location: addressWithoutCountrySchema.sanitization,
+      zipcode: { type: 'string', optional: true },
       contact: { type: 'string' },
       phone: { type: 'string' },
     },
     validation: {
       location: addressWithoutCountrySchema.validation,
+      zipcode: { type: 'string', optional: true },
       contact: { type: 'string' },
       phone: { $phone: 1 },
     },

@@ -14,35 +14,27 @@ export default class CompanyCouponModel extends Model {
 
   pageCompanyCoupon(company_id, query) {
     let { page, pagesize } = this.getPageInfo(query);
-    return this.db.payment.company.coupon.findOne({
-      _id: company_id
+    return this.db.payment.coupon.item.find({
+      _id: company_id,
     })
-    .then(doc => {
-      return mapObjectIdToData(
-        {
-          list: doc ? doc.list.slice(page * pagesize, (page + 1) * pagesize) : [],
-          page,
-          pagesize,
-          totalRows: doc ? doc.list.length : 0
-        },
-        'payment.coupon', '', 'list'
-      );
+    .then(couponsItems => {
+      return {coupons: couponsItems, page, pagesize, totalRows: couponsItems ? couponsItems.length : 0};
     });
   }
 
-  pageCompanyHasCoupon(coupon_id, query) {
+  pageCompanyHasCoupon(coupon_no, query) {
     let { page, pagesize } = this.getPageInfo(query);
     let criteria = {
-      'list.coupon': coupon_id
+      coupon_no
     };
     return Promise.all([
-      this.db.payment.company.coupon.find(criteria, {
+      this.db.payment.coupon.item.find(criteria, {
         _id: 1
       })
       .skip(page * pagesize)
       .limit(pagesize)
-      .then(doc => {
-        let companys = doc.map(item => item._id);
+      .then(couponItem => {
+        let companys = couponItem.map(item => item.company_id);
         return this.db.company.find({
           _id: {$in: companys}
         }, {
@@ -52,7 +44,7 @@ export default class CompanyCouponModel extends Model {
           date_create: 1,
         });
       }),
-      this.db.payment.company.coupon.count(criteria)
+      this.db.payment.coupon.item.count(criteria)
     ])
     .then(([list, totalRows]) => {
       return {

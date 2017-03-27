@@ -202,17 +202,59 @@ const schema = {
       },
     }
   },
+  distribute_coupon: {
+    sanitization: {
+      coupon_no: {
+        type: 'string',
+      },
+      companies: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
+    },
+    validation: {
+      coupon_no: {
+        type: 'string',
+      },
+      companies: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
+    }
+  },
+  distribute_coupon_users: {
+    sanitization: {
+      coupon_no: {
+        type: 'string',
+      },
+      users: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
+    },
+    validation: {
+      coupon_no: {
+        type: 'string',
+      },
+      users: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
+    }
+  },
   invoice_status: {
     sanitization: {
       invoice_id: {$objectId: 1},
       status: {type: 'string'},
+      comment: {type: 'string'},
       operator_id: {$objectId: 1},
     },
     validation: {
       invoice_id: {$objectId: 1},
       status: {
-        $enum: [C.INVOICE_STATUS.VERIFING, C.INVOICE_STATUS.REJECTED, C.INVOICE_STATUS.FINISHED]
+        $enum: [C.INVOICE_STATUS.CONFIRMED, C.INVOICE_STATUS.REJECTED, C.INVOICE_STATUS.ISSUED, C.INVOICE_STATUS.COMPLETED]
       },
+      comment: {type: 'string'},
       operator_id: {$objectId: 1},
     },
   },
@@ -247,13 +289,17 @@ const schema = {
       status: {type: 'string', optional: true},
       invoice_no: {type: 'string', optional: true},
       company_id: {$objectId: 1, optional: true},
+      type: {type: 'string', optional: true},
+      keyword: {type: 'string', optional: true},
     },
     validation: {
       page: {type: 'integer', optional: true},
       pagesize: {type: 'integer', optional: true},
-      status: {type: 'string', optional: true},
-      invoice_no: {$enum: ENUMS.INVOICE_STATUS, optional: true},
+      status: {$enum: ENUMS.INVOICE_STATUS, optional: true},
+      invoice_no: {type: 'string', optional: true},
       company_id: {$objectId: 1, optional: true},
+      keyword: {type: 'string', optional: true},
+      type: {type: 'string', optional: true},
     },
   },
 };

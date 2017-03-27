@@ -39,7 +39,10 @@ export function isImageFile(name) {
   return _.contains('jpeg,jpg,gif,png'.split(','), ext);
 }
 
-export function randomAvatar(type, size) {
+export function randomAvatar(type) {
+  const sizes = config.get('avatar.count');
+  const size = sizes[type];
+  console.log(size);
   let index = _.random(1, size).toString();
   let num = ('0'+index).slice(-2);
   let filename = `${num}.png`;

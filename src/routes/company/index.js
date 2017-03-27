@@ -81,7 +81,7 @@ api.post('/', (req, res, next) => {
     _.extend(data, {
       owner: member._id,
       members: [member],
-      logo: randomAvatar('company', 10),
+      logo: randomAvatar('company'),
       structure: {
         _id: ObjectId(),
         name: data.name,

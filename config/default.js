@@ -7,6 +7,7 @@ if (!fs.existsSync(__dirname + '/../.env')) {
 }
 require('dotenv').config();
 // DO NOT REMOVE THIS LINE process.env.NODE_ENV
+// DO NOT REMOVE THIS LINE process.env.JZJ_CONFIG
 
 module.exports = {
   apiUrl: 'https://tlifang.com/',
@@ -23,11 +24,11 @@ module.exports = {
     appid: process.env.RPC_APPID,
     appsecret: process.env.RPC_APPSECRET,
   },
-  database: '127.0.0.1/tlf_core',
+  database: '127.0.0.1/tlf_core', // process.env.DATABASE
   locale: 'zh-CN',
-  // 前端展示配置
+  // list view config
   view: {
-    // 每页默认显式条目数量
+    // list view number
     listNum: 20,
     taskListNum: 10,
     approvalListNum: 10,
@@ -35,18 +36,27 @@ module.exports = {
     maxListNum: 100,
     userLoginListNum: 10,
   },
-  passwordHashRounds: 10,
   avatar: {
     count: {
       company: 10,
-      project: 34,
+      project: 32,
       user: 32,
     },
   },
   oauth: {
     accessTokenLifetime: 30 * 60,
     refreshTokenLifetime: 15 * 24 * 3600,
-    wechat_client_id: 'com_tlifang_wechat'
+    wechat_client_id: 'com_tlifang_wechat',
+  },
+  security: {
+    passwordHashRounds: 10,
+    attemptTimes: {
+      ipTimes: 150,
+      userCaptchaTimes: 3,
+      userLockTimes: 10,
+      ipTTL: 3600,
+      userTTL: 3600
+    },
   },
   userVerifyCode: {
     email: {
@@ -56,7 +66,12 @@ module.exports = {
     sms: {
       codeLength: 6,
       expires: 15 * 60, // 15 minutes in seconds
-    }
+    },
+    captcha: {
+      captchaNumber: 4,
+      lineNumber: 4,
+      circleNumber: 4,
+    },
   },
   accountLevel: {
     free: {
@@ -247,6 +262,7 @@ module.exports = {
       'panel.announcement': true,
       'panel.schedule': true,
       'panel.weather': true,
+      new_user_guide_showed: false,
     }
   },
   plan: {
@@ -270,11 +286,11 @@ module.exports = {
     }
   },
   order: {
-    expire_minutes: 30, // 订单有效期
+    expire_minutes: 30, // order expire
   },
   invoice: {
-    min_tax_free_amount: 100000,  // 1000元免快递费
-    tax_rate: 2000,               // 快递费20元
+    min_tax_free_amount: 100000,  // free ship limit
+    tax_rate: 2000,               // ship charge under limit
   },
   recharge: {
     amount: {

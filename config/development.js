@@ -3,7 +3,7 @@ module.exports = {
   webUrl: 'http://web.tlf.alvin.tlifang.cn/',
   database: process.env.DATABASE || '192.168.1.18/tlf_core',
   upload: {
-    url: 'http://web.tlf.test.tlifang.cn/cdn/',
+    url: 'http://web.tlf.alvin.tlifang.cn/cdn/',
   },
   rpc: {
     protocol: process.env.RPC_PROTOCOL || 'http',

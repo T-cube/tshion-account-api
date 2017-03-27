@@ -17,9 +17,9 @@ export default class UpgradeOrder extends Base {
     this.order_type = C.ORDER_TYPE.UPGRADE;
   }
 
-  init({member_count, plan, coupon}) {
-    if (coupon) {
-      this.withCoupon(coupon);
+  init({member_count, plan, serial_no}) {
+    if (serial_no) {
+      this.withCoupon(serial_no);
     }
 
     this.plan = plan;
@@ -98,7 +98,7 @@ export default class UpgradeOrder extends Base {
     if (!current || current.type == 'trial' || !current.date_end) {
       times = 0;
     } else {
-      times = moment(current.date_end).diff(moment(), 'month', true);
+      times = moment(current.date_end).diff(moment().startOf('day'), 'month', true);
     }
     return times > 0 ? (Math.round(times * 100) / 100) : times;
   }

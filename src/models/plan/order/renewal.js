@@ -16,9 +16,9 @@ export default class RenewalOrder extends Base {
     this.order_type = C.ORDER_TYPE.RENEWAL;
   }
 
-  init({coupon, times}) {
-    if (coupon) {
-      this.withCoupon(coupon);
+  init({serial_no, times}) {
+    if (serial_no) {
+      this.withCoupon(serial_no);
     }
     let {current} = this.getPlanStatus();
     let {plan, member_count} = current;

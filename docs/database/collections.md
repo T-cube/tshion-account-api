@@ -774,13 +774,13 @@
 
 ```javascript
 {
-  _id: <ObjectId>,
-  user: <ObjectId>,
-  action: <String>,     // login logout login_fail change_passw bind_wechat unbind_wechat
-  client_id: <String>,  // com_tlifang_web com_tlifang_mobile
-  user_agent: <String>,
-  ip: <String>,
-  time: <Date>,
+  _id: ObjectId,
+  user: ObjectId,
+  action: String,     // login logout login_fail change_passw bind_wechat unbind_wechat
+  client_id: String,  // com_tlifang_web com_tlifang_mobile
+  user_agent: String,
+  ip: String,
+  time: Date,
 }
 ```
 
@@ -789,17 +789,20 @@
 ```javascript
 {
   explore: {
-    sort_by: <String>,
-    view_type: <String>,
+    sort_by: String,
+    view_type: String,
   }
   weather: {
-    areaid: <String>,
+    areaid: String,
   },
-  'panel.announcement': <Boolean>,
-  'panel.schedule': <Boolean>,
-  'panel.weather': <Boolean>,
-  'panel.locked': <Boolean>,
-  'panel.open': <Boolean>,
+  panel: {
+    announcement: Boolean,
+    schedule: Boolean,
+    weather: Boolean,
+    locked: Boolean,
+    open: Boolean,
+  },
+  new_user_guide_showed: Boolean,
   ...
 }
 ```

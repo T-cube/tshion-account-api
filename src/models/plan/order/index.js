@@ -15,7 +15,7 @@ export default class OrderFactory {
       user_id,
       plan,
       member_count,
-      coupon,
+      serial_no,
       times,
       order_type,
     } = props;
@@ -42,7 +42,7 @@ export default class OrderFactory {
       default:
         throw new Error('invalid_order_type');
       }
-      return orderModel.init({plan, member_count, coupon, times})
+      return orderModel.init({plan, member_count, serial_no, times})
       .then(() => {
         return {
           prepare: orderModel.prepare.bind(orderModel),

@@ -3,12 +3,23 @@ import express from 'express';
 import config from 'config';
 
 import db from 'lib/database';
-import { time, timestamp, expire, comparePassword, hashPassword, generateToken, getEmailName } from 'lib/utils';
+import {
+  time,
+  timestamp,
+  expire,
+  comparePassword,
+  hashPassword,
+  generateToken,
+  getEmailName,
+  downloadFile,
+  saveCdnInBucket,
+  checkRequestFrequency,
+} from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
 import { validate } from './schema';
-import { randomAvatar } from 'lib/upload';
+import { randomAvatar, cropAvatar } from 'lib/upload';
 import { ValidationError } from 'lib/inspector';
 
 let api = express.Router();
@@ -68,7 +79,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       mobile_verified: type == C.USER_ID_TYPE.MOBILE,
       name: type == C.USER_ID_TYPE.MOBILE ? data.mobile : getEmailName(data.email),
       description: '',
-      avatar: randomAvatar('user', 8),
+      avatar: randomAvatar('user'),
       password: hash,
       birthdate: null,
       address: {
@@ -90,9 +101,6 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       date_create: time(),
       current_company: null,
     };
-    if (req.openUserinfo) {
-      _.extend(doc, req.openUserinfo);
-    }
     return db.user.insert(doc);
   })
   .then(user => {
@@ -104,6 +112,24 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
     if (type == C.USER_ID_TYPE.MOBILE) {
       req.model('notification-setting').initUserDefaultSetting(user._id);
       req.model('preference').init(user._id);
+    }
+    // 保存第三方账户的图片
+    if (req.openUserinfo && req.openUserinfo.avatar) {
+      return downloadFile(req.openUserinfo.avatar, 'avatar').then(downloadFile => {
+        return saveCdnInBucket(req.model('qiniu').bucket('cdn-public'), downloadFile);
+      })
+      .then(cdnFile => {
+        req.file = cdnFile;
+        let avatar = cropAvatar(req);
+        return db.user.update({
+          _id: user._id
+        }, {
+          $set: {avatar}
+        });
+      })
+      .catch(e => {
+        console.error(e);
+      });
     }
   })
   .catch(err => {
@@ -126,7 +152,7 @@ api.post('/confirm', (req, res, next) => {
     res.json(data);
     // init notification setting when user activiated
     req.model('notification-setting').initUserDefaultSetting(data.user_id);
-    req.model('preference').init(data.user._id);
+    req.model('preference').init(data.user_id);
   })
   .catch(next);
 });
@@ -136,14 +162,18 @@ api.post('/send-sms', (req, res, next) => {
   if (!mobile || !/^1[34578]\d{9}$/.test(mobile)) {
     throw new ApiError(400, 'invalid_mobile');
   }
-  db.user.find({mobile: mobile}).count()
-  .then(count => {
-    if (count) {
-      throw new ApiError(400, 'user_exists');
-    }
-    req.model('account').sendSmsCode(mobile);
+  let redis = req.model('redis');
+  checkRequestFrequency(redis, {type: 'mobile', data: req.body, interval: C.FREQUENCY_CHECK.CODE}).then(() => {
+    db.user.find({mobile: mobile}).count()
+    .then(count => {
+      if (count) {
+        throw new ApiError(400, 'user_exists');
+      }
+      req.model('account').sendSmsCode(mobile);
+    })
+    .then(() => res.json({}))
+    .catch(next);
   })
-  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -224,11 +254,15 @@ api.post('/recover/send-code', (req, res, next) => {
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type]);
   let account = req.body[type];
-  req.model('account').checkExistance(type, account, true)
-  .then(() => {
-    return req.model('account').sendCode(type, account, 'reset_pass');
+  let redis = req.model('redis');
+  checkRequestFrequency(redis, {type, data, interval: C.FREQUENCY_CHECK.CODE}).then(() => {
+    req.model('account').checkExistance(type, account, true)
+    .then(() => {
+      return req.model('account').sendCode(type, account, 'reset_pass');
+    })
+    .then(() => res.json({}))
+    .catch(next);
   })
-  .then(() => res.json({}))
   .catch(next);
 });
 

@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 
+import config from 'config';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { defaultAvatar } from 'lib/upload';
@@ -105,8 +106,9 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
         }
         data._id = user._id;
       } else {
-        // invite new user throw email;
-        data._id = ObjectId();
+        throw new ApiError(400, 'user_not_registered');
+        // TODO invite new user throw email;
+        // data._id = ObjectId();
       }
       return Promise.all([
         db.request.insert({
@@ -199,9 +201,11 @@ api.get('/:member_id', (req, res, next) => {
   })
   .then(user => {
     if (!user) {
-      throw new ApiError(404);
+      member.avatar = config.get('apiUrl') + 'cdn/system/avatar/user/00.png';
+      // throw new ApiError(404);
+    } else {
+      member.avatar = user.avatar;
     }
-    member.avatar = user.avatar;
     res.json(member);
   })
   .catch(next);
