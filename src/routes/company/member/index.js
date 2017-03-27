@@ -84,7 +84,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
     delete data.id;
     sanitizeValidateObject(sanitization, validation, data);
     data.type = C.COMPANY_MEMBER_TYPE.NORMAL;
-    let member = _.find(req.company.members, m => m.type == data.type);
+    let member = _.find(req.company.members, m => m[type] == data[type]);
     if (member) {
       throw new ApiError(400, 'member_exists');
     }
