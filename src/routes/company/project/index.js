@@ -44,7 +44,7 @@ api.post('/', (req, res, next) => {
     company_id: req.company._id,
     is_archived: false,
     owner: req.user._id,
-    logo: randomAvatar('project', 14),
+    logo: randomAvatar('project'),
     members: [{
       _id: req.user._id,
       type: C.PROJECT_MEMBER_TYPE.OWNER,
