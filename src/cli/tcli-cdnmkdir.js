@@ -31,6 +31,9 @@ function testLink() {
     return mkdirp(`${dir}/${first}/${second}/${third}`).then(made => {
       console.log(made);
       return made;
+    })
+    .catch(err => {
+      throw new Error(err);
     });
   });
 }
