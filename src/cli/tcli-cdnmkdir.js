@@ -24,23 +24,33 @@ function testLink() {
     return Promise.reject(e);
   }
   return Promise.map(files, (file) => {
+    if (!fs.statSync(`${dir}/`+file).isFile()) {
+      return {};
+    }
     let first = file[0];
     let second = file[1];
     let third = file[2];
-    console.log(`${dir}/${first}/${second}/${third}`);
-    return mkdirp(`${dir}/${first}/${second}/${third}`).then(made => {
-      console.log(made);
-      return made;
-    })
-    .catch(err => {
-      throw new Error(err);
-    });
+    try {
+      fs.statSync(`${dir}/${first}/${second}/${third}/`);
+    } catch(e) {
+      return mkdirp(`${dir}/${first}/${second}/${third}`).then(() => {
+        try {
+          return fs.renameSync(`${dir}/` + file , `${dir}/${first}/${second}/${third}/` + file);
+        } catch(e) {
+          throw new Error(e);
+        }
+      })
+      .catch(err => {
+        throw new Error(err);
+      });
+    }
+    return fs.renameSync(`${dir}/` + file , `${dir}/${first}/${second}/${third}/` + file);
   });
 }
 
 program
-  .command('test-current')
-  .description('read current dir & files')
+  .command('class-file')
+  .description('read current dir & files & class')
   .action(() => {
     testLink()
     .then(() => {
