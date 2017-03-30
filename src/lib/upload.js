@@ -5,7 +5,7 @@ import _ from 'underscore';
 import path from 'path';
 import mkdirp from 'mkdirp-bluebird';
 import config from 'config';
-import { dirExists } from 'lib/utils';
+import { dirExists, dirPathConfig } from 'lib/utils';
 import { BASE_PATH } from 'lib/constants';
 
 export function getUploadPath(dir) {
@@ -65,7 +65,10 @@ export function upload(options) {
   }
   let storage = multer.diskStorage({
     destination: (req, file, callback) => {
+      file.uuidName = uuid.v4() + path.extname(file.originalname);
       let dir = getUploadPath('upload/' + options.type);
+      let classPath = dirPathConfig(file.uuidName);
+      dir = dir + '/' + classPath;
       dirExists(dir)
       .then(exists => {
         if (!exists) {
@@ -81,9 +84,14 @@ export function upload(options) {
       });
     },
     filename: (req, file, callback) => {
-      let name = uuid.v4() + path.extname(file.originalname);
+      let name = file.uuidName;
       file.url = getUploadUrl('upload/' + options.type, name);
-      file.relpath = getRelUploadPath('upload/' + options.type, name);
+      if (options.type == 'attachment') {
+        let classPath = dirPathConfig(name);
+        file.relpath = getRelUploadPath('upload/' + options.type, classPath + name);
+      } else {
+        file.relpath = getRelUploadPath('upload/' + options.type, name);
+      }
       callback(null, name);
     }
   });

@@ -319,9 +319,12 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   if (!member) {
     throw new ApiError(404, 'member_not_exists');
   }
-  new Plan(company._id).getPlanInfo().then(({certified}) => {
-    if (certified) {
-      throw new ApiError(400, 'certified_company_cannot_transfer');
+  new Plan(company._id).getPlanInfo().then((plan) => {
+    if (plan) {
+      const { certified } = plan;
+      if (certified) {
+        throw new ApiError(400, 'certified_company_cannot_transfer');
+      }
     }
     return db.user.findOne({_id: user_id});
   })

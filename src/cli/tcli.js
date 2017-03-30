@@ -19,6 +19,7 @@ program
   .command('preference', 'reset preference')
   .command('announcement', 'update announcement description')
   .command('config', 'config utils')
+  .command('cdnmkdir', 'mkdir uuid dir')
   .parse(process.argv);
 
 // console.log('TLifang API Command Line Tool');
