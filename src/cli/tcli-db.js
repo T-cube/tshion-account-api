@@ -1,6 +1,7 @@
 import Promise from 'bluebird';
 import mkdirp from 'mkdirp-bluebird';
 import moment from 'moment';
+import fs from 'fs';
 
 import '../bootstrap';
 import program from 'commander';
@@ -8,15 +9,16 @@ import { handleError } from './lib/utils';
 
 function backup() {
   const spawn = require('child_process').spawn;
-  let dir = `${__dirname}/../../../../backup/mongodb/tlf_core`;
+  let dir = `${__dirname}/../../../../backup/mongodb/tlf_core/`;
   let fileDir;
   if (program.tag) {
     fileDir = 'dbdump-tag-' + program.tag;
   } else {
     if (program.lock) {
-      return fileDir = 'dbdump-' + moment().format('YYYYMMDDHHmmss') + '-lock';
+      fileDir = 'dbdump-' + moment().format('YYYYMMDDHHmmss') + '-lock';
+    } else {
+      fileDir = 'dbdump-' + moment().format('YYYYMMDDHHmmss');
     }
-    fileDir = 'dbdump-' + moment().format('YYYYMMDDHHmmss');
   }
   let targetDir = dir + fileDir;
   new Promise((resolve,reject)=>{
@@ -32,8 +34,11 @@ function backup() {
       });
       mongodump.on('close', code => {
         console.log(`子进程退出码：${code}`);
-        if (code) return reject(error);
-        resolve(body);
+        fs.writeFile(`${targetDir}` + '-comments.txt', `${program.comments}`, (err) => {
+          if (err) return reject(err);
+          if (code) return reject(error);
+          resolve(body);
+        });
       });
     })
     .catch(handleError);
@@ -58,11 +63,10 @@ program
   .option('-t, --tag <tag>', 'add tag for restore easily by using tag')
   // .option('-f, --force', 'recover target tag version')
   .option('-l, --lock', 'add lock for invoid clean backup')
-  .parse(process.argv);
-
-program
   .command('backup')
   .description('backup database using -m for comments which is required, -t -f -l is optional')
   .action(() => {
     backup();
   });
+
+program.parse(process.argv);

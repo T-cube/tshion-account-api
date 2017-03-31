@@ -62,7 +62,7 @@ function databaseDir() {
           }
         });
       } else {
-        return {};        
+        return {};
       }
     });
   });
