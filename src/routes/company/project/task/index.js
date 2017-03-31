@@ -122,7 +122,7 @@ api.post('/', (req, res, next) => {
   let data = req.body;
   let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title'];
   validate('task', data, fields);
-  if (data.date_due < data.date_start) {
+  if (data.date_due && data.date_due < data.date_start) {
     throw new ApiError(400, 'invalid_date');
   }
   _.extend(data, {
