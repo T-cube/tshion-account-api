@@ -20,6 +20,7 @@ program
   .command('announcement', 'update announcement description')
   .command('config', 'config utils')
   .command('cdnmkdir', 'mkdir uuid dir')
+  .command('db', 'dump & restore db')
   .parse(process.argv);
 
 // console.log('TLifang API Command Line Tool');
