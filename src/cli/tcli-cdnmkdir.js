@@ -61,6 +61,8 @@ function databaseDir() {
             relpath: newPath
           }
         });
+      } else {
+        return {};
       }
     });
   });
