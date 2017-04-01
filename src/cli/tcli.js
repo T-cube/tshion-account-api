@@ -4,7 +4,7 @@ import '../bootstrap';
 import program from 'commander';
 
 program
-  .version('0.0.1')
+  .version('0.1.0')
   .command('db', 'dump & restore db')
   .command('initdb', 'init data after install')
   .command('companylevel', 'update company level statistics')
