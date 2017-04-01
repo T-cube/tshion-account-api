@@ -511,9 +511,3 @@ export function checkRequestFrequency(redis, {type, data, interval}) {
     });
   });
 }
-
-export function dirPathConfig(name) {
-  const classRound = config.get('upload.classRound');
-  let classPath = name.split('').slice(0, classRound).join('/') + '/';
-  return classPath;
-}

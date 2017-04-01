@@ -4,12 +4,15 @@ import '../bootstrap';
 import program from 'commander';
 
 program
-  .version('0.0.1')
+  .version('0.1.0')
+  .command('db', 'dump & restore db')
   .command('initdb', 'init data after install')
   .command('companylevel', 'update company level statistics')
   .command('attendancesign', 'upgrade attendance data structure')
   .command('wechatmenu', 'update wechat menu')
   .command('cdnupgrade', 'upload local files to qiniu cdn & update database')
+  .command('cdnmkdir', 'mkdir uuid dir')
+  .command('cdnmkdir', 'separate uploaded files into directories')
   .command('filecdnkey', 'add cdn key to document file')
   .command('approvalversion', 'update approval template version status')
   .command('position', 'update member position')
@@ -19,7 +22,6 @@ program
   .command('preference', 'reset preference')
   .command('announcement', 'update announcement description')
   .command('config', 'config utils')
-  .command('cdnmkdir', 'mkdir uuid dir')
   .parse(process.argv);
 
 // console.log('TLifang API Command Line Tool');
