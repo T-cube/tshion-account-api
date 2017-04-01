@@ -10,6 +10,7 @@ import program from 'commander';
 import db from 'lib/database';
 import approvalTemplate from './config/approval-template';
 import planData from './config/plan';
+import products from './config/products';
 import oauthClient from './config/oauth-clients';
 import { handleError } from './lib/utils';
 
@@ -94,6 +95,17 @@ function initWeatherArea() {
   });
 }
 
+function initProduct() {
+  return db.payment.product.count({}).then(count => {
+    if (count > 0 && !program.force) {
+      throw new Error('db payment product already exists, please use -f');
+    }
+    return db.payment.product.insert(products).then(() => {
+      return db.payment.product.history.remove({});
+    });
+  });
+}
+
 program
   .option('-f, --force', 'force update, this will erase old data');
 
@@ -142,6 +154,17 @@ program
   });
 
 program
+  .command('product')
+  .description('init db payment product')
+  .action(() => {
+    initProduct()
+    .then(() => {
+      process.exit();
+    })
+    .catch(handleError);
+  });
+
+program
   .command('all')
   .description('update approval default templates')
   .action(() => {
@@ -149,7 +172,8 @@ program
       initOauthClients,
       initApprovalTemplate,
       initPlan,
-      initWeatherArea
+      initWeatherArea,
+      initProduct
     ], func => func())
     .then(() => {
       process.exit();
