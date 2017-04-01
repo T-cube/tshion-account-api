@@ -5,8 +5,14 @@ import _ from 'underscore';
 import path from 'path';
 import mkdirp from 'mkdirp-bluebird';
 import config from 'config';
-import { dirExists, dirPathConfig } from 'lib/utils';
+import { dirExists } from 'lib/utils';
 import { BASE_PATH } from 'lib/constants';
+
+export function getDistributedPath(name) {
+  const directoryDepth = config.get('upload.directoryDepth');
+  let path = name.split('').slice(0, directoryDepth).join('/') + '/';
+  return path;
+}
 
 export function getUploadPath(dir) {
   let basePath = config.get('upload.path');
@@ -67,7 +73,7 @@ export function upload(options) {
     destination: (req, file, callback) => {
       file.uuidName = uuid.v4() + path.extname(file.originalname);
       let dir = getUploadPath('upload/' + options.type);
-      let classPath = dirPathConfig(file.uuidName);
+      let classPath = getDistributedPath(file.uuidName);
       dir = dir + '/' + classPath;
       dirExists(dir)
       .then(exists => {
@@ -87,7 +93,7 @@ export function upload(options) {
       let name = file.uuidName;
       file.url = getUploadUrl('upload/' + options.type, name);
       if (options.type == 'attachment') {
-        let classPath = dirPathConfig(name);
+        let classPath = getDistributedPath(name);
         file.relpath = getRelUploadPath('upload/' + options.type, classPath + name);
       } else {
         file.relpath = getRelUploadPath('upload/' + options.type, name);

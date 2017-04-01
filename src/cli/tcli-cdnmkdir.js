@@ -13,7 +13,7 @@ import approvalTemplate from './config/approval-template';
 import planData from './config/plan';
 import oauthClient from './config/oauth-clients';
 import { handleError } from './lib/utils';
-import { dirPathConfig } from 'lib/utils';
+import { getDistributedPath } from 'lib/upload';
 
 
 function fileDir() {
@@ -28,7 +28,7 @@ function fileDir() {
     if (!fs.statSync(`${dir}/`+file).isFile()) {
       return {};
     }
-    let filePath = dirPathConfig(file);
+    let filePath = getDistributedPath(file);
     try {
       fs.statSync(`${dir}/${filePath}/`);
     } catch(e) {
@@ -52,7 +52,7 @@ function databaseDir() {
     return Promise.map(list, item => {
       if(/^upload\/attachment\//.test(item.relpath)) {
         let fileName = item.relpath.replace(/^upload\/attachment\//,'');
-        let filePath = dirPathConfig(fileName);
+        let filePath = getDistributedPath(fileName);
         let newPath = 'upload/attachment/' + filePath + fileName;
         return db.document.file.update({
           _id: item._id
