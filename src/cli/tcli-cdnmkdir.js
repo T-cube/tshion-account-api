@@ -1,9 +1,9 @@
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import xlsx from 'node-xlsx';
-import fs from 'fs';
 import _ from 'underscore';
 import mkdirp from 'mkdirp-bluebird';
+const fs = Promise.promisifyAll(require('fs'));
 
 import config from 'config';
 import '../bootstrap';
@@ -18,32 +18,28 @@ import { getDistributedPath } from 'lib/upload';
 
 function fileDir() {
   let dir = `${__dirname}/../../public/cdn/upload/attachment`;
-  let files = [];
-  try{
-    files = fs.readdirSync(dir);
-  } catch (e) {
-    return Promise.reject(e);
-  }
-  return Promise.map(files, (file) => {
-    if (!fs.statSync(`${dir}/`+file).isFile()) {
-      return {};
-    }
-    let filePath = getDistributedPath(file);
-    try {
-      fs.statSync(`${dir}/${filePath}/`);
-    } catch(e) {
-      return mkdirp(`${dir}/${filePath}`).then(() => {
-        try {
-          return fs.renameSync(`${dir}/` + file , `${dir}/${filePath}/` + file);
-        } catch(e) {
-          throw new Error(e);
-        }
-      })
-      .catch(err => {
-        throw new Error(err);
-      });
-    }
-    return fs.renameSync(`${dir}/` + file , `${dir}/${filePath}/` + file);
+  return fs.readdirAsync(dir).then((files) => {
+    return Promise.map(files, (file) => {
+      if (!fs.statSync(`${dir}/`+file).isFile()) {
+        return {};
+      }
+      let filePath = getDistributedPath(file);
+      try {
+        fs.statSync(`${dir}/${filePath}/`);
+      } catch(e) {
+        return mkdirp(`${dir}/${filePath}`).then(() => {
+          try {
+            return fs.renameSync(`${dir}/` + file , `${dir}/${filePath}/` + file);
+          } catch(e) {
+            throw new Error(e);
+          }
+        })
+        .catch(err => {
+          throw new Error(err);
+        });
+      }
+      return fs.renameSync(`${dir}/` + file , `${dir}/${filePath}/` + file);
+    });
   });
 }
 

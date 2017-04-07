@@ -11,7 +11,6 @@ program
   .command('attendancesign', 'upgrade attendance data structure')
   .command('wechatmenu', 'update wechat menu')
   .command('cdnupgrade', 'upload local files to qiniu cdn & update database')
-  .command('cdnmkdir', 'mkdir uuid dir')
   .command('cdnmkdir', 'separate uploaded files into directories')
   .command('filecdnkey', 'add cdn key to document file')
   .command('approvalversion', 'update approval template version status')
