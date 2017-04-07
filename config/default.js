@@ -136,6 +136,7 @@ module.exports = {
     approval_attachment: {
       max_file_size: 10 * 1024 * 1024, // 10M
     },
+    directoryDepth: 3,
   },
   vendor: {
     sessionRedis: {

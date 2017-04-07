@@ -8,6 +8,12 @@ import config from 'config';
 import { dirExists } from 'lib/utils';
 import { BASE_PATH } from 'lib/constants';
 
+export function getDistributedPath(name) {
+  const directoryDepth = config.get('upload.directoryDepth');
+  let path = name.split('').slice(0, directoryDepth).join('/') + '/';
+  return path;
+}
+
 export function getUploadPath(dir) {
   let basePath = config.get('upload.path');
   if (!/^\//.test(basePath)) {
@@ -65,7 +71,10 @@ export function upload(options) {
   }
   let storage = multer.diskStorage({
     destination: (req, file, callback) => {
+      file.uuidName = uuid.v4() + path.extname(file.originalname);
       let dir = getUploadPath('upload/' + options.type);
+      let classPath = getDistributedPath(file.uuidName);
+      dir = dir + '/' + classPath;
       dirExists(dir)
       .then(exists => {
         if (!exists) {
@@ -81,9 +90,14 @@ export function upload(options) {
       });
     },
     filename: (req, file, callback) => {
-      let name = uuid.v4() + path.extname(file.originalname);
+      let name = file.uuidName;
       file.url = getUploadUrl('upload/' + options.type, name);
-      file.relpath = getRelUploadPath('upload/' + options.type, name);
+      if (options.type == 'attachment') {
+        let classPath = getDistributedPath(name);
+        file.relpath = getRelUploadPath('upload/' + options.type, classPath + name);
+      } else {
+        file.relpath = getRelUploadPath('upload/' + options.type, name);
+      }
       callback(null, name);
     }
   });
