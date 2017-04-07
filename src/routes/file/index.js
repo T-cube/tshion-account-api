@@ -156,7 +156,7 @@ api.get('/approval/:token', (req, res, next) => {
     });
   })
   .then(csv => {
-    let iconv = new Iconv('UTF-8', 'GBK');
+    let iconv = new Iconv('UTF-8', 'GBK//TRANSLIT//IGNORE');
     filename = encodeFilename(req, filename);
     res.set('Pragma', 'public');
     res.set('Expires', '0');
