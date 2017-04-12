@@ -23,6 +23,15 @@ module.exports = {
     port: 2000, // process.env.RPC_PORT
     appid: process.env.RPC_APPID,
     appsecret: process.env.RPC_APPSECRET,
+    trpc: {
+      users: {
+        'tim': {
+          appid: 'tim',
+          appsecret: 'S7B6881J8nRRqCjG',
+          cluster: true
+        }
+      }
+    },
   },
   database: '127.0.0.1/tlf_core', // process.env.DATABASE
   locale: 'zh-CN',
