@@ -72,7 +72,7 @@ export default class ProductModel extends Model {
         .then(discounts => {
           canHasNumberDiscount || discounts.forEach(item => {
             if (item.discount.type == 'number') {
-              throw new ApiError(400, 'plan cannot has number discount');
+              throw new ApiError(400, 'plan_cannot_has_number_discount');
             }
           });
           return _.pluck(discounts, '_id');
