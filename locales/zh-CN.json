@@ -61,6 +61,7 @@
   "over_member_num": "公司人数已达到限制",
   "over_company_num": "创建公司数已达到限制",
   "parent_folder_not_exists": "父目录不存在",
+  "plan_cannot_has_number_discount": "基础费用不可使用数量优惠",
   "position_exists": "已存在该职位",
   "position_not_exists": "职位不存在",
   "processing": "待处理",

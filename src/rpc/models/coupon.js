@@ -45,7 +45,6 @@ export default class CouponModel extends Model {
   update(_id, data) {
     return this._parseData(data)
     .then(data => {
-      data = this._parseData(data);
       data.date_update = new Date();
       return this.db.payment.coupon.update({_id}, {
         $set: data
@@ -93,7 +92,7 @@ export default class CouponModel extends Model {
     }
     // 非人数续费不能有数量的优惠
     if (!products.length) {
-      throw new ApiError(400, 'plan cannot has number discount');
+      throw new ApiError(400, 'plan_cannot_has_number_discount');
     }
     return this.db.payment.product.count({
       _id: {
@@ -103,7 +102,7 @@ export default class CouponModel extends Model {
     })
     .then(planProductCount => {
       if (planProductCount > 0) {
-        throw new ApiError(400, 'plan cannot has number discount');
+        throw new ApiError(400, 'plan_cannot_has_number_discount');
       }
       return data;
     });

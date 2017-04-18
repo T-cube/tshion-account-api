@@ -55,8 +55,14 @@ api.get('/', (req, res, next) => {
       $regex: strToReg(keyword, 'i')
     };
   }
-  if (tag && ObjectId.isValid(tag)) {
-    condition['tags'] = ObjectId(tag);
+  if (tag) {
+    let tages = [];
+    tag.split(',').forEach(item => {
+      if (ObjectId.isValid(item)) {
+        tages.push(ObjectId(item));
+      }
+    });
+    condition['tags'] = { $all: tages };
   }
   if (is_expired === '1') {
     condition['status'] = C.TASK_STATUS.PROCESSING;

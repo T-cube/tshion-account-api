@@ -238,7 +238,7 @@ export default class ApprovalFlow {
     if (!data.list.length) {
       return '';
     }
-    let formFields = _.uniq(_.flatten(data.list.map(i => i.template.forms && i.template.forms.map(f => f.label)).filter(i => i)));
+    let formFields = _.uniq(_.flatten(data.list.map(i => i.template.forms && i.template.forms.map(f => {if (f.required) {return f.label;} else {return [];}})).filter(i => i)));
     let parsedData = data.list.map(i => {
       let item = [
         moment(i.apply_date).format('YYYY-MM-DD HH:mm'),
