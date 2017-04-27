@@ -1,6 +1,8 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 import config from 'config';
+import fs from 'fs';
+import path from 'path';
 
 import db from 'lib/database';
 import { strToReg } from 'lib/utils';
@@ -94,6 +96,18 @@ class Document {
         return this.fetchItemIdsUnderDir(childDirs, items);
       }
       return items;
+    });
+  }
+
+  deleteFile(req, file) {
+    if (!file) {
+      return;
+    }
+    file.cdn_key && req.model('qiniu').bucket('cdn-file').delete(file.cdn_key).catch(e => console.error(e));
+    let dir = path.normalize(__dirname + '/../../public/cdn/' + file.relpath);
+    fs.stat(dir, (err, stat) => {
+      if (err) console.error(err);
+      fs.unlink(dir, e => e && console.error(e));
     });
   }
 

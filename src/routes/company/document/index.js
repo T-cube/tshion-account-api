@@ -190,7 +190,7 @@ api.delete('/', (req, res, next) => {
   validate('del', data);
   mapObjectIdToData(data, [
     ['document.dir', '', 'dirs'],
-    ['document.file', `${req.document.posKey},name,size,dir_id,path,cdn_key`, 'files'],
+    ['document.file', `${req.document.posKey},name,size,dir_id,path,cdn_key,relpath`, 'files'],
   ])
   .then(() => {
     data.dirs = data.dirs.filter(dir => dir && dir[req.document.posKey].equals(req.document.posVal));
@@ -725,8 +725,7 @@ function deleteFiles(req, files, dirCheckAndPull) {
     }
     return removeFileFromDb.then(() => {
       incSize -= file.size;
-      file.path && fs.unlink(file.path, e => e && console.error(e));
-      file.cdn_key && req.model('qiniu').bucket('cdn-file').delete(file.cdn_key).catch(e => console.error(e));
+      req.model('document').deleteFile(req, file);
     });
   }))
   .then(() => {

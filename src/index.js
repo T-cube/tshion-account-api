@@ -50,6 +50,7 @@ import Payment from 'models/plan/payment';
 import C from 'lib/constants';
 import Captcha from 'lib/captcha';
 import Broadcast from 'models/broadcast';
+import rpc from '@ym/rpc';
 
 // welcome messages and output corre config
 const version = require('../package.json').version;
@@ -72,6 +73,11 @@ const server = http.Server(app);
 const io = socketio(server, { path: '/api/socket' });
 
 app.enable('trust proxy');
+
+// let rpc = require('@ym/rpc');
+
+require('./trpc')(rpc);
+rpc.install(server, config.get('rpc.trpc'));
 
 // bind model loader
 bindLoader(app);

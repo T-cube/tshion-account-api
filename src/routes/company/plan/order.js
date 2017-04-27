@@ -188,10 +188,10 @@ api.put('/:order_id/status', (req, res, next) => {
       company_id,
     })
     .then(order => {
-      if (order.serial_no) {
+      if (order.coupon_serial_no) {
         return db.payment.coupon.item.update({
           company_id,
-          serial_no: order.serial_no
+          serial_no: order.coupon_serial_no
         }, {
           $set: {
             is_used: false
