@@ -16,7 +16,7 @@
   "attendance_is_closed": "考勤功能未开启",
   "assignee_and_creator_can_not_unfollow": "创建者和执行人不能取消关注",
   "already_set": "已处理",
-  "bad_password_format": "密码格式错误",
+  "bad_password_format": "密码格式错误，请输入6到20位字符",
   "content": "内容",
   "cannot_modify": "不是可以修改的状态",
   "can_not_remove_yourself": "不能删除自己",
