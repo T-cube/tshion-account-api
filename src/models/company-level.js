@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import db from 'lib/database';
-import { indexObjectId } from 'lib/utils';
+import { indexObjectId, mapObjectIdToData } from 'lib/utils';
 import Plan from 'models/plan/plan';
 
 import authConfig from 'models/plan/auth-config';
@@ -92,6 +92,35 @@ export default class CompanyLevel {
       });
       this.status = {setting, planInfo, levelInfo};
       return this.status;
+    });
+  }
+
+  getProgramLimits() {
+    let { company_id } = this;
+    return this.planModel.getCurrent().then(planInfo => {
+      return db.company.findOne({_id: company_id}).then(companyInfo => {
+        return Promise.all([
+          this.planModel.getSetting(planInfo.plan),
+          mapObjectIdToData(companyInfo.projects, 'project', 'is_archived')
+        ]).then(([setting, projectList]) => {
+          if (companyInfo.projects.length >= setting.project_all){
+            let limit = C.PROJECT_QUANTITY_LIMIT.OVER_TOTAL;
+            return limit;
+          }
+          let count = _.countBy(projectList, item => {
+            if (item.is_archived) {
+              return 'archived';
+            } else {
+              return 'actived';
+            }
+          });
+          if (count.actived >= setting.project_actived) {
+            let limit = C.PROJECT_QUANTITY_LIMIT.OVER_ACTIVED;
+            return limit;
+          }
+          return null;
+        });
+      });
     });
   }
 

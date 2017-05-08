@@ -19,6 +19,8 @@ import {
   PROJECT_MEMBER_REMOVEADMIN,
 } from 'models/notification-setting';
 import { validate } from './schema';
+import CompanyLevel from 'models/company-level';
+
 
 /* company collection */
 let api = express.Router();
@@ -39,37 +41,47 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   validate('project', data);
+  console.log(123456789);
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.getProgramLimits().then(limit => {
+    if (limit) {
+      if (limit == C.PROJECT_QUANTITY_LIMIT.OVER_TOTAL) {
+        throw new ApiError(400, C.PROJECT_QUANTITY_LIMIT.OVER_TOTAL);
+      } else {
+        throw new ApiError(400, C.PROJECT_QUANTITY_LIMIT.OVER_ACTIVED);        
+      }
+    }
+    _.extend(data, {
+      company_id: req.company._id,
+      is_archived: false,
+      owner: req.user._id,
+      logo: randomAvatar('project'),
+      members: [{
+        _id: req.user._id,
+        type: C.PROJECT_MEMBER_TYPE.OWNER,
+        title: ''
+      }],
+      date_create: new Date(),
+    });
 
-  _.extend(data, {
-    company_id: req.company._id,
-    is_archived: false,
-    owner: req.user._id,
-    logo: randomAvatar('project'),
-    members: [{
-      _id: req.user._id,
-      type: C.PROJECT_MEMBER_TYPE.OWNER,
-      title: ''
-    }],
-    date_create: new Date(),
-  });
-
-  db.project.insert(data)
-  .then(doc => {
-    req.project = doc;
-    return Promise.all([
-      db.company.update({
-        _id: req.company._id
-      }, {
-        $push: { projects: doc._id }
-      }),
-      db.user.update({
-        _id: req.user._id
-      }, {
-        $push: { projects: doc._id }
-      }),
-    ])
-    .then(() => logProject(req, C.ACTIVITY_ACTION.CREATE))
-    .then(() => res.json(doc));
+    db.project.insert(data)
+    .then(doc => {
+      req.project = doc;
+      return Promise.all([
+        db.company.update({
+          _id: req.company._id
+        }, {
+          $push: { projects: doc._id }
+        }),
+        db.user.update({
+          _id: req.user._id
+        }, {
+          $push: { projects: doc._id }
+        }),
+      ])
+      .then(() => logProject(req, C.ACTIVITY_ACTION.CREATE))
+      .then(() => res.json(doc));
+    });
   })
   .catch(next);
 });
