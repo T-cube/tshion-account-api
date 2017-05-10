@@ -41,14 +41,13 @@ api.get('/', (req, res, next) => {
 api.post('/', (req, res, next) => {
   let data = req.body;
   validate('project', data);
-  console.log(123456789);
   let companyLevel = new CompanyLevel(req.company._id);
   companyLevel.getProgramLimits().then(limit => {
     if (limit) {
       if (limit == C.PROJECT_QUANTITY_LIMIT.OVER_TOTAL) {
         throw new ApiError(400, C.PROJECT_QUANTITY_LIMIT.OVER_TOTAL);
       } else {
-        throw new ApiError(400, C.PROJECT_QUANTITY_LIMIT.OVER_ACTIVED);        
+        throw new ApiError(400, C.PROJECT_QUANTITY_LIMIT.OVER_ACTIVED);
       }
     }
     _.extend(data, {

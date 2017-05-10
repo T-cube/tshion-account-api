@@ -20,13 +20,18 @@
 
 添加项目
 
-INPUT
+INPUT:
 ```javascript
 {
   name: <String>,
   description: <String>
 }
 ```
+
+ERROR:
+
+* `over_total_project_quantity` 超过当前产品总项目数量
+* `over_actived_project_quantity` 超过当前产品总可激活项目数量
 
 ### PUT /project/:project_id
 
