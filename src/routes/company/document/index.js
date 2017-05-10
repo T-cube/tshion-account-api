@@ -599,10 +599,10 @@ function createFile(req, data, dir_id) {
       _.map(data, item => {
         if (item.cdn_key) {
           req.model('qiniu').bucket('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
+          fs.unlink(item.path, e => {
+            e && console.error(e);
+          });
         }
-        fs.unlink(item.path, e => {
-          e && console.error(e);
-        });
       });
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
         throw new ApiError(400, 'over_storage');

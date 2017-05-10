@@ -126,9 +126,9 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title'];
+  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title', 'tags'];
   validate('task', data, fields);
-  if (data.date_due && data.date_due < data.date_start) {
+  if (data.date_due && data.date_due <= data.date_start) {
     throw new ApiError(400, 'invalid_date');
   }
   _.extend(data, {
@@ -139,6 +139,7 @@ api.post('/', (req, res, next) => {
     status: C.TASK_STATUS.PROCESSING,
     date_create: new Date(),
     date_update: new Date(),
+    tags: data.tags || []
   });
   data.subtask = data.subtask ? data.subtask.map(subtask => initSubtask(subtask)) : [];
   return db.task.insert(data)
