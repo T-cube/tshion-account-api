@@ -10,11 +10,11 @@
   app_info: {
     version: String, //"0.1.0"
     author: String, //"foo"
-    introduction: String, //"this is a incredible note app"
+    introduction: String, //"this is an incredible note app"
     organization: String, // "tlifang.com"
   },
-  likes: Number,//2345
-  star: Number,// 4.7  average of this app comments stars
+  likes: Number, //2345
+  star: Number, // 4.7  average of this app comments stars
   comments: [
     {
       user_id: ObjectId,
@@ -36,7 +36,7 @@
       enable: Boolean, //true
       options: {
         showDirection: Boolean, //true
-        timeout: Number,//3000
+        timeout: Number, //3000
       }
     }...,    
   ]
@@ -53,7 +53,7 @@
       user_id: ObjectId,
       create_date: Date, //2017-5-21
       activity: String, //like gea's shared note
-    }
+    }...,
   ]
   content: [
     {
@@ -62,11 +62,11 @@
         {
           note_name: String, //"react"
           note_content: String, //"how to become a genius frontend engineer"
-          directory: String,//"work"
-          category: String,//"frontend"
-          create_date: Date,//2017-5-12
-          update_date: Date,//2017-5-20
-          tag: String, //"rgb(0,0,0)"
+          directory: String, //"work"
+          category: String, //"frontend"
+          create_date: Date, //2017-5-12
+          update_date: Date, //2017-5-20
+          tag: String, //"pink"
           share: Boolean, //true
           likes: Number, //16
         }...,
