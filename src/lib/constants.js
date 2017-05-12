@@ -181,6 +181,11 @@ let constants = {
     SUPERVISOR: 'supervisor',
   },
 
+  PROJECT_QUANTITY_LIMIT: {
+    OVER_TOTAL: 'over_total_project_quantity',
+    OVER_ACTIVED: 'over_actived_project_quantity'
+  },
+
   REQUEST_TYPE: {
     COMPANY: 'company',
   },

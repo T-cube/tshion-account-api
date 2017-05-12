@@ -16,7 +16,7 @@
   "attendance_is_closed": "考勤功能未开启",
   "assignee_and_creator_can_not_unfollow": "创建者和执行人不能取消关注",
   "already_set": "已处理",
-  "bad_password_format": "密码格式错误",
+  "bad_password_format": "密码格式错误，请输入6到20位字符",
   "content": "内容",
   "cannot_modify": "不是可以修改的状态",
   "can_not_remove_yourself": "不能删除自己",
@@ -85,5 +85,7 @@
   "order_type_degrade": "降级",
   "order_type_patch": "欠费",
   "order_type_renewal": "续费",
-  "recharge_order": "充值"
+  "recharge_order": "充值",
+  "over_total_project_quantity": "超过最大项目数量",
+  "over_actived_project_quantity": "超过最大激活项目数量"
 }
