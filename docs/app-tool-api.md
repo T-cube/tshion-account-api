@@ -19,7 +19,7 @@
 * [GET /document/file/:file_id](#file)
 * [GET /document/file/:file_id/download](#download)
 
-<!-- approval hold on -->
+<!-- TODO approval hold on -->
 
 
 <!-- ### [GET /company/info](id:companyInfo)
@@ -317,15 +317,5 @@ INPUT:
   name: <String>,
   description: <String>,
   content: <String>,
-}
-```
-
-### [GET /document/file/:file_id/download](id:download)
-
-下载文档，先获取token，再跳转到`/api/download/file/:file_id/token/:token`地址下载
-
-```javascript
-{
-  token: <String>
 }
 ```
