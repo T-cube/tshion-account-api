@@ -16,6 +16,14 @@ export default[
     client_secret: 'Af9a3535pqp5Z865gza452zWf3y3KPUR',
   },
   {
+    client_id: 'com_tlifang_phone_ios',
+    client_secret: '9fG1Y50i2m2E6Us95dDQ1eB1Ubc62Dyl',
+  },
+  {
+    client_id: 'com_tlifang_phone_android',
+    client_secret: 'dz0hJhy3u7G62BKhamPC40wq2fTDNL2N',
+  },
+  {
     client_id: 'com_tlifang_wechat',
     client_secret: 'Ck2NS44cDg2cs93U2Rs9KCdH33bd495m',
   },
