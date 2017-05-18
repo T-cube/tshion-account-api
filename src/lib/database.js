@@ -6,6 +6,9 @@ export { ObjectId } from 'mongodb';
 const collections = [
   'announcement',
   'activity',
+  'app',
+  'app.old',
+  'app.comment',
   'approval.approve',
   'approval.copyto',
   'approval.export',
@@ -22,6 +25,8 @@ const collections = [
   'attendance.export',
   'auth_check_token',
   'company',
+  'company.app',
+  'company.app.config',
   'company.level',
   'company.member.old',
   'discussion',
