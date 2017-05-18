@@ -57,8 +57,8 @@ export default class Payment {
         notify_url,
         redirect_url,
         title,
-        total_fee: 1 || order.paid_sum, // TODO
-        spbill_create_ip: ip
+        total_fee: order.paid_sum,
+        spbill_create_ip: ip,
       }
     })
     .then(payment_data => {
