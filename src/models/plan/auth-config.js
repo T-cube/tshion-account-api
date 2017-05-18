@@ -1,6 +1,7 @@
 import C from 'lib/constants';
 
 export const MODULE_HOME = 'home';
+export const MODULE_APP_CENTER = 'app-center';
 export const MODULE_PROJECT = 'project';
 export const MODULE_TASK = 'task';
 export const MODULE_DOCUMENT = 'document';
@@ -14,6 +15,7 @@ const AUTH_CONFIG = {
 
   [C.TEAMPLAN.FREE]: [
     MODULE_HOME,
+    MODULE_APP_CENTER,
     MODULE_PROJECT,
     MODULE_TASK,
     MODULE_DOCUMENT,
@@ -23,6 +25,7 @@ const AUTH_CONFIG = {
 
   [C.TEAMPLAN.PRO]: [
     MODULE_HOME,
+    MODULE_APP_CENTER,
     MODULE_PROJECT,
     MODULE_TASK,
     MODULE_DOCUMENT,
@@ -33,6 +36,7 @@ const AUTH_CONFIG = {
 
   [C.TEAMPLAN.ENT]: [
     MODULE_HOME,
+    MODULE_APP_CENTER,
     MODULE_PROJECT,
     MODULE_TASK,
     MODULE_DOCUMENT,
