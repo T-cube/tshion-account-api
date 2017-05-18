@@ -7,7 +7,7 @@ const collections = [
   'announcement',
   'activity',
   'app',
-  'app.old',
+  'app.version',
   'app.comment',
   'approval.approve',
   'approval.copyto',

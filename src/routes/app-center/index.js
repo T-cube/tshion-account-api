@@ -9,6 +9,40 @@ import Promise from 'bluebird';
 let api = express.Router();
 export default api;
 
+api.get('/collection/add', (req, res, next) => {
+  db.app.insert({
+    appid: 'com.tlifang.app.notebook',
+    name: 'notebook',
+    name_en: 'nottttttteeeeeboooooooook',
+    version: '0.1.0',
+    icons: {
+      '16': '',
+      '64': '',
+      '128': '',
+    },
+    slideshow: ['','','','','',],
+    author: 'Gea',
+    author_id: ObjectId('58aaab6003312409f04e128f'),
+    description: 'this is an incredible note app',
+    update_info: 'first version',
+    star: 5,
+    metadata: {
+      storage: ['app.store.note'],
+      dependencies: [''],
+    },
+    published: true,
+    date_publish: new Date(),
+    date_update: new Date(),
+    date_create: new Date(),
+  }).then(() => {
+    db.app.findOne().then(doc => {
+      db.app.version.insert({appid: doc.appid, current: doc._id}).then(doc => {
+        res.json(doc);
+      })
+    });
+  });
+});
+
 api.get('/company/app', (req, res, next) => {
   // let company_id = req.company._id;
   // return db.company.app.find({company_id}).then(list => {
@@ -20,24 +54,49 @@ api.get('/company/app', (req, res, next) => {
   //   });
   //   res.json(company_apps);
   // });
-  db.version.find({}, {current: 1}).then(list => {
-    let applist = _.map(list, item => {
-      return {_id: item.current};
-    });
-    return mapObjectIdToData(applist, 'app');
-  }).then(list => {
-    let apps = _.map(list, item => {
-      delete item.metadata;
-      return item;
-    });
-    res.json(apps);
+  // db.app.version.find({published:true}, {current: 1}).then(list => {
+  //   let applist = _.map(list, item => {
+  //     return {_id: item.current};
+  //   });
+  //   return mapObjectIdToData(applist, 'app');
+  // }).then(list => {
+  //   let apps = _.map(list, item => {
+  //     delete item.metadata;
+  //     return item;
+  //   });
+  // });
+  db.app.find({published: true}, {metadata:0}).then(list => {
+    res.json(list);
+  })
+});
+
+api.get('/company/:company_id/app/:app_id/add', (req, res, next) => {
+  let app_id = req.params.app_id;
+  let company_id = req.company._id;
+  db.company.app.findOne({company_id}).then(doc => {
+    if (!doc) {
+      return db.company.app.insert({
+        company_id,
+        apps: [
+          {
+            app_id,
+            enabled: true
+          }
+        ]
+      }).then(() => {
+        res.json();
+      })
+    }
+    db.company.app.update({company_id, 'apps.app_id': app_id}, {$set: {'apps.$.enabled': true}}).then(() => {
+      res.json();
+    })
   });
 });
 
 api.post('/company/app/switch', (req, res, next) => {
   let { app_id, flag } = req.body;
   let company_id = req.company._id;
-  db.company.app.updage({
+  db.company.app.update({
     company_id: company_id,
     'apps.app_id': app_id
   }, { $set: {
@@ -85,6 +144,7 @@ api.get('/app/detail/:app_id', (req, res, next) => {
 
 api.get('/app/comments/:app_id', (req, res, next) => {
   let app_id = req.params.app_id;
+  let user_id = req.user._id;
   db.app.comment.aggregate([
     { $match: {app_id}},
     {
@@ -94,7 +154,10 @@ api.get('/app/comments/:app_id', (req, res, next) => {
         user_id: 1,
         star: 1,
         content: 1,
-        totalLikes: { $size: 'likes'}
+        totalLikes: { $size: 'likes'},
+        isLike: {
+          $in: [user_id, '$likes']
+        }
       }
     }
   ]).then(list => {
