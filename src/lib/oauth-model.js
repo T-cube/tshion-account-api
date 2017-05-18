@@ -53,6 +53,8 @@ export default {
         'com_tlifang_web',
         'com_tlifang_web_old',
         'com_tlifang_mobile',
+        'com_tlifang_phone_ios',
+        'com_tlifang_phone_android',
         'com_tlifang_wcapp_attendance',
       ];
       let valid = _.contains(authorized_clients, clientId);

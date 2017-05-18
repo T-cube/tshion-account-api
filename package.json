@@ -1,6 +1,6 @@
 {
   "name": "tlf-api",
-  "version": "1.1.6",
+  "version": "1.1.8",
   "description": "Tlifang API Server",
   "main": "app/index.js",
   "author": "tlifang.com <support@tlifang.com>",
@@ -16,7 +16,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "babel-watch src/index.js",
     "compile": "babel src --out-dir app",
-    "nodemon": "nodemon -i src ./app/index.js",
+    "nodemon": "nodemon --delay 1000ms -i src ./app/index.js",
     "watch": "babel src --out-dir app --watch",
     "tcli": "node ./app/cli/tcli \"$@\"",
     "cp": "babel node_modules/@ym/payment --out-dir pc"
