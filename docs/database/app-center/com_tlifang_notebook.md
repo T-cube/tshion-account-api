@@ -32,9 +32,9 @@ app_id_hash = md5(app_id)
   _id: ObjectId,
   user_id: ObjectId,
   company_id: ObjectId,
-  name: String, //"react"
+  title: String, //"react"
   content: String, //"how to become a genius frontend engineer"
-  tag: [ObjectId...],
+  tags: [ObjectId...],
   notebook: ObjectId,
   comments: [ObjectId...],
   likes: [ObjectId...],

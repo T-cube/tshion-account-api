@@ -22,7 +22,7 @@
   star: Number, // 4.7  average of this app comments stars
   metadata: {
     storage: [String, ...], //"note"
-    dependencies: [String, ...],
+    dependency: String,
   },
   published: Boolean,
   date_publish: Date,

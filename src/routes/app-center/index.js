@@ -4,6 +4,9 @@ import _ from 'underscore';
 import { mapObjectIdToData } from 'lib/utils';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
+import { validate } from './schema';
+import { ApiError } from 'lib/error';
+import Notebook from 'models/notebook';
 
 
 let api = express.Router();
@@ -71,8 +74,8 @@ api.get('/company/app', (req, res, next) => {
 });
 
 api.get('/company/:company_id/app/:app_id/add', (req, res, next) => {
-  let app_id = req.params.app_id;
-  let company_id = req.company._id;
+  let app_id = ObjectId(req.params.app_id);
+  let company_id = ObjectId(req.params.company_id);
   db.company.app.findOne({company_id}).then(doc => {
     if (!doc) {
       return db.company.app.insert({
@@ -83,40 +86,42 @@ api.get('/company/:company_id/app/:app_id/add', (req, res, next) => {
             enabled: true
           }
         ]
-      }).then(() => {
-        res.json();
+      }).then(doc => {
+        res.json(doc);
       })
     }
-    db.company.app.update({company_id, 'apps.app_id': app_id}, {$set: {'apps.$.enabled': true}}).then(() => {
-      res.json();
+    db.company.app.update({company_id}, {$push: {apps: {app_id, enabled:true}}}).then(doc => {
+      res.json(doc);
     })
   });
 });
 
-api.post('/company/app/switch', (req, res, next) => {
-  let { app_id, flag } = req.body;
-  let company_id = req.company._id;
+api.post('/company/:company_id/app/switch', (req, res, next) => {
+  let flag = req.body.flag;
+  let app_id = ObjectId(req.body.app_id);
+  let company_id = ObjectId(req.params.company_id);
   db.company.app.update({
     company_id: company_id,
     'apps.app_id': app_id
   }, { $set: {
     'apps.$.enabled': flag
-  }}).then(() => {
-    res.json();
+  }}).then(doc => {
+    res.json(doc);
   });
 });
 
-api.get('/company/app/:app_id/options', (req, res, next) => {
-  let app_id = req.params.app_id;
-  let company_id = req.company._id;
+api.get('/company/:company_id/app/:app_id/options', (req, res, next) => {
+  let app_id = ObjectId(req.params.app_id);
+  let company_id = ObjectId(req.params.company_id);
   db.company.app.config.findOne({app_id, company_id}).then(doc => {
     res.json(doc);
   });
 });
 
-api.post('/company/app/options', (req, res, next) => {
-  let { app_id, options } = req.body;
-  let company_id = req.company._id;
+api.post('/company/:company_id/app/:app_id/options', (req, res, next) => {
+  let options = req.body.options;
+  let app_id = ObjectId(req.params.app_id);
+  let company_id = ObjectId(req.params.company_id);
   db.company.app.config.update({
     app_id,
     company_id
@@ -124,27 +129,29 @@ api.post('/company/app/options', (req, res, next) => {
     $set: {
       options: options
     }
-  }).then(() => {
-    res.json();
+  }, {
+    upsert: true
+  }).then(doc => {
+    res.json(doc);
   });
 });
 
 api.get('/app/list', (req, res, next) => {
-  db.app.find({status: 'used'}, {app_name: 1, icon: 1}).then(list => {
+  db.app.find({published: true}, {app_name: 1, icons: 1}).then(list => {
     res.json(list);
   });
 });
 
 api.get('/app/detail/:app_id', (req, res, next) => {
-  let app_id = req.params.app_id;
-  db.app.findOne({_id: app_id}).then(doc => {
+  let app_id = ObjectId(req.params.app_id);
+  db.app.findOne({_id: app_id},{metadata:0}).then(doc => {
     res.json(doc);
   });
 });
 
-api.get('/app/comments/:app_id', (req, res, next) => {
-  let app_id = req.params.app_id;
-  let user_id = req.user._id;
+api.get('/app/:user_id/comments/:app_id', (req, res, next) => {
+  let app_id = ObjectId(app_id);
+  let user_id = ObjectId(user_id);
   db.app.comment.aggregate([
     { $match: {app_id}},
     {
@@ -154,7 +161,7 @@ api.get('/app/comments/:app_id', (req, res, next) => {
         user_id: 1,
         star: 1,
         content: 1,
-        totalLikes: { $size: 'likes'},
+        totalLikes: { $size: '$likes'},
         isLike: {
           $in: [user_id, '$likes']
         }
@@ -165,21 +172,22 @@ api.get('/app/comments/:app_id', (req, res, next) => {
   });
 });
 
-api.get('/app/comments/:comment_id/like', (req, res, next) => {
-  let comment_id = req.params.comment_id;
-  let user_id = req.user._id;
-  db.app.comment.update({_id: comment_id},{ $push: {likes: user_id}}).then(() => res.json());
+api.get('/app/:user_id/comments/:comment_id/like', (req, res, next) => {
+  let comment_id = ObjectId(req.params.comment_id);
+  let user_id = req.params.user_id;
+  db.app.comment.update({_id: comment_id},{ $addToSet: {likes: user_id}}).then(doc => res.json(doc));
 });
 
-api.get('/app/comments/:comment_id/unlike', (req, res, next) => {
-  let comment_id = req.params.comment_id;
-  let user_id = req.user._id;
-  db.app.comment.update({_id: comment_id},{ $pull: {likes: user_id}}).then(() => res.json());
+api.get('/app/:user_id/comments/:comment_id/unlike', (req, res, next) => {
+  let comment_id = ObjectId(req.params.comment_id);
+  let user_id = req.params.user_id;
+  db.app.comment.update({_id: comment_id},{ $pull: {likes: user_id}}).then(doc => res.json(doc));
 });
 
-api.post('/app/comments/create', (req, res, next) => {
-  let user_id = req.user._id;
-  let { app_id, app_version, star, content } = req.body;
+api.post('/app/:user_id/comments/create', (req, res, next) => {
+  let user_id = ObjectId(req.params.user_id);
+  let app_id = ObjectId(req.body.app_id);
+  let { app_version, star, content } = req.body;
   db.app.comment.insert({
     user_id,
     app_id,
@@ -188,8 +196,8 @@ api.post('/app/comments/create', (req, res, next) => {
     content,
     likes: [],
     date_create: new Date()
-  }).then(() => {
-    res.json();
+  }).then(doc => {
+    res.json(doc);
   });
 });
 
@@ -219,3 +227,25 @@ api.get('/app/test', (req, res, next) => {
     // });
   });
 });
+
+api.get('/app/', (req, res, next) => {
+  validate('operation', req.query);
+  let { app_id, company_id, user_id, type, content } = req.query;
+  db.app.findOne({_id: app_id}).then(doc => {
+    selectModel(doc.dependency, {company_id, user_id}).checkOperation({type, content}).then(result => {
+      res.json(result);
+    });
+  });
+});
+
+function selectModel(model, props) {
+  let appModel;
+  switch (model) {
+    case 'notebook':
+      appModel = new Notebook(props);
+      break;
+    default:
+      throw new ApiError('400', 'invalid_model')
+  }
+  return appModel;
+}
