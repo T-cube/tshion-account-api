@@ -1,12 +1,10 @@
 import express from 'express';
 import db from 'lib/database';
 import _ from 'underscore';
-import { mapObjectIdToData } from 'lib/utils';
 import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
-import Notebook from 'models/notebook';
 
 
 let api = express.Router();
@@ -41,7 +39,7 @@ api.get('/collection/add', (req, res, next) => {
     db.app.findOne().then(doc => {
       db.app.version.insert({appid: doc.appid, current: doc._id}).then(doc => {
         res.json(doc);
-      })
+      });
     });
   });
 });
@@ -68,9 +66,9 @@ api.get('/company/app', (req, res, next) => {
   //     return item;
   //   });
   // });
-  db.app.find({published: true}, {metadata:0}).then(list => {
+  db.app.find({published: true}, {metadata:0, model:0}).then(list => {
     res.json(list);
-  })
+  });
 });
 
 api.get('/company/:company_id/app/:app_id/add', (req, res, next) => {
@@ -88,11 +86,11 @@ api.get('/company/:company_id/app/:app_id/add', (req, res, next) => {
         ]
       }).then(doc => {
         res.json(doc);
-      })
+      });
     }
     db.company.app.update({company_id}, {$push: {apps: {app_id, enabled:true}}}).then(doc => {
       res.json(doc);
-    })
+    });
   });
 });
 
@@ -202,10 +200,15 @@ api.post('/app/:user_id/comments/create', (req, res, next) => {
 });
 
 api.get('/app/test', (req, res, next) => {
+  db.company.find({
+    projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}
+  }).then(doc => {
+    res.json(doc);
+  });
   db.company.aggregate([
     {$match: {owner:ObjectId('574f087d6a400ffd0f40d0fb')}},
     {$project: {
-      name:1,
+      // name:0,
       totalProjects: { $size: '$projects'},
       inproject: {
         $in: [ObjectId('574f85066a400ffd0f40d131'), '$projects']
@@ -228,24 +231,80 @@ api.get('/app/test', (req, res, next) => {
   });
 });
 
-api.get('/app/', (req, res, next) => {
-  validate('operation', req.query);
-  let { app_id, company_id, user_id, type, content } = req.query;
-  db.app.findOne({_id: app_id}).then(doc => {
-    selectModel(doc.dependency, {company_id, user_id}).checkOperation({type, content}).then(result => {
-      res.json(result);
-    });
-  });
-});
+// api.get('/app', (req, res, next) => {
+//   // validate('appRequest', req.query);
+//   let { app_id, company_id, user_id } = req.query;
+//   let { type, operation } = req.body;
+//   db.app.findOne({_id: ObjectId(app_id)}).then(doc => {
+//     return selectModel(doc.model, {company_id, user_id}).routeOperation({type, operation}).then(result =>
+//       res.json(result)
+//     ).catch(next);
+//   }).catch(next);
+// });
+//
+// api.post('/app', (req, res, next) => {
+//   // validate('appRequest', req.query);
+//   let { app_id, company_id, user_id } = req.query;
+//   let { type, operation } = req.body;
+//   db.app.findOne({_id: app_id}).then(doc => {
+//     return selectModel(doc.model, {company_id, user_id}).routeOperation({type, operation}).then(result =>
+//       res.json(result)
+//     ).catch(next);
+//   }).catch(next);
+// });
+//
+// api.delete('/app', (req, res, next) => {
+//   // validate('appRequest', req.query);
+//   let { app_id, company_id, user_id } = req.query;
+//   let { type, operation } = req.body;
+//   db.app.findOne({_id: ObjectId(app_id)}).then(doc => {
+//     return selectModel(doc.model, {company_id, user_id}).routeOperation({type, operation}).then(result =>
+//       res.json(result)
+//     ).catch(next);
+//   }).catch(next);
+// });
+//
+// api.put('/app', (req, res, next) => {
+//   // validate('appRequest', req.query);
+//   let { app_id, company_id, user_id } = req.query;
+//   let { type, operation } = req.body;
+//   db.app.findOne({_id: ObjectId(app_id)}).then(doc => {
+//     return selectModel(doc.model, {company_id, user_id}).routeOperation({type, operation}).then(result =>
+//       res.json(result)
+//     ).catch(next);
+//   }).catch(next);
+// });
+//
+// function selectModel(model, props) {
+//   switch (model) {
+//   case 'notebook':
+//     return Notebook;
+//   default:
+//     throw new ApiError('400', 'invalid_model');
+//   }
+// }
 
-function selectModel(model, props) {
-  let appModel;
-  switch (model) {
-    case 'notebook':
-      appModel = new Notebook(props);
-      break;
-    default:
-      throw new ApiError('400', 'invalid_model')
-  }
-  return appModel;
+/**
+ * query string
+ * @param {string} target
+ * @param {ObjectId} app_id
+ * @param {ObjectId} user_id
+ * @param {ObjectId} company_id
+ * @param {ObjectId} note_id optional
+ * @param {ObjectId} tag_id optional
+ *
+ */
+
+function targetError() {
+  throw new ApiError('400', 'query_target_error');
 }
+
+api.use('/app/notebook/', (req, res, next) => {
+  _.indexOf(['user', 'tag', 'note', 'like', 'notebook', 'shared', 'comment', 'note', 'noteAddTag', 'noteDeleteTag', 'noteShare'], req.query.target) || targetError();
+  validate('appRequest', req.query);
+  req.url = '/' + req.query.target;
+  // db.app.findOne({_id: req.query.app_id}).then(doc => {
+  //   if (!doc) throw new ApiError('400', 'invalid_app');
+  // });
+  next();
+}, require('./app-notebook').default);

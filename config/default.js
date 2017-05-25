@@ -307,5 +307,10 @@ module.exports = {
       min: 100,
       max: 500000,
     }
+  },
+  app_center: {
+    notebook:{
+      db: 'app.store.notebook.'
+    }
   }
 };
