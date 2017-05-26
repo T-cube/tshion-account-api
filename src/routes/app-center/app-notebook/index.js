@@ -11,7 +11,6 @@ function requestError() {
 }
 
 // api.use('/', (req, res, next) => {
-//   notebook = new Notebook();
 //   next();
 // });
 

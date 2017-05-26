@@ -1,4 +1,3 @@
-import C, { ENUMS } from 'lib/constants';
 import { buildValidator } from 'lib/inspector';
 
 const schema = {

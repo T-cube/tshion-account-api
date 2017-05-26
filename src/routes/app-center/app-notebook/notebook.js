@@ -9,7 +9,7 @@ export default class Notebook extends Base {
   }
 
   list({user_id, company_id}) {
-    return this.notebook_user.findOne({
+    return this.collection('user').findOne({
       user_id: user_id,
       company_id: company_id,
     }).then(doc => {
@@ -20,7 +20,7 @@ export default class Notebook extends Base {
           tags: [],
           notebooks: []
         };
-        return this.notebook_user.insert(criteria);
+        return this.collection('user').insert(criteria);
       }
       return new Promise((resolve) => {
         resolve(doc);
@@ -29,7 +29,7 @@ export default class Notebook extends Base {
   }
 
   tagQuery({user_id, company_id, tag_id}) {
-    return this.notebook_note.aggregate([
+    return this.collection('note').aggregate([
       { $match: {
         user_id,
         company_id,
@@ -50,7 +50,7 @@ export default class Notebook extends Base {
   }
 
   notebookQuery({user_id, company_id, notebook_id}) {
-    return this.notebook_note.aggregate([
+    return this.collection('note').aggregate([
       { $match: {
         user_id,
         company_id,
@@ -71,7 +71,7 @@ export default class Notebook extends Base {
   }
 
   noteQuery({user_id, company_id, note_id}) {
-    return this.notebook_note.aggregate([
+    return this.collection('note').aggregate([
       { $match: {
         user_id,
         company_id,
@@ -92,7 +92,7 @@ export default class Notebook extends Base {
   }
 
   sharedQuery({user_id, company_id}) {
-    return this.notebook_note.aggregate([
+    return this.collection('note').aggregate([
       { $match: {
         user_id,
         company_id,
@@ -113,11 +113,11 @@ export default class Notebook extends Base {
   }
 
   commentsQuery({company_id, note_id}) {
-    return this.notebook_comment.find({company_id, note_id});
+    return this.collection('comment').find({company_id, note_id});
   }
 
   tagAdd({company_id, user_id, tag_name}) {
-    return this.notebook_user.update({
+    return this.collection('user').update({
       user_id,
       company_id,
     }, {
@@ -126,7 +126,7 @@ export default class Notebook extends Base {
   }
 
   notebookAdd({company_id, user_id, notebook_name}) {
-    return this.notebook_user.update({
+    return this.collection('user').update({
       user_id,
       company_id,
     }, {
@@ -136,7 +136,7 @@ export default class Notebook extends Base {
 
   noteAdd({user_id, company_id, note}) {
     let { title, content, tags, notebook, shared } = note;
-    return this.notebook_note.insert({
+    return this.collection('note').insert({
       company_id,
       user_id,
       title,
@@ -153,14 +153,14 @@ export default class Notebook extends Base {
 
   commentAdd({user_id, company_id, comment}) {
     let { note_id, content } = comment;
-    return this.notebook_comment.insert({
+    return this.collection('comment').insert({
       user_id,
       company_id,
       note_id,
       content,
       date_create: new Date(),
     }).then(doc => {
-      return this.notebook_note.update({
+      return this.collection('note').update({
         _id: note_id
       }, {
         $addToSet: { comments: doc._id }
@@ -169,7 +169,7 @@ export default class Notebook extends Base {
   }
 
   likeAdd({note_id, user_id}) {
-    return this.notebook_note.update({
+    return this.collection('note').update({
       _id: note_id
     }, {
       $addToSet: { likes: user_id }
@@ -177,13 +177,13 @@ export default class Notebook extends Base {
   }
 
   tagDelete({user_id, company_id, tag_id}) {
-    return this.notebook_user.update({
+    return this.collection('user').update({
       user_id,
       company_id,
     }, {
       $pull: { tags: { _id: tag_id } }
     }).then(() => {
-      return this.notebook_note.update({
+      return this.collection('note').update({
         user_id,
         company_id,
         tags: { $in: [tag_id]}
@@ -194,13 +194,13 @@ export default class Notebook extends Base {
   }
 
   notebookDelete({company_id, user_id, notebook_id}) {
-    return this.notebook_user.update({
+    return this.collection('user').update({
       user_id,
       company_id,
     }, {
       $pull: { notebooks: { _id: notebook_id }}
     }).then(() => {
-      return this.notebook_note.remove({
+      return this.collection('note').remove({
         user_id,
         company_id,
         notebook: notebook_id
@@ -209,16 +209,16 @@ export default class Notebook extends Base {
   }
 
   noteDelete({company_id, user_id, note_id}) {
-    return this.notebook_note.findOne({company_id, user_id, _id: note_id}).then(doc => {
+    return this.collection('note').findOne({company_id, user_id, _id: note_id}).then(doc => {
       return Promise.all([
-        this.notebook_note.remove({_id: note_id}),
-        this.notebook_comment.remove({_id:{ $in: doc.comments}})
+        this.collection('note').remove({_id: note_id}),
+        this.collection('comment').remove({_id:{ $in: doc.comments}})
       ]);
     });
   }
 
   likeDelete({user_id, note_id}) {
-    return this.notebook_note.update({
+    return this.collection('note').update({
       _id: note_id
     }, {
       $pull: { likes: user_id }
@@ -226,7 +226,7 @@ export default class Notebook extends Base {
   }
 
   tagChange({user_id, company_id, tag_name, tag_id}) {
-    return this.notebook_user.update({
+    return this.collection('user').update({
       user_id,
       company_id,
       'tags._id': tag_id
@@ -238,7 +238,7 @@ export default class Notebook extends Base {
   }
 
   notebookChange({user_id, company_id, notebook_name, notebook_id}) {
-    return this.notebook_user.update({
+    return this.collection('user').update({
       user_id,
       company_id,
       'notebooks._id': notebook_id
@@ -251,7 +251,7 @@ export default class Notebook extends Base {
 
   noteChange({user_id, company_id, note}) {
     let { title, content, note_id } = note;
-    return this.notebook_note.update({
+    return this.collection('note').update({
       _id: note_id,
       company_id,
       user_id,
@@ -264,7 +264,7 @@ export default class Notebook extends Base {
   }
 
   noteAddTag({company_id, user_id, tag_id, note_id}) {
-    return this.notebook_note.update({
+    return this.collection('note').update({
       _id: note_id,
       company_id,
       user_id,
@@ -274,7 +274,7 @@ export default class Notebook extends Base {
   }
 
   noteDeleteTag({company_id, user_id, tag_id, note_id}) {
-    return this.notebook_note.update({
+    return this.collection('note').update({
       _id: note_id,
       company_id,
       user_id,
@@ -284,7 +284,7 @@ export default class Notebook extends Base {
   }
 
   noteShare({user_id, company_id, note_id, shared}) {
-    return this.notebook_note.update({
+    return this.collection('note').update({
       _id: note_id,
       user_id,
       company_id,

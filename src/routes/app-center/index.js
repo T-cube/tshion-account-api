@@ -44,7 +44,7 @@ api.get('/collection/add', (req, res, next) => {
   });
 });
 
-api.get('/company/app', (req, res, next) => {
+api.get('/app/all', (req, res, next) => {
   // let company_id = req.company._id;
   // return db.company.app.find({company_id}).then(list => {
   //   let apps = list.apps;
@@ -66,45 +66,70 @@ api.get('/company/app', (req, res, next) => {
   //     return item;
   //   });
   // });
-  db.app.find({published: true}, {metadata:0, model:0}).then(list => {
+  db.app.find({published: true}, {metadata:0, published:0}).then(list => {
     res.json(list);
   });
 });
 
-api.get('/company/:company_id/app/:app_id/add', (req, res, next) => {
+api.get('/company/:company_id/app/list', (req, res, next) => {
   let app_id = ObjectId(req.params.app_id);
   let company_id = ObjectId(req.params.company_id);
   db.company.app.findOne({company_id}).then(doc => {
     if (!doc) {
       return db.company.app.insert({
         company_id,
-        apps: [
-          {
-            app_id,
-            enabled: true
-          }
-        ]
-      }).then(doc => {
-        res.json(doc);
+        apps: []
+      }).then(inserted => {
+        res.json(inserted);
       });
     }
-    db.company.app.update({company_id}, {$push: {apps: {app_id, enabled:true}}}).then(doc => {
-      res.json(doc);
+    res.json(doc);
+  });
+});
+
+api.get('/company/:company_id/operator/:user_id/app/:app_id/add', (req, res, next) => {
+  let app_id = ObjectId(req.params.app_id);
+  let company_id = ObjectId(req.params.company_id);
+  let user_id = ObjectId(req.params.user_id);
+  db.company.findOne({_id: company_id}).then(doc => {
+    if (doc.owner != user_id) throw new ApiError('400', 'permisson_dined');
+    db.company.app.findOne({company_id}).then(doc => {
+      if (!doc) {
+        return db.company.app.insert({
+          company_id,
+          apps: [
+            {
+              app_id,
+              enabled: true
+            }
+          ]
+        }).then(doc => {
+          res.json(doc);
+        });
+      }
+      db.company.app.update({company_id}, {$push: {apps: {app_id, enabled:true}}}).then(doc => {
+        res.json(doc);
+      });
     });
   });
 });
 
-api.post('/company/:company_id/app/switch', (req, res, next) => {
+
+api.post('/company/:company_id/operator/:user_id/app/:app_id/switch', (req, res, next) => {
   let flag = req.body.flag;
-  let app_id = ObjectId(req.body.app_id);
+  let app_id = ObjectId(req.params.app_id);
   let company_id = ObjectId(req.params.company_id);
-  db.company.app.update({
-    company_id: company_id,
-    'apps.app_id': app_id
-  }, { $set: {
-    'apps.$.enabled': flag
-  }}).then(doc => {
-    res.json(doc);
+  let user_id = ObjectId(req.params.user_id);
+  db.company.findOne({_id: company_id}).then(doc => {
+    if (doc.owner != user_id) throw new ApiError('400', 'permisson_dined');
+    db.company.app.update({
+      company_id: company_id,
+      'apps.app_id': app_id
+    }, { $set: {
+      'apps.$.enabled': flag
+    }}).then(doc => {
+      res.json(doc);
+    });
   });
 });
 
@@ -116,21 +141,25 @@ api.get('/company/:company_id/app/:app_id/options', (req, res, next) => {
   });
 });
 
-api.post('/company/:company_id/app/:app_id/options', (req, res, next) => {
+api.put('/company/:company_id/operator/:user_id/app/:app_id/options', (req, res, next) => {
   let options = req.body.options;
   let app_id = ObjectId(req.params.app_id);
   let company_id = ObjectId(req.params.company_id);
-  db.company.app.config.update({
-    app_id,
-    company_id
-  }, {
-    $set: {
-      options: options
-    }
-  }, {
-    upsert: true
-  }).then(doc => {
-    res.json(doc);
+  let user_id = ObjectId(req.params.user_id);
+  db.company.findOne({_id: company_id}).then(doc => {
+    if (doc.owner != user_id) throw new ApiError('400', 'permisson_dined');
+    db.company.app.config.update({
+      app_id,
+      company_id
+    }, {
+      $set: {
+        options: options
+      }
+    }, {
+      upsert: true
+    }).then(doc => {
+      res.json(doc);
+    });
   });
 });
 
@@ -140,14 +169,14 @@ api.get('/app/list', (req, res, next) => {
   });
 });
 
-api.get('/app/detail/:app_id', (req, res, next) => {
+api.get('/app/:app_id/detail', (req, res, next) => {
   let app_id = ObjectId(req.params.app_id);
   db.app.findOne({_id: app_id},{metadata:0}).then(doc => {
     res.json(doc);
   });
 });
 
-api.get('/app/:user_id/comments/:app_id', (req, res, next) => {
+api.get('/app/:app_id/:user_id/comments', (req, res, next) => {
   let app_id = ObjectId(app_id);
   let user_id = ObjectId(user_id);
   db.app.comment.aggregate([
@@ -172,19 +201,19 @@ api.get('/app/:user_id/comments/:app_id', (req, res, next) => {
 
 api.get('/app/:user_id/comments/:comment_id/like', (req, res, next) => {
   let comment_id = ObjectId(req.params.comment_id);
-  let user_id = req.params.user_id;
+  let user_id = ObjectId(req.params.user_id);
   db.app.comment.update({_id: comment_id},{ $addToSet: {likes: user_id}}).then(doc => res.json(doc));
 });
 
 api.get('/app/:user_id/comments/:comment_id/unlike', (req, res, next) => {
   let comment_id = ObjectId(req.params.comment_id);
-  let user_id = req.params.user_id;
+  let user_id = ObjectId(req.params.user_id);
   db.app.comment.update({_id: comment_id},{ $pull: {likes: user_id}}).then(doc => res.json(doc));
 });
 
-api.post('/app/:user_id/comments/create', (req, res, next) => {
+api.post('/app/:app_id/:user_id/comments/create', (req, res, next) => {
   let user_id = ObjectId(req.params.user_id);
-  let app_id = ObjectId(req.body.app_id);
+  let app_id = ObjectId(req.params.app_id);
   let { app_version, star, content } = req.body;
   db.app.comment.insert({
     user_id,
@@ -287,7 +316,6 @@ api.get('/app/test', (req, res, next) => {
 /**
  * query string
  * @param {string} target
- * @param {ObjectId} app_id
  * @param {ObjectId} user_id
  * @param {ObjectId} company_id
  * @param {ObjectId} note_id optional
@@ -295,12 +323,12 @@ api.get('/app/test', (req, res, next) => {
  *
  */
 
-function targetError() {
-  throw new ApiError('400', 'query_target_error');
-}
+// function targetError() {
+//   throw new ApiError('400', 'query_target_error');
+// }
 
 api.use('/app/notebook/', (req, res, next) => {
-  _.indexOf(['user', 'tag', 'note', 'like', 'notebook', 'shared', 'comment', 'note', 'noteAddTag', 'noteDeleteTag', 'noteShare'], req.query.target) || targetError();
+  // _.indexOf(['user', 'tag', 'note', 'like', 'notebook', 'shared', 'comment', 'note', 'noteAddTag', 'noteDeleteTag', 'noteShare'], req.query.target) || targetError();
   validate('appRequest', req.query);
   req.url = '/' + req.query.target;
   // db.app.findOne({_id: req.query.app_id}).then(doc => {
