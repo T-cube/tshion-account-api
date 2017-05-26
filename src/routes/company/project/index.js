@@ -9,7 +9,7 @@ import { upload, saveCdn, randomAvatar, cropAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { authCheck } from 'lib/middleware';
-import { time, fetchCompanyMemberInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
+import { time, fetchCompanyMemberInfo, findObjectIdIndex, mapObjectIdToData } from 'lib/utils';
 import {
   PROJECT_TRANSFER,
   PROJECT_QUIT,
@@ -262,7 +262,7 @@ api.post('/:project_id/member', (req, res, next) => {
   let members = data.map(item => item._id);
   ensureProjectAdmin(req.project, req.user._id);
   data.forEach(item => {
-    if (indexObjectId(req.project.members.map(i => i._id), item._id) != -1) {
+    if (findObjectIdIndex(req.project.members.map(i => i._id), item._id) != -1) {
       throw new ApiError(400, 'member_exists');
     }
   });

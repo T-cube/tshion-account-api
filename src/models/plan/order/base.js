@@ -5,7 +5,7 @@ import moment from 'moment';
 import config from 'config';
 
 import { ApiError } from 'lib/error';
-import { indexObjectId } from 'lib/utils';
+import { findObjectIdIndex } from 'lib/utils';
 import C from 'lib/constants';
 import db from 'lib/database';
 import Coupon from '../coupon';
@@ -192,7 +192,7 @@ export default class BaseOrder {
       if (!products.length) {
         this._persistOrderDiscount({coupon: coupon._id}, this._getOrderDiscount(coupon));
       } else {
-        _.filter(this.products, product => indexObjectId(products, product._id) > -1).map(product => {
+        _.filter(this.products, product => findObjectIdIndex(products, product._id) > -1).map(product => {
           let discountProduct = this._getProductDiscount(product, coupon);
           this._couponProductDiscount({discount: {coupon_id: coupon._id, coupon_title: coupon.title, coupon_description: coupon.description}}, discountProduct, product._id);
         });

@@ -5,7 +5,7 @@
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 
-import { getUniqName, indexObjectId, uniqObjectId } from 'lib/utils';
+import { getUniqName, findObjectIdIndex, uniqObjectIdArray } from 'lib/utils';
 
 class Structure {
 
@@ -116,14 +116,13 @@ class Structure {
   }
 
   setAdmin(member_id, node_id) {
-    member_id = ObjectId(member_id);
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
-    if (!node) {
-      return false;
+    if (node) {
+      node.admin = member_id ? ObjectId(member_id) : null;
+      return true;
     }
-    node.admin = member_id;
-    return true;
+    return false;
   }
 
   _getMember(node_id, all, level = 0) {
@@ -151,9 +150,8 @@ class Structure {
 
   getMember(node_id, all = false) {
     node_id = ObjectId(node_id);
-    node_id = ObjectId(node_id);
     let members = this._getMember(node_id, all);
-    let memberIds = uniqObjectId(members.map(member => member._id));
+    let memberIds = uniqObjectIdArray(members.map(member => member._id));
     return memberIds.map(mid => _.find(members, member => member._id.equals(mid)));
   }
 
@@ -178,6 +176,9 @@ class Structure {
       if (index >= 0) {
         node.members.splice(index, 1);
         this._counter++;
+      }
+      if (ObjectId.isValid(node.admin) && member_id.equals(node.admin)) {
+        node.admin = null;
       }
     }
     if (all) {
@@ -306,7 +307,7 @@ class Structure {
     let newPath = path ? _.clone(path) : [];
     newPath.push(node._id);
     let members = node.members || [];
-    if (indexObjectId(members.map(member => member._id), member_id) != -1) {
+    if (findObjectIdIndex(members.map(member => member._id), member_id) != -1) {
       departments = departments.concat(node._id).concat(newPath);
     }
     if (node.children && node.children.length) {
@@ -314,7 +315,7 @@ class Structure {
         departments = departments.concat(this.findMemberDepartments(member_id, i, newPath));
       });
     }
-    return uniqObjectId(departments);
+    return uniqObjectIdArray(departments);
   }
 
   object() {

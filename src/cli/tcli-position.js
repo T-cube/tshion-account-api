@@ -6,7 +6,7 @@ import '../bootstrap';
 import program from 'commander';
 import db from 'lib/database';
 import Structure from 'models/structure';
-import { indexObjectId } from 'lib/utils';
+import { findObjectIdIndex } from 'lib/utils';
 
 program
   .option('-m, --cleanmember', 'remove member position when position not exists')
@@ -59,7 +59,7 @@ function updateStructer(node) {
   let positionIds = _.pluck(positions, '_id');
   let updated = false;
   node.members = _.filter(members, m => {
-    if (indexObjectId(positionIds, m.position) > -1) {
+    if (findObjectIdIndex(positionIds, m.position) > -1) {
       return true;
     }
     updated = true;

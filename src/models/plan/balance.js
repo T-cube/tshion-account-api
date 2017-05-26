@@ -1,5 +1,5 @@
 import db from 'lib/database';
-import {indexObjectId} from 'lib/utils';
+import {findObjectIdIndex} from 'lib/utils';
 
 export default class Banlance {
 
@@ -11,7 +11,7 @@ export default class Banlance {
       _id: company_id
     })
     .then(doc => {
-      let transactionReach = doc && doc.transactions && (indexObjectId(doc.transactions, transactionId) >= 0);
+      let transactionReach = doc && doc.transactions && (findObjectIdIndex(doc.transactions, transactionId) >= 0);
       if (transactionReach) {
         return;
       }

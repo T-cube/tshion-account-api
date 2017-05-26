@@ -148,45 +148,27 @@ export function isMobile(str) {
   return /^1[3|4|5|7|8]\d{9}$/.test(str);
 }
 
-export function uniqObjectId(list) {
-  let newList = [];
-  list.forEach(item => {
-    let found = false;
-    newList.forEach(newItem => {
-      if (!newItem || newItem.equals(item)) {
-        found = true;
-      }
-    });
-    found || newList.push(item);
+export function uniqObjectIdArray(list) {
+  const newList = list.filter((value, index, array) => {
+    return _.findIndex(array, v => v.equals(value)) == index;
   });
   return newList;
 }
 
-export function diffObjectId(list, otherList) {
-  uniqObjectId(list);
-  uniqObjectId(otherList);
+export function intersectObjectIdArray(list, otherList) {
+  list = uniqObjectIdArray(list);
+  otherList = uniqObjectIdArray(otherList);
   let newList = [];
   list.forEach(item => {
-    let found = false;
-    otherList.forEach(newItem => {
-      if (newItem.equals(item)) {
-        found = true;
-      }
-    });
-    found || newList.push(item);
-  });
-  return newList;
-}
-
-export function indexObjectId(list, id) {
-  let index = -1;
-  for (let k in list) {
-    if (ObjectId.isValid(list[k]) && list[k].equals(id)) {
-      index = k;
-      break;
+    if (_.find(otherList, _item => _item.equals(item))) {
+      newList.push(item);
     }
-  }
-  return index;
+  });
+  return newList;
+}
+
+export function findObjectIdIndex(list, id) {
+  return _.findIndex(list, item => item.equals(id));
 }
 
 export function fetchCompanyMemberInfo(company, data, ...args) {
@@ -194,7 +176,7 @@ export function fetchCompanyMemberInfo(company, data, ...args) {
   let keys = getKeysFromArgs(args);
   let keyList = getListOfKeys(data, keys);
   let companyMemberIds = companyMembers.map(m => m._id);
-  keyList = diffObjectId(keyList, companyMemberIds);
+  keyList = intersectObjectIdArray(keyList, companyMemberIds);
   if (!keyList.length) {
     return mapObjectIdToData(data, 'user', ['name', 'avatar'], keys, companyMembers);
   }
@@ -244,7 +226,7 @@ export function mapObjectIdToData(data, collection, fields, keys, mergeList) {
   }
   return objectPath.get(db, collection).find({
     _id: {
-      $in: uniqObjectId(keyList)
+      $in: uniqObjectIdArray(keyList)
     }
   }, _.object(fields, _.range(fields.length).map(() => 1)))
   .then(infoList => {

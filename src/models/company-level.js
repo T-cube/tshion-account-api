@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import db from 'lib/database';
-import { indexObjectId, mapObjectIdToData } from 'lib/utils';
+import { findObjectIdIndex, mapObjectIdToData } from 'lib/utils';
 import Plan from 'models/plan/plan';
 
 import authConfig from 'models/plan/auth-config';
@@ -149,7 +149,7 @@ export default class CompanyLevel {
 
       if (levelInfo.file[target_type]) {
         let existItems = levelInfo.file[target_type].map(item => item._id);
-        if (indexObjectId(existItems, target_id) > -1) {
+        if (findObjectIdIndex(existItems, target_id) > -1) {
           return db.company.level.update({
             _id: company_id,
             [`file.${target_type}._id`]: target_id

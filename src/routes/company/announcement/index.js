@@ -5,7 +5,7 @@ import config from 'config';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { indexObjectId, fetchCompanyMemberInfo, uniqObjectId, cleanHtmlTags, textEllipsis } from 'lib/utils';
+import { findObjectIdIndex, fetchCompanyMemberInfo, uniqObjectIdArray, cleanHtmlTags, textEllipsis } from 'lib/utils';
 import inspector from 'lib/inspector';
 import Structure from 'models/structure';
 import { sanitization, validation } from './schema';
@@ -203,7 +203,7 @@ function fetchAnnouncementData(req) {
     });
     let memberIds = req.company.members.map(i => i._id);
     data.to && data.to.member && data.to.member.forEach(each => {
-      if (-1 == indexObjectId(memberIds, each)) {
+      if (-1 == findObjectIdIndex(memberIds, each)) {
         throw new ApiError(400, 'member_not_exists');
       }
     });
@@ -271,5 +271,5 @@ function getNotifyUsers(req, to) {
   } else {
     users = _.filter(req.company.members.map(member => member._id), id => id.equals(req.user._id));
   }
-  return uniqObjectId(users);
+  return uniqObjectIdArray(users);
 }
