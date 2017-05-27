@@ -2,10 +2,8 @@ import express from 'express';
 import db from 'lib/database';
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
-import Promise from 'bluebird';
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
-import { mapObjectIdToData } from 'lib/utils'
 
 
 let api = express.Router();
@@ -46,27 +44,6 @@ api.get('/collection/add', (req, res, next) => {
 });
 
 api.get('/app/all', (req, res, next) => {
-  // let company_id = req.company._id;
-  // return db.company.app.find({company_id}).then(list => {
-  //   let apps = list.apps;
-  //   return mapObjectIdToData(apps, 'app');
-  // }).then(apps => {
-  //   let company_apps = _.filter(apps, app => {
-  //     return app.status == 'used';
-  //   });
-  //   res.json(company_apps);
-  // });
-  // db.app.version.find({published:true}, {current: 1}).then(list => {
-  //   let applist = _.map(list, item => {
-  //     return {_id: item.current};
-  //   });
-  //   return mapObjectIdToData(applist, 'app');
-  // }).then(list => {
-  //   let apps = _.map(list, item => {
-  //     delete item.metadata;
-  //     return item;
-  //   });
-  // });
   db.app.find({published: true}, {metadata:0, published:0}).then(list => {
     res.json(list);
   });
@@ -229,50 +206,6 @@ api.post('/app/:app_id/:user_id/comments/create', (req, res, next) => {
   });
 });
 
-api.get('/app/test', (req, res, next) => {
-  db.user.findOne({_id: ObjectId('58aaab6003312409f04e128f')}, {frequentProject:1}).then(doc => {
-    // let a = mapObjectIdToData(_.map(_.sortBy(doc.frequentProject, item => {
-    //   return -item.date
-    // }).slice(0, 4), project => {
-    //   return project.project_id
-    // }), 'project');
-    let c = _.sortBy(doc.frequentProject, item => -item.date).slice(0, 4).map(project => {
-      return project.project_id;
-    });
-    mapObjectIdToData(c, 'project').then(() => {
-      res.json(c);
-    });
-  });
-  // db.company.find({
-  //   projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}
-  // }).then(doc => {
-  //   res.json(doc);
-  // });
-  // db.company.aggregate([
-  //   {$match: {owner:ObjectId('574f087d6a400ffd0f40d0fb')}},
-  //   {$project: {
-  //     // name:0,
-  //     totalProjects: { $size: '$projects'},
-  //     inproject: {
-  //       $in: [ObjectId('574f85066a400ffd0f40d131'), '$projects']
-  //     },
-  //   }}
-  // ]).then(list => {
-  //   res.json(list);
-  //   // Promise.map(list, item => {
-  //   //   return db.company.count({_id: item._id, projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}}).then(doc => {
-  //   //     item.hasProject = doc;
-  //   //     return item;
-  //   //   })
-  //   // }).then(list => {
-  //   //   res.json(list);
-  //   // });
-  //   // return db.company.count({_id:ObjectId('574f84726a400ffd0f40d121'),projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}}).then(doc => {
-  //   //   console.log(doc);
-  //   //   res.json(list);
-  //   // });
-  // });
-});
 
 
 /**
@@ -314,11 +247,3 @@ fs.readdir(__dirname + '/app', (err, result) => {
     console.log('--------------------------------------------------------------------------------');
   });
 });
-
-// api.use('/app/notebook/', (req, res, next) => {
-//   // _.indexOf(['user', 'tag', 'note', 'like', 'notebook', 'shared', 'comment', 'note', 'noteAddTag', 'noteDeleteTag', 'noteShare'], req.query.target) || targetError();
-//   // db.app.findOne({_id: req.query.app_id}).then(doc => {
-//   //   if (!doc) throw new ApiError('400', 'invalid_app');
-//   // });
-//   next();
-// }, require('./app-notebook').default);
