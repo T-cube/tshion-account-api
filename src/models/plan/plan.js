@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 
 import C from 'lib/constants';
 import db from 'lib/database';
-import {indexObjectId} from 'lib/utils';
+import {findObjectIdIndex} from 'lib/utils';
 
 export default class Plan {
 
@@ -123,7 +123,7 @@ export default class Plan {
     let { company_id } = this;
     let { plan, order_type, times, date_create, member_count, user_id } = order;
     return this.getPlanInfo().then(planInfo => {
-      if (transactionId && planInfo && planInfo.transactions && indexObjectId(planInfo.transactions, transactionId) > -1) {
+      if (transactionId && planInfo && planInfo.transactions && findObjectIdIndex(planInfo.transactions, transactionId) > -1) {
         return true;
       }
 

@@ -8,7 +8,7 @@ import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, indexObjectId, strToReg } from 'lib/utils';
+import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg } from 'lib/utils';
 import {
   TASK_ASSIGNED,
   TASK_UPDATE,
@@ -613,7 +613,7 @@ function validField(field, val) {
 }
 
 function ensureProjectMember(project, user_id) {
-  if (indexObjectId(project.members.map(i => i._id), user_id) == -1) {
+  if (findObjectIdIndex(project.members.map(i => i._id), user_id) == -1) {
     throw new ApiError(400, 'member_not_exists');
   }
 }

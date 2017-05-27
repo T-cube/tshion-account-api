@@ -1,5 +1,5 @@
 import db from 'lib/database';
-import { indexObjectId } from 'lib/utils';
+import { findObjectIdIndex } from 'lib/utils';
 import PlanOrder from 'models/plan/plan-order';
 import RechargeOrder from 'models/plan/recharge-order';
 import Transaction from 'models/plan/transaction';
@@ -20,7 +20,7 @@ export default {
         }
         let {payment_method} = transaction;
         let transactionId = transaction._id;
-        if (!indexObjectId(planOrder.get('transactions'), transactionId)) {
+        if (!findObjectIdIndex(planOrder.get('transactions'), transactionId)) {
           return;
         }
         let paidWithBalance = payment_method == 'balance';

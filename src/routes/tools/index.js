@@ -27,7 +27,6 @@ api.get('/avatar-list/:type', (req, res, next) => {
   }
   let dir = `system/avatar/${type}`;
   let count = config.get(`avatar.count.${type}`);
-  console.log(count);
   let list = [];
   for (let i = 1; i <= count; i++) {
     let num = ('0' + i).slice(-2);

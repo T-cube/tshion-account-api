@@ -5,7 +5,7 @@ import Promise from 'bluebird';
 import C, {ENUMS} from 'lib/constants';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { mapObjectIdToData, getPageInfo, indexObjectId } from 'lib/utils';
+import { mapObjectIdToData, getPageInfo, findObjectIdIndex } from 'lib/utils';
 import Plan from 'models/plan/plan';
 import PlanProduct from 'models/plan/plan-product';
 import { checkUserType } from '../utils';
@@ -161,7 +161,7 @@ function getProductsWithDiscount(plan, order_type) {
     return db.payment.discount.find(criteria)
     .then(discounts => {
       products.forEach(product => {
-        product.discount = discounts.filter(d => indexObjectId(product.discount, d._id) > -1);
+        product.discount = discounts.filter(d => findObjectIdIndex(product.discount, d._id) > -1);
       });
       return products;
     });

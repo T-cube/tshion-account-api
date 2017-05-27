@@ -9,7 +9,7 @@ import { upload, saveCdn, randomAvatar, cropAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { authCheck } from 'lib/middleware';
-import { time, fetchCompanyMemberInfo, indexObjectId, mapObjectIdToData } from 'lib/utils';
+import { time, fetchCompanyMemberInfo, findObjectIdIndex, mapObjectIdToData } from 'lib/utils';
 import {
   PROJECT_TRANSFER,
   PROJECT_QUIT,
@@ -110,31 +110,7 @@ api.get('/:project_id', (req, res, next) => {
   fetchCompanyMemberInfo(req.company, data, 'owner')
   .then(data => {
     res.json(data);
-    db.user.findOne({
-      _id: req.user._id,
-      'frequentProject.project_id': req.project._id,
-    }).then(doc => {
-      if(!doc) {
-        db.user.update({
-          _id: req.user._id
-        }, {
-          $addToSet: {
-            frequentProject: {
-              project_id: req.project._id,
-              date: new Date()
-            }
-          }
-        });
-      }
-      db.user.update({
-        _id: req.user._id,
-        'frequentProject.project_id': req.project._id,
-      }, {
-        $set: {
-          'frequentProject.$.date': new Date()
-        }
-      });
-    });
+    recordUserRecentProjects(req);
   })
   .catch(next);
 });
@@ -289,7 +265,7 @@ api.post('/:project_id/member', (req, res, next) => {
   let members = data.map(item => item._id);
   ensureProjectAdmin(req.project, req.user._id);
   data.forEach(item => {
-    if (indexObjectId(req.project.members.map(i => i._id), item._id) != -1) {
+    if (findObjectIdIndex(req.project.members.map(i => i._id), item._id) != -1) {
       throw new ApiError(400, 'member_exists');
     }
   });
@@ -504,39 +480,16 @@ api.delete('/:project_id/member/:member_id', (req, res, next) => {
 api.put('/:project_id/archived', (req, res, next) => {
   let { archived } = req.body;
   archived = !!archived;
-  db.project.update({
-    _id: req.project._id,
-    company_id: req.company._id,
-  }, {
-    $set: {
-      is_archived: archived
+  if (archived) {
+    return archiveProject(req, res, next, archived);
+  }
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.getProgramLimits().then(limit => {
+    if (limit == C.PROJECT_QUANTITY_LIMIT.OVER_ACTIVED) {
+      throw new ApiError(400, C.PROJECT_QUANTITY_LIMIT.OVER_ACTIVED);
     }
-  })
-  .then(() => {
-    res.json({});
-    let update = archived ? {
-      $set: {
-        project_archived: true
-      }
-    } : {
-      $unset: {
-        project_archived: 1
-      }
-    };
-    return db.task.update({
-      project_id: req.project._id,
-    }, update, {
-      multi: true
-    });
-  })
-  .then(() => {
-    logProject(req, archived ? C.ACTIVITY_ACTION.ARCHIVED : C.ACTIVITY_ACTION.UN_ARCHIVED, {
-      field: {
-        is_archived: archived
-      }
-    });
-  })
-  .catch(next);
+    archiveProject(req, res, next, archived);
+  }).catch(next);
 });
 
 api.post('/:project_id/tag', (req, res, next) => {
@@ -671,6 +624,42 @@ api.get('/:project_id/statistics', (req, res, next) => {
   .catch(next);
 });
 
+function archiveProject(req, res, next, archived) {
+  db.project.update({
+    _id: req.project._id,
+    company_id: req.company._id,
+  }, {
+    $set: {
+      is_archived: archived
+    }
+  })
+  .then(() => {
+    res.json({});
+    let update = archived ? {
+      $set: {
+        project_archived: true
+      }
+    } : {
+      $unset: {
+        project_archived: 1
+      }
+    };
+    return db.task.update({
+      project_id: req.project._id,
+    }, update, {
+      multi: true
+    });
+  })
+  .then(() => {
+    logProject(req, archived ? C.ACTIVITY_ACTION.ARCHIVED : C.ACTIVITY_ACTION.UN_ARCHIVED, {
+      field: {
+        is_archived: archived
+      }
+    });
+  })
+  .catch(next);
+}
+
 function logProject(req, action, data) {
   let info = {
     action: action,
@@ -781,6 +770,34 @@ function fetchFilesUnderDir(dir, files) {
     return fetchFilesUnderDir(dirs, files);
   })
   .then(files => files);
+}
+
+function recordUserRecentProjects(req) {
+  db.user.findOne({
+    _id: req.user._id,
+    'recent.projects.project_id': req.project._id,
+  }).then(doc => {
+    if(!doc) {
+      return db.user.update({
+        _id: req.user._id
+      }, {
+        $push: {
+          'recent.projects': {
+            project_id: req.project._id,
+            date: new Date()
+          }
+        }
+      });
+    }
+    db.user.update({
+      _id: req.user._id,
+      'recent.projects.project_id': req.project._id,
+    }, {
+      $set: {
+        'recent.projects.$.date': new Date()
+      }
+    });
+  });
 }
 
 api.use('/:project_id/task', require('./task').default);
