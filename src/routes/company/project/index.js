@@ -115,7 +115,7 @@ api.get('/:project_id', (req, res, next) => {
       'frequentProject.project_id': req.project._id,
     }).then(doc => {
       if(!doc) {
-        db.user.update({
+        return db.user.update({
           _id: req.user._id
         }, {
           $addToSet: {
