@@ -55,6 +55,9 @@
   // relations
   companies: [ObjectId...],
   projects: [ObjectId...],
+  recent: {
+    projects: Array,
+  },
   activiated: Boolean,
 }
 ```
