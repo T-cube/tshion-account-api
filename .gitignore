@@ -30,7 +30,7 @@ node_modules
 config/local.*
 
 # Application runtime
-app
+/app
 runtime
 
 # User upload files

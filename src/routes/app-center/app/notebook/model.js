@@ -1,9 +1,10 @@
 import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
-import Base from '../base';
+import Base from '../../base';
 
 
 export default class Notebook extends Base {
+
   constructor() {
     super();
   }

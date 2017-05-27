@@ -12,4 +12,46 @@ query:
   tag_id: <String>,  
 }
 ```
- 
+
+### 添加tag
+
+query:
+
+target=tag
+
+body:
+```javascript
+{
+  tag_name: <String>
+}
+```
+
+### 添加notebook
+
+query:
+
+target=notebook
+
+body:
+```javascript
+{
+  notebook_name: <String>
+}
+```
+
+### 添加note
+
+query:
+
+target=note
+
+body:
+```javascript
+{
+  title,
+  content,
+  tags,
+  notebook,
+  shared
+}
+```

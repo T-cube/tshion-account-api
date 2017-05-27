@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
 import Promise from 'bluebird';
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
+import { mapObjectIdToData } from 'lib/utils'
 
 
 let api = express.Router();
@@ -229,89 +230,50 @@ api.post('/app/:app_id/:user_id/comments/create', (req, res, next) => {
 });
 
 api.get('/app/test', (req, res, next) => {
-  db.company.find({
-    projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}
-  }).then(doc => {
-    res.json(doc);
+  db.user.findOne({_id: ObjectId('58aaab6003312409f04e128f')}, {frequentProject:1}).then(doc => {
+    // let a = mapObjectIdToData(_.map(_.sortBy(doc.frequentProject, item => {
+    //   return -item.date
+    // }).slice(0, 4), project => {
+    //   return project.project_id
+    // }), 'project');
+    let c = _.sortBy(doc.frequentProject, item => -item.date).slice(0, 4).map(project => {
+      return project.project_id;
+    });
+    mapObjectIdToData(c, 'project').then(() => {
+      res.json(c);
+    });
   });
-  db.company.aggregate([
-    {$match: {owner:ObjectId('574f087d6a400ffd0f40d0fb')}},
-    {$project: {
-      // name:0,
-      totalProjects: { $size: '$projects'},
-      inproject: {
-        $in: [ObjectId('574f85066a400ffd0f40d131'), '$projects']
-      },
-    }}
-  ]).then(list => {
-    res.json(list);
-    // Promise.map(list, item => {
-    //   return db.company.count({_id: item._id, projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}}).then(doc => {
-    //     item.hasProject = doc;
-    //     return item;
-    //   })
-    // }).then(list => {
-    //   res.json(list);
-    // });
-    // return db.company.count({_id:ObjectId('574f84726a400ffd0f40d121'),projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}}).then(doc => {
-    //   console.log(doc);
-    //   res.json(list);
-    // });
-  });
+  // db.company.find({
+  //   projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}
+  // }).then(doc => {
+  //   res.json(doc);
+  // });
+  // db.company.aggregate([
+  //   {$match: {owner:ObjectId('574f087d6a400ffd0f40d0fb')}},
+  //   {$project: {
+  //     // name:0,
+  //     totalProjects: { $size: '$projects'},
+  //     inproject: {
+  //       $in: [ObjectId('574f85066a400ffd0f40d131'), '$projects']
+  //     },
+  //   }}
+  // ]).then(list => {
+  //   res.json(list);
+  //   // Promise.map(list, item => {
+  //   //   return db.company.count({_id: item._id, projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}}).then(doc => {
+  //   //     item.hasProject = doc;
+  //   //     return item;
+  //   //   })
+  //   // }).then(list => {
+  //   //   res.json(list);
+  //   // });
+  //   // return db.company.count({_id:ObjectId('574f84726a400ffd0f40d121'),projects: {$in: [ObjectId('574f85066a400ffd0f40d131')]}}).then(doc => {
+  //   //   console.log(doc);
+  //   //   res.json(list);
+  //   // });
+  // });
 });
 
-// api.get('/app', (req, res, next) => {
-//   // validate('appRequest', req.query);
-//   let { app_id, company_id, user_id } = req.query;
-//   let { type, operation } = req.body;
-//   db.app.findOne({_id: ObjectId(app_id)}).then(doc => {
-//     return selectModel(doc.model, {company_id, user_id}).routeOperation({type, operation}).then(result =>
-//       res.json(result)
-//     ).catch(next);
-//   }).catch(next);
-// });
-//
-// api.post('/app', (req, res, next) => {
-//   // validate('appRequest', req.query);
-//   let { app_id, company_id, user_id } = req.query;
-//   let { type, operation } = req.body;
-//   db.app.findOne({_id: app_id}).then(doc => {
-//     return selectModel(doc.model, {company_id, user_id}).routeOperation({type, operation}).then(result =>
-//       res.json(result)
-//     ).catch(next);
-//   }).catch(next);
-// });
-//
-// api.delete('/app', (req, res, next) => {
-//   // validate('appRequest', req.query);
-//   let { app_id, company_id, user_id } = req.query;
-//   let { type, operation } = req.body;
-//   db.app.findOne({_id: ObjectId(app_id)}).then(doc => {
-//     return selectModel(doc.model, {company_id, user_id}).routeOperation({type, operation}).then(result =>
-//       res.json(result)
-//     ).catch(next);
-//   }).catch(next);
-// });
-//
-// api.put('/app', (req, res, next) => {
-//   // validate('appRequest', req.query);
-//   let { app_id, company_id, user_id } = req.query;
-//   let { type, operation } = req.body;
-//   db.app.findOne({_id: ObjectId(app_id)}).then(doc => {
-//     return selectModel(doc.model, {company_id, user_id}).routeOperation({type, operation}).then(result =>
-//       res.json(result)
-//     ).catch(next);
-//   }).catch(next);
-// });
-//
-// function selectModel(model, props) {
-//   switch (model) {
-//   case 'notebook':
-//     return Notebook;
-//   default:
-//     throw new ApiError('400', 'invalid_model');
-//   }
-// }
 
 /**
  * query string
@@ -323,16 +285,40 @@ api.get('/app/test', (req, res, next) => {
  *
  */
 
-// function targetError() {
-//   throw new ApiError('400', 'query_target_error');
-// }
 
-api.use('/app/notebook/', (req, res, next) => {
-  // _.indexOf(['user', 'tag', 'note', 'like', 'notebook', 'shared', 'comment', 'note', 'noteAddTag', 'noteDeleteTag', 'noteShare'], req.query.target) || targetError();
-  validate('appRequest', req.query);
-  req.url = '/' + req.query.target;
-  // db.app.findOne({_id: req.query.app_id}).then(doc => {
-  //   if (!doc) throw new ApiError('400', 'invalid_app');
-  // });
-  next();
-}, require('./app-notebook').default);
+import fs from 'fs';
+
+const appInstances = {};
+
+function loadAppInstance(appName) {
+  if (!appInstances[appName]) {
+    const modelPath = `${__dirname}/app/${appName}/model`;
+    const AppClass = require(modelPath).default;
+    appInstances[appName] = new AppClass();
+  }
+  return appInstances[appName];
+}
+
+fs.readdir(__dirname + '/app', (err, result) => {
+  _.each(result, appName => {
+    console.log(`app ${appName} starting...`);
+    const apiRoute = `/app/${appName}`;
+    const appDir = __dirname + apiRoute;
+    api.use(apiRoute, (req, res, next) => {
+      req._app = loadAppInstance(appName);
+      validate('appRequest', req.query);
+      req.url = '/' + req.query.target;
+      next();
+    }, require(appDir).default);
+    console.log(`app ${appName} loaded.`);
+    console.log('--------------------------------------------------------------------------------');
+  });
+});
+
+// api.use('/app/notebook/', (req, res, next) => {
+//   // _.indexOf(['user', 'tag', 'note', 'like', 'notebook', 'shared', 'comment', 'note', 'noteAddTag', 'noteDeleteTag', 'noteShare'], req.query.target) || targetError();
+//   // db.app.findOne({_id: req.query.app_id}).then(doc => {
+//   //   if (!doc) throw new ApiError('400', 'invalid_app');
+//   // });
+//   next();
+// }, require('./app-notebook').default);

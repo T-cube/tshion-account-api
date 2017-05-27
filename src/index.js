@@ -50,7 +50,6 @@ import Payment from 'models/plan/payment';
 import C from 'lib/constants';
 import Captcha from 'lib/captcha';
 import Broadcast from 'models/broadcast';
-import Notebook from 'routes/app-center/app-notebook/notebook';
 import rpc from '@ym/rpc';
 
 // welcome messages and output corre config
@@ -98,7 +97,6 @@ app.loadModel('document', Document);
 app.loadModel('wechat-util', WechatUtil);
 app.loadModel('notification-setting', NotificationSetting);
 app.loadModel('broadcast', Broadcast);
-app.loadModel('notebook', Notebook);
 
 // load services;
 app.loadModel('schedule', ScheduleServer);
