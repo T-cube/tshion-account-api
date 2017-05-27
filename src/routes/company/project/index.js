@@ -110,31 +110,7 @@ api.get('/:project_id', (req, res, next) => {
   fetchCompanyMemberInfo(req.company, data, 'owner')
   .then(data => {
     res.json(data);
-    db.user.findOne({
-      _id: req.user._id,
-      'recent.projects.project_id': req.project._id,
-    }).then(doc => {
-      if(!doc) {
-        return db.user.update({
-          _id: req.user._id
-        }, {
-          $push: {
-            'recent.projects': {
-              project_id: req.project._id,
-              date: new Date()
-            }
-          }
-        });
-      }
-      db.user.update({
-        _id: req.user._id,
-        'recent.projects.project_id': req.project._id,
-      }, {
-        $set: {
-          'recent.projects.$.date': new Date()
-        }
-      });
-    });
+    recordUserRecentProjects(req);
   })
   .catch(next);
 });
@@ -794,6 +770,34 @@ function fetchFilesUnderDir(dir, files) {
     return fetchFilesUnderDir(dirs, files);
   })
   .then(files => files);
+}
+
+function recordUserRecentProjects(req) {
+  db.user.findOne({
+    _id: req.user._id,
+    'recent.projects.project_id': req.project._id,
+  }).then(doc => {
+    if(!doc) {
+      return db.user.update({
+        _id: req.user._id
+      }, {
+        $push: {
+          'recent.projects': {
+            project_id: req.project._id,
+            date: new Date()
+          }
+        }
+      });
+    }
+    db.user.update({
+      _id: req.user._id,
+      'recent.projects.project_id': req.project._id,
+    }, {
+      $set: {
+        'recent.projects.$.date': new Date()
+      }
+    });
+  });
 }
 
 api.use('/:project_id/task', require('./task').default);
