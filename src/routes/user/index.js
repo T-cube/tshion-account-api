@@ -9,7 +9,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import { upload, saveCdn, cropAvatar } from 'lib/upload';
-import { maskEmail, maskMobile } from 'lib/utils';
+import { maskEmail, maskMobile, mapObjectIdToData } from 'lib/utils';
 import UserLevel from 'models/user-level';
 import Realname from 'models/plan/realname';
 
@@ -66,6 +66,22 @@ api.get('/info', (req, res, next) => {
     });
   })
   .catch(next);
+});
+
+api.get('/frequent/project', (req, res, next) => {
+  db.user.findOne({_id: req.user._id}, {frequentProject: 1}).then(doc => {
+    if (!doc.frequentProject || !doc.frequentProject.length) {
+      return db.user.findOne({_id: req.user._id}, {projects: 1}).then(doc => {
+        mapObjectIdToData(doc.projects.slice(-4), 'project').then(projects => {
+          res.json(projects);
+        });
+      });
+    }
+    let projects = _.sortBy(doc.frequentProject, item => -item.date).slice(0, 4).map(project => project.project_id);
+    mapObjectIdToData(projects, 'project').then(() => {
+      res.json(projects);
+    });
+  }).catch(next);
 });
 
 api.put('/info', (req, res, next) => {

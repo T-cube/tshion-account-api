@@ -108,7 +108,34 @@ api.get('/:project_id', (req, res, next) => {
   let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
   fetchCompanyMemberInfo(req.company, data, 'owner')
-  .then(data => res.json(data))
+  .then(data => {
+    res.json(data);
+    db.user.findOne({
+      _id: req.user._id,
+      'frequentProject.project_id': req.project._id,
+    }).then(doc => {
+      if(!doc) {
+        db.user.update({
+          _id: req.user._id
+        }, {
+          $addToSet: {
+            frequentProject: {
+              project_id: req.project._id,
+              date: new Date()
+            }
+          }
+        });
+      }
+      db.user.update({
+        _id: req.user._id,
+        'frequentProject.project_id': req.project._id,
+      }, {
+        $set: {
+          'frequentProject.$.date': new Date()
+        }
+      });
+    });
+  })
   .catch(next);
 });
 
