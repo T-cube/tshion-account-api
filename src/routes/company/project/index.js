@@ -112,14 +112,14 @@ api.get('/:project_id', (req, res, next) => {
     res.json(data);
     db.user.findOne({
       _id: req.user._id,
-      'frequentProject.project_id': req.project._id,
+      'recent.projects.project_id': req.project._id,
     }).then(doc => {
       if(!doc) {
         return db.user.update({
           _id: req.user._id
         }, {
-          $addToSet: {
-            frequentProject: {
+          $push: {
+            'recent.projects': {
               project_id: req.project._id,
               date: new Date()
             }
@@ -128,10 +128,10 @@ api.get('/:project_id', (req, res, next) => {
       }
       db.user.update({
         _id: req.user._id,
-        'frequentProject.project_id': req.project._id,
+        'recent.projects.project_id': req.project._id,
       }, {
         $set: {
-          'frequentProject.$.date': new Date()
+          'recent.projects.$.date': new Date()
         }
       });
     });

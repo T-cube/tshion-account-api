@@ -68,16 +68,16 @@ api.get('/info', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/frequent/project', (req, res, next) => {
-  db.user.findOne({_id: req.user._id}, {frequentProject: 1}).then(doc => {
-    if (!doc.frequentProject || !doc.frequentProject.length) {
+api.get('/recent/projects', (req, res, next) => {
+  db.user.findOne({_id: req.user._id}, {'recent.projects': 1}).then(doc => {
+    if (!doc.recent || !doc.recent.projects || !doc.recent.projects.length) {
       return db.user.findOne({_id: req.user._id}, {projects: 1}).then(doc => {
         mapObjectIdToData(doc.projects.slice(-4), 'project').then(projects => {
           res.json(projects);
         });
       });
     }
-    let projects = _.sortBy(doc.frequentProject, item => -item.date).slice(0, 4).map(project => project.project_id);
+    let projects = _.sortBy(doc.recent.projects, item => -item.date).slice(0, 4).map(project => project.project_id);
     mapObjectIdToData(projects, 'project').then(() => {
       res.json(projects);
     });
