@@ -12,7 +12,7 @@ import Structure from 'models/structure';
 import Approval from 'models/approval';
 import { checkUserType } from '../utils';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {

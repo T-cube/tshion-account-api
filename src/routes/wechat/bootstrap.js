@@ -3,7 +3,7 @@ import wechat from 'wechat';
 import config from 'config';
 import db from 'lib/database';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 const wechatConfig = {

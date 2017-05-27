@@ -11,7 +11,7 @@ import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import { sanitizeValidateObject } from 'lib/inspector';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get('/info', oauthCheck(), (req, res, next) => {

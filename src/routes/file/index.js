@@ -13,7 +13,7 @@ import ApprovalFlow from 'models/approval-flow';
 import Attendance from 'models/attendance';
 import Structure from 'models/structure';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 function getFileInfo(fileId, token) {

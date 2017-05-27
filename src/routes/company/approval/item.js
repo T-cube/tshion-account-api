@@ -27,7 +27,7 @@ import {
   APPROVAL_ITEM_RESULT,
 } from 'models/notification-setting';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.post('/',

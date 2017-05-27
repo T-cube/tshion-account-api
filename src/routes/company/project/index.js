@@ -23,7 +23,7 @@ import CompanyLevel from 'models/company-level';
 
 
 /* company collection */
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {

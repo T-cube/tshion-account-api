@@ -10,7 +10,7 @@ import db from 'lib/database';
 import C from 'lib/constants';
 import PlanOrder from 'models/plan/plan-order';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(express.query());

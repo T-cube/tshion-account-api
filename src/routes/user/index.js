@@ -39,7 +39,7 @@ const BASIC_FIELDS = {
 };
 
 /* users collection */
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());

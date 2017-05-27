@@ -7,7 +7,7 @@ import corsHandler from 'lib/cors';
 import Notification from 'models/notification';
 import Activity from 'models/activity';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(corsHandler);

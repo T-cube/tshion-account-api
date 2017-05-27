@@ -10,7 +10,7 @@ import Plan from 'models/plan/plan';
 import PlanProduct from 'models/plan/plan-product';
 import { checkUserType } from '../utils';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 const checkOwner = checkUserType(C.COMPANY_MEMBER_TYPE.OWNER);

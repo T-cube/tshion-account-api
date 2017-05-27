@@ -7,7 +7,7 @@ import { oauthCheck } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { readSanitization, readValidation } from './schema';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());

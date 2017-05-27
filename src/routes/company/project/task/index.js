@@ -16,7 +16,7 @@ import {
 } from 'models/notification-setting';
 import { validate } from './schema';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
