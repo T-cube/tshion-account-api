@@ -29,37 +29,42 @@ if (!program.collection) {
 let collectionName = program.collection;
 let schema = {};
 switch (collectionName) {
-case 'user':
-  schema = {
-    field: 'avatar',
-    collection: DB.user,
-    bucket: 'cdn-public',
-  };
-  break;
-case 'company':
-  schema = {
-    field: 'logo',
-    collection: DB.company,
-    bucket: 'cdn-public',
-  };
-  break;
-case 'project':
-  schema = {
-    field: 'logo',
-    collection: DB.project,
-    bucket: 'cdn-public',
-  };
-  break;
-case 'document.file':
-  schema = {
-    field: 'url',
-    collection: DB.document.file,
-    bucket: 'cdn-file',
-  };
-  break;
-default:
-  console.error('ERROR: invalid collection name');
-  process.exit(1);
+  case 'user': {
+    schema = {
+      field: 'avatar',
+      collection: DB.user,
+      bucket: 'cdn-public',
+    };
+    break;
+  }
+  case 'company': {
+    schema = {
+      field: 'logo',
+      collection: DB.company,
+      bucket: 'cdn-public',
+    };
+    break;
+  }
+  case 'project': {
+    schema = {
+      field: 'logo',
+      collection: DB.project,
+      bucket: 'cdn-public',
+    };
+    break;
+  }
+  case 'document.file': {
+    schema = {
+      field: 'url',
+      collection: DB.document.file,
+      bucket: 'cdn-file',
+    };
+    break;
+  }
+  default: {
+    console.error('ERROR: invalid collection name');
+    process.exit(1);
+  }
 }
 console.log('processing collection: "%s"\n', collectionName);
 

@@ -182,21 +182,21 @@ function generateApprovalFileName({type, query}, tplName) {
   };
   let pageTxt;
   switch (query.export_count) {
-  case 'this_month':
-    pageTxt = (datetime.month() + 1) + '月';
-    break;
-  case 'last_month':
-    pageTxt = datetime.month() + '月';
-    break;
-  case 'all':
-    pageTxt = '全部';
-    break;
-  case 'page':
-    query.page = query.page || 1;
-    pageTxt = `第${query.page}页`;
-    break;
-  default:
-    pageTxt = '';
+    case 'this_month':
+      pageTxt = (datetime.month() + 1) + '月';
+      break;
+    case 'last_month':
+      pageTxt = datetime.month() + '月';
+      break;
+    case 'all':
+      pageTxt = '全部';
+      break;
+    case 'page':
+      query.page = query.page || 1;
+      pageTxt = `第${query.page}页`;
+      break;
+    default:
+      pageTxt = '';
   }
   datetime = datetime.format('M月D日');
   let filename = `审批-${typeTxt[type]}-${tplName}-${pageTxt}-${datetime}导出.csv`;

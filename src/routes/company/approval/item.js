@@ -277,8 +277,8 @@ function doAfterApproval(item, status) {
     return;
   }
   switch (item.for) {
-  case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
-    return updateAttendance(item, status);
+    case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
+      return updateAttendance(item, status);
   }
   return;
 }

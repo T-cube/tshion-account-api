@@ -247,15 +247,15 @@ api.put('/:task_id/status', (req, res, next) => {
   .then(() => {
     res.json(data);
     switch (data.status) {
-    case C.TASK_STATUS.COMPLETED:
-      logTask(req, C.ACTIVITY_ACTION.COMPLETE);
-      break;
-    case C.TASK_STATUS.PROCESSING:
-      logTask(req, C.ACTIVITY_ACTION.REOPEN);
-      break;
-    case C.TASK_STATUS.CHECKING:
-      logTask(req, C.ACTIVITY_ACTION.REOPEN); // TODO
-      break;
+      case C.TASK_STATUS.COMPLETED:
+        logTask(req, C.ACTIVITY_ACTION.COMPLETE);
+        break;
+      case C.TASK_STATUS.PROCESSING:
+        logTask(req, C.ACTIVITY_ACTION.REOPEN);
+        break;
+      case C.TASK_STATUS.CHECKING:
+        logTask(req, C.ACTIVITY_ACTION.REOPEN); // TODO
+        break;
     }
   })
   .catch(next);

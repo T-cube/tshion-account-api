@@ -27,20 +27,20 @@ export default class OrderFactory {
       };
       let orderModel;
       switch (order_type) {
-      case C.ORDER_TYPE.NEWLY:
-        orderModel = new NewlyOrder(props);
-        break;
-      case C.ORDER_TYPE.UPGRADE:
-        orderModel = new UpgradeOrder(props);
-        break;
-      case C.ORDER_TYPE.DEGRADE:
-        orderModel = new DegradeOrder(props);
-        break;
-      case C.ORDER_TYPE.RENEWAL:
-        orderModel = new RenewalOrder(props);
-        break;
-      default:
-        throw new Error('invalid_order_type');
+        case C.ORDER_TYPE.NEWLY:
+          orderModel = new NewlyOrder(props);
+          break;
+        case C.ORDER_TYPE.UPGRADE:
+          orderModel = new UpgradeOrder(props);
+          break;
+        case C.ORDER_TYPE.DEGRADE:
+          orderModel = new DegradeOrder(props);
+          break;
+        case C.ORDER_TYPE.RENEWAL:
+          orderModel = new RenewalOrder(props);
+          break;
+        default:
+          throw new Error('invalid_order_type');
       }
       return orderModel.init({plan, member_count, serial_no, times})
       .then(() => {

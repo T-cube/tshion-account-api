@@ -159,12 +159,12 @@ export default class Payment {
   query(payment_method, props) {
     let promise;
     switch (payment_method) {
-    case 'wxpay':
-      promise = this.queryWechatOrder(props.out_trade_no);
-      break;
-    case 'alipay':
-      promise = this.queryAlipayOrder(props.out_trade_no);
-      break;
+      case 'wxpay':
+        promise = this.queryWechatOrder(props.out_trade_no);
+        break;
+      case 'alipay':
+        promise = this.queryAlipayOrder(props.out_trade_no);
+        break;
     }
     return promise.then(({ok, payment_query}) => {
       if (!payment_query || !ok) {

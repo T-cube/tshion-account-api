@@ -20,7 +20,8 @@
     ],
     "indent": [
       "error",
-      2
+      2,
+      { "SwitchCase": 1 }
     ],
     "linebreak-style": [
       "error",
@@ -37,7 +38,7 @@
     "comma-dangle": [
       "warn",
       "only-multiline"
-    ]
-
+    ],
+    "react/jsx-uses-vars": 1
   }
 }
