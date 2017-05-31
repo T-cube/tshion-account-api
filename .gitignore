@@ -37,6 +37,9 @@ runtime
 public/cdn/upload
 public/cdn/resource/qrcode
 
+# appliaction temp pic storage
+application
+
 # temp
 temp/*
 

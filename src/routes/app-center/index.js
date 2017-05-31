@@ -1,9 +1,11 @@
+import fs from 'fs';
 import express from 'express';
 import db from 'lib/database';
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
+import path from 'path';
 
 
 let api = express.Router();
@@ -206,7 +208,16 @@ api.post('/app/:app_id/:user_id/comments/create', (req, res, next) => {
   });
 });
 
-
+api.get('/app/pic', (req, res, next) => {
+  let dir = path.normalize(`${__dirname}/../../../public/cdn` + req.query.path);
+  fs.readFile(dir, (err, data) => {
+    if (err) {
+      return next(new ApiError('400', 'no_such_directory'));
+    }
+    res.set('Content-Type', 'image/png');
+    res.status(200).send(data);
+  });
+});
 
 /**
  * query string
@@ -217,9 +228,6 @@ api.post('/app/:app_id/:user_id/comments/create', (req, res, next) => {
  * @param {ObjectId} tag_id optional
  *
  */
-
-
-import fs from 'fs';
 
 const appInstances = {};
 
