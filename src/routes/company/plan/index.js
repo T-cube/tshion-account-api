@@ -44,7 +44,11 @@ api.get('/status', (req, res, next) => {
     return PlanProduct.init({plan, member_count})
     .then(planProduct => {
       info.fee_monthly = planProduct.getTotalFee();
-      return res.json(info);
+      return db.plan.auth.findOne({company_id: info.company_id}, {data:1}).then(doc => {
+        info.location = doc.data[0].info.enterprise.location;
+        info.industry = doc.data[0].info.enterprise.industry;
+        res.json(info);
+      });
     });
   })
   .catch(next);
