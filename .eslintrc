@@ -5,7 +5,11 @@
   },
   "extends": "eslint:recommended",
   "parserOptions": {
-    "sourceType": "module"
+    "sourceType": "module",
+    "ecmaVersion": 6,
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    }
   },
   "globals": {
     "__": true
@@ -38,7 +42,6 @@
     "comma-dangle": [
       "warn",
       "only-multiline"
-    ],
-    "react/jsx-uses-vars": 1
+    ]
   }
 }

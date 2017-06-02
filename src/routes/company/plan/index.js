@@ -44,10 +44,38 @@ api.get('/status', (req, res, next) => {
     return PlanProduct.init({plan, member_count})
     .then(planProduct => {
       info.fee_monthly = planProduct.getTotalFee();
-      return db.plan.auth.findOne({company_id: info.company_id}, {data:1}).then(doc => {
-        info.location = doc.data[0].info.enterprise.location;
-        info.industry = doc.data[0].info.enterprise.industry;
-        res.json(info);
+      return db.plan.auth.findOne({
+        company_id: info.company_id,
+        status: C.AUTH_STATUS.ACCEPTED,
+        'data.status': C.AUTH_STATUS.ACCEPTED,
+      }, {
+        'plan': 1,
+        'data.$.info': 1,
+      }).then(doc => {
+        if (!doc) {
+          throw new ApiError(500, 'invalid_data');
+        }
+        let field;
+        switch (doc.plan) {
+          case C.TEAMPLAN.PRO: {
+            field = 'team';
+            break;
+          }
+          case C.TEAMPLAN.ENT: {
+            field = 'enterprise';
+            break;
+          }
+          default:
+            throw new ApiError(500, 'invalid_data');
+        }
+        if (!doc.data[0] || !doc.data[0].info[field]) {
+          throw new ApiError(500, 'invalid_data');
+        }
+        const data = doc.data[0].info[field];
+        res.json({
+          ...info,
+          ..._.pick(data, 'location', 'industry'),
+        });
       });
     });
   })
