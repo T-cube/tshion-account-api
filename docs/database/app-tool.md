@@ -113,7 +113,8 @@ db.company.app.update({
   app_id: ObjectId,
   options: {
     showDirection: Boolean, //true
-    timeout: Number, //3000    
+    timeout: Number, //3000
+    requirement: String,        
   }
 }
 ```

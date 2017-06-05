@@ -52,7 +52,6 @@ api.get('/app/all', (req, res, next) => {
 });
 
 api.get('/company/:company_id/app/list', (req, res, next) => {
-  let app_id = ObjectId(req.params.app_id);
   let company_id = ObjectId(req.params.company_id);
   db.company.app.findOne({company_id}).then(doc => {
     if (!doc) {
@@ -72,7 +71,7 @@ api.get('/company/:company_id/operator/:user_id/app/:app_id/add', (req, res, nex
   let company_id = ObjectId(req.params.company_id);
   let user_id = ObjectId(req.params.user_id);
   db.company.findOne({_id: company_id}).then(doc => {
-    if (doc.owner != user_id) throw new ApiError('400', 'permisson_dined');
+    if (doc.owner != user_id) next(new ApiError('400', 'permisson_dined'));
     db.company.app.findOne({company_id}).then(doc => {
       if (!doc) {
         return db.company.app.insert({

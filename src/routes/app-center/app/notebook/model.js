@@ -122,7 +122,7 @@ export default class Notebook extends Base {
       user_id,
       company_id,
     }, {
-      $push: { tags: { name: tag_name, _id: ObjectId } }
+      $push: { tags: { name: tag_name, _id: ObjectId() } }
     });
   }
 
@@ -131,7 +131,7 @@ export default class Notebook extends Base {
       user_id,
       company_id,
     }, {
-      $push: { notebooks: { name: notebook_name, _id: ObjectId} }
+      $push: { notebooks: { name: notebook_name, _id: ObjectId()} }
     });
   }
 
