@@ -2,24 +2,14 @@
 
 ## 挂载点 /app-center/app/notebook
 
-query:
-```javascript
-{
-  target: <String>, // ['user', 'tag', 'note', 'like', 'notebook', 'shared', 'comment', 'note', 'noteAddTag', 'noteDeleteTag', 'noteShare']
-  user_id: <String>,
-  company_id: <String>,
-  note_id: <String>, //optional
-  tag_id: <String>,  //optional
-}
-```
 
 ### GET /user 获取用户笔记信息
 
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 
@@ -28,9 +18,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  tag_id: <String>
+  company_id: ObjectId,
+  app_id: ObjectId,
+  tag_id: ObjectId
 }
 ```
 
@@ -39,9 +29,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  note_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
+  note_id: ObjectId,
 }
 ```
 
@@ -50,9 +40,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  notebook_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
+  notebook_id: ObjectId,
 }
 ```
 
@@ -61,8 +51,8 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 
@@ -71,9 +61,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  note_id: <String>,  
+  company_id: ObjectId,
+  app_id: ObjectId,
+  note_id: ObjectId,  
 }
 ```
 
@@ -83,8 +73,8 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 body:
@@ -99,8 +89,8 @@ body:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 body:
@@ -115,8 +105,8 @@ body:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 body:
@@ -135,14 +125,14 @@ body:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 body:
 ```javascript
 {
-  note_id: <String>,
+  note_id: ObjectId,
   content: <String>
 }
 ```
@@ -152,9 +142,9 @@ body:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  note_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
+  note_id: ObjectId,
 }
 ```
 
@@ -163,9 +153,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  tag_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
+  tag_id: ObjectId,
 }
 ```
 
@@ -174,9 +164,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  notebook_id: <String>,  
+  company_id: ObjectId,
+  app_id: ObjectId,
+  notebook_id: ObjectId,  
 }
 ```
 
@@ -185,9 +175,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  note_id: <String>,  
+  company_id: ObjectId,
+  app_id: ObjectId,
+  note_id: ObjectId,  
 }
 ```
 
@@ -196,9 +186,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  note_id: <String>,  
+  company_id: ObjectId,
+  app_id: ObjectId,
+  note_id: ObjectId,  
 }
 ```
 
@@ -207,15 +197,15 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 body:
 ```javascript
 {
   tag_name: <String>,
-  tag_id: <String>
+  tag_id: ObjectId
 }
 ```
 
@@ -224,15 +214,15 @@ body:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 body:
 ```javascript
 {
   notebook_name: <String>,
-  notebook_id: <String>
+  notebook_id: ObjectId
 }
 ```
 
@@ -241,8 +231,8 @@ body:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
 }
 ```
 body:
@@ -250,7 +240,7 @@ body:
 {
   title: <String>,
   content: <String>,
-  note_id: <String>
+  note_id: ObjectId
 }
 ```
 
@@ -259,10 +249,10 @@ body:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  tag_id: <String>,
-  note_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
+  tag_id: ObjectId,
+  note_id: ObjectId,
 }
 ```
 
@@ -271,10 +261,10 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  tag_id: <String>,
-  note_id: <String>,
+  company_id: ObjectId,
+  app_id: ObjectId,
+  tag_id: ObjectId,
+  note_id: ObjectId,
 }
 ```
 
@@ -283,14 +273,9 @@ query:
 query:
 ```javascript
 {
-  company_id: <String>,
-  app_id: <String>,
-  note_id: <String>,
-}
-```
-body:
-```javascript
-{
+  company_id: ObjectId,
+  app_id: ObjectId,
+  note_id: ObjectId,
   shared: <Boolean>,
 }
 ```

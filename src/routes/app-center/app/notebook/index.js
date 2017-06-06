@@ -156,9 +156,8 @@ api.put('/note/delete/tag', (req, res, next) => {
 });
 
 api.put('/note/shared', (req, res, next) => {
-  req.query.note_id || requestError();
-  let { shared } = req.body;
-  req._app.noteShare({user_id: req.user._id, company_id: req.query.company_id, note_id: req.query.note_id}, shared).then(doc => {
+  req.query.note_id && req.query.shared || requestError();
+  req._app.noteShare({user_id: req.user._id, company_id: req.query.company_id, note_id: req.query.note_id}, req.queyr.shared).then(doc => {
     res.json(doc);
   }).catch(next);
 });
