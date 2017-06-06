@@ -124,8 +124,8 @@ body:
 {
   title: <String>,
   content: <String>,
-  tags:[],
-  notebook:<String>,
+  tags:[ObjectId],
+  notebook:ObjectId,
   shared: <Boolean>
 }
 ```
