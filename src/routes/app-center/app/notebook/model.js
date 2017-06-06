@@ -1,6 +1,7 @@
 import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import Base from '../../base';
+import _ from 'underscore';
 
 
 export default class Notebook extends Base {
@@ -95,7 +96,6 @@ export default class Notebook extends Base {
   sharedQuery({user_id, company_id}) {
     return this.collection('note').aggregate([
       { $match: {
-        user_id,
         company_id,
         shared: true
       }},
@@ -137,6 +137,10 @@ export default class Notebook extends Base {
 
   noteAdd({user_id, company_id, note}) {
     let { title, content, tags, notebook, shared } = note;
+    _.map(tags, tag => {
+      return ObjectId(tag);
+    });
+    notebook = ObjectId(notebook);
     return this.collection('note').insert({
       company_id,
       user_id,

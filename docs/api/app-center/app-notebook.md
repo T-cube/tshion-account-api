@@ -1,6 +1,6 @@
 # APP notebook API 文档
 
-## request /app-center/app/notebook
+## 挂载点 /app-center/app/notebook
 
 query:
 ```javascript
@@ -13,54 +13,80 @@ query:
 }
 ```
 
-### GET 获取用户笔记信息
+### GET /user 获取用户笔记信息
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
 
-target=user
-
-
-### GET 获取指定tag_id的所有笔记
-
-query:
-
-tag_id
-target=tag
-
-### GET 获取指定note_id的笔记
+### GET /tag 获取指定tag_id的所有笔记
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  tag_id: <String>
+}
+```
 
-note_id
-target=note
-
-### GET 获取指定notebook_id的笔记
-
-query:
-
-notebook_id
-target=notebook
-
-### GET 获取所有分享笔记
+### GET /note 获取指定note_id的笔记
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  note_id: <String>,
+}
+```
 
-target=shared
-
-### GET 获取指定note_id的所有评论
-
-query:
-
-note_id
-target=comment
-
-
-### POST 添加tag
+### GET /notebook 获取指定notebook_id的笔记
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  notebook_id: <String>,
+}
+```
 
-target=tag
+### GET /shared 获取团队内所有分享笔记
 
+query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
+
+### GET /comment 获取指定note_id的所有评论
+
+query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  note_id: <String>,  
+}
+```
+
+
+### POST /tag 添加tag
+
+query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
 body:
 ```javascript
 {
@@ -68,12 +94,15 @@ body:
 }
 ```
 
-### POST 添加notebook
+### POST /notebook 添加notebook
 
 query:
-
-target=notebook
-
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
 body:
 ```javascript
 {
@@ -81,29 +110,35 @@ body:
 }
 ```
 
-### POST 添加note
+### POST /note 添加note
 
 query:
-
-target=note
-
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
 body:
 ```javascript
 {
   title: <String>,
   content: <String>,
   tags:[],
-  notebook:[],
+  notebook:<String>,
   shared: <Boolean>
 }
 ```
 
-### POST 添加评论
+### POST /comment 添加评论
 
 query:
-
-target=comment
-
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
 body:
 ```javascript
 {
@@ -112,47 +147,70 @@ body:
 }
 ```
 
-### POST 点赞笔记
+### POST /like 点赞笔记
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  note_id: <String>,
+}
+```
 
-note_id
-target=like
-
-### DELETE 删除标签
-
-query:
-
-tag_id
-target=tag
-
-### DELETE 删除笔记本（同时删除笔记本中所有笔记）
+### DELETE /tag 删除标签
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  tag_id: <String>,
+}
+```
 
-note_id
-target=notebook
-
-### DELETE 删除笔记
-
-query：
-
-note_id
-target=note
-
-### DELETE 取消点赞
+### DELETE /notebook 删除笔记本（同时删除笔记本中所有笔记）
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  notebook_id: <String>,  
+}
+```
 
-note_id
-target=like
-
-### PUT 更改指定标签的标签名
+### DELETE /note 删除笔记
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  note_id: <String>,  
+}
+```
 
-target=tag
+### DELETE /like 取消点赞
 
+query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  note_id: <String>,  
+}
+```
+
+### PUT /tag 更改指定标签的标签名
+
+query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
 body:
 ```javascript
 {
@@ -161,12 +219,15 @@ body:
 }
 ```
 
-### PUT 更改指定笔记本的笔记本名
+### PUT /notebook 更改指定笔记本的笔记本名
 
 query:
-
-target=notebook
-
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
 body:
 ```javascript
 {
@@ -175,12 +236,15 @@ body:
 }
 ```
 
-### PUT 更改笔记
+### PUT /note 更改笔记
 
 query:
-
-target=note
-
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+}
+```
 body:
 ```javascript
 {
@@ -190,23 +254,43 @@ body:
 }
 ```
 
-### PUT 给笔记添加标签
+### PUT /note/add/tag 给笔记添加标签
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  tag_id: <String>,
+  note_id: <String>,
+}
+```
 
-note_id
-tag_id
-target=noteAddTag
-
-### PUT 给笔记删除标签
+### PUT /note/delete/tag 给笔记删除标签
 
 query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  tag_id: <String>,
+  note_id: <String>,
+}
+```
 
-note_id
-tag_id
-target=noteAddTag
+### PUT /note/shared 笔记开启/关闭共享
 
-### PUT 笔记开启/关闭共享
-
-note_id
-target=noteShare
+query:
+```javascript
+{
+  company_id: <String>,
+  app_id: <String>,
+  note_id: <String>,
+}
+```
+body:
+```javascript
+{
+  shared: <Boolean>,
+}
+```

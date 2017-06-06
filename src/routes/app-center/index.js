@@ -6,10 +6,14 @@ import { ObjectId } from 'mongodb';
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
 import path from 'path';
+import { oauthCheck } from 'lib/middleware';
 
 
 let api = express.Router();
 export default api;
+
+api.use(oauthCheck());
+
 
 api.get('/collection/add', (req, res, next) => {
   db.app.insert({
@@ -247,7 +251,6 @@ fs.readdir(__dirname + '/app', (err, result) => {
     api.use(apiRoute, (req, res, next) => {
       req._app = loadAppInstance(appName);
       validate('appRequest', req.query);
-      req.url = '/' + req.query.target;
       next();
     }, require(appDir).default);
     console.log(`app ${appName} loaded.`);
