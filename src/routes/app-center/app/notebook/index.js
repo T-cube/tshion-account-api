@@ -7,7 +7,7 @@ let api = express.Router();
 export default api;
 
 function requestError() {
-  throw new ApiError('400', 'params_missing');
+  return new ApiError('400', 'params_missing');
 }
 
 
@@ -23,21 +23,21 @@ api.get('/user', (req, res, next) => {
 });
 
 api.get('/tag', (req, res, next) => {
-  req.query.tag_id || requestError();
+  req.query.tag_id || next(requestError());
   req._app.tagQuery({company_id: req.query.company_id, user_id: req.user._id, tag_id: req.query.tag_id}).then(list => {
     res.json(list);
   }).catch(next);
 });
 
 api.get('/note', (req, res, next) => {
-  req.query.note_id || requestError();
+  req.query.note_id || next(requestError());
   req._app.noteQuery({company_id: req.query.company_id, user_id: req.user._id, note_id: req.query.note_id}).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
 api.get('/notebook', (req, res, next) => {
-  req.query.notebook_id || requestError();
+  req.query.notebook_id || next(requestError());
   req._app.notebookQuery({company_id: req.query.company_id, user_id: req.user._id, notebook_id: req.query.notebook_id}).then(list => {
     res.json(list);
   }).catch(next);
@@ -50,7 +50,7 @@ api.get('/shared', (req, res, next) => {
 });
 
 api.get('/comment', (req, res, next) => {
-  req.query.note_id || requestError();
+  req.query.note_id || next(requestError());
   req._app.commentQuery({company_id: req.query.company_id, note_id: req.query.note_id }).then(list => {
     res.json(list);
   }).catch(next);
@@ -85,35 +85,35 @@ api.post('/comment', (req, res, next) => {
 });
 
 api.post('/like', (req, res, next) => {
-  req.query.note_id || requestError();
+  req.query.note_id || next(requestError());
   req._app.likeAdd({user_id: req.user._id, note_id: req.query.note_id}).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
 api.delete('/tag', (req, res, next) => {
-  req.query.tag_id || requestError();
+  req.query.tag_id || next(requestError());
   req.model('note').tagDelete({company_id: req.query.company_id, user_id: req.user._id, tag_id: req.query.tag_id}).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
 api.delete('/notebook', (req, res, next) => {
-  req.query.notebook_id || requestError();
+  req.query.notebook_id || next(requestError());
   req._app.notebookDelete({company_id: req.query.company_id, user_id: req.user._id, notebook_id: req.query.notebook_id}).then(list => {
     res.json(list);
   }).catch(next);
 });
 
 api.delete('/note', (req, res, next) => {
-  req.query.note_id || requestError();
+  req.query.note_id || next(requestError());
   req._app.noteDelete({company_id: req.query.company_id, user_id: req.user._id, note_id: req.query.note_id}).then(list => {
     res.json(list);
   }).catch(next);
 });
 
 api.delete('/like', (req, res, next) => {
-  req.query.note_id || requestError();
+  req.query.note_id || next(requestError());
   req._app.likeDelete({user_id: req.user._id, note_id: req.query.note_id}).then(list => {
     res.json(list);
   }).catch(next);
@@ -142,21 +142,21 @@ api.put('/note', (req, res, next) => {
 });
 
 api.put('/note/add/tag', (req, res, next) => {
-  req.query.note_id && req.query.tag_id || requestError();
+  req.query.note_id && req.query.tag_id || next(requestError());
   req._app.noteAddTag({user_id: req.user._id, company_id: req.query.company_id, note_id: req.query.note_id, tag_id: req.query.tag_id}).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
 api.put('/note/delete/tag', (req, res, next) => {
-  req.query.note_id && req.query.tag_id || requestError();
+  req.query.note_id && req.query.tag_id || next(requestError());
   req._app.noteDeleteTag({user_id: req.user._id, company_id: req.query.company_id, note_id: req.query.note_id, tag_id: req.query.tag_id}).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
 api.put('/note/shared', (req, res, next) => {
-  req.query.note_id && req.query.shared || requestError();
+  req.query.note_id && req.query.shared || next(requestError());
   req._app.noteShare({user_id: req.user._id, company_id: req.query.company_id, note_id: req.query.note_id}, req.queyr.shared).then(doc => {
     res.json(doc);
   }).catch(next);
