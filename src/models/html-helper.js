@@ -48,7 +48,6 @@ export default class HtmlHelper {
   }
 
   sanitize(html) {
-    console.log(html);
     if (!_.isString(html)) {
       return Promise.resolve('');
     }

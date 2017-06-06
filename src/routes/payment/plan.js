@@ -80,8 +80,8 @@ api.all('/notify/:payment_method', (req, res, next) => {
       if (payment_method == 'wxpay') {
         return res.send(
           '<xml>' +
-          '<return_code><![CDATA[SUCCESS]]></return_code>' +
-          '<return_msg><![CDATA[OK]]></return_msg>' +
+            '<return_code><![CDATA[SUCCESS]]></return_code>' +
+            '<return_msg><![CDATA[OK]]></return_msg>' +
           '</xml>'
         );
       } else {
