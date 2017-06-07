@@ -9,7 +9,7 @@
   report_target: ObjectId,
   copy_to: [ObjectId...],
   content: String,
-  type: String, //day, week, mongth
+  type: String, //day, week, month
   status: String, //draft, applied, agreed, rejected
   attachment: [String...],
   comments: [{

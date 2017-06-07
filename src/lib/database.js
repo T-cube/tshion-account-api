@@ -12,6 +12,7 @@ const collections = [
   'app.store.notebook.user',
   'app.store.notebook.note',
   'app.store.notebook.note.comment',
+  'app.store.report.item',
   'approval.approve',
   'approval.copyto',
   'approval.export',

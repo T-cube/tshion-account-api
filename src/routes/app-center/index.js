@@ -7,6 +7,7 @@ import { validate } from './schema';
 import { ApiError } from 'lib/error';
 import path from 'path';
 import { oauthCheck } from 'lib/middleware';
+import moment from 'moment';
 
 
 let api = express.Router();
@@ -17,9 +18,9 @@ api.use(oauthCheck());
 
 api.get('/collection/add', (req, res, next) => {
   db.app.insert({
-    appid: 'com.tlifang.app.notebook',
-    name: 'notebook',
-    name_en: 'nottttttteeeeeboooooooook',
+    appid: 'com.tlifang.app.report',
+    name: 'report',
+    name_en: 'repoooooooooooooooort',
     version: '0.1.0',
     icons: {
       '16': '',
@@ -29,11 +30,11 @@ api.get('/collection/add', (req, res, next) => {
     slideshow: ['','','','','',],
     author: 'Gea',
     author_id: ObjectId('58aaab6003312409f04e128f'),
-    description: 'this is an incredible note app',
+    description: 'this is an incredible report app',
     update_info: 'first version',
     star: 5,
     metadata: {
-      storage: ['app.store.note'],
+      storage: ['app.store.report'],
       dependencies: [''],
     },
     published: true,
@@ -221,6 +222,16 @@ api.get('/app/pic', (req, res, next) => {
   });
 });
 
+api.get('/app/test', (req, res, next) => {
+  // db.company.findOne({}).then(doc => {
+  //   res.json(doc);
+  // });
+  let a = moment().startOf('day');
+  let b = new Date('2017/6/6');
+
+  res.json({a,b,aa: new Date()-a ,bb: new Date()-b});
+});
+
 /**
  * query string
  * @param {string} target
@@ -249,9 +260,17 @@ fs.readdir(__dirname + '/app', (err, result) => {
     const appDir = __dirname + apiRoute;
     api.use(apiRoute, (req, res, next) => {
       req._app = loadAppInstance(appName);
-      validate('appRequest', req.query);
+      validate('appRequest', req.query, []);
       req._app.dbNamespace = appName;
       next();
+    }, (req, res, next) => {
+      db.company.app.findOne({
+        company_id: req.query.company_id,
+        apps: { $in: [{ app_id: req.query.app_id, enabled: true }] }
+      }).then(doc => {
+        if (!doc) return next(new ApiError(400, 'no_app'));
+        next();
+      });
     }, require(appDir).default);
     console.log(`app ${appName} loaded.`);
     console.log('--------------------------------------------------------------------------------');
