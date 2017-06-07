@@ -1,47 +1,34 @@
 # 应用中心 API 文档
 
-## 挂载点
+## 挂载点 /company/:company_id/app-center/
 
-```javascript
-/app-center
-```
+### GET /
 
-### GET /app/list
-
-获得所有上限APP名字及图标
-
-### GET /app/:app_id/detail
-
-获得指定app详情
-
-### GET /app/all
-
-获得所有上线APP及其详情
+获得所有上线APP
 
 output:
 ```javascript
 [{
   _id: ObjectId,
-  appid: <String>,
   name: <String>,
-  name_en: <String>,
-  version: <String>,
   icons: {
     '16': <String>,
     '64': <String>,
     '128': <String>,
   },
-  slideshow: <Array>,
   author: <String>,
-  author_id: ObjectId,
   description: <String>,
-  update_info: <String>,
-  star: <Number>,
-  date_create: <Date>,
-  date_publish: <Date>,
-  date_update: <Date>,  
 }...]
 ```
+
+### GET /app
+
+获得公司app列表
+
+### GET /app/all
+
+获得所有上线APP及其详情
+
 
 ### GET /company/:company_id/app/list
 

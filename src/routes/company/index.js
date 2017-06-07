@@ -453,3 +453,4 @@ api.use('/:company_id/structure', ckeckAuth(MODULE_STRUCTURE), require('./struct
 api.use('/:company_id/activity', require('./activity').default);
 api.use('/:company_id/member', require('./member').default);
 api.use('/:company_id/plan', require('./plan').default);
+api.use('/:company_id/app-center', require('./app-center').default);
