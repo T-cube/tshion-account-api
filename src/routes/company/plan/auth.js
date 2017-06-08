@@ -13,7 +13,7 @@ import Realname from 'models/plan/realname';
 import { saveCdn } from 'lib/upload';
 import { mapObjectIdToData } from 'lib/utils';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 

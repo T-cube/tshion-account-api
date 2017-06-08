@@ -18,7 +18,7 @@ import {
 // import { infoSanitization, infoValidation, avatarSanitization, avatarValidation } from './schema';
 
 /* users collection */
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());

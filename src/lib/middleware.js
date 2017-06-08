@@ -44,31 +44,31 @@ export function fetchRegUserinfoOfOpen(allowOpenType) {
       return next();
     }
     switch(from_open) {
-    case 'wechat':
-      req.model('wechat-util').findWechatByRandomToken(random_token)
-      .then(wechat => {
-        if (!wechat) {
-          return next();
-        }
-        return req.model('wechat-util').findWechatUserinfo(wechat.openid)
-        .then(openUserinfo => {
-          if (openUserinfo) {
-            req.openUserinfo = {
-              name: openUserinfo.nickname,
-              sex: openUserinfo.sex,
-              avatar: openUserinfo.headimgurl,
-              wechat: req.model('wechat-util').getBindWechatData(wechat)
-            };
+      case 'wechat':
+        req.model('wechat-util').findWechatByRandomToken(random_token)
+        .then(wechat => {
+          if (!wechat) {
+            return next();
           }
-          next();
+          return req.model('wechat-util').findWechatUserinfo(wechat.openid)
+          .then(openUserinfo => {
+            if (openUserinfo) {
+              req.openUserinfo = {
+                name: openUserinfo.nickname,
+                sex: openUserinfo.sex,
+                avatar: openUserinfo.headimgurl,
+                wechat: req.model('wechat-util').getBindWechatData(wechat)
+              };
+            }
+            next();
+          });
+        })
+        .catch(e => {
+          throw e;
         });
-      })
-      .catch(e => {
-        throw e;
-      });
-      break;
-    default:
-      next();
+        break;
+      default:
+        next();
     }
   };
 }

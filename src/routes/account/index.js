@@ -22,7 +22,7 @@ import { validate } from './schema';
 import { randomAvatar, cropAvatar } from 'lib/upload';
 import { ValidationError } from 'lib/inspector';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 

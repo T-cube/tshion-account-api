@@ -19,7 +19,7 @@ import {
 } from 'models/notification-setting';
 
 /* company collection */
-let api = require('express').Router();
+const api = express.Router();
 export default api;
 
 api.use((req, res, next) => {
@@ -43,7 +43,7 @@ api.get('/:node_id', (req, res, next) => {
   let node_id = req.params.node_id;
   let node = tree.findNodeById(node_id);
   if (!node) {
-    return next(new ApiError(404));
+    return next(new ApiError(404, 'department_not_exists'));
   }
   res.json(node);
 });
@@ -72,7 +72,7 @@ api.put('/:node_id', (req, res, next) => {
     .then(() => res.json(node))
     .catch(next);
   } else {
-    next(new ApiError(404));
+    next(new ApiError(404, 'department_not_exists'));
   }
 });
 
@@ -91,7 +91,7 @@ api.put('/:node_id/admin', (req, res, next) => {
   let node_id = req.params.node_id;
   let result = tree.setAdmin(data._id, node_id);
   if (!result) {
-    throw new ApiError(404, 'node_not_found');
+    throw new ApiError(404, 'department_not_exists');
   }
   save(req)
   .then(() => res.json({}))

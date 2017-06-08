@@ -14,24 +14,24 @@ export default class CronRule {
     let rule = [datetime.getMinutes(), datetime.getHours()];
 
     switch (data.type) {
-    case null:
-      return null;
-    case 'day':
-      rule = rule.concat(['*', '*', '*']);
-      break;
-    case 'year':
-      rule = rule.concat([newDate, newMonth, '*']);
-      break;
-    case 'month':
-      info = info ? _.uniq(info).filter(i => /^([0-9]|([1-2]\d)|30)$/.test(i)).join(',') : newDate;
-      rule = rule.concat([info, '*', '*']);
-      break;
-    case 'weekday':
-      info = _.uniq(info).filter(i => /^[0-6]$/.test(i)).join(',');
-      rule = rule.concat(['*', '*', info]);
-      break;
-    default:
-      rule = rule.concat(['*', '*', '*']);
+      case null:
+        return null;
+      case 'day':
+        rule = rule.concat(['*', '*', '*']);
+        break;
+      case 'year':
+        rule = rule.concat([newDate, newMonth, '*']);
+        break;
+      case 'month':
+        info = info ? _.uniq(info).filter(i => /^([0-9]|([1-2]\d)|30)$/.test(i)).join(',') : newDate;
+        rule = rule.concat([info, '*', '*']);
+        break;
+      case 'weekday':
+        info = _.uniq(info).filter(i => /^[0-6]$/.test(i)).join(',');
+        rule = rule.concat(['*', '*', info]);
+        break;
+      default:
+        rule = rule.concat(['*', '*', '*']);
     }
     return rule.join(' ');
   }

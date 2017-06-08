@@ -10,7 +10,7 @@ import db from 'lib/database';
 import C from 'lib/constants';
 import PlanOrder from 'models/plan/plan-order';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(express.query());
@@ -80,8 +80,8 @@ api.all('/notify/:payment_method', (req, res, next) => {
       if (payment_method == 'wxpay') {
         return res.send(
           '<xml>' +
-          '<return_code><![CDATA[SUCCESS]]></return_code>' +
-          '<return_msg><![CDATA[OK]]></return_msg>' +
+            '<return_code><![CDATA[SUCCESS]]></return_code>' +
+            '<return_msg><![CDATA[OK]]></return_msg>' +
           '</xml>'
         );
       } else {

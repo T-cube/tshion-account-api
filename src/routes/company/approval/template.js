@@ -12,7 +12,7 @@ import Structure from 'models/structure';
 import Approval from 'models/approval';
 import { checkUserType } from '../utils';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
@@ -83,17 +83,17 @@ api.get('/related', (req, res, next) => {
     master_id: 1,
   };
   switch (type) {
-  case 'approve':
-    tplCondition['steps.approver._id'] = user;
-    break;
-  case 'copyto':
-    tplCondition['steps.copy_to._id'] = user;
-    break;
-  default:
-    tplCondition.scope = {
-      $in: new Structure(req.company.structure).findMemberDepartments(user)
-    };
-    itemCondition.from = user;
+    case 'approve':
+      tplCondition['steps.approver._id'] = user;
+      break;
+    case 'copyto':
+      tplCondition['steps.copy_to._id'] = user;
+      break;
+    default:
+      tplCondition.scope = {
+        $in: new Structure(req.company.structure).findMemberDepartments(user)
+      };
+      itemCondition.from = user;
   }
   db.approval.template.find(tplCondition, fields)
   .then(tpls => Promise.filter(tpls, tpl => db.approval.item.count(_.extend({

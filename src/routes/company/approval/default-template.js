@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {

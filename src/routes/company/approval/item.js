@@ -19,7 +19,7 @@ import {
 } from './schema';
 import Structure from 'models/structure';
 import C from 'lib/constants';
-import { mapObjectIdToData, indexObjectId, fetchCompanyMemberInfo, uniqObjectId } from 'lib/utils';
+import { mapObjectIdToData, findObjectIdIndex, fetchCompanyMemberInfo, uniqObjectIdArray } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 import {
@@ -27,7 +27,7 @@ import {
   APPROVAL_ITEM_RESULT,
 } from 'models/notification-setting';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.post('/',
@@ -89,8 +89,8 @@ api.get('/:item_id', (req, res, next) => {
         }
         let approveInfo = _.find(flowInfo.approve, v => v._id && v._id.equals(item_id));
         let approveInfoCurStep = _.find(flowInfo.approve, v => v._id && v._id.equals(item_id) && v.step && v.step.equals(data.step));
-        let inApply = indexObjectId(flowInfo.apply, item_id) != -1;
-        let inCopyto = indexObjectId(flowInfo.copy_to, item_id) != -1;
+        let inApply = findObjectIdIndex(flowInfo.apply, item_id) != -1;
+        let inCopyto = findObjectIdIndex(flowInfo.copy_to, item_id) != -1;
         if (!inApply && !inCopyto && !approveInfo) {
           throw new ApiError(400, 'forbidden');
         }
@@ -277,8 +277,8 @@ function doAfterApproval(item, status) {
     return;
   }
   switch (item.for) {
-  case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
-    return updateAttendance(item, status);
+    case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
+      return updateAttendance(item, status);
   }
   return;
 }
@@ -312,7 +312,7 @@ function mapTemplateFormValue(templateForms, forms) {
 function checkAprroveStep(req, item, approveData) {
   let { template, step } = item;
   let { approver } = Approval.getStepRelatedMembers(req.company.structure, template.steps, item.step);
-  if (-1 == indexObjectId(approver, req.user._id)) {
+  if (-1 == findObjectIdIndex(approver, req.user._id)) {
     throw new ApiError(400, 'forbidden');
   }
   if (!step.equals(approveData._id)) {

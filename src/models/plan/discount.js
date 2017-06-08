@@ -15,18 +15,18 @@ export default class Discount {
     let { total_fee } = origin;
     let result = {type};
     switch (type) {
-    case 'rate':
-      result.fee = discount.rate > 1 ? total_fee : total_fee * discount.rate;
-      break;
-    case 'amount':
-      result.fee = discount.amount < total_fee ? discount.amount : total_fee;
-      break;
-    case 'number':
-      result.number = discount.number;
-      break;
-    case 'times':
-      result.times = discount.times;
-      break;
+      case 'rate':
+        result.fee = discount.rate > 1 ? total_fee : total_fee * discount.rate;
+        break;
+      case 'amount':
+        result.fee = discount.amount < total_fee ? discount.amount : total_fee;
+        break;
+      case 'number':
+        result.number = discount.number;
+        break;
+      case 'times':
+        result.times = discount.times;
+        break;
     }
     return result;
   }

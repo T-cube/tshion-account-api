@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import C from 'lib/constants';
-import {indexObjectId} from 'lib/utils';
+import {findObjectIdIndex} from 'lib/utils';
 
 export default class TempFile {
 
@@ -53,7 +53,7 @@ export default class TempFile {
       }
       let value = doc.files;
       if (files) {
-        value = value.filter(file => indexObjectId(files, file._id) > -1);
+        value = value.filter(file => findObjectIdIndex(files, file._id) > -1);
       }
       return this.getPreviewLink(value, doc.is_private);
     });
@@ -66,7 +66,7 @@ export default class TempFile {
     })
     .then(doc => {
       let value = doc.value && doc.value.files;
-      value = value ? value.filter(file => indexObjectId(files, file._id) > -1) : [];
+      value = value ? value.filter(file => findObjectIdIndex(files, file._id) > -1) : [];
       return value;
     });
   }

@@ -123,27 +123,27 @@ export default class Schedule {
       let data = rule;
       let cron_rule = time.reverse();
       switch (data.type) {
-      case 'day':
-        cron_rule = cron_rule.concat(['*', '*', '*']);
-        break;
-      case 'month':
-        cron_rule = cron_rule.concat([newDate, '*', '*']);
-        break;
-      case 'year':
-        cron_rule = cron_rule.concat([newDate, newMonth, '*']);
-        break;
-      case 'weekday':
-        info = _.uniq(info.filter(i => /^[0-6]$/.test(i))).join(',');
-        if (preDays) {
-          info = info.map(i => {
-            i = (i - preDays) % 7;
-            return i < 0 ? (i + 7) : i;
-          });
-        }
-        cron_rule = cron_rule.concat(['*', '*', info]);
-        break;
-      default:
-        cron_rule = cron_rule.concat(['*', '*', '*']);
+        case 'day':
+          cron_rule = cron_rule.concat(['*', '*', '*']);
+          break;
+        case 'month':
+          cron_rule = cron_rule.concat([newDate, '*', '*']);
+          break;
+        case 'year':
+          cron_rule = cron_rule.concat([newDate, newMonth, '*']);
+          break;
+        case 'weekday':
+          info = _.uniq(info.filter(i => /^[0-6]$/.test(i))).join(',');
+          if (preDays) {
+            info = info.map(i => {
+              i = (i - preDays) % 7;
+              return i < 0 ? (i + 7) : i;
+            });
+          }
+          cron_rule = cron_rule.concat(['*', '*', info]);
+          break;
+        default:
+          cron_rule = cron_rule.concat(['*', '*', '*']);
       }
       return cron_rule.length == 5 ? cron_rule.join(' ') : null;
     } else {
@@ -154,20 +154,20 @@ export default class Schedule {
   getPreDate(datetime, preType) {
     let newDatetime = new Date(datetime);
     switch (preType.type) {
-    case 'exact':
-      break;
-    case 'minute':
-      newDatetime -= preType.num * 60 * 1000;
-      break;
-    case 'hour':
-      newDatetime -= preType.num * 60 * 60 * 1000;
-      break;
-    case 'day':
-      newDatetime -= preType.num * 24 * 60 * 60 * 1000;
-      break;
-    case 'week':
-      newDatetime -= preType.num * 7 * 24 * 60 * 60 * 1000;
-      break;
+      case 'exact':
+        break;
+      case 'minute':
+        newDatetime -= preType.num * 60 * 1000;
+        break;
+      case 'hour':
+        newDatetime -= preType.num * 60 * 60 * 1000;
+        break;
+      case 'day':
+        newDatetime -= preType.num * 24 * 60 * 60 * 1000;
+        break;
+      case 'week':
+        newDatetime -= preType.num * 7 * 24 * 60 * 60 * 1000;
+        break;
     }
     return new Date(newDatetime);
   }

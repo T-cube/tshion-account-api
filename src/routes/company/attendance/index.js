@@ -30,7 +30,7 @@ import {
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 

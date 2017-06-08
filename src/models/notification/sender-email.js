@@ -35,20 +35,20 @@ export default class EmailSender extends Sender {
 
   getTemplate(type) {
     switch (type) {
-    case COMPANY_MEMBER_INVITE:
-      return 'tlifang_email_company_invite';
+      case COMPANY_MEMBER_INVITE:
+        return 'tlifang_email_company_invite';
     }
     return null;
   }
 
   getData(type, extended) {
     switch (type) {
-    case COMPANY_MEMBER_INVITE:
-      return {
-        from: extended.from.name,
-        company: extended.company.name,
-        url: this.urlHelper.getWebUrl(type, extended),
-      };
+      case COMPANY_MEMBER_INVITE:
+        return {
+          from: extended.from.name,
+          company: extended.company.name,
+          url: this.urlHelper.getWebUrl(type, extended),
+        };
     }
   }
 

@@ -9,7 +9,7 @@ import C from 'lib/constants';
 import WechatOAuthModel from 'lib/wechat-oauth-model.js';
 import { oauthCheck } from 'lib/middleware';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 const mobileUrl = config.get('mobileUrl');

@@ -11,7 +11,7 @@ import { validate } from './schema';
 import PlanOrder from 'models/plan/plan-order';
 import OrderFactory from 'models/plan/order';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.post(/\/(prepare\/?)?$/, (req, res, next) => {

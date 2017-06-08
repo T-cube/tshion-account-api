@@ -8,7 +8,7 @@ import { getPageInfo, getClientIp } from 'lib/utils';
 import { validate } from './schema';
 import Recharge from 'models/plan/recharge';
 
-let api = express.Router();
+const api = express.Router();
 
 export default api;
 

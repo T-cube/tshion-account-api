@@ -57,6 +57,30 @@ OUTPUT:
 }
 ```
 
+### GET /user/frequent/project
+
+OUTPUT:
+```javascript
+[
+  {
+    _id: <ObjectId>,
+    name: <String>,
+    company_id: <ObjectId>,
+    is_archived: <Boolean>,
+    owner: <ObjectId>,
+    logo: <String>,
+    members: [
+      {
+        _id: <ObjectId>,
+        type: <String>,
+        title:
+      }
+    ],
+    date_create: <Date>
+  }...
+]
+```
+
 ### PUT /user/info
 
 INPUT:

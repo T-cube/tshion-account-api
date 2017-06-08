@@ -64,20 +64,20 @@ export default class InvoiceModel extends Model {
       _id: invoice_id
     };
     switch (status) {
-    case C.INVOICE_STATUS.COMPLETED:
-      criteria.status = C.INVOICE_STATUS.SHIPPED;
-      break;
-    case C.INVOICE_STATUS.CONFIRMED:
-      criteria.status = C.INVOICE_STATUS.CREATED;
-      break;
-    case C.INVOICE_STATUS.REJECTED:
-      criteria.status = C.INVOICE_STATUS.CREATED;
-      break;
-    case C.INVOICE_STATUS.ISSUED:
-      criteria.status = C.INVOICE_STATUS.CONFIRMED;
-      break;
-    default:
-      criteria.status = {$ne: C.INVOICE_STATUS.CREATING};
+      case C.INVOICE_STATUS.COMPLETED:
+        criteria.status = C.INVOICE_STATUS.SHIPPED;
+        break;
+      case C.INVOICE_STATUS.CONFIRMED:
+        criteria.status = C.INVOICE_STATUS.CREATED;
+        break;
+      case C.INVOICE_STATUS.REJECTED:
+        criteria.status = C.INVOICE_STATUS.CREATED;
+        break;
+      case C.INVOICE_STATUS.ISSUED:
+        criteria.status = C.INVOICE_STATUS.CONFIRMED;
+        break;
+      default:
+        criteria.status = {$ne: C.INVOICE_STATUS.CREATING};
     }
     return this.db.payment.invoice.update(criteria, {
       $set: {status},

@@ -10,12 +10,12 @@ import { ApiError } from 'lib/error';
 import { validate } from './schema';
 import { upload, saveCdn, isImageFile, getCdnThumbnail } from 'lib/upload';
 import { getUniqFileName, mapObjectIdToData, fetchCompanyMemberInfo,
-  generateToken, timestamp, indexObjectId, uniqObjectId } from 'lib/utils';
+  generateToken, timestamp, findObjectIdIndex, uniqObjectIdArray } from 'lib/utils';
 import config from 'config';
 import C from 'lib/constants';
 import CompanyLevel from 'models/company-level';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 const max_dir_path_length = 5;
@@ -195,7 +195,7 @@ api.delete('/', (req, res, next) => {
   .then(() => {
     data.dirs = data.dirs.filter(dir => dir && dir[req.document.posKey].equals(req.document.posVal));
     data.files = data.files.filter(file => file && file[req.document.posKey].equals(req.document.posVal));
-    let parent_dir = uniqObjectId(data.dirs.map(dir => dir.parent_dir).concat(data.files.map(file => file.dir_id)));
+    let parent_dir = uniqObjectIdArray(data.dirs.map(dir => dir.parent_dir).concat(data.files.map(file => file.dir_id)));
     if (parent_dir.length != 1) {
       throw new ApiError(400);
     }
@@ -408,7 +408,7 @@ api.post('/move', (req, res, next) => {
   let { files, dirs, dest_dir } = data;
   let moveInfo = _.clone(data);
   let parent_dir;
-  if (indexObjectId(dirs, dest_dir) >= 0) {
+  if (findObjectIdIndex(dirs, dest_dir) >= 0) {
     throw new ApiError(400, 'invalid_dest_dir');
   }
   mapObjectIdToData(moveInfo, [
@@ -417,7 +417,7 @@ api.post('/move', (req, res, next) => {
     ['document.file', `name,dir_id,${req.document.posKey}`, 'files'],
   ])
   .then(() => {
-    parent_dir = uniqObjectId(moveInfo.dirs.map(dir => dir.parent_dir).concat(moveInfo.files.map(file => file.dir_id)));
+    parent_dir = uniqObjectIdArray(moveInfo.dirs.map(dir => dir.parent_dir).concat(moveInfo.files.map(file => file.dir_id)));
     if (parent_dir.length != 1) {
       throw new ApiError(400);
     }
@@ -769,7 +769,7 @@ function checkMoveable(dest_dir, dirs, files) {
       dirs.length && getParentPaths(dest_dir._id)
       .then(path => {
         dirs.forEach(dir => {
-          if (-1 != indexObjectId(path, dir)) {
+          if (-1 != findObjectIdIndex(path, dir)) {
             throw new ApiError(400, 'folder_path_error');
           }
         });

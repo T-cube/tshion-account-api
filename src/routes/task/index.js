@@ -6,10 +6,10 @@ import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import { oauthCheck } from 'lib/middleware';
-import { fetchUserInfo, fetchCompanyMemberInfo, uniqObjectId, strToReg } from 'lib/utils';
+import { fetchUserInfo, fetchCompanyMemberInfo, uniqObjectIdArray, strToReg } from 'lib/utils';
 import C, { ENUMS } from 'lib/constants';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());
@@ -130,7 +130,7 @@ api.get('/', (req, res, next) => {
             && user_id.equals(req.user._id));
           delete task.followers;
         });
-        projects = uniqObjectId(projects);
+        projects = uniqObjectIdArray(projects);
         if (req.company) {
           return fetchCompanyMemberInfo(req.company, list, 'assignee');
         }
