@@ -9,7 +9,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import { upload, saveCdn, cropAvatar } from 'lib/upload';
-import { maskEmail, maskMobile } from 'lib/utils';
+import { maskEmail, maskMobile, mapObjectIdToData } from 'lib/utils';
 import UserLevel from 'models/user-level';
 import Realname from 'models/plan/realname';
 
@@ -39,7 +39,7 @@ const BASIC_FIELDS = {
 };
 
 /* users collection */
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());
@@ -66,6 +66,22 @@ api.get('/info', (req, res, next) => {
     });
   })
   .catch(next);
+});
+
+api.get('/recent/projects', (req, res, next) => {
+  db.user.findOne({_id: req.user._id}, {'recent.projects': 1}).then(doc => {
+    if (!doc.recent || !doc.recent.projects || !doc.recent.projects.length) {
+      return db.user.findOne({_id: req.user._id}, {projects: 1}).then(doc => {
+        mapObjectIdToData(doc.projects.slice(-4), 'project').then(projects => {
+          res.json(projects);
+        });
+      });
+    }
+    let projects = _.sortBy(doc.recent.projects, item => -item.date).slice(0, 4).map(project => project.project_id);
+    mapObjectIdToData(projects, 'project').then(() => {
+      res.json(projects);
+    });
+  }).catch(next);
 });
 
 api.put('/info', (req, res, next) => {
@@ -182,15 +198,15 @@ api.get('/project', (req, res, next) =>  {
       }
     }
     switch (type) {
-    case 'archived':
-      condition['is_archived'] = true;
-      break;
-    case 'mine':
-      condition['owner'] = req.user._id;
-      break;
+      case 'archived':
+        condition.is_archived = true;
+        break;
+      case 'mine':
+        condition.owner = req.user._id;
+        break;
     }
-    if (!search && !condition['is_archived']) {
-      condition['is_archived'] = false;
+    if (!search && !condition.is_archived) {
+      condition.is_archived = false;
     }
     return db.project.find(condition)
     .then(data => res.json(data));

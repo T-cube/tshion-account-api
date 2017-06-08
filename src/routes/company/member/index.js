@@ -23,7 +23,7 @@ import {
 } from 'models/notification-setting';
 
 /* company collection */
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use((req, res, next) => {

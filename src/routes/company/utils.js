@@ -25,14 +25,14 @@ export function checkUserTypeFunc(req, type) {
   const TYPES = C.COMPANY_MEMBER_TYPE;
   let authorised = false;
   switch(member.type) {
-  case TYPES.NORMAL:
-    authorised = type == TYPES.NORMAL;
-    break;
-  case TYPES.ADMIN:
-    authorised = type == TYPES.NORMAL || type == TYPES.ADMIN;
-    break;
-  case TYPES.OWNER:
-    authorised = true;
+    case TYPES.NORMAL:
+      authorised = type == TYPES.NORMAL;
+      break;
+    case TYPES.ADMIN:
+      authorised = type == TYPES.NORMAL || type == TYPES.ADMIN;
+      break;
+    case TYPES.OWNER:
+      authorised = true;
   }
   return authorised;
 }

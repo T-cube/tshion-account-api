@@ -60,12 +60,12 @@ function fetchSubInfo(target, query) {
   };
   let fetch;
   switch (target) {
-  case 'member':
-    fetch = companyModel.fetchMemberList(props);
-    break;
-  case 'project':
-    fetch = companyModel.fetchProjectList(props);
-    break;
+    case 'member':
+      fetch = companyModel.fetchMemberList(props);
+      break;
+    case 'project':
+      fetch = companyModel.fetchProjectList(props);
+      break;
   }
   return fetch.then(doc => {
     if (null === doc) {

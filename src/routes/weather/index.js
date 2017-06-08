@@ -7,7 +7,7 @@ import express from 'express';
 //   console.log(result);
 // });
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get('/:areaid', (req, res, next) => {

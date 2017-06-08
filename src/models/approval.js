@@ -6,7 +6,7 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import Structure from 'models/structure';
-import { uniqObjectId } from 'lib/utils';
+import { uniqObjectIdArray } from 'lib/utils';
 import { APPROVAL } from 'models/notification-setting';
 
 export default class Approval {
@@ -342,8 +342,8 @@ export default class Approval {
       }
     });
     return {
-      copyto: uniqObjectId(copyto),
-      approver: uniqObjectId(approver)
+      copyto: uniqObjectIdArray(copyto),
+      approver: uniqObjectIdArray(approver)
     };
   }
 

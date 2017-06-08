@@ -8,7 +8,7 @@ import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, indexObjectId, strToReg } from 'lib/utils';
+import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg } from 'lib/utils';
 import {
   TASK_ASSIGNED,
   TASK_UPDATE,
@@ -16,7 +16,7 @@ import {
 } from 'models/notification-setting';
 import { validate } from './schema';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
@@ -247,15 +247,15 @@ api.put('/:task_id/status', (req, res, next) => {
   .then(() => {
     res.json(data);
     switch (data.status) {
-    case C.TASK_STATUS.COMPLETED:
-      logTask(req, C.ACTIVITY_ACTION.COMPLETE);
-      break;
-    case C.TASK_STATUS.PROCESSING:
-      logTask(req, C.ACTIVITY_ACTION.REOPEN);
-      break;
-    case C.TASK_STATUS.CHECKING:
-      logTask(req, C.ACTIVITY_ACTION.REOPEN); // TODO
-      break;
+      case C.TASK_STATUS.COMPLETED:
+        logTask(req, C.ACTIVITY_ACTION.COMPLETE);
+        break;
+      case C.TASK_STATUS.PROCESSING:
+        logTask(req, C.ACTIVITY_ACTION.REOPEN);
+        break;
+      case C.TASK_STATUS.CHECKING:
+        logTask(req, C.ACTIVITY_ACTION.REOPEN); // TODO
+        break;
     }
   })
   .catch(next);
@@ -613,7 +613,7 @@ function validField(field, val) {
 }
 
 function ensureProjectMember(project, user_id) {
-  if (indexObjectId(project.members.map(i => i._id), user_id) == -1) {
+  if (findObjectIdIndex(project.members.map(i => i._id), user_id) == -1) {
     throw new ApiError(400, 'member_not_exists');
   }
 }

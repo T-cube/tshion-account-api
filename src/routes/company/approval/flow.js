@@ -8,7 +8,7 @@ import { generateToken } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import ApprovalFlow from 'models/approval-flow';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.get(/^\/(apply|copyto|approve)$/, (req, res, next) => {

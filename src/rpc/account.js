@@ -71,12 +71,12 @@ function fetchSubInfo(target, query) {
   };
   let fetch;
   switch (target) {
-  case 'company':
-    fetch = accountModel.fetchCompanyList(props);
-    break;
-  case 'project':
-    fetch = accountModel.fetchProjectList(props);
-    break;
+    case 'company':
+      fetch = accountModel.fetchCompanyList(props);
+      break;
+    case 'project':
+      fetch = accountModel.fetchProjectList(props);
+      break;
   }
   return fetch.then(doc => {
     if (null === doc) {

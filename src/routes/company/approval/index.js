@@ -1,7 +1,7 @@
 import express from 'express';
 import C from 'lib/constants';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 
