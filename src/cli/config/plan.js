@@ -21,9 +21,9 @@ export default[
     default_member: 10,
     project_actived: 50,
     project_all: 100,
-    store: 20 * 1024 * 1024 * 1024, // 20G
+    store: 25 * 1024 * 1024 * 1024, // 25G
     project_store: 500 * 1024 * 1024, // 500M
-    inc_member_store: 500 * 1024 * 1024, // 500M
+    inc_member_store: 2.5 * 1024 * 1024 * 1024, // 2.5G
     max_file_size: 10 * 1024 * 1024, // 10M
     max_member: 1000,
     ext_info: '专业版',
@@ -35,9 +35,9 @@ export default[
     default_member: 10,
     project_actived: 100,
     project_all: 200,
-    store: 100 * 1024 * 1024 * 1024, // 100G
+    store: 50 * 1024 * 1024 * 1024, // 100G
     project_store: 1 * 1024 * 1024 * 1024, // 1G
-    inc_member_store: 1 * 1024 * 1024 * 1024, // 1G
+    inc_member_store: 5 * 1024 * 1024 * 1024, // 1G
     max_file_size: 20 * 1024 * 1024, // 20M
     max_member: 1000,
     ext_info: '企业版',

@@ -53,7 +53,7 @@ api.get('/status', (req, res, next) => {
         'data.$.info': 1,
       }).then(doc => {
         if (!doc) {
-          throw new ApiError(500, 'invalid_data');
+          return res.json(info);
         }
         let field;
         switch (doc.plan) {

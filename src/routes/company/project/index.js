@@ -27,14 +27,20 @@ const api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
-  db.project.find({
+  let query = {
     company_id: req.company._id,
-  }, {
+  };
+  db.project.find(query, {
+    owner: 1,
     name: 1,
     description: 1,
     logo: 1,
+    is_archived: 1,
   })
-  .then(doc => res.json(doc))
+  .then(list => {
+    return mapObjectIdToData(list, 'user', 'name,avatar', 'owner');
+  })
+  .then(list => res.json(list))
   .catch(next);
 });
 
