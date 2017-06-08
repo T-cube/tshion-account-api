@@ -1,82 +1,120 @@
 # APP notebook API 文档
 
-## 挂载点 /app-center/app/notebook
+## 挂载点 /company/:company_id/app-center/app/notebook
 
 
 ### GET /user 获取用户笔记信息
 
-query:
+OUTPUT:
 ```javascript
 {
+  _id: ObjectId,
+  user_id: ObjectId,
   company_id: ObjectId,
-  app_id: ObjectId,
+  tags: [{
+    name: <String>,
+    _id: ObjectId
+  }...],
+  notebook: [],
 }
 ```
 
-### GET /tag 获取指定tag_id的所有笔记
+### GET /tag/:tag_id/note 获取指定tag_id的所有笔记
 
-query:
+OUTPUT:
+```javascript
+[{
+  _id: ObjectId,
+  user_id: ObjectId,
+  company_id: ObjectId,
+  title: <String>,
+  content: <String>,
+  tags: [ObjectId...],
+  notebook: ObjectId,
+  comments: [ObjectId...],
+  likes: [ObjectId...],
+  shared: <Boolean>,
+  create_date: <Date>,
+  update_date: <Date>,  
+}...]
+```
+
+### GET /note/:note_id 获取指定note_id的笔记
+
+OUTPUT:
 ```javascript
 {
+  _id: ObjectId,
+  user_id: ObjectId,
   company_id: ObjectId,
-  app_id: ObjectId,
-  tag_id: ObjectId
+  title: <String>,
+  content: <String>,
+  tags: [ObjectId...],
+  notebook: ObjectId,
+  comments: [ObjectId...],
+  likes: [ObjectId...],
+  shared: <Boolean>,
+  create_date: <Date>,
+  update_date: <Date>,
 }
 ```
 
-### GET /note 获取指定note_id的笔记
+### GET /notebook/:notebook_id 获取指定notebook_id的笔记
 
-query:
+OUTPUT:
 ```javascript
-{
+[{
+  _id: ObjectId,
+  user_id: ObjectId,
   company_id: ObjectId,
-  app_id: ObjectId,
-  note_id: ObjectId,
-}
-```
-
-### GET /notebook 获取指定notebook_id的笔记
-
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-  notebook_id: ObjectId,
-}
+  title: <String>,
+  content: <String>,
+  tags: [ObjectId...],
+  notebook: ObjectId,
+  comments: [ObjectId...],
+  likes: [ObjectId...],
+  shared: <Boolean>,
+  create_date: <Date>,
+  update_date: <Date>,  
+}...]
 ```
 
 ### GET /shared 获取团队内所有分享笔记
 
-query:
+OUTPUT:
 ```javascript
-{
+[{
+  _id: ObjectId,
+  user_id: ObjectId,
   company_id: ObjectId,
-  app_id: ObjectId,
-}
+  title: <String>,
+  content: <String>,
+  tags: [ObjectId...],
+  notebook: ObjectId,
+  comments: [ObjectId...],
+  likes: [ObjectId...],
+  shared: <Boolean>,
+  create_date: <Date>,
+  update_date: <Date>,  
+}...]
 ```
 
-### GET /comment 获取指定note_id的所有评论
+### GET /note/:note_id/comments 获取指定note_id的所有评论
 
-query:
+OUTPUT:
 ```javascript
-{
+[{
+  _id: ObjectId,
+  note_id: ObjectId,
+  user_id: ObjectId,
   company_id: ObjectId,
-  app_id: ObjectId,
-  note_id: ObjectId,  
-}
+  content: <String>,
+  date_create: <Date>
+}...]
 ```
-
 
 ### POST /tag 添加tag
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-}
-```
 body:
 ```javascript
 {
@@ -86,13 +124,6 @@ body:
 
 ### POST /notebook 添加notebook
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-}
-```
 body:
 ```javascript
 {
@@ -102,180 +133,76 @@ body:
 
 ### POST /note 添加note
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-}
-```
 body:
 ```javascript
 {
   title: <String>,
   content: <String>,
-  tags:[ObjectId],
+  tags:[ObjectId...],
   notebook:ObjectId,
   shared: <Boolean>
 }
 ```
 
-### POST /comment 添加评论
+### POST /note/:note_id/comment 添加评论
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-}
-```
 body:
 ```javascript
 {
-  note_id: ObjectId,
-  content: <String>
+  comment: <String>
 }
 ```
 
-### POST /like 点赞笔记
+### POST /note/:note_id/like 点赞笔记
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-  note_id: ObjectId,
-}
-```
+### DELETE /note/:note_id/like 取消点赞
 
-### DELETE /tag 删除标签
+### DELETE /tag/:tag_id 删除标签
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-  tag_id: ObjectId,
-}
-```
+### DELETE /notebook/:notebook_id 删除笔记本（同时删除笔记本中所有笔记）
 
-### DELETE /notebook 删除笔记本（同时删除笔记本中所有笔记）
+### DELETE /note/:note_id 删除笔记
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-  notebook_id: ObjectId,  
-}
-```
+### PUT /tag/:tag_id 更改指定标签的标签名
 
-### DELETE /note 删除笔记
-
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-  note_id: ObjectId,  
-}
-```
-
-### DELETE /like 取消点赞
-
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-  note_id: ObjectId,  
-}
-```
-
-### PUT /tag 更改指定标签的标签名
-
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-}
-```
 body:
 ```javascript
 {
   tag_name: <String>,
-  tag_id: ObjectId
 }
 ```
 
-### PUT /notebook 更改指定笔记本的笔记本名
+### PUT /notebook/:notebook_id 更改指定笔记本的笔记本名
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-}
-```
 body:
 ```javascript
 {
   notebook_name: <String>,
-  notebook_id: ObjectId
 }
 ```
 
-### PUT /note 更改笔记
+### PUT /note/:note_id 更改笔记
 
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-}
-```
 body:
 ```javascript
 {
   title: <String>,
   content: <String>,
-  note_id: ObjectId
+  tags: [ObjectId...],
+  notebook: ObjectId,
+  shared: <Boolean>,
 }
 ```
 
-### PUT /note/add/tag 给笔记添加标签
+### POST /note/:note_id/tag/:tag_id 给笔记添加标签
 
-query:
+### DELETE /note/:note_id/tag/:tag_id 给笔记删除标签
+
+### PUT /note/:note_id/shared 笔记开启/关闭共享
+
+body:
 ```javascript
 {
-  company_id: ObjectId,
-  app_id: ObjectId,
-  tag_id: ObjectId,
-  note_id: ObjectId,
-}
-```
-
-### PUT /note/delete/tag 给笔记删除标签
-
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-  tag_id: ObjectId,
-  note_id: ObjectId,
-}
-```
-
-### PUT /note/shared 笔记开启/关闭共享
-
-query:
-```javascript
-{
-  company_id: ObjectId,
-  app_id: ObjectId,
-  note_id: ObjectId,
   shared: <Boolean>,
 }
 ```

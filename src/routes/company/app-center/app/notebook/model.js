@@ -156,8 +156,7 @@ export default class Notebook extends Base {
     });
   }
 
-  commentAdd({user_id, company_id, comment}) {
-    let { note_id, content } = comment;
+  commentAdd({user_id, company_id, note_id, content}) {
     return this.collection('comment').insert({
       user_id,
       company_id,
@@ -168,7 +167,7 @@ export default class Notebook extends Base {
       return this.collection('note').update({
         _id: note_id
       }, {
-        $addToSet: { comments: doc._id }
+        $push: { comments: doc._id }
       });
     });
   }
@@ -255,7 +254,7 @@ export default class Notebook extends Base {
   }
 
   noteChange({user_id, company_id, note}) {
-    let { title, content, note_id } = note;
+    let { title, content, notebook, tags, shared } = note;
     return this.collection('note').update({
       _id: note_id,
       company_id,
@@ -264,6 +263,9 @@ export default class Notebook extends Base {
       $set: {
         title,
         content,
+        tags,
+        shared,
+        notebook,
       }
     });
   }

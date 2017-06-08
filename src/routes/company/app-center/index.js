@@ -222,14 +222,14 @@ api.put('/app/:app_id/comments/:comment_id/like', (req, res, next) => {
   db.app.comment.update({
     _id: comment_id
   }, {
-    $addToSet: {
+    $push: {
       likes: user_id
     }
   })
   .then(doc => res.json(doc));
 });
 
-api.put('/app/:app_id/comments/:comment_id/unlike', (req, res, next) => {
+api.delete('/app/:app_id/comments/:comment_id/like', (req, res, next) => {
   validate('appRequest', req.params, ['app_id', 'comment_id']);
   let { app_id, comment_id } = req.params;
   let user_id = req.user._id;
@@ -262,8 +262,8 @@ api.post('/app/:app_id/comments', (req, res, next) => {
   });
 });
 
-api.get('/app/pic', (req, res, next) => {
-  let dir = path.normalize(`${__dirname}/../../../public/cdn` + req.query.path);
+api.get('/app/:app_id/pic', (req, res, next) => {
+  let dir = path.normalize(`${__dirname}/../../../../public/cdn` + req.query.path);
   fs.readFile(dir, (err, data) => {
     if (err) {
       return next(new ApiError('400', 'no_such_directory'));

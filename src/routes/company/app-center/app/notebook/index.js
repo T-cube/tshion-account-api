@@ -1,163 +1,268 @@
-import { ApiError } from 'lib/error';
 import { ObjectId } from 'mongodb';
 import express from 'express';
+import { validate } from './schema';
 
 
 let api = express.Router();
 export default api;
 
-function requestError() {
-  return new ApiError('400', 'params_missing');
-}
 
-
-
-// api.use('/', (req, res, next) => {
-//   next();
-// });
 
 api.get('/user', (req, res, next) => {
-  req._app.list({ company_id: req.query.company_id, user_id: req.user._id }).then(doc => {
+  req._app.list({
+    company_id: req.company._id,
+    user_id: req.user._id
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.get('/tag', (req, res, next) => {
-  req.query.tag_id || next(requestError());
-  req._app.tagQuery({company_id: req.query.company_id, user_id: req.user._id, tag_id: req.query.tag_id}).then(list => {
+api.get('/tag/:tag_id/note', (req, res, next) => {
+  validate('notebook', req.params, ['tag_id']);
+  let { tag_id } = req.params;
+  req._app.tagQuery({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    tag_id,
+  }).then(list => {
     res.json(list);
   }).catch(next);
 });
 
-api.get('/note', (req, res, next) => {
-  req.query.note_id || next(requestError());
-  req._app.noteQuery({company_id: req.query.company_id, user_id: req.user._id, note_id: req.query.note_id}).then(doc => {
+api.get('/note/:note_id', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  let { note_id } = req.params;
+  req._app.noteQuery({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    note_id,
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.get('/notebook', (req, res, next) => {
-  req.query.notebook_id || next(requestError());
-  req._app.notebookQuery({company_id: req.query.company_id, user_id: req.user._id, notebook_id: req.query.notebook_id}).then(list => {
+api.get('/notebook/:notebook_id', (req, res, next) => {
+  validate('notebook', req.params, ['notebook_id']);
+  let { notebook_id } = req.params;
+  req._app.notebookQuery({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    notebook_id
+  }).then(list => {
     res.json(list);
   }).catch(next);
 });
 
 api.get('/shared', (req, res, next) => {
-  req._app.sharedQuery({company_id: req.query.company_id }).then(list => {
+  req._app.sharedQuery({
+    company_id: req.company._id
+  }).then(list => {
     res.json(list);
   }).catch(next);
 });
 
-api.get('/comment', (req, res, next) => {
-  req.query.note_id || next(requestError());
-  req._app.commentQuery({company_id: req.query.company_id, note_id: req.query.note_id }).then(list => {
+api.get('/note/:note_id/comments', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  let { note_id } = req.params;
+  req._app.commentQuery({
+    company_id: req.company._id,
+    note_id
+  }).then(list => {
     res.json(list);
   }).catch(next);
 });
 
 api.post('/tag', (req, res, next) => {
-  let tag_name = req.body.tag_name;
-  req._app.tagAdd({company_id: req.query.company_id, user_id: req.user._id, tag_name}).then(doc => {
+  validate('notebook', req.body, ['tag_name']);
+  let { tag_name } = req.body;
+  req._app.tagAdd({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    tag_name
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
 api.post('/notebook', (req, res, next) => {
-  let notebook_name = req.body.notebook_name;
-  req._app.notebookAdd({company_id: req.query.company_id, user_id: req.user._id, notebook_name}).then(doc => {
+  validate('notebook', req.body, ['notebook_name']);
+  let { notebook_name } = req.body;
+  req._app.notebookAdd({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    notebook_name
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
 api.post('/note', (req, res, next) => {
-  let note = req.body.note;
-  req._app.noteAdd({company_id: req.query.company_id, user_id: req.user._id, note}).then(doc => {
+  validate('notebook', req.body, ['note']);
+  let { note } = req.body;
+  req._app.noteAdd({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    note
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.post('/comment', (req, res, next) => {
-  let comment = req.body.comment;
-  req._app.commentAdd({company_id: req.query.company_id, user_id: req.user._id, comment}).then(doc => {
+api.post('/note/:note_id/comments', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  validate('notebook', req.body, ['comment']);
+  let { note_id } = req.params;
+  let { comment } = req.body;
+  req._app.commentAdd({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    note_id,
+    content: comment
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.post('/like', (req, res, next) => {
-  req.query.note_id || next(requestError());
-  req._app.likeAdd({user_id: req.user._id, note_id: req.query.note_id}).then(doc => {
+api.post('/note/:note_id/like', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  let { note_id } = req.params;
+  req._app.likeAdd({
+    user_id: req.user._id,
+    note_id,
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.delete('/tag', (req, res, next) => {
-  req.query.tag_id || next(requestError());
-  req.model('note').tagDelete({company_id: req.query.company_id, user_id: req.user._id, tag_id: req.query.tag_id}).then(doc => {
+api.delete('/tag/:tag_id', (req, res, next) => {
+  validate('notebook', req.params, ['tag_id']);
+  let { tag_id } = req.params;
+  req.model('note').tagDelete({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    tag_id
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.delete('/notebook', (req, res, next) => {
-  req.query.notebook_id || next(requestError());
-  req._app.notebookDelete({company_id: req.query.company_id, user_id: req.user._id, notebook_id: req.query.notebook_id}).then(list => {
+api.delete('/notebook/:notebook_id', (req, res, next) => {
+  validate('notebook', req.params, ['notebook_id']);
+  let { notebook_id } = req.params;
+  req._app.notebookDelete({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    notebook_id,
+  }).then(list => {
     res.json(list);
   }).catch(next);
 });
 
-api.delete('/note', (req, res, next) => {
-  req.query.note_id || next(requestError());
-  req._app.noteDelete({company_id: req.query.company_id, user_id: req.user._id, note_id: req.query.note_id}).then(list => {
+api.delete('/note/:note_id', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  let { note_id } = req.params;
+  req._app.noteDelete({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    note_id,
+  }).then(list => {
     res.json(list);
   }).catch(next);
 });
 
-api.delete('/like', (req, res, next) => {
-  req.query.note_id || next(requestError());
-  req._app.likeDelete({user_id: req.user._id, note_id: req.query.note_id}).then(list => {
+api.delete('/note/:note_id/like', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  let { note_id } = req.params;
+  req._app.likeDelete({
+    user_id: req.user._id,
+    note_id,
+  }).then(list => {
     res.json(list);
   }).catch(next);
 });
 
-api.put('/tag', (req, res, next) => {
-  let { tag_name, tag_id } = req.body;
-  req._app.tagChange({user_id: req.user._id, company_id: req.query.company_id, tag_name, tag_id: ObjectId(tag_id)}).then(doc => {
+api.put('/tag/:tag_id', (req, res, next) => {
+  validate('notebook', req.params, ['tag_id']);
+  validate('notebook', req.body, ['tag_name']);
+  let { tag_id } = req.params;
+  let { tag_name } = req.body;
+  req._app.tagChange({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    tag_name,
+    tag_id
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.put('/notebook', (req, res, next) => {
-  let { notebook_name, notebook_id } = req.body;
-  req._app.notebookChange({user_id: req.user._id, company_id: req.query.company_id, notebook_name, notebook_id: ObjectId(notebook_id)}).then(doc => {
+api.put('/notebook/:notebook_id', (req, res, next) => {
+  validate('notebook', req.params, ['notebook_id']);
+  validate('notebook', req.body, ['notebook_name']);
+  let { notebook_id } = req.params;
+  let { notebook_name } = req.body;
+  req._app.notebookChange({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    notebook_name,
+    notebook_id,
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.put('/note', (req, res, next) => {
-  let { title, content, note_id } = req.body;
-  let note = { title, content, note_id: ObjectId(note_id) };
-  req._app.noteChange({user_id: req.user._id, company_id: req.query.company_id, note}).then(doc => {
+api.put('/note/:note_id', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  validate('notebook', req.body, ['note_id']);
+  let { note_id } = req.params;
+  let { note } = req.body;
+  req._app.noteChange({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    note_id,
+    note
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.put('/note/add/tag', (req, res, next) => {
-  req.query.note_id && req.query.tag_id || next(requestError());
-  req._app.noteAddTag({user_id: req.user._id, company_id: req.query.company_id, note_id: req.query.note_id, tag_id: req.query.tag_id}).then(doc => {
+api.post('/note/:note_id/tag/:tag_id', (req, res, next) => {
+  validate('notebook', req.params, ['note_id', 'tag_id']);
+  let { note_id, tag_id } = req.params;
+  req._app.noteAddTag({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    note_id,
+    tag_id,
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.put('/note/delete/tag', (req, res, next) => {
-  req.query.note_id && req.query.tag_id || next(requestError());
-  req._app.noteDeleteTag({user_id: req.user._id, company_id: req.query.company_id, note_id: req.query.note_id, tag_id: req.query.tag_id}).then(doc => {
+api.delete('/note/:note_id/tag/:tag_id', (req, res, next) => {
+  validate('notebook', req.params, ['note_id', 'tag_id']);
+  let { note_id, tag_id } = req.params;
+  req._app.noteDeleteTag({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    note_id,
+    tag_id,
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
-api.put('/note/shared', (req, res, next) => {
-  req.query.note_id && req.query.shared || next(requestError());
-  req._app.noteShare({user_id: req.user._id, company_id: req.query.company_id, note_id: req.query.note_id}, req.queyr.shared).then(doc => {
+api.put('/note/:note_id/shared', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  validate('notebook', req.body, ['shared']);
+  let { note_id } = req.params;
+  let { shared } = req.body;
+  req._app.noteShare({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    note_id,
+    shared
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });

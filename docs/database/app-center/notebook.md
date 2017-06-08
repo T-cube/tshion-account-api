@@ -53,6 +53,6 @@ app_id_hash = md5(app_id)
   user_id: ObjectId,
   company_id: ObjectId,
   content: String,
-  date_create: DATE
+  date_create: Date
 }
 ```
