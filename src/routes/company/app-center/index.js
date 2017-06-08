@@ -273,13 +273,16 @@ api.get('/app/:app_id/pic', (req, res, next) => {
   });
 });
 
-api.post('/test', (req, res, next) => {
-  // db.company.findOne({}).then(doc => {
-  //   res.json(doc);
-  // });
-  validate('test', req.query);
-  console.log(req.query);
-  res.json({});
+api.get('/test', (req, res, next) => {
+  let user_id = req.user._id;
+  // validate('test', req.query);
+  db.company.findOne({owner: user_id}).then(doc => {
+    if (doc.owner == user_id.toString()) {
+      console.log(1111111);
+    }
+    res.json({});
+  });
+  // console.log(req.query);
 });
 
 /**

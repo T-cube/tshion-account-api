@@ -65,8 +65,15 @@ export default class Report extends Base {
     });
   }
 
-  list({user_id, company_id, page, pagesize, type, status}) {
+  list({user_id, company_id, page, pagesize, type, status, start_date, end_date}) {
     let criteria;
+    if (start_date && end_date) {
+      criteria.date_report = { $gte: start_date, $lte: end_date };
+    } else if (start_date) {
+      criteria.date_report = { $gte: start_date };
+    } else if (end_date) {
+      criteria.date_report = { $lte: end_date };
+    }
     if (type == 'inbox') {
       if (status) {
         criteria.status = status;
@@ -76,13 +83,21 @@ export default class Report extends Base {
     } else if (type == 'outbox') {
       if (status && status != 'draft'){
         criteria.status = status;
+      } else if (status && status == 'draft') {
+        throw new ApiError(400, 'invalid_status');
       }
       criteria.user_id = user_id;
       criteria.company_id = company_id;
     } else {
       throw new ApiError(400, 'invalid_box_check');
     }
-    return this.collection('item').find(criteria)
+    return this.collection('item').find(criteria,
+      {
+        type: 1,
+        date_report: 1,
+        status: 1,
+        report_target: 1,
+      })
     .sort({id: -1})
     .skip((page - 1) * pagesize)
     .limit(pagesize)
@@ -116,6 +131,87 @@ export default class Report extends Base {
       date_create: new Date(),
     }).then(doc => {
       return doc;
+    });
+  }
+
+  reportUpdate({user_id, report_id, report}) {
+    return this.collection('item').findOne({
+      _id: report_id
+    }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_report');
+      }
+      if (doc.user_id != user_id) {
+        throw new ApiError(400, 'invalid_user');
+      }
+      if (doc.status == 'applied' || doc.status == 'agreed') {
+        throw new ApiError(400, 'invalid_modified');
+      }
+      return this.collection('item').update({
+        _id: report_id
+      }, {
+        $set: report
+      }).then(modified => {
+        return modified;
+      });
+    });
+  }
+
+  mark({user_id, status, content, report_id}) {
+    return this.collection('item').findOne({
+      _id: report_id
+    }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_report');
+      }
+      if (doc.report_target != user_id) {
+        throw new ApiError(400, 'invalid_user');
+      }
+      return this.collection('item').update({
+        _id: report_id
+      }, {
+        $set: { status: status },
+        $push: {
+          comments: {
+            _id:  ObjectId(),
+            user_id,
+            action: status.slice(0, -1),
+            new_status: status,
+            content,
+            date_create: new Date()
+          }
+        }
+      }).then(doc => {
+        return doc;
+      });
+    });
+  }
+
+  comment({user_id, content, report_id}) {
+    return this.collection('item').findOne({
+      _id: report_id
+    }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_report');
+      }
+      if (doc.report_target != user_id.toString() && !_.contains(doc.copy_to, user_id.toString()) ) {
+        throw new ApiError(400, 'invalid_user');
+      }
+      return this.collection('item').update({
+        _id: report_id
+      }, {
+        $push: {
+          comments: {
+            _id: ObjectId(),
+            user_id,
+            action: 'comment',
+            content,
+            date_create: new Date()
+          }
+        }
+      }).then(doc => {
+        return doc;
+      });
     });
   }
 
