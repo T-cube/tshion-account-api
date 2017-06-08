@@ -68,15 +68,17 @@ export default class Report extends Base {
   list({user_id, company_id, page, pagesize, type, status}) {
     let criteria;
     if (type == 'inbox') {
-      criteria = {
-        user_id,
-        company_id,
-      };
+      if (status) {
+        criteria.status = status;
+      }
+      criteria.user_id = user_id;
+      criteria.company_id = company_id;
     } else if (type == 'outbox') {
-      criteria = {
-        company_id,
-        copy_to: { $in: [user_id] },
-      };
+      if (status && status != 'draft'){
+        criteria.status = status;
+      }
+      criteria.user_id = user_id;
+      criteria.company_id = company_id;
     } else {
       throw new ApiError(400, 'invalid_box_check');
     }
