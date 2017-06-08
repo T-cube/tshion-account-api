@@ -29,6 +29,18 @@ const schema = {
       },
     },
   },
+  test: {
+    sanitization: {
+      page: { type: 'integer' },
+      type: { type: 'string' },
+      pagesize: { type: 'integer', def: 10, optional:false }
+    },
+    validation: {
+      page: { type:'integer', gte: 1 },
+      type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
+      pagesize: { type:'integer', gte: 1 }
+    }
+  }
 };
 
 export const validate = buildValidator(schema);

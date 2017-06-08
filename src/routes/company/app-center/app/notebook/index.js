@@ -134,6 +134,17 @@ api.post('/note/:note_id/like', (req, res, next) => {
   }).catch(next);
 });
 
+api.delete('/note/:note_id/like', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  let { note_id } = req.params;
+  req._app.likeDelete({
+    user_id: req.user._id,
+    note_id,
+  }).then(list => {
+    res.json(list);
+  }).catch(next);
+});
+
 api.delete('/tag/:tag_id', (req, res, next) => {
   validate('notebook', req.params, ['tag_id']);
   let { tag_id } = req.params;
@@ -163,17 +174,6 @@ api.delete('/note/:note_id', (req, res, next) => {
   let { note_id } = req.params;
   req._app.noteDelete({
     company_id: req.company._id,
-    user_id: req.user._id,
-    note_id,
-  }).then(list => {
-    res.json(list);
-  }).catch(next);
-});
-
-api.delete('/note/:note_id/like', (req, res, next) => {
-  validate('notebook', req.params, ['note_id']);
-  let { note_id } = req.params;
-  req._app.likeDelete({
     user_id: req.user._id,
     note_id,
   }).then(list => {

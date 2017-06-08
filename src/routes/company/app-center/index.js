@@ -273,11 +273,12 @@ api.get('/app/:app_id/pic', (req, res, next) => {
   });
 });
 
-api.post('/app/test', (req, res, next) => {
+api.post('/test', (req, res, next) => {
   // db.company.findOne({}).then(doc => {
   //   res.json(doc);
   // });
-  console.log(typeof req.body.a);
+  validate('test', req.query);
+  console.log(req.query);
   res.json({});
 });
 

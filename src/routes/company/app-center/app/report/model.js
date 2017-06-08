@@ -12,7 +12,7 @@ export default class Report extends Base {
     super();
   }
 
-  count({user_id, company_id}) {
+  overview({user_id, company_id}) {
     return Promise.all([
       this.collection('item').count({user_id, company_id}),
       this.collection('item').count({report_target: user_id, company_id}),
@@ -27,11 +27,60 @@ export default class Report extends Base {
     });
   }
 
-  list({user_id, company_id, page, pagesize, queryTarget}) {
-    return this.collection('item').find({
-      [queryTarget]: user_id,
-      company_id,
-    })
+  review({user_id, company_id}) {
+    return Promise.all([
+      Promise.map(['day', 'week', 'month'], item => {
+        return this.collection('item').find({
+          user_id,
+          company_id,
+          type: item,
+          date_create: {
+            $gte: moment().startOf(item).toDate()
+          }
+        });
+      }),
+      Promise.map(['day', 'week', 'month'], item => {
+        return this.collection('item').find({
+          copy_to: { $in: [user_id] },
+          company_id,
+          type: item,
+          date_create: {
+            $gte: moment().startOf(item).toDate()
+          }
+        });
+      }),
+    ]).then(([mine, received]) => {
+      return {
+        mine: {
+          day: mine[0],
+          week: mine[1],
+          month: mine[2],
+        },
+        received: {
+          day: received[0],
+          week: received[1],
+          month: received[2],
+        }
+      };
+    });
+  }
+
+  list({user_id, company_id, page, pagesize, type, status}) {
+    let criteria;
+    if (type == 'inbox') {
+      criteria = {
+        user_id,
+        company_id,
+      };
+    } else if (type == 'outbox') {
+      criteria = {
+        company_id,
+        copy_to: { $in: [user_id] },
+      };
+    } else {
+      throw new ApiError(400, 'invalid_box_check');
+    }
+    return this.collection('item').find(criteria)
     .sort({id: -1})
     .skip((page - 1) * pagesize)
     .limit(pagesize)
@@ -40,39 +89,17 @@ export default class Report extends Base {
     });
   }
 
-  detail({user_id, company_id, report_id}) {
+  detail(report_id) {
     return this.collection('item').findOne({
       _id: report_id,
-
-    })
-  }
-
-  recentReport({user_id, company_id, queryTarget}) {
-    return Promise.map(['day', 'week', 'month'], item => {
-      return this.collection('item').find({
-        [queryTarget]: queryTarget == 'user_id' ? user_id : { $in: [user_id] },
-        company_id,
-        type: item,
-        date_create: {
-          $gte: moment().startOf(item).toDate()
-        }
-      });
-    }).then(data => {
-      if (!data || !data.length) throw new ApiError(400, 'invalid_data');
-      return {
-        day: data[0],
-        week: data[1],
-        month: data[2]
-      };
+    }).then(doc => {
+      return doc;
     });
   }
 
-  report({user_id, company_id, report, status}) {
-    let { date_report, report_target, copy_to, content, type, attachment } = report;
-    report_target = ObjectId(report_target);
-    _.map(copy_to, item => {
-      return ObjectId(item);
-    });
+
+  report({user_id, company_id, report}) {
+    let { date_report, report_target, copy_to, content, type, status, attachment } = report;
     return this.collection('item').insert({
       user_id,
       company_id,
