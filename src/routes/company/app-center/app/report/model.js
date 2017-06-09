@@ -15,10 +15,10 @@ export default class Report extends Base {
 
   overview({user_id, company_id}) {
     return Promise.all([
-      this.collection('item').count({user_id, company_id}),
-      this.collection('item').count({report_target: user_id, company_id}),
-      this.collection('item').findOne({user_id, company_id}, {date_create:1}),
-      this.collection('item').findOne({report_target: user_id, company_id}, {date_create:1}),
+      this.collection('item').count({ user_id, company_id }),
+      this.collection('item').count({ report_target: user_id, company_id }),
+      this.collection('item').findOne({ user_id, company_id }, { date_create: 1 }),
+      this.collection('item').findOne({ report_target: user_id, company_id }, { date_create: 1 }),
       Promise.map(['day', 'week', 'month'], item => {
         return this.collection('item').find({
           user_id,
@@ -77,7 +77,7 @@ export default class Report extends Base {
         criteria.status = status;
       }
     } else if (type == C.BOX_TYPE.INBOX) {
-      criteria['$in'] = [{report_target: user_id}, {copy_to: user_id}];
+      criteria['$in'] = [{ report_target: user_id }, { copy_to: user_id }];
       if (reporter) {
         criteria.user_id = reporter;
       }
