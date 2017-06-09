@@ -92,7 +92,7 @@ api.post('/app/:app_id/add', (req, res, next) => {
   let user_id = req.user._id;
   let company_id = req.company._id;
   db.company.findOne({_id: company_id}).then(doc => {
-    if (doc.owner != user_id) {
+    if (doc.owner.equals(user_id)) {
       throw new ApiError('400', 'permisson_dined');
     }
     db.company.app.findOne({company_id}).then(doc => {
@@ -131,7 +131,7 @@ api.put('/app/:app_id/switch', (req, res, next) => {
   let company_id = req.company._id;
   let user_id = req.user._id;
   db.company.findOne({_id: company_id}).then(doc => {
-    if (doc.owner != user_id.toString()) {
+    if (doc.owner.equals(user_id)) {
       throw new ApiError('400', 'permisson_dined');
     }
     db.company.app.update({
@@ -163,7 +163,7 @@ api.put('/app/:app_id/options', (req, res, next) => {
   let company_id = req.company._id;
   let user_id = req.user._id;
   db.company.findOne({_id: company_id}).then(doc => {
-    if (doc.owner != user_id.toString()) {
+    if (doc.owner.equals(user_id)) {
       throw new ApiError('400', 'permisson_dined');
     }
     db.company.app.config.update({
@@ -276,24 +276,23 @@ api.get('/app/:app_id/pic', (req, res, next) => {
 api.get('/test', (req, res, next) => {
   let user_id = req.user._id;
   // validate('test', req.query);
-  db.company.findOne({owner: user_id}).then(doc => {
-    if (doc.owner == user_id.toString()) {
-      console.log(1111111);
-    }
-    res.json({});
+  _test(user_id).then(doc => {
+    res.json(doc);
   });
   // console.log(req.query);
 });
 
-/**
- * query string
- * @param {string} target
- * @param {ObjectId} user_id
- * @param {ObjectId} company_id
- * @param {ObjectId} note_id optional
- * @param {ObjectId} tag_id optional
- *
- */
+function _test(user_id) {
+  return db.company.findOne({owner: user_id}).then(doc => {
+    if (_.find(doc.projects, item => item.equals(ObjectId('58ed9be9d17a2552d9fbac9a')))) {
+      console.log(1111);
+    }
+    return doc;
+  });
+
+}
+
+
 
 const appInstances = {};
 

@@ -253,20 +253,13 @@ export default class Notebook extends Base {
     });
   }
 
-  noteChange({user_id, company_id, note}) {
-    let { title, content, notebook, tags, shared } = note;
+  noteChange({user_id, note_id, company_id, note}) {
     return this.collection('note').update({
       _id: note_id,
       company_id,
       user_id,
     }, {
-      $set: {
-        title,
-        content,
-        tags,
-        shared,
-        notebook,
-      }
+      $set: note
     });
   }
 

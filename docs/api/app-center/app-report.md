@@ -2,9 +2,7 @@
 
 ## 挂载点 /company/:company_id/app-center/app/report
 
-### GET /overview 获得工作汇报使用情况
-
-### GET /review 获得日周月报汇报情况
+### GET /overview 获得工作汇报使用情况及日周月报汇报情况
 
 ### GET /report 查询汇报列表
 
@@ -17,6 +15,7 @@ query:
   status: String, // 'draft', 'applied', 'agreed', 'rejected' this key is optional
   start_date: Date, // optional
   end_date: Date, // optional
+  reporter: ObjectId, //optional
 }
 ```
 
@@ -24,6 +23,7 @@ OUTPUT:
 ```javascript
 [{
   _id: ObjectId,
+  user_id: ObjectId, 
   type: String, // 'day', 'week', 'month'
   date_report: Date,
   status: String, // 'draft', 'applied', 'agreed', 'rejected'

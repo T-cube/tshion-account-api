@@ -16,18 +16,9 @@ api.get('/overview', (req, res, next) => {
   }).catch(next);
 });
 
-api.get('/review', (req, res, next) => {
-  req._app.review({
-    user_id: req.user._id,
-    company_id: req.company._id
-  }).then(doc => {
-    res.json(doc);
-  }).catch(next);
-});
-
 api.get('/report', (req, res, next) => {
   validate('list', req.query);
-  let { page, type, pagesize, status, start_date, end_date } = req.query;
+  let { page, type, pagesize, status, start_date, end_date, reporter } = req.query;
   req._app.list({
     user_id: req.user._id,
     company_id: req.company._id,
@@ -37,6 +28,7 @@ api.get('/report', (req, res, next) => {
     status,
     start_date,
     end_date,
+    reporter
   })
   .then(list => {
     res.json(list);
@@ -51,6 +43,7 @@ api.get('/report/:report_id', (req, res, next) => {
   }).catch(next);
 });
 
+// TODO: may write a common api for user to upload their attachment in their apps
 
 api.post('/upload',
 upload({type: 'attachment'}).single('report_attachment'),

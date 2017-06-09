@@ -4,6 +4,7 @@ import moment from 'moment';
 import { ApiError } from 'lib/error';
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+import C from './constants';
 
 
 export default class Report extends Base {
@@ -18,17 +19,6 @@ export default class Report extends Base {
       this.collection('item').count({report_target: user_id, company_id}),
       this.collection('item').findOne({user_id, company_id}, {date_create:1}),
       this.collection('item').findOne({report_target: user_id, company_id}, {date_create:1}),
-    ]).then(([totalReport, totalReceived, reportDate, receiveDate]) => {
-      return {
-        totalReport,
-        totalReceived,
-        firstDate: reportDate-receiveDate ? reportDate-receiveDate > 0 ? reportDate: receiveDate : 0
-      };
-    });
-  }
-
-  review({user_id, company_id}) {
-    return Promise.all([
       Promise.map(['day', 'week', 'month'], item => {
         return this.collection('item').find({
           user_id,
@@ -41,7 +31,7 @@ export default class Report extends Base {
       }),
       Promise.map(['day', 'week', 'month'], item => {
         return this.collection('item').find({
-          copy_to: { $in: [user_id] },
+          report_target: user_id,
           company_id,
           type: item,
           date_create: {
@@ -49,24 +39,31 @@ export default class Report extends Base {
           }
         });
       }),
-    ]).then(([mine, received]) => {
+    ]).then(([totalReported, totalReceived, reported, received, from_me, to_me]) => {
+      let report_date = reported ? reported.date_create : 0;
+      let receive_date = reported ? received.date_create : 0;
+      let firstDate = _.min([report_date, receive_date]);
       return {
-        mine: {
-          day: mine[0],
-          week: mine[1],
-          month: mine[2],
+        totalReported,
+        totalReceived,
+        firstDate,
+        from_me: {
+          day: from_me[0],
+          week: from_me[1],
+          month: from_me[2],
         },
-        received: {
-          day: received[0],
-          week: received[1],
-          month: received[2],
+        to_me: {
+          day: to_me[0],
+          week: to_me[1],
+          month: to_me[2],
         }
       };
     });
   }
 
-  list({user_id, company_id, page, pagesize, type, status, start_date, end_date}) {
+  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter}) {
     let criteria;
+    criteria.company_id = company_id;
     if (start_date && end_date) {
       criteria.date_report = { $gte: start_date, $lte: end_date };
     } else if (start_date) {
@@ -74,25 +71,29 @@ export default class Report extends Base {
     } else if (end_date) {
       criteria.date_report = { $lte: end_date };
     }
-    if (type == 'inbox') {
+    if (type == C.BOX_TYPE.OUTBOX) {
+      criteria.user_id = user_id;
       if (status) {
         criteria.status = status;
       }
-      criteria.user_id = user_id;
-      criteria.company_id = company_id;
-    } else if (type == 'outbox') {
-      if (status && status != 'draft'){
-        criteria.status = status;
-      } else if (status && status == 'draft') {
-        throw new ApiError(400, 'invalid_status');
+    } else if (type == C.BOX_TYPE.INBOX) {
+      criteria['$in'] = [{report_target: user_id}, {copy_to: user_id}];
+      if (reporter) {
+        criteria.user_id = reporter;
       }
-      criteria.user_id = user_id;
-      criteria.company_id = company_id;
-    } else {
-      throw new ApiError(400, 'invalid_box_check');
+      if (status) {
+        if (status == C.REPORT_STATUS.DRAFT) {
+          throw new ApiError(400, 'invalid_status');
+        } else {
+          criteria.status = status;
+        }
+      } else {
+        criteria.status = { $not: C.REPORT_STATUS.DRAFT };
+      }
     }
     return this.collection('item').find(criteria,
       {
+        user_id: 1,
         type: 1,
         date_report: 1,
         status: 1,
@@ -120,7 +121,7 @@ export default class Report extends Base {
     return this.collection('item').insert({
       user_id,
       company_id,
-      date_report: new Date(date_report),
+      date_report,
       report_target,
       copy_to,
       content,
@@ -141,10 +142,10 @@ export default class Report extends Base {
       if (!doc) {
         throw new ApiError(400, 'invalid_report');
       }
-      if (doc.user_id != user_id) {
+      if (doc.user_id.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
-      if (doc.status == 'applied' || doc.status == 'agreed') {
+      if (doc.status == C.REPORT_STATUS.APPLIED || doc.status == C.REPORT_STATUS.AGREED) {
         throw new ApiError(400, 'invalid_modified');
       }
       return this.collection('item').update({
@@ -164,7 +165,7 @@ export default class Report extends Base {
       if (!doc) {
         throw new ApiError(400, 'invalid_report');
       }
-      if (doc.report_target != user_id) {
+      if (doc.report_target.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
       return this.collection('item').update({
@@ -194,7 +195,7 @@ export default class Report extends Base {
       if (!doc) {
         throw new ApiError(400, 'invalid_report');
       }
-      if (doc.report_target != user_id.toString() && !_.contains(doc.copy_to, user_id.toString()) ) {
+      if (!doc.report_target.equals(user_id) && !_.find(doc.copy_to, item => item.equals(user_id)) ) {
         throw new ApiError(400, 'invalid_user');
       }
       return this.collection('item').update({

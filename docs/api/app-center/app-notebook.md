@@ -186,11 +186,11 @@ body:
 body:
 ```javascript
 {
-  title: <String>,
-  content: <String>,
-  tags: [ObjectId...],
-  notebook: ObjectId,
-  shared: <Boolean>,
+  title: <String>, //optional
+  content: <String>, //optional
+  tags: [ObjectId...], //optional
+  notebook: ObjectId, //optional
+  shared: <Boolean>, //optional
 }
 ```
 

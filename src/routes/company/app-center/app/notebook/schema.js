@@ -18,6 +18,17 @@ const schema = {
         notebook: { $objectId:1 },
         shared: { type: 'boolean' }
       },
+      change: {
+        title: { type: 'string', optional: true },
+        content: { type: 'string', optional: true },
+        tags: {
+          type: 'array',
+          optional: true,
+          items: { $objectId: 1 },
+        },
+        notebook: { $objectId:1, optional: true },
+        shared: { type: 'boolean', optional: true }
+      },
       comment: { type: 'string' },
       shared: { type: 'boolean' },
     },
@@ -36,6 +47,17 @@ const schema = {
         },
         notebook: { $objectId:1 },
         shared: { type: 'boolean' }
+      },
+      change: {
+        title: { type: 'string', optional: true },
+        content: { type: 'string', optional: true },
+        tags: {
+          type: 'array',
+          optional: true,
+          items: { $objectId: 1 },
+        },
+        notebook: { $objectId:1, optional: true },
+        shared: { type: 'boolean', optional: true }
       },
       comment: { type: 'string' },
       shared: { type: 'boolean' },

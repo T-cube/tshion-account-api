@@ -1,4 +1,5 @@
 import { buildValidator } from 'lib/inspector';
+import C, { ENUMS } from './constants';
 
 const schema={
   list: {
@@ -6,17 +7,19 @@ const schema={
       page: { type: 'integer' },
       type: { type: 'string' },
       pagesize: { type: 'integer' },
+      reporter: { $objectId: 1, optional: true },
       status: { type: 'string', optional: true },
-      start_date: { type: 'date', optional: true },
-      end_date: { type: 'date', optional: true },
+      start_date: { $date: 1, optional: true },
+      end_date: { $date: 1, optional: true },
     },
     validation: {
       page: { type:'integer', gte: 1 },
       type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
       pagesize: { type:'integer', gte: 1 },
-      status: { $enum: ['draft', 'applied', 'agreed', 'rejected'], optional: true },
-      start_date: { type: 'date', optional: true },
-      end_date: { type: 'date', optional: true },
+      status: { $enum: ENUMS.REPORT_STATUS, optional: true },
+      reporter: { $objectId: 1, optional: true },
+      start_date: { type: ['date', 'null'], optional: true },
+      end_date: { type: ['date', 'null'], optional: true },
     }
   },
   info: {
@@ -27,13 +30,13 @@ const schema={
     },
     validation: {
       report_id: { $objectId: 1 },
-      status: { $enum: ['agreed', 'rejected'] },
+      status: { $enum: [C.REPORT_STATUS.AGREED, C.REPORT_STATUS.REJECTED] },
       content: { type: 'string' },
     }
   },
   change: {
     sanitization: {
-      date_report: { type: 'date', optional: true },
+      date_report: { $date: 1, optional: true },
       report_target: { $objectId: 1, optional: true },
       copy_to: {
         type: 'array',
@@ -50,7 +53,7 @@ const schema={
       },
     },
     validation: {
-      date_report: { type: 'date', optional: true },
+      date_report: { type: ['date', 'null'], optional: true },
       report_target: { $objectId: 1, optional: true },
       copy_to: {
         type: 'array',
@@ -58,8 +61,8 @@ const schema={
         items: { $objectId: 1}
       },
       content: { type: 'string', optional: true },
-      status: { $enum: ['applied', 'draft'], optional: true },
-      type: { $enum: ['day', 'week', 'month'], optional: true },
+      status: { $enum: [C.REPORT_STATUS.APPLIED, C.REPORT_STATUS.DRAFT], optional: true },
+      type: { $enum: ENUMS.REPORT_TYPE, optional: true },
       attachment: {
         type: 'array',
         optional: true,
@@ -71,7 +74,7 @@ const schema={
     sanitization: {
       user_id: { $objectId: 1 },
       company_id: { $objectId: 1 },
-      date_report: { type: 'date' },
+      date_report: { $date: 1 },
       report_target: { $objectId: 1 },
       copy_to: {
         type: 'array',
@@ -88,15 +91,15 @@ const schema={
     validation: {
       user_id: { $objectId: 1 },
       company_id: { $objectId: 1 },
-      date_report: { type: 'date' },
+      date_report: { $date: 1 },
       report_target: { $objectId: 1 },
       copy_to: {
         type: 'array',
         items: { $objectId: 1}
       },
       content: { type: 'string' },
-      status: { $enum: ['applied', 'draft'] },
-      type: { $enum: ['day', 'week', 'month'] },
+      status: { $enum: [C.REPORT_STATUS.APPLIED, C.REPORT_STATUS.DRAFT] },
+      type: { $enum: ENUMS.REPORT_TYPE },
       attachment: {
         type: 'array',
         items: { type: 'string' }

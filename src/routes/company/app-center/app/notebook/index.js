@@ -213,7 +213,7 @@ api.put('/notebook/:notebook_id', (req, res, next) => {
 
 api.put('/note/:note_id', (req, res, next) => {
   validate('notebook', req.params, ['note_id']);
-  validate('notebook', req.body, ['note_id']);
+  validate('notebook', req.body, ['change']);
   let { note_id } = req.params;
   let { note } = req.body;
   req._app.noteChange({
