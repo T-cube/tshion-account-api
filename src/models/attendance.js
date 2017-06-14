@@ -3,7 +3,7 @@ import moment from 'moment';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { diffObjectId } from 'lib/utils';
+import { uniqObjectIdArray } from 'lib/utils';
 import Structure from 'models/structure';
 import C from 'lib/constants';
 
@@ -329,7 +329,7 @@ export default class Attendance {
           signRecord.push(_.extend(this.parseUserRecord(sign.data, year, month), {
             user: sign.user
           }));
-          members = diffObjectId(members, [sign.user]);
+          members = uniqObjectIdArray(members, [sign.user]);
         });
         // if (members.length) {
         //   members.forEach(user => {
