@@ -20,12 +20,12 @@ let constants = {
     // 成员
     JOIN: 'join',             // 加入
     EXIT: 'exit',             // 退出
-    ADD_POSITION: 'add_position',             // 添加职位
-    REMOVE_POSITION: 'remove_position',       // 移除职位
+    ADD_POSITION: 'add_position',       // 添加职位
+    REMOVE_POSITION: 'remove_position', // 移除职位
     SET_ADMIN: 'add_admin',             // 设为管理员
     REMOVE_ADMIN: 'remove_admin',       // 取消管理员
     // 管理操作
-    TRANSFER: 'transfer',      // 转让
+    TRANSFER: 'transfer',     // 转让
     // 邀请、审批
     ACCEPT: 'accept',         // 接受
     APPROVE: 'approve',       // 通过
@@ -34,8 +34,8 @@ let constants = {
     SUBMIT: 'submit',         // 提交
     COPY: 'copy',             // 抄送
     CANCEL: 'cancel',         // 取消
-    ENABLE_APPROVAL_TPL: 'enable_approval_tpl',         // 启用审批模板
-    DISABLE_APPROVAL_TPL: 'disable_approval_tpl',         // 禁用审批模板
+    ENABLE_APPROVAL_TPL: 'enable_approval_tpl',     // 启用审批模板
+    DISABLE_APPROVAL_TPL: 'disable_approval_tpl',   // 禁用审批模板
     // 任务
     COMPLETE: 'complete',     // 关注
     REOPEN: 'reopen',         // 取消关注
@@ -43,7 +43,7 @@ let constants = {
     FOLLOW: 'follow',         // 关注
     UNFOLLOW: 'unfollow',     // 取消关注
     ARCHIVED: 'archived',     // 归档
-    UN_ARCHIVED: 'un_archived',     // 重启
+    UN_ARCHIVED: 'un_archived',              // 重启
     CHANGE_TASK_ASSIGNEE: 'change_task_assignee', // 修改项目的执行人
     // 文件操作
     UPLOAD: 'upload',         // 上传
@@ -57,7 +57,7 @@ let constants = {
     SIGN_OUT: 'sign.out',     // 签到
     SIGN_AUDIT: 'sign.audit', // 补签
 
-    RELEASE: 'release',   // 发布
+    RELEASE: 'release',       // 发布
 
     TASK_DAYLYREPORT: 'task_daylyreport',   // 任务日报
   },
@@ -226,7 +226,7 @@ let constants = {
     TAG: 'tag',                   // 标签
     FOLLOWERS: 'followers',       // 关注者
     FOLLOW: 'follow',             // 关注
-    UNFOLLOW: 'follow',           // 关注
+    UNFOLLOW: 'unfollow',         // 取消关注
     PRIORITY: 'priority',         // 优先级
   },
 
@@ -239,7 +239,7 @@ let constants = {
     LOGIN: 'login',
     LOGOUT: 'logout',
     LOGIN_FAIL: 'login_fail',
-    CHANGE_PASSW: 'change_passw',
+    CHANGE_PASSWORD: 'change_password',
     BIND_WECHAT: 'bind_wechat',
     UNBIND_WECHAT: 'unbind_wechat',
   },

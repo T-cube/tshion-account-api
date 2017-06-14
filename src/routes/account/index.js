@@ -241,7 +241,7 @@ api.post('/change-pass', oauthCheck(), (req, res, next) => {
           password: password,
         }
       }),
-      req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.CHANGE_PASSW)
+      req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.CHANGE_PASSWORD)
       // TODO logout current user
     ]);
   })
