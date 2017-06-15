@@ -10,9 +10,12 @@ const schema = {
         type: 'object'
       },
       comment: {
-        app_version: { type: 'string' },
-        star: { type: 'number' },
-        content: { type: 'string' },
+        type: 'object',
+        properties: {
+          app_version: { type: 'string' },
+          star: { type: 'number' },
+          content: { type: 'string' },
+        }
       },
     },
     validation: {
@@ -23,18 +26,33 @@ const schema = {
         type: 'object'
       },
       comment: {
-        app_version: { type: 'string' },
-        star: { type: 'number' },
-        content: { type: 'string' },
+        type: 'object',
+        properties: {
+          app_version: { type: 'string' },
+          star: { type: 'number' },
+          content: { type: 'string' },
+        }
       },
     },
   },
   test: {
     sanitization: {
-      start_date: { type: 'date', optional:true },
+      name: { type: 'string' },
+      type: { type: 'string' },
+      company_id: { $objectId: 1 },
+      departments: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
     },
     validation: {
-      start_date: { type: 'date', optional:true },
+      name: { type: 'string' },
+      type: { type: 'string' },
+      company_id: { $objectId: 1 },
+      departments: {
+        type: 'array',
+        items: { $objectId: 1 }
+      },
     }
   }
 };

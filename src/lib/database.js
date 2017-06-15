@@ -55,6 +55,7 @@ const collections = [
   'task.comments',
   'user',
   'user.activity',
+  'user.file',
   'user.confirm.email',
   'user.confirm.mobile',
   'user.guide',

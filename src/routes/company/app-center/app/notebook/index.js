@@ -41,7 +41,7 @@ api.get('/note/:note_id', (req, res, next) => {
   }).catch(next);
 });
 
-api.get('/notebook/:notebook_id', (req, res, next) => {
+api.get('/notebook/:notebook_id/note', (req, res, next) => {
   validate('notebook', req.params, ['notebook_id']);
   let { notebook_id } = req.params;
   req._app.notebookQuery({

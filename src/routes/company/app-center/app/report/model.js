@@ -117,7 +117,7 @@ export default class Report extends Base {
 
 
   report({user_id, company_id, report}) {
-    let { date_report, report_target, copy_to, content, type, status, attachment } = report;
+    let { date_report, report_target, copy_to, content, type, status, attachments } = report;
     return this.collection('item').insert({
       user_id,
       company_id,
@@ -127,9 +127,10 @@ export default class Report extends Base {
       content,
       type,
       status,
-      attachment,
+      attachments,
       comments: [],
       date_create: new Date(),
+      date_update: new Date(),
     }).then(doc => {
       return doc;
     });
@@ -148,6 +149,7 @@ export default class Report extends Base {
       if (doc.status == C.REPORT_STATUS.APPLIED || doc.status == C.REPORT_STATUS.AGREED) {
         throw new ApiError(400, 'invalid_modified');
       }
+      report.date_update = new Date();
       return this.collection('item').update({
         _id: report_id
       }, {
@@ -195,7 +197,7 @@ export default class Report extends Base {
       if (!doc) {
         throw new ApiError(400, 'invalid_report');
       }
-      if (!doc.report_target.equals(user_id) && !_.find(doc.copy_to, item => item.equals(user_id)) ) {
+      if (!doc.report_target.equals(user_id) && !_.some(doc.copy_to, item => item.equals(user_id)) ) {
         throw new ApiError(400, 'invalid_user');
       }
       return this.collection('item').update({

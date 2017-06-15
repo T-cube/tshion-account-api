@@ -11,7 +11,11 @@
   content: String,
   type: String, //day, week, month
   status: String, //draft, applied, agreed, rejected
-  attachment: [String...],
+  attachments: [{
+    _id: { $objectId: 1 },
+    name: { type: 'string' },
+    url: { type: 'string' }
+  }...],
   comments: [{
     _id: ObjectId,
     user_id: ObjectId,
@@ -21,5 +25,6 @@
     date_create: Date
   }...],  
   date_create: Date,
+  date_update: Date,
 }
 ```

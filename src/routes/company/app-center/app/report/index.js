@@ -3,6 +3,7 @@ import { upload, saveCdn } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import { ObjectId } from 'mongodb';
 import { validate } from './schema';
+import _ from 'underscore';
 
 let api = express.Router();
 export default api;
@@ -46,23 +47,25 @@ api.get('/report/:report_id', (req, res, next) => {
 // TODO: may write a common api for user to upload their attachment in their apps
 
 api.post('/upload',
-upload({type: 'attachment'}).single('report_attachment'),
+upload({type: 'attachment'}).single('document'),
 saveCdn('cdn-private'),
 (req, res, next) => {
   let file = req.file;
+  let user_id = req.user._id;
   if (!file) {
-    return res.json({});
+    throw new ApiError(400, 'file_not_upload');
   }
-  res.json(file);
+  req._app.uploadSave(file, user_id).then(doc => {
+    res.json(doc);
+  }).catch(next);
 });
 
 api.post('/report', (req, res, next) => {
   validate('report', req.body);
-  let { report } = req.body;
   req._app.report({
     user_id: req.user._id,
     company_id: req.company._id,
-    report
+    report: req.body
   }).then(doc => {
     res.json(doc);
   }).catch(next);
@@ -72,11 +75,10 @@ api.put('/report/:report_id', (req, res, next) => {
   validate('change', req.body);
   validate('info', req.params, ['report_id']);
   let { report_id } = req.params;
-  let { report } = req.body;
   req._app.reportUpdate({
     user_id: req.user._id,
     report_id,
-    report
+    report: req.body
   }).then(doc => {
     res.json(doc);
   }).catch(next);

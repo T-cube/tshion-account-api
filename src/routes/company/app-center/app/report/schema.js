@@ -46,10 +46,18 @@ const schema={
       content: { type: 'string', optional: true },
       status: { type: 'string', optional: true },
       type: { type: 'string', optional: true },
-      attachment: {
+      attachments: {
         type: 'array',
         optional: true,
-        items: { type: 'string' }
+        items: {
+          type: 'object',
+          optional: true,
+          properties: {
+            _id: { $objectId: 1 },
+            name: { type: 'string' },
+            url: { type: 'string' },
+          }
+        }
       },
     },
     validation: {
@@ -63,10 +71,18 @@ const schema={
       content: { type: 'string', optional: true },
       status: { $enum: [C.REPORT_STATUS.APPLIED, C.REPORT_STATUS.DRAFT], optional: true },
       type: { $enum: ENUMS.REPORT_TYPE, optional: true },
-      attachment: {
+      attachments: {
         type: 'array',
         optional: true,
-        items: { type: 'string' }
+        items: {
+          type: 'object',
+          optional: true,
+          properties: {
+            _id: { $objectId: 1 },
+            name: { type: 'string' },
+            url: { type: 'string' },
+          }
+        }
       },
     }
   },
@@ -83,9 +99,17 @@ const schema={
       content: { type: 'string' },
       status: { type: 'string' },
       type: { type: 'string' },
-      attachment: {
+      attachments: {
         type: 'array',
-        items: { type: 'string' }
+        items: {
+          type: 'object',
+          optional: true,
+          properties: {
+            _id: { $objectId: 1 },
+            name: { type: 'string' },
+            url: { type: 'string' },
+          }
+        }
       },
     },
     validation: {
@@ -100,9 +124,18 @@ const schema={
       content: { type: 'string' },
       status: { $enum: [C.REPORT_STATUS.APPLIED, C.REPORT_STATUS.DRAFT] },
       type: { $enum: ENUMS.REPORT_TYPE },
-      attachment: {
+      attachments: {
         type: 'array',
-        items: { type: 'string' }
+        optional: true,
+        items: {
+          type: 'object',
+          optional: true,
+          properties: {
+            _id: { $objectId: 1 },
+            name: { type: 'string' },
+            url: { type: 'string' },
+          }
+        }
       },
     }
   }

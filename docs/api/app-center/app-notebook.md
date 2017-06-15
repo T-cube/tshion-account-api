@@ -59,7 +59,7 @@ OUTPUT:
 }
 ```
 
-### GET /notebook/:notebook_id 获取指定notebook_id的笔记
+### GET /notebook/:notebook_id/note 获取指定notebook_id的笔记
 
 OUTPUT:
 ```javascript

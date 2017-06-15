@@ -23,7 +23,7 @@ OUTPUT:
 ```javascript
 [{
   _id: ObjectId,
-  user_id: ObjectId, 
+  user_id: ObjectId,
   type: String, // 'day', 'week', 'month'
   date_report: Date,
   status: String, // 'draft', 'applied', 'agreed', 'rejected'
@@ -45,7 +45,11 @@ OUTPUT:
   content: String,
   type: String, //day, week, month
   status: String, //draft, applied, agreed, rejected
-  attachment: [String...],
+  attachments: [{
+    _id: ObjectId,
+    name: String,
+    url: String,
+  }...],
   comments: [{
     _id: ObjectId,
     user_id: ObjectId,
@@ -78,7 +82,11 @@ body:
   content: String,
   type: String, //'day', 'week', 'month'
   status: String, //'draft', 'applied'
-  attachment: [String...],
+  attachments: [{
+    _id: ObjectId,
+    name: String,
+    url: String,
+  }...],
 }
 ```
 
@@ -93,7 +101,11 @@ body:
   content: String, //optional
   type: String, //'day', 'week', 'month'  optional
   status: String, //'draft', 'applied' optional
-  attachment: [String...], //optional
+  attachments: [{
+    _id: ObjectId,
+    name: String,
+    url: String,
+  }...], //optional
 }
 ```
 

@@ -29,7 +29,7 @@ output:
 
 获得公司app列表
 
-### GET /app/:app_id/add
+### POST /app/:app_id/add
 
 团队拥有者添加app
 
