@@ -11,7 +11,7 @@ import { ApiError } from 'lib/error';
 import Auth from 'models/plan/auth';
 import Realname from 'models/plan/realname';
 import { saveCdn } from 'lib/upload';
-import { mapObjectIdToData } from 'lib/utils';
+import { mapObjectIdToData, validadeSocialCreditCode, validadeBusCode } from 'lib/utils';
 
 const api = express.Router();
 export default api;
@@ -74,6 +74,7 @@ api.get('/item/:authId', (req, res, next) => {
 
 api.post('/', checkValid(), (req, res, next) => {
   let {plan} = req.query;
+  console.log(req.body);
   if (plan == C.TEAMPLAN.PRO) {
     createOrUpdatePro()(req, res, next);
   } else if (plan == C.TEAMPLAN.ENT) {
@@ -182,7 +183,16 @@ function createOrUpdatePro(isUpdate) {
 function createOrUpdateEnt(isUpdate) {
   return (req, res, next) => {
     let info = req.body;
+    let certificate_status = false;
     validate('auth_ent', info);
+    if (info.enterprise.certificate_type == 'license') {
+      certificate_status = validadeBusCode(info.enterprise.certificate_number);
+    } else {
+      certificate_status = validadeSocialCreditCode(info.enterprise.certificate_number);
+    }
+    if (!certificate_status) {
+      throw new ApiError(400, 'invalid_certificate_number');
+    }
     let company_id = req.company._id;
     let user_id = req.user._id;
     req.model('temp-file')

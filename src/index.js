@@ -26,7 +26,7 @@ import bindLoader from 'lib/loader';
 import apiRouter from './routes';
 import oauthModel from 'lib/oauth-model';
 import * as oauthRoute from 'lib/oauth-routes';
-import { apiErrorHandler } from 'lib/error';
+import { apiErrorHandler, apiRouteError } from 'lib/error';
 import corsHandler from 'lib/cors';
 import SocketServer from 'service/socket';
 import ScheduleServer from 'service/schedule';
@@ -49,15 +49,16 @@ import Preference from 'models/preference';
 import TempFile from 'models/temp-file';
 import Payment from 'models/plan/payment';
 import C from 'lib/constants';
+import Security from 'models/security';
 import Captcha from 'lib/captcha';
 import Broadcast from 'models/broadcast';
 import rpc from '@ym/rpc';
 
 // welcome messages and output corre config
-const version = require('../package.json').version;
+const API_VERSION = require('../package.json').version;
 console.log();
 console.log('--------------------------------------------------------------------------------');
-console.log('Tlifang API Service v%s', version);
+console.log('Tlifang API Service v%s', API_VERSION);
 console.log('--------------------------------------------------------------------------------');
 console.log(`GIT_SHA1=${git.short()}`);
 const NODE_ENV = process.env.NODE_ENV || 'default';
@@ -91,6 +92,7 @@ app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
 app.loadModel('weather', Weather, config.get('vendor.showapi.weather'));
 app.loadModel('captcha', Captcha, config.get('userVerifyCode.captcha'));
+app.loadModel('security', Security, config.get('security'));
 app.loadModel('html-helper', HtmlHelper);
 app.loadModel('notification', Notification);
 app.loadModel('activity', Activity);
@@ -122,6 +124,11 @@ initRPC(config.get('rpc'), _loader).then(rpc => {
 // model loader
 app.use((req, res, next) => {
   app.bindLoader(req);
+  res.set({
+    'X-Powered-By': `tlf-api/${API_VERSION}`,
+    'X-Content-Type-Options': 'nosniff',
+    'Vary': 'Accept-Encoding',
+  });
   next();
 });
 
@@ -172,6 +179,7 @@ app.use('/api', apiRouter);
 app.use(app.oauth.errorHandler());
 
 // global error handler
+app.use(apiRouteError);
 app.use(apiErrorHandler);
 
 // starting server

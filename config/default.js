@@ -17,6 +17,7 @@ module.exports = {
     host: '127.0.0.1', // process.env.SERVER_HOST
     port: 3000, // process.env.SERVER_PORT
   },
+  allowedOrigins: '*',
   rpc: {
     protocol: 'http', // process.env.RPC_PROTOCOL
     hostname: '127.0.0.1', // process.env.RPC_HOSTNAME
@@ -59,6 +60,9 @@ module.exports = {
   },
   security: {
     passwordHashRounds: 10,
+    frequency: {
+      userVerifyCode: 60,
+    },
     attemptTimes: {
       ipTimes: 150,
       userCaptchaTimes: 3,

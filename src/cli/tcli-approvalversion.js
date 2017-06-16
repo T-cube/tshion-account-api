@@ -5,7 +5,7 @@ import program from 'commander';
 import Promise from 'bluebird';
 import db from 'lib/database';
 import C from 'lib/constants';
-import { diffObjectId } from 'lib/utils';
+import { uniqObjectIdArray } from 'lib/utils';
 
 program
   .option('-o, --update', 'update approval template version status')
@@ -25,7 +25,7 @@ if (program.update) {
   .then(list => {
     return Promise.map(list, item => {
       if (item.reversions) {
-        let templateNeedUpdate = diffObjectId(item.reversions, [item.current]);
+        let templateNeedUpdate = uniqObjectIdArray(item.reversions, [item.current]);
         if (!templateNeedUpdate.length) {
           return;
         }
