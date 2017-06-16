@@ -511,3 +511,78 @@ export function saveCdnInBucket(bucketInstance, files) {
     });
   }
 }
+<<<<<<< HEAD
+=======
+
+export function checkRequestFrequency(redis, {type, data, interval}) {
+  return new Promise((resolve, reject) => {
+    let account = data[type];
+    let frequency = `frequency_${type}_${account}`;
+    redis.exists(frequency).then(exist => {
+      if (exist) {
+        reject(new ApiError(429, 'too_many_requests'));
+      } else {
+        redis.set(frequency, account).then(() => {
+          redis.expire(frequency, interval);
+          resolve();
+        });
+      }
+    });
+  });
+}
+
+export function validadeSocialCreditCode(code) {
+  let patrn = /^[0-9A-Z]+$/;
+  if ((code.length != 18) || !patrn.test(code)) {
+    return false;
+  } else {
+    let ancode, ancodeValue, total = 0;
+    let weightedfactors = [1, 3, 9, 27, 19, 26, 16, 17, 20, 29, 25, 13, 8, 24, 10, 30, 28];
+    let str = '0123456789ABCDEFGHJKLMNPQRTUWXY';
+    for (let i = 0; i < code.length - 1; i++) {
+      ancode = code.substring(i, i + 1);
+      ancodeValue = str.indexOf(ancode);
+      total = total + ancodeValue * weightedfactors[i];
+    }
+    let logiccheckcode = 31 - total % 31;
+    if (logiccheckcode === 31) logiccheckcode = 0;
+    let initStr = '0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,J,K,L,M,N,P,Q,R,T,U,W,X,Y';
+    let arrayStr = initStr.split(',');
+    logiccheckcode = arrayStr[logiccheckcode];
+    let checkcode = code.substring(17, 18);
+    if (logiccheckcode !== checkcode) return false;
+    return true;
+  }
+}
+
+export function validadeBusCode(busCode) {
+  let ret = false;
+  if (busCode.length == 15) {
+    let s = [];
+    let p = [];
+    let a = [];
+    let m = 10;
+    p[0] = m;
+    for (let i = 0; i < busCode.length; i++) {
+      a[i] = parseInt(busCode.substring(i, i + 1), m);
+      s[i] = (p[i] % (m + 1)) + a[i];
+      if (0 == s[i] % m) {
+        p[i + 1] = 10 * 2;
+      } else {
+        p[i + 1] = (s[i] % m) * 2;
+      }
+    }
+    if (1 == (s[14] % m)) {
+      ret = true;
+    } else {
+      ret = false;
+    }
+  }
+  else if ('' == busCode) {
+    ret = false;
+  } else {
+    ret = false;
+  }
+  return ret;
+}
+>>>>>>> c1d8a20a2d334e8670559ca1e555646c0c6f0976
