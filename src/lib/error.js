@@ -59,6 +59,10 @@ export function debugHttpInfo(req, res, next) {
   next();
 }
 
+export function apiRouteError(req, res, next) {
+  throw new ApiError(404, 'api_not_found');
+}
+
 export function apiErrorHandler(err, req, res, next) {
   // if (err instanceof DbError) {
   //   err = ApiError(500, err.message, err.description, err);

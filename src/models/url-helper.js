@@ -113,10 +113,10 @@ export default class UrlHelper {
         }
         break;
       case 'announcement':
-        url = `oa/company/${object.company_id}/announcement/${object.type}/${object._id}`;
+        url = `oa/company/${object.company_id}/announcement/list/${object.type}/${object._id}`;
         break;
       case 'announcement.draft':
-        url = `oa/company/${object.company_id}/announcement/drafts/${object._id}/edit`;
+        url = `oa/company/${object.company_id}/announcement/list/drafts/${object._id}/edit`;
         break;
       case SCHEDULE_REMIND:
         url = 'oa/user/schedule';

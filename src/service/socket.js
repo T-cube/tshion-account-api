@@ -17,7 +17,6 @@ class SocketClient {
 
   add(socket) {
     this.sockets.set(socket.id, socket);
-    let keys = [];
   }
 
   remove(socket) {
@@ -93,7 +92,7 @@ export default class SocketServer extends EventEmitter {
     } else if (_.isString(object) && ObjectId.isValid(object)) {
       userId = object;
     } else if (_.isObject(object)) {
-      userId = object.userId;
+      return this.getClient(object.userId);
     } else {
       return null;
     }
