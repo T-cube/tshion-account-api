@@ -33,7 +33,7 @@
 ```
 npm run watch          开发时自动编译指令，`src/`下源码保存后会自动编译输出至`app/`
 npm run nodemon        与`npm run watch`配合使用，更新源码后自动重启API服务
-npm run compile        手工编译源代码，通常用于生产环境部署
+npm run build          手工编译源代码，通常用于生产环境部署
 npm start              在当前 console 启动服务
 pm2 start pm2.json     以后台方式启动服务
 pm2 restart tlf-api    重启服务，对于已经使用`./deploy`或`pm2 start`的情况
