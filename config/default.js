@@ -60,6 +60,9 @@ module.exports = {
   },
   security: {
     passwordHashRounds: 10,
+    frequency: {
+      userVerifyCode: 60,
+    },
     attemptTimes: {
       ipTimes: 150,
       userCaptchaTimes: 3,

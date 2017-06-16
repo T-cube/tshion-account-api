@@ -8,6 +8,8 @@ export default class Sender {
   }
 
   // @interface
-  send() {}
+  send() {
+    throw new Error('Sender: you need to overide send() method in your subclass');
+  }
 
 }

@@ -6,14 +6,13 @@ import db from 'lib/database';
 import {
   time,
   timestamp,
-  expire,
+  isMobile,
   comparePassword,
   hashPassword,
   generateToken,
   getEmailName,
   downloadFile,
   saveCdnInBucket,
-  checkRequestFrequency,
 } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -159,21 +158,21 @@ api.post('/confirm', (req, res, next) => {
 
 api.post('/send-sms', (req, res, next) => {
   const { mobile } = req.body;
-  if (!mobile || !/^1[34578]\d{9}$/.test(mobile)) {
+  if (!mobile || !isMobile(mobile)) {
     throw new ApiError(400, 'invalid_mobile');
   }
-  let redis = req.model('redis');
-  checkRequestFrequency(redis, {type: 'mobile', data: req.body, interval: C.FREQUENCY_CHECK.CODE}).then(() => {
-    db.user.find({mobile: mobile}).count()
-    .then(count => {
-      if (count) {
-        throw new ApiError(400, 'user_exists');
-      }
-      req.model('account').sendSmsCode(mobile);
-    })
-    .then(() => res.json({}))
-    .catch(next);
+  const frequency = config.get('security.frequency.userVerifyCode');
+  req.model('security').limitRequestFrequency('verifycode', mobile, frequency)
+  .then(() => {
+    return db.user.find({mobile: mobile}).count();
   })
+  .then(count => {
+    if (count) {
+      throw new ApiError(400, 'user_exists');
+    }
+    req.model('account').sendSmsCode(mobile);
+  })
+  .then(() => res.json({}))
   .catch(next);
 });
 
@@ -254,15 +253,15 @@ api.post('/recover/send-code', (req, res, next) => {
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type]);
   let account = req.body[type];
-  let redis = req.model('redis');
-  checkRequestFrequency(redis, {type, data, interval: C.FREQUENCY_CHECK.CODE}).then(() => {
-    req.model('account').checkExistance(type, account, true)
-    .then(() => {
-      return req.model('account').sendCode(type, account, 'reset_pass');
-    })
-    .then(() => res.json({}))
-    .catch(next);
+  const frequency = config.get('security.frequency.userVerifyCode');
+  req.model('security').limitRequestFrequency('verifycode', account, frequency)
+  .then(() => {
+    return req.model('account').checkExistance(type, account, true);
   })
+  .then(() => {
+    return req.model('account').sendCode(type, account, 'reset_pass');
+  })
+  .then(() => res.json({}))
   .catch(next);
 });
 

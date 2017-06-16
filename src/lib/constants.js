@@ -346,10 +346,6 @@ let constants = {
     INACTIVE: 'inactive'
   },
 
-  FREQUENCY_CHECK: {
-    CODE: 60
-  }
-
 };
 
 export default constants;
