@@ -511,25 +511,6 @@ export function saveCdnInBucket(bucketInstance, files) {
     });
   }
 }
-<<<<<<< HEAD
-=======
-
-export function checkRequestFrequency(redis, {type, data, interval}) {
-  return new Promise((resolve, reject) => {
-    let account = data[type];
-    let frequency = `frequency_${type}_${account}`;
-    redis.exists(frequency).then(exist => {
-      if (exist) {
-        reject(new ApiError(429, 'too_many_requests'));
-      } else {
-        redis.set(frequency, account).then(() => {
-          redis.expire(frequency, interval);
-          resolve();
-        });
-      }
-    });
-  });
-}
 
 export function validadeSocialCreditCode(code) {
   let patrn = /^[0-9A-Z]+$/;
@@ -585,4 +566,3 @@ export function validadeBusCode(busCode) {
   }
   return ret;
 }
->>>>>>> c1d8a20a2d334e8670559ca1e555646c0c6f0976
