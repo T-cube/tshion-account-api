@@ -20,6 +20,7 @@ import _ from 'underscore';
 import git from 'git-rev-sync';
 import session from 'express-session';
 const sessionRedis = require('connect-redis')(session);
+import morgan from 'morgan';
 
 import 'lib/i18n';
 import bindLoader from 'lib/loader';
@@ -121,9 +122,24 @@ initRPC(config.get('rpc'), _loader).then(rpc => {
   console.error('rpc:', e);
 });
 
-// model loader
+if (config.get('debug.httpInfo')) {
+  // debug http info
+  console.log('debug.httpInfo enabled');
+  app.use(morgan(config.get('debug.format'), {
+    skip: (req, res) => {
+      return req.method == 'OPTIONS';
+    }
+  }));
+}
+if (config.get('debug.apiError')) {
+  // debug http info
+  console.log('debug.apiError enabled');
+}
+
 app.use((req, res, next) => {
+  // model loader
   app.bindLoader(req);
+  // set application headers
   res.set({
     'X-Powered-By': `tlf-api/${API_VERSION}`,
     'X-Content-Type-Options': 'nosniff',

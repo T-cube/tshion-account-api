@@ -18,6 +18,11 @@ module.exports = {
     port: 3000, // process.env.SERVER_PORT
   },
   allowedOrigins: '*',
+  debug: {
+    format: 'dev', // mongan log format
+    httpInfo: false, //process.env.DEBUG_HTTP_INFO
+    apiError: false, //process.env.DEBUG_API_ERROR
+  },
   rpc: {
     protocol: 'http', // process.env.RPC_PROTOCOL
     hostname: '127.0.0.1', // process.env.RPC_HOSTNAME
