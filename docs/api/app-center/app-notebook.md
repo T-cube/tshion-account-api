@@ -1,6 +1,6 @@
 # APP notebook API 文档
 
-## 挂载点 /company/:company_id/app-center/app/notebook
+## 挂载点 /company/:company_id/app-center/com.tlifang.notebook
 
 
 ### GET /user 获取用户笔记信息

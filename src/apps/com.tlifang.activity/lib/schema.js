@@ -50,6 +50,7 @@ const schema={
       loop: { type: 'boolean' },
       is_public: { type: 'boolean' },
       accept_require: { type: 'boolean' },
+      certified_member: { type: 'boolean' },
       creator: { $objectId: 1 },
       assistants: {
         type: 'arrary',
@@ -114,6 +115,7 @@ const schema={
       loop: { type: 'boolean' },
       is_public: { type: 'boolean' },
       accept_require: { type: 'boolean' },
+      certified_member: { type: 'boolean' },
       creator: { $objectId: 1 },
       assistants: {
         type: 'arrary',

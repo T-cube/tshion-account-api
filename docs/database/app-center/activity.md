@@ -1,6 +1,6 @@
 # app.store.activity 命名空间
 
-## activity
+## item
 ```javascript
 {
   name: String,
@@ -15,6 +15,7 @@
   loop: Boolean,
   is_public: Boolean,
   accept_require: Boolean,
+  is_member_certified: Boolean,
   creator: ObjectId,
   assistants: [ObjectId...],
   members: [ObjectId...],

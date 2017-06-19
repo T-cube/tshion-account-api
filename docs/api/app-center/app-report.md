@@ -1,6 +1,6 @@
 # APP report API 文档
 
-## 挂载点 /company/:company_id/app-center/app/report
+## 挂载点 /company/:company_id/app-center/com.tlifang.report
 
 ### GET /overview 获得工作汇报使用情况及日周月报汇报情况
 

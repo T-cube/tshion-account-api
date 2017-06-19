@@ -1,16 +1,16 @@
 import Promise from 'bluebird';
-import Base from '../../base';
 import moment from 'moment';
-import { ApiError } from 'lib/error';
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+
+import AppBase from 'models/app-base';
+import { ApiError } from 'lib/error';
 import C from './constants';
 
+export default class Report extends AppBase {
 
-export default class Report extends Base {
-
-  constructor() {
-    super();
+  constructor(options) {
+    super(options);
   }
 
   overview({user_id, company_id}) {

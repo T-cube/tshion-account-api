@@ -15,7 +15,7 @@ api.get('/overview', (req, res, next) => {
   }).catch(next);
 });
 
-api.get('/activities', (req, res, next) => {
+api.get('/activity', (req, res, next) => {
   validate('list', req.query);
   let { range, target } = req.query;
   req._app.list({
@@ -30,7 +30,7 @@ api.get('/activities', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/activities/:activity_id', (req, res, next) => {
+api.get('/activity/:activity_id', (req, res, next) => {
   validate('info', req.params, ['activity_id']);
   req._app.detail({
     user_id: req.user._id,
@@ -43,11 +43,22 @@ api.get('/activities/:activity_id', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/activities/:activity_id/accept', (req, res, next) => {
+api.post('/activity/:activity_id/signIn', (req, res, next) => {
+  validate('info', req.params, ['activity_id']);
+  req._app.signIn({
+    user_id: req.user._id,
+    activity_id: req.params.activity_id,
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.post('/activity/:activity_id/accept', (req, res, next) => {
   validate('info', req.params, ['activity_id']);
   req._app.accept({
     user_id: req.user._id,
-    company_id: req.company._id,
     activity_id: req.params.activity_id
   })
   .then(doc => {
@@ -56,7 +67,19 @@ api.get('/activities/:activity_id/accept', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/activities/:activity_id/comments', (req, res, next) => {
+api.post('/activity/:activity_id/signUp', (req, res, next) => {
+  validate('info', req.params, ['activity_id']);
+  req._app.signUp({
+    user_id: req.user._id,
+    activity_id: req.params.activity_id
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.post('/activity/:activity_id/comment', (req, res, next) => {
   validate('info', req.params, ['activity_id']);
   validate('info', req.body, ['content']);
   req._app.comment({
@@ -70,17 +93,17 @@ api.post('/activities/:activity_id/comments', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/activities', (req, res, next) => {
+api.post('/activity', (req, res, next) => {
   validate('activity', req.body);
   req._app.createActivity(req.body).then(doc => {
-    if (doc.room.status == C.APPROVAL_STATUS.PENDING) {
+    if (doc.room.status == C.APPROVAL_STATUS.AGREED) {
       // req.model('notifiction')
     }
     res.json(doc);
   }).catch(next);
 });
 
-api.post('/activities/:activity_id/approval', (req, res, next) => {
+api.post('/activity/:activity_id/approval', (req, res, next) => {
   validate('info', req.body, ['content']);
   validate('info', req.params, ['activity_id']);
   req._app.approval({

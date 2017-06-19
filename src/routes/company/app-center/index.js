@@ -3,38 +3,33 @@ import express from 'express';
 import db from 'lib/database';
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
 import path from 'path';
 import { oauthCheck } from 'lib/middleware';
-import moment from 'moment';
-
 
 let api = express.Router();
 export default api;
 
 api.use(oauthCheck());
 
-
 api.get('/collection/add', (req, res, next) => {
   db.app.insert({
-    appid: 'com.tlifang.app.report',
-    name: 'report',
+    appid: 'com.tlifang.activity',
+    name: 'activity',
     name_en: 'repoooooooooooooooort',
     version: '0.1.0',
     icons: {
-      '16': '',
-      '64': '',
-      '128': '',
     },
-    slideshow: ['','','','','',],
+    slideshow: [],
     author: 'Gea',
     author_id: ObjectId('58aaab6003312409f04e128f'),
-    description: 'this is an incredible report app',
+    description: 'this is an incredible activity app',
     update_info: 'first version',
     star: 5,
     metadata: {
-      storage: ['app.store.report'],
+      storage: ['app.store.activity'],
       dependencies: [''],
     },
     published: true,
@@ -270,49 +265,5 @@ api.get('/app/:app_id/pic', (req, res, next) => {
     }
     res.set('Content-Type', 'image/png');
     res.status(200).send(data);
-  });
-});
-
-api.post('/test', (req, res, next) => {
-  validate('test', req.body, ['name']);
-  console.log(req.body);
-  res.json({a: 2});
-});
-
-
-
-
-const appInstances = {};
-
-function loadAppInstance(appName) {
-  if (!appInstances[appName]) {
-    const modelPath = `${__dirname}/app/${appName}/model`;
-    const AppClass = require(modelPath).default;
-    appInstances[appName] = new AppClass();
-  }
-  return appInstances[appName];
-}
-
-fs.readdir(__dirname + '/app', (err, result) => {
-  _.each(result, appName => {
-    console.log(`app ${appName} starting...`);
-    const apiRoute = `/app/${appName}`;
-    const appDir = __dirname + apiRoute;
-    api.use(apiRoute, (req, res, next) => {
-      req._app = loadAppInstance(appName);
-      validate('appRequest', req.query, ['app_id']);
-      req._app.dbNamespace = appName;
-      next();
-    }, (req, res, next) => {
-      db.company.app.findOne({
-        company_id: req.company._id,
-        apps: { $in: [{ app_id: req.query.app_id, enabled: true }] }
-      }).then(doc => {
-        if (!doc) return next(new ApiError(400, 'no_app'));
-        next();
-      });
-    }, require(appDir).default);
-    console.log(`app ${appName} loaded.`);
-    console.log('--------------------------------------------------------------------------------');
   });
 });

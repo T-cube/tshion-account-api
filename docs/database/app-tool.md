@@ -14,7 +14,7 @@
     '64': String,
     '128': String,
   },
-  slideshow: [String, ...]
+  slideshow: [String, ...],
   author: String, //"foo"
   author_id: ObjectId,
   description: String, //"this is an incredible note app"

@@ -1,9 +1,8 @@
 import express from 'express';
+
 import { upload, saveCdn } from 'lib/upload';
 import { ApiError } from 'lib/error';
-import { ObjectId } from 'mongodb';
 import { validate } from './schema';
-import _ from 'underscore';
 
 let api = express.Router();
 export default api;

@@ -1,13 +1,13 @@
 import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
-import Base from '../../base';
 import _ from 'underscore';
 
+import AppBase from 'models/app-base';
 
-export default class Notebook extends Base {
+export default class Notebook extends AppBase {
 
-  constructor() {
-    super();
+  constructor(options) {
+    super(options);
   }
 
   list({user_id, company_id}) {

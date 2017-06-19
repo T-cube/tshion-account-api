@@ -1,28 +1,31 @@
-import Base from '../../base';
 import _ from 'underscore';
-import { ApiError } from 'lib/error';
-import moment from 'moment';
-import { ObjectId } from 'mongodb';
-import C from './constants';
 import Promise from 'bluebird';
+import { ObjectId } from 'mongodb';
 
+import AppBase from 'models/app-base';
+import { ApiError } from 'lib/error';
+import C from './constants';
 
-export default class Activity extends Base {
+export default class Activity extends AppBase {
 
-  constructor() {
-    super();
+  constructor(options) {
+    super(options);
     this.baseInfo = {
       name: 1,
       type: 1,
-      activity_date: 1,
       activity_start: 1,
       activity_end: 1,
       assistants: 1,
       members: 1,
+      accept_require: 1,
+      accept_members: 1,
       content: 1,
       locale_info: 1,
     };
-    this.inMember = [
+  }
+
+  overview({user_id, company_id}) {
+    let isMember = [
       {
         creator: user_id
       },
@@ -36,10 +39,7 @@ export default class Activity extends Base {
         members: user_id
       },
     ];
-    this.all = inMember.concat([{is_public: true}]);
-  }
-
-  overview({user_id, company_id}) {
+    let all = isMember.concat([{is_public: true}]);
     let now = new Date();
     return Promise.all([
       this.collection('item')
@@ -47,7 +47,7 @@ export default class Activity extends Base {
         company_id,
         time_end: { $lt: now },
         'room.status': C.APPROVAL_STATUS.AGREED,
-        $or: this.isMember
+        $or: isMember
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
       this.collection('item')
@@ -56,7 +56,7 @@ export default class Activity extends Base {
         time_start: { $lt: now },
         time_end: { $gt: now },
         'room.status': C.APPROVAL_STATUS.AGREED,
-        $or: this.isMember
+        $or: isMember
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
       this.collection('item')
@@ -64,7 +64,7 @@ export default class Activity extends Base {
         company_id,
         time_start: { $gt: now },
         'room.status': C.APPROVAL_STATUS.AGREED,
-        $or: this.isMember
+        $or: isMember
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
       this.collection('item')
@@ -72,7 +72,7 @@ export default class Activity extends Base {
         company_id,
         time_start: { $gt: now },
         'room.status': C.APPROVAL_STATUS.AGREED,
-        $or: this.all,
+        $or: all,
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
       this.collection('item')
@@ -80,7 +80,7 @@ export default class Activity extends Base {
         company_id,
         time_start: { $gt: now },
         'room.status': C.APPROVAL_STATUS.AGREED,
-        $or: this.all,
+        $or: all,
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
       this.collection('item')
@@ -88,58 +88,63 @@ export default class Activity extends Base {
         company_id,
         time_start: { $gt: now },
         'room.status': C.APPROVAL_STATUS.AGREED,
-        $or: this.all,
+        $or: all,
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
     ]).then(([past_mine, now_mine, feature_mine, past_all, now_all, feature_all]) => {
       return {
         mine: {
-          past: past_mine,
-          now: now_mine,
-          feature: feature_mine
+          past: this._listCalc(past_mine),
+          now: this._listCalc(now_mine),
+          feature: this._listCalc(feature_mine)
         },
         all: {
-          past: past_all,
-          now: now_all,
-          feature: feature_all
+          past: this._listCalc(past_all),
+          now: this._listCalc(now_all),
+          feature: this._listCalc(feature_all)
         }
       };
     });
   }
 
   list({user_id, company_id, range, target}) {
-    let now = new Date();
-    return this.collection('item').find({
-      company_id,
-      time_start: {
-        $gte: moment().startOf('day').toDate()
+    let isMember = [
+      {
+        creator: user_id
       },
+      {
+        assistants: user_id
+      },
+      {
+        followers: user_id
+      },
+      {
+        members: user_id
+      },
+    ];
+    let all = isMember.concat([{is_public: true}]);
+    let now = new Date();
+    let criteria = {
+      company_id,
       'room.status': C.APPROVAL_STATUS.AGREED,
-      $or: [
-        {
-          creator: user_id
-        },
-        {
-          assistants: user_id
-        },
-        {
-          followers: user_id
-        },
-        {
-          members: user_id
-        },
-        {
-          is_public: true
-        }
-      ]
-    }, this.baseInfo).then(list => {
-      _.map(list, item => {
-        item.total = item.assistants.length + item.members.length + 1;
-        delete item.assistants;
-        delete item.members;
-        return item;
-      });
-      return list;
+    };
+    if (range == C.LIST_RANGE.PAST) {
+      criteria.time_end = { $lt: now };
+    } else if (range == C.LIST_RANGE.NOW) {
+      criteria.time_start = { $lt: now };
+      criteria.time_end = { $gt: now };
+    } else {
+      criteria.time_start = { $gt: now };
+    }
+    if (target == C.LIST_TARGET.MINE) {
+      criteria['$or'] = isMember;
+    } else {
+      criteria['$or'] = all;
+    }
+    return this.collection('item')
+    .find(criteria, this.baseInfo)
+    .then(list => {
+      return this._listCalc(list);
     });
   }
 
@@ -147,10 +152,42 @@ export default class Activity extends Base {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
-      if (!this._checkPermission(doc, user_id)) {
+      if (!this._checkReadPermission(doc, user_id)) {
         throw new ApiError(400, 'permission_dined');
       } else {
         return doc;
+      }
+    });
+  }
+
+  signIn({user_id, activity_id}) {
+    return this.collection('item').findOne({
+      _id: activity_id
+    }).then(doc => {
+      if (!doc.sign_in_require || !_.some(doc.assistants.concat(doc.creator, doc.members, doc.followers), item => item.equals(user_id))) {
+        throw new ApiError(400, 'invalid_sign_in');
+      } else {
+        return this.collection('item').update({
+          _id: activity_id
+        }, {
+          $addToSet: { sign_in_members: user_id }
+        });
+      }
+    });
+  }
+
+  signUp({user_id, activity_id}) {
+    return this.collection('item').findOne({
+      _id: activity_id
+    }).then(doc => {
+      if (doc.is_member_certified) {
+        throw new ApiError(400, 'invalid_sign_up');
+      } else {
+        return this.collection('item').update({
+          _id: activity_id
+        }, {
+          $addToSet: { members: user_id }
+        });
       }
     });
   }
@@ -159,13 +196,13 @@ export default class Activity extends Base {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
-      if (!_.some(doc.members, item => item.equals(user_id))) {
-        throw new ApiError(400, 'invalid_user');
+      if (!doc.accept_require || !_.some(doc.members, item => item.equals(user_id))) {
+        throw new ApiError(400, 'invalid_accept');
       } else {
         return this.collection('item').update({
           _id: activity_id
         }, {
-          $push: { accept_members: user_id }
+          $addToSet: { accept_members: user_id }
         });
       }
     });
@@ -175,7 +212,7 @@ export default class Activity extends Base {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
-      if (!this._checkPermission(doc, user_id)) {
+      if (!_.some(doc.assistants.concat(doc.creator, doc.members, doc.followers), item => item.equals(user_id))) {
         throw new ApiError(400, 'permission_dined');
       } else {
         return this.collection('item').update({
@@ -225,12 +262,34 @@ export default class Activity extends Base {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
-      if
+      if (!doc) {
+        throw new ApiError(400, 'no_approval');
+      }
+      this.collection('item')
+      .update({
+        _id: activity_id
+      }, {
+        $push: { comments: {
+          _id: ObjectId(),
+          user_id,
+          content,
+          date_create: new Date()
+        } }
+      });
     });
   }
 
-  _checkPermission(doc, user_id) {
-    if (doc.is_public) {
+  _listCalc(list) {
+    return _.map(list, item => {
+      item.total = item.assistants.length + item.members.length + 1;
+      delete item.assistants;
+      delete item.members;
+      return item;
+    });
+  }
+
+  _checkReadPermission(doc, user_id) {
+    if (doc.is_public || !doc.is_member_certified) {
       return true;
     }
     if (_.some(doc.assistants.concat(doc.followers, doc.creator), item => item.equals(user_id))) {

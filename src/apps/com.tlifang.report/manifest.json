@@ -1,0 +1,18 @@
+{
+  "appid": "com.tlifang.report",
+  "version": "0.1.0",
+  "name": "report",
+  "description": "a report",
+  "icons": {
+    "16": "./assets/icon16.png",
+    "64": "./assets/icon64.png",
+    "128": "./assets/icon128.png"
+  },
+  "author": "tlifang",
+  "url": "https://tlifang.com/",
+  "permissions": ["storage.mongo"],
+  "dependencies": [],
+  "storage": {
+    "mongo": ["item", "room"]
+  }
+}
