@@ -5,7 +5,7 @@ import db from 'lib/database';
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 const MAX_ADDRESS_LIST_LENGTH = 10;

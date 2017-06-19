@@ -15,7 +15,7 @@ import config from 'config';
 import C from 'lib/constants';
 import CompanyLevel from 'models/company-level';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 const max_dir_path_length = 5;

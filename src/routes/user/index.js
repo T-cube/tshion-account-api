@@ -39,7 +39,7 @@ const BASIC_FIELDS = {
 };
 
 /* users collection */
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());
@@ -198,15 +198,15 @@ api.get('/project', (req, res, next) =>  {
       }
     }
     switch (type) {
-    case 'archived':
-      condition['is_archived'] = true;
-      break;
-    case 'mine':
-      condition['owner'] = req.user._id;
-      break;
+      case 'archived':
+        condition.is_archived = true;
+        break;
+      case 'mine':
+        condition.owner = req.user._id;
+        break;
     }
-    if (!search && !condition['is_archived']) {
-      condition['is_archived'] = false;
+    if (!search && !condition.is_archived) {
+      condition.is_archived = false;
     }
     return db.project.find(condition)
     .then(data => res.json(data));

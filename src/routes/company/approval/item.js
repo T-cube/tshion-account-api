@@ -27,7 +27,7 @@ import {
   APPROVAL_ITEM_RESULT,
 } from 'models/notification-setting';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.post('/',
@@ -277,8 +277,8 @@ function doAfterApproval(item, status) {
     return;
   }
   switch (item.for) {
-  case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
-    return updateAttendance(item, status);
+    case C.APPROVAL_TARGET.ATTENDANCE_AUDIT:
+      return updateAttendance(item, status);
   }
   return;
 }

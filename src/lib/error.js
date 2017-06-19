@@ -10,7 +10,9 @@
 import _ from 'underscore';
 import util from 'util';
 import { ValidationError } from 'lib/inspector';
-// import DbError from '../models/db-error';
+import config from 'config';
+
+const debugApiErrorEnabled = config.get('debug.apiError');
 
 //const VALIDATION_ERROR_MESSAGE = 'validation error';
 
@@ -54,9 +56,8 @@ export function ApiError(code, error, description, err) {
 
 util.inherits(ApiError, Error);
 
-export function debugHttpInfo(req, res, next) {
-  console.log(req.method + ' ' + req.url);
-  next();
+export function apiRouteError(req, res, next) {
+  throw new ApiError(404, 'api_not_found');
 }
 
 export function apiErrorHandler(err, req, res, next) {
@@ -88,11 +89,16 @@ export function apiErrorHandler(err, req, res, next) {
   }
   delete err.name;
   delete err.message;
-  if (err.headers) {
+  try {
     res.set(err.headers);
+    delete err.headers;
+    res.status(err.code);
+    res.json(err);
+  } catch(e) {
+    console.error('headers already sent');
   }
-  delete err.headers;
-  res.status(err.code);
-  res.json(err);
-  next();
+  if (debugApiErrorEnabled) {
+    console.error(`${req.method} ${req.url} ${err.code}`, _.pick(err, 'error', 'error_description'));
+  }
+  next(err);
 }

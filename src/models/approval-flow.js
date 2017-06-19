@@ -253,12 +253,12 @@ export default class ApprovalFlow {
             let templateForm = _.find(i.template.forms, tf => tf._id.equals(itf._id) && tf._id.equals(f._id));
             if (templateForm) {
               switch (templateForm.type) {
-              case 'date':
-                f.value = moment(f.value).format('YYYY-MM-DD');
-                break;
-              case 'datetime':
-                f.value = moment(f.value).format('YYYY-MM-DD HH:mm');
-                break;
+                case 'date':
+                  f.value = moment(f.value).format('YYYY-MM-DD');
+                  break;
+                case 'datetime':
+                  f.value = moment(f.value).format('YYYY-MM-DD HH:mm');
+                  break;
               }
               item.push(f.value || '');
             }
@@ -285,23 +285,23 @@ export default class ApprovalFlow {
   static getStatusText(status) {
     let info;
     switch (status) {
-    case C.APPROVAL_ITEM_STATUS.PROCESSING:
-      info = __('approval_pressing');
-      break;
-    case C.APPROVAL_ITEM_STATUS.APPROVED:
-      info = __('approval_approved');
-      break;
-    case C.APPROVAL_ITEM_STATUS.REJECTED:
-      info = __('approval_rejected');
-      break;
-    case C.APPROVAL_ITEM_STATUS.REVOKED:
-      info = __('approval_revoked');
-      break;
-    case C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED:
-      info = __('approval_template_change');
-      break;
-    default:
-      info = '';
+      case C.APPROVAL_ITEM_STATUS.PROCESSING:
+        info = __('approval_pressing');
+        break;
+      case C.APPROVAL_ITEM_STATUS.APPROVED:
+        info = __('approval_approved');
+        break;
+      case C.APPROVAL_ITEM_STATUS.REJECTED:
+        info = __('approval_rejected');
+        break;
+      case C.APPROVAL_ITEM_STATUS.REVOKED:
+        info = __('approval_revoked');
+        break;
+      case C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED:
+        info = __('approval_template_change');
+        break;
+      default:
+        info = '';
     }
     return info;
   }

@@ -55,6 +55,32 @@ export default class CompanyLevel {
     });
   }
 
+  canAddApprovalTemplete() {
+    let _setting = null;
+    return this.planModel.getCurrent().then(planInfo => {
+      return this.planModel.getSetting(planInfo.plan);
+    })
+    .then(setting => {
+      if (!setting) {
+        return false;
+      }
+      _setting = setting;
+      let masterQuery = {
+        company_id: this.company_id,
+        status: {
+          $ne: C.APPROVAL_STATUS.DELETED
+        }
+      };
+      return db.approval.template.master.count(masterQuery);
+    })
+    .then(total => {
+      if (total >= _setting.max_approval_templete) {
+        return false;
+      }
+      return true;
+    })
+  }
+
   canAddMember() {
     return this.getStatus().then(status => {
       let {setting, planInfo, levelInfo} = status;

@@ -28,7 +28,7 @@ import {
 } from 'models/plan/auth-config';
 
 /* company collection */
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());

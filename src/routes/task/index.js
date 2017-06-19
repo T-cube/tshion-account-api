@@ -9,7 +9,7 @@ import { oauthCheck } from 'lib/middleware';
 import { fetchUserInfo, fetchCompanyMemberInfo, uniqObjectIdArray, strToReg } from 'lib/utils';
 import C, { ENUMS } from 'lib/constants';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());

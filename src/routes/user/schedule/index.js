@@ -12,7 +12,7 @@ import { oauthCheck } from 'lib/middleware';
 import C from 'lib/constants';
 import ScheduleModel from 'models/schedule';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 api.use(oauthCheck());

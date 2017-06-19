@@ -9,10 +9,13 @@ import { sanitizeValidateObject } from 'lib/inspector';
 import { sanitization, validation, statusSanitization, statusValidation } from './schema';
 import C from 'lib/constants';
 import Structure from 'models/structure';
+import CompanyLevel from 'models/company-level';
 import Approval from 'models/approval';
 import { checkUserType } from '../utils';
+import Plan from 'models/plan/plan';
 
-let api = express.Router();
+
+const api = express.Router();
 export default api;
 
 api.get('/', (req, res, next) => {
@@ -83,17 +86,17 @@ api.get('/related', (req, res, next) => {
     master_id: 1,
   };
   switch (type) {
-  case 'approve':
-    tplCondition['steps.approver._id'] = user;
-    break;
-  case 'copyto':
-    tplCondition['steps.copy_to._id'] = user;
-    break;
-  default:
-    tplCondition.scope = {
-      $in: new Structure(req.company.structure).findMemberDepartments(user)
-    };
-    itemCondition.from = user;
+    case 'approve':
+      tplCondition['steps.approver._id'] = user;
+      break;
+    case 'copyto':
+      tplCondition['steps.copy_to._id'] = user;
+      break;
+    default:
+      tplCondition.scope = {
+        $in: new Structure(req.company.structure).findMemberDepartments(user)
+      };
+      itemCondition.from = user;
   }
   db.approval.template.find(tplCondition, fields)
   .then(tpls => Promise.filter(tpls, tpl => db.approval.item.count(_.extend({
@@ -118,15 +121,21 @@ api.get('/related', (req, res, next) => {
 });
 
 api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
+  let companyLevel = new CompanyLevel(req.company._id);
   let data = req.body;
-  sanitizeValidateObject(sanitization, validation, data);
-  data.steps.forEach(i => {
-    i._id = ObjectId();
-  });
-  checkAndInitForms(data.forms);
-  data.company_id = req.company._id;
-  data.status = C.APPROVAL_STATUS.UNUSED;
-  Approval.createTemplate(data)
+  companyLevel.canAddApprovalTemplete().then(enabled => {
+    if (!enabled) {
+      throw new ApiError(400, 'reach_plan_limit');
+    }
+    sanitizeValidateObject(sanitization, validation, data);
+    data.steps.forEach(i => {
+      i._id = ObjectId();
+    });
+    checkAndInitForms(data.forms);
+    data.company_id = req.company._id;
+    data.status = C.APPROVAL_STATUS.UNUSED;
+    return Approval.createTemplate(data);
+  })
   .then(template => {
     res.json(template);
     return addActivity(req, C.ACTIVITY_ACTION.CREATE, {

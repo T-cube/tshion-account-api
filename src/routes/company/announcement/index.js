@@ -13,7 +13,7 @@ import C from 'lib/constants';
 import { checkUserType } from '../utils';
 import { ANNOUNCEMENT } from 'models/notification-setting';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 

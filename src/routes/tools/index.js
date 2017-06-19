@@ -19,6 +19,19 @@ export default api;
 
 const attemptTimes = config.get('security.attemptTimes');
 
+api.get('/product-list', (req, res, next) => {
+  return Promise.all([
+    db.plan.find(),
+    db.payment.product.find({}, {discount: 0})
+  ])
+  .then(([plans, products]) => {
+    plans.forEach(plan => {
+      plan.products = _.filter(products, product => product.plan == plan.type);
+    });
+    res.json(plans);
+  })
+  .catch(next);
+});
 
 api.get('/avatar-list/:type', (req, res, next) => {
   let type = req.params.type;

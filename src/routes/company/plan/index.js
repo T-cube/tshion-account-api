@@ -10,7 +10,7 @@ import Plan from 'models/plan/plan';
 import PlanProduct from 'models/plan/plan-product';
 import { checkUserType } from '../utils';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 const checkOwner = checkUserType(C.COMPANY_MEMBER_TYPE.OWNER);
@@ -44,7 +44,39 @@ api.get('/status', (req, res, next) => {
     return PlanProduct.init({plan, member_count})
     .then(planProduct => {
       info.fee_monthly = planProduct.getTotalFee();
-      return res.json(info);
+      return db.plan.auth.findOne({
+        company_id: info.company_id,
+        status: C.AUTH_STATUS.ACCEPTED,
+        'data.status': C.AUTH_STATUS.ACCEPTED,
+      }, {
+        'plan': 1,
+        'data.$.info': 1,
+      }).then(doc => {
+        if (!doc) {
+          return res.json(info);
+        }
+        let field;
+        switch (doc.plan) {
+          case C.TEAMPLAN.PRO: {
+            field = 'team';
+            break;
+          }
+          case C.TEAMPLAN.ENT: {
+            field = 'enterprise';
+            break;
+          }
+          default:
+            throw new ApiError(500, 'invalid_data');
+        }
+        if (!doc.data[0] || !doc.data[0].info[field]) {
+          throw new ApiError(500, 'invalid_data');
+        }
+        const data = doc.data[0].info[field];
+        res.json({
+          ...info,
+          ..._.pick(data, 'location', 'industry'),
+        });
+      });
     });
   })
   .catch(next);

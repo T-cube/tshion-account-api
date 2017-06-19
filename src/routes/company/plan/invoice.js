@@ -10,7 +10,7 @@ import { validate } from './schema';
 import { ApiError } from 'lib/error';
 import { getPageInfo, mapObjectIdToData } from 'lib/utils';
 
-let api = express.Router();
+const api = express.Router();
 export default api;
 
 const MIN_TAX_FREE_AMOUNT = config.get('invoice.min_tax_free_amount');

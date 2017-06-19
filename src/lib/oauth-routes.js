@@ -135,7 +135,8 @@ export function ipCheck() {
         } else {
           next();
         }
-      }).catch(next);
+      })
+      .catch(next);
     } else {
       next();
     }
@@ -184,15 +185,16 @@ export function userCheck() {
       } else {
         throw new ApiError(400, 'account_locked');
       }
-    }).catch(next);
+    })
+    .catch(next);
   };
 }
 
 export function captchaErrorResolve() {
   return (err, req, res, next) => {
-    let redis = req.model('redis');
-    let username = req.body.username;
-    let userKey = `error_times_${username}`;
+    const redis = req.model('redis');
+    const { username } = req.body;
+    const userKey = `error_times_${username}`;
     if (err.error == 'invalid_grant') {
       redis.incr(userKey).then(userTimes => {
         if (userTimes > attemptTimes.userCaptchaTimes - 1) {

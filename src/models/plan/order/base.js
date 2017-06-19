@@ -233,16 +233,16 @@ export default class BaseOrder {
     let { type } = discountInfo;
     let discountAmount = 0;
     switch (type) {
-    case 'amount':
-    case 'rate':
-      discountAmount = discountInfo.fee;
-      break;
-    case 'number':
-      discountAmount = discountInfo.number * product.original_price;
-      break;
-    case 'times':
-      discountAmount = discountInfo.times * product.original_price * product.quantity;
-      break;
+      case 'amount':
+      case 'rate':
+        discountAmount = discountInfo.fee;
+        break;
+      case 'number':
+        discountAmount = discountInfo.number * product.original_price;
+        break;
+      case 'times':
+        discountAmount = discountInfo.times * product.original_price * product.quantity;
+        break;
     }
     return { discountAmount, discountInfo };
   }
@@ -256,19 +256,19 @@ export default class BaseOrder {
     let { type } = discountInfo;
     let product = _.find(this.products, product => product._id.equals(productId));
     switch (type) {
-    case 'amount':
-    case 'rate':
-      discountInfo.fee = Math.round(discountInfo.fee);
-      product.paid_sum -= discountInfo.fee;
-      this.paid_sum -= discountInfo.fee;
-      break;
-    case 'number':
-      product.quantity += discountInfo.number;
-      this.member_count += discountInfo.number;
-      break;
-    case 'times':
-      this.times += discountInfo.times;
-      break;
+      case 'amount':
+      case 'rate':
+        discountInfo.fee = Math.round(discountInfo.fee);
+        product.paid_sum -= discountInfo.fee;
+        this.paid_sum -= discountInfo.fee;
+        break;
+      case 'number':
+        product.quantity += discountInfo.number;
+        this.member_count += discountInfo.number;
+        break;
+      case 'times':
+        this.times += discountInfo.times;
+        break;
     }
     // product.discount_using = (product.discount_using || []).concat(discountInfo);
     this.discount = (this.discount || []).concat(_.extend({}, {discount_type: 'coupon'},{product: product.product_no}, discountInfo));
@@ -281,14 +281,14 @@ export default class BaseOrder {
     _.extend(discountInfo, ext);
     let { type } = discountInfo;
     switch (type) {
-    case 'amount':
-    case 'rate':
-      discountInfo.fee = Math.round(discountInfo.fee);
-      this.paid_sum -= discountInfo.fee;
-      break;
-    case 'times':
-      this.times += discountInfo.times;
-      break;
+      case 'amount':
+      case 'rate':
+        discountInfo.fee = Math.round(discountInfo.fee);
+        this.paid_sum -= discountInfo.fee;
+        break;
+      case 'times':
+        this.times += discountInfo.times;
+        break;
     }
     this.discount = (this.discount || []).concat(discountInfo);
   }
