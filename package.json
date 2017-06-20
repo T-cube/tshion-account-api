@@ -57,6 +57,7 @@
     "mkdirp-bluebird": "^1.0.1",
     "moment-timezone": "^0.5.4",
     "mongodb": "^2.1.18",
+    "morgan": "^1.8.2",
     "multer": "^1.1.0",
     "node-schedule": "^1.1.0",
     "node-string-pad": "0.0.4",

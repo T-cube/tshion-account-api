@@ -125,7 +125,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   companyLevel.canAddApprovalTemplete().then(enabled => {
     if (!enabled) {
-      throw new ApiError(400, 'unable_add_approval');
+      throw new ApiError(400, 'reach_plan_limit');
     }
     sanitizeValidateObject(sanitization, validation, data);
     data.steps.forEach(i => {
