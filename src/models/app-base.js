@@ -1,6 +1,7 @@
 import db from 'lib/database';
 import _ from 'underscore';
 import path from 'path';
+import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 
@@ -23,21 +24,24 @@ export default class Base {
     }).then(appVersion => {
       if (!appVersion) {
         let appInfo = this._info;
-        appInfo.icons['16'] = this._saveCdn(appInfo.icons['16']);
-        appInfo.icons['64'] = this._saveCdn(appInfo.icons['64']);
-        appInfo.icons['128'] = this._saveCdn(appInfo.icons['128']);
-        db.collection('app.all')
-        .insert(appInfo)
-        .then(doc => {
-          return db.collection('app')
-          .insert(doc);
-        })
-        .then(doc => {
-          db.collection('app.version')
-          .insert({
-            appid: doc.appid,
-            current: doc._id,
-            versions: [doc._id]
+        return Promise.map(_.keys(appInfo.icons), item => {
+          return this._saveCdn(appInfo.icons[item]).then(url => {
+            return appInfo.icons[item] = url;
+          });
+        }).then(() => {
+          db.collection('app.all')
+          .insert(appInfo)
+          .then(doc => {
+            return db.collection('app')
+            .insert(doc);
+          })
+          .then(doc => {
+            db.collection('app.version')
+            .insert({
+              appid: doc.appid,
+              current: doc._id,
+              versions: [doc._id]
+            });
           });
         });
       } else {
@@ -46,27 +50,28 @@ export default class Base {
         }).then(app => {
           if (app.version != this._info.version) {
             let appInfo = this._info;
-            appInfo.icons['16'] = this._saveCdn(appInfo.icons['16']);
-            appInfo.icons['64'] = this._saveCdn(appInfo.icons['64']);
-            appInfo.icons['128'] = this._saveCdn(appInfo.icons['128']);
-            return db.collection('app.all')
-            .insert(appInfo)
-            .then(doc => {
-              return db.collection('app')
-              .insert(doc);
-            }).then(doc => {
-              return db.collection('app.version')
-              .update({
-                _id: appVersion._id
-              }, {
-                $set: { current: doc._id },
-                $push: { versions: doc._id },
-              });
-            })
-            .then(() => {
-              return db.collection('app')
-              .remove({
-                _id: appVersion.current
+            return Promise.map(_.keys(appInfo.icons), item => {
+              return appInfo.icons[item] = this._saveCdn(appInfo.icons[item]);
+            }).then(() => {
+              return db.collection('app.all')
+              .insert(appInfo)
+              .then(doc => {
+                return db.collection('app')
+                .insert(doc);
+              }).then(doc => {
+                return db.collection('app.version')
+                .update({
+                  _id: appVersion._id
+                }, {
+                  $set: { current: doc._id },
+                  $push: { versions: doc._id },
+                });
+              })
+              .then(() => {
+                return db.collection('app')
+                .remove({
+                  _id: appVersion.current
+                });
               });
             });
           } else {
@@ -77,10 +82,13 @@ export default class Base {
     });
   }
 
-  _saveCdn() {
+  _saveCdn(filePath) {
     const qiniu = this.model('qiniu').bucket('cdn-file');
-
-    return;
+    let key = `${this._info.appid}/v${this._info.version}/${filePath}`;
+    let path = `${this._options.basepath}/${filePath}`;
+    return qiniu.upload(key, path).then(data => {
+      return `${data.server_url}${key}`;
+    });
   }
 
   collection(dbName) {

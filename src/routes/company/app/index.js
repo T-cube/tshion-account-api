@@ -4,6 +4,7 @@ import db from 'lib/database';
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 import app from 'index';
+import path from 'path';
 
 import { APP_ROOT_DIR, SRC_ROOT_DIR } from 'bootstrap';
 import { ApiError } from 'lib/error';
@@ -20,9 +21,10 @@ const APPS_ROOT = `${APP_ROOT_DIR}/apps`;
 function loadAppInstance(appId) {
   const modelId = `app-${appId}`;
   if (!appInstances[appId]) {
+    const src_root_dir = path.normalize(SRC_ROOT_DIR);
     const relpath = `/apps/${appId}`;
     const basepath = `${APP_ROOT_DIR}${relpath}`;
-    const srcBasepath = `${SRC_ROOT_DIR}${relpath}`;
+    const srcBasepath = `${src_root_dir}${relpath}`;
     const modelPath = `${basepath}/lib/model`;
     const AppClass = require(modelPath).default;
     const instance = new AppClass({

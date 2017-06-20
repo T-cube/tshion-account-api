@@ -4,9 +4,9 @@
   "name": "notebook",
   "description": "a notebook",
   "icons": {
-    "16": "./assets/icon16.png",
-    "64": "./assets/icon64.png",
-    "128": "./assets/icon128.png"
+    "16": "assets/icon16.png",
+    "64": "assets/icon64.png",
+    "128": "assets/icon128.png"
   },
   "author": "tlifang",
   "url": "https://tlifang.com/",
