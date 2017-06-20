@@ -220,6 +220,12 @@ api.post('/app/:appid/comments', (req, res, next) => {
     date_create: new Date()
   }).then(doc => {
     res.json(doc);
+    db.app.comment.count({appid}).then(counts => {
+      db.app.findOne({appid}).then(app => {
+        let score = app.star + (app.star - star)/counts;
+        db.app.update({ appid }, { $set: { star: score }});
+      });
+    });
   })
   .catch(next);
 });

@@ -27,9 +27,47 @@ OUTPUT:
 
 获得指定app详情
 
+OUTPUT:
+```javascript
+{
+  _id: ObjectId,
+  appid: String, // com.tlifang.app.notebook
+  name: String, //"note"
+  name_en: String,
+  version: String, //"0.1.0"
+  icons: {
+    '16': String,
+    '64': String,
+    '128': String,
+  },
+  slideshow: [String, ...],
+  author: String, //"foo"
+  url: String,
+  description: String, //"this is an incredible note app"
+  update_info: String, //"fixed some bugs"
+  star: Number, // 4.7  average of this app comments stars
+  permissions: [String...],
+  dependencies: [String...],
+  storage: {
+    "mongo": [String...]
+  },
+  date_create: Date,
+}
+```
+
 ### GET /app
 
 获得公司app列表
+OUTPUT:
+```javascript
+{
+  company_id: ObjectId,
+  apps: [{
+    appid: String,
+    enabled: Boolean,
+  }...]
+}
+```
 
 ### POST /app/:appid/add
 
