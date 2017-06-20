@@ -44,8 +44,8 @@ export default class Notebook extends AppBase {
           tags: 1,
           notebook: 1,
           comments: 1,
-          totalLikes: { $size: '$likes' },
-          isLike: { $in: [ user_id, '$likes' ] }
+          total_likes: { $size: '$likes' },
+          is_like: { $in: [ user_id, '$likes' ] }
         }
       }
     ]);
@@ -65,8 +65,8 @@ export default class Notebook extends AppBase {
           tags: 1,
           notebook: 1,
           comments: 1,
-          totalLikes: { $size: '$likes' },
-          isLike: { $in: [ user_id, '$likes' ] }
+          total_likes: { $size: '$likes' },
+          is_like: { $in: [ user_id, '$likes' ] }
         }
       }
     ]);
@@ -86,8 +86,8 @@ export default class Notebook extends AppBase {
           tags: 1,
           notebook: 1,
           comments: 1,
-          totalLikes: { $size: '$likes' },
-          isLike: { $in: [ user_id, '$likes' ] }
+          total_likes: { $size: '$likes' },
+          is_like: { $in: [ user_id, '$likes' ] }
         }
       }
     ]);
@@ -106,8 +106,8 @@ export default class Notebook extends AppBase {
           tags: 1,
           notebook: 1,
           comments: 1,
-          totalLikes: { $size: '$likes' },
-          isLike: { $in: [ user_id, '$likes' ] }
+          total_likes: { $size: '$likes' },
+          is_like: { $in: [ user_id, '$likes' ] }
         }
       }
     ]);

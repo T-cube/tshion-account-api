@@ -10,18 +10,20 @@ OUTPUT:
 ```javascript
 [{
   _id: ObjectId,
+  appid: <String>,
   name: <String>,
   icons: {
     '16': <String>,
     '64': <String>,
     '128': <String>,
   },
+  version: <String>,
   author: <String>,
   description: <String>,
 }...]
 ```
 
-### GET /app/:app_id
+### GET /app/:appid
 
 获得指定app详情
 
@@ -29,12 +31,12 @@ OUTPUT:
 
 获得公司app列表
 
-### POST /app/:app_id/add
+### POST /app/:appid/add
 
 团队拥有者添加app
 
 
-### PUT /app/:app_id/switch
+### PUT /app/:appid/switch
 
 公司拥有者开启关闭APP
 
@@ -45,41 +47,41 @@ request_body:
 }
 ```
 
-### GET /app/:app_id/options
+### GET /app/:appid/options
 
 获取公司APP设置
 
-### PUT /app/:app_id/options
+### PUT /app/:appid/options
 
 更改公司APP设置
 
 
-### GET /app/:app_id/comments
+### GET /app/:appid/comments
 
 获得指定app所有评论
 
 OUTPUT:
 ```javascript
 {
-  app_id: ObjectId,
+  appid: ObjectId,
   app_version: <String>,
   user_id: ObjectId,
   star: <Number>,
   content: <String>,
-  totalLikes: <Number>,
-  isLike: <Boolean>,
+  total_likes: <Number>,
+  is_like: <Boolean>,
 }
 ```
 
-### PUT /app/:app_id/comments/:comment_id/like
+### PUT /app/:appid/comments/:comment_id/like
 
 点赞评论
 
-### DELETE /app/:app_id/comments/:comment_id/like
+### DELETE /app/:appid/comments/:comment_id/like
 
 取赞评论
 
-### POST /app/:app_id/comments
+### POST /app/:appid/comments
 
 评论指定APP
 

@@ -143,7 +143,7 @@ export default class Report extends AppBase {
       if (!doc) {
         throw new ApiError(400, 'invalid_report');
       }
-      if (doc.user_id.equals(user_id)) {
+      if (!doc.user_id.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
       if (doc.status == C.REPORT_STATUS.APPLIED || doc.status == C.REPORT_STATUS.AGREED) {
@@ -167,7 +167,7 @@ export default class Report extends AppBase {
       if (!doc) {
         throw new ApiError(400, 'invalid_report');
       }
-      if (doc.report_target.equals(user_id)) {
+      if (!doc.report_target.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
       return this.collection('item').update({

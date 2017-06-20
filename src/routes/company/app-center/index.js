@@ -1,12 +1,10 @@
 import fs from 'fs';
 import express from 'express';
 import db from 'lib/database';
-import _ from 'underscore';
 import { ObjectId } from 'mongodb';
 
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
-import path from 'path';
 import { oauthCheck } from 'lib/middleware';
 
 let api = express.Router();
@@ -14,40 +12,9 @@ export default api;
 
 api.use(oauthCheck());
 
-api.get('/collection/add', (req, res, next) => {
-  db.app.insert({
-    appid: 'com.tlifang.activity',
-    name: 'activity',
-    name_en: 'repoooooooooooooooort',
-    version: '0.1.0',
-    icons: {
-    },
-    slideshow: [],
-    author: 'Gea',
-    author_id: ObjectId('58aaab6003312409f04e128f'),
-    description: 'this is an incredible activity app',
-    update_info: 'first version',
-    star: 5,
-    metadata: {
-      storage: ['app.store.activity'],
-      dependencies: [''],
-    },
-    published: true,
-    date_publish: new Date(),
-    date_update: new Date(),
-    date_create: new Date(),
-  }).then(() => {
-    db.app.findOne().then(doc => {
-      db.app.version.insert({appid: doc.appid, current: doc._id}).then(doc => {
-        res.json(doc);
-      });
-    });
-  });
-});
-
 api.get('/', (req, res, next) => {
   db.app.find({}, {
-    app_name: 1,
+    name: 1,
     appid: 1,
     icons: 1,
     version: 1,
@@ -56,14 +23,9 @@ api.get('/', (req, res, next) => {
   })
   .then(list => {
     res.json(list);
-  });
+  })
+  .catch(next);
 });
-
-// api.get('/overview', (req, res, next) => {
-//   db.app.find({published: true}, {app_name: 1, icons: 1}).then(list => {
-//     res.json(list);
-//   });
-// });
 
 api.get('/app', (req, res, next) => {
   let company_id = req.company._id;
@@ -77,16 +39,16 @@ api.get('/app', (req, res, next) => {
       });
     }
     res.json(doc);
-  });
+  }).catch(next);
 });
 
-api.post('/app/:app_id/add', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id']);
-  let app_id = req.params.app_id;
+api.post('/app/:appid/add', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
+  let appid = req.params.appid;
   let user_id = req.user._id;
   let company_id = req.company._id;
-  db.company.findOne({_id: company_id}).then(doc => {
-    if (doc.owner.equals(user_id)) {
+  db.company.findOne({_id: company_id}).then(company => {
+    if (!user_id.equals(company.owner)) {
       throw new ApiError('400', 'permission_dined');
     }
     db.company.app.findOne({company_id}).then(doc => {
@@ -95,42 +57,43 @@ api.post('/app/:app_id/add', (req, res, next) => {
           company_id,
           apps: [
             {
-              app_id,
+              appid,
               enabled: true
             }
           ]
-        }).then(doc => {
-          res.json(doc);
+        }).then(app => {
+          res.json(app);
         });
       }
       db.company.app.update({
         company_id
       }, {
         $push: {
-          apps: {app_id, enabled:true}
+          apps: {appid, enabled:true}
         }
-      }).then(doc => {
-        res.json(doc);
+      }).then(list => {
+        res.json(list);
       });
     });
-  });
+  })
+  .catch(next);
 });
 
 
-api.put('/app/:app_id/switch', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id']);
+api.put('/app/:appid/switch', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['flag']);
   let { flag } = req.body;
-  let { app_id } = req.params;
+  let { appid } = req.params;
   let company_id = req.company._id;
   let user_id = req.user._id;
   db.company.findOne({_id: company_id}).then(doc => {
-    if (doc.owner.equals(user_id)) {
+    if (!doc.owner.equals(user_id)) {
       throw new ApiError('400', 'permission_dined');
     }
     db.company.app.update({
       company_id: company_id,
-      'apps.app_id': app_id
+      'apps.appid': appid
     }, { $set: {
       'apps.$.enabled': flag
     }}).then(doc => {
@@ -140,28 +103,28 @@ api.put('/app/:app_id/switch', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/app/:app_id/options', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id']);
-  let { app_id } = req.params;
+api.get('/app/:appid/options', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
+  let { appid } = req.params;
   let company_id = req.company._id;
-  db.company.app.config.findOne({app_id, company_id}).then(doc => {
+  db.company.app.config.findOne({appid, company_id}).then(doc => {
     res.json(doc);
-  });
+  }).catch(next);
 });
 
-api.put('/app/:app_id/options', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id']);
+api.put('/app/:appid/options', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['options']);
-  let { app_id } = req.params;
+  let { appid } = req.params;
   let { options } = req.body;
   let company_id = req.company._id;
   let user_id = req.user._id;
   db.company.findOne({_id: company_id}).then(doc => {
-    if (doc.owner.equals(user_id)) {
+    if (!doc.owner.equals(user_id)) {
       throw new ApiError('400', 'permission_dined');
     }
     db.company.app.config.update({
-      app_id,
+      appid,
       company_id
     }, {
       $set: {
@@ -177,41 +140,43 @@ api.put('/app/:app_id/options', (req, res, next) => {
 });
 
 
-api.get('/app/:app_id', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id']);
-  let { app_id } = req.params;
-  db.app.findOne({ _id: app_id }, { metadata: 0 }).then(doc => {
+api.get('/app/:appid', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
+  let { appid } = req.params;
+  db.app.findOne({ appid: appid }, { metadata: 0 }).then(doc => {
     res.json(doc);
-  });
+  })
+  .catch(next);
 });
 
-api.get('/app/:app_id/comments', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id']);
-  let { app_id } = req.params;
+api.get('/app/:appid/comments', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
+  let { appid } = req.params;
   let user_id = req.user._id;
   db.app.comment.aggregate([
-    { $match: {app_id} },
+    { $match: {appid} },
     {
       $project: {
-        app_id: 1,
+        appid: 1,
         app_version: 1,
         user_id: 1,
         star: 1,
         content: 1,
-        totalLikes: { $size: '$likes'},
-        isLike: {
+        total_likes: { $size: '$likes'},
+        is_like: {
           $in: [user_id, '$likes']
         }
       }
     }
   ]).then(list => {
     res.json(list);
-  });
+  })
+  .catch(next);
 });
 
-api.put('/app/:app_id/comments/:comment_id/like', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id', 'comment_id']);
-  let { app_id, comment_id } = req.params;
+api.put('/app/:appid/comments/:comment_id/like', (req, res, next) => {
+  validate('appRequest', req.params, ['appid', 'comment_id']);
+  let { appid, comment_id } = req.params;
   let user_id = req.user._id;
   db.app.comment.update({
     _id: comment_id
@@ -220,12 +185,13 @@ api.put('/app/:app_id/comments/:comment_id/like', (req, res, next) => {
       likes: user_id
     }
   })
-  .then(doc => res.json(doc));
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
-api.delete('/app/:app_id/comments/:comment_id/like', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id', 'comment_id']);
-  let { app_id, comment_id } = req.params;
+api.delete('/app/:appid/comments/:comment_id/like', (req, res, next) => {
+  validate('appRequest', req.params, ['appid', 'comment_id']);
+  let { appid, comment_id } = req.params;
   let user_id = req.user._id;
   db.app.comment.update({
     _id: comment_id
@@ -234,18 +200,19 @@ api.delete('/app/:app_id/comments/:comment_id/like', (req, res, next) => {
       likes: user_id
     }
   })
-  .then(doc => res.json(doc));
+  .then(doc => res.json(doc))
+  .catch(next);
 });
 
-api.post('/app/:app_id/comments', (req, res, next) => {
-  validate('appRequest', req.params, ['app_id']);
+api.post('/app/:appid/comments', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['comment']);
-  let { app_id } = req.params;
+  let { appid } = req.params;
   let user_id = req.user._id;
   let { app_version, star, content } = req.body;
   db.app.comment.insert({
     user_id,
-    app_id,
+    appid,
     app_version,
     star,
     content,
@@ -253,7 +220,8 @@ api.post('/app/:app_id/comments', (req, res, next) => {
     date_create: new Date()
   }).then(doc => {
     res.json(doc);
-  });
+  })
+  .catch(next);
 });
 
 api.delete('/remove', (req, res, next) => {

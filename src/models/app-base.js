@@ -24,19 +24,29 @@ export default class Base {
     }).then(appVersion => {
       if (!appVersion) {
         let appInfo = this._info;
-        return Promise.map(_.keys(appInfo.icons), item => {
-          return this._saveCdn(appInfo.icons[item]).then(url => {
-            return appInfo.icons[item] = url;
-          });
-        }).then(() => {
-          db.collection('app.all')
+        let slide = [];
+        return Promise.all([
+          Promise.map(_.keys(appInfo.icons), item => {
+            return this._saveCdn(appInfo.icons[item]).then(url => {
+              return appInfo.icons[item] = url;
+            });
+          }),
+          Promise.map(appInfo.slideshow, item => {
+            return this._saveCdn(item).then(url => {
+              slide.push(url);
+            });
+          })
+        ]).then(() => {
+          appInfo.slideshow = slide;
+          appInfo = _.extend({}, appInfo, { star: null, date_create: new Date() });
+          return db.collection('app.all')
           .insert(appInfo)
           .then(doc => {
             return db.collection('app')
             .insert(doc);
           })
           .then(doc => {
-            db.collection('app.version')
+            return db.collection('app.version')
             .insert({
               appid: doc.appid,
               current: doc._id,
@@ -50,11 +60,27 @@ export default class Base {
         }).then(app => {
           if (app.version != this._info.version) {
             let appInfo = this._info;
-            return Promise.map(_.keys(appInfo.icons), item => {
-              return appInfo.icons[item] = this._saveCdn(appInfo.icons[item]);
-            }).then(() => {
-              return db.collection('app.all')
-              .insert(appInfo)
+            let slide = [];
+            return Promise.all([
+              Promise.map(_.keys(appInfo.icons), item => {
+                return this._saveCdn(appInfo.icons[item]).then(url => {
+                  return appInfo.icons[item] = url;
+                });
+              }),
+              Promise.map(appInfo.slideshow, item => {
+                return this._saveCdn(item).then(url => {
+                  slide.push(url);
+                });
+              })
+            ]).then(() => {
+              appInfo.slideshow = slide;
+              return db.collection('app')
+              .findOne({appid: appInfo.appid})
+              .then(doc => {
+                appInfo = _.extend({}, appInfo, { star: doc.star, date_create: new Date() });
+                return db.collection('app.all')
+                .insert(appInfo);
+              })
               .then(doc => {
                 return db.collection('app')
                 .insert(doc);

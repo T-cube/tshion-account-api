@@ -16,17 +16,15 @@
   },
   slideshow: [String, ...],
   author: String, //"foo"
-  author_id: ObjectId,
+  url: String,
   description: String, //"this is an incredible note app"
   update_info: String, //"fixed some bugs"
   star: Number, // 4.7  average of this app comments stars
-  metadata: {
-    storage: [String, ...], //"note"
-    dependency: String,
+  permissions: [String...],
+  dependencies: [String...],
+  storage: {
+    "mongo": [String...]
   },
-  published: Boolean,
-  date_publish: Date,
-  date_update: Date,
   date_create: Date,
 }
 ```
@@ -68,7 +66,7 @@
 ```javascript
 {
   _id: ObjectId,
-  app_id: ObjectId,
+  appid: ObjectId,
   app_version: String, //"0.1.0"
   user_id: ObjectId,
   star: Number[Enum=1,2,3,4,5], //5
@@ -86,7 +84,7 @@
   company_id: ObjectId,
   apps:[
     {
-      app_id: ObjectId,
+      appid: ObjectId,
       enabled: Boolean, //true
     }...,
   ]
@@ -96,7 +94,7 @@
 ```javascript
 db.company.app.update({
   company_id: '123',
-  'apps.app_id': 'demp_app',
+  'apps.appid': 'demp_app',
 }, {
   $set: {
     'apps.$.enabled': false,
@@ -110,7 +108,7 @@ db.company.app.update({
 {
   _id: ObjectId,
   company_id: ObjectId,
-  app_id: ObjectId,
+  appid: ObjectId,
   options: {
     showDirection: Boolean, //true
     timeout: Number, //3000
