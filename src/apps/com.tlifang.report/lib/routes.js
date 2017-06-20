@@ -47,14 +47,15 @@ api.get('/report/:report_id', (req, res, next) => {
 
 api.post('/upload',
 upload({type: 'attachment'}).single('document'),
-saveCdn('cdn-private'),
+saveCdn('cdn-file'),
 (req, res, next) => {
   let file = req.file;
-  let user_id = req.user._id;
   if (!file) {
     throw new ApiError(400, 'file_not_upload');
   }
-  req._app.uploadSave(file, user_id).then(doc => {
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  req._app.uploadSave(file, user_id, company_id).then(doc => {
     res.json(doc);
   }).catch(next);
 });

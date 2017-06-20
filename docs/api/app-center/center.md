@@ -6,7 +6,7 @@
 
 获得所有上线APP
 
-output:
+OUTPUT:
 ```javascript
 [{
   _id: ObjectId,
@@ -38,7 +38,7 @@ output:
 
 公司拥有者开启关闭APP
 
-input:
+request_body:
 ```javascript
 {
   flag: <Boolean>
@@ -58,7 +58,7 @@ input:
 
 获得指定app所有评论
 
-output:
+OUTPUT:
 ```javascript
 {
   app_id: ObjectId,
@@ -83,7 +83,7 @@ output:
 
 评论指定APP
 
-input:
+request_body:
 ```javascript
 {
   app_version: <String>,

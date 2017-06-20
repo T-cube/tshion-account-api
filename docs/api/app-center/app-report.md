@@ -1,10 +1,14 @@
 # APP report API 文档
 
-## 挂载点 /company/:company_id/app-center/com.tlifang.report
+## 挂载点 /company/:company_id/app/com.tlifang.report
 
-### GET /overview 获得工作汇报使用情况及日周月报汇报情况
+### GET /overview
 
-### GET /report 查询汇报列表
+获得工作汇报使用情况及日周月报汇报情况
+
+### GET /report
+
+查询汇报列表
 
 query:
 ```javascript
@@ -31,7 +35,9 @@ OUTPUT:
 }...]
 ```
 
-### GET /report/:report_id 汇报详情
+### GET /report/:report_id
+
+汇报详情
 
 OUTPUT:
 ```javascript
@@ -62,16 +68,20 @@ OUTPUT:
 }
 ```
 
-### POST /upload 上传附件
+### POST /upload
 
-OUTPUT
+上传附件
+
+OUTPUT:
 ```javascript
 {
   url: String
 }
 ```
 
-### POST /report 上传汇报
+### POST /report
+
+上传汇报
 
 body:
 ```javascript
@@ -90,7 +100,9 @@ body:
 }
 ```
 
-### PUT /report/:report_id 修改汇报
+### PUT /report/:report_id
+
+修改汇报
 
 body:
 ```javascript
@@ -109,7 +121,9 @@ body:
 }
 ```
 
-### POST /report/:report_id/mark 批阅汇报
+### POST /report/:report_id/mark
+
+批阅汇报
 
 body:
 ```javascript
@@ -119,7 +133,9 @@ body:
 }
 ```
 
-### POST /report/:report_id/comment 评论汇报
+### POST /report/:report_id/comment
+
+评论汇报
 
 body:
 ```javascript

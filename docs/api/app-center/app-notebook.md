@@ -1,9 +1,11 @@
 # APP notebook API 文档
 
-## 挂载点 /company/:company_id/app-center/com.tlifang.notebook
+## 挂载点 /company/:company_id/app/com.tlifang.notebook
 
 
-### GET /user 获取用户笔记信息
+### GET /user
+
+获取用户笔记信息
 
 OUTPUT:
 ```javascript
@@ -19,7 +21,9 @@ OUTPUT:
 }
 ```
 
-### GET /tag/:tag_id/note 获取指定tag_id的所有笔记
+### GET /tag/:tag_id/note
+
+获取指定tag_id的所有笔记
 
 OUTPUT:
 ```javascript
@@ -39,7 +43,9 @@ OUTPUT:
 }...]
 ```
 
-### GET /note/:note_id 获取指定note_id的笔记
+### GET /note/:note_id
+
+获取指定note_id的笔记
 
 OUTPUT:
 ```javascript
@@ -59,7 +65,9 @@ OUTPUT:
 }
 ```
 
-### GET /notebook/:notebook_id/note 获取指定notebook_id的笔记
+### GET /notebook/:notebook_id/note
+
+获取指定notebook_id的笔记
 
 OUTPUT:
 ```javascript
@@ -79,7 +87,9 @@ OUTPUT:
 }...]
 ```
 
-### GET /shared 获取团队内所有分享笔记
+### GET /shared
+
+获取团队内所有分享笔记
 
 OUTPUT:
 ```javascript
@@ -99,7 +109,9 @@ OUTPUT:
 }...]
 ```
 
-### GET /note/:note_id/comments 获取指定note_id的所有评论
+### GET /note/:note_id/comments
+
+获取指定note_id的所有评论
 
 OUTPUT:
 ```javascript
@@ -113,27 +125,33 @@ OUTPUT:
 }...]
 ```
 
-### POST /tag 添加tag
+### POST /tag
 
-body:
+添加tag
+
+request_body:
 ```javascript
 {
   tag_name: <String>
 }
 ```
 
-### POST /notebook 添加notebook
+### POST /notebook
 
-body:
+添加notebook
+
+request_body:
 ```javascript
 {
   notebook_name: <String>
 }
 ```
 
-### POST /note 添加note
+### POST /note
 
-body:
+添加note
+
+request_body:
 ```javascript
 {
   title: <String>,
@@ -144,46 +162,74 @@ body:
 }
 ```
 
-### POST /note/:note_id/comment 添加评论
+### POST /note/:note_id/comment
 
-body:
+添加评论
+
+request_body:
 ```javascript
 {
   comment: <String>
 }
 ```
 
-### POST /note/:note_id/like 点赞笔记
+### POST /note/:note_id/like
 
-### DELETE /note/:note_id/like 取消点赞
 
-### DELETE /tag/:tag_id 删除标签
 
-### DELETE /notebook/:notebook_id 删除笔记本（同时删除笔记本中所有笔记）
+点赞笔记
 
-### DELETE /note/:note_id 删除笔记
+### DELETE /note/:note_id/like
 
-### PUT /tag/:tag_id 更改指定标签的标签名
 
-body:
+
+取消点赞
+
+### DELETE /tag/:tag_id
+
+
+
+删除标签
+
+### DELETE /notebook/:notebook_id
+
+
+
+删除笔记本（同时删除笔记本中所有笔记）
+
+### DELETE /note/:note_id
+
+
+
+删除笔记
+
+### PUT /tag/:tag_id
+
+更改指定标签的标签名
+
+request_body:
 ```javascript
 {
   tag_name: <String>,
 }
 ```
 
-### PUT /notebook/:notebook_id 更改指定笔记本的笔记本名
+### PUT /notebook/:notebook_id
 
-body:
+更改指定笔记本的笔记本名
+
+request_body:
 ```javascript
 {
   notebook_name: <String>,
 }
 ```
 
-### PUT /note/:note_id 更改笔记
+### PUT /note/:note_id
 
-body:
+更改笔记
+
+request_body:
 ```javascript
 {
   title: <String>, //optional
@@ -194,13 +240,19 @@ body:
 }
 ```
 
-### POST /note/:note_id/tag/:tag_id 给笔记添加标签
+### POST /note/:note_id/tag/:tag_id
 
-### DELETE /note/:note_id/tag/:tag_id 给笔记删除标签
+给笔记添加标签
 
-### PUT /note/:note_id/shared 笔记开启/关闭共享
+### DELETE /note/:note_id/tag/:tag_id
 
-body:
+给笔记删除标签
+
+### PUT /note/:note_id/shared
+
+笔记开启/关闭共享
+
+request_body:
 ```javascript
 {
   shared: <Boolean>,

@@ -3,6 +3,7 @@ import express from 'express';
 import db from 'lib/database';
 import _ from 'underscore';
 import { ObjectId } from 'mongodb';
+import app from 'index';
 
 import { APP_ROOT_DIR, SRC_ROOT_DIR } from 'bootstrap';
 import { ApiError } from 'lib/error';
@@ -16,9 +17,10 @@ api.use(oauthCheck());
 const appInstances = {};
 const APPS_ROOT = `${APP_ROOT_DIR}/apps`;
 
-function loadAppInstance(dirName) {
-  if (!appInstances[dirName]) {
-    const relpath = `/apps/${dirName}`;
+function loadAppInstance(appId) {
+  const modelId = `app-${appId}`;
+  if (!appInstances[appId]) {
+    const relpath = `/apps/${appId}`;
     const basepath = `${APP_ROOT_DIR}${relpath}`;
     const srcBasepath = `${SRC_ROOT_DIR}${relpath}`;
     const modelPath = `${basepath}/lib/model`;
@@ -26,10 +28,14 @@ function loadAppInstance(dirName) {
     const instance = new AppClass({
       basepath: srcBasepath,
     });
-    const appId = instance.getId();
+    const _appId = instance.getId();
+    if (_appId != appId) {
+      throw new Error('appid does not match directory name');
+    }
     appInstances[appId] = instance;
+    app.bindModel(modelId, instance);
   }
-  return appInstances[dirName];
+  return appInstances[appId];
 }
 
 function getAppInstance(appId) {
@@ -47,7 +53,6 @@ fs.readdir(APPS_ROOT, (err, result) => {
     const apiRoute = `/${appId}`;
     const appDir = `${APPS_ROOT}${apiRoute}/lib/routes`;
     console.log(`app ${appId} starting...`);
-    console.log(apiRoute);
     api.use(apiRoute, (req, res, next) => {
       req._app = _app;
       db.company.app.findOne({

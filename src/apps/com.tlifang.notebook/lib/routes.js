@@ -148,7 +148,7 @@ api.delete('/note/:note_id/like', (req, res, next) => {
 api.delete('/tag/:tag_id', (req, res, next) => {
   validate('notebook', req.params, ['tag_id']);
   let { tag_id } = req.params;
-  req.model('note').tagDelete({
+  req._app.tagDelete({
     company_id: req.company._id,
     user_id: req.user._id,
     tag_id

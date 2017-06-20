@@ -18,7 +18,7 @@ export default class Base {
   }
 
   install() {
-    db.collection('app.version').findOne({
+    return db.collection('app.version').findOne({
       appid: this._info.appid
     }).then(appVersion => {
       if (!appVersion) {
@@ -49,7 +49,7 @@ export default class Base {
             appInfo.icons['16'] = this._saveCdn(appInfo.icons['16']);
             appInfo.icons['64'] = this._saveCdn(appInfo.icons['64']);
             appInfo.icons['128'] = this._saveCdn(appInfo.icons['128']);
-            db.collection('app.all')
+            return db.collection('app.all')
             .insert(appInfo)
             .then(doc => {
               return db.collection('app')
@@ -62,14 +62,24 @@ export default class Base {
                 $set: { current: doc._id },
                 $push: { versions: doc._id },
               });
+            })
+            .then(() => {
+              return db.collection('app')
+              .remove({
+                _id: appVersion.current
+              });
             });
+          } else {
+            return;
           }
         });
       }
     });
   }
 
-  _saveCdn(picPath) {
+  _saveCdn() {
+    const qiniu = this.model('qiniu').bucket('cdn-file');
+
     return;
   }
 
@@ -80,10 +90,12 @@ export default class Base {
     return db.collection('app.store.' + this._info.appid + '.' + dbName);
   }
 
-  uploadSave(file, user_id) {
+  uploadSave(file, user_id, company_id) {
     let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
     _.extend(fileData, {
       name: file.originalname,
+      company: company_id,
+      appid: this.getId(),
       author: user_id,
       date_update: new Date(),
       date_create: new Date(),

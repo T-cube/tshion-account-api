@@ -90,22 +90,18 @@ export function upload(options) {
       });
     },
     filename: (req, file, callback) => {
-      let name = file.uuidName;
+      const name = file.uuidName;
       file.url = getUploadUrl('upload/' + options.type, name);
-      if (options.type == 'attachment') {
-        let classPath = getDistributedPath(name);
-        file.relpath = getRelUploadPath('upload/' + options.type, classPath + name);
-      } else {
-        file.relpath = getRelUploadPath('upload/' + options.type, name);
-      }
+      const classPath = getDistributedPath(name);
+      file.relpath = getRelUploadPath('upload/' + options.type, classPath + name);
       callback(null, name);
     }
   });
   return multer({
     storage: storage,
     fileFilter(req, file, cb) {
-      let allowed = config.get('upload.allowed')[options.type];
-      let ext = path.extname(file.originalname);
+      const allowed = config.get('upload.allowed')[options.type];
+      const ext = path.extname(file.originalname);
       if (_.contains(allowed, ext.toLowerCase())) {
         cb(null, true);
       } else {
@@ -124,6 +120,7 @@ export function saveCdn(bucket) {
 
     function cdnUpload(file, key, path) {
       return qiniu.upload(key, path).then(data => {
+        console.log(data);
         file.cdn_bucket = bucket;
         file.cdn_key = key;
         file.url = `${data.server_url}${key}`;

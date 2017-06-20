@@ -46,10 +46,9 @@ api.get('/collection/add', (req, res, next) => {
 });
 
 api.get('/', (req, res, next) => {
-  db.app.find({
-    published: true
-  }, {
+  db.app.find({}, {
     app_name: 1,
+    appid: 1,
     icons: 1,
     version: 1,
     description: 1,
@@ -257,13 +256,12 @@ api.post('/app/:app_id/comments', (req, res, next) => {
   });
 });
 
-api.get('/app/:app_id/pic', (req, res, next) => {
-  let dir = path.normalize(`${__dirname}/../../../../public/cdn` + req.query.path);
-  fs.readFile(dir, (err, data) => {
-    if (err) {
-      return next(new ApiError('400', 'no_such_directory'));
-    }
-    res.set('Content-Type', 'image/png');
-    res.status(200).send(data);
+api.delete('/remove', (req, res, next) => {
+  Promise.all([
+    db.app.remove({}),
+    db.app.all.remove({}),
+    db.company.app.remove({})
+  ]).then(([app, all, company]) => {
+    res.json({app, all, company});
   });
 });
