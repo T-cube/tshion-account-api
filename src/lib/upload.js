@@ -5,6 +5,8 @@ import _ from 'underscore';
 import path from 'path';
 import mkdirp from 'mkdirp-bluebird';
 import config from 'config';
+import mime from 'mime-types';
+
 import { dirExists } from 'lib/utils';
 import { BASE_PATH } from 'lib/constants';
 
@@ -69,12 +71,17 @@ export function upload(options) {
   if (!checkTypes(options.type)) {
     throw new Error('invalid upload type');
   }
-  let storage = multer.diskStorage({
+  const storage = multer.diskStorage({
     destination: (req, file, callback) => {
-      file.uuidName = uuid.v4() + path.extname(file.originalname);
-      let dir = getUploadPath('upload/' + options.type);
+      file.ext = path.extname(file.originalname);
+      file.mimetype = mime.lookup(file.ext) || 'application/octet-stream';
+      file.uuidName = uuid.v4() + file.ext;
       let classPath = getDistributedPath(file.uuidName);
+      let dir = getUploadPath('upload/' + options.type);
       dir = dir + '/' + classPath;
+      file.url = getUploadUrl('upload/' + options.type, file.uuidName);
+      file.cdn_key = getRelUploadPath('upload/' + options.type, file.uuidName);
+      file.relpath = getRelUploadPath('upload/' + options.type, classPath + file.uuidName);
       dirExists(dir)
       .then(exists => {
         if (!exists) {
@@ -90,22 +97,14 @@ export function upload(options) {
       });
     },
     filename: (req, file, callback) => {
-      let name = file.uuidName;
-      file.url = getUploadUrl('upload/' + options.type, name);
-      if (options.type == 'attachment') {
-        let classPath = getDistributedPath(name);
-        file.relpath = getRelUploadPath('upload/' + options.type, classPath + name);
-      } else {
-        file.relpath = getRelUploadPath('upload/' + options.type, name);
-      }
-      callback(null, name);
+      callback(null, file.uuidName);
     }
   });
   return multer({
     storage: storage,
     fileFilter(req, file, cb) {
-      let allowed = config.get('upload.allowed')[options.type];
-      let ext = path.extname(file.originalname);
+      const allowed = config.get('upload.allowed')[options.type];
+      const ext = path.extname(file.originalname);
       if (_.contains(allowed, ext.toLowerCase())) {
         cb(null, true);
       } else {
@@ -122,21 +121,18 @@ export function saveCdn(bucket) {
     const qiniu = req.model('qiniu').bucket(bucket);
     let promise;
 
-    function cdnUpload(file, key, path) {
-      return qiniu.upload(key, path).then(data => {
+    function cdnUpload(file) {
+      return qiniu.upload(file.cdn_key, file.path).then(data => {
         file.cdn_bucket = bucket;
-        file.cdn_key = key;
-        file.url = `${data.server_url}${key}`;
+        file.url = data.url;
       });
     }
 
     if (req.file) {
-      const { relpath, path } = req.file;
-      promise = cdnUpload(req.file, relpath, path);
+      promise = cdnUpload(req.file);
     } else if (req.files) {
       promise = Promise.map(req.files, file => {
-        const { relpath, path } = file;
-        return cdnUpload(file, relpath, path);
+        return cdnUpload(file);
       });
     } else {
       promise = Promise.resolve();
