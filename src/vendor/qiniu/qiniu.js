@@ -81,7 +81,7 @@ export default class Qiniu {
     });
   }
 
-  getThumnailUrl(url, width, height) {
+  getThumbnailUrl(url, width, height) {
     if (!/^http/.test(url)) {
       url = this.conf.SERVER_URL + url;
     }
@@ -92,7 +92,7 @@ export default class Qiniu {
       height = parseInt(height);
     }
     if (!/^\d+$/.test(width + '' + height)) {
-      throw new Error('getThumnailUrl: invalid thumbnail size');
+      throw new Error('getThumbnailUrl: invalid thumbnail size');
     }
     let find = /\?.+/;
     let replace = `?imageView2/1/w/${width}/h/${height}`;
