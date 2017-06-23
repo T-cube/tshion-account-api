@@ -1,4 +1,5 @@
 import express from 'express';
+import { ObjectId } from 'mongodb';
 
 import { upload, saveCdn } from 'lib/upload';
 import { ApiError } from 'lib/error';
@@ -17,6 +18,12 @@ api.get('/overview', (req, res, next) => {
 });
 
 api.get('/report', (req, res, next) => {
+  let report_target = [];
+  req.query.report_target.split(',').forEach(item => {
+    if (ObjectId.isValid(item)) {
+      report_target.push(ObjectId(item));
+    }
+  });
   validate('list', req.query);
   let { page, type, pagesize, status, start_date, end_date, reporter, report_type } = req.query;
   req._app.list({
@@ -29,7 +36,8 @@ api.get('/report', (req, res, next) => {
     start_date,
     end_date,
     reporter,
-    report_type
+    report_type,
+    report_target
   })
   .then(list => {
     res.json(list);

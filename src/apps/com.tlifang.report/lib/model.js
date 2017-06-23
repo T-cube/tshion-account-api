@@ -20,7 +20,7 @@ export default class Report extends AppBase {
       this.collection('item').findOne({ user_id, company_id }, { date_create: 1 }),
       this.collection('item').findOne({ report_target: user_id, company_id }, { date_create: 1 }),
       Promise.map(['day', 'week', 'month'], item => {
-        return this.collection('item').find({
+        return this.collection('item').count({
           user_id,
           company_id,
           type: item,
@@ -30,7 +30,7 @@ export default class Report extends AppBase {
         });
       }),
       Promise.map(['day', 'week', 'month'], item => {
-        return this.collection('item').find({
+        return this.collection('item').count({
           report_target: user_id,
           company_id,
           type: item,
@@ -41,7 +41,7 @@ export default class Report extends AppBase {
       }),
     ]).then(([totalReported, totalReceived, reported, received, from_me, to_me]) => {
       let report_date = reported ? reported.date_create : 0;
-      let receive_date = reported ? received.date_create : 0;
+      let receive_date = received ? received.date_create : 0;
       let firstDate = _.min([report_date, receive_date]);
       return {
         totalReported,
@@ -61,11 +61,11 @@ export default class Report extends AppBase {
     });
   }
 
-  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type}) {
+  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target}) {
     let criteria = {};
     criteria.company_id = company_id;
     if (report_type) {
-      criteria.type = report_type;      
+      criteria.type = report_type;
     }
     if (start_date && end_date) {
       criteria.date_report = { $gte: start_date, $lte: end_date };
@@ -80,7 +80,7 @@ export default class Report extends AppBase {
         criteria.status = status;
       }
     } else if (type == C.BOX_TYPE.INBOX) {
-      criteria['$or'] = [{ report_target: user_id }, { copy_to: user_id }];
+      criteria['$or'] = [{ report_target: { $in: report_target } }, { copy_to: user_id }];
       if (reporter) {
         criteria.user_id = reporter;
       }

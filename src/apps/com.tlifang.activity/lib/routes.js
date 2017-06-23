@@ -17,6 +17,46 @@ api.get('/overview', (req, res, next) => {
   }).catch(next);
 });
 
+api.post('/activity', (req, res, next) => {
+  validate('activity', req.body);
+  req._app.createActivity({
+    activity: req.body,
+    user_id: req.user._id,
+    company_id: req.company._id
+  })
+  .then(activity => {
+    if (activity.room.status == _C.APPROVAL_STATUS.AGREED) {
+      // let from = activity.creator;
+      // let to = activity.assistants.concat(activity.members, activity.followers);
+      // let info = {
+      //   company: req.company._id,
+      //   action: C.ACTIVITY_ACTION.ADD,
+      //   target_type: _C.OBJECT_TYPE.ACTIVITY,
+      //   from,
+      //   to
+      // };
+      // req.model('notification').send(info, APP);
+    }
+    res.json(activity);
+  })
+  .catch(next);
+});
+
+api.put('/activity/:activity_id', (req, res, next) => {
+  validate('activity', req.body);
+  validate('info', req.params, ['activity_id']);
+  req._app.changeActivity({
+    activity_id: req.params.activity_id,
+    activity: req.body,
+    user_id: req.user._id,
+    company_id: req.company._id
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
 api.get('/activity', (req, res, next) => {
   validate('list', req.query);
   let { time_start, time_end, target, last_id } = req.query;
@@ -93,31 +133,6 @@ api.post('/activity/:activity_id/comment', (req, res, next) => {
   })
   .then(doc => {
     res.json(doc);
-  })
-  .catch(next);
-});
-
-api.post('/activity', (req, res, next) => {
-  validate('activity', req.body);
-  req._app.createActivity({
-    activity: req.body,
-    user_id: req.user._id,
-    company_id: req.company._id
-  })
-  .then(activity => {
-    if (activity.room.status == _C.APPROVAL_STATUS.AGREED) {
-      // let from = activity.creator;
-      // let to = activity.assistants.concat(activity.members, activity.followers);
-      // let info = {
-      //   company: req.company._id,
-      //   action: C.ACTIVITY_ACTION.ADD,
-      //   target_type: _C.OBJECT_TYPE.ACTIVITY,
-      //   from,
-      //   to
-      // };
-      // req.model('notification').send(info, APP);
-    }
-    res.json(activity);
   })
   .catch(next);
 });

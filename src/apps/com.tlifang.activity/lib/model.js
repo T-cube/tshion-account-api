@@ -14,9 +14,10 @@ export default class Activity extends AppBase {
     this.baseInfo = {
       name: 1,
       type: 1,
-      activity_start: 1,
-      activity_end: 1,
+      time_start: 1,
+      time_end: 1,
       assistants: 1,
+      status: 1,
       members: 1,
       accept_require: 1,
       accept_members: 1,
@@ -127,7 +128,7 @@ export default class Activity extends AppBase {
     let now = new Date();
     let criteria = {
       company_id,
-      'room.status': C.APPROVAL_STATUS.AGREED,
+      status: { $ne: C.ACTIVITY_STATUS.CANCELLED },
     };
     if (range == C.LIST_RANGE.PAST) {
       criteria.time_end = { $lt: now };
@@ -153,6 +154,52 @@ export default class Activity extends AppBase {
     .limit(10)
     .then(list => {
       return this._listCalc(list);
+    });
+  }
+
+  changeActivity({activity_id, activity, user_id, company_id}) {
+    return this.collection('item')
+    .findOne({
+      _id: activity_id
+    })
+    .then(doc => {
+      if (activity.room && !activity.room._id.equals(doc.room._id)) {
+        return this.collection('room')
+        .findOne({
+          _id:
+          activity.room._id
+        })
+        .then(room => {
+          return this.collection('approval').insert({
+            room_id: activity.room._id,
+            creator: user_id,
+            type: room.name,
+            company_id,
+            manager: room.manager,
+            status: C.APPROVAL_STATUS.PENDING,
+            comments: []
+          });
+        })
+        .then(approval => {
+          activity.room.approval_id = approval._id;
+          return this.collection('item')
+          .update({
+            _id: activity_id
+          }, {
+            $set: activity
+          });
+        })
+        .then(newActivity => {
+          return newActivity;
+        });
+      } else {
+        return this.collection('item')
+        .update({
+          _id: activity_id
+        }, {
+          $set: activity
+        });
+      }
     });
   }
 
@@ -270,11 +317,19 @@ export default class Activity extends AppBase {
           status: C.APPROVAL_STATUS.PENDING,
           comments: []
         })
-        .then(doc => {
-          activity.room.approval_id = doc._id;
+        .then(approval => {
+          activity.room.approval_id = approval._id;
           return this.collection('item')
           .insert(activity)
           .then(doc => {
+            this.collection('approval')
+            .update({
+              _id: approval._id
+            }, {
+              $set: {
+                activity_id: doc._id
+              }
+            });
             return doc;
           });
         });
@@ -314,13 +369,16 @@ export default class Activity extends AppBase {
       }
       return this.collection('item')
       .findOne({
-        'room.approval_id': approval_id
+        _id: approval.activity_id
+      }, {
+        comments: 0,
+        attachments: 0,
       })
       .then(activity => {
         if (!activity) {
           throw new ApiError(400, 'no_activity');
         }
-        activity.approval = approval;
+        approval.activity = activity;
         return activity;
       });
     });

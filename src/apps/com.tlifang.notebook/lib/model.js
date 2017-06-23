@@ -30,7 +30,7 @@ export default class Notebook extends AppBase {
     });
   }
 
-  note({user_id, company_id, last_id}) {
+  note({user_id, company_id, last_id, sort_type}) {
     let criteria = {
       user_id,
       company_id,
@@ -39,6 +39,7 @@ export default class Notebook extends AppBase {
       criteria._id = { $lt: last_id };
     }
     return this.collection('note').find(criteria)
+    .sort({[sort_type]: 1})
     .limit(10)
     .then(list => {
       return list;

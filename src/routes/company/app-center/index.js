@@ -2,6 +2,7 @@ import fs from 'fs';
 import express from 'express';
 import db from 'lib/database';
 import { ObjectId } from 'mongodb';
+import Promise from 'bluebird';
 
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
@@ -14,6 +15,7 @@ api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
   db.app.find({}, {
+    _id: 1,
     name: 1,
     appid: 1,
     icons: 1,
@@ -38,7 +40,24 @@ api.get('/app', (req, res, next) => {
         res.json(inserted);
       });
     }
-    res.json(doc);
+    return Promise.map(doc.apps, item => {
+      return db.app.findOne({
+        appid: item.appid
+      }, {
+        _id: 1,
+        name: 1,
+        appid: 1,
+        icons: 1,
+        version: 1,
+        description: 1,
+        author: 1
+      }).then(app => {
+        item.detail = app;
+        return item;
+      });
+    }).then(apps => {
+      res.json(apps);
+    });
   }).catch(next);
 });
 

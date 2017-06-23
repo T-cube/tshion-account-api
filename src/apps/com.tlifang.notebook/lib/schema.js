@@ -4,9 +4,11 @@ const schema = {
   limit: {
     sanitization: {
       last_id: { $objectId: 1, optional: true },
+      sort_type: { type: 'string' },
     },
     validation: {
       last_id: { $objectId: 1, optional: true },
+      sort_type: { $enum: ['date_update', 'date_create', 'notebook', 'title'] },
     }
   },
   notebook: {
