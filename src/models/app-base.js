@@ -38,7 +38,7 @@ export default class Base {
           })
         ]).then(() => {
           appInfo.slideshow = slide;
-          appInfo = _.extend({}, appInfo, { star: null, date_create: new Date() });
+          appInfo = _.extend({}, appInfo, { star: 0, date_create: new Date() });
           return db.collection('app.all')
           .insert(appInfo)
           .then(doc => {
@@ -84,7 +84,8 @@ export default class Base {
               .then(doc => {
                 return db.collection('app')
                 .insert(doc);
-              }).then(doc => {
+              })
+              .then(doc => {
                 return db.collection('app.version')
                 .update({
                   _id: appVersion._id

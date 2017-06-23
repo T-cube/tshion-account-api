@@ -16,6 +16,6 @@
   "permissions": ["storage.mongo"],
   "dependencies": [],
   "storage": {
-    "mongo": ["item", "approval"]
+    "mongo": ["item", "approval", "room"]
   }
 }

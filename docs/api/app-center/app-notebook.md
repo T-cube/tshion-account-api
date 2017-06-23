@@ -21,6 +21,16 @@ OUTPUT:
 }
 ```
 
+### GET /note
+
+获取所有笔记
+query:
+```javascript
+{
+  last_id: objectId,//optional, 分页处理，为上一页最后一个笔记的id
+}
+```
+
 ### GET /tag/:tag_id/note
 
 获取指定tag_id的所有笔记

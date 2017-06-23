@@ -119,7 +119,6 @@ export function saveCdn(bucket) {
     let promise;
 
     function cdnUpload(file, key, path) {
-      console.log(key, path);
       return qiniu.upload(key, path).then(data => {
         file.cdn_bucket = bucket;
         file.cdn_key = key;

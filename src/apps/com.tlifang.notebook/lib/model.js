@@ -30,6 +30,21 @@ export default class Notebook extends AppBase {
     });
   }
 
+  note({user_id, company_id, last_id}) {
+    let criteria = {
+      user_id,
+      company_id,
+    };
+    if (last_id) {
+      criteria._id = { $lt: last_id };
+    }
+    return this.collection('note').find(criteria)
+    .limit(10)
+    .then(list => {
+      return list;
+    });
+  }
+
   tagQuery({user_id, company_id, tag_id}) {
     return this.collection('note').aggregate([
       { $match: {

@@ -41,6 +41,17 @@ api.get('/note/:note_id', (req, res, next) => {
   }).catch(next);
 });
 
+api.get('/note', (req, res, next) => {
+  validate('limit', req.query);
+  req._app.note({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    last_id: req.query.last_id,
+  }).then(list => {
+    res.json(list);
+  }).catch(next);
+});
+
 api.get('/notebook/:notebook_id/note', (req, res, next) => {
   validate('notebook', req.params, ['notebook_id']);
   let { notebook_id } = req.params;

@@ -61,9 +61,12 @@ export default class Report extends AppBase {
     });
   }
 
-  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter}) {
-    let criteria;
+  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type}) {
+    let criteria = {};
     criteria.company_id = company_id;
+    if (report_type) {
+      criteria.type = report_type;      
+    }
     if (start_date && end_date) {
       criteria.date_report = { $gte: start_date, $lte: end_date };
     } else if (start_date) {
@@ -77,7 +80,7 @@ export default class Report extends AppBase {
         criteria.status = status;
       }
     } else if (type == C.BOX_TYPE.INBOX) {
-      criteria['$in'] = [{ report_target: user_id }, { copy_to: user_id }];
+      criteria['$or'] = [{ report_target: user_id }, { copy_to: user_id }];
       if (reporter) {
         criteria.user_id = reporter;
       }
@@ -88,7 +91,7 @@ export default class Report extends AppBase {
           criteria.status = status;
         }
       } else {
-        criteria.status = { $not: C.REPORT_STATUS.DRAFT };
+        criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
       }
     }
     return this.collection('item').find(criteria,

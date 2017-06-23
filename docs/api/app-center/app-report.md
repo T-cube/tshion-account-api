@@ -16,6 +16,7 @@ query:
   page: Number,
   pagesize: Number,
   type: String, // inbox, outbox
+  report_type: ENUM, //day, week, month
   status: String, // 'draft', 'applied', 'agreed', 'rejected' this key is optional
   start_date: Date, // optional
   end_date: Date, // optional

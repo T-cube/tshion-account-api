@@ -7,6 +7,7 @@ const schema={
       page: { type: 'integer' },
       type: { type: 'string' },
       pagesize: { type: 'integer' },
+      report_type: { type: 'string' },
       reporter: { $objectId: 1, optional: true },
       status: { type: 'string', optional: true },
       start_date: { $date: 1, optional: true },
@@ -16,6 +17,7 @@ const schema={
       page: { type:'integer', gte: 1 },
       type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
       pagesize: { type:'integer', gte: 1 },
+      report_type: { $enum: ENUMS.REPORT_TYPE },
       status: { $enum: ENUMS.REPORT_STATUS, optional: true },
       reporter: { $objectId: 1, optional: true },
       start_date: { type: ['date', 'null'], optional: true },
@@ -88,8 +90,6 @@ const schema={
   },
   report: {
     sanitization: {
-      user_id: { $objectId: 1 },
-      company_id: { $objectId: 1 },
       date_report: { $date: 1 },
       report_target: { $objectId: 1 },
       copy_to: {
@@ -101,6 +101,7 @@ const schema={
       type: { type: 'string' },
       attachments: {
         type: 'array',
+        optional: true,
         items: {
           type: 'object',
           optional: true,
@@ -113,8 +114,6 @@ const schema={
       },
     },
     validation: {
-      user_id: { $objectId: 1 },
-      company_id: { $objectId: 1 },
       date_report: { $date: 1 },
       report_target: { $objectId: 1 },
       copy_to: {

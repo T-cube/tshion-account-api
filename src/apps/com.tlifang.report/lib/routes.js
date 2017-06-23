@@ -18,7 +18,7 @@ api.get('/overview', (req, res, next) => {
 
 api.get('/report', (req, res, next) => {
   validate('list', req.query);
-  let { page, type, pagesize, status, start_date, end_date, reporter } = req.query;
+  let { page, type, pagesize, status, start_date, end_date, reporter, report_type } = req.query;
   req._app.list({
     user_id: req.user._id,
     company_id: req.company._id,
@@ -28,7 +28,8 @@ api.get('/report', (req, res, next) => {
     status,
     start_date,
     end_date,
-    reporter
+    reporter,
+    report_type
   })
   .then(list => {
     res.json(list);

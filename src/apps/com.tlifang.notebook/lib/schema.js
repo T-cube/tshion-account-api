@@ -1,6 +1,14 @@
 import { buildValidator } from 'lib/inspector';
 
 const schema = {
+  limit: {
+    sanitization: {
+      last_id: { $objectId: 1, optional: true },
+    },
+    validation: {
+      last_id: { $objectId: 1, optional: true },
+    }
+  },
   notebook: {
     sanitization: {
       tag_id: { $objectId: 1 },

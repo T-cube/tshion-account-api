@@ -15,6 +15,21 @@ let constants = {
   LIST_TARGET: {
     MINE: 'mine',
     ALL: 'all',
+  },
+  ACTIVITY_STATUS: {
+    CREATED: 'created',
+    APPROVING: 'approving',
+    CANCELLED: 'cancelled',
+  },
+  OBJECT_TYPE: {
+    ACTIVITY: 'activity'
+  },
+  ROOM_TYPE: {
+    INTERVIEW: 'interview',
+    MEETING: 'meeting',
+    RECEPTION: 'reception',
+    TEA: 'tea',
+    OTHER: 'other',
   }
 };
 
