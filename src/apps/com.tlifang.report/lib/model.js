@@ -13,12 +13,12 @@ export default class Report extends AppBase {
     super(options);
   }
 
-  overview({user_id, company_id}) {
+  overview({user_id, company_id, memberDepartments}) {
     return Promise.all([
       this.collection('item').count({ user_id, company_id }),
-      this.collection('item').count({ report_target: user_id, company_id }),
+      this.collection('item').count({ report_target: { $in: memberDepartments }, company_id }),
       this.collection('item').findOne({ user_id, company_id }, { date_create: 1 }),
-      this.collection('item').findOne({ report_target: user_id, company_id }, { date_create: 1 }),
+      this.collection('item').findOne({ report_target: { $in: memberDepartments }, company_id }, { date_create: 1 }),
       Promise.map(['day', 'week', 'month'], item => {
         return this.collection('item').count({
           user_id,
@@ -29,14 +29,23 @@ export default class Report extends AppBase {
           }
         });
       }),
-      Promise.map(['day', 'week', 'month'], item => {
-        return this.collection('item').count({
-          report_target: user_id,
-          company_id,
-          type: item,
-          date_create: {
-            $gte: moment().startOf(item).toDate()
-          }
+      Promise.map(memberDepartments, department => {
+        return Promise.map(['day', 'week', 'month'], item => {
+          return this.collection('item').count({
+            report_target: department,
+            company_id,
+            type: item,
+            date_create: {
+              $gte: moment().startOf(item).toDate()
+            }
+          });
+        }).then(list => {
+          return {
+            department_id: department,
+            day: list[0],
+            week: list[1],
+            month: list[2]
+          };
         });
       }),
     ]).then(([totalReported, totalReceived, reported, received, from_me, to_me]) => {
@@ -52,11 +61,7 @@ export default class Report extends AppBase {
           week: from_me[1],
           month: from_me[2],
         },
-        to_me: {
-          day: to_me[0],
-          week: to_me[1],
-          month: to_me[2],
-        }
+        to_me
       };
     });
   }
@@ -80,7 +85,7 @@ export default class Report extends AppBase {
         criteria.status = status;
       }
     } else if (type == C.BOX_TYPE.INBOX) {
-      criteria['$or'] = [{ report_target: { $in: report_target } }, { copy_to: user_id }];
+      criteria['$or'] = [{ report_target: { $in: report_target } }, { copy_to: { $in: user_id } }];
       if (reporter) {
         criteria.user_id = reporter;
       }

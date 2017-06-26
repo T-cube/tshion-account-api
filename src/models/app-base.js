@@ -2,7 +2,9 @@ import db from 'lib/database';
 import _ from 'underscore';
 import path from 'path';
 import Promise from 'bluebird';
+import { ObjectId } from 'mongodb';
 
+import Structure from 'models/structure';
 import { ApiError } from 'lib/error';
 
 export default class Base {
@@ -123,6 +125,14 @@ export default class Base {
       throw new ApiError(400, 'invalid_collection');
     }
     return db.collection('app.store.' + this._info.appid + '.' + dbName);
+  }
+
+  getStructure(structure, user_id) {
+    return new Promise((resolve) => {
+      let s = new Structure(structure);
+      let memberDepartments = s.findMemberDepartments(user_id);
+      resolve(memberDepartments);      
+    });
   }
 
   uploadSave(file, user_id, company_id) {

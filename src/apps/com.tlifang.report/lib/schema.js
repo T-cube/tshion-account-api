@@ -12,6 +12,7 @@ const schema={
       status: { type: 'string', optional: true },
       start_date: { $date: 1, optional: true },
       end_date: { $date: 1, optional: true },
+      report_target: { $objectId: 1, optional: true },
     },
     validation: {
       page: { type:'integer', gte: 1 },
@@ -22,6 +23,7 @@ const schema={
       reporter: { $objectId: 1, optional: true },
       start_date: { type: ['date', 'null'], optional: true },
       end_date: { type: ['date', 'null'], optional: true },
+      report_target: { $objectId: 1, optional: true },
     }
   },
   info: {
