@@ -16,7 +16,7 @@ const schema = {
       tag_id: { $objectId: 1 },
       note_id: { $objectId: 1 },
       notebook_id: { $objectId: 1 },
-      name: { type: 'string' },
+      name: { type: 'string', rules:['trim'] },
       note: {
         title: { type: 'string' },
         content: { type: 'string' },

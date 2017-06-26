@@ -142,26 +142,50 @@ export default class Notebook extends AppBase {
   }
 
   tagAdd({company_id, user_id, name}) {
-    let _id = ObjectId();
-    return this.collection('user').update({
+    return this.collection('user').findOne({
       user_id,
-      company_id,
-    }, {
-      $push: { tags: { name: name, _id: _id } }
-    }).then(() => {
-      return { name, _id };
+      company_id
+    }).then(doc => {
+      let tag = _.find(doc.tags, item => {
+        return item.name == name;
+      });
+      if (tag) {
+        return tag;
+      } else {
+        let _id = ObjectId();
+        return this.collection('user').update({
+          user_id,
+          company_id,
+        }, {
+          $push: { tags: { name, _id } }
+        }).then(() => {
+          return { name, _id };
+        });
+      }
     });
   }
 
   notebookAdd({company_id, user_id, name}) {
-    let _id = ObjectId();
-    return this.collection('user').update({
+    return this.collection('user').findOne({
       user_id,
-      company_id,
-    }, {
-      $push: { notebooks: { name: name, _id: _id } }
-    }).then(() => {
-      return { name, _id };
+      company_id
+    }).then(doc => {
+      let notebook = _.find(doc.notebooks, item => {
+        return item.name == name;
+      });
+      if (notebook) {
+        return notebook;
+      } else {
+        let _id = ObjectId();
+        return this.collection('user').update({
+          user_id,
+          company_id,
+        }, {
+          $push: { notebooks: { name, _id } }
+        }).then(() => {
+          return { name, _id };
+        });
+      }
     });
   }
 
