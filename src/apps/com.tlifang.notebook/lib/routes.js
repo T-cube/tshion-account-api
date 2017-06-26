@@ -17,12 +17,27 @@ api.get('/user', (req, res, next) => {
   }).catch(next);
 });
 
+api.get('/note', (req, res, next) => {
+  validate('limit', req.query);
+  req._app.note({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    last_id: req.query.last_id,
+    sort_type: req.query.sort_type,
+  }).then(list => {
+    res.json(list);
+  }).catch(next);
+});
+
 api.get('/tag/:tag_id/note', (req, res, next) => {
   validate('notebook', req.params, ['tag_id']);
+  validate('limit', req.query);
   let { tag_id } = req.params;
   req._app.tagQuery({
     company_id: req.company._id,
     user_id: req.user._id,
+    last_id: req.query.last_id,
+    sort_type: req.query.sort_type,
     tag_id,
   }).then(list => {
     res.json(list);
@@ -41,24 +56,15 @@ api.get('/note/:note_id', (req, res, next) => {
   }).catch(next);
 });
 
-api.get('/note', (req, res, next) => {
-  validate('limit', req.query);
-  req._app.note({
-    company_id: req.company._id,
-    user_id: req.user._id,
-    last_id: req.query.last_id,
-    sort_type: req.query.sort_type,
-  }).then(list => {
-    res.json(list);
-  }).catch(next);
-});
-
 api.get('/notebook/:notebook_id/note', (req, res, next) => {
   validate('notebook', req.params, ['notebook_id']);
+  validate('limit', req.query);
   let { notebook_id } = req.params;
   req._app.notebookQuery({
     company_id: req.company._id,
     user_id: req.user._id,
+    last_id: req.query.last_id,
+    sort_type: req.query.sort_type,
     notebook_id
   }).then(list => {
     res.json(list);
@@ -73,7 +79,7 @@ api.get('/shared', (req, res, next) => {
   }).catch(next);
 });
 
-api.get('/note/:note_id/comments', (req, res, next) => {
+api.get('/note/:note_id/comment', (req, res, next) => {
   validate('notebook', req.params, ['note_id']);
   let { note_id } = req.params;
   req._app.commentQuery({
@@ -85,24 +91,24 @@ api.get('/note/:note_id/comments', (req, res, next) => {
 });
 
 api.post('/tag', (req, res, next) => {
-  validate('notebook', req.body, ['tag_name']);
-  let { tag_name } = req.body;
+  validate('notebook', req.body, ['name']);
+  let { name } = req.body;
   req._app.tagAdd({
     company_id: req.company._id,
     user_id: req.user._id,
-    tag_name
+    name
   }).then(doc => {
     res.json(doc);
   }).catch(next);
 });
 
 api.post('/notebook', (req, res, next) => {
-  validate('notebook', req.body, ['notebook_name']);
-  let { notebook_name } = req.body;
+  validate('notebook', req.body, ['name']);
+  let { name } = req.body;
   req._app.notebookAdd({
     company_id: req.company._id,
     user_id: req.user._id,
-    notebook_name
+    name
   }).then(doc => {
     res.json(doc);
   }).catch(next);
@@ -120,7 +126,7 @@ api.post('/note', (req, res, next) => {
   }).catch(next);
 });
 
-api.post('/note/:note_id/comments', (req, res, next) => {
+api.post('/note/:note_id/comment', (req, res, next) => {
   validate('notebook', req.params, ['note_id']);
   validate('notebook', req.body, ['comment']);
   let { note_id } = req.params;
@@ -188,20 +194,20 @@ api.delete('/note/:note_id', (req, res, next) => {
     company_id: req.company._id,
     user_id: req.user._id,
     note_id,
-  }).then(list => {
-    res.json(list);
+  }).then(doc => {
+    res.json(doc);
   }).catch(next);
 });
 
 api.put('/tag/:tag_id', (req, res, next) => {
   validate('notebook', req.params, ['tag_id']);
-  validate('notebook', req.body, ['tag_name']);
+  validate('notebook', req.body, ['name']);
   let { tag_id } = req.params;
-  let { tag_name } = req.body;
+  let { name } = req.body;
   req._app.tagChange({
     user_id: req.user._id,
     company_id: req.company._id,
-    tag_name,
+    name,
     tag_id
   }).then(doc => {
     res.json(doc);
@@ -210,13 +216,13 @@ api.put('/tag/:tag_id', (req, res, next) => {
 
 api.put('/notebook/:notebook_id', (req, res, next) => {
   validate('notebook', req.params, ['notebook_id']);
-  validate('notebook', req.body, ['notebook_name']);
+  validate('notebook', req.body, ['name']);
   let { notebook_id } = req.params;
-  let { notebook_name } = req.body;
+  let { name } = req.body;
   req._app.notebookChange({
     user_id: req.user._id,
     company_id: req.company._id,
-    notebook_name,
+    name,
     notebook_id,
   }).then(doc => {
     res.json(doc);
@@ -238,8 +244,10 @@ api.put('/note/:note_id', (req, res, next) => {
 });
 
 api.post('/note/:note_id/tag/:tag_id', (req, res, next) => {
-  validate('notebook', req.params, ['note_id', 'tag_id']);
-  let { note_id, tag_id } = req.params;
+  validate('notebook', req.params, ['note_id']);
+  validate('notebook', req.body, ['tag_id']);
+  let { note_id } = req.params;
+  let { tag_id } = req.body;
   req._app.noteAddTag({
     user_id: req.user._id,
     company_id: req.company._id,
@@ -251,8 +259,10 @@ api.post('/note/:note_id/tag/:tag_id', (req, res, next) => {
 });
 
 api.delete('/note/:note_id/tag/:tag_id', (req, res, next) => {
-  validate('notebook', req.params, ['note_id', 'tag_id']);
-  let { note_id, tag_id } = req.params;
+  validate('notebook', req.params, ['note_id']);
+  validate('notebook', req.body, ['tag_id']);
+  let { note_id } = req.params;
+  let { tag_id } = req.body;
   req._app.noteDeleteTag({
     user_id: req.user._id,
     company_id: req.company._id,

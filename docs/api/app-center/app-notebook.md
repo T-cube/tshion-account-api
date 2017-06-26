@@ -15,9 +15,14 @@ OUTPUT:
   company_id: ObjectId,
   tags: [{
     name: <String>,
+    total: <Number>,
     _id: ObjectId
   }...],
-  notebook: [],
+  notebooks: [{
+    name: <String>,
+    total: <Number>,
+    _id: ObjectId
+  }...],
 }
 ```
 
@@ -27,20 +32,26 @@ OUTPUT:
 query:
 ```javascript
 {
-  last_id: objectId,//optional, 分页处理，为上一页最后一个笔记的id
+  last_id: objectId, //optional, 分页处理，为上一页最后一个笔记的id
+  sort_type: <String>, //title, date_update, notebook, date_create
 }
 ```
 
 ### GET /tag/:tag_id/note
 
 获取指定tag_id的所有笔记
+query:
+```javascript
+{
+  last_id: objectId, //optional, 分页处理，为上一页最后一个笔记的id
+  sort_type: <String>, //title, date_update, notebook, date_create
+}
+```
 
 OUTPUT:
 ```javascript
 [{
   _id: ObjectId,
-  user_id: ObjectId,
-  company_id: ObjectId,
   title: <String>,
   content: <String>,
   tags: [ObjectId...],
@@ -61,8 +72,6 @@ OUTPUT:
 ```javascript
 {
   _id: ObjectId,
-  user_id: ObjectId,
-  company_id: ObjectId,
   title: <String>,
   content: <String>,
   tags: [ObjectId...],
@@ -78,13 +87,18 @@ OUTPUT:
 ### GET /notebook/:notebook_id/note
 
 获取指定notebook_id的笔记
+query:
+```javascript
+{
+  last_id: objectId, //optional, 分页处理，为上一页最后一个笔记的id
+  sort_type: <String>, //title, date_update, notebook, date_create
+}
+```
 
 OUTPUT:
 ```javascript
 [{
   _id: ObjectId,
-  user_id: ObjectId,
-  company_id: ObjectId,
   title: <String>,
   content: <String>,
   tags: [ObjectId...],
@@ -142,7 +156,15 @@ OUTPUT:
 request_body:
 ```javascript
 {
-  tag_name: <String>
+  name: <String>
+}
+```
+
+OUTPUT:
+```javascript
+{
+  name: <String>, // tag_name
+  _id: ObjectId, // tag_id
 }
 ```
 
@@ -153,7 +175,15 @@ request_body:
 request_body:
 ```javascript
 {
-  notebook_name: <String>
+  name: <String>
+}
+```
+
+OUTPUT:
+```javascript
+{
+  name: <String>, // notebook_name
+  _id: ObjectId, // notebook_id
 }
 ```
 
@@ -172,7 +202,7 @@ request_body:
 }
 ```
 
-### POST /note/:note_id/comment
+### POST /note/:note_id/comments
 
 添加评论
 
@@ -220,7 +250,7 @@ request_body:
 request_body:
 ```javascript
 {
-  tag_name: <String>,
+  name: <String>,
 }
 ```
 
@@ -231,7 +261,7 @@ request_body:
 request_body:
 ```javascript
 {
-  notebook_name: <String>,
+  name: <String>,
 }
 ```
 
@@ -244,19 +274,31 @@ request_body:
 {
   title: <String>, //optional
   content: <String>, //optional
-  tags: [ObjectId...], //optional
   notebook: ObjectId, //optional
   shared: <Boolean>, //optional
 }
 ```
 
-### POST /note/:note_id/tag/:tag_id
+### POST /note/:note_id/tag
 
 给笔记添加标签
 
-### DELETE /note/:note_id/tag/:tag_id
+request_body:
+```javascript
+{
+  tag_id: ObjectId
+}
+```
+
+### DELETE /note/:note_id/tag
 
 给笔记删除标签
+request_body:
+```javascript
+{
+  tag_id: ObjectId
+}
+```
 
 ### PUT /note/:note_id/shared
 

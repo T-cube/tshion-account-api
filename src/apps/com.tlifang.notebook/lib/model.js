@@ -24,8 +24,21 @@ export default class Notebook extends AppBase {
         };
         return this.collection('user').insert(criteria);
       }
-      return new Promise((resolve) => {
-        resolve(doc);
+      return Promise.all([
+        Promise.map(doc.tags, item => {
+          return this.collection('note').count({tags: item._id}).then(count => {
+            item.total = count;
+            return item;
+          });
+        }),
+        Promise.map(doc.notebooks, item => {
+          return this.collection('note').count({notebook: item._id}).then(count => {
+            item.total = count;
+            return item;
+          });
+        })
+      ]).then(() => {
+        return doc;
       });
     });
   }
@@ -38,7 +51,8 @@ export default class Notebook extends AppBase {
     if (last_id) {
       criteria._id = { $lt: last_id };
     }
-    return this.collection('note').find(criteria)
+    return this.collection('note')
+    .find(criteria, { user_id: 0, company_id: 0 })
     .sort({[sort_type]: 1})
     .limit(10)
     .then(list => {
@@ -46,46 +60,40 @@ export default class Notebook extends AppBase {
     });
   }
 
-  tagQuery({user_id, company_id, tag_id}) {
-    return this.collection('note').aggregate([
-      { $match: {
-        user_id,
-        company_id,
-        tags: tag_id,
-      }},
-      {
-        $project: {
-          title: 1,
-          content: 1,
-          tags: 1,
-          notebook: 1,
-          comments: 1,
-          total_likes: { $size: '$likes' },
-          is_like: { $in: [ user_id, '$likes' ] }
-        }
-      }
-    ]);
+  tagQuery({user_id, company_id, last_id, sort_type, tag_id}) {
+    let criteria = {
+      user_id,
+      company_id,
+      tags: tag_id,
+    };
+    if (last_id) {
+      criteria._id = { $lt: last_id };
+    }
+    return this.collection('note')
+    .find(criteria, { user_id: 0, company_id: 0 })
+    .sort({[sort_type]: 1})
+    .limit(10)
+    .then(list => {
+      return list;
+    });
   }
 
-  notebookQuery({user_id, company_id, notebook_id}) {
-    return this.collection('note').aggregate([
-      { $match: {
-        user_id,
-        company_id,
-        notebook: notebook_id
-      }},
-      {
-        $project: {
-          title: 1,
-          content: 1,
-          tags: 1,
-          notebook: 1,
-          comments: 1,
-          total_likes: { $size: '$likes' },
-          is_like: { $in: [ user_id, '$likes' ] }
-        }
-      }
-    ]);
+  notebookQuery({user_id, company_id, last_id, sort_type, notebook_id}) {
+    let criteria = {
+      user_id,
+      company_id,
+      notebook: notebook_id,
+    };
+    if (last_id) {
+      criteria._id = { $lt: last_id };
+    }
+    return this.collection('note')
+    .find(criteria, { user_id: 0, company_id: 0 })
+    .sort({[sort_type]: 1})
+    .limit(10)
+    .then(list => {
+      return list;
+    });
   }
 
   noteQuery({user_id, company_id, note_id}) {
@@ -133,21 +141,27 @@ export default class Notebook extends AppBase {
     return this.collection('comment').find({ company_id, note_id });
   }
 
-  tagAdd({company_id, user_id, tag_name}) {
+  tagAdd({company_id, user_id, name}) {
+    let _id = ObjectId();
     return this.collection('user').update({
       user_id,
       company_id,
     }, {
-      $push: { tags: { name: tag_name, _id: ObjectId() } }
+      $push: { tags: { name: name, _id: _id } }
+    }).then(() => {
+      return { name, _id };
     });
   }
 
-  notebookAdd({company_id, user_id, notebook_name}) {
+  notebookAdd({company_id, user_id, name}) {
+    let _id = ObjectId();
     return this.collection('user').update({
       user_id,
       company_id,
     }, {
-      $push: { notebooks: { name: notebook_name, _id: ObjectId() } }
+      $push: { notebooks: { name: name, _id: _id } }
+    }).then(() => {
+      return { name, _id };
     });
   }
 
