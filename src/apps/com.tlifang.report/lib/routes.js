@@ -105,13 +105,16 @@ api.post('/report/:report_id/mark', (req, res, next) => {
   validate('info', req.body, ['status', 'content']);
   let { report_id } = req.params;
   let { status, content } = req.body;
-  req._app.mark({
-    user_id: req.user._id,
-    report_id,
-    status,
-    content
-  }).then(doc => {
-    res.json(doc);
+  req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
+    req._app.mark({
+      user_id: req.user._id,
+      report_id,
+      memberDepartments,
+      status,
+      content
+    }).then(doc => {
+      res.json(doc);
+    }).catch(next);
   }).catch(next);
 });
 
@@ -120,11 +123,14 @@ api.post('/report/:report_id/comment', (req, res, next) => {
   validate('info', req.body, ['content']);
   let { report_id } = req.params;
   let { content } = req.body;
-  req._app.comment({
-    user_id: req.user._id,
-    report_id,
-    content
-  }).then(doc => {
-    res.json(doc);
+  req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
+    req._app.comment({
+      user_id: req.user._id,
+      report_id,
+      memberDepartments,
+      content
+    }).then(doc => {
+      res.json(doc);
+    }).catch(next);
   }).catch(next);
 });

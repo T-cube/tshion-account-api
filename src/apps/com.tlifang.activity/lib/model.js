@@ -16,13 +16,14 @@ export default class Activity extends AppBase {
       type: 1,
       time_start: 1,
       time_end: 1,
+      departments: 1,
       assistants: 1,
       status: 1,
       members: 1,
       accept_require: 1,
       accept_members: 1,
       content: 1,
-      locale_info: 1,
+      room: 1,
     };
   }
 
@@ -48,7 +49,7 @@ export default class Activity extends AppBase {
       .find({
         company_id,
         time_end: { $lt: now },
-        'room.status': C.APPROVAL_STATUS.AGREED,
+        status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
@@ -57,7 +58,7 @@ export default class Activity extends AppBase {
         company_id,
         time_start: { $lt: now },
         time_end: { $gt: now },
-        'room.status': C.APPROVAL_STATUS.AGREED,
+        status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
@@ -65,15 +66,24 @@ export default class Activity extends AppBase {
       .find({
         company_id,
         time_start: { $gt: now },
-        'room.status': C.APPROVAL_STATUS.AGREED,
+        status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
       this.collection('item')
       .find({
         company_id,
-        time_start: { $gt: now },
-        'room.status': C.APPROVAL_STATUS.AGREED,
+        time_end: { $lt: now },
+        status: C.ACTIVITY_STATUS.CREATED,
+        $or: all,
+      }, this.baseInfo)
+      .limit(C.ACTIVITY_QUERY_LIMIT),
+      this.collection('item')
+      .find({
+        company_id,
+        time_start: { $lt: now },
+        time_end: { $gt: now },
+        status: C.ACTIVITY_STATUS.CREATED,
         $or: all,
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
@@ -81,35 +91,27 @@ export default class Activity extends AppBase {
       .find({
         company_id,
         time_start: { $gt: now },
-        'room.status': C.APPROVAL_STATUS.AGREED,
-        $or: all,
-      }, this.baseInfo)
-      .limit(C.ACTIVITY_QUERY_LIMIT),
-      this.collection('item')
-      .find({
-        company_id,
-        time_start: { $gt: now },
-        'room.status': C.APPROVAL_STATUS.AGREED,
+        status: C.ACTIVITY_STATUS.CREATED,
         $or: all,
       }, this.baseInfo)
       .limit(C.ACTIVITY_QUERY_LIMIT),
     ]).then(([past_mine, now_mine, feature_mine, past_all, now_all, feature_all]) => {
       return {
         mine: {
-          past: this._listCalc(past_mine),
-          now: this._listCalc(now_mine),
-          feature: this._listCalc(feature_mine)
+          past: this._listCalc(past_mine, user_id),
+          now: this._listCalc(now_mine, user_id),
+          feature: this._listCalc(feature_mine, user_id)
         },
         all: {
-          past: this._listCalc(past_all),
-          now: this._listCalc(now_all),
-          feature: this._listCalc(feature_all)
+          past: this._listCalc(past_all, user_id),
+          now: this._listCalc(now_all, user_id),
+          feature: this._listCalc(feature_all, user_id)
         }
       };
     });
   }
 
-  list({user_id, company_id, range, target, last_id}) {
+  list({user_id, company_id, date_start, date_end, target, last_id}) {
     let isMember = [
       {
         creator: user_id
@@ -125,24 +127,22 @@ export default class Activity extends AppBase {
       },
     ];
     let all = isMember.concat([{is_public: true}]);
-    let now = new Date();
     let criteria = {
       company_id,
       status: { $ne: C.ACTIVITY_STATUS.CANCELLED },
     };
-    if (range == C.LIST_RANGE.PAST) {
-      criteria.time_end = { $lt: now };
-      if (last_id) {
-        criteria._id = { $lt: last_id };
-      }
-    } else if (range == C.LIST_RANGE.NOW) {
-      criteria.time_start = { $lt: now };
-      criteria.time_end = { $gt: now };
-    } else {
-      criteria.time_start = { $gt: now };
-      if (last_id) {
-        criteria._id = { $gt: last_id };
-      }
+    let sortType = -1;
+    if (date_start && !date_end) {
+      criteria.time_start = { $gte: date_start};
+      sortType = 1;
+    } else if (!date_start && date_end) {
+      criteria.time_start = { $lte: date_end };
+    } else if (date_start && date_end) {
+      criteria.time_start = { $gte: date_start, $lte: date_end };
+      sortType = 1;
+    }
+    if (last_id) {
+      criteria._id = { $lt: last_id };
     }
     if (target == C.LIST_TARGET.MINE) {
       criteria['$or'] = isMember;
@@ -152,8 +152,60 @@ export default class Activity extends AppBase {
     return this.collection('item')
     .find(criteria, this.baseInfo)
     .limit(10)
+    .sort({time_start: sortType})
     .then(list => {
-      return this._listCalc(list);
+      return this._listCalc(list, user_id);
+    });
+  }
+
+  createActivity(activity, user_id, company_id) {
+    return this.collection('room').findOne({
+      _id: activity.room._id
+    }).then(room => {
+      if (!room) {
+        throw new ApiError(400, 'invalid_room_id');
+      }
+      activity.accept_members = [];
+      activity.sign_in_members = [];
+      activity.comments = [];
+      activity.creator = user_id;
+      activity.date_create = new Date();
+      activity.date_update = new Date();
+      if (!room.approval_require) {
+        activity.status = C.ACTIVITY_STATUS.CREATED;
+        return this.collection('item')
+        .insert(activity)
+        .then(doc => {
+          return doc;
+        });
+      } else {
+        activity.status = C.ACTIVITY_STATUS.APPROVING;
+        return this.collection('approval').insert({
+          room_id: activity.room._id,
+          creator: user_id,
+          type: room.name,
+          company_id,
+          manager: room.manager,
+          status: C.APPROVAL_STATUS.PENDING,
+          comments: []
+        })
+        .then(approval => {
+          activity.room.approval_id = approval._id;
+          return this.collection('item')
+          .insert(activity)
+          .then(doc => {
+            this.collection('approval')
+            .update({
+              _id: approval._id
+            }, {
+              $set: {
+                activity_id: doc._id
+              }
+            });
+            return doc;
+          });
+        });
+      }
     });
   }
 
@@ -166,8 +218,7 @@ export default class Activity extends AppBase {
       if (activity.room && !activity.room._id.equals(doc.room._id)) {
         return this.collection('room')
         .findOne({
-          _id:
-          activity.room._id
+          _id: activity.room._id
         })
         .then(room => {
           return this.collection('approval').insert({
@@ -287,57 +338,8 @@ export default class Activity extends AppBase {
     });
   }
 
-  createActivity(activity, user_id, company_id) {
-    return this.collection('room').findOne({
-      _id: activity.room._id
-    }).then(room => {
-      if (!room) {
-        throw new ApiError(400, 'invalid_room_id');
-      }
-      activity.accept_members = [];
-      activity.sign_in_members = [];
-      activity.comments = [];
-      activity.date_create = new Date();
-      activity.date_update = new Date();
-      if (!room.approval_require) {
-        activity.status = C.ACTIVITY_STATUS.CREATED;
-        return this.collection('item')
-        .insert(activity)
-        .then(doc => {
-          return doc;
-        });
-      } else {
-        activity.status = C.ACTIVITY_STATUS.APPROVING;
-        return this.collection('approval').insert({
-          room_id: activity.room._id,
-          creator: user_id,
-          type: room.name,
-          company_id,
-          manager: room.manager,
-          status: C.APPROVAL_STATUS.PENDING,
-          comments: []
-        })
-        .then(approval => {
-          activity.room.approval_id = approval._id;
-          return this.collection('item')
-          .insert(activity)
-          .then(doc => {
-            this.collection('approval')
-            .update({
-              _id: approval._id
-            }, {
-              $set: {
-                activity_id: doc._id
-              }
-            });
-            return doc;
-          });
-        });
-      }
-    });
-  }
 
-  approvalList({user_id}) {
+  approvalList({user_id, page, pagesize}) {
     let criteria = {
       $or: [
         {
@@ -350,6 +352,8 @@ export default class Activity extends AppBase {
     };
     return this.collection('approval')
     .find(criteria)
+    .skip((page - 1) * pagesize)
+    .limit(pagesize)
     .then(list => {
       return list;
     });
@@ -379,7 +383,7 @@ export default class Activity extends AppBase {
           throw new ApiError(400, 'no_activity');
         }
         approval.activity = activity;
-        return activity;
+        return approval;
       });
     });
   }
@@ -457,7 +461,7 @@ export default class Activity extends AppBase {
         _id: activity_id
       }, {
         $set: {
-          'room.status': C.APPROVAL_STATUS.CANCELLED
+          status: C.ACTIVITY_STATUS.CANCELLED
         }
       });
     });
@@ -468,8 +472,25 @@ export default class Activity extends AppBase {
     room.company_id = company_id;
     room.date_create = new Date();
     room.date_update = new Date();
+    _.map(room.equipments, equipment => {
+      equipment._id = ObjectId();
+      return equipment;
+    });
     return this.collection('room')
     .insert(room);
+  }
+
+  removeRoom({room_id, user_id}) {
+    return this.collection('room')
+    .findOne({
+      _id: room_id
+    })
+    .then(room => {
+      if (!room.manager.equals(user_id)) {
+        throw new ApiError(400, 'not_manager_can_not_delete');
+      }
+      return this.collection('room').remove({_id: room_id});
+    });
   }
 
   listRoom({company_id}) {
@@ -486,6 +507,8 @@ export default class Activity extends AppBase {
         .then(activities => {
           return item.activities = activities;
         });
+      }).then(rooms => {
+        return rooms;
       });
     });
   }
@@ -544,9 +567,77 @@ export default class Activity extends AppBase {
     });
   }
 
-  _listCalc(list) {
+  addEquipment({room_id, user_id, equipment}) {
+    return this.collection('room')
+    .findOne({
+      _id: room_id
+    })
+    .then(room => {
+      let equipmentList = _.map(room.equipments, item => {
+        return item.name;
+      });
+      if (_.some(equipmentList, item => item == equipment.name)) {
+        throw new ApiError(400, 'have_same_name_equipment');
+      }
+      if (!room.manager.equals(user_id)) {
+        throw new ApiError(400, 'no_change_room_permission');
+      }
+      return this.collection('room')
+      .udpate({
+        _id: room_id
+      }, {
+        $push: {
+          _id: ObjectId(),
+          name: equipment.name,
+          optional: equipment.optional
+        }
+      });
+    });
+  }
+
+  deleteEquipment({room_id, user_id, equipment_id}) {
+    return this.collection('room')
+    .findOne({
+      _id: room_id
+    })
+    .then(room => {
+      if (!room.manager.equals(user_id)) {
+        throw new ApiError(400, 'no_change_room_permission');
+      }
+      return this.collection('room')
+      .update({
+        _id: room_id
+      }, {
+        $pull: { _id: equipment_id }
+      });
+    });
+  }
+
+  changeRoomEquipment({room_id, equipment_id, user_id, equipment}) {
+    return this.collection('room')
+    .findOne({
+      _id: room_id
+    })
+    .then(room => {
+      if (!room.manager.equals(user_id)) {
+        throw new ApiError(400, 'no_change_room_permission');
+      }
+      return this.collection('room')
+      .update({
+        _id: room_id,
+        'equipments._id': equipment_id
+      }, {
+        $set: {
+          'equipments.$': equipment
+        }
+      });
+    });
+  }
+
+  _listCalc(list, user_id) {
     return _.map(list, item => {
       item.total = item.assistants.length + item.members.length + 1;
+      item.isMember = _.some([].concat(item.assistants, item.creator, item.followers, item.members), member => member.equals(user_id));
       delete item.assistants;
       delete item.members;
       return item;

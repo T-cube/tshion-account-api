@@ -182,14 +182,14 @@ export default class Report extends AppBase {
     });
   }
 
-  mark({user_id, status, content, report_id}) {
+  mark({user_id, status, content, memberDepartments, report_id}) {
     return this.collection('item').findOne({
       _id: report_id
     }).then(doc => {
       if (!doc) {
         throw new ApiError(400, 'invalid_report');
       }
-      if (!doc.report_target.equals(user_id)) {
+      if (!_.some(memberDepartments, item => item.equals(doc.report_target))) {
         throw new ApiError(400, 'invalid_user');
       }
       return this.collection('item').update({
@@ -212,14 +212,14 @@ export default class Report extends AppBase {
     });
   }
 
-  comment({user_id, content, report_id}) {
+  comment({user_id, content, memberDepartments, report_id}) {
     return this.collection('item').findOne({
       _id: report_id
     }).then(doc => {
       if (!doc) {
         throw new ApiError(400, 'invalid_report');
       }
-      if (!doc.report_target.equals(user_id) && !_.some(doc.copy_to, item => item.equals(user_id)) ) {
+      if (!_.some(memberDepartments, item => item.equals(doc.report_target)) && !doc.user_id.equals(user_id) && !_.some(doc.copy_to, item => item.equals(user_id)) ) {
         throw new ApiError(400, 'invalid_user');
       }
       return this.collection('item').update({

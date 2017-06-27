@@ -43,7 +43,7 @@ api.post('/activity', (req, res, next) => {
 });
 
 api.put('/activity/:activity_id', (req, res, next) => {
-  validate('activity', req.body);
+  validate('activityChange', req.body);
   validate('info', req.params, ['activity_id']);
   req._app.changeActivity({
     activity_id: req.params.activity_id,
@@ -59,12 +59,12 @@ api.put('/activity/:activity_id', (req, res, next) => {
 
 api.get('/activity', (req, res, next) => {
   validate('list', req.query);
-  let { time_start, time_end, target, last_id } = req.query;
+  let { date_start, date_end, target, last_id } = req.query;
   req._app.list({
     user_id: req.user._id,
     company_id: req.company._id,
-    time_start,
-    time_end,
+    date_start,
+    date_end,
     target,
     last_id
   })
@@ -138,8 +138,11 @@ api.post('/activity/:activity_id/comment', (req, res, next) => {
 });
 
 api.get('/approval', (req, res, next) => {
+  validate('approvalList', req.query);
   req._app.approvalList({
     user_id: req.user._id,
+    page: req.query.page,
+    pagesize: req.query.pagesize,
   })
   .then(list => {
     res.json(list);
@@ -188,7 +191,7 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/activity/:activity_id/cancel', (req, res, next) => {
+api.delete('/activity/:activity_id/cancel', (req, res, next) => {
   validate('info', req.params, ['activity_id']);
   req._qpp.cancel({
     user_id: req.user._id,
@@ -206,6 +209,18 @@ api.post('/room', (req, res, next) => {
     user_id: req.user._id,
     room: req.body,
     company_id: req.company._id
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.delete('/room/:room_id', (req, res, next) => {
+  validate('info', req.params, ['room_id']);
+  req._app.removeRoom({
+    room_id: req.params.room_id,
+    user_id: req.user._id
   })
   .then(doc => {
     res.json(doc);
@@ -236,11 +251,53 @@ api.get('/room/:room_id', (req, res, next) => {
 
 api.put('/room/:room_id', (req, res, next) => {
   validate('info', req.params, ['room_id']);
-  validate('room', req.body);
+  validate('roomChange', req.body);
   req._app.changeRoom({
     room_id: req.params.room_id,
     room: req.body,
     user_id: req.user._id,
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.post('/room/:room_id/equipment', (req, res, next) => {
+  validate('equipment', req.body);
+  validate('info', req.params, ['room_id']);
+  req._app.addEquipment({
+    user_id: req.user._id,
+    room_id: req.params.room_id,
+    equipment: req.body
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.put('/room/:room_id/equipment/:equipment_id', (req, res, next) => {
+  validate('equipment', req.body);
+  validate('info', req.params, ['room_id', 'equipment_id']);
+  req._app.changeRoomEquipment({
+    user_id: req.user._id,
+    room_id: req.params.room_id,
+    equipment_id: req.params.equipment_id,
+    equipment: req.body
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.delete('/room/:room_id/equipment/:equipment_id', (req, res, next) => {
+  validate('info', req.params, ['room_id', 'equipment_id']);
+  req._app.deleteEquipment({
+    user_id: req.user._id,
+    room_id: req.params.room_id,
+    equipment_id: req.params.equipment_id,
   })
   .then(doc => {
     res.json(doc);
