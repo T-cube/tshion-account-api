@@ -52,7 +52,7 @@ export default class Notebook extends AppBase {
       criteria._id = { $lt: last_id };
     }
     return this.collection('note')
-    .find(criteria, { user_id: 0, company_id: 0 })
+    .find(criteria, { company_id: 0 })
     .sort({[sort_type]: 1})
     .limit(10)
     .then(list => {
@@ -70,7 +70,7 @@ export default class Notebook extends AppBase {
       criteria._id = { $lt: last_id };
     }
     return this.collection('note')
-    .find(criteria, { user_id: 0, company_id: 0 })
+    .find(criteria, { company_id: 0 })
     .sort({[sort_type]: 1})
     .limit(10)
     .then(list => {
@@ -88,7 +88,7 @@ export default class Notebook extends AppBase {
       criteria._id = { $lt: last_id };
     }
     return this.collection('note')
-    .find(criteria, { user_id: 0, company_id: 0 })
+    .find(criteria, { company_id: 0 })
     .sort({[sort_type]: 1})
     .limit(10)
     .then(list => {
@@ -181,7 +181,7 @@ export default class Notebook extends AppBase {
           user_id,
           company_id,
         }, {
-          $push: { notebooks: { name, _id } }
+          $push: { notebooks: { name, _id, date_update: new Date() } }
         }).then(() => {
           return { name, _id };
         });
@@ -191,10 +191,15 @@ export default class Notebook extends AppBase {
 
   noteAdd({user_id, company_id, note}) {
     let { title, content, tags, notebook, shared } = note;
-    _.map(tags, tag => {
-      return ObjectId(tag);
+    this.collection('user').update({
+      user_id,
+      company_id,
+      'notebooks._id': notebook
+    }, {
+      $set: {
+        'notebooks.$.date_update': new Date()
+      }
     });
-    notebook = ObjectId(notebook);
     return this.collection('note').insert({
       company_id,
       user_id,
@@ -283,26 +288,27 @@ export default class Notebook extends AppBase {
     });
   }
 
-  tagChange({user_id, company_id, tag_name, tag_id}) {
+  tagChange({user_id, company_id, name, tag_id}) {
     return this.collection('user').update({
       user_id,
       company_id,
       'tags._id': tag_id
     }, {
       $set: {
-        'tags.$.name': tag_name
+        'tags.$.name': name
       }
     });
   }
 
-  notebookChange({user_id, company_id, notebook_name, notebook_id}) {
+  notebookChange({user_id, company_id, name, notebook_id}) {
     return this.collection('user').update({
       user_id,
       company_id,
       'notebooks._id': notebook_id
     }, {
       $set: {
-        'notebooks.$.name': notebook_name
+        'notebooks.$.name': name,
+        'notebooks.$.date_update': new Date()
       }
     });
   }

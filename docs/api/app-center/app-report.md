@@ -6,6 +6,31 @@
 
 获得工作汇报使用情况及日周月报汇报情况
 
+OUTPUT:
+```javascript
+{
+  totalReported: Number, //汇报总数
+  totalReceived: Number, //接收汇报总数
+  firstDate: Date, //第一天使用汇报app的日期
+  from_me: {
+    day: Number, //昨日日报 汇报数量
+    week: Number, //上周周报 汇报数量
+    month: Number, //上月月报 汇报数量
+  },
+  to_me: [{
+    department_id: objectId, //部门
+    day: Number, //昨日日报 接收数量
+    week: Number, //上周周报 接收数量
+    month: Number, //上月月报 接收数量
+  }...]
+  total: {
+    day: Number, //日报汇报总数
+    week: Number, //周报汇报总数
+    month: Number, //月报汇报总数
+  }
+}
+```
+
 ### GET /report
 
 查询汇报列表

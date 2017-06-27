@@ -24,8 +24,8 @@ export default class Report extends AppBase {
           user_id,
           company_id,
           type: item,
-          date_create: {
-            $gte: moment().startOf(item).toDate()
+          date_report: {
+            $gte: moment().startOf(item).subtract(1, item+'s').toDate()
           }
         });
       }),
@@ -35,8 +35,8 @@ export default class Report extends AppBase {
             report_target: department,
             company_id,
             type: item,
-            date_create: {
-              $gte: moment().startOf(item).toDate()
+            date_report: {
+              $gte: moment().startOf(item).subtract(1, item+'s').toDate()
             }
           });
         }).then(list => {
@@ -48,7 +48,14 @@ export default class Report extends AppBase {
           };
         });
       }),
-    ]).then(([totalReported, totalReceived, reported, received, from_me, to_me]) => {
+      Promise.map(['day', 'week', 'month'], item => {
+        return this.collection('item').count({
+          user_id,
+          company_id,
+          type: item
+        });
+      })
+    ]).then(([totalReported, totalReceived, reported, received, from_me, to_me, total]) => {
       let report_date = reported ? reported.date_create : 0;
       let receive_date = received ? received.date_create : 0;
       let firstDate = _.min([report_date, receive_date]);
@@ -61,7 +68,12 @@ export default class Report extends AppBase {
           week: from_me[1],
           month: from_me[2],
         },
-        to_me
+        to_me,
+        total: {
+          day: total[0],
+          week: total[1],
+          month: total[2]
+        }
       };
     });
   }
@@ -85,7 +97,7 @@ export default class Report extends AppBase {
         criteria.status = status;
       }
     } else if (type == C.BOX_TYPE.INBOX) {
-      criteria['$or'] = [{ report_target: { $in: report_target } }, { copy_to: { $in: user_id } }];
+      criteria['$or'] = [{ report_target: report_target  }, { copy_to: { $in: [user_id] } }];
       if (reporter) {
         criteria.user_id = reporter;
       }
@@ -99,20 +111,36 @@ export default class Report extends AppBase {
         criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
       }
     }
-    return this.collection('item').find(criteria,
-      {
-        user_id: 1,
-        type: 1,
-        date_report: 1,
-        status: 1,
-        report_target: 1,
-      })
-    .sort({id: -1})
-    .skip((page - 1) * pagesize)
-    .limit(pagesize)
-    .then(list => {
-      return list;
+    return Promise.all([
+      this.collection('item').count(criteria),
+      this.collection('item').find(criteria,
+        {
+          user_id: 1,
+          type: 1,
+          date_report: 1,
+          status: 1,
+          report_target: 1,
+        })
+      .sort({id: -1})
+      .skip((page - 1) * pagesize)
+      .limit(pagesize)
+    ]).then(([count, list]) => {
+      return { count, list };
     });
+    // return this.collection('item').find(criteria,
+    //   {
+    //     user_id: 1,
+    //     type: 1,
+    //     date_report: 1,
+    //     status: 1,
+    //     report_target: 1,
+    //   })
+    // .sort({id: -1})
+    // .skip((page - 1) * pagesize)
+    // .limit(pagesize)
+    // .then(list => {
+    //   return list;
+    // });
   }
 
   detail(report_id) {

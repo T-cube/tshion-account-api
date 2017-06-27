@@ -130,8 +130,8 @@ export default class Base {
   getStructure(structure, user_id) {
     return new Promise((resolve) => {
       let s = new Structure(structure);
-      let memberDepartments = s.findMemberDepartments(user_id);
-      resolve(memberDepartments);      
+      let memberDepartments = s.findMemberAdminDepartments(user_id);
+      resolve(memberDepartments);
     });
   }
 
