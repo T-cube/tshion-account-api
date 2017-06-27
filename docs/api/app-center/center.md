@@ -2,59 +2,6 @@
 
 ## 挂载点 /company/:company_id/app-center/
 
-### GET /
-
-获得所有上线APP
-
-OUTPUT:
-```javascript
-[{
-  _id: ObjectId,
-  appid: <String>,
-  name: <String>,
-  icons: {
-    '16': <String>,
-    '64': <String>,
-    '128': <String>,
-  },
-  version: <String>,
-  author: <String>,
-  description: <String>,
-}...]
-```
-
-### GET /app/:appid
-
-获得指定app详情
-
-OUTPUT:
-```javascript
-{
-  _id: ObjectId,
-  appid: String, // com.tlifang.app.notebook
-  name: String, //"note"
-  name_en: String,
-  version: String, //"0.1.0"
-  icons: {
-    '16': String,
-    '64': String,
-    '128': String,
-  },
-  slideshow: [String, ...],
-  author: String, //"foo"
-  url: String,
-  description: String, //"this is an incredible note app"
-  update_info: String, //"fixed some bugs"
-  star: Number, // 4.7  average of this app comments stars
-  permissions: [String...],
-  dependencies: [String...],
-  storage: {
-    "mongo": [String...]
-  },
-  date_create: Date,
-}
-```
-
 ### GET /app
 
 获得公司app列表
@@ -129,5 +76,60 @@ request_body:
   app_version: <String>,
   star: <Number>,
   content: <String>
+}
+```
+
+## 挂载点 /app-center/
+
+### GET /app
+
+获得所有上线APP
+
+OUTPUT:
+```javascript
+[{
+  _id: ObjectId,
+  appid: <String>,
+  name: <String>,
+  icons: {
+    '16': <String>,
+    '64': <String>,
+    '128': <String>,
+  },
+  version: <String>,
+  author: <String>,
+  description: <String>,
+}...]
+```
+
+### GET /app/:appid
+
+获得指定app详情
+
+OUTPUT:
+```javascript
+{
+  _id: ObjectId,
+  appid: String, // com.tlifang.app.notebook
+  name: String, //"note"
+  name_en: String,
+  version: String, //"0.1.0"
+  icons: {
+    '16': String,
+    '64': String,
+    '128': String,
+  },
+  slideshow: [String, ...],
+  author: String, //"foo"
+  url: String,
+  description: String, //"this is an incredible note app"
+  update_info: String, //"fixed some bugs"
+  star: Number, // 4.7  average of this app comments stars
+  permissions: [String...],
+  dependencies: [String...],
+  storage: {
+    "mongo": [String...]
+  },
+  date_create: Date,
 }
 ```

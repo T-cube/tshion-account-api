@@ -127,20 +127,6 @@ export default class Report extends AppBase {
     ]).then(([count, list]) => {
       return { count, list };
     });
-    // return this.collection('item').find(criteria,
-    //   {
-    //     user_id: 1,
-    //     type: 1,
-    //     date_report: 1,
-    //     status: 1,
-    //     report_target: 1,
-    //   })
-    // .sort({id: -1})
-    // .skip((page - 1) * pagesize)
-    // .limit(pagesize)
-    // .then(list => {
-    //   return list;
-    // });
   }
 
   detail(report_id) {

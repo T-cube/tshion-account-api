@@ -18,6 +18,7 @@ api.use((req, res, next) => {
 
 let routes = [
   'account',
+  'app-center',
   'company',
   'file',
   'notification',
