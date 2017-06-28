@@ -53,7 +53,7 @@ export default class Notebook extends AppBase {
     }
     return this.collection('note')
     .find(criteria, { company_id: 0 })
-    .sort({[sort_type]: 1})
+    .sort({[sort_type]: -1})
     .limit(10)
     .then(list => {
       return list;
@@ -71,7 +71,7 @@ export default class Notebook extends AppBase {
     }
     return this.collection('note')
     .find(criteria, { company_id: 0 })
-    .sort({[sort_type]: 1})
+    .sort({[sort_type]: -1})
     .limit(10)
     .then(list => {
       return list;
@@ -89,7 +89,7 @@ export default class Notebook extends AppBase {
     }
     return this.collection('note')
     .find(criteria, { company_id: 0 })
-    .sort({[sort_type]: 1})
+    .sort({[sort_type]: -1})
     .limit(10)
     .then(list => {
       return list;
@@ -210,8 +210,8 @@ export default class Notebook extends AppBase {
       comments: [],
       likes: [],
       shared,
-      create_date: new Date(),
-      update_date: new Date(),
+      date_create: new Date(),
+      date_update: new Date(),
     });
   }
 

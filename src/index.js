@@ -195,8 +195,8 @@ app.use('/api', apiRouter);
 app.use(app.oauth.errorHandler());
 
 // global error handler
-app.use(apiRouteError);
 app.use(apiErrorHandler);
+app.use(apiRouteError);
 
 export default app;
 

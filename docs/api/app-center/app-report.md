@@ -46,6 +46,7 @@ query:
   start_date: Date, // optional
   end_date: Date, // optional
   reporter: ObjectId, //optional
+  report_target: objectId, //optional
 }
 ```
 
@@ -59,6 +60,23 @@ OUTPUT:
   status: String, // 'draft', 'applied', 'agreed', 'rejected'
   report_target: ObjectId
 }...]
+```
+
+### GET /month/report
+
+月汇报情况
+
+query:
+```javascript
+{
+  type: ENUM, // inbox, outbox
+  report_type: ENUM, //day, week, month
+  status: ENUM, // 'draft', 'applied', 'agreed', 'rejected' this key is optional
+  report_target: objectId,//optional
+  reporter: objectId,//optional
+  year: Number, // >1970
+  month: Number, // 1 - 12
+}
 ```
 
 ### GET /report/:report_id

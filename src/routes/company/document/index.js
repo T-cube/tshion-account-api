@@ -902,7 +902,7 @@ function attachFileUrls(req, file, thumb_size) {
   ];
   if (isImageFile(file.name)) {
     promises.push(
-      qiniu.getThumnailUrl(file.cdn_key, thumb_width, thumb_height).then(link => {
+      qiniu.getThumbnailUrl(file.cdn_key, thumb_width, thumb_height).then(link => {
         file.thumbnail_url = link;
       })
     );

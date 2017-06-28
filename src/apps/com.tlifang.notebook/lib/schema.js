@@ -11,29 +11,50 @@ const schema = {
       sort_type: { $enum: ['date_update', 'date_create', 'notebook', 'title'] },
     }
   },
+  note: {
+    sanitization: {
+      title: { type: 'string', rules:['trim'] },
+      content: { type: 'string', rules:['trim'] },
+      notebook: { $objectId: 1 },
+      shared: { type: 'boolean' },
+      tags: {
+        type: 'array',
+        optional: true,
+        items: { $objectId: 1, optional: true },
+      },
+    },
+    validation: {
+      title: { type: 'string', minLength: 1 },
+      content: { type: 'string', minLength: 1 },
+      notebook: { $objectId: 1 },
+      shared: { type: 'boolean' },
+      tags: {
+        type: 'array',
+        optional: true,
+        items: { $objectId: 1, optional: true },
+      },
+    }
+  },
+  change: {
+    sanitization: {
+      title: { type: 'string', optional: true },
+      content: { type: 'string', optional: true },
+      notebook: { $objectId: 1, optional: true },
+      shared: { type: 'boolean', optional: true }
+    },
+    validation: {
+      title: { type: 'string', optional: true },
+      content: { type: 'string', optional: true },
+      notebook: { $objectId: 1, optional: true },
+      shared: { type: 'boolean', optional: true }
+    }
+  },
   notebook: {
     sanitization: {
       tag_id: { $objectId: 1 },
       note_id: { $objectId: 1 },
       notebook_id: { $objectId: 1 },
       name: { type: 'string', rules:['trim'] },
-      note: {
-        title: { type: 'string' },
-        content: { type: 'string' },
-        tags: {
-          type: 'array',
-          optional: true,
-          items: { $objectId: 1, optional: true },
-        },
-        notebook: { $objectId:1 },
-        shared: { type: 'boolean' }
-      },
-      change: {
-        title: { type: 'string', optional: true },
-        content: { type: 'string', optional: true },
-        notebook: { $objectId:1, optional: true },
-        shared: { type: 'boolean', optional: true }
-      },
       comment: { type: 'string' },
       shared: { type: 'boolean' },
     },
@@ -42,23 +63,6 @@ const schema = {
       note_id: { $objectId: 1 },
       notebook_id: { $objectId: 1 },
       name: { type: 'string', minLength: 1 },
-      note: {
-        title: { type: 'string' },
-        content: { type: 'string' },
-        tags: {
-          type: 'array',
-          optional: true,
-          items: { $objectId: 1, optional: true },
-        },
-        notebook: { $objectId:1 },
-        shared: { type: 'boolean' }
-      },
-      change: {
-        title: { type: 'string', optional: true },
-        content: { type: 'string', optional: true },
-        notebook: { $objectId:1, optional: true },
-        shared: { type: 'boolean', optional: true }
-      },
       comment: { type: 'string' },
       shared: { type: 'boolean' },
     }

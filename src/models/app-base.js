@@ -113,7 +113,7 @@ export default class Base {
 
   _saveCdn(filePath) {
     const qiniu = this.model('qiniu').bucket('cdn-public');
-    let key = `${this._info.appid}/v${this._info.version}/${filePath}`;
+    let key = `app/${this._info.appid}/v${this._info.version}/${filePath}`;
     let path = `${this._options.basepath}/${filePath}`;
     return qiniu.upload(key, path).then(data => {
       return `${data.server_url}${key}`;

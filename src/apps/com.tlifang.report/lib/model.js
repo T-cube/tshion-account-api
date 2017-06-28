@@ -93,11 +93,18 @@ export default class Report extends AppBase {
     }
     if (type == C.BOX_TYPE.OUTBOX) {
       criteria.user_id = user_id;
+      if (report_target) {
+        criteria.report_target = report_target;
+      }
       if (status) {
         criteria.status = status;
       }
     } else if (type == C.BOX_TYPE.INBOX) {
-      criteria['$or'] = [{ report_target: report_target  }, { copy_to: { $in: [user_id] } }];
+      if (_.isArray(report_target)) {
+        criteria['$or'] = [{ report_target: { $in: report_target } }, { copy_to: user_id }];
+      } else {
+        criteria['$or'] = [{ report_target: report_target }, { copy_to: user_id }];
+      }
       if (reporter) {
         criteria.user_id = reporter;
       }
@@ -129,17 +136,107 @@ export default class Report extends AppBase {
     });
   }
 
-  detail(report_id) {
+  detail({company_id, user_id, type, report_id, report_type, report_target, reporter}) {
     return this.collection('item').findOne({
       _id: report_id,
-    }).then(doc => {
-      return doc;
+    }).then(report => {
+      let criteria = {};
+      criteria.company_id = company_id;
+      if (type == 'outbox') {
+        criteria.user_id = user_id;
+      }
+      if (report_type) {
+        criteria.type = report_type;
+      }
+      if (report_target) {
+        criteria.report_target = report_target;
+      } else {
+        if (type == 'inbox') {
+          criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
+          criteria['$or'] = [{ report_target: report.report_target }, { copy_to: user_id }];
+        }
+      }
+      if (reporter) {
+        criteria.user_id = reporter;
+      }
+      return Promise.all([
+        this.collection('item').find(_.extend(criteria,{date_report:{$lt:report.date_report}}), {
+          _id: 1
+        })
+        .sort({report_date: 1})
+        .limit(1),
+        this.collection('item').find(_.extend(criteria,{date_report:{$gt:report.date_report}}), {
+          _id: 1
+        })
+        .sort({report_date: 1})
+        .limit(1)
+      ])
+      .then(([prevId, nextId]) => {
+        report.nextId = nextId[0];
+        report.prevId = prevId[0];
+        return report;
+      });
     });
   }
 
+  month({user_id, company_id, type, start_date, end_date, status, reporter, report_target, report_type}) {
+    let criteria = {};
+    criteria.company_id = company_id;
+    if (report_type) {
+      criteria.type = report_type;
+    }
+    if (start_date && end_date) {
+      criteria.date_report = { $gte: start_date, $lte: end_date };
+    } else if (start_date) {
+      criteria.date_report = { $gte: start_date };
+    } else if (end_date) {
+      criteria.date_report = { $lte: end_date };
+    }
+    if (type == C.BOX_TYPE.OUTBOX) {
+      criteria.user_id = user_id;
+      if (report_target) {
+        criteria.report_target = report_target;
+      }
+      if (status) {
+        criteria.status = status;
+      }
+    } else if (type == C.BOX_TYPE.INBOX) {
+      if (_.isArray(report_target)) {
+        criteria['$or'] = [{ report_target: { $in: report_target } }, { copy_to: user_id }];
+      } else {
+        criteria['$or'] = [{ report_target: report_target }, { copy_to: user_id }];
+      }
+      if (reporter) {
+        criteria.user_id = reporter;
+      }
+      if (status) {
+        if (status == C.REPORT_STATUS.DRAFT) {
+          throw new ApiError(400, 'invalid_status');
+        } else {
+          criteria.status = status;
+        }
+      } else {
+        criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
+      }
+    }
+    return this.collection('item')
+    .find(criteria, {
+      _id: 1,
+      date_report: 1
+    })
+    .then(list => {
+      _.map(list, item => {
+        item.date = moment(item.report_date).get('date');
+        delete item.report_date;
+        return item;
+      });
+      return list;
+    });
+  }
 
   report({user_id, company_id, report}) {
     let { date_report, report_target, copy_to, content, type, status, attachments } = report;
+    date_report = moment(date_report).startOf('day').toDate();
     return this.collection('item').insert({
       user_id,
       company_id,
@@ -192,6 +289,12 @@ export default class Report extends AppBase {
       if (!_.some(memberDepartments, item => item.equals(doc.report_target))) {
         throw new ApiError(400, 'invalid_user');
       }
+      let action;
+      if (status == C.REPORT_STATUS.AGREED) {
+        action = 'agree';
+      } else {
+        action = 'reject';
+      }
       return this.collection('item').update({
         _id: report_id
       }, {
@@ -200,7 +303,7 @@ export default class Report extends AppBase {
           comments: {
             _id:  ObjectId(),
             user_id,
-            action: status.slice(0, -1),
+            action,
             new_status: status,
             content,
             date_create: new Date()
@@ -282,7 +385,7 @@ export default class Report extends AppBase {
       if (!report.user_id.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
-      if (report.status == C.REPORT_STATUS.DRAFT) {
+      if (!report.status == C.REPORT_STATUS.DRAFT) {
         throw new ApiError(400, 'invalid_delete');
       }
       return this.collection('item').remove({

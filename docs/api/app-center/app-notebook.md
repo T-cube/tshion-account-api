@@ -59,8 +59,8 @@ OUTPUT:
   comments: [ObjectId...],
   likes: [ObjectId...],
   shared: <Boolean>,
-  create_date: <Date>,
-  update_date: <Date>,  
+  date_create: <Date>,
+  date_update: <Date>,  
 }...]
 ```
 
@@ -79,8 +79,8 @@ OUTPUT:
   comments: [ObjectId...],
   likes: [ObjectId...],
   shared: <Boolean>,
-  create_date: <Date>,
-  update_date: <Date>,
+  date_create: <Date>,
+  date_update: <Date>,
 }
 ```
 
@@ -106,8 +106,8 @@ OUTPUT:
   comments: [ObjectId...],
   likes: [ObjectId...],
   shared: <Boolean>,
-  create_date: <Date>,
-  update_date: <Date>,  
+  date_create: <Date>,
+  date_update: <Date>,  
 }...]
 ```
 
@@ -128,8 +128,8 @@ OUTPUT:
   comments: [ObjectId...],
   likes: [ObjectId...],
   shared: <Boolean>,
-  create_date: <Date>,
-  update_date: <Date>,  
+  date_create: <Date>,
+  date_update: <Date>,  
 }...]
 ```
 

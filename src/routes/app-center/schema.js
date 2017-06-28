@@ -14,12 +14,12 @@ const schema = {
     sanitization: {
       page: { type: 'integer' },
       pagesize: { type: 'integer' },
-      appid: { type: 'string', rules: ['trim'] },
+      type: { type: 'string', rules: ['trim'] },
     },
     validation: {
       page: { type: 'integer', gte: 1 },
       pagesize: { type: 'integer', gte: 1 },
-      appid: { $enum: ENUMS.APP_LIST_TYPE },
+      type: { $enum: ENUMS.APP_LIST_TYPE },
     }
   }
 };

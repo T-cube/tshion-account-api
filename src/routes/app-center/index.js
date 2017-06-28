@@ -26,6 +26,7 @@ api.get('/app', (req, res, next) => {
     version: 1,
     star: 1,
     description: 1,
+    slideshow: 1,
     author: 1
   })
   .sort(sort)

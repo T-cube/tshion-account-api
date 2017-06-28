@@ -57,7 +57,9 @@ export function ApiError(code, error, description, err) {
 util.inherits(ApiError, Error);
 
 export function apiRouteError(req, res, next) {
-  throw new ApiError(404, 'api_not_found');
+  if (!res.headersSent) {
+    throw new ApiError(404, 'api_not_found');
+  }
 }
 
 export function apiErrorHandler(err, req, res, next) {
@@ -100,5 +102,4 @@ export function apiErrorHandler(err, req, res, next) {
   if (debugApiErrorEnabled) {
     console.error(`${req.method} ${req.url} ${err.code}`, _.pick(err, 'error', 'error_description'));
   }
-  next(err);
 }

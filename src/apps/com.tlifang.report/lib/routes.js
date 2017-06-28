@@ -1,10 +1,12 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import _ from 'underscore';
-
 import { upload, saveCdn } from 'lib/upload';
 import { ApiError } from 'lib/error';
+import moment from 'moment';
+
 import { validate } from './schema';
+import C from './constants';
 
 let api = express.Router();
 export default api;
@@ -25,12 +27,14 @@ api.get('/report', (req, res, next) => {
   validate('list', req.query);
   let { page, type, pagesize, status, start_date, end_date, reporter, report_target, report_type } = req.query;
   req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
-    if (report_target) {
-      if (!_.some(memberDepartments, item => item.equals(report_target))) {
-        throw new ApiError(400, 'report_target_error');
+    if (type == C.BOX_TYPE.INBOX) {
+      if (report_target) {
+        if (!_.some(memberDepartments, item => item.equals(report_target))) {
+          throw new ApiError(400, 'report_target_error');
+        }
+      } else {
+        report_target = memberDepartments;
       }
-    } else {
-      report_target = memberDepartments;
     }
     req._app.list({
       user_id: req.user._id,
@@ -51,10 +55,42 @@ api.get('/report', (req, res, next) => {
   }).catch(next);
 });
 
+api.get('/month/report', (req, res, next) => {
+  validate('month', req.query);
+  let { type, year, month, reporter, report_target, status, report_type } = req.query;
+  let start_date = moment().year(year).month(month-1).startOf('month').toDate();
+  let end_date = moment().year(year).month(month-1).endOf('month').toDate();
+  req._app.month({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    type,
+    start_date,
+    status,
+    end_date,
+    reporter,
+    report_target,
+    report_type
+  })
+  .then(list => {
+    res.json(list);
+  })
+  .catch(next);
+});
+
 api.get('/report/:report_id', (req, res, next) => {
   validate('info', req.params, ['report_id']);
+  validate('detail', req.query);
+  let { report_type, report_target, reporter, type } = req.query;
   let { report_id } = req.params;
-  req._app.detail(report_id).then(doc => {
+  req._app.detail({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    type,
+    report_id,
+    report_type,
+    report_target,
+    reporter,
+  }).then(doc => {
     res.json(doc);
   }).catch(next);
 });

@@ -8,11 +8,11 @@ const schema={
       type: { type: 'string' },
       pagesize: { type: 'integer' },
       report_type: { type: 'string' },
+      report_target: { $objectId: 1, optional: true },
       reporter: { $objectId: 1, optional: true },
       status: { type: 'string', optional: true },
       start_date: { $date: 1, optional: true },
       end_date: { $date: 1, optional: true },
-      report_target: { $objectId: 1, optional: true },
     },
     validation: {
       page: { type:'integer', gte: 1 },
@@ -20,17 +20,51 @@ const schema={
       pagesize: { type:'integer', gte: 1 },
       report_type: { $enum: ENUMS.REPORT_TYPE },
       status: { $enum: ENUMS.REPORT_STATUS, optional: true },
+      report_target: { $objectId: 1, optional: true },
       reporter: { $objectId: 1, optional: true },
       start_date: { type: ['date', 'null'], optional: true },
       end_date: { type: ['date', 'null'], optional: true },
+    }
+  },
+  detail: {
+    sanitization: {
       report_target: { $objectId: 1, optional: true },
+      reporter: { $objectId: 1, optional: true },
+      type: { type: 'string', def: 'outbox' },
+      report_type: { type: 'string', def: 'day'},
+    },
+    validation: {
+      report_target: { $objectId: 1, optional: true },
+      reporter: { $objectId: 1, optional: true },
+      type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
+      report_type: { $enum: ENUMS.REPORT_TYPE },
+    }
+  },
+  month: {
+    sanitization: {
+      type: { type: 'string' },
+      report_type: { type: 'string' },
+      status: { type: 'string', optional: true },
+      report_target: { $objectId: 1, optional: true },
+      reporter: { $objectId: 1, optional: true },
+      year: { type: 'integer' },
+      month: { type: 'integer' },
+    },
+    validation: {
+      type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
+      report_type: { $enum: ENUMS.REPORT_TYPE },
+      status: { $enum: ENUMS.REPORT_STATUS, optional: true },
+      report_target: { $objectId: 1, optional: true },
+      reporter: { $objectId: 1, optional: true },
+      year: { type: 'integer', gte: 1970 },
+      month: { type: 'integer', gte: 1, lte: 12 },
     }
   },
   info: {
     sanitization: {
       report_id: { $objectId: 1 },
       status: { type: 'string' },
-      content: { type: 'string' },
+      content: { type: 'string', rules:['trim'] },
     },
     validation: {
       report_id: { $objectId: 1 },
