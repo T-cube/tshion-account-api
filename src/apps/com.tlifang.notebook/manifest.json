@@ -1,8 +1,9 @@
 {
   "appid": "com.tlifang.notebook",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "notebook",
   "name_en": "",
+  "type": "team",
   "description": "a notebook",
   "icons": {
     "16": "assets/icon16.png",

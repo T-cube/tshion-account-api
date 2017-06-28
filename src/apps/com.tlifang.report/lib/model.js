@@ -251,7 +251,7 @@ export default class Report extends AppBase {
       if (!report.user_id.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
-      if (!report.status == C.REPORT_STATUS.AGREED) {
+      if (report.status == C.REPORT_STATUS.AGREED) {
         throw new ApiError(400, 'invalid_modified');
       }
       return this.collection('item').update({

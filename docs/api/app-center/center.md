@@ -85,6 +85,15 @@ request_body:
 
 获得所有上线APP
 
+query:
+```javascript
+{
+  page: Number, //最小为1 页数
+  pagesize: Number, //最小为1 每页数量
+  type: String, // all 所有的 , new 最新的, top 高分的
+}
+```
+
 OUTPUT:
 ```javascript
 [{

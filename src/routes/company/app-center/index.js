@@ -81,6 +81,10 @@ api.post('/app/:appid/add', (req, res, next) => {
 });
 
 
+api.delete('/app/:appid/uninstall', (req, res, next) => {
+  res.json({});
+});
+
 api.put('/app/:appid/switch', (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['flag']);
@@ -213,7 +217,7 @@ api.post('/app/:appid/comment', (req, res, next) => {
     res.json(doc);
     db.app.comment.count({appid}).then(counts => {
       db.app.findOne({appid}).then(app => {
-        let score = app.star + (app.star - star)/counts;
+        let score = app.star - (app.star - star)/counts;
         db.app.update({ appid }, { $set: { star: score }});
       });
     });

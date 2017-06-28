@@ -1,8 +1,9 @@
 {
   "appid": "com.tlifang.report",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "report",
   "name_en": "",
+  "type": "report",
   "description": "a report",
   "icons": {
     "16": "assets/icon16.png",
