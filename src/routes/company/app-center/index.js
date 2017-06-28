@@ -140,7 +140,7 @@ api.put('/app/:appid/options', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/app/:appid/comments', (req, res, next) => {
+api.get('/app/:appid/comment', (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   let { appid } = req.params;
   let user_id = req.user._id;
@@ -165,7 +165,7 @@ api.get('/app/:appid/comments', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/app/:appid/comments/:comment_id/like', (req, res, next) => {
+api.put('/app/:appid/comment/:comment_id/like', (req, res, next) => {
   validate('appRequest', req.params, ['appid', 'comment_id']);
   let { appid, comment_id } = req.params;
   let user_id = req.user._id;
@@ -180,7 +180,7 @@ api.put('/app/:appid/comments/:comment_id/like', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/app/:appid/comments/:comment_id/like', (req, res, next) => {
+api.delete('/app/:appid/comment/:comment_id/like', (req, res, next) => {
   validate('appRequest', req.params, ['appid', 'comment_id']);
   let { appid, comment_id } = req.params;
   let user_id = req.user._id;
@@ -195,7 +195,7 @@ api.delete('/app/:appid/comments/:comment_id/like', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/app/:appid/comments', (req, res, next) => {
+api.post('/app/:appid/comment', (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['comment']);
   let { appid } = req.params;

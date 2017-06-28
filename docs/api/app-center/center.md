@@ -41,7 +41,7 @@ request_body:
 更改公司APP设置
 
 
-### GET /app/:appid/comments
+### GET /app/:appid/comment
 
 获得指定app所有评论
 
@@ -58,15 +58,15 @@ OUTPUT:
 }
 ```
 
-### PUT /app/:appid/comments/:comment_id/like
+### PUT /app/:appid/comment/:comment_id/like
 
 点赞评论
 
-### DELETE /app/:appid/comments/:comment_id/like
+### DELETE /app/:appid/comment/:comment_id/like
 
 取赞评论
 
-### POST /app/:appid/comments
+### POST /app/:appid/comment
 
 评论指定APP
 
@@ -124,7 +124,7 @@ OUTPUT:
   url: String,
   description: String, //"this is an incredible note app"
   update_info: String, //"fixed some bugs"
-  star: Number, // 4.7  average of this app comments stars
+  star: Number, // 4.7  average of this app comment stars
   permissions: [String...],
   dependencies: [String...],
   storage: {

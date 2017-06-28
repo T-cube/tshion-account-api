@@ -168,7 +168,7 @@ export default class Report extends AppBase {
       if (!doc.user_id.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
-      if (doc.status == C.REPORT_STATUS.APPLIED || doc.status == C.REPORT_STATUS.AGREED) {
+      if (!doc.status == C.REPORT_STATUS.DRAFT) {
         throw new ApiError(400, 'invalid_modified');
       }
       report.date_update = new Date();

@@ -45,7 +45,7 @@ const schema={
       copy_to: {
         type: 'array',
         optional: true,
-        items: { $objectId: 1}
+        items: { $objectId: 1, optional: true }
       },
       content: { type: 'string', optional: true },
       status: { type: 'string', optional: true },
@@ -70,7 +70,7 @@ const schema={
       copy_to: {
         type: 'array',
         optional: true,
-        items: { $objectId: 1}
+        items: { $objectId: 1, optional: true }
       },
       content: { type: 'string', optional: true },
       status: { $enum: [C.REPORT_STATUS.APPLIED, C.REPORT_STATUS.DRAFT], optional: true },
