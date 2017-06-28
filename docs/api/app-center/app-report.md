@@ -169,3 +169,11 @@ body:
   content: String,
 }
 ```
+
+### DELETE /report/:report_id/cancel
+
+撤销非已阅状态的报告到草稿箱
+
+### DELETE /report/:report_id/delete
+
+删除草稿

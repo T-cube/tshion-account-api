@@ -240,4 +240,55 @@ export default class Report extends AppBase {
     });
   }
 
+  reportCancel({user_id, report_id}) {
+    return this.collection('item').findOne({
+      _id: report_id
+    })
+    .then(report => {
+      if (!report) {
+        throw new ApiError(400, 'invalid_report');
+      }
+      if (!report.user_id.equals(user_id)) {
+        throw new ApiError(400, 'invalid_user');
+      }
+      if (!report.status == C.REPORT_STATUS.AGREED) {
+        throw new ApiError(400, 'invalid_modified');
+      }
+      return this.collection('item').update({
+        _id: report_id
+      }, {
+        $set: { status: C.REPORT_STATUS.DRAFT },
+        $push: {
+          comments: {
+            _id:  ObjectId(),
+            user_id,
+            action: 'cancel',
+            new_status: C.REPORT_STATUS.DRAFT,
+            date_create: new Date()
+          }
+        }
+      });
+    });
+  }
+
+  reportDelete({user_id, report_id}) {
+    return this.collection('item').findOne({
+      _id: report_id
+    })
+    .then(report => {
+      if (!report) {
+        throw new ApiError(400, 'invalid_report');
+      }
+      if (!report.user_id.equals(user_id)) {
+        throw new ApiError(400, 'invalid_user');
+      }
+      if (report.status == C.REPORT_STATUS.DRAFT) {
+        throw new ApiError(400, 'invalid_delete');
+      }
+      return this.collection('item').remove({
+        _id: report_id
+      });
+    });
+  }
+
 }

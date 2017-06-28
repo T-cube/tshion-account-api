@@ -134,3 +134,27 @@ api.post('/report/:report_id/comment', (req, res, next) => {
     }).catch(next);
   }).catch(next);
 });
+
+api.delete('/report/:report_id/cancel', (req, res, next) => {
+  validate('info', req.params, ['report_id']);
+  req._app.reportCancel({
+    user_id: req.user._id,
+    report_id: req.params.report_id
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.delete('/report/:report_id/delete', (req, res, next) => {
+  validate('info', req.params, ['report_id']);
+  req._app.reportDelete({
+    user_id: req.user._id,
+    report_id: req.params.report_id
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
