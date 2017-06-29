@@ -1,7 +1,6 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import fs from 'fs';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
@@ -9,8 +8,7 @@ import C from 'lib/constants';
 import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { time } from 'lib/utils';
-import { sanitizeValidateObject } from 'lib/inspector';
-import { companySanitization, companyValidation } from './schema';
+import { validate } from './schema';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
 import UserLevel from 'models/user-level';
@@ -57,7 +55,7 @@ api.get('/', (req, res, next) => {
 // Add new company
 api.post('/', (req, res, next) => {
   let data = req.body; // contains name, description only
-  sanitizeValidateObject(companySanitization, companyValidation, data);
+  validate('company', data);
 
   let userLevel = new UserLevel(req.user);
   userLevel.canOwnCompany().then(canOwnCompany => {
@@ -164,7 +162,7 @@ api.get('/:company_id', (req, res, next) => {
 
 api.put('/:company_id', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(companySanitization, companyValidation, data);
+  validate('company', data);
 
   db.company.update(
     {_id: ObjectId(req.params.company_id)},
