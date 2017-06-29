@@ -58,11 +58,22 @@ export default class Report extends AppBase {
     ]).then(([totalReported, totalReceived, reported, received, from_me, to_me, total]) => {
       let report_date = reported ? reported.date_create : 0;
       let receive_date = received ? received.date_create : 0;
+      let firstDate;
+      if (report_date > receive_date) {
+        firstDate = receive_date;
+      } else {
+        firstDate = report_date;
+      }
+      let use_day;
+      if (firstDate) {
+        use_day = moment(firstDate).diff(moment(), 'days') + 1;
+      } else {
+        use_day = 0;
+      }
       return {
         totalReported,
         totalReceived,
-        report_date,
-        receive_date,
+        use_day,
         from_me: {
           day: from_me[0],
           week: from_me[1],

@@ -56,31 +56,31 @@ export default class Notebook extends AppBase {
       })
       .sort({[sort_type]: -1})
       .then(list => {
-        let index;
-        for (var i = 0; i < list.length; i++) {
+        let id_index;
+        for (let i = 0; i < list.length; i++) {
           if (list[i]._id.equals(last_id)) {
-            index = i;
+            id_index = i;
+            break;
           }
           if (i == list.length - 1) {
-            if (!index) {
-              throw new ApiError(400, 'invalid_last_id');
-            } else {
-              let target_list = list.splice(index, 10);
-              return Promise.map(target_list, item => {
-                return this.collection('note')
-                .findOne({
-                  _id: item._id
-                })
-                .then(doc => {
-                  return doc;
-                });
-              })
-              .then(data => {
-                return data;
-              });
+            if (!id_index) {
+              throw new ApiError(400, 'invalid_last_id');              
             }
           }
         }
+        let target_list = list.splice(id_index, 10);
+        return Promise.map(target_list, item => {
+          return this.collection('note')
+          .findOne({
+            _id: item._id
+          })
+          .then(doc => {
+            return doc;
+          });
+        })
+        .then(data => {
+          return data;
+        });
       });
     } else {
       return this.collection('note')
