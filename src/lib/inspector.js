@@ -8,14 +8,15 @@ import moment from 'moment-timezone';
 
 const sanitizationCustom = {
   objectId: function (schema, post) {
-    if (/^[A-Fa-f0-9]{24}$/.test(post)) {
+    if (post === null || post === undefined) {
+      return post;
+    } else if (/^[A-Fa-f0-9]{24}$/.test(post)) {
       this.report();
       return ObjectId(post);
-    } else if (post) {
+    } else {
       this.report();
       return '[Invalid ObjectId]';
     }
-    return post;
   },
   emptyArray: function (schema, post) {
     this.report();

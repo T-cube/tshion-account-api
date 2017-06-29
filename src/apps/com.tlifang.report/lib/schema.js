@@ -5,8 +5,8 @@ const schema={
   list: {
     sanitization: {
       page: { type: 'integer' },
-      type: { type: 'string' },
       pagesize: { type: 'integer' },
+      type: { type: 'string' },
       report_type: { type: 'string' },
       report_target: { $objectId: 1, optional: true },
       reporter: { $objectId: 1, optional: true },
@@ -16,8 +16,8 @@ const schema={
     },
     validation: {
       page: { type:'integer', gte: 1 },
-      type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
       pagesize: { type:'integer', gte: 1 },
+      type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
       report_type: { $enum: ENUMS.REPORT_TYPE },
       status: { $enum: ENUMS.REPORT_STATUS, optional: true },
       report_target: { $objectId: 1, optional: true },
@@ -44,18 +44,14 @@ const schema={
     sanitization: {
       type: { type: 'string' },
       report_type: { type: 'string' },
-      status: { type: 'string', optional: true },
-      report_target: { $objectId: 1, optional: true },
-      reporter: { $objectId: 1, optional: true },
+      report_target: { $objectId: 1 },
       year: { type: 'integer' },
       month: { type: 'integer' },
     },
     validation: {
       type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
       report_type: { $enum: ENUMS.REPORT_TYPE },
-      status: { $enum: ENUMS.REPORT_STATUS, optional: true },
-      report_target: { $objectId: 1, optional: true },
-      reporter: { $objectId: 1, optional: true },
+      report_target: { $objectId: 1 },
       year: { type: 'integer', gte: 1970 },
       month: { type: 'integer', gte: 1, lte: 12 },
     }
@@ -130,7 +126,8 @@ const schema={
       report_target: { $objectId: 1 },
       copy_to: {
         type: 'array',
-        items: { $objectId: 1}
+        optional: true,
+        items: { $objectId: 1, optional: true }
       },
       content: { type: 'string' },
       status: { type: 'string' },
@@ -154,7 +151,8 @@ const schema={
       report_target: { $objectId: 1 },
       copy_to: {
         type: 'array',
-        items: { $objectId: 1}
+        optional: true,
+        items: { $objectId: 1, optional: true }
       },
       content: { type: 'string' },
       status: { $enum: [C.REPORT_STATUS.APPLIED, C.REPORT_STATUS.DRAFT] },

@@ -57,41 +57,65 @@ api.get('/report', (req, res, next) => {
 
 api.get('/month/report', (req, res, next) => {
   validate('month', req.query);
-  let { type, year, month, reporter, report_target, status, report_type } = req.query;
+  let { type, year, month, report_target, report_type } = req.query;
   let start_date = moment().year(year).month(month-1).startOf('month').toDate();
   let end_date = moment().year(year).month(month-1).endOf('month').toDate();
-  req._app.month({
-    user_id: req.user._id,
-    company_id: req.company._id,
-    type,
-    start_date,
-    status,
-    end_date,
-    reporter,
-    report_target,
-    report_type
-  })
-  .then(list => {
-    res.json(list);
+  req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
+    let is_copyto = false;
+    if (type == C.BOX_TYPE.INBOX) {
+      if (!_.some(memberDepartments, item => item.equals(report_target))) {
+        is_copyto = true;
+      }
+    }
+    req._app.month({
+      user_id: req.user._id,
+      company_id: req.company._id,
+      is_copyto,
+      type,
+      start_date,
+      end_date,
+      report_target,
+      report_type
+    })
+    .then(list => {
+      res.json(list);
+    })
+    .catch(next);
   })
   .catch(next);
 });
 
 api.get('/report/:report_id', (req, res, next) => {
   validate('info', req.params, ['report_id']);
-  validate('detail', req.query);
-  let { report_type, report_target, reporter, type } = req.query;
+  validate('list', req.query);
+  let { page, type, pagesize, status, start_date, end_date, reporter, report_target, report_type } = req.query;
   let { report_id } = req.params;
-  req._app.detail({
-    company_id: req.company._id,
-    user_id: req.user._id,
-    type,
-    report_id,
-    report_type,
-    report_target,
-    reporter,
-  }).then(doc => {
-    res.json(doc);
+  req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
+    if (type == C.BOX_TYPE.INBOX) {
+      if (report_target) {
+        if (!_.some(memberDepartments, item => item.equals(report_target))) {
+          throw new ApiError(400, 'report_target_error');
+        }
+      } else {
+        report_target = memberDepartments;
+      }
+    }
+    req._app.detail({
+      user_id: req.user._id,
+      company_id: req.company._id,
+      page,
+      pagesize,
+      type,
+      status,
+      start_date,
+      end_date,
+      reporter,
+      report_type,
+      report_target,
+      report_id
+    }).then(doc => {
+      res.json(doc);
+    }).catch(next);
   }).catch(next);
 });
 

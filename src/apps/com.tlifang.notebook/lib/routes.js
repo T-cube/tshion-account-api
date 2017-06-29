@@ -122,6 +122,7 @@ api.post('/note', (req, res, next) => {
     user_id: req.user._id,
     note
   }).then(doc => {
+    delete doc.company_id;
     res.json(doc);
   }).catch(next);
 });

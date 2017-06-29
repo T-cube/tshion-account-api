@@ -1,6 +1,7 @@
 import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import _ from 'underscore';
+import { ApiError } from 'lib/error';
 
 import AppBase from 'models/app-base';
 
@@ -49,15 +50,49 @@ export default class Notebook extends AppBase {
       company_id,
     };
     if (last_id) {
-      criteria._id = { $lt: last_id };
+      return this.collection('note')
+      .find(criteria, {
+        _id: 1,
+      })
+      .sort({[sort_type]: -1})
+      .then(list => {
+        let index;
+        for (var i = 0; i < list.length; i++) {
+          if (list[i]._id.equals(last_id)) {
+            index = i;
+          }
+          if (i == list.length - 1) {
+            if (!index) {
+              throw new ApiError(400, 'invalid_last_id');
+            } else {
+              let target_list = list.splice(index, 10);
+              return Promise.map(target_list, item => {
+                return this.collection('note')
+                .findOne({
+                  _id: item._id
+                })
+                .then(doc => {
+                  return doc;
+                });
+              })
+              .then(data => {
+                return data;
+              });
+            }
+          }
+        }
+      });
+    } else {
+      return this.collection('note')
+      .find(criteria, {
+        company_id: 0
+      })
+      .sort({[sort_type]: -1 })
+      .limit(10)
+      .then(list => {
+        return list;
+      });
     }
-    return this.collection('note')
-    .find(criteria, { company_id: 0 })
-    .sort({[sort_type]: -1})
-    .limit(10)
-    .then(list => {
-      return list;
-    });
   }
 
   tagQuery({user_id, company_id, last_id, sort_type, tag_id}) {

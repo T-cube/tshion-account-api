@@ -58,11 +58,11 @@ export default class Report extends AppBase {
     ]).then(([totalReported, totalReceived, reported, received, from_me, to_me, total]) => {
       let report_date = reported ? reported.date_create : 0;
       let receive_date = received ? received.date_create : 0;
-      let firstDate = _.min([report_date, receive_date]);
       return {
         totalReported,
         totalReceived,
-        firstDate,
+        report_date,
+        receive_date,
         from_me: {
           day: from_me[0],
           week: from_me[1],
@@ -128,7 +128,7 @@ export default class Report extends AppBase {
           status: 1,
           report_target: 1,
         })
-      .sort({id: -1})
+      .sort({date_report: -1})
       .skip((page - 1) * pagesize)
       .limit(pagesize)
     ]).then(([count, list]) => {
@@ -136,88 +136,55 @@ export default class Report extends AppBase {
     });
   }
 
-  detail({company_id, user_id, type, report_id, report_type, report_target, reporter}) {
+  detail({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target, report_id}) {
     return this.collection('item').findOne({
       _id: report_id,
     }).then(report => {
-      let criteria = {};
-      criteria.company_id = company_id;
-      if (type == 'outbox') {
-        criteria.user_id = user_id;
-      }
-      if (report_type) {
-        criteria.type = report_type;
-      }
-      if (report_target) {
-        criteria.report_target = report_target;
-      } else {
-        if (type == 'inbox') {
-          criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
-          criteria['$or'] = [{ report_target: report.report_target }, { copy_to: user_id }];
+      return this.list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target})
+      .then(list => {
+        let ids = _.map(list.list, item => {
+          return item._id.toString();
+        });
+        let report_index = _.indexOf(ids, report._id.toString());
+        if (report_index == 9) {
+          page += 1;
+          return this.list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target})
+          .then(secondList => {
+            let secondIds = _.map(secondList.list, item => {
+              return item._id.toString();
+            });
+            report.prevId = ids[8];
+            report.nextId = secondIds[0];
+            return report;
+          });
+        } else if (report_index == 0) {
+          report.nextId = ids[1];
+          return report;
+        } else {
+          report.prevId = ids[report_index - 1];
+          report.nextId = ids[report_index + 1];
+          return report;
         }
-      }
-      if (reporter) {
-        criteria.user_id = reporter;
-      }
-      return Promise.all([
-        this.collection('item').find(_.extend(criteria,{date_report:{$lt:report.date_report}}), {
-          _id: 1
-        })
-        .sort({report_date: 1})
-        .limit(1),
-        this.collection('item').find(_.extend(criteria,{date_report:{$gt:report.date_report}}), {
-          _id: 1
-        })
-        .sort({report_date: 1})
-        .limit(1)
-      ])
-      .then(([prevId, nextId]) => {
-        report.nextId = nextId[0];
-        report.prevId = prevId[0];
-        return report;
       });
     });
   }
 
-  month({user_id, company_id, type, start_date, end_date, status, reporter, report_target, report_type}) {
+  month({user_id, company_id, is_copyto, type, start_date, end_date, report_target, report_type}) {
     let criteria = {};
-    criteria.company_id = company_id;
-    if (report_type) {
-      criteria.type = report_type;
-    }
-    if (start_date && end_date) {
-      criteria.date_report = { $gte: start_date, $lte: end_date };
-    } else if (start_date) {
-      criteria.date_report = { $gte: start_date };
-    } else if (end_date) {
-      criteria.date_report = { $lte: end_date };
-    }
     if (type == C.BOX_TYPE.OUTBOX) {
       criteria.user_id = user_id;
-      if (report_target) {
-        criteria.report_target = report_target;
+      criteria.report_target = report_target;
+      criteria.company_id = company_id;
+      criteria.type = report_type;
+      criteria.report_date = { $gte: start_date, $lte: end_date };
+    } else {
+      if (is_copyto) {
+        criteria.copy_to = user_id;
       }
-      if (status) {
-        criteria.status = status;
-      }
-    } else if (type == C.BOX_TYPE.INBOX) {
-      if (_.isArray(report_target)) {
-        criteria['$or'] = [{ report_target: { $in: report_target } }, { copy_to: user_id }];
-      } else {
-        criteria['$or'] = [{ report_target: report_target }, { copy_to: user_id }];
-      }
-      if (reporter) {
-        criteria.user_id = reporter;
-      }
-      if (status) {
-        if (status == C.REPORT_STATUS.DRAFT) {
-          throw new ApiError(400, 'invalid_status');
-        } else {
-          criteria.status = status;
-        }
-      } else {
-        criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
-      }
+      criteria.report_target = report_target;
+      criteria.company_id = company_id;
+      criteria.type = report_type;
+      criteria.report_date = { $gte: start_date, $lte: end_date };
     }
     return this.collection('item')
     .find(criteria, {

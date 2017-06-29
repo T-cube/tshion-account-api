@@ -71,9 +71,7 @@ query:
 {
   type: ENUM, // inbox, outbox
   report_type: ENUM, //day, week, month
-  status: ENUM, // 'draft', 'applied', 'agreed', 'rejected' this key is optional
-  report_target: objectId,//optional
-  reporter: objectId,//optional
+  report_target: objectId,
   year: Number, // >1970
   month: Number, // 1 - 12
 }
