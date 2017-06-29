@@ -137,7 +137,6 @@ OUTPUT:
 request_body:
 ```javascript
 {
-  app_version: <String>,
   star: <Number>,
   content: <String>
 }

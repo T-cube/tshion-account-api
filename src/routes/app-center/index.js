@@ -107,21 +107,26 @@ api.post('/app/:appid/comment', (req, res, next) => {
   validate('appRequest', req.body, ['comment']);
   let { appid } = req.params;
   let user_id = req.user._id;
-  let { app_version, star, content } = req.body;
-  db.app.comment.insert({
-    user_id,
-    appid,
-    app_version,
-    star,
-    content,
-    likes: [],
-    date_create: new Date()
-  }).then(doc => {
-    res.json(doc);
-    db.app.comment.count({appid}).then(counts => {
-      db.app.findOne({appid}).then(app => {
-        let score = app.star - (app.star - star)/counts;
-        db.app.update({ appid }, { $set: { star: score }});
+  let { star, content } = req.body;
+  db.app.findOne({
+    appid
+  })
+  .then(doc => {
+    db.app.comment.insert({
+      app_version: doc.version,
+      user_id,
+      appid,
+      star,
+      content,
+      likes: [],
+      date_create: new Date()
+    }).then(doc => {
+      res.json(doc);
+      db.app.comment.count({appid}).then(counts => {
+        db.app.findOne({appid}).then(app => {
+          let score = app.star - (app.star - star)/counts;
+          db.app.update({ appid }, { $set: { star: score }});
+        });
       });
     });
   })

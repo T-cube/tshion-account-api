@@ -3,7 +3,7 @@ import { buildValidator } from 'lib/inspector';
 const schema = {
   appRequest: {
     sanitization: {
-      appid: { type: 'string' },
+      appid: { type: 'string', rules:['trim'] },
       comment_id: { $objectId: 1 },
       flag: { type: 'boolean' },
       options: {
@@ -19,7 +19,7 @@ const schema = {
       },
     },
     validation: {
-      appid: { type: 'string' },
+      appid: { type: 'string', minLength: 1 },
       comment_id: { $objectId: 1 },
       flag: { type: 'boolean' },
       options: {

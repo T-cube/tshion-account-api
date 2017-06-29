@@ -5,6 +5,7 @@ import Promise from 'bluebird';
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
+import { SRC_ROOT_DIR } from 'bootstrap';
 
 let api = express.Router();
 export default api;
@@ -82,7 +83,31 @@ api.post('/app/:appid/add', (req, res, next) => {
 
 
 api.delete('/app/:appid/uninstall', (req, res, next) => {
-  res.json({});
+  let appid = req.params.appid;
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  db.company.findOne({_id: company_id}).then(company => {
+    if (!user_id.equals(company.owner)) {
+      throw new ApiError('400', 'permission_dined');
+    }
+    db.company.app.update({
+      company_id
+    }, {
+      $pull: { apps: { appid } }
+    })
+    .then(() => {
+      let info = require(`${SRC_ROOT_DIR}/apps/${appid}/manifest`);
+      let data_base_list = info.storage.mongo;
+      Promise.map(data_base_list, item => {
+        return db.app.store[appid][item].remove({
+          company_id,
+        });
+      }).then(() => {
+        res.json({});
+      });
+    });
+  })
+  .catch(next);
 });
 
 api.put('/app/:appid/switch', (req, res, next) => {
