@@ -64,11 +64,11 @@ export default class Notebook extends AppBase {
           }
           if (i == list.length - 1) {
             if (!id_index) {
-              throw new ApiError(400, 'invalid_last_id');              
+              throw new ApiError(400, 'invalid_last_id');
             }
           }
         }
-        let target_list = list.splice(id_index, 10);
+        let target_list = list.slice(id_index, id_index + 10);
         return Promise.map(target_list, item => {
           return this.collection('note')
           .findOne({

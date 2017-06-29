@@ -41,44 +41,6 @@ request_body:
 更改公司APP设置
 
 
-### GET /app/:appid/comment
-
-获得指定app所有评论
-
-OUTPUT:
-```javascript
-{
-  appid: ObjectId,
-  app_version: <String>,
-  user_id: ObjectId,
-  star: <Number>,
-  content: <String>,
-  total_likes: <Number>,
-  is_like: <Boolean>,
-}
-```
-
-### PUT /app/:appid/comment/:comment_id/like
-
-点赞评论
-
-### DELETE /app/:appid/comment/:comment_id/like
-
-取赞评论
-
-### POST /app/:appid/comment
-
-评论指定APP
-
-request_body:
-```javascript
-{
-  app_version: <String>,
-  star: <Number>,
-  content: <String>
-}
-```
-
 ## 挂载点 /app-center/
 
 ### GET /app
@@ -140,5 +102,43 @@ OUTPUT:
     "mongo": [String...]
   },
   date_create: Date,
+}
+```
+
+### GET /app/:appid/comment
+
+获得指定app所有评论
+
+OUTPUT:
+```javascript
+{
+  appid: ObjectId,
+  app_version: <String>,
+  user_id: ObjectId,
+  star: <Number>,
+  content: <String>,
+  total_likes: <Number>,
+  is_like: <Boolean>,
+}
+```
+
+### PUT /app/:appid/comment/:comment_id/like
+
+点赞评论
+
+### DELETE /app/:appid/comment/:comment_id/like
+
+取赞评论
+
+### POST /app/:appid/comment
+
+评论指定APP
+
+request_body:
+```javascript
+{
+  app_version: <String>,
+  star: <Number>,
+  content: <String>
 }
 ```

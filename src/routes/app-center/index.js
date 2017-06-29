@@ -46,3 +46,84 @@ api.get('/app/:appid', (req, res, next) => {
   })
   .catch(next);
 });
+
+api.get('/app/:appid/comment', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
+  let { appid } = req.params;
+  let user_id = req.user._id;
+  db.app.comment.aggregate([
+    { $match: {appid} },
+    {
+      $project: {
+        appid: 1,
+        app_version: 1,
+        user_id: 1,
+        star: 1,
+        content: 1,
+        total_likes: { $size: '$likes'},
+        is_like: {
+          $in: [user_id, '$likes']
+        }
+      }
+    }
+  ]).then(list => {
+    res.json(list);
+  })
+  .catch(next);
+});
+
+api.put('/app/:appid/comment/:comment_id/like', (req, res, next) => {
+  validate('appRequest', req.params, ['appid', 'comment_id']);
+  let { appid, comment_id } = req.params;
+  let user_id = req.user._id;
+  db.app.comment.update({
+    _id: comment_id
+  }, {
+    $push: {
+      likes: user_id
+    }
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.delete('/app/:appid/comment/:comment_id/like', (req, res, next) => {
+  validate('appRequest', req.params, ['appid', 'comment_id']);
+  let { appid, comment_id } = req.params;
+  let user_id = req.user._id;
+  db.app.comment.update({
+    _id: comment_id
+  }, {
+    $pull: {
+      likes: user_id
+    }
+  })
+  .then(doc => res.json(doc))
+  .catch(next);
+});
+
+api.post('/app/:appid/comment', (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
+  validate('appRequest', req.body, ['comment']);
+  let { appid } = req.params;
+  let user_id = req.user._id;
+  let { app_version, star, content } = req.body;
+  db.app.comment.insert({
+    user_id,
+    appid,
+    app_version,
+    star,
+    content,
+    likes: [],
+    date_create: new Date()
+  }).then(doc => {
+    res.json(doc);
+    db.app.comment.count({appid}).then(counts => {
+      db.app.findOne({appid}).then(app => {
+        let score = app.star - (app.star - star)/counts;
+        db.app.update({ appid }, { $set: { star: score }});
+      });
+    });
+  })
+  .catch(next);
+});
