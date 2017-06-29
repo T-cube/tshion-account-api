@@ -99,7 +99,7 @@ api.delete('/app/:appid/uninstall', (req, res, next) => {
       let info = require(`${SRC_ROOT_DIR}/apps/${appid}/manifest`);
       let data_base_list = info.storage.mongo;
       Promise.map(data_base_list, item => {
-        return db.app.store[appid][item].remove({
+        return db.collection(`app.store.${appid}.${item}`).remove({
           company_id,
         });
       }).then(() => {
