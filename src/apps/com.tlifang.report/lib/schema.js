@@ -95,7 +95,7 @@ const schema={
       },
     },
     validation: {
-      date_report: { type: ['date', 'null'], optional: true },
+      date_report: { $date: 1, optional: true },
       report_target: { $objectId: 1, optional: true },
       copy_to: {
         type: 'array',

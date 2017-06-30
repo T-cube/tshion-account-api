@@ -76,11 +76,13 @@ OUTPUT:
   content: <String>,
   tags: [ObjectId...],
   notebook: ObjectId,
-  comments: [ObjectId...],
-  likes: [ObjectId...],
   shared: <Boolean>,
+  comments: [ObjectId...],
   date_create: <Date>,
   date_update: <Date>,
+  likes: [ObjectId...],
+  total_likes: <Integer>,
+  is_like: <Boolean>
 }
 ```
 

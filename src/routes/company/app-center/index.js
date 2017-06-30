@@ -34,7 +34,6 @@ api.get('/app', (req, res, next) => {
         icons: 1,
         version: 1,
         description: 1,
-        author: 1
       }).then(app => {
         item = _.extend({}, app, item);
         return item;

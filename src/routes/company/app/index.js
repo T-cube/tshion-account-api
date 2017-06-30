@@ -59,13 +59,14 @@ fs.readdir(APPS_ROOT, (err, result) => {
       req._app = _app;
       db.company.app.findOne({
         company_id: req.company._id,
-        // apps: { $in: [{ app_id: req.query.app_id, enabled: true }] }
       }, {
         apps: 1
       }).then(doc => {
-        // if (_.some(doc.apps, item => item.)) {
+        // if (_.some(doc.apps, item => item.appid == appId && item.enabled)) {
+        //    next();
+        // } else {
         //   throw new ApiError(400, 'no_app');
-        // }
+        //}
         next();
       });
     }, require(appDir).default);

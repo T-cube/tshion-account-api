@@ -66,7 +66,7 @@ export default class Report extends AppBase {
       }
       let use_day;
       if (firstDate) {
-        use_day = moment(firstDate).diff(moment(), 'days') + 1;
+        use_day = moment().diff(moment(firstDate), 'days') + 1;
       } else {
         use_day = 0;
       }
@@ -187,7 +187,7 @@ export default class Report extends AppBase {
       criteria.report_target = report_target;
       criteria.company_id = company_id;
       criteria.type = report_type;
-      criteria.report_date = { $gte: start_date, $lte: end_date };
+      criteria.date_report = { $gte: start_date, $lte: end_date };
     } else {
       if (is_copyto) {
         criteria.copy_to = user_id;
@@ -195,7 +195,7 @@ export default class Report extends AppBase {
       criteria.report_target = report_target;
       criteria.company_id = company_id;
       criteria.type = report_type;
-      criteria.report_date = { $gte: start_date, $lte: end_date };
+      criteria.date_report = { $gte: start_date, $lte: end_date };
     }
     return this.collection('item')
     .find(criteria, {
@@ -204,8 +204,8 @@ export default class Report extends AppBase {
     })
     .then(list => {
       _.map(list, item => {
-        item.date = moment(item.report_date).get('date');
-        delete item.report_date;
+        item.date = moment(item.date_report).get('date');
+        delete item.date_report;
         return item;
       });
       return list;

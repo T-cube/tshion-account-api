@@ -144,7 +144,11 @@ export default class Notebook extends AppBase {
           content: 1,
           tags: 1,
           notebook: 1,
+          shared: 1,
           comments: 1,
+          date_create: 1,
+          date_update: 1,
+          likes: 1,
           total_likes: { $size: '$likes' },
           is_like: { $in: [ user_id, '$likes' ] }
         }
