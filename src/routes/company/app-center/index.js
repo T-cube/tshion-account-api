@@ -1,6 +1,7 @@
 import express from 'express';
 import db from 'lib/database';
 import Promise from 'bluebird';
+import _ from 'underscore';
 
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
@@ -35,7 +36,7 @@ api.get('/app', (req, res, next) => {
         description: 1,
         author: 1
       }).then(app => {
-        item.detail = app;
+        item = _.extend({}, app, item);
         return item;
       });
     }).then(apps => {
@@ -66,16 +67,21 @@ api.post('/app/:appid/add', (req, res, next) => {
         }).then(app => {
           res.json(app);
         });
-      }
-      db.company.app.update({
-        company_id
-      }, {
-        $push: {
-          apps: {appid, enabled:true}
+      } else {
+        if (_.some(doc.apps, item => item.appid.equals(appid))) {
+          throw new ApiError(400, 'app_already_install');
+        } else {
+          db.company.app.update({
+            company_id
+          }, {
+            $push: {
+              apps: {appid, enabled:true}
+            }
+          }).then(list => {
+            res.json(list);
+          });
         }
-      }).then(list => {
-        res.json(list);
-      });
+      }
     });
   })
   .catch(next);
