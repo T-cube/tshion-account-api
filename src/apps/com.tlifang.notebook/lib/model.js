@@ -132,28 +132,18 @@ export default class Notebook extends AppBase {
   }
 
   noteQuery({user_id, company_id, note_id}) {
-    return this.collection('note').aggregate([
-      { $match: {
-        user_id,
-        company_id,
-        _id: note_id,
-      }},
-      {
-        $project: {
-          title: 1,
-          content: 1,
-          tags: 1,
-          notebook: 1,
-          shared: 1,
-          comments: 1,
-          date_create: 1,
-          date_update: 1,
-          likes: 1,
-          total_likes: { $size: '$likes' },
-          is_like: { $in: [ user_id, '$likes' ] }
-        }
+    return this.collection('note').findOne({
+      _id: note_id
+    })
+    .then(doc => {
+      if (!doc.user_id.equals(user_id) && !doc.shared) {
+        throw new ApiError(403);
+      } else {
+        doc.is_like = _.some(doc.likes, item => item.equals(user_id));
+        doc.total_likes = doc.likes.length;
+        return doc;
       }
-    ]);
+    });
   }
 
   sharedQuery({user_id, company_id}) {
@@ -314,7 +304,7 @@ export default class Notebook extends AppBase {
     return this.collection('note').findOne({ company_id, user_id, _id: note_id }).then(doc => {
       return Promise.all([
         this.collection('note').remove({ _id: note_id }),
-        this.collection('comment').remove({ _id: { $in: doc.comments } })
+        this.collection('comment').remove({ note_id })
       ]);
     });
   }

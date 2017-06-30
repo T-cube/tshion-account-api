@@ -17,6 +17,6 @@
   "update_info": "",
   "dependencies": [],
   "storage": {
-    "mongo": ["item", "room"]
+    "mongo": ["item", "config"]
   }
 }

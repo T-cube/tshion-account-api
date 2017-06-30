@@ -17,8 +17,7 @@ export default class Report extends AppBase {
     return Promise.all([
       this.collection('item').count({ user_id, company_id }),
       this.collection('item').count({ report_target: { $in: memberDepartments }, company_id }),
-      this.collection('item').findOne({ user_id, company_id }, { date_create: 1 }),
-      this.collection('item').findOne({ report_target: { $in: memberDepartments }, company_id }, { date_create: 1 }),
+      this.collection('config').findOne({user_id}),
       Promise.map(['day', 'week', 'month'], item => {
         return this.collection('item').count({
           user_id,
@@ -55,22 +54,20 @@ export default class Report extends AppBase {
           type: item
         });
       })
-    ]).then(([totalReported, totalReceived, reported, received, from_me, to_me, total]) => {
-      let report_date = reported ? reported.date_create : 0;
-      let receive_date = received ? received.date_create : 0;
-      let firstDate;
-      if (report_date > receive_date) {
-        firstDate = receive_date;
-      } else {
-        firstDate = report_date;
-      }
+    ]).then(([totalReported, totalReceived, user_config, from_me, to_me, total]) => {
       let use_day;
-      if (firstDate) {
-        use_day = moment().diff(moment(firstDate), 'days') + 1;
+      if (user_config) {
+        use_day = moment().diff(moment(user_config.date_join), 'days') + 1;
       } else {
-        use_day = 0;
+        use_day = 1;
+        this.collection('config').insert({
+          user_id,
+          company_id,
+          date_join: new Date(),
+        });
       }
       return {
+        appid: this.getId(),
         totalReported,
         totalReceived,
         use_day,
@@ -243,7 +240,7 @@ export default class Report extends AppBase {
       if (!doc.user_id.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
-      if (!doc.status == C.REPORT_STATUS.DRAFT) {
+      if (doc.status != C.REPORT_STATUS.DRAFT) {
         throw new ApiError(400, 'invalid_modified');
       }
       report.date_update = new Date();
@@ -363,7 +360,7 @@ export default class Report extends AppBase {
       if (!report.user_id.equals(user_id)) {
         throw new ApiError(400, 'invalid_user');
       }
-      if (!report.status == C.REPORT_STATUS.DRAFT) {
+      if (report.status != C.REPORT_STATUS.DRAFT) {
         throw new ApiError(400, 'invalid_delete');
       }
       return this.collection('item').remove({
