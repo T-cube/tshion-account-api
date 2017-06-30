@@ -104,7 +104,7 @@ export default class Account {
 
   sendCode(type, account, template) {
     if (!_.contains(ENUMS.USER_ID_TYPE, type)) {
-      throw new Error('invalid account type');
+      return Promise.reject(new ApiError(400, 'invalid_account_type'));
     }
     if (type == C.USER_ID_TYPE.EMAIL) {
       return this.sendEmailCode(account, template);
@@ -115,7 +115,7 @@ export default class Account {
 
   verifyCode(type, account, code) {
     if (!_.contains(ENUMS.USER_ID_TYPE, type)) {
-      throw new Error('invalid account type');
+      return Promise.reject(new ApiError(400, 'invalid_account_type'));
     }
     if (type == C.USER_ID_TYPE.EMAIL) {
       return this.verifyEmailCode(account, code);

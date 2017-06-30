@@ -2,72 +2,73 @@
 
 [返回目录](index.md)
 
-当前用户操作
+账户操作
 
-## Table of Contents
-
-* [POST /account/check](#post-account-check)
-* [POST /account/send_email](#post-account-send_email)
-* [POST /account/verify_email](#post-account-verify_email)
-* [POST /account/verify_sms](#post-account-verify_sms)
-* [POST /account/register](#post-account-register)
-* [GET /account/info](#GET-account-info)
-
-## Function List
+## API List
 
 ### POST /account/check
+
 校验用户账号格式和存在
 
 INPUT
+
 ```javascript
 {
-  "type": "[email|mobile]", // 账号类型
-  "id": "id_string"         // 账号ID字符串
+  type: String[Enum:mobile,email], // 账号类型
+  id: String                       // 账号ID字符串
 }
 ```
+
 OUTPUT
+
 ```javascript
 {
-  "exists": true|false, // 是否存在
+  exists: Boolean, // 是否存在
 }
+
 ```
 ERROR
 ```javascript
-"validation error" //校验错误
+validation_error //校验错误
 ```
 
 ### POST /account/register
+
 用户注册
 
 INPUT
+
 ```javascript
 {
-  "type": "[email|mobile]",     // 账号类型
-  "id": "id_string",            // 账号ID字符串
-  "code": "",                   // 当type="mobile"时需要的短信验证码
-  "password": "password_string" // 用户密码
+  type: String[Enum:email,mobile],     // 账号类型
+  id: String,               // 账号ID字符串
+  code: String[optional],   // 当type=mobile时需要的短信验证码
+  password: String,         // 用户密码
 }
 ```
+
 OUTPUT
+
 ```javascript
 {
-  "exists": true|false, // 是否存在
+  exists: Boolean,           // 是否存在
 }
+
 ```
 ERROR
 ```javascript
-"validation error" //校验错误
+validation error //校验错误
 ```
 
 ### POST /account/send-sms
 
-发送短信验证码 NOT READY
+发送短信验证码
 
 INPUT
 
 ```javascript
 {
-  "mobile": "{mobile}"    // 电子邮件
+  mobile: String   // 手机号码
 }
 ```
 
@@ -85,17 +86,17 @@ ERROR
 | 400 | `user_exists` | user exists |
 | 429 | `too_many_requests` | request too often |
 
-### POST account/recover/send-code
+### POST /account/recover/send-code
 
-忘记密码，发送短信和邮箱验证码给用户
+找回密码第1步：发送验邮箱、短信证码
 
 INUPT
 
 ```javascript
 {
-  "type": ["email", "mobile"],
-  "mobile": <String>  //optional depend on type
-  "email": <String>   //optional depend on type
+  type: [email, mobile],
+  mobile: String  //optional depend on type
+  email: String   //optional depend on type
 }
 ```
 
@@ -109,75 +110,91 @@ ERROR
 
 | code | error | error_description |
 | ---- | ----- | ----------------- |
-| 429 | `too_many_requests` | request too often |
+| 429  | `too_many_requests` | request too often |
 
-### POST account/verify-email
+### POST /account/verify
 
-校验邮件验证码
+找回密码第2步：实时校验验证码正误
+
+INPUT
+
+```javascript
+{
+  type: String[Enum:mobile,email],
+  email: String[optional],    // when type == 'email'
+  mobile: String[optional],   // when type == 'mobile'
+  code: String,               // 验证码
+}
+```
+
+OUTPUT
+
+```javascript
+{
+  token: String   // 下一步修改密码需要的临时token
+}
+```
+
+ERROR
+
+| code | error | error_description |
+| ---- | ----- | ----------------- |
+| 400  | `invalid_account_type` | 错误的帐户类型 |
+| 400  | `account_not_exists` | 帐户不存在 |
+
+### POST /recover/change-pass
+
+找回密码第3步：保存新密码
 
 INPUT
 
 ```javascript
 {
-  "code": "{code}"     //URL中的验证码
+  type: String[Enum:mobile,email],
+  email: String[optional],    // when type == 'email'
+  mobile: String[optional],   // when type == 'mobile'
+  code: String,               // 验证码
+  password: String,           // 新密码
 }
 ```
+
 OUTPUT
+
 ```javascript
-{
-  "email": "{email}"   //电子邮件
-}
+{}
 ```
+
 ERROR
-```javascript
-"bad verification code" //验证码错误
-```
 
-### POST /account/verify-sms
-校验短信验证码
-
-TODO
-
-INPUT
-```javascript
-{
-  "mobile": "{mobile}"      //手机号码
-  "code": "{code}"          //URL中的验证码
-}
-```
-OUTPUT
-```javascript
-{
-  "mobile": "{mobile}"      //手机号码
-}
-```
-ERROR
-```javascript
-"bad verification code"     //验证码错误
-```
+| code | error | error_description |
+| ---- | ----- | ----------------- |
+| 400  | `invalid_account_type` | 错误的帐户类型 |
+| 400  | `account_not_exists` | 帐户不存在 |
 
 ### POST /account/register
+
 用户注册
 
 INPUT
 ```javascript
 {
-  "type": "[email|mobile]"  //帐户类型
-  "id": "{string}"          //帐户名字
-  "password": "{password}"  //密码
-  "code": "{code}"          //短信验证码（当type==mobile时）
+  type: String[Enum:email,mobile]  //帐户类型
+  id: String             // 帐户名字
+  password: String       // 密码
+  code: String           // 短信验证码（当type == 'mobile' 时）
 }
 ```
+
 OUTPUT
+
 ```javascript
-{
-  "success": [true|false]
-}
+{}
 ```
+
 ERROR
+
 ```javascript
-"unkown_type"              //类型不为 email 或 mobile
-"validation_failed"        //验证码错误
+validation_failed        //验证码错误
 ```
 
 ### POST /account/authorise
@@ -185,16 +202,18 @@ ERROR
 用户密码校验，请求后得到临时 token，可用于关键操作，需将该 token 加入请求数据
 
 INPUT
+
 ```javascript
 {
-  password: <String>,
+  password: String,
 }
 ```
 
 OUTPUT
+
 ```javascript
 {
-  auth_check_token: <String>
+  auth_check_token: String
 }
 ```
 
@@ -208,9 +227,9 @@ INPUT
 OUTPUT
 ```javascript
 {
-  "_id":"...",
-  "email":"...",
-  "mobile":"..."
+  _id:...,
+  email:...,
+  mobile:...
 }
 ```
 
@@ -220,12 +239,12 @@ OUTPUT
 OUTPUT
 ```javascript
 [{
-  _id: <ObjectId>,
-  user: <ObjectId>,
-  action: <String>,
-  client_id: <String>,
-  user_agent: <String>,
-  ip: <String>,
-  time: <Date>,
+  _id: ObjectId,
+  user: ObjectId,
+  action: String,
+  client_id: String,
+  user_agent: String,
+  ip: String,
+  time: Date,
 }...]
 ```

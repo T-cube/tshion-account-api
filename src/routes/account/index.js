@@ -254,7 +254,7 @@ api.post('/recover/send-code', (req, res, next) => {
   validate('register', data, ['type', type]);
   let account = req.body[type];
   const frequency = config.get('security.frequency.userVerifyCode');
-  req.model('security').limitRequestFrequency('verifycode', account, frequency)
+  req.model('security').limitRequestFrequency('send-code', account, frequency)
   .then(() => {
     return req.model('account').checkExistance(type, account, true);
   })
@@ -270,7 +270,10 @@ api.post('/recover/verify', (req, res, next) => {
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type, 'code']);
   let account = data[type];
-  req.model('account').checkExistance(type, account, true)
+  req.model('security').limitRequestFrequency('verify-code', account, 0.5)
+  .then(() => {
+    req.model('account').checkExistance(type, account, true);
+  })
   .then(() => {
     return req.model('account').verifyCode(type, account, data.code);
   })
