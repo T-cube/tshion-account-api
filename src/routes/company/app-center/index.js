@@ -5,7 +5,7 @@ import _ from 'underscore';
 
 import { validate } from './schema';
 import { ApiError } from 'lib/error';
-import { oauthCheck } from 'lib/middleware';
+import { oauthCheck, authCheck } from 'lib/middleware';
 import { SRC_ROOT_DIR } from 'bootstrap';
 
 let api = express.Router();
@@ -51,7 +51,7 @@ api.post('/app/:appid/add', (req, res, next) => {
   let company_id = req.company._id;
   db.company.findOne({_id: company_id}).then(company => {
     if (!user_id.equals(company.owner)) {
-      throw new ApiError('400', 'permission_dined');
+      throw new ApiError('400', 'not_company_owner');
     }
     db.company.app.findOne({company_id}).then(doc => {
       if (!doc) {
@@ -67,7 +67,7 @@ api.post('/app/:appid/add', (req, res, next) => {
           res.json(app);
         });
       } else {
-        if (_.some(doc.apps, item => item.appid.equals(appid))) {
+        if (_.some(doc.apps, item => item.appid == appid)) {
           throw new ApiError(400, 'app_already_install');
         } else {
           db.company.app.update({
@@ -87,13 +87,13 @@ api.post('/app/:appid/add', (req, res, next) => {
 });
 
 
-api.delete('/app/:appid/uninstall', (req, res, next) => {
+api.delete('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   let appid = req.params.appid;
   let user_id = req.user._id;
   let company_id = req.company._id;
   db.company.findOne({_id: company_id}).then(company => {
     if (!user_id.equals(company.owner)) {
-      throw new ApiError('400', 'permission_dined');
+      throw new ApiError('400', 'not_company_owner');
     }
     db.company.app.update({
       company_id
@@ -124,7 +124,7 @@ api.put('/app/:appid/switch', (req, res, next) => {
   let user_id = req.user._id;
   db.company.findOne({_id: company_id}).then(doc => {
     if (!doc.owner.equals(user_id)) {
-      throw new ApiError('400', 'permission_dined');
+      throw new ApiError('400', 'not_company_owner');
     }
     db.company.app.update({
       company_id: company_id,
@@ -156,7 +156,7 @@ api.put('/app/:appid/options', (req, res, next) => {
   let user_id = req.user._id;
   db.company.findOne({_id: company_id}).then(doc => {
     if (!doc.owner.equals(user_id)) {
-      throw new ApiError('400', 'permission_dined');
+      throw new ApiError('400', 'not_company_owner');
     }
     db.company.app.config.update({
       appid,

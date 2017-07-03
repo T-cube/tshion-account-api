@@ -34,9 +34,5 @@ export function checkUserTypeFunc(req, type) {
     case TYPES.OWNER:
       authorised = true;
   }
-  console.log(req.company.members);
-  console.log(type);
-  console.log(member.type);
-  console.log(authorised);
   return authorised;
 }

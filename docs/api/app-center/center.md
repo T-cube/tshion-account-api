@@ -48,6 +48,10 @@ request_body:
 
 更改公司APP设置
 
+### DELETE /app/:appid/uninstall
+
+公司拥有者卸载APP，需要登录密码校验
+
 
 ## 挂载点 /app-center/
 

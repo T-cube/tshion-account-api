@@ -259,7 +259,7 @@ export default class Activity extends AppBase {
       _id: activity_id
     }).then(doc => {
       if (!this._checkReadPermission(doc, user_id)) {
-        throw new ApiError(400, 'permission_dined');
+        throw new ApiError(400, 'not_member');
       } else {
         return doc;
       }
@@ -319,7 +319,7 @@ export default class Activity extends AppBase {
       _id: activity_id
     }).then(doc => {
       if (!_.some(doc.assistants.concat(doc.creator, doc.members, doc.followers), item => item.equals(user_id))) {
-        throw new ApiError(400, 'permission_dined');
+        throw new ApiError(400, 'not_member');
       } else {
         return this.collection('item').update({
           _id: activity_id
