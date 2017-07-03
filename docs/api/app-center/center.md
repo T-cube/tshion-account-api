@@ -105,6 +105,7 @@ OUTPUT:
   slideshow: [String, ...],
   author: String, //"foo"
   url: String,
+  total_installed: Number,
   description: String, //"this is an incredible note app"
   update_info: String, //"fixed some bugs"
   star: Number, // 4.7  average of this app comment stars
@@ -127,6 +128,8 @@ OUTPUT:
   appid: ObjectId,
   app_version: <String>,
   user_id: ObjectId,
+  user_name: <String>,
+  user_avatar: <String>,
   star: <Number>,
   content: <String>,
   total_likes: <Number>,

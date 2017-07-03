@@ -69,6 +69,8 @@
   appid: ObjectId,
   app_version: String, //"0.1.0"
   user_id: ObjectId,
+  user_name: String,
+  user_avatar: String,
   star: Number[Enum=1,2,3,4,5], //5
   content: String, //"wonderful!"
   likes: [ObjectId...], //users
@@ -91,16 +93,6 @@
 }
 ```
 
-```javascript
-db.company.app.update({
-  company_id: '123',
-  'apps.appid': 'demp_app',
-}, {
-  $set: {
-    'apps.$.enabled': false,
-  }
-});
-```
 
 ## company.app.config
 

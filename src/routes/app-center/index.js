@@ -3,6 +3,7 @@ import db from 'lib/database';
 import C from 'lib/constants';
 
 import { validate } from './schema';
+import { oauthCheck } from 'lib/middleware';
 
 let api = express.Router();
 export default api;
@@ -39,7 +40,7 @@ api.get('/app', (req, res, next) => {
 });
 
 api.get('/app/:appid', (req, res, next) => {
-  validate('appRequest', req.params);
+  validate('appRequest', req.params, ['appid']);
   let { appid } = req.params;
   db.app.findOne({ appid: appid }, { metadata: 0 }).then(doc => {
     res.json(doc);
@@ -47,7 +48,7 @@ api.get('/app/:appid', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/app/:appid/comment', (req, res, next) => {
+api.get('/app/:appid/comment', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   let { appid } = req.params;
   let user_id = req.user._id;
@@ -72,7 +73,7 @@ api.get('/app/:appid/comment', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/app/:appid/comment/:comment_id/like', (req, res, next) => {
+api.put('/app/:appid/comment/:comment_id/like', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid', 'comment_id']);
   let { appid, comment_id } = req.params;
   let user_id = req.user._id;
@@ -87,7 +88,7 @@ api.put('/app/:appid/comment/:comment_id/like', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/app/:appid/comment/:comment_id/like', (req, res, next) => {
+api.delete('/app/:appid/comment/:comment_id/like', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid', 'comment_id']);
   let { appid, comment_id } = req.params;
   let user_id = req.user._id;
@@ -102,7 +103,7 @@ api.delete('/app/:appid/comment/:comment_id/like', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/app/:appid/comment', (req, res, next) => {
+api.post('/app/:appid/comment', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['comment']);
   let { appid } = req.params;
@@ -115,6 +116,8 @@ api.post('/app/:appid/comment', (req, res, next) => {
     db.app.comment.insert({
       app_version: doc.version,
       user_id,
+      user_avatar: req.user.avatar,
+      user_name: req.user.name,
       appid,
       star,
       content,

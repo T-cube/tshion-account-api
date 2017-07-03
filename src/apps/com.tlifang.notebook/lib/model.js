@@ -147,23 +147,26 @@ export default class Notebook extends AppBase {
   }
 
   sharedQuery({user_id, company_id}) {
-    return this.collection('note').aggregate([
-      { $match: {
-        company_id,
-        shared: true
-      }},
-      {
-        $project: {
-          title: 1,
-          content: 1,
-          tags: 1,
-          notebook: 1,
-          comments: 1,
-          total_likes: { $size: '$likes' },
-          is_like: { $in: [ user_id, '$likes' ] }
-        }
-      }
-    ]);
+    return this.collection('note').findOne({
+      company_id,
+      shared: true,
+    }, {
+      _id: 1,
+      title: 1,
+      content: 1,
+      tags: 1,
+      notebook: 1,
+      comments: 1,
+      likes: 1,
+    })
+    .then(list => {
+      _.map(list, item => {
+        item.total_likes = item.likes.length;
+        item.is_like = _.some(item.likes, user => user.equals(user_id));
+        return item;
+      });
+      return list;
+    });
   }
 
   commentsQuery({company_id, note_id}) {

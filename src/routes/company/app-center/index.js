@@ -64,6 +64,7 @@ api.post('/app/:appid/add', (req, res, next) => {
             }
           ]
         }).then(app => {
+          _incTotalInstalled(appid);
           res.json(app);
         });
       } else {
@@ -77,6 +78,7 @@ api.post('/app/:appid/add', (req, res, next) => {
               apps: {appid, enabled:true}
             }
           }).then(list => {
+            _incTotalInstalled(appid);
             res.json(list);
           });
         }
@@ -108,6 +110,11 @@ api.delete('/app/:appid/uninstall', authCheck(), (req, res, next) => {
           company_id,
         });
       }).then(() => {
+        db.app.update({
+          appid,
+        }, {
+          $inc: { total_installed: -1 }
+        });
         res.json({});
       });
     });
@@ -173,3 +180,11 @@ api.put('/app/:appid/options', (req, res, next) => {
   })
   .catch(next);
 });
+
+function _incTotalInstalled(appid) {
+  db.app.update({
+    appid,
+  }, {
+    $inc: { total_installed: 1 }
+  });
+}

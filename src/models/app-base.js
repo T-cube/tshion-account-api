@@ -40,7 +40,7 @@ export default class Base {
           })
         ]).then(() => {
           appInfo.slideshow = slide;
-          appInfo = _.extend({}, appInfo, { star: 0, date_create: new Date(), date_update: new Date() });
+          appInfo = _.extend({}, appInfo, { star: 0, total_installed: 0, date_create: new Date(), date_update: new Date() });
           return db.collection('app.all')
           .insert(appInfo)
           .then(doc => {
@@ -79,7 +79,7 @@ export default class Base {
               return db.collection('app')
               .findOne({appid: appInfo.appid})
               .then(doc => {
-                appInfo = _.extend({}, appInfo, { star: doc.star, date_create: doc.date_create, date_update: new Date() });
+                appInfo = _.extend({}, appInfo, { star: doc.star, total_installed: doc.total_installed, date_create: doc.date_create, date_update: new Date() });
                 return db.collection('app.all')
                 .insert(appInfo);
               })
@@ -150,7 +150,8 @@ export default class Base {
       return {
         _id: doc._id,
         name: doc.name,
-        url: doc.url
+        url: doc.url,
+        mimetype: doc.mimetype,
       };
     });
   }
