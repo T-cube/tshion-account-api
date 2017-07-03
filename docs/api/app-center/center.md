@@ -123,7 +123,7 @@ OUTPUT:
 
 OUTPUT:
 ```javascript
-{
+[{
   appid: ObjectId,
   app_version: <String>,
   user_id: ObjectId,
@@ -131,7 +131,7 @@ OUTPUT:
   content: <String>,
   total_likes: <Number>,
   is_like: <Boolean>,
-}
+}...]
 ```
 
 ### PUT /app/:appid/comment/:comment_id/like
