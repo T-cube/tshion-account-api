@@ -28,7 +28,8 @@ api.get('/app', (req, res, next) => {
     star: 1,
     description: 1,
     slideshow: 1,
-    author: 1
+    author: 1,
+    total_installed: 1,
   })
   .sort(sort)
   .skip((page - 1) * pagesize)

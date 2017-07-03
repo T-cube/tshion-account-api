@@ -82,6 +82,7 @@ OUTPUT:
   version: <String>,
   author: <String>,
   description: <String>,
+  total_installed: Number,
 }...]
 ```
 
