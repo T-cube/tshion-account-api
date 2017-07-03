@@ -218,6 +218,7 @@ OUTPUT
 ```
 
 ### GET /account/info
+
 获取当前登录用户信息
 
 INPUT
@@ -234,6 +235,7 @@ OUTPUT
 ```
 
 ### GET /account/activity
+
 获取登录日志
 
 OUTPUT
