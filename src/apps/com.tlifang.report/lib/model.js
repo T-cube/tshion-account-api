@@ -177,14 +177,14 @@ export default class Report extends AppBase {
     });
   }
 
-  month({user_id, company_id, is_copyto, type, start_date, end_date, report_target, report_type}) {
+  month({user_id, company_id, is_copyto, type, report_target, report_type}) {
     let criteria = {};
     if (type == C.BOX_TYPE.OUTBOX) {
       criteria.user_id = user_id;
       criteria.report_target = report_target;
       criteria.company_id = company_id;
       criteria.type = report_type;
-      criteria.date_report = { $gte: start_date, $lte: end_date };
+      // criteria.date_report = { $gte: start_date, $lte: end_date };
     } else {
       if (is_copyto) {
         criteria.copy_to = user_id;
@@ -192,7 +192,7 @@ export default class Report extends AppBase {
       criteria.report_target = report_target;
       criteria.company_id = company_id;
       criteria.type = report_type;
-      criteria.date_report = { $gte: start_date, $lte: end_date };
+      // criteria.date_report = { $gte: start_date, $lte: end_date };
     }
     return this.collection('item')
     .find(criteria, {

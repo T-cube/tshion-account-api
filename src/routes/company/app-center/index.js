@@ -122,7 +122,7 @@ api.delete('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.put('/app/:appid/switch', (req, res, next) => {
+api.post('/app/:appid/switch', (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['flag']);
   let { flag } = req.body;

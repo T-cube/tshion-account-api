@@ -29,7 +29,7 @@ OUTPUT:
 团队拥有者添加app
 
 
-### PUT /app/:appid/switch
+### POST /app/:appid/switch
 
 公司拥有者开启关闭APP
 

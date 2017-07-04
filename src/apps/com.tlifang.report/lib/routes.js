@@ -36,6 +36,12 @@ api.get('/report', (req, res, next) => {
         report_target = memberDepartments;
       }
     }
+    if (start_date) {
+      start_date = moment(start_date).startOf('day').toDate()
+    }
+    if (end_date) {
+      end_date = moment(end_date).startOf('day').toDate()
+    }
     req._app.list({
       user_id: req.user._id,
       company_id: req.company._id,
@@ -57,9 +63,9 @@ api.get('/report', (req, res, next) => {
 
 api.get('/month/report', (req, res, next) => {
   validate('month', req.query);
-  let { type, year, month, report_target, report_type } = req.query;
-  let start_date = moment().year(year).month(month-1).startOf('month').toDate();
-  let end_date = moment().year(year).month(month-1).endOf('month').toDate();
+  let { type, report_target, report_type } = req.query;
+  // let start_date = moment().year(year).month(month-1).startOf('month').toDate();
+  // let end_date = moment().year(year).month(month-1).endOf('month').toDate();
   req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
     let is_copyto = false;
     if (type == C.BOX_TYPE.INBOX) {
@@ -72,8 +78,8 @@ api.get('/month/report', (req, res, next) => {
       company_id: req.company._id,
       is_copyto,
       type,
-      start_date,
-      end_date,
+      // start_date,
+      // end_date,
       report_target,
       report_type
     })
@@ -99,6 +105,12 @@ api.get('/report/:report_id', (req, res, next) => {
       } else {
         report_target = memberDepartments;
       }
+    }
+    if (start_date) {
+      start_date = moment(start_date).startOf('day').toDate()
+    }
+    if (end_date) {
+      end_date = moment(end_date).startOf('day').toDate()
     }
     req._app.detail({
       user_id: req.user._id,

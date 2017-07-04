@@ -865,7 +865,7 @@ function generateFileToken(user_id, file_id) {
   });
 }
 
-function attachFileUrls(req, file, thumb_size) {
+export function attachFileUrls(req, file, thumb_size) {
   const qiniu = req.model('qiniu').bucket('cdn-file');
   if (!_.isString(thumb_size)) {
     thumb_size = '32';
