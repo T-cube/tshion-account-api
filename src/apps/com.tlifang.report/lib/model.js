@@ -24,7 +24,8 @@ export default class Report extends AppBase {
           company_id,
           type: item,
           date_report: {
-            $gte: moment().startOf(item).subtract(1, item+'s').toDate()
+            $gte: moment().startOf(item).subtract(1, item+'s').toDate(),
+            $lt: moment().startOf(item).toDate(),
           }
         });
       }),
@@ -35,7 +36,8 @@ export default class Report extends AppBase {
             company_id,
             type: item,
             date_report: {
-              $gte: moment().startOf(item).subtract(1, item+'s').toDate()
+              $gte: moment().startOf(item).subtract(1, item+'s').toDate(),
+              $lt: moment().startOf(item).toDate(),
             }
           });
         }).then(list => {

@@ -2,6 +2,7 @@ import express from 'express';
 import db from 'lib/database';
 import C from 'lib/constants';
 
+import { upload, saveCdn } from 'lib/upload';
 import { validate } from './schema';
 import { oauthCheck } from 'lib/middleware';
 
@@ -20,16 +21,10 @@ api.get('/app', (req, res, next) => {
     sort = { date_update: -1 };
   }
   db.app.find({}, {
-    _id: 1,
-    name: 1,
-    appid: 1,
-    icons: 1,
-    version: 1,
-    star: 1,
-    description: 1,
-    slideshow: 1,
-    author: 1,
-    total_installed: 1,
+    permissions: 0,
+    dependencies: 0,
+    storage: 0,
+    slideshow: 0
   })
   .sort(sort)
   .skip((page - 1) * pagesize)
@@ -38,6 +33,56 @@ api.get('/app', (req, res, next) => {
     res.json(list);
   })
   .catch(next);
+});
+
+api.get('/store/category', (req, res, next) => {
+  Promise.all([
+    db.app.slideshow.find({}).limit(3),
+    db.app
+    .find({}, {
+      permissions: 0,
+      dependencies: 0,
+      storage: 0,
+      slideshow: 0
+    })
+    .sort({ date_update: -1 })
+    .limit(5),
+    db.app
+    .find({}, {
+      permissions: 0,
+      dependencies: 0,
+      storage: 0
+    })
+    .sort({ star: -1 })
+    .limit(5)
+  ])
+  .then(([slideshow, new_apps, top_apps]) => {
+    res.json({
+      slideshow,
+      new_apps,
+      top_apps
+    })
+  })
+});
+
+api.post('/slideshow/upload',
+oauthCheck(),
+upload({type: 'attachment'}).single('document'),
+(req, res, next) => {
+  let file = req.file;
+  if (!file) {
+    throw new ApiError(400, 'file_not_upload');
+  }
+  const qiniu = req.model('qiniu').bucket('cdn-public');
+  qiniu.upload(file.cdn_key, file.path).then(data => {
+    db.app.slideshow.insert({
+      url: `${data.server_url}${file.cdn_key}`,
+      appid: req.body.appid,
+    })
+    .then(doc => {
+      res.json(doc);
+    });
+  });
 });
 
 api.get('/app/:appid', (req, res, next) => {

@@ -73,17 +73,75 @@ OUTPUT:
 [{
   _id: ObjectId,
   appid: <String>,
+  version: <String>,
   name: <String>,
+  name_en: <String>,
+  description: <String>,
   icons: {
     '16': <String>,
     '64': <String>,
     '128': <String>,
   },
-  version: <String>,
   author: <String>,
-  description: <String>,
-  total_installed: Number,
+  url: <String>,
+  update_info: <String>,
+  star: <Number>,
+  total_installed: <Number>,
+  date_create: <Date>,
+  date_update: <Date>,
 }...]
+```
+
+### GET /store/category
+
+OUTPUT:
+```javascript
+{
+  slideshow: [{
+    appid: <String>,
+    url: <String>,
+  }...],
+  new_apps: [{
+    _id: ObjectId,
+    appid: <String>,
+    version: <String>,
+    name: <String>,
+    name_en: <String>,
+    description: <String>,
+    icons: {
+      '16': <String>,
+      '64': <String>,
+      '128': <String>,
+    },
+    author: <String>,
+    url: <String>,
+    update_info: <String>,
+    star: <Number>,
+    total_installed: <Number>,
+    date_create: <Date>,
+    date_update: <Date>,
+  }...],
+  top_apps: [{
+    _id: ObjectId,
+    appid: <String>,
+    version: <String>,
+    name: <String>,
+    name_en: <String>,
+    description: <String>,
+    icons: {
+      '16': <String>,
+      '64': <String>,
+      '128': <String>,
+    },
+    author: <String>,
+    url: <String>,
+    update_info: <String>,
+    star: <Number>,
+    total_installed: <Number>,
+    date_create: <Date>,
+    date_update: <Date>,
+  }...]
+}
 ```
 
 ### GET /app/:appid
