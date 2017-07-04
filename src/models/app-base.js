@@ -151,6 +151,7 @@ export default class Base {
         _id: doc._id,
         name: doc.name,
         url: doc.url,
+        cdn_key: doc.cdn_key,
         mimetype: doc.mimetype,
       };
     });

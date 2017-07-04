@@ -153,8 +153,10 @@ body:
   status: String, //'draft', 'applied'
   attachments: [{
     _id: ObjectId,
-    name: String,
     url: String,
+    mimetype: String,
+    name: String,
+    cdn_key: String,
   }...],
 }
 ```

@@ -4,9 +4,11 @@ import _ from 'underscore';
 import { upload, saveCdn } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import moment from 'moment';
+import Promise from 'bluebird';
 
 import { validate } from './schema';
 import C from './constants';
+import { attachFileUrls } from 'routes/company/document/index';
 
 let api = express.Router();
 export default api;
@@ -126,7 +128,11 @@ api.get('/report/:report_id', (req, res, next) => {
       report_target,
       report_id
     }).then(doc => {
-      res.json(doc);
+      Promise.map(doc.attachments, attachment => {
+        return attachFileUrls(req, attachment)
+      }).then(() => {
+        res.json(doc);
+      })
     }).catch(next);
   }).catch(next);
 });

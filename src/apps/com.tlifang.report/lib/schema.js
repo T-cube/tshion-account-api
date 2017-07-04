@@ -141,7 +141,9 @@ const schema={
           properties: {
             _id: { $objectId: 1 },
             name: { type: 'string' },
+            cdn_key: { type: 'string' },
             url: { type: 'string' },
+            mimetype: { type: 'string' },
           }
         }
       },
@@ -166,7 +168,9 @@ const schema={
           properties: {
             _id: { $objectId: 1 },
             name: { type: 'string' },
+            cdn_key: { type: 'string' },
             url: { type: 'string' },
+            mimetype: { type: 'string' },
           }
         }
       },
