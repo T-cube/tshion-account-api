@@ -99,7 +99,7 @@ OUTPUT:
 {
   slideshow: [{
     appid: <String>,
-    url: <String>,
+    pic_url: <String>,
   }...],
   new_apps: [{
     _id: ObjectId,

@@ -1,6 +1,7 @@
 import express from 'express';
 import db from 'lib/database';
 import C from 'lib/constants';
+import _ from 'underscore';
 
 import { upload, saveCdn } from 'lib/upload';
 import { validate } from './schema';
@@ -37,7 +38,7 @@ api.get('/app', (req, res, next) => {
 
 api.get('/store/category', (req, res, next) => {
   Promise.all([
-    db.app.slideshow.find({}).limit(3),
+    db.app.slideshow.find({}, {pic_url: 1, appid: 1}).limit(3),
     db.app
     .find({}, {
       permissions: 0,
@@ -75,10 +76,13 @@ upload({type: 'attachment'}).single('document'),
   }
   const qiniu = req.model('qiniu').bucket('cdn-public');
   qiniu.upload(file.cdn_key, file.path).then(data => {
-    db.app.slideshow.insert({
-      url: `${data.server_url}${file.cdn_key}`,
-      appid: req.body.appid,
-    })
+    let slide_file = _.extend({}, file,
+      {
+        pic_url: `${data.server_url}${file.cdn_key}`,
+        appid: req.body.appid,
+      }
+    );
+    db.app.slideshow.insert(slide_file)
     .then(doc => {
       res.json(doc);
     });
