@@ -59,9 +59,9 @@ api.get('/store/index', (req, res, next) => {
     .sort({ star: -1 })
     .limit(5),
   ])
-  .then(([slideshow, new_apps, top_apps]) => {
+  .then(([slideshows, new_apps, top_apps]) => {
     res.json({
-      slideshow,
+      slideshows,
       new_apps,
       top_apps,
     });
