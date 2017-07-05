@@ -14,13 +14,13 @@ OUTPUT:
   user_id: ObjectId,
   company_id: ObjectId,
   tags: [{
-    name: <String>,
-    total: <Number>,
+    name: String,
+    total: Number,
     _id: ObjectId
   }...],
   notebooks: [{
-    name: <String>,
-    total: <Number>,
+    name: String,
+    total: Number,
     _id: ObjectId
   }...],
 }
@@ -33,7 +33,7 @@ query:
 ```javascript
 {
   last_id: objectId, //optional, 分页处理，为上一页最后一个笔记的id
-  sort_type: <String>, //title, date_update, notebook, date_create
+  sort_type: String, //title, date_update, notebook, date_create
 }
 ```
 
@@ -45,15 +45,15 @@ OUTPUT:
 ```javascript
 [{
   _id: ObjectId,
-  title: <String>,
-  content: <String>,
+  title: String,
+  content: String,
   tags: [ObjectId...],
   notebook: ObjectId,
   comments: [ObjectId...],
   likes: [ObjectId...],
-  shared: <Boolean>,
-  date_create: <Date>,
-  date_update: <Date>,  
+  shared: Boolean,
+  date_create: Date,
+  date_update: Date,  
 }...]
 ```
 
@@ -65,17 +65,17 @@ OUTPUT:
 ```javascript
 {
   _id: ObjectId,
-  title: <String>,
-  content: <String>,
+  title: String,
+  content: String,
   tags: [ObjectId...],
   notebook: ObjectId,
-  shared: <Boolean>,
+  shared: Boolean,
   comments: [ObjectId...],
-  date_create: <Date>,
-  date_update: <Date>,
+  date_create: Date,
+  date_update: Date,
   likes: [ObjectId...],
-  total_likes: <Integer>,
-  is_like: <Boolean>
+  total_likes: Integer,
+  is_like: Boolean
 }
 ```
 
@@ -87,15 +87,15 @@ OUTPUT:
 ```javascript
 [{
   _id: ObjectId,
-  title: <String>,
-  content: <String>,
+  title: String,
+  content: String,
   tags: [ObjectId...],
   notebook: ObjectId,
   comments: [ObjectId...],
   likes: [ObjectId...],
-  shared: <Boolean>,
-  date_create: <Date>,
-  date_update: <Date>,  
+  shared: Boolean,
+  date_create: Date,
+  date_update: Date,  
 }...]
 ```
 
@@ -109,15 +109,15 @@ OUTPUT:
   _id: ObjectId,
   user_id: ObjectId,
   company_id: ObjectId,
-  title: <String>,
-  content: <String>,
+  title: String,
+  content: String,
   tags: [ObjectId...],
   notebook: ObjectId,
   comments: [ObjectId...],
   likes: [ObjectId...],
-  shared: <Boolean>,
-  date_create: <Date>,
-  date_update: <Date>,  
+  shared: Boolean,
+  date_create: Date,
+  date_update: Date,  
 }...]
 ```
 
@@ -132,8 +132,8 @@ OUTPUT:
   note_id: ObjectId,
   user_id: ObjectId,
   company_id: ObjectId,
-  content: <String>,
-  date_create: <Date>
+  content: String,
+  date_create: Date
 }...]
 ```
 
@@ -144,14 +144,14 @@ OUTPUT:
 request_body:
 ```javascript
 {
-  name: <String>
+  name: String
 }
 ```
 
 OUTPUT:
 ```javascript
 {
-  name: <String>, // tag_name
+  name: String, // tag_name
   _id: ObjectId, // tag_id
 }
 ```
@@ -163,14 +163,14 @@ OUTPUT:
 request_body:
 ```javascript
 {
-  name: <String>
+  name: String
 }
 ```
 
 OUTPUT:
 ```javascript
 {
-  name: <String>, // notebook_name
+  name: String, // notebook_name
   _id: ObjectId, // notebook_id
 }
 ```
@@ -182,11 +182,11 @@ OUTPUT:
 request_body:
 ```javascript
 {
-  title: <String>,
-  content: <String>,
+  title: String,
+  content: String,
   tags:[ObjectId...],
   notebook:ObjectId,
-  shared: <Boolean>
+  shared: Boolean
 }
 ```
 
@@ -197,7 +197,7 @@ request_body:
 request_body:
 ```javascript
 {
-  comment: <String>
+  comment: String
 }
 ```
 
@@ -238,7 +238,7 @@ request_body:
 request_body:
 ```javascript
 {
-  name: <String>,
+  name: String,
 }
 ```
 
@@ -249,7 +249,7 @@ request_body:
 request_body:
 ```javascript
 {
-  name: <String>,
+  name: String,
 }
 ```
 
@@ -260,10 +260,10 @@ request_body:
 request_body:
 ```javascript
 {
-  title: <String>, //optional
-  content: <String>, //optional
+  title: String, //optional
+  content: String, //optional
   notebook: ObjectId, //optional
-  shared: <Boolean>, //optional
+  shared: Boolean, //optional
 }
 ```
 
@@ -295,6 +295,33 @@ request_body:
 request_body:
 ```javascript
 {
-  shared: <Boolean>,
+  shared: Boolean,
 }
 ```
+
+### GET /abandoned
+
+OUTPUT:
+```javascript
+[{
+  _id: ObjectId,
+  title: String,
+  content: String,
+  tags: [ObjectId...],
+  notebook: ObjectId,
+  abandoned: Boolean,
+  comments: [ObjectId...],
+  likes: [ObjectId...],
+  shared: Boolean,
+  date_create: Date,
+  date_update: Date,  
+}...]
+```
+
+### PUT /note/:note_id/abandoned
+
+废弃笔记
+
+### PUT /note/:note_id/recover
+
+恢复笔记

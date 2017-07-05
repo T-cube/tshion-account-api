@@ -282,3 +282,40 @@ api.put('/note/:note_id/shared', (req, res, next) => {
     res.json(doc);
   }).catch(next);
 });
+
+api.get('/abandoned', (req, res, next) => {
+  req._app.abandonList({
+    user_id: req.user._id,
+    company_id: req.company._id,
+  })
+  .then(list => {
+    res.json(list);
+  })
+  .catch(next);
+});
+
+api.put('/note/:note_id/abandoned', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  req._app.noteAbandon({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    note_id: req.params.note_id,
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.put('/note/:note_id/recover', (req, res, next) => {
+  validate('notebook', req.params, ['note_id']);
+  req._app.noteRecover({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    note_id: req.params.note_id,
+  })
+  .then(doc => {
+    res.json(doc);
+  })
+  .catch(next);
+});

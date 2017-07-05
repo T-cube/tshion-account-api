@@ -48,6 +48,7 @@ export default class Notebook extends AppBase {
     let criteria = {
       user_id,
       company_id,
+      abandoned: { $ne: true },
     };
     if (last_id) {
       return this.collection('note')
@@ -100,6 +101,7 @@ export default class Notebook extends AppBase {
       user_id,
       company_id,
       tags: tag_id,
+      abandoned: { $ne: true },
     };
     return this.collection('note')
     .find(criteria, { company_id: 0 })
@@ -113,6 +115,7 @@ export default class Notebook extends AppBase {
       user_id,
       company_id,
       notebook: notebook_id,
+      abandoned: { $ne: true },
     };
     return this.collection('note')
     .find(criteria, { company_id: 0 })
@@ -140,6 +143,7 @@ export default class Notebook extends AppBase {
     return this.collection('note').find({
       company_id,
       shared: true,
+      abandoned: { $ne: true },
     })
     .then(list => {
       _.map(list, item => {
@@ -248,6 +252,7 @@ export default class Notebook extends AppBase {
   likeAdd({note_id, user_id}) {
     return this.collection('note').update({
       _id: note_id
+      abandoned: { $ne: true },
     }, {
       $addToSet: { likes: user_id }
     });
@@ -287,6 +292,9 @@ export default class Notebook extends AppBase {
 
   noteDelete({company_id, user_id, note_id}) {
     return this.collection('note').findOne({ company_id, user_id, _id: note_id }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_user');
+      }
       return Promise.all([
         this.collection('note').remove({ _id: note_id }),
         this.collection('comment').remove({ note_id })
@@ -296,7 +304,8 @@ export default class Notebook extends AppBase {
 
   likeDelete({user_id, note_id}) {
     return this.collection('note').update({
-      _id: note_id
+      _id: note_id,
+      abandoned: { $ne: true },
     }, {
       $pull: { likes: user_id }
     });
@@ -332,6 +341,7 @@ export default class Notebook extends AppBase {
       _id: note_id,
       company_id,
       user_id,
+      abandoned: { $ne: true },
     }, {
       $set: note
     });
@@ -342,6 +352,7 @@ export default class Notebook extends AppBase {
       _id: note_id,
       company_id,
       user_id,
+      abandoned: { $ne: true },
     }, {
       $addToSet: { tags: tag_id }
     });
@@ -352,6 +363,7 @@ export default class Notebook extends AppBase {
       _id: note_id,
       company_id,
       user_id,
+      abandoned: { $ne: true },
     }, {
       $pull: { tags: tag_id }
     });
@@ -362,9 +374,42 @@ export default class Notebook extends AppBase {
       _id: note_id,
       user_id,
       company_id,
+      abandoned: { $ne: true },
     }, {
       $set: {
         shared,
+      }
+    });
+  }
+
+  abandonList({user_id, company_id}) {
+    return this.collection('note').find({
+      user_id,
+      company_id,
+      abandoned: true
+    });
+  }
+
+  noteAbandon({user_id, company_id, note_id}) {
+    return this.collection('note').update({
+      _id: note_id,
+      user_id,
+      company_id,
+    }, {
+      $set: {
+        abandoned: true
+      }
+    });
+  }
+
+  noteRecover({user_id, company_id, note_id}) {
+    return this.collection('note').update({
+      _id: note_id,
+      user_id,
+      company_id,
+    }, {
+      $set: {
+        abandoned: false
       }
     });
   }
