@@ -5,7 +5,7 @@ const schema = {
     sanitization: {
       appid: { type: 'string', rules:['trim'] },
       comment_id: { $objectId: 1 },
-      flag: { type: 'boolean' },
+      enabled: { type: 'boolean' },
       options: {
         type: 'object'
       },
@@ -21,7 +21,7 @@ const schema = {
     validation: {
       appid: { type: 'string', minLength: 1 },
       comment_id: { $objectId: 1 },
-      flag: { type: 'boolean' },
+      enabled: { type: 'boolean' },
       options: {
         type: 'object'
       },

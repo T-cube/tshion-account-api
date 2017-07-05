@@ -35,8 +35,7 @@ api.get('/app', (req, res, next) => {
         version: 1,
         description: 1,
       }).then(app => {
-        item = _.extend({}, app, item);
-        return item;
+        return {...app, ...item};
       });
     }).then(apps => {
       res.json(apps);
@@ -60,7 +59,7 @@ api.post('/app/:appid/add', (req, res, next) => {
           apps: [
             {
               appid,
-              enabled: true
+              enabled: true,
             }
           ]
         }).then(app => {
@@ -71,11 +70,11 @@ api.post('/app/:appid/add', (req, res, next) => {
         if (_.some(doc.apps, item => item.appid == appid)) {
           throw new ApiError(400, 'app_already_install');
         } else {
-          db.company.app.update({
-            company_id
+          return db.company.app.update({
+            company_id,
           }, {
             $push: {
-              apps: {appid, enabled:true}
+              apps: {appid, enabled:true},
             }
           }).then(list => {
             _incTotalInstalled(appid);
@@ -89,7 +88,7 @@ api.post('/app/:appid/add', (req, res, next) => {
 });
 
 
-api.delete('/app/:appid/uninstall', authCheck(), (req, res, next) => {
+api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   let appid = req.params.appid;
   let user_id = req.user._id;
   let company_id = req.company._id;
@@ -122,9 +121,9 @@ api.delete('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.post('/app/:appid/switch', (req, res, next) => {
+api.post('/app/:appid/enabled', (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
-  validate('appRequest', req.body, ['flag']);
+  validate('appRequest', req.body, ['enabled']);
   let { flag } = req.body;
   let { appid } = req.params;
   let company_id = req.company._id;

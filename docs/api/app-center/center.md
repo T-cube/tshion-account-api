@@ -2,75 +2,10 @@
 
 ## 挂载点 /company/:company_id/app-center/
 
-### GET /app
+## 常用数据类型
 
-获得公司app列表
-OUTPUT:
 ```javascript
-{
-  company_id: ObjectId,
-  apps: [{
-    appid: String,
-    enabled: Boolean,
-    name: String,
-    icons: {
-      '16': <String>,
-      '64': <String>,
-      '128': <String>,
-    },
-    version: <String>,
-    description: <String>,
-  }...]
-}
-```
-
-### POST /app/:appid/add
-
-团队拥有者添加app
-
-
-### POST /app/:appid/switch
-
-公司拥有者开启关闭APP
-
-request_body:
-```javascript
-{
-  flag: <Boolean>
-}
-```
-
-### GET /app/:appid/options
-
-获取公司APP设置
-
-### PUT /app/:appid/options
-
-更改公司APP设置
-
-### DELETE /app/:appid/uninstall
-
-公司拥有者卸载APP，需要登录密码校验
-
-
-## 挂载点 /app-center/
-
-### GET /app
-
-获得所有上线APP
-
-query:
-```javascript
-{
-  page: Number, //最小为1 页数
-  pagesize: Number, //最小为1 每页数量
-  type: String, // all 所有的 , new 最新的, top 高分的
-}
-```
-
-OUTPUT:
-```javascript
-[{
+AppData: {
   _id: ObjectId,
   appid: <String>,
   version: <String>,
@@ -89,10 +24,79 @@ OUTPUT:
   total_installed: <Number>,
   date_create: <Date>,
   date_update: <Date>,
-}...]
+};
 ```
 
-### GET /store/category
+### GET /app
+
+获得公司app列表
+OUTPUT:
+```javascript
+{
+  company_id: ObjectId,
+  apps: [{
+    appid: String,
+    enabled: Boolean,
+    name: String,
+    icons: {
+      '16': <String>,
+      '64': <String>,
+      '128': <String>,
+    },
+    version: <String>,
+    description: <String>,
+  }...],
+}
+```
+
+### POST /app/:appid/add
+
+团队拥有者添加app
+
+### POST /app/:appid/enabled
+
+公司拥有者开启关闭APP
+
+request_body:
+```javascript
+{
+  enabled: <Boolean>,
+}
+```
+
+### GET /app/:appid/options
+
+获取公司APP设置
+
+### PUT /app/:appid/options
+
+更改公司APP设置
+
+### POST /app/:appid/uninstall
+
+公司拥有者卸载APP，需要登录密码校验
+
+## 挂载点 /app-center/
+
+### GET /app
+
+获得所有上线APP
+
+query:
+```javascript
+{
+  page: Number, //最小为1 页数
+  pagesize: Number, //最小为1 每页数量
+  type: String, // all 所有的 , new 最新的, top 高分的
+}
+```
+
+OUTPUT:
+```javascript
+[AppData...]
+```
+
+### GET /store/index
 
 OUTPUT:
 ```javascript
@@ -101,46 +105,8 @@ OUTPUT:
     appid: <String>,
     pic_url: <String>,
   }...],
-  new_apps: [{
-    _id: ObjectId,
-    appid: <String>,
-    version: <String>,
-    name: <String>,
-    name_en: <String>,
-    description: <String>,
-    icons: {
-      '16': <String>,
-      '64': <String>,
-      '128': <String>,
-    },
-    author: <String>,
-    url: <String>,
-    update_info: <String>,
-    star: <Number>,
-    total_installed: <Number>,
-    date_create: <Date>,
-    date_update: <Date>,
-  }...],
-  top_apps: [{
-    _id: ObjectId,
-    appid: <String>,
-    version: <String>,
-    name: <String>,
-    name_en: <String>,
-    description: <String>,
-    icons: {
-      '16': <String>,
-      '64': <String>,
-      '128': <String>,
-    },
-    author: <String>,
-    url: <String>,
-    update_info: <String>,
-    star: <Number>,
-    total_installed: <Number>,
-    date_create: <Date>,
-    date_update: <Date>,
-  }...]
+  new_apps: [AppData...],
+  top_apps: [AppData...],
 }
 ```
 

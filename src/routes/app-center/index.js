@@ -3,6 +3,7 @@ import db from 'lib/database';
 import C from 'lib/constants';
 import _ from 'underscore';
 
+import { ApiError } from 'lib/error';
 import { upload, saveCdn } from 'lib/upload';
 import { validate } from './schema';
 import { oauthCheck } from 'lib/middleware';
@@ -25,7 +26,7 @@ api.get('/app', (req, res, next) => {
     permissions: 0,
     dependencies: 0,
     storage: 0,
-    slideshow: 0
+    slideshow: 0,
   })
   .sort(sort)
   .skip((page - 1) * pagesize)
@@ -36,7 +37,7 @@ api.get('/app', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/store/category', (req, res, next) => {
+api.get('/store/index', (req, res, next) => {
   Promise.all([
     db.app.slideshow.find({}, {pic_url: 1, appid: 1}).limit(3),
     db.app
@@ -44,7 +45,7 @@ api.get('/store/category', (req, res, next) => {
       permissions: 0,
       dependencies: 0,
       storage: 0,
-      slideshow: 0
+      slideshow: 0,
     })
     .sort({ date_update: -1 })
     .limit(5),
@@ -52,18 +53,20 @@ api.get('/store/category', (req, res, next) => {
     .find({}, {
       permissions: 0,
       dependencies: 0,
-      storage: 0
+      storage: 0,
+      slideshow: 0,
     })
     .sort({ star: -1 })
-    .limit(5)
+    .limit(5),
   ])
   .then(([slideshow, new_apps, top_apps]) => {
     res.json({
       slideshow,
       new_apps,
-      top_apps
-    })
+      top_apps,
+    });
   })
+  .catch(next);
 });
 
 api.post('/slideshow/upload',
