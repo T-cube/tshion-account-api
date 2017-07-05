@@ -251,7 +251,7 @@ export default class Notebook extends AppBase {
 
   likeAdd({note_id, user_id}) {
     return this.collection('note').update({
-      _id: note_id
+      _id: note_id,
       abandoned: { $ne: true },
     }, {
       $addToSet: { likes: user_id }
