@@ -36,7 +36,7 @@ const schema = {
     },
     validation: {
       page: { type: 'integer', gte: 1 },
-      pagesize: { type: 'integer', gte: 1 },
+      pagesize: { type: 'integer', gte: 1, lte: 100 },
       type: { $enum: ENUMS.APP_LIST_TYPE },
     }
   }

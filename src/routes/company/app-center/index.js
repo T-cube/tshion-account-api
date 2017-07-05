@@ -89,7 +89,7 @@ api.post('/app/:appid/add', (req, res, next) => {
 });
 
 
-api.delete('/app/:appid/uninstall', authCheck(), (req, res, next) => {
+api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   let appid = req.params.appid;
   let user_id = req.user._id;
   let company_id = req.company._id;
