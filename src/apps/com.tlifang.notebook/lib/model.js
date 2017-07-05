@@ -140,14 +140,6 @@ export default class Notebook extends AppBase {
     return this.collection('note').find({
       company_id,
       shared: true,
-    }, {
-      _id: 1,
-      title: 1,
-      content: 1,
-      tags: 1,
-      notebook: 1,
-      comments: 1,
-      likes: 1,
     })
     .then(list => {
       _.map(list, item => {
