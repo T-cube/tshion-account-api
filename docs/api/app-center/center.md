@@ -2,6 +2,31 @@
 
 ## 挂载点 /company/:company_id/app-center/
 
+## 常用数据类型
+
+```javascript
+AppData: {
+  _id: ObjectId,
+  appid: <String>,
+  version: <String>,
+  name: <String>,
+  name_en: <String>,
+  description: <String>,
+  icons: {
+    '16': <String>,
+    '64': <String>,
+    '128': <String>,
+  },
+  author: <String>,
+  url: <String>,
+  update_info: <String>,
+  star: <Number>,
+  total_installed: <Number>,
+  date_create: <Date>,
+  date_update: <Date>,
+};
+```
+
 ### GET /app
 
 获得公司app列表
@@ -20,7 +45,7 @@ OUTPUT:
     },
     version: <String>,
     description: <String>,
-  }...]
+  }...],
 }
 ```
 
@@ -28,15 +53,14 @@ OUTPUT:
 
 团队拥有者添加app
 
-
-### POST /app/:appid/switch
+### POST /app/:appid/enabled
 
 公司拥有者开启关闭APP
 
 request_body:
 ```javascript
 {
-  flag: <Boolean>
+  enabled: <Boolean>,
 }
 ```
 
@@ -69,26 +93,7 @@ query:
 
 OUTPUT:
 ```javascript
-[{
-  _id: ObjectId,
-  appid: <String>,
-  version: <String>,
-  name: <String>,
-  name_en: <String>,
-  description: <String>,
-  icons: {
-    '16': <String>,
-    '64': <String>,
-    '128': <String>,
-  },
-  author: <String>,
-  url: <String>,
-  update_info: <String>,
-  star: <Number>,
-  total_installed: <Number>,
-  date_create: <Date>,
-  date_update: <Date>,
-}...]
+[AppData...]
 ```
 
 ### GET /store/index
@@ -100,46 +105,8 @@ OUTPUT:
     appid: <String>,
     pic_url: <String>,
   }...],
-  new_apps: [{
-    _id: ObjectId,
-    appid: <String>,
-    version: <String>,
-    name: <String>,
-    name_en: <String>,
-    description: <String>,
-    icons: {
-      '16': <String>,
-      '64': <String>,
-      '128': <String>,
-    },
-    author: <String>,
-    url: <String>,
-    update_info: <String>,
-    star: <Number>,
-    total_installed: <Number>,
-    date_create: <Date>,
-    date_update: <Date>,
-  }...],
-  top_apps: [{
-    _id: ObjectId,
-    appid: <String>,
-    version: <String>,
-    name: <String>,
-    name_en: <String>,
-    description: <String>,
-    icons: {
-      '16': <String>,
-      '64': <String>,
-      '128': <String>,
-    },
-    author: <String>,
-    url: <String>,
-    update_info: <String>,
-    star: <Number>,
-    total_installed: <Number>,
-    date_create: <Date>,
-    date_update: <Date>,
-  }...]
+  new_apps: [AppData...],
+  top_apps: [AppData...],
 }
 ```
 
