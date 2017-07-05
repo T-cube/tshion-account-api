@@ -48,41 +48,39 @@ api.post('/app/:appid/add', (req, res, next) => {
   let appid = req.params.appid;
   let user_id = req.user._id;
   let company_id = req.company._id;
-  db.company.findOne({_id: company_id}).then(company => {
-    if (!user_id.equals(company.owner)) {
-      throw new ApiError('400', 'not_company_owner');
-    }
-    db.company.app.findOne({company_id}).then(doc => {
-      if (!doc) {
-        return db.company.app.insert({
-          company_id,
-          apps: [
-            {
-              appid,
-              enabled: true,
-            }
-          ]
-        }).then(app => {
-          _incTotalInstalled(appid);
-          res.json(app);
-        });
+  if (!user_id.equals(req.company.owner)) {
+    throw new ApiError(400, 'not_company_owner');
+  }
+  db.company.app.findOne({company_id}).then(doc => {
+    if (!doc) {
+      return db.company.app.insert({
+        company_id,
+        apps: [
+          {
+            appid,
+            enabled: true,
+          }
+        ]
+      }).then(app => {
+        _incTotalInstalled(appid);
+        res.json(app);
+      });
+    } else {
+      if (_.some(doc.apps, item => item.appid == appid)) {
+        throw new ApiError(400, 'app_already_install');
       } else {
-        if (_.some(doc.apps, item => item.appid == appid)) {
-          throw new ApiError(400, 'app_already_install');
-        } else {
-          return db.company.app.update({
-            company_id,
-          }, {
-            $push: {
-              apps: {appid, enabled:true},
-            }
-          }).then(list => {
-            _incTotalInstalled(appid);
-            res.json(list);
-          });
-        }
+        return db.company.app.update({
+          company_id,
+        }, {
+          $push: {
+            apps: {appid, enabled:true},
+          }
+        }).then(list => {
+          _incTotalInstalled(appid);
+          res.json(list);
+        });
       }
-    });
+    }
   })
   .catch(next);
 });
@@ -92,33 +90,30 @@ api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   let appid = req.params.appid;
   let user_id = req.user._id;
   let company_id = req.company._id;
-  db.company.findOne({_id: company_id}).then(company => {
-    if (!user_id.equals(company.owner)) {
-      throw new ApiError('400', 'not_company_owner');
-    }
-    db.company.app.update({
-      company_id
-    }, {
-      $pull: { apps: { appid } }
-    })
-    .then(() => {
-      let info = require(`${SRC_ROOT_DIR}/apps/${appid}/manifest`);
-      let data_base_list = info.storage.mongo;
-      Promise.map(data_base_list, item => {
-        return db.collection(`app.store.${appid}.${item}`).remove({
-          company_id,
-        });
-      }).then(() => {
-        db.app.update({
-          appid,
-        }, {
-          $inc: { total_installed: -1 }
-        });
-        res.json({});
-      });
-    });
+  if (!user_id.equals(req.company.owner)) {
+    throw new ApiError('400', 'not_company_owner');
+  }
+  db.company.app.update({
+    company_id
+  }, {
+    $pull: { apps: { appid } }
   })
-  .catch(next);
+  .then(() => {
+    let info = require(`${SRC_ROOT_DIR}/apps/${appid}/manifest`);
+    let data_base_list = info.storage.mongo;
+    Promise.map(data_base_list, item => {
+      return db.collection(`app.store.${appid}.${item}`).remove({
+        company_id,
+      });
+    }).then(() => {
+      db.app.update({
+        appid,
+      }, {
+        $inc: { total_installed: -1 }
+      });
+      res.json({});
+    });
+  });
 });
 
 api.post('/app/:appid/enabled', (req, res, next) => {
