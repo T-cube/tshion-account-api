@@ -21,6 +21,8 @@ OUTPUT:
   notebooks: [{
     name: String,
     total: Number,
+    date_update: Date,
+    abandoned: Boolean, // only delte notebook will be true, DO NOT SHOW IN UI, recover note will recover notebook if note's notebook is abandoned
     _id: ObjectId
   }...],
 }

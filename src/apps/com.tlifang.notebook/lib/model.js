@@ -27,13 +27,13 @@ export default class Notebook extends AppBase {
       }
       return Promise.all([
         Promise.map(doc.tags, item => {
-          return this.collection('note').count({tags: item._id}).then(count => {
+          return this.collection('note').count({tags: item._id, abandoned: { $ne: true }}).then(count => {
             item.total = count;
             return item;
           });
         }),
         Promise.map(doc.notebooks, item => {
-          return this.collection('note').count({notebook: item._id}).then(count => {
+          return this.collection('note').count({notebook: item._id, abandoned: { $ne: true }}).then(count => {
             item.total = count;
             return item;
           });
@@ -279,13 +279,18 @@ export default class Notebook extends AppBase {
     return this.collection('user').update({
       user_id,
       company_id,
+      'notebooks._id': notebook_id
     }, {
-      $pull: { notebooks: { _id: notebook_id } }
+      $set: {
+        'notebooks.$.abandoned': true
+      }
     }).then(() => {
-      return this.collection('note').remove({
+      return this.collection('note').update({
         user_id,
         company_id,
         notebook: notebook_id
+      }, {
+        $set: { abandoned: true },
       });
     });
   }
@@ -403,13 +408,38 @@ export default class Notebook extends AppBase {
   }
 
   noteRecover({user_id, company_id, note_id}) {
-    return this.collection('note').update({
-      _id: note_id,
-      user_id,
-      company_id,
-    }, {
-      $set: {
-        abandoned: false
+    return Promise.all([
+      this.collection('note').update({
+        _id: note_id,
+        user_id,
+        company_id,
+      }, {
+        $set: {
+          abandoned: false
+        }
+      }),
+      this.collection('note').findOne({
+        _id: note_id,
+        user_id,
+        company_id,
+      }),
+      this.collection('user').findOne({
+        user_id,
+        company_id,
+      })
+    ]).then(([updated, note, user_info]) => {
+      if (!note || !user_info || !_.some(user_info.notebooks, item => item._id.equals(note.notebook) && item.abandoned )) {
+        return;
+      } else {
+        return this.collection('user').update({
+          user_id,
+          company_id,
+          'notebooks._id': notebook_id
+        }, {
+          $set: {
+            'notebooks.$.abandoned': false
+          }
+        });
       }
     });
   }
