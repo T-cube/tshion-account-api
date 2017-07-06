@@ -24,21 +24,8 @@ api.get('/app', (req, res, next) => {
         res.json(inserted);
       });
     }
-    return Promise.map(doc.apps, item => {
-      return db.app.findOne({
-        appid: item.appid
-      }, {
-        _id: 1,
-        name: 1,
-        appid: 1,
-        icons: 1,
-        version: 1,
-        description: 1,
-      }).then(app => {
-        return {...app, ...item};
-      });
-    }).then(apps => {
-      res.json(apps);
+    return _mapCompanyAppList(doc).then(list => {
+      res.json(list);
     });
   }).catch(next);
 });
@@ -75,9 +62,13 @@ api.post('/app/:appid/add', (req, res, next) => {
           $push: {
             apps: {appid, enabled:true},
           }
-        }).then(list => {
+        }).then(() => {
           _incTotalInstalled(appid);
-          res.json(list);
+          return db.company.app.findOne({company_id}).then(list => {
+            return _mapCompanyAppList(list).then(data => {
+              res.json(data);
+            });
+          });
         });
       }
     }
@@ -101,7 +92,7 @@ api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   .then(() => {
     let info = require(`${SRC_ROOT_DIR}/apps/${appid}/manifest`);
     let data_base_list = info.storage.mongo;
-    Promise.map(data_base_list, item => {
+    return Promise.map(data_base_list, item => {
       return db.collection(`app.store.${appid}.${item}`).remove({
         company_id,
       });
@@ -113,7 +104,8 @@ api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
       });
       res.json({});
     });
-  });
+  })
+  .catch(next);
 });
 
 api.post('/app/:appid/enabled', (req, res, next) => {
@@ -180,5 +172,26 @@ function _incTotalInstalled(appid) {
     appid,
   }, {
     $inc: { total_installed: 1 }
+  });
+}
+
+function _mapCompanyAppList(company) {
+  return Promise.map(company.apps, item => {
+    return db.app.findOne({
+      appid: item.appid
+    }, {
+      _id: 1,
+      name: 1,
+      appid: 1,
+      icons: 1,
+      version: 1,
+      description: 1,
+    }).then(app => {
+      return {...app, ...item};
+    });
+  })
+  .then(list => {
+    company.apps = list;
+    return company;
   });
 }

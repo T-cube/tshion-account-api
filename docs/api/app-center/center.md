@@ -53,6 +53,25 @@ OUTPUT:
 
 团队拥有者添加app
 
+OUTPUT:
+```javascript
+{
+  company_id: ObjectId,
+  apps: [{
+    appid: String,
+    enabled: Boolean,
+    name: String,
+    icons: {
+      '16': <String>,
+      '64': <String>,
+      '128': <String>,
+    },
+    version: <String>,
+    description: <String>,
+  }...],
+}
+```
+
 ### POST /app/:appid/enabled
 
 公司拥有者开启关闭APP

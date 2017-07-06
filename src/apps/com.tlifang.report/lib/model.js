@@ -203,7 +203,7 @@ export default class Report extends AppBase {
     })
     .then(list => {
       _.map(list, item => {
-        item.date = moment(item.date_report).get('date');
+        item.date = moment(item.date_report).toDate();
         delete item.date_report;
         return item;
       });
