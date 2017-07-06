@@ -20,12 +20,12 @@ api.get('/app', (req, res, next) => {
       return db.company.app.insert({
         company_id,
         apps: []
-      }).then(inserted => {
-        res.json(inserted);
+      }).then(() => {
+        res.json([]);
       });
     }
-    return _mapCompanyAppList(doc).then(list => {
-      res.json(list);
+    return _mapCompanyAppList(doc).then(company => {
+      res.json(company.apps);
     });
   }).catch(next);
 });
@@ -64,10 +64,18 @@ api.post('/app/:appid/add', (req, res, next) => {
           }
         }).then(() => {
           _incTotalInstalled(appid);
-          return db.company.app.findOne({company_id}).then(list => {
-            return _mapCompanyAppList(list).then(data => {
-              res.json(data);
-            });
+          return db.app.findOne({
+            appid
+          }, {
+            _id: 1,
+            name: 1,
+            appid: 1,
+            icons: 1,
+            version: 1,
+            description: 1,
+          }).then(app => {
+            app.enabled = true;
+            res.json(app);
           });
         });
       }

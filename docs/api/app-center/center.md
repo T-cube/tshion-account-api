@@ -32,21 +32,18 @@ AppData: {
 获得公司app列表
 OUTPUT:
 ```javascript
-{
-  company_id: ObjectId,
-  apps: [{
-    appid: String,
-    enabled: Boolean,
-    name: String,
-    icons: {
-      '16': <String>,
-      '64': <String>,
-      '128': <String>,
-    },
-    version: <String>,
-    description: <String>,
-  }...],
-}
+[{
+  appid: String,
+  enabled: Boolean,
+  name: String,
+  icons: {
+    '16': <String>,
+    '64': <String>,
+    '128': <String>,
+  },
+  version: <String>,
+  description: <String>,
+}...]
 ```
 
 ### POST /app/:appid/add
@@ -56,19 +53,16 @@ OUTPUT:
 OUTPUT:
 ```javascript
 {
-  company_id: ObjectId,
-  apps: [{
-    appid: String,
-    enabled: Boolean,
-    name: String,
-    icons: {
-      '16': <String>,
-      '64': <String>,
-      '128': <String>,
-    },
-    version: <String>,
-    description: <String>,
-  }...],
+  appid: String,
+  enabled: Boolean,
+  name: String,
+  icons: {
+    '16': <String>,
+    '64': <String>,
+    '128': <String>,
+  },
+  version: <String>,
+  description: <String>,
 }
 ```
 
