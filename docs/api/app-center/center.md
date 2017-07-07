@@ -165,9 +165,10 @@ OUTPUT:
 [{
   appid: ObjectId,
   app_version: <String>,
-  user_id: ObjectId,
-  user_name: <String>,
-  user_avatar: <String>,
+  user: {
+    avatar: String,
+    name: String,
+  },
   star: <Number>,
   content: <String>,
   total_likes: <Number>,
@@ -186,15 +187,16 @@ OUTPUT:
 [{
   appid: ObjectId,
   app_version: <String>,
-  user_id: ObjectId,
-  user_name: <String>,
-  user_avatar: <String>,
+  user: {
+    avatar: String,
+    name: String,
+  },
   star: <Number>,
   content: <String>,
   total_likes: <Number>,
   is_like: <Boolean>,
   date_create: Date,
-  date_update: Date, 
+  date_update: Date,
 }...]
 ```
 

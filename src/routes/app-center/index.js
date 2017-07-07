@@ -7,6 +7,7 @@ import { ApiError } from 'lib/error';
 import { upload, saveCdn } from 'lib/upload';
 import { validate } from './schema';
 import { oauthCheck } from 'lib/middleware';
+import { mapObjectIdToData } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -104,23 +105,26 @@ api.get('/app/:appid', (req, res, next) => {
 api.get('/app/:appid/comment', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   let { appid } = req.params;
-  let user_id = req.user._id;
+  let user = req.user._id;
   db.app.comment.aggregate([
     { $match: {appid} },
     {
       $project: {
         appid: 1,
         app_version: 1,
-        user_id: 1,
+        user: 1,
         star: 1,
         content: 1,
         total_likes: { $size: '$likes'},
         is_like: {
-          $in: [user_id, '$likes']
+          $in: [user, '$likes']
         }
       }
     }
   ]).then(list => {
+    return mapObjectIdToData(list, 'user', 'name,avatar', 'user');
+  })
+  .then(list => {
     res.json(list);
   })
   .catch(next);
@@ -129,12 +133,12 @@ api.get('/app/:appid/comment', oauthCheck(), (req, res, next) => {
 api.put('/app/:appid/comment/:comment_id/like', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid', 'comment_id']);
   let { appid, comment_id } = req.params;
-  let user_id = req.user._id;
+  let user = req.user._id;
   db.app.comment.update({
     _id: comment_id
   }, {
     $push: {
-      likes: user_id
+      likes: user
     }
   })
   .then(doc => res.json(doc))
@@ -144,12 +148,12 @@ api.put('/app/:appid/comment/:comment_id/like', oauthCheck(), (req, res, next) =
 api.delete('/app/:appid/comment/:comment_id/like', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid', 'comment_id']);
   let { appid, comment_id } = req.params;
-  let user_id = req.user._id;
+  let user = req.user._id;
   db.app.comment.update({
     _id: comment_id
   }, {
     $pull: {
-      likes: user_id
+      likes: user
     }
   })
   .then(doc => res.json(doc))
@@ -159,15 +163,15 @@ api.delete('/app/:appid/comment/:comment_id/like', oauthCheck(), (req, res, next
 api.get('/app/:appid/user/comment', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   let { appid } = req.params;
-  let user_id = req.user._id;
+  let user = req.user._id;
   db.app.comment.find({
     appid,
-    user_id
+    user
   })
   .then(list => {
     _.map(list, item => {
       item.total_likes = item.likes.length;
-      item.is_like = _.some(item.likes, l => l.equals(user_id));
+      item.is_like = _.some(item.likes, l => l.equals(user));
       delete item.likes;
       return item;
     });
@@ -180,7 +184,7 @@ api.post('/app/:appid/comment', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['comment']);
   let { appid } = req.params;
-  let user_id = req.user._id;
+  let user = req.user._id;
   let { star, content } = req.body;
   let app;
   db.app.findOne({
@@ -189,7 +193,7 @@ api.post('/app/:appid/comment', oauthCheck(), (req, res, next) => {
   .then(doc => {
     app = doc;
     return db.app.comment.findOne({
-      user_id,
+      user,
       appid,
       app_version: app.version
     });
@@ -206,9 +210,7 @@ api.post('/app/:appid/comment', oauthCheck(), (req, res, next) => {
     } else {
       return db.app.comment.insert({
         app_version: app.version,
-        user_id,
-        user_avatar: req.user.avatar,
-        user_name: req.user.name,
+        user,
         appid,
         star,
         content,
