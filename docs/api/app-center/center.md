@@ -172,6 +172,29 @@ OUTPUT:
   content: <String>,
   total_likes: <Number>,
   is_like: <Boolean>,
+  date_create: Date,
+  date_update: Date,  
+}...]
+```
+
+### GET /app/:appid/user/comment
+
+获取用户对app的所有评论
+
+OUTPUT:
+```javascript
+[{
+  appid: ObjectId,
+  app_version: <String>,
+  user_id: ObjectId,
+  user_name: <String>,
+  user_avatar: <String>,
+  star: <Number>,
+  content: <String>,
+  total_likes: <Number>,
+  is_like: <Boolean>,
+  date_create: Date,
+  date_update: Date, 
 }...]
 ```
 
@@ -192,5 +215,12 @@ request_body:
 {
   star: <Number>,
   content: <String>
+}
+```
+
+OUTPUT:
+```javascript
+{
+  star: Number
 }
 ```

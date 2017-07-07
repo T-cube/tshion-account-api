@@ -156,35 +156,76 @@ api.delete('/app/:appid/comment/:comment_id/like', oauthCheck(), (req, res, next
   .catch(next);
 });
 
+api.get('/app/:appid/user/comment', oauthCheck(), (req, res, next) => {
+  validate('appRequest', req.params, ['appid']);
+  let { appid } = req.params;
+  let user_id = req.user._id;
+  db.app.comment.find({
+    appid,
+    user_id
+  })
+  .then(list => {
+    _.map(list, item => {
+      item.total_likes = item.likes.length;
+      item.is_like = _.some(item.likes, l => l.equals(user_id));
+      delete item.likes;
+      return item;
+    });
+    res.json(list);
+  })
+  .catch(next);
+});
+
 api.post('/app/:appid/comment', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['comment']);
   let { appid } = req.params;
   let user_id = req.user._id;
   let { star, content } = req.body;
+  let app;
   db.app.findOne({
     appid
   })
   .then(doc => {
-    db.app.comment.insert({
-      app_version: doc.version,
+    app = doc;
+    return db.app.comment.findOne({
       user_id,
-      user_avatar: req.user.avatar,
-      user_name: req.user.name,
       appid,
-      star,
-      content,
-      likes: [],
-      date_create: new Date()
-    }).then(doc => {
-      res.json(doc);
-      db.app.comment.count({appid}).then(counts => {
-        db.app.findOne({appid}).then(app => {
-          let score = app.star - (app.star - star)/counts;
-          db.app.update({ appid }, { $set: { star: score }});
-        });
-      });
+      app_version: app.version
     });
+  })
+  .then(comment => {
+    if (comment) {
+      return db.app.comment.update({
+        _id: comment._id
+      }, {
+        star,
+        content,
+        date_update: new Date(),
+      });
+    } else {
+      return db.app.comment.insert({
+        app_version: app.version,
+        user_id,
+        user_avatar: req.user.avatar,
+        user_name: req.user.name,
+        appid,
+        star,
+        content,
+        likes: [],
+        date_create: new Date(),
+        date_update: new Date(),
+      });
+    }
+  })
+  .then(() => {
+    return db.app.comment.count({appid});
+  })
+  .then(counts => {
+    let score = app.star + (star - app.star)/counts;
+    res.json({star: score});
+    // TODO: may find a new method like $inc instead $set for summary correctly
+    db.app.update({appid}, { $set: { star: score }});
   })
   .catch(next);
 });
