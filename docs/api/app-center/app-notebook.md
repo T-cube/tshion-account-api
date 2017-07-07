@@ -101,9 +101,15 @@ OUTPUT:
 }...]
 ```
 
-### GET /shared
+### GET /shared/all
 
 获取团队内所有分享笔记
+query:
+```javascript
+{
+  last_id: objectId, //optional
+}
+```
 
 OUTPUT:
 ```javascript
@@ -123,7 +129,36 @@ OUTPUT:
 }...]
 ```
 
-### GET /note/:note_id/comments
+### GET /shared/member/:member_id
+
+获取团队内所有分享笔记
+query:
+```javascript
+{
+  last_id: objectId, //optional
+  member_id: objectId,
+}
+```
+
+OUTPUT:
+```javascript
+[{
+  _id: ObjectId,
+  user_id: ObjectId,
+  company_id: ObjectId,
+  title: String,
+  content: String,
+  tags: [ObjectId...],
+  notebook: ObjectId,
+  comments: [ObjectId...],
+  likes: [ObjectId...],
+  shared: Boolean,
+  date_create: Date,
+  date_update: Date,  
+}...]
+```
+
+### GET /note/:note_id/comment
 
 获取指定note_id的所有评论
 

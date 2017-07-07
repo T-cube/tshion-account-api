@@ -65,9 +65,25 @@ api.get('/notebook/:notebook_id/note', (req, res, next) => {
   }).catch(next);
 });
 
-api.get('/shared', (req, res, next) => {
+api.get('/shared/all', (req, res, next) => {
+  validate('member', req.query, ['last_id']);
   req._app.sharedQuery({
-    company_id: req.company._id
+    user_id: req.user._id,
+    company_id: req.company._id,
+    last_id: req.query.last_id,
+  }).then(list => {
+    res.json(list);
+  }).catch(next);
+});
+
+api.get('/shared/member/:member_id', (req, res, next) => {
+  validate('member', req.params, ['member_id']);
+  validate('member', req.query, ['last_id']);
+  req._app.sharedQuery({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    last_id: req.query.last_id,
+    member_id: req.params.member_id,
   }).then(list => {
     res.json(list);
   }).catch(next);

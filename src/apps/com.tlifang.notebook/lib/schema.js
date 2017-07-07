@@ -11,6 +11,16 @@ const schema = {
       sort_type: { $enum: ['date_update', 'date_create', 'notebook', 'title'] },
     }
   },
+  member: {
+    sanitization: {
+      member_id: { $objectId: 1 },
+      last_id: { $objectId: 1, optional: true },
+    },
+    validation: {
+      member_id: { $objectId: 1 },
+      last_id: { $objectId: 1, optional: true },
+    }
+  },
   note: {
     sanitization: {
       title: { type: 'string', rules:['trim'] },

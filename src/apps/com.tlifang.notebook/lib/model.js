@@ -139,12 +139,21 @@ export default class Notebook extends AppBase {
     });
   }
 
-  sharedQuery({user_id, company_id}) {
-    return this.collection('note').find({
+  sharedQuery({user_id, company_id, last_id, member_id}) {
+    let criteria = {
       company_id,
       shared: true,
       abandoned: { $ne: true },
-    })
+    };
+    if (last_id) {
+      criteria._id = { $lt: last_id };
+    }
+    if (member_id) {
+      criteria.user_id = member_id;
+    }
+    return this.collection('note').find(criteria)
+    .sort({_id: -1})
+    .limit(10)
     .then(list => {
       _.map(list, item => {
         item.total_likes = item.likes.length;
@@ -155,7 +164,7 @@ export default class Notebook extends AppBase {
     });
   }
 
-  commentsQuery({company_id, note_id}) {
+  commentQuery({company_id, note_id}) {
     return this.collection('comment').find({ company_id, note_id });
   }
 
