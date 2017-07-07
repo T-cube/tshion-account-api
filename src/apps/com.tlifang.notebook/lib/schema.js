@@ -11,14 +11,16 @@ const schema = {
       sort_type: { $enum: ['date_update', 'date_create', 'notebook', 'title'] },
     }
   },
-  member: {
+  share: {
     sanitization: {
       member_id: { $objectId: 1 },
       last_id: { $objectId: 1, optional: true },
+      sort_type: { type: 'string' },
     },
     validation: {
       member_id: { $objectId: 1 },
       last_id: { $objectId: 1, optional: true },
+      sort_type: { $enum: ['date_update', 'date_create', 'likes', 'title'] },
     }
   },
   note: {

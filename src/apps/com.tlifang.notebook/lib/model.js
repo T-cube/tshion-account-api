@@ -139,29 +139,64 @@ export default class Notebook extends AppBase {
     });
   }
 
-  sharedQuery({user_id, company_id, last_id, member_id}) {
+  sharedQuery({user_id, company_id, last_id, member_id, sort_type}) {
     let criteria = {
       company_id,
       shared: true,
       abandoned: { $ne: true },
     };
-    if (last_id) {
-      criteria._id = { $lt: last_id };
-    }
     if (member_id) {
       criteria.user_id = member_id;
     }
-    return this.collection('note').find(criteria)
-    .sort({_id: -1})
-    .limit(10)
-    .then(list => {
-      _.map(list, item => {
-        item.total_likes = item.likes.length;
-        item.is_like = _.some(item.likes, user => user.equals(user_id));
-        return item;
+    if (last_id) {
+      criteria._id = { $lt: last_id };
+      return this.collection('note')
+      .find(criteria, {
+        _id: 1,
+      })
+      .sort({ [sort_type]: -1 })
+      .then(list => {
+        let id_index;
+        for (let i = 0; i < list.length; i++) {
+          if (list[i]._id.equals(last_id)) {
+            id_index = i;
+            break;
+          }
+          if (i == list.length - 1) {
+            if (!id_index) {
+              throw new ApiError(400, 'invalid_last_id');
+            }
+          }
+        }
+        let target_list = list.slice(id_index, id_index + 10);
+        return Promise.map(target_list, item => {
+          return this.collection('note')
+          .findOne({
+            _id: item._id,
+          })
+          .then(doc => {
+            doc.total_likes = doc.likes.length;
+            doc.is_like = _.some(doc.likes, user => user.equals(user_id));
+            return doc;
+          });
+        })
+        .then(data => {
+          return data;
+        });
       });
-      return list;
-    });
+    } else {
+      return this.collection('note').find(criteria)
+      .sort({_id: -1})
+      .limit(10)
+      .then(list => {
+        _.map(list, item => {
+          item.total_likes = item.likes.length;
+          item.is_like = _.some(item.likes, user => user.equals(user_id));
+          return item;
+        });
+        return list;
+      });
+    }
   }
 
   commentQuery({company_id, note_id}) {

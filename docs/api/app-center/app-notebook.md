@@ -104,10 +104,12 @@ OUTPUT:
 ### GET /shared/all
 
 获取团队内所有分享笔记
+
 query:
 ```javascript
 {
   last_id: objectId, //optional
+  sort_type: String, //title, date_update, likes, date_create
 }
 ```
 
@@ -132,11 +134,12 @@ OUTPUT:
 ### GET /shared/member/:member_id
 
 获取团队内所有分享笔记
+
 query:
 ```javascript
 {
   last_id: objectId, //optional
-  member_id: objectId,
+  sort_type: String, //title, date_update, likes, date_create
 }
 ```
 

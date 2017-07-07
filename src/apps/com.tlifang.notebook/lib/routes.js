@@ -66,7 +66,7 @@ api.get('/notebook/:notebook_id/note', (req, res, next) => {
 });
 
 api.get('/shared/all', (req, res, next) => {
-  validate('member', req.query, ['last_id']);
+  validate('share', req.query, ['last_id', 'sort_type']);
   req._app.sharedQuery({
     user_id: req.user._id,
     company_id: req.company._id,
@@ -77,8 +77,8 @@ api.get('/shared/all', (req, res, next) => {
 });
 
 api.get('/shared/member/:member_id', (req, res, next) => {
-  validate('member', req.params, ['member_id']);
-  validate('member', req.query, ['last_id']);
+  validate('share', req.params, ['member_id']);
+  validate('share', req.query, ['last_id', 'sort_type']);
   req._app.sharedQuery({
     user_id: req.user._id,
     company_id: req.company._id,
