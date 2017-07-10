@@ -168,19 +168,17 @@ export default class Report extends AppBase {
           _.extend({}, criteria, {date_report: { $lt: report.date_report }}), {
             _id: 1,
           }
-        )
-        .sort({date_report: -1}),
+        ),
         this.collection('item')
         .findOne(
           _.extend({}, criteria, {date_report: { $gt: report.date_report }}), {
             _id: 1,
           }
-        )
-        .sort({date_report: -1}),
+        ),
       ])
       .then(([prev_report, next_report]) => {
-        report.prevId = prev_report._id;
-        report.nextId = next_report._id;
+        report.prevId = prev_report ? prev_report._id : null;
+        report.nextId = next_report ? next_report._id : null;
         return report;
       });
     });

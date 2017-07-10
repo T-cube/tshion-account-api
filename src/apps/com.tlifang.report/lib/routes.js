@@ -125,7 +125,9 @@ saveCdn('cdn-file'),
   let user_id = req.user._id;
   let company_id = req.company._id;
   req._app.uploadSave(file, user_id, company_id).then(doc => {
-    res.json(doc);
+    return attachFileUrls(req, doc).then(() => {
+      res.json(doc);
+    });
   }).catch(next);
 });
 

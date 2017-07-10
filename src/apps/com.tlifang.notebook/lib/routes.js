@@ -13,6 +13,24 @@ api.get('/user', (req, res, next) => {
   }).catch(next);
 });
 
+api.get('/tag', (req, res, next) => {
+  req._app.listTag({
+    company_id: req.company._id,
+    user_id: req.user._id
+  }).then(tags => {
+    res.json(tags);
+  }).catch(next);
+});
+
+api.get('/notebook', (req, res, next) => {
+  req._app.listNotebook({
+    company_id: req.company._id,
+    user_id: req.user._id
+  }).then(notebooks => {
+    res.json(notebooks);
+  }).catch(next);
+});
+
 api.get('/note', (req, res, next) => {
   validate('limit', req.query);
   req._app.note({

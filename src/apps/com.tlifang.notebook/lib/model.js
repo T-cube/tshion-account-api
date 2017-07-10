@@ -44,6 +44,66 @@ export default class Notebook extends AppBase {
     });
   }
 
+  listTag({user_id, company_id}) {
+    return this.collection('user').findOne({
+      user_id,
+      company_id
+    }).then(doc => {
+      if (!doc) {
+        let user = {
+          user_id,
+          company_id,
+          tags: [],
+          notebooks: [],
+        };
+        return this.collection('user').insert(user)
+        .then(() => {
+          return [];
+        });
+      } else {
+        return Promise.map(doc.tags, item => {
+          return this.collection('note').count({tags: item._id, abandoned: { $ne: true }}).then(count => {
+            item.total = count;
+            return item;
+          });
+        })
+        .then(tags => {
+          return tags;
+        });
+      }
+    });
+  }
+
+  listNotebook({user_id, company_id}) {
+    return this.collection('user').findOne({
+      user_id,
+      company_id
+    }).then(doc => {
+      if (!doc) {
+        let user = {
+          user_id,
+          company_id,
+          tags: [],
+          notebooks: [],
+        };
+        return this.collection('user').insert(user)
+        .then(() => {
+          return [];
+        });
+      } else {
+        return Promise.map(doc.notebooks, item => {
+          return this.collection('note').count({notebook: item._id, abandoned: { $ne: true }}).then(count => {
+            item.total = count;
+            return item;
+          });
+        })
+        .then(notebooks => {
+          return notebooks;
+        });
+      }
+    });
+  }
+
   note({user_id, company_id, last_id, sort_type}) {
     let criteria = {
       user_id,
@@ -232,6 +292,7 @@ export default class Notebook extends AppBase {
       user_id,
       company_id
     }).then(doc => {
+      let now = new Date();
       let notebook = _.find(doc.notebooks, item => {
         return item.name == name;
       });
@@ -243,9 +304,9 @@ export default class Notebook extends AppBase {
           user_id,
           company_id,
         }, {
-          $push: { notebooks: { name, _id, date_update: new Date() } }
+          $push: { notebooks: { name, _id, date_update: now } }
         }).then(() => {
-          return { name, _id };
+          return { name, _id, date_update: now };
         });
       }
     });
@@ -335,6 +396,8 @@ export default class Notebook extends AppBase {
         notebook: notebook_id
       }, {
         $set: { abandoned: true },
+      }, {
+        multi: true
       });
     });
   }
