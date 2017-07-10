@@ -2,29 +2,26 @@
 app_id_hash = md5(app_id)
 
 
-## tag
+## user
 
 ```javascript
-[
-  {
-    name: String,
-    total: Number,
-    _id: ObjectId
-  }...,
-]
-```
-
-## notebook
-
-```javascript
-[
-  {
-    name: String,
-    total: Number,
-    date_update: Date,
-    _id: ObjectId,
-  }...,
-]
+{
+  _id: ObjectId,
+  user_id: ObjectId ,
+  company_id: ObjectId,
+  tags: [
+    {
+      name: String,
+      _id: ObjectId
+    }...,
+  ],
+  notebooks: [
+    {
+      name: String,
+      _id: ObjectId,
+    }...,
+  ]
+},
 ```
 
 
