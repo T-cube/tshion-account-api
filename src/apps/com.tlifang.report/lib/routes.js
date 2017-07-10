@@ -1,5 +1,4 @@
 import express from 'express';
-import { ObjectId } from 'mongodb';
 import _ from 'underscore';
 import { upload, saveCdn } from 'lib/upload';
 import { ApiError } from 'lib/error';
@@ -39,10 +38,10 @@ api.get('/report', (req, res, next) => {
       }
     }
     if (start_date) {
-      start_date = moment(start_date).startOf('day').toDate()
+      start_date = moment(start_date).startOf('day').toDate();
     }
     if (end_date) {
-      end_date = moment(end_date).startOf('day').toDate()
+      end_date = moment(end_date).startOf('day').toDate();
     }
     req._app.list({
       user_id: req.user._id,
@@ -109,10 +108,10 @@ api.get('/report/:report_id', (req, res, next) => {
       }
     }
     if (start_date) {
-      start_date = moment(start_date).startOf('day').toDate()
+      start_date = moment(start_date).startOf('day').toDate();
     }
     if (end_date) {
-      end_date = moment(end_date).startOf('day').toDate()
+      end_date = moment(end_date).startOf('day').toDate();
     }
     req._app.detail({
       user_id: req.user._id,
@@ -129,10 +128,10 @@ api.get('/report/:report_id', (req, res, next) => {
       report_id
     }).then(doc => {
       Promise.map(doc.attachments, attachment => {
-        return attachFileUrls(req, attachment)
+        return attachFileUrls(req, attachment);
       }).then(() => {
         res.json(doc);
-      })
+      });
     }).catch(next);
   }).catch(next);
 });

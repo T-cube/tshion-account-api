@@ -1,12 +1,8 @@
-import { ObjectId } from 'mongodb';
 import express from 'express';
 import { validate } from './schema';
 
-
 let api = express.Router();
 export default api;
-
-
 
 api.get('/user', (req, res, next) => {
   req._app.list({

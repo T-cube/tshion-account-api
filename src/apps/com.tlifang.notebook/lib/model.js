@@ -200,7 +200,7 @@ export default class Notebook extends AppBase {
   }
 
   commentQuery({company_id, note_id}) {
-    return this.collection('comment').find({ company_id, note_id });
+    return this.collection('comment').find({ company_id, note_id }).sort({date_create: -1});
   }
 
   tagAdd({company_id, user_id, name}) {
@@ -473,12 +473,12 @@ export default class Notebook extends AppBase {
       })
     ]).then(([updated, note, user_info]) => {
       if (!note || !user_info || !_.some(user_info.notebooks, item => item._id.equals(note.notebook) && item.abandoned )) {
-        return;
+        return {};
       } else {
         return this.collection('user').update({
           user_id,
           company_id,
-          'notebooks._id': notebook_id
+          'notebooks._id': note.notebook
         }, {
           $set: {
             'notebooks.$.abandoned': false
