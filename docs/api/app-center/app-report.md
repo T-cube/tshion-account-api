@@ -9,8 +9,8 @@
 OUTPUT:
 ```javascript
 {
-  totalReported: Number, //汇报总数
-  totalReceived: Number, //接收汇报总数
+  total_reported: Number, //汇报总数
+  total_received: Number, //接收汇报总数
   firstDate: Date, //第一天使用汇报app的日期
   from_me: {
     day: Number, //昨日日报 汇报数量
@@ -80,21 +80,6 @@ query:
 ### GET /report/:report_id
 
 汇报详情
-
-query:
-```javascript
-{
-  page: Number,
-  pagesize: Number,
-  type: String, // inbox, outbox
-  report_type: ENUM, //day, week, month
-  status: String, // 'draft', 'applied', 'agreed', 'rejected' this key is optional
-  start_date: Date, // optional
-  end_date: Date, // optional
-  reporter: ObjectId, //optional
-  report_target: objectId, //optional
-}
-```
 
 OUTPUT:
 ```javascript

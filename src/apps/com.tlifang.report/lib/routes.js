@@ -94,45 +94,21 @@ api.get('/month/report', (req, res, next) => {
 
 api.get('/report/:report_id', (req, res, next) => {
   validate('info', req.params, ['report_id']);
-  validate('list', req.query);
-  let { page, type, pagesize, status, start_date, end_date, reporter, report_target, report_type } = req.query;
   let { report_id } = req.params;
-  req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
-    if (type == C.BOX_TYPE.INBOX) {
-      if (report_target) {
-        if (!_.some(memberDepartments, item => item.equals(report_target))) {
-          throw new ApiError(400, 'report_target_error');
-        }
-      } else {
-        report_target = memberDepartments;
-      }
-    }
-    if (start_date) {
-      start_date = moment(start_date).startOf('day').toDate();
-    }
-    if (end_date) {
-      end_date = moment(end_date).startOf('day').toDate();
-    }
-    req._app.detail({
+  req._app.getStructure(req.company.structure, req.user._id)
+  .then(memberDepartments => {
+    return req._app.detail({
       user_id: req.user._id,
-      company_id: req.company._id,
-      page,
-      pagesize,
-      type,
-      status,
-      start_date,
-      end_date,
-      reporter,
-      report_type,
-      report_target,
-      report_id
-    }).then(doc => {
-      Promise.map(doc.attachments, attachment => {
-        return attachFileUrls(req, attachment);
-      }).then(() => {
-        res.json(doc);
-      });
-    }).catch(next);
+      company: req.company,
+      report_id,
+      memberDepartments,
+    });
+  }).then(doc => {
+    return Promise.map(doc.attachments, attachment => {
+      return attachFileUrls(req, attachment);
+    }).then(() => {
+      res.json(doc);
+    });
   }).catch(next);
 });
 
