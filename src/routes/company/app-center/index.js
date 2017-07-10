@@ -20,66 +20,75 @@ api.get('/app', (req, res, next) => {
       return db.company.app.insert({
         company_id,
         apps: []
-      }).then(() => {
+      })
+      .then(() => {
         res.json([]);
       });
     }
-    return _mapCompanyAppList(doc).then(company => {
+    return _mapCompanyAppList(doc)
+    .then(company => {
       res.json(company.apps);
     });
-  }).catch(next);
+  })
+  .catch(next);
+});
+
+api.param('appid', (req, res, next, appid) => {
+  validate('appRequest', {appid}, ['appid']);
+  db.app.findOne({appid}, {
+    _id: 1,
+    name: 1,
+    appid: 1,
+    icons: 1,
+    version: 1,
+    description: 1,
+  })
+  .then(app => {
+    if (!app) {
+      throw new ApiError(404, 'app_not_found');
+    }
+    req._app = app;
+    next();
+  })
+  .catch(next);
 });
 
 api.post('/app/:appid/add', (req, res, next) => {
-  validate('appRequest', req.params, ['appid']);
   let appid = req.params.appid;
   let user_id = req.user._id;
   let company_id = req.company._id;
   if (!user_id.equals(req.company.owner)) {
     throw new ApiError(400, 'not_company_owner');
   }
-  db.company.app.findOne({company_id}).then(doc => {
+  db.company.app.findOne({company_id})
+  .then(doc => {
     if (!doc) {
       return db.company.app.insert({
         company_id,
         apps: [
-          {
-            appid,
-            enabled: true,
-          }
+          { appid, enabled: true },
         ]
-      }).then(app => {
-        _incTotalInstalled(appid);
-        res.json(app);
       });
+    } else if (_.some(doc.apps, item => item.appid == appid)) {
+      throw new ApiError(400, 'app_already_install');
     } else {
-      if (_.some(doc.apps, item => item.appid == appid)) {
-        throw new ApiError(400, 'app_already_install');
-      } else {
-        return db.company.app.update({
-          company_id,
-        }, {
-          $push: {
-            apps: {appid, enabled:true},
-          }
-        }).then(() => {
-          _incTotalInstalled(appid);
-          return db.app.findOne({
-            appid
-          }, {
-            _id: 1,
-            name: 1,
-            appid: 1,
-            icons: 1,
-            version: 1,
-            description: 1,
-          }).then(app => {
-            app.enabled = true;
-            res.json(app);
-          });
-        });
-      }
+      return db.company.app.update({
+        company_id,
+      }, {
+        $push: {
+          apps: { appid, enabled:true },
+        }
+      });
     }
+
+  })
+  .then(() => {
+    _incTotalInstalled(appid);
+    const app = {
+      ...req._app,
+      enabled: true,
+    };
+    res.json(app);
   })
   .catch(next);
 });
@@ -90,7 +99,7 @@ api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   let user_id = req.user._id;
   let company_id = req.company._id;
   if (!user_id.equals(req.company.owner)) {
-    throw new ApiError('400', 'not_company_owner');
+    throw new ApiError('401', 'not_company_owner');
   }
   db.company.app.update({
     company_id
@@ -104,37 +113,39 @@ api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
       return db.collection(`app.store.${appid}.${item}`).remove({
         company_id,
       });
-    }).then(() => {
-      db.app.update({
-        appid,
-      }, {
-        $inc: { total_installed: -1 }
-      });
-      res.json({});
+    });
+  })
+  .then(() => {
+    res.json({});
+    db.app.update({
+      appid,
+    }, {
+      $inc: { total_installed: -1 }
     });
   })
   .catch(next);
 });
 
 api.post('/app/:appid/enabled', (req, res, next) => {
-  validate('appRequest', req.params, ['appid']);
+  console.log('into enalbed!!!');
   validate('appRequest', req.body, ['enabled']);
-  let { flag } = req.body;
   let { appid } = req.params;
-  let company_id = req.company._id;
+  let { enabled } = req.body;
   let user_id = req.user._id;
-  db.company.findOne({_id: company_id}).then(doc => {
-    if (!doc.owner.equals(user_id)) {
-      throw new ApiError('400', 'not_company_owner');
+  const company = req.company;
+  if (!company.owner.equals(user_id)) {
+    throw new ApiError('401', 'not_company_owner');
+  }
+  db.company.app.update({
+    company_id: company._id,
+    'apps.appid': appid,
+  }, {
+    $set: {
+      'apps.$.enabled': enabled,
     }
-    db.company.app.update({
-      company_id: company_id,
-      'apps.appid': appid
-    }, { $set: {
-      'apps.$.enabled': flag
-    }}).then(doc => {
-      res.json(doc);
-    });
+  })
+  .then(() => {
+    res.json({});
   })
   .catch(next);
 });
@@ -149,7 +160,6 @@ api.get('/app/:appid/options', (req, res, next) => {
 });
 
 api.put('/app/:appid/options', (req, res, next) => {
-  validate('appRequest', req.params, ['appid']);
   validate('appRequest', req.body, ['options']);
   let { appid } = req.params;
   let { options } = req.body;
@@ -176,7 +186,7 @@ api.put('/app/:appid/options', (req, res, next) => {
 });
 
 function _incTotalInstalled(appid) {
-  db.app.update({
+  return db.app.update({
     appid,
   }, {
     $inc: { total_installed: 1 }

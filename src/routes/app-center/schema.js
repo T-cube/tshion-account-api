@@ -6,26 +6,10 @@ const schema = {
     sanitization: {
       appid: { type: 'string', rules: ['trim'] },
       comment_id: { $objectId: 1 },
-      comment: {
-        type: 'object',
-        properties: {
-          app_version: { type: 'string' },
-          star: { type: 'number' },
-          content: { type: 'string' },
-        }
-      },
     },
     validation: {
       appid: { type: 'string', minLength: 1 },
       comment_id: { $objectId: 1 },
-      comment: {
-        type: 'object',
-        properties: {
-          app_version: { type: 'string' },
-          star: { type: 'number' },
-          content: { type: 'string' },
-        }
-      },
     },
   },
   list: {
@@ -38,7 +22,17 @@ const schema = {
       page: { type: 'integer', gte: 1 },
       pagesize: { type: 'integer', gte: 1, lte: 100 },
       type: { $enum: ENUMS.APP_LIST_TYPE },
-    }
+    },
+  },
+  comment: {
+    sanitization: {
+      rate: { type: 'integer' },
+      content: { type: 'string', rules: ['trim'] },
+    },
+    validation: {
+      rate: { type: 'integer', gt: 0, lte: 5 },
+      content: { type: 'string', maxLength: 1000 },
+    },
   }
 };
 
