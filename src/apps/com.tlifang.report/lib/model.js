@@ -56,7 +56,7 @@ export default class Report extends AppBase {
           type: item
         });
       })
-    ]).then(([totalReported, totalReceived, user_config, from_me, to_me, total]) => {
+    ]).then(([total_reported, total_received, user_config, from_me, to_me, total]) => {
       let use_day;
       if (user_config) {
         use_day = moment().diff(moment(user_config.date_join), 'days') + 1;
@@ -70,8 +70,8 @@ export default class Report extends AppBase {
       }
       return {
         appid: this.getId(),
-        totalReported,
-        totalReceived,
+        total_reported,
+        total_received,
         use_day,
         from_me: {
           day: from_me[0],
