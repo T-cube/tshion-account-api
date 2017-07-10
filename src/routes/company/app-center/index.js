@@ -127,7 +127,6 @@ api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
 });
 
 api.post('/app/:appid/enabled', (req, res, next) => {
-  console.log('into enalbed!!!');
   validate('appRequest', req.body, ['enabled']);
   let { appid } = req.params;
   let { enabled } = req.body;
