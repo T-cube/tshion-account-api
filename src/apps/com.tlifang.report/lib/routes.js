@@ -26,7 +26,7 @@ api.get('/overview', (req, res, next) => {
 
 api.get('/report', (req, res, next) => {
   validate('list', req.query);
-  let { page, type, pagesize, status, start_date, end_date, reporter, report_target, report_type } = req.query;
+  let { page, type, pagesize, status, start_date, end_date, reporter, report_target, report_type, key_word } = req.query;
   req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
     if (type == C.BOX_TYPE.INBOX) {
       if (report_target) {
@@ -54,7 +54,8 @@ api.get('/report', (req, res, next) => {
       end_date,
       reporter,
       report_type,
-      report_target
+      report_target,
+      key_word,
     })
     .then(list => {
       res.json(list);

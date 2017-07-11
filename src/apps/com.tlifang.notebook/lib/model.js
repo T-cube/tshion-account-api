@@ -1,9 +1,10 @@
 import Promise from 'bluebird';
 import { ObjectId } from 'mongodb';
 import _ from 'underscore';
-import { ApiError } from 'lib/error';
 
+import { ApiError } from 'lib/error';
 import AppBase from 'models/app-base';
+import { getUniqName } from 'lib/utils';
 
 export default class Notebook extends AppBase {
 
@@ -323,18 +324,29 @@ export default class Notebook extends AppBase {
         'notebooks.$.date_update': new Date()
       }
     });
-    return this.collection('note').insert({
-      company_id,
-      user_id,
-      title,
-      content,
-      tags,
-      notebook,
-      comments: [],
-      likes: [],
-      shared,
-      date_create: new Date(),
-      date_update: new Date(),
+    return this.collection('note').find({
+      notebook: notebook
+    }, {
+      title: 1
+    }).then(list => {
+      let names = [];
+      list.forEach(item => {
+        names.push(item.title);
+      });
+      title = getUniqName(names, title);
+      return this.collection('note').insert({
+        company_id,
+        user_id,
+        title,
+        content,
+        tags,
+        notebook,
+        comments: [],
+        likes: [],
+        shared,
+        date_create: new Date(),
+        date_update: new Date(),
+      });
     });
   }
 
@@ -411,7 +423,26 @@ export default class Notebook extends AppBase {
       return Promise.all([
         this.collection('note').remove({ _id: note_id }),
         this.collection('comment').remove({ note_id })
-      ]);
+      ])
+      .then(() => {
+        this.collection('note').count({
+          notebook: doc.notebook
+        })
+        .then(count => {
+          if (!count) {
+            this.collection('user')
+            .update({
+              company_id,
+              user_id,
+            }, {
+              $pull: {
+                notebooks: { _id: doc.notebook }
+              }
+            });
+          }
+        });
+        return null;
+      });
     });
   }
 
@@ -450,13 +481,45 @@ export default class Notebook extends AppBase {
   }
 
   noteChange({user_id, note_id, company_id, note}) {
-    return this.collection('note').update({
-      _id: note_id,
-      company_id,
-      user_id,
-      abandoned: { $ne: true },
-    }, {
-      $set: note
+    let { title, notebook } = note;
+    let promise = Promise.resolve({});
+    if (title && notebook) {
+      promise = this.collection('note').find({
+        notebook: notebook
+      })
+      .then(list => {
+        let names = [];
+        list.forEach(item => {
+          item.title.push(names);
+        });
+        note.title = getUniqName(names, title);
+      });
+    } else if (title && !notebook) {
+      promise = this.collection('note').findOne({
+        _id: note_id
+      })
+      .then(note => {
+        return this.collection('note').find({
+          notebook: note.notebook
+        })
+        .then(list => {
+          let names = [];
+          list.forEach(item => {
+            names.push(item.title);
+          });
+          note.title = getUniqName(names, title);
+        });
+      });
+    }
+    return promise.then(() => {
+      return this.collection('note').update({
+        _id: note_id,
+        company_id,
+        user_id,
+        abandoned: { $ne: true },
+      }, {
+        $set: note
+      });
     });
   }
 

@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 import AppBase from 'models/app-base';
 import { ApiError } from 'lib/error';
 import C from './constants';
+import { strToReg } from 'lib/utils';
 
 export default class Report extends AppBase {
 
@@ -88,7 +89,7 @@ export default class Report extends AppBase {
     });
   }
 
-  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target}) {
+  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target, key_word}) {
     let criteria = {};
     criteria.company_id = company_id;
     if (report_type) {
@@ -128,6 +129,11 @@ export default class Report extends AppBase {
         criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
       }
     }
+    if (key_word) {
+      criteria['content'] = {
+        $regex: strToReg(key_word, 'i')
+      };
+    }
     return Promise.all([
       this.collection('item').count(criteria),
       this.collection('item').find(criteria,
@@ -137,6 +143,7 @@ export default class Report extends AppBase {
           date_report: 1,
           status: 1,
           report_target: 1,
+          attachments: 1
         })
       .sort({date_report: -1})
       .skip((page - 1) * pagesize)
