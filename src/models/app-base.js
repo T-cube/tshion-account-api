@@ -147,13 +147,7 @@ export default class Base {
       updated_by: user_id,
     });
     return db.user.file.insert(fileData).then(doc => {
-      return {
-        _id: doc._id,
-        name: doc.name,
-        url: doc.url,
-        cdn_key: doc.cdn_key,
-        mimetype: doc.mimetype,
-      };
+      return doc;
     });
   }
 

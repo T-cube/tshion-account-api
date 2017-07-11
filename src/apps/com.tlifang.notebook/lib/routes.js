@@ -1,12 +1,8 @@
-import { ObjectId } from 'mongodb';
 import express from 'express';
 import { validate } from './schema';
 
-
 let api = express.Router();
 export default api;
-
-
 
 api.get('/user', (req, res, next) => {
   req._app.list({
@@ -14,6 +10,24 @@ api.get('/user', (req, res, next) => {
     user_id: req.user._id
   }).then(doc => {
     res.json(doc);
+  }).catch(next);
+});
+
+api.get('/tag', (req, res, next) => {
+  req._app.listTag({
+    company_id: req.company._id,
+    user_id: req.user._id
+  }).then(tags => {
+    res.json(tags);
+  }).catch(next);
+});
+
+api.get('/notebook', (req, res, next) => {
+  req._app.listNotebook({
+    company_id: req.company._id,
+    user_id: req.user._id
+  }).then(notebooks => {
+    res.json(notebooks);
   }).catch(next);
 });
 

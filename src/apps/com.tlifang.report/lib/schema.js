@@ -42,16 +42,20 @@ const schema={
   },
   month: {
     sanitization: {
-      type: { type: 'string' },
-      report_type: { type: 'string' },
-      report_target: { $objectId: 1 },
+      report_id: { $objectId: 1 },
+      // type: { type: 'string' },
+      // report_type: { type: 'string' },
+      // report_target: { $objectId: 1 },
+      // status: { type: 'string' },
       // year: { type: 'integer' },
       // month: { type: 'integer' },
     },
     validation: {
-      type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
-      report_type: { $enum: ENUMS.REPORT_TYPE },
-      report_target: { $objectId: 1 },
+      report_id: { $objectId: 1 },
+      // type: { $enum: ['inbox', 'outbox'], code: 'invalid_box_check' },
+      // report_type: { $enum: ENUMS.REPORT_TYPE },
+      // report_target: { $objectId: 1 },
+      // status: { $enum: ENUMS.REPORT_STATUS },
       // year: { type: 'integer', gte: 1970 },
       // month: { type: 'integer', gte: 1, lte: 12 },
     }

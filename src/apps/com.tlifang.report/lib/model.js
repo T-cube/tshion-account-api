@@ -146,68 +146,77 @@ export default class Report extends AppBase {
     });
   }
 
-  detail({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target, report_id}) {
-    return this.collection('item').findOne({
-      _id: report_id,
-    }).then(report => {
-      return this.list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target})
-      .then(list => {
-        let ids = _.map(list.list, item => {
-          return item._id.toString();
-        });
-        let report_index = _.indexOf(ids, report._id.toString());
-        if (report_index == 9) {
-          page += 1;
-          return this.list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target})
-          .then(secondList => {
-            let secondIds = _.map(secondList.list, item => {
-              return item._id.toString();
-            });
-            report.prevId = ids[8];
-            report.nextId = secondIds[0];
-            return report;
-          });
-        } else if (report_index == 0) {
-          report.nextId = ids[1];
-          return report;
-        } else {
-          report.prevId = ids[report_index - 1];
-          report.nextId = ids[report_index + 1];
-          return report;
-        }
+  detail({user_id, company, report_id, memberDepartments}) {
+    return this.collection('item')
+    .findOne({
+      _id: report_id
+    })
+    .then(report => {
+      let criteria = {
+        company_id: company._id,
+        type: report.type,
+        report_target: report.report_target,
+        user_id: report.user_id
+      };
+      if (!user_id.equals(report.user_id)) {
+        criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
+      }
+      if (!_.some(memberDepartments, item => item.equals(report.report_target))) {
+        criteria.copy_to = user_id;
+      }
+      return Promise.all([
+        this.collection('item')
+        .findOne(
+          _.extend({}, criteria, {date_report: { $lt: report.date_report }}), {
+            _id: 1,
+          }
+        ),
+        this.collection('item')
+        .findOne(
+          _.extend({}, criteria, {date_report: { $gt: report.date_report }}), {
+            _id: 1,
+          }
+        ),
+      ])
+      .then(([prev_report, next_report]) => {
+        report.prevId = prev_report ? prev_report._id : null;
+        report.nextId = next_report ? next_report._id : null;
+        return report;
       });
     });
   }
 
-  month({user_id, company_id, is_copyto, type, report_target, report_type}) {
-    let criteria = {};
-    if (type == C.BOX_TYPE.OUTBOX) {
-      criteria.user_id = user_id;
-      criteria.report_target = report_target;
-      criteria.company_id = company_id;
-      criteria.type = report_type;
-      // criteria.date_report = { $gte: start_date, $lte: end_date };
-    } else {
-      if (is_copyto) {
+  month({user_id, company_id, report_id, memberDepartments}) {
+    return this.collection('item')
+    .findOne({
+      _id: report_id
+    })
+    .then(report => {
+      let criteria = {
+        company_id: company_id,
+        type: report.type,
+        report_target: report.report_target,
+        user_id: report.user_id
+      };
+      if (!user_id.equals(report.user_id)) {
+        criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
+      }
+      if (!_.some(memberDepartments, item => item.equals(report.report_target))) {
         criteria.copy_to = user_id;
       }
-      criteria.report_target = report_target;
-      criteria.company_id = company_id;
-      criteria.type = report_type;
-      // criteria.date_report = { $gte: start_date, $lte: end_date };
-    }
-    return this.collection('item')
-    .find(criteria, {
-      _id: 1,
-      date_report: 1
-    })
-    .then(list => {
-      _.map(list, item => {
-        item.date = moment(item.date_report).toDate();
-        delete item.date_report;
-        return item;
+      return this.collection('item')
+      .find(criteria, {
+        _id: 1,
+        date_report: 1
+      })
+      .then(list => {
+        _.map(list, item => {
+          item.date = moment(item.date_report).toDate();
+          delete item.date_report;
+          return item;
+        });
+        return list;
       });
-      return list;
     });
   }
 

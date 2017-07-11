@@ -44,6 +44,66 @@ export default class Notebook extends AppBase {
     });
   }
 
+  listTag({user_id, company_id}) {
+    return this.collection('user').findOne({
+      user_id,
+      company_id
+    }).then(doc => {
+      if (!doc) {
+        let user = {
+          user_id,
+          company_id,
+          tags: [],
+          notebooks: [],
+        };
+        return this.collection('user').insert(user)
+        .then(() => {
+          return [];
+        });
+      } else {
+        return Promise.map(doc.tags, item => {
+          return this.collection('note').count({tags: item._id, abandoned: { $ne: true }}).then(count => {
+            item.total = count;
+            return item;
+          });
+        })
+        .then(tags => {
+          return tags;
+        });
+      }
+    });
+  }
+
+  listNotebook({user_id, company_id}) {
+    return this.collection('user').findOne({
+      user_id,
+      company_id
+    }).then(doc => {
+      if (!doc) {
+        let user = {
+          user_id,
+          company_id,
+          tags: [],
+          notebooks: [],
+        };
+        return this.collection('user').insert(user)
+        .then(() => {
+          return [];
+        });
+      } else {
+        return Promise.map(doc.notebooks, item => {
+          return this.collection('note').count({notebook: item._id, abandoned: { $ne: true }}).then(count => {
+            item.total = count;
+            return item;
+          });
+        })
+        .then(notebooks => {
+          return notebooks;
+        });
+      }
+    });
+  }
+
   note({user_id, company_id, last_id, sort_type}) {
     let criteria = {
       user_id,
@@ -200,7 +260,7 @@ export default class Notebook extends AppBase {
   }
 
   commentQuery({company_id, note_id}) {
-    return this.collection('comment').find({ company_id, note_id });
+    return this.collection('comment').find({ company_id, note_id }).sort({date_create: -1});
   }
 
   tagAdd({company_id, user_id, name}) {
@@ -232,6 +292,7 @@ export default class Notebook extends AppBase {
       user_id,
       company_id
     }).then(doc => {
+      let now = new Date();
       let notebook = _.find(doc.notebooks, item => {
         return item.name == name;
       });
@@ -243,9 +304,9 @@ export default class Notebook extends AppBase {
           user_id,
           company_id,
         }, {
-          $push: { notebooks: { name, _id, date_update: new Date() } }
+          $push: { notebooks: { name, _id, date_update: now } }
         }).then(() => {
-          return { name, _id };
+          return { name, _id, date_update: now };
         });
       }
     });
@@ -285,11 +346,12 @@ export default class Notebook extends AppBase {
       content,
       date_create: new Date(),
     }).then(doc => {
-      return this.collection('note').update({
+      this.collection('note').update({
         _id: note_id
       }, {
         $push: { comments: doc._id }
       });
+      return doc;
     });
   }
 
@@ -314,7 +376,7 @@ export default class Notebook extends AppBase {
         company_id,
         tags: tag_id
       }, {
-        $pull: { tags: { _id: tag_id }}
+        $pull: { tags: tag_id }
       });
     });
   }
@@ -335,6 +397,8 @@ export default class Notebook extends AppBase {
         notebook: notebook_id
       }, {
         $set: { abandoned: true },
+      }, {
+        multi: true
       });
     });
   }
@@ -473,12 +537,12 @@ export default class Notebook extends AppBase {
       })
     ]).then(([updated, note, user_info]) => {
       if (!note || !user_info || !_.some(user_info.notebooks, item => item._id.equals(note.notebook) && item.abandoned )) {
-        return;
+        return {};
       } else {
         return this.collection('user').update({
           user_id,
           company_id,
-          'notebooks._id': notebook_id
+          'notebooks._id': note.notebook
         }, {
           $set: {
             'notebooks.$.abandoned': false

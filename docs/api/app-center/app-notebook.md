@@ -3,29 +3,32 @@
 ## 挂载点 /company/:company_id/app/com.tlifang.notebook
 
 
-### GET /user
+### GET /tag
 
-获取用户笔记信息
+获取用户tags
 
 OUTPUT:
 ```javascript
-{
-  _id: ObjectId,
-  user_id: ObjectId,
-  company_id: ObjectId,
-  tags: [{
-    name: String,
-    total: Number,
-    _id: ObjectId
-  }...],
-  notebooks: [{
-    name: String,
-    total: Number,
-    date_update: Date,
-    abandoned: Boolean, // only deleted notebook will be true, DO NOT SHOW IN UI, recover note will recover notebook if note's notebook is abandoned
-    _id: ObjectId
-  }...],
-}
+[{
+  name: String,
+  total: Number,
+  _id: ObjectId
+}...]
+```
+
+### GET /notebook
+
+获取用户notebooks
+
+OUTPUT:
+```javascript
+[{
+  name: String,
+  total: Number,
+  date_update: Date,
+  abandoned: Boolean, // only deleted notebook will be true, DO NOT SHOW IN UI, recover note will recover notebook if note's notebook is abandoned
+  _id: ObjectId
+}...]
 ```
 
 ### GET /note
@@ -238,6 +241,17 @@ request_body:
 ```javascript
 {
   comment: String
+}
+```
+
+OUTPUT:
+```javascript
+{
+  user_id: ObjectId,
+  company_id: ObjectId,
+  note_id: ObjectId,
+  content: String,
+  date_create: Date,
 }
 ```
 
