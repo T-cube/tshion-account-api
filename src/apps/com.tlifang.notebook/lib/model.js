@@ -105,12 +105,18 @@ export default class Notebook extends AppBase {
     });
   }
 
-  note({user_id, company_id, last_id, sort_type}) {
+  note({user_id, company_id, last_id, sort_type, tag_id, notebook_id}) {
     let criteria = {
       user_id,
       company_id,
       abandoned: { $ne: true },
     };
+    if (tag_id) {
+      criteria.tags = tag_id;
+    }
+    if (notebook_id) {
+      criteria.notebook = notebook_id;
+    }
     if (last_id) {
       return this.collection('note')
       .find(criteria, {
@@ -155,34 +161,6 @@ export default class Notebook extends AppBase {
         return list;
       });
     }
-  }
-
-  tagQuery({user_id, company_id, tag_id}) {
-    let criteria = {
-      user_id,
-      company_id,
-      tags: tag_id,
-      abandoned: { $ne: true },
-    };
-    return this.collection('note')
-    .find(criteria, { company_id: 0 })
-    .then(list => {
-      return list;
-    });
-  }
-
-  notebookQuery({user_id, company_id, notebook_id}) {
-    let criteria = {
-      user_id,
-      company_id,
-      notebook: notebook_id,
-      abandoned: { $ne: true },
-    };
-    return this.collection('note')
-    .find(criteria, { company_id: 0 })
-    .then(list => {
-      return list;
-    });
   }
 
   noteQuery({user_id, company_id, note_id}) {

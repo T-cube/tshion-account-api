@@ -45,11 +45,29 @@ api.get('/note', (req, res, next) => {
 
 api.get('/tag/:tag_id/note', (req, res, next) => {
   validate('notebook', req.params, ['tag_id']);
+  validate('limit', req.query);
   let { tag_id } = req.params;
-  req._app.tagQuery({
+  req._app.note({
     company_id: req.company._id,
     user_id: req.user._id,
+    last_id: req.query.last_id,
+    sort_type: req.query.sort_type,
     tag_id,
+  }).then(list => {
+    res.json(list);
+  }).catch(next);
+});
+
+api.get('/notebook/:notebook_id/note', (req, res, next) => {
+  validate('notebook', req.params, ['notebook_id']);
+  validate('limit', req.query);
+  let { notebook_id } = req.params;
+  req._app.note({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    last_id: req.query.last_id,
+    sort_type: req.query.sort_type,
+    notebook_id
   }).then(list => {
     res.json(list);
   }).catch(next);
@@ -64,18 +82,6 @@ api.get('/note/:note_id', (req, res, next) => {
     note_id,
   }).then(doc => {
     res.json(doc);
-  }).catch(next);
-});
-
-api.get('/notebook/:notebook_id/note', (req, res, next) => {
-  validate('notebook', req.params, ['notebook_id']);
-  let { notebook_id } = req.params;
-  req._app.notebookQuery({
-    company_id: req.company._id,
-    user_id: req.user._id,
-    notebook_id
-  }).then(list => {
-    res.json(list);
   }).catch(next);
 });
 
