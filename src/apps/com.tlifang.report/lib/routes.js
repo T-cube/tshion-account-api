@@ -64,25 +64,25 @@ api.get('/report', (req, res, next) => {
 
 api.get('/month/report', (req, res, next) => {
   validate('month', req.query);
-  let { type, report_target, report_type } = req.query;
-  // let start_date = moment().year(year).month(month-1).startOf('month').toDate();
-  // let end_date = moment().year(year).month(month-1).endOf('month').toDate();
+  // let { type, report_target, report_type, status } = req.query;
+  let { report_id } = req.query;
   req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
-    let is_copyto = false;
-    if (type == C.BOX_TYPE.INBOX) {
-      if (!_.some(memberDepartments, item => item.equals(report_target))) {
-        is_copyto = true;
-      }
-    }
+    // let is_copyto = false;
+    // if (type == C.BOX_TYPE.INBOX) {
+    //   if (!_.some(memberDepartments, item => item.equals(report_target))) {
+    //     is_copyto = true;
+    //   }
+    // }
     req._app.month({
       user_id: req.user._id,
       company_id: req.company._id,
-      is_copyto,
-      type,
-      // start_date,
-      // end_date,
-      report_target,
-      report_type
+      report_id,
+      // is_copyto,
+      // type,
+      // report_target,
+      // report_type,
+      // status,
+      memberDepartments,
     })
     .then(list => {
       res.json(list);

@@ -244,6 +244,17 @@ request_body:
 }
 ```
 
+OUTPUT:
+```javascript
+{
+  user_id: ObjectId,
+  company_id: ObjectId,
+  note_id: ObjectId,
+  content: String,
+  date_create: Date,
+}
+```
+
 ### POST /note/:note_id/like
 
 

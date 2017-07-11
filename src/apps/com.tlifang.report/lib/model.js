@@ -155,10 +155,12 @@ export default class Report extends AppBase {
       let criteria = {
         company_id: company._id,
         type: report.type,
-        status: report.status,
         report_target: report.report_target,
         user_id: report.user_id
       };
+      if (!user_id.equals(report.user_id)) {
+        criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
+      }
       if (!_.some(memberDepartments, item => item.equals(report.report_target))) {
         criteria.copy_to = user_id;
       }
@@ -184,35 +186,37 @@ export default class Report extends AppBase {
     });
   }
 
-  month({user_id, company_id, is_copyto, type, report_target, report_type}) {
-    let criteria = {};
-    if (type == C.BOX_TYPE.OUTBOX) {
-      criteria.user_id = user_id;
-      criteria.report_target = report_target;
-      criteria.company_id = company_id;
-      criteria.type = report_type;
-      // criteria.date_report = { $gte: start_date, $lte: end_date };
-    } else {
-      if (is_copyto) {
+  month({user_id, company_id, report_id, memberDepartments}) {
+    return this.collection('item')
+    .findOne({
+      _id: report_id
+    })
+    .then(report => {
+      let criteria = {
+        company_id: company_id,
+        type: report.type,
+        report_target: report.report_target,
+        user_id: report.user_id
+      };
+      if (!user_id.equals(report.user_id)) {
+        criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
+      }
+      if (!_.some(memberDepartments, item => item.equals(report.report_target))) {
         criteria.copy_to = user_id;
       }
-      criteria.report_target = report_target;
-      criteria.company_id = company_id;
-      criteria.type = report_type;
-      // criteria.date_report = { $gte: start_date, $lte: end_date };
-    }
-    return this.collection('item')
-    .find(criteria, {
-      _id: 1,
-      date_report: 1
-    })
-    .then(list => {
-      _.map(list, item => {
-        item.date = moment(item.date_report).toDate();
-        delete item.date_report;
-        return item;
+      return this.collection('item')
+      .find(criteria, {
+        _id: 1,
+        date_report: 1
+      })
+      .then(list => {
+        _.map(list, item => {
+          item.date = moment(item.date_report).toDate();
+          delete item.date_report;
+          return item;
+        });
+        return list;
       });
-      return list;
     });
   }
 

@@ -346,11 +346,12 @@ export default class Notebook extends AppBase {
       content,
       date_create: new Date(),
     }).then(doc => {
-      return this.collection('note').update({
+      this.collection('note').update({
         _id: note_id
       }, {
         $push: { comments: doc._id }
       });
+      return doc;
     });
   }
 
