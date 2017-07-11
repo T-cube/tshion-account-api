@@ -127,7 +127,7 @@ export default class Notebook extends AppBase {
         let id_index;
         for (let i = 0; i < list.length; i++) {
           if (list[i]._id.equals(last_id)) {
-            id_index = i;
+            id_index = i + 1;
             break;
           }
           if (i == list.length - 1) {
@@ -460,36 +460,32 @@ export default class Notebook extends AppBase {
 
   noteChange({user_id, note_id, company_id, note}) {
     let { title, notebook } = note;
-    let promise = Promise.resolve({});
-    if (title && notebook) {
-      promise = this.collection('note').find({
-        notebook: notebook
-      })
-      .then(list => {
-        let names = [];
-        list.forEach(item => {
-          item.title.push(names);
-        });
-        note.title = getUniqName(names, title);
-      });
-    } else if (title && !notebook) {
-      promise = this.collection('note').findOne({
-        _id: note_id
-      })
-      .then(note => {
+    return this.collection('note').findOne({
+      _id: note_id
+    })
+    .then(doc => {
+      if (!doc) {
+        throw new ApiError(404, 'notebok_not_found');
+      }
+      if (!notebook) {
+        notebook = doc.notebook;
+      }
+      if (note.title) {
         return this.collection('note').find({
-          notebook: note.notebook
+          company_id,
+          user_id,
+          notebook: notebook,
+        }, {
+          title: 1,
         })
         .then(list => {
-          let names = [];
-          list.forEach(item => {
-            names.push(item.title);
-          });
+          const names = _.pluck(list, 'title');
           note.title = getUniqName(names, title);
         });
-      });
-    }
-    return promise.then(() => {
+      }
+    })
+    .then(() => {
+      note.date_update = new Date();
       return this.collection('note').update({
         _id: note_id,
         company_id,
@@ -498,7 +494,8 @@ export default class Notebook extends AppBase {
       }, {
         $set: note
       });
-    });
+    })
+    .then(() => note);
   }
 
   noteAddTag({company_id, user_id, tag_id, note_id}) {

@@ -189,9 +189,11 @@ api.delete('/note/:note_id/like', (req, res, next) => {
   req._app.likeDelete({
     user_id: req.user._id,
     note_id,
-  }).then(list => {
+  })
+  .then(list => {
     res.json(list);
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.delete('/tag/:tag_id', (req, res, next) => {
@@ -201,9 +203,11 @@ api.delete('/tag/:tag_id', (req, res, next) => {
     company_id: req.company._id,
     user_id: req.user._id,
     tag_id
-  }).then(doc => {
+  })
+  .then(doc => {
     res.json(doc);
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.delete('/notebook/:notebook_id', (req, res, next) => {
@@ -213,9 +217,11 @@ api.delete('/notebook/:notebook_id', (req, res, next) => {
     company_id: req.company._id,
     user_id: req.user._id,
     notebook_id,
-  }).then(list => {
+  })
+  .then(list => {
     res.json(list);
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.delete('/note/:note_id', (req, res, next) => {
@@ -225,9 +231,11 @@ api.delete('/note/:note_id', (req, res, next) => {
     company_id: req.company._id,
     user_id: req.user._id,
     note_id,
-  }).then(() => {
+  })
+  .then(() => {
     res.json({});
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.put('/tag/:tag_id', (req, res, next) => {
@@ -240,9 +248,11 @@ api.put('/tag/:tag_id', (req, res, next) => {
     company_id: req.company._id,
     name,
     tag_id
-  }).then(doc => {
+  })
+  .then(doc => {
     res.json(doc);
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.put('/notebook/:notebook_id', (req, res, next) => {
@@ -255,9 +265,11 @@ api.put('/notebook/:notebook_id', (req, res, next) => {
     company_id: req.company._id,
     name,
     notebook_id,
-  }).then(doc => {
+  })
+  .then(doc => {
     res.json(doc);
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.put('/note/:note_id', (req, res, next) => {
@@ -269,9 +281,11 @@ api.put('/note/:note_id', (req, res, next) => {
     company_id: req.company._id,
     note_id,
     note: req.body
-  }).then(doc => {
+  })
+  .then(doc => {
     res.json(doc);
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.post('/note/:note_id/tag', (req, res, next) => {
@@ -284,9 +298,11 @@ api.post('/note/:note_id/tag', (req, res, next) => {
     company_id: req.company._id,
     note_id,
     tag_id,
-  }).then(doc => {
+  })
+  .then(doc => {
     res.json(doc);
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.delete('/note/:note_id/tag', (req, res, next) => {
