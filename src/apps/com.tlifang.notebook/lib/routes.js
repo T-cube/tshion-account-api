@@ -336,9 +336,12 @@ api.put('/note/:note_id/shared', (req, res, next) => {
 });
 
 api.get('/abandoned', (req, res, next) => {
+  validate('limit', req.query, ['last_id', 'sort_type']);
   req._app.abandonList({
     user_id: req.user._id,
     company_id: req.company._id,
+    last_id: req.query.last_id,
+    sort_type: req.query.sort_type,
   })
   .then(list => {
     res.json(list);

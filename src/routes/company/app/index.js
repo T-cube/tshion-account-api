@@ -62,12 +62,11 @@ fs.readdir(APPS_ROOT, (err, result) => {
       }, {
         apps: 1
       }).then(doc => {
-        // if (_.some(doc.apps, item => item.appid == appId && item.enabled)) {
-        //    next();
-        // } else {
-        //   throw new ApiError(400, 'no_app');
-        //}
-        next();
+        if (_.some(doc.apps, item => item.appid == appId && item.enabled)) {
+          next();
+        } else {
+          throw new ApiError(400, 'no_app');
+        }
       });
     }, require(appDir).default);
     console.log(`app ${appId} loaded.`);

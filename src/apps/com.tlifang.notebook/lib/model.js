@@ -22,7 +22,7 @@ export default class Notebook extends AppBase {
           user_id: user_id,
           company_id: company_id,
           tags: [],
-          notebooks: []
+          notebooks: [],
         };
         return this.collection('user').insert(criteria);
       }
@@ -124,18 +124,7 @@ export default class Notebook extends AppBase {
       })
       .sort({[sort_type]: -1})
       .then(list => {
-        let id_index;
-        for (let i = 0; i < list.length; i++) {
-          if (list[i]._id.equals(last_id)) {
-            id_index = i + 1;
-            break;
-          }
-          if (i == list.length - 1) {
-            if (!id_index) {
-              throw new ApiError(400, 'invalid_last_id');
-            }
-          }
-        }
+        let id_index = this._getIdIndex(last_id, list);
         let target_list = list.slice(id_index, id_index + 10);
         return Promise.map(target_list, item => {
           return this.collection('note')
@@ -195,18 +184,7 @@ export default class Notebook extends AppBase {
       })
       .sort({ [sort_type]: -1 })
       .then(list => {
-        let id_index;
-        for (let i = 0; i < list.length; i++) {
-          if (list[i]._id.equals(last_id)) {
-            id_index = i;
-            break;
-          }
-          if (i == list.length - 1) {
-            if (!id_index) {
-              throw new ApiError(400, 'invalid_last_id');
-            }
-          }
-        }
+        let id_index = this._getIdIndex(last_id, list);
         let target_list = list.slice(id_index, id_index + 10);
         return Promise.map(target_list, item => {
           return this.collection('note')
@@ -225,7 +203,7 @@ export default class Notebook extends AppBase {
       });
     } else {
       return this.collection('note').find(criteria)
-      .sort({_id: -1})
+      .sort({[sort_type]: -1})
       .limit(10)
       .then(list => {
         _.map(list, item => {
@@ -248,7 +226,9 @@ export default class Notebook extends AppBase {
       company_id
     }).then(doc => {
       let tag = _.find(doc.tags, item => {
-        return item.name == name;
+        if (item.name == name) {
+          return item;
+        }
       });
       if (tag) {
         return tag;
@@ -273,7 +253,7 @@ export default class Notebook extends AppBase {
     }).then(doc => {
       let now = new Date();
       let notebook = _.find(doc.notebooks, item => {
-        return item.name == name;
+        return item.name == name && !item.abandoned;
       });
       if (notebook) {
         return notebook;
@@ -283,9 +263,9 @@ export default class Notebook extends AppBase {
           user_id,
           company_id,
         }, {
-          $push: { notebooks: { name, _id, date_update: now } }
+          $push: { notebooks: { name, _id, date_update: now, abandoned: false } }
         }).then(() => {
-          return { name, _id, date_update: now };
+          return { name, _id, date_update: now, abandoned: false };
         });
       }
     });
@@ -381,6 +361,20 @@ export default class Notebook extends AppBase {
         'notebooks.$.abandoned': true
       }
     }).then(() => {
+      this.collection('note').count({
+        notebook: notebook_id
+      }).then(count => {
+        if (!count) {
+          this.collection('user').update({
+            user_id,
+            company_id
+          }, {
+            $pull: {
+              notebooks: { _id: notebook_id }
+            }
+          })
+        }
+      });
       return this.collection('note').update({
         user_id,
         company_id,
@@ -407,6 +401,8 @@ export default class Notebook extends AppBase {
           notebook: doc.notebook
         })
         .then(count => {
+          console.log(count);
+          console.log(doc);
           if (!count) {
             this.collection('user')
             .update({
@@ -533,12 +529,45 @@ export default class Notebook extends AppBase {
     });
   }
 
-  abandonList({user_id, company_id}) {
-    return this.collection('note').find({
+  abandonList({user_id, company_id, last_id, sort_type}) {
+    let criteria = {
       user_id,
       company_id,
       abandoned: true
-    });
+    }
+    if (last_id) {
+      return this.collection('note')
+      .find(criteria, {
+        _id: 1,
+      })
+      .sort({[sort_type]: -1})
+      .then(list => {
+        let id_index = this._getIdIndex(last_id, list);
+        let target_list = list.slice(id_index, id_index + 10);
+        return Promise.map(target_list, item => {
+          return this.collection('note')
+          .findOne({
+            _id: item._id
+          })
+          .then(doc => {
+            return doc;
+          });
+        })
+        .then(data => {
+          return data;
+        });
+      });
+    } else {
+      return this.collection('note')
+      .find(criteria, {
+        company_id: 0
+      })
+      .sort({[sort_type]: -1 })
+      .limit(10)
+      .then(list => {
+        return list;
+      });
+    }
   }
 
   noteAbandon({user_id, company_id, note_id}) {
@@ -588,6 +617,22 @@ export default class Notebook extends AppBase {
         });
       }
     });
+  }
+
+  _getIdIndex(last_id, list) {
+    let id_index;
+    for (let i = 0; i < list.length; i++) {
+      if (list[i]._id.equals(last_id)) {
+        id_index = i + 1;
+        break;
+      }
+      if (i == list.length - 1) {
+        if (!id_index) {
+          throw new ApiError(400, 'invalid_last_id');
+        }
+      }
+    }
+    return id_index;
   }
 
 }

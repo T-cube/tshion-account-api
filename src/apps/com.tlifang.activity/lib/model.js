@@ -212,9 +212,14 @@ export default class Activity extends AppBase {
   changeActivity({activity_id, activity, user_id, company_id}) {
     return this.collection('item')
     .findOne({
-      _id: activity_id
+      _id: activity_id,
+      creator: user_id,
+      company_id,
     })
     .then(doc => {
+      if (!doc) {
+        throw new ApiError(401, 'invalid_activity_id');
+      }
       if (activity.room && !activity.room._id.equals(doc.room._id)) {
         return this.collection('room')
         .findOne({
@@ -258,6 +263,9 @@ export default class Activity extends AppBase {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_activity');
+      }
       if (!this._checkReadPermission(doc, user_id)) {
         throw new ApiError(400, 'not_member');
       } else {
@@ -270,6 +278,9 @@ export default class Activity extends AppBase {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_activity');
+      }
       if (!doc.sign_in_require || !_.some(doc.assistants.concat(doc.creator, doc.members, doc.followers), item => item.equals(user_id))) {
         throw new ApiError(400, 'invalid_sign_in');
       } else {
@@ -282,10 +293,14 @@ export default class Activity extends AppBase {
     });
   }
 
-  signUp({user_id, activity_id}) {
+  signUp({user_id, company_id, activity_id}) {
     return this.collection('item').findOne({
-      _id: activity_id
+      _id: activity_id,
+      company_id,
     }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_activity');
+      }
       if (doc.is_member_certified) {
         throw new ApiError(400, 'invalid_sign_up');
       } else {
@@ -302,6 +317,9 @@ export default class Activity extends AppBase {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_activity');
+      }
       if (!doc.accept_require || !_.some(doc.members, item => item.equals(user_id))) {
         throw new ApiError(400, 'invalid_accept');
       } else {
@@ -318,6 +336,9 @@ export default class Activity extends AppBase {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_activity');
+      }
       if (!_.some(doc.assistants.concat(doc.creator, doc.members, doc.followers), item => item.equals(user_id))) {
         throw new ApiError(400, 'not_member');
       } else {
@@ -486,6 +507,9 @@ export default class Activity extends AppBase {
       _id: room_id
     })
     .then(room => {
+      if (!room) {
+        throw new ApiError(400, 'invalid_room');
+      }
       if (!room.manager.equals(user_id)) {
         throw new ApiError(400, 'not_manager_can_not_delete');
       }
@@ -513,12 +537,16 @@ export default class Activity extends AppBase {
     });
   }
 
-  roomDetail({room_id}) {
+  roomDetail({company_id, room_id}) {
     return this.collection('room')
     .findOne({
-      _id: room_id
+      _id: room_id,
+      company_id,
     })
     .then(room => {
+      if (!room) {
+        throw new ApiError(400, 'invalid_room');
+      }
       return Promise.all([
         this.collection('item')
         .find({
@@ -555,6 +583,9 @@ export default class Activity extends AppBase {
       _id: room_id
     })
     .then(doc => {
+      if (!doc) {
+        throw new ApiError(400, 'invalid_room');
+      }
       if (!doc.manager.equals(user_id)) {
         throw new ApiError(400, 'no_change_room_permission');
       }
@@ -573,24 +604,36 @@ export default class Activity extends AppBase {
       _id: room_id
     })
     .then(room => {
+      if (!room) {
+        throw new ApiError(400, 'invalid_room');
+      }
+      if (!room.manager.equals(user_id)) {
+        throw new ApiError(400, 'no_change_room_permission');
+      }
       let equipmentList = _.map(room.equipments, item => {
         return item.name;
       });
       if (_.some(equipmentList, item => item == equipment.name)) {
         throw new ApiError(400, 'have_same_name_equipment');
       }
-      if (!room.manager.equals(user_id)) {
-        throw new ApiError(400, 'no_change_room_permission');
-      }
+      let _id = ObjectId();
       return this.collection('room')
       .udpate({
         _id: room_id
       }, {
-        $push: {
-          _id: ObjectId(),
+        $push: { equipments: {
+          _id,
           name: equipment.name,
           optional: equipment.optional
         }
+      }
+      })
+      .then(() => {
+        return {
+          _id,
+          name: equipment.name,
+          optional: equipment.optional,
+        };
       });
     });
   }
@@ -608,7 +651,7 @@ export default class Activity extends AppBase {
       .update({
         _id: room_id
       }, {
-        $pull: { _id: equipment_id }
+        $pull: { equipments: {_id: equipment_id} }
       });
     });
   }
@@ -619,6 +662,9 @@ export default class Activity extends AppBase {
       _id: room_id
     })
     .then(room => {
+      if (!room) {
+        throw new ApiError(400, 'invalid_room');
+      }
       if (!room.manager.equals(user_id)) {
         throw new ApiError(400, 'no_change_room_permission');
       }
@@ -630,6 +676,12 @@ export default class Activity extends AppBase {
         $set: {
           'equipments.$': equipment
         }
+      })
+      .then(() => {
+        return {
+          _id: equipment_id,
+          ...equipment
+        };
       });
     });
   }

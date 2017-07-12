@@ -115,6 +115,7 @@ api.post('/activity/:activity_id/sign-up', (req, res, next) => {
   validate('info', req.params, ['activity_id']);
   req._app.signUp({
     user_id: req.user._id,
+    company_id: req.company._id,
     activity_id: req.params.activity_id
   })
   .then(doc => {
@@ -241,7 +242,8 @@ api.get('/room', (req, res, next) => {
 api.get('/room/:room_id', (req, res, next) => {
   validate('info', req.params, ['room_id']);
   req._app.roomDetail({
-    room_id: req.params.room_id
+    room_id: req.params.room_id,
+    company_id: req.company._id,
   })
   .then(doc => {
     res.json(doc);
