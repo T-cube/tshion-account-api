@@ -488,7 +488,7 @@ export default class Activity extends AppBase {
     });
   }
 
-  createRoom({user_id, room, company_id}) {
+  createRoom({room, company_id}) {
     room.company_id = company_id;
     room.date_create = new Date();
     room.date_update = new Date();
@@ -528,7 +528,8 @@ export default class Activity extends AppBase {
         })
         .limit(C.ACTIVITY_QUERY_LIMIT)
         .then(activities => {
-          return item.activities = activities;
+          item.activities = activities;
+          return item;
         });
       }).then(rooms => {
         return rooms;

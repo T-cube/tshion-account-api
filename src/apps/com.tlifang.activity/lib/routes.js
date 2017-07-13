@@ -217,7 +217,6 @@ api.post('/room', (req, res, next) => {
     throw new ApiError(400, 'manager_not_member');
   }
   req._app.createRoom({
-    user_id,
     room: req.body,
     company_id,
   })
