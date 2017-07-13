@@ -147,7 +147,7 @@ request_body:
 
 ### post /room
 
-创建场所
+公司所有者创建场所
 
 request_body:
 ```javascript
@@ -155,6 +155,7 @@ request_body:
   name: String,
   type: String,
   max_member: Number, // min: 1
+  manager: objectId,
   equipments: [{
     name: String,
     optional: Boolean,

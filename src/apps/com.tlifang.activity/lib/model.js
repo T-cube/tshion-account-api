@@ -489,7 +489,6 @@ export default class Activity extends AppBase {
   }
 
   createRoom({user_id, room, company_id}) {
-    room.manager = user_id;
     room.company_id = company_id;
     room.date_create = new Date();
     room.date_update = new Date();

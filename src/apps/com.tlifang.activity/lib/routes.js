@@ -1,7 +1,9 @@
 import express from 'express';
+import _ from 'underscore';
 
 import { validate } from './schema';
 import _C from './constants';
+import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { APP } from 'models/notification-setting';
 
@@ -206,10 +208,18 @@ api.delete('/activity/:activity_id/cancel', (req, res, next) => {
 
 api.post('/room', (req, res, next) => {
   validate('room', req.body);
+  let company_id = req.company._id;
+  let user_id = req.user._id;
+  if (!user_id.equals(req.company.owner)) {
+    throw new ApiError(400, 'not_company_owner');
+  }
+  if (!_.some(req.company.members, member => member._id.equals(req.body.manager))) {
+    throw new ApiError(400, 'manager_not_member');
+  }
   req._app.createRoom({
-    user_id: req.user._id,
+    user_id,
     room: req.body,
-    company_id: req.company._id
+    company_id,
   })
   .then(doc => {
     res.json(doc);
