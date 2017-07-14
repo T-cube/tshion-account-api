@@ -39,6 +39,17 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
+api.post('/transfer', (req, res, next) => {
+  let data = req.body;
+  validate('transfer', data);
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  let recharge = new Recharge({company_id, user_id});
+  let payment_method = 'transfer';
+  recharge.transfer()
+  .then(re)
+});
+
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);

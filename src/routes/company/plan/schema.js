@@ -161,6 +161,18 @@ const schema = {
       payment_method: { $enum: ['wxpay', 'alipay'] },
     },
   },
+  transfer: {
+    sanitization: {
+      account: { type: 'integer' },
+      amount: { type: 'integer' },
+      bank: { type: 'string', rules: ['trim'] },
+    },
+    validation: {
+      account: { type: 'integer' },
+      amount: { type: 'integer', gt: 0 },
+      bank: { type: 'string' },
+    },
+  },
   trial: {
     sanitization: {
       plan: { type: 'string' },
