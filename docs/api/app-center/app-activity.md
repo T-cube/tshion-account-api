@@ -166,6 +166,10 @@ request_body:
 }
 ```
 
+### DELETE /room/:room_id
+
+活动场所管理者删除活动场所
+
 ### GET /room
 
 获取场所列表

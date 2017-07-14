@@ -618,7 +618,7 @@ export default class Activity extends AppBase {
       }
       let _id = ObjectId();
       return this.collection('room')
-      .udpate({
+      .update({
         _id: room_id
       }, {
         $push: { equipments: {

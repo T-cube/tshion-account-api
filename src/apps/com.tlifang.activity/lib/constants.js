@@ -25,11 +25,11 @@ let constants = {
     ACTIVITY: 'activity'
   },
   ROOM_TYPE: {
-    INTERVIEW: 'interview',
     MEETING: 'meeting',
-    RECEPTION: 'reception',
-    TEA: 'tea',
-    OTHER: 'other',
+    GUEST: 'guest',
+    OFFICE: 'office',
+    PANTRY: 'pantry',
+    OUTDOOR: 'outdoor',
   }
 };
 

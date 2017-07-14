@@ -23,6 +23,7 @@ const schema={
   room: {
     sanitization: {
       name: { type: 'string', rules: ['trim'] },
+      place: { type: 'string', rules: ['trim'] },     
       type: { type: 'string', rules: ['trim'] },
       manager: { $objectId: 1 },
       max_member: { type: 'integer', gte: 1  },
@@ -44,6 +45,7 @@ const schema={
     },
     validation: {
       name: { type: 'string', minLength: 1 },
+      place: { type: 'string', minLength: 1 },     
       type: { $enum: ENUMS.ROOM_TYPE },
       manager: { $objectId: 1 },
       max_member: { type: 'integer', gte: 1  },

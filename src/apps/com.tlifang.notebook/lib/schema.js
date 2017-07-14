@@ -67,7 +67,7 @@ const schema = {
       note_id: { $objectId: 1 },
       notebook_id: { $objectId: 1 },
       name: { type: 'string', rules:['trim'] },
-      comment: { type: 'string' },
+      comment: { type: 'string', rules:['trim'] },
       shared: { type: 'boolean' },
     },
     validation: {
@@ -75,7 +75,7 @@ const schema = {
       note_id: { $objectId: 1 },
       notebook_id: { $objectId: 1 },
       name: { type: 'string', minLength: 1 },
-      comment: { type: 'string' },
+      comment: { type: 'string', minLength: 1 },
       shared: { type: 'boolean' },
     }
   }
