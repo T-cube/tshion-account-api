@@ -394,3 +394,7 @@ OUTPUT:
 ### PUT /note/:note_id/recover
 
 恢复笔记
+
+### DELETE /note/:note_id/comment/:comment_id
+
+删除评论

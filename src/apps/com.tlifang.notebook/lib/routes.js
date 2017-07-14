@@ -172,6 +172,19 @@ api.post('/note/:note_id/comment', (req, res, next) => {
   }).catch(next);
 });
 
+api.delete('/note/:note_id/comment/:comment_id', (req, res, next) => {
+  validate('notebook', req.params, ['note_id', 'comment_id']);
+  let { note_id, comment_id } = req.params;
+  req._app.commentDelete({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    note_id,
+    comment_id,
+  }).then(doc => {
+    res.json(doc);
+  }).catch(next);
+});
+
 api.post('/note/:note_id/like', (req, res, next) => {
   validate('notebook', req.params, ['note_id']);
   let { note_id } = req.params;

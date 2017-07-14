@@ -64,6 +64,7 @@ const schema = {
   notebook: {
     sanitization: {
       tag_id: { $objectId: 1 },
+      comment_id: { $objectId: 1 },
       note_id: { $objectId: 1 },
       notebook_id: { $objectId: 1 },
       name: { type: 'string', rules:['trim'] },
@@ -72,6 +73,7 @@ const schema = {
     },
     validation: {
       tag_id: { $objectId: 1 },
+      comment_id: { $objectId: 1 },
       note_id: { $objectId: 1 },
       notebook_id: { $objectId: 1 },
       name: { type: 'string', minLength: 1 },

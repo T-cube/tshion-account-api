@@ -372,7 +372,7 @@ export default class Notebook extends AppBase {
             $pull: {
               notebooks: { _id: notebook_id }
             }
-          })
+          });
         }
       });
       return this.collection('note').update({
@@ -401,8 +401,6 @@ export default class Notebook extends AppBase {
           notebook: doc.notebook
         })
         .then(count => {
-          console.log(count);
-          console.log(doc);
           if (!count) {
             this.collection('user')
             .update({
@@ -416,6 +414,34 @@ export default class Notebook extends AppBase {
           }
         });
         return null;
+      });
+    });
+  }
+
+  commentDelete({company_id, user_id, note_id, comment_id}) {
+    return this.collection('comment').findOne({
+      _id: comment_id,
+      company_id,
+      user_id
+    }).then(comment => {
+      if (!comment) {
+        throw new ApiError(400, 'invalid_comment');
+      }
+      if (!comment.note_id.equals(note_id)) {
+        throw new ApiError(400, 'invalid_note');
+      }
+      return this.collection('comment').remove({
+        _id: comment_id
+      })
+      .then(() => {
+        this.collection('note').update({
+          _id: note_id
+        }, {
+          $pull: {
+            comments: comment_id
+          }
+        });
+        return {};
       });
     });
   }
@@ -534,7 +560,7 @@ export default class Notebook extends AppBase {
       user_id,
       company_id,
       abandoned: true
-    }
+    };
     if (last_id) {
       return this.collection('note')
       .find(criteria, {
