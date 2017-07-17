@@ -1,7 +1,7 @@
 import RpcRoute from 'models/rpc-route';
 
-
 import TransferModel from './models/transfer';
+import { strToReg } from 'lib/utils';
 
 const route = RpcRoute.router();
 export default route;
@@ -15,7 +15,7 @@ route.on('/list', query => {
     criteria.status = status;
   }
   if (keyword) {
-    criteria['name'] = {
+    criteria['company_name'] = {
       $regex: strToReg(keyword, 'i')
     };
   }
@@ -24,5 +24,5 @@ route.on('/list', query => {
 
 route.on('/confirm', query => {
   let { transfer_id } = query;
-  return transferModel.
+  return transferModel.confirm({transfer_id});
 });

@@ -1,10 +1,10 @@
 import Model from './model';
 
 export default class TransferModel extends Model {
+
   constructor(props) {
     super(props);
   }
-
 
   fetchList(props) {
     let { page, pagesize, criteria = {} } = props;
@@ -19,5 +19,13 @@ export default class TransferModel extends Model {
     });
   }
 
+  confirm(transfer_id) {
+    return this.db.transfer.findOne({
+      _id: transfer_id
+    })
+    .then(transfer => {
+      return transfer;
+    });
+  }
 
 }

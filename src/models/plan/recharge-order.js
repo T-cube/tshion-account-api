@@ -11,6 +11,7 @@ export default class RechargeOrder {
   constructor() {}
 
   static handlePaySuccess(recharge_id, charge_id) {
+    console.log(recharge_id, 111, charge_id);
     return db.payment.recharge.findOne({_id: recharge_id})
     .then(recharge => {
       if (!recharge) {

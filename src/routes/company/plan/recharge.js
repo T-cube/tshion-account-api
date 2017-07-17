@@ -48,6 +48,7 @@ api.post('/transfer', (req, res, next) => {
   let payment_method = 'transfer';
   recharge.transfer({amount: data.amount, payment_method})
   .then(recharge => {
+    data.company_name = req.company.name;
     data.recharge_id = recharge._id;
     data.recharge_no = recharge.recharge_no;
     data.user_id = user_id;
