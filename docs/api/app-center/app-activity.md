@@ -82,6 +82,10 @@ query:
 }
 ```
 
+### POST /upload
+
+上传文件，同app notebook上传接口
+
 ### GET /activity/:activity_id
 
 ### POST /activity/:activity_id/sign-in

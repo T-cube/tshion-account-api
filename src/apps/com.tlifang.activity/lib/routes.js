@@ -6,6 +6,8 @@ import _C from './constants';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { APP } from 'models/notification-setting';
+import { upload, saveCdn } from 'lib/upload';
+import { attachFileUrls } from 'routes/company/document/index';
 
 let api = express.Router();
 export default api;
@@ -84,9 +86,30 @@ api.get('/activity/:activity_id', (req, res, next) => {
     activity_id: req.params.activity_id
   })
   .then(doc => {
-    res.json(doc);
+    return Promise.map(doc.attachments, attachment => {
+      return attachFileUrls(req, attachment);
+    }).then(() => {
+      res.json(doc);
+    });
   })
   .catch(next);
+});
+
+api.post('/upload',
+upload({type: 'attachment'}).single('document'),
+saveCdn('cdn-file'),
+(req, res, next) => {
+  let file = req.file;
+  if (!file) {
+    throw new ApiError(400, 'file_not_upload');
+  }
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  req._app.uploadSave(file, user_id, company_id).then(doc => {
+    return attachFileUrls(req, doc).then(() => {
+      res.json(doc);
+    });
+  }).catch(next);
 });
 
 api.post('/activity/:activity_id/sign-in', (req, res, next) => {
