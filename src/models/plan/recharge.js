@@ -44,6 +44,29 @@ export default class Recharge {
     });
   }
 
+  transfer({amount, payment_method}) {
+    let {company_id, user_id} = this;
+    amount = parseInt(amount);
+    return this.ensureIsValid(amount)
+    .then(() => this.createOrderNo())
+    .then(recharge_no => {
+      let paid_sum = amount;
+      let data = {
+        amount,
+        company_id,
+        user_id,
+        paid_sum,
+        payment_method,
+        recharge_no,
+        status: C.ORDER_STATUS.CREATED,
+        date_create: new Date(),
+        date_update: new Date(),
+        date_expires: moment().add(3, 'days').toDate(),
+      };
+      return db.payment.recharge.insert(data);
+    });
+  }
+
   ensureIsValid(amount) {
     return this.getLimits().then(limits => {
       if (!amount || amount > limits.amount.max || amount < limits.amount.min) {

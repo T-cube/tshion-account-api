@@ -643,6 +643,21 @@ OUTPUT
 
 ```
 
+### POST /transfer
+
+提交转账记录
+
+INPUT
+
+```javascript
+{
+  amount: Number,
+  account: Number,
+  bank: String, //银行名 例：兴业银行
+  bank_subname: String, //分行名 例：莲前支行
+}
+```
+
 ### GET /recharge/:rechargeId/query
 
 查询充值的状态

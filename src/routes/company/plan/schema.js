@@ -166,11 +166,13 @@ const schema = {
       account: { type: 'integer' },
       amount: { type: 'integer' },
       bank: { type: 'string', rules: ['trim'] },
+      bank_subname: { type: 'string', rules: ['trim'] },
     },
     validation: {
       account: { type: 'integer' },
       amount: { type: 'integer', gt: 0 },
       bank: { type: 'string' },
+      bank_subname: { type: 'string' },
     },
   },
   trial: {

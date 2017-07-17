@@ -230,6 +230,12 @@ let constants = {
     PRIORITY: 'priority',         // 优先级
   },
 
+  TRANSFER_STATUS: {
+    CREATED: 'created',
+    REJECTED: 'rejected',
+    CONFIRMED: 'confirmed',
+  },
+
   USER_ID_TYPE: {
     EMAIL: 'email',
     MOBILE: 'mobile',

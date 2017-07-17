@@ -44,6 +44,7 @@ const collections = [
   'short.url',
   'task',
   'task.comments',
+  'transfer',
   'user',
   'user.activity',
   'user.confirm.email',

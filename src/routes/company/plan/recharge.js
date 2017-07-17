@@ -46,8 +46,19 @@ api.post('/transfer', (req, res, next) => {
   let company_id = req.company._id;
   let recharge = new Recharge({company_id, user_id});
   let payment_method = 'transfer';
-  recharge.transfer()
-  .then(re)
+  recharge.transfer({amount: data.amount, payment_method})
+  .then(recharge => {
+    data.recharge_id = recharge._id;
+    data.recharge_no = recharge.recharge_no;
+    data.user_id = user_id;
+    data.company_id = company_id;
+    data.date_create = new Date();
+    data.status = C.TRANSFER_STATUS.CREATED;
+    return db.transfer.insert(data).then(doc => {
+      delete doc._id;
+      return {...recharge,...req.body};
+    });
+  }).catch(next);
 });
 
 api.get('/', (req, res, next) => {
