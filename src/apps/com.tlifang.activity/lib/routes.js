@@ -15,7 +15,7 @@ api.get('/overview', (req, res, next) => {
     user_id: req.user._id,
     company_id: req.company._id,
   }).then(doc => {
-    return doc;
+    res.json(doc);
   }).catch(next);
 });
 
