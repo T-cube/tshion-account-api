@@ -362,6 +362,17 @@ api.get('/abandoned', (req, res, next) => {
   .catch(next);
 });
 
+api.delete('/delete/abandoned', (req, res, next) => {
+  req._app.abandonedDelete({
+    user_id: req.user._id,
+    company_id: req.company._id
+  })
+  .then(() => {
+    res.json({});
+  })
+  .catch(next);
+});
+
 api.put('/note/:note_id/abandoned', (req, res, next) => {
   validate('notebook', req.params, ['note_id']);
   req._app.noteAbandon({

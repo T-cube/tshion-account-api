@@ -647,6 +647,44 @@ export default class Notebook extends AppBase {
     });
   }
 
+  abandonedDelete({user_id, company_id}) {
+    return this.collection('note').remove({
+      user_id,
+      company_id,
+      abandoned: true,
+    })
+    .then(() => {
+      this.collection('user').findOne({
+        user_id,
+        company_id,
+      })
+      .then(data => {
+        data.notebooks.forEach((notebook) => {
+          this.collection('note').count({
+            user_id,
+            company_id,
+            notebook: notebook._id
+          })
+          .then(count => {
+            if (!count) {
+              this.collection('user').update({
+                user_id,
+                company_id,
+              }, {
+                $pull: {
+                  notebooks: {
+                    _id: notebook._id
+                  }
+                }
+              });
+            }
+          });
+        });
+      });
+      return;
+    });
+  }
+
   _getIdIndex(last_id, list) {
     let id_index;
     for (let i = 0; i < list.length; i++) {
