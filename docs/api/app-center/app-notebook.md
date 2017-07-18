@@ -398,3 +398,7 @@ OUTPUT:
 ### DELETE /note/:note_id/comment/:comment_id
 
 删除评论
+
+### DELETE /abandoned/delete
+
+ 一键删除所有废弃笔记
