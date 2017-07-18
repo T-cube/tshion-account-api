@@ -347,6 +347,8 @@ export default class Notebook extends AppBase {
         tags: tag_id
       }, {
         $pull: { tags: tag_id }
+      }, {
+        multi: true
       });
     });
   }
