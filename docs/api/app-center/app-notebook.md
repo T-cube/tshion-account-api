@@ -399,6 +399,6 @@ OUTPUT:
 
 删除评论
 
-### DELETE /abandoned/delete
+### DELETE /delete/abandoned
 
  一键删除所有废弃笔记
