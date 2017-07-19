@@ -157,7 +157,6 @@ const schema={
       certified_member: { type: 'boolean' },
       assistants: {
         type: 'arrary',
-        optional: true,
         items: {
           $objectId: 1,
           optional: true,
@@ -165,7 +164,6 @@ const schema={
       },
       members: {
         type: 'arrary',
-        optional: true,
         items: {
           $objectId: 1,
           optional: true,
@@ -224,7 +222,6 @@ const schema={
       certified_member: { type: 'boolean' },
       assistants: {
         type: 'arrary',
-        optional: true,
         items: {
           $objectId: 1,
           optional: true,
@@ -232,7 +229,6 @@ const schema={
       },
       members: {
         type: 'arrary',
-        optional: true,
         items: {
           $objectId: 1,
           optional: true,

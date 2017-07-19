@@ -12,18 +12,9 @@ export default class Activity extends AppBase {
   constructor(options) {
     super(options);
     this.baseInfo = {
-      name: 1,
-      type: 1,
-      time_start: 1,
-      time_end: 1,
-      departments: 1,
-      assistants: 1,
-      status: 1,
-      members: 1,
-      accept_require: 1,
-      accept_members: 1,
-      content: 1,
-      room: 1,
+      room: 0,
+      attachments: 0,
+      comments: 0,
     };
   }
 
