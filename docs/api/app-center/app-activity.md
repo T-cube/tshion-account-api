@@ -30,7 +30,9 @@
   all: {
     now: [<activity>...],
     future: [<activity>...]
-  }
+  },
+  mine_total: Number,
+  all_total: Number,
 }
 ```
 

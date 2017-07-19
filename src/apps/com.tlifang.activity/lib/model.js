@@ -79,7 +79,21 @@ export default class Activity extends AppBase {
         $or: all,
       }, this.baseInfo)
       .sort({time_start: -1}),
-    ]).then(([now_mine, feature_mine, now_all, feature_all]) => {
+      this.collection('item')
+      .count({
+        company_id,
+        status: C.ACTIVITY_STATUS.CREATED,
+        time_start: { $gte: moment().toDate() },
+        $or: isMember,
+      }),
+      this.collection('item')
+      .count({
+        company_id,
+        status: C.ACTIVITY_STATUS.CREATED,
+        time_start: { $gte: moment().toDate() },
+        $or: all,
+      }),
+    ]).then(([now_mine, feature_mine, now_all, feature_all, mine_total, all_total]) => {
       return {
         mine: {
           now: this._listCalc(now_mine, user_id),
@@ -88,7 +102,9 @@ export default class Activity extends AppBase {
         all: {
           now: this._listCalc(now_all, user_id),
           feature: this._listCalc(feature_all, user_id)
-        }
+        },
+        mine_total,
+        all_total,
       };
     });
   }
