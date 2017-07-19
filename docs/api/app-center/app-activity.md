@@ -57,7 +57,6 @@ request_body:
   is_public: Boolean,
   accept_require: Boolean,
   certified_member: Boolean,
-  creator: objectId,
   assistants: [objectId...],
   members: [objectId...],
   followers: [objectId...],

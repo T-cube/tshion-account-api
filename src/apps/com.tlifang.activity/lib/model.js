@@ -158,7 +158,7 @@ export default class Activity extends AppBase {
     });
   }
 
-  createActivity(activity, user_id, company_id) {
+  createActivity({activity, user_id, company_id}) {
     return this.collection('room').findOne({
       _id: activity.room._id
     }).then(room => {
