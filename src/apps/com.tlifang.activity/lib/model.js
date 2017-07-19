@@ -166,6 +166,7 @@ export default class Activity extends AppBase {
         throw new ApiError(400, 'invalid_room_id');
       }
       activity.accept_members = [];
+      activity.company_id = company_id;
       activity.sign_in_members = [];
       activity.comments = [];
       activity.creator = user_id;
@@ -524,7 +525,9 @@ export default class Activity extends AppBase {
     .then(list => {
       return Promise.map(list, item => {
         return this.collection('item').find({
-          time_start: { $gte: moment().startOf('day').toDate() }
+          time_start: { $gte: moment().startOf('day').toDate() },
+          company_id,
+          'room._id': item._id
         })
         .limit(C.ACTIVITY_QUERY_LIMIT)
         .then(activities => {
