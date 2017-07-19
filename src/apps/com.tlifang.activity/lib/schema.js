@@ -99,13 +99,13 @@ const schema={
       date_start: { $date: 1, optional: true },
       date_end: { $date: 1, optional: true },
       target: { type: 'string' },
-      last_id: { $objectId: 1 , optional: true },
+      page: { type: 'integer' },
     },
     validation: {
       date_start: { $date: 1, optional: true },
       date_end: { $date: 1, optional: true },
       target: { $enum: ENUMS.LIST_TARGET },
-      last_id: { $objectId: 1 , optional: true },
+      page: { type: 'integer' },
     }
   },
   approvalList: {

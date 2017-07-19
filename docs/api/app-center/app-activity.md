@@ -4,11 +4,11 @@
 
 ### GET /overview
 
-获取我的和所有的活动近期概览（最多两条，查看更多使用 GET /activity）
+获取我的和所有的活动近期概览（查看更多使用 GET /activity）
 ```javascript
 {
   mine: {
-    past: [<activity:> {
+    now: [<activity:> {
       name: String,
       type: String,
       time_start: Date,
@@ -25,11 +25,9 @@
         equipments: [objectId...], //equipment_id
       }
     }...],
-    now: [<activity>...],
-    future: [<activity>...]
+    future: [<activity>...],
   },
   all: {
-    past: [<activity>...],
     now: [<activity>...],
     future: [<activity>...]
   }
@@ -77,7 +75,7 @@ query:
   date_start: Date, //optional
   date_end: Date, //optional
   target: String, // mine, all
-  last_id: objectId
+  page: Number
 }
 ```
 

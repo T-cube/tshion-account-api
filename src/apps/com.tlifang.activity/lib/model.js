@@ -34,67 +34,58 @@ export default class Activity extends AppBase {
       },
     ];
     let all = isMember.concat([{is_public: true}]);
-    let now = new Date();
     return Promise.all([
       this.collection('item')
       .find({
         company_id,
-        time_end: { $lt: now },
+        time_start: {
+          $gte: moment().startOf('day').toDate(),
+          $lt: moment().endOf('day').toDate(),
+        },
         status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
-      .limit(C.ACTIVITY_QUERY_LIMIT),
+      .sort({time_start: -1}),
       this.collection('item')
       .find({
         company_id,
-        time_start: { $lt: now },
-        time_end: { $gt: now },
+        time_start: {
+          $gte: moment().add(1, 'day').startOf('day').toDate(),
+          $lt: moment().add(3, 'day').startOf('day').toDate(),
+        },
         status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
-      .limit(C.ACTIVITY_QUERY_LIMIT),
+      .sort({time_start: -1}),
       this.collection('item')
       .find({
         company_id,
-        time_start: { $gt: now },
-        status: C.ACTIVITY_STATUS.CREATED,
-        $or: isMember
-      }, this.baseInfo)
-      .limit(C.ACTIVITY_QUERY_LIMIT),
-      this.collection('item')
-      .find({
-        company_id,
-        time_end: { $lt: now },
+        time_start: {
+          $gte: moment().startOf('day').toDate(),
+          $lt: moment().endOf('day').toDate(),
+        },
         status: C.ACTIVITY_STATUS.CREATED,
         $or: all,
       }, this.baseInfo)
-      .limit(C.ACTIVITY_QUERY_LIMIT),
+      .sort({time_start: -1}),
       this.collection('item')
       .find({
         company_id,
-        time_start: { $lt: now },
-        time_end: { $gt: now },
+        time_start: {
+          $gte: moment().add(1, 'day').startOf('day').toDate(),
+          $lt: moment().add(3, 'day').startOf('day').toDate(),
+        },
         status: C.ACTIVITY_STATUS.CREATED,
         $or: all,
       }, this.baseInfo)
-      .limit(C.ACTIVITY_QUERY_LIMIT),
-      this.collection('item')
-      .find({
-        company_id,
-        time_start: { $gt: now },
-        status: C.ACTIVITY_STATUS.CREATED,
-        $or: all,
-      }, this.baseInfo)
-      .limit(C.ACTIVITY_QUERY_LIMIT),
-    ]).then(([past_mine, now_mine, feature_mine, past_all, now_all, feature_all]) => {
+      .sort({time_start: -1}),
+    ]).then(([now_mine, feature_mine, now_all, feature_all]) => {
       return {
         mine: {
-          past: this._listCalc(past_mine, user_id),
           now: this._listCalc(now_mine, user_id),
           feature: this._listCalc(feature_mine, user_id)
         },
         all: {
-          past: this._listCalc(past_all, user_id),
           now: this._listCalc(now_all, user_id),
           feature: this._listCalc(feature_all, user_id)
         }
@@ -102,7 +93,7 @@ export default class Activity extends AppBase {
     });
   }
 
-  list({user_id, company_id, date_start, date_end, target, last_id}) {
+  list({user_id, company_id, date_start, date_end, target, page}) {
     let isMember = [
       {
         creator: user_id
@@ -120,20 +111,16 @@ export default class Activity extends AppBase {
     let all = isMember.concat([{is_public: true}]);
     let criteria = {
       company_id,
-      status: { $ne: C.ACTIVITY_STATUS.CANCELLED },
+      status: C.ACTIVITY_STATUS.CREATED,
     };
-    let sortType = -1;
+    let sortType = 1;
     if (date_start && !date_end) {
-      criteria.time_start = { $gte: date_start};
-      sortType = 1;
+      criteria.time_start = { $gte: moment(date_start).startOf('day').toDate() };
     } else if (!date_start && date_end) {
-      criteria.time_start = { $lte: date_end };
+      criteria.time_start = { $lte: moment(date_end).endOf('day').toDate() };
+      sortType = -1;
     } else if (date_start && date_end) {
-      criteria.time_start = { $gte: date_start, $lte: date_end };
-      sortType = 1;
-    }
-    if (last_id) {
-      criteria._id = { $lt: last_id };
+      criteria.time_start = { $gte: moment(date_start).startOf('day').toDate(), $lte: moment(date_end).endOf('day').toDate() };
     }
     if (target == C.LIST_TARGET.MINE) {
       criteria['$or'] = isMember;
@@ -142,6 +129,7 @@ export default class Activity extends AppBase {
     }
     return this.collection('item')
     .find(criteria, this.baseInfo)
+    .skip((page - 1) * 10)
     .limit(10)
     .sort({time_start: sortType})
     .then(list => {
@@ -150,11 +138,23 @@ export default class Activity extends AppBase {
   }
 
   createActivity({activity, user_id, company_id}) {
-    return this.collection('room').findOne({
-      _id: activity.room._id
-    }).then(room => {
+    return Promise.all([
+      this.collection('room').findOne({
+        _id: activity.room._id,
+        company_id,
+      }),
+      this.collection('item').findOne({
+        _id: activity.room._id,
+        company_id,
+        time_start: { $lte: activity.time_start },
+        time_end: { $gt: activity.time_start },
+      })
+    ]).then(([room, exist]) => {
       if (!room) {
         throw new ApiError(400, 'invalid_room_id');
+      }
+      if (exist) {
+        throw new ApiError(400, 'already_exist_activity_use_room');
       }
       activity.accept_members = [];
       activity.company_id = company_id;
@@ -516,11 +516,15 @@ export default class Activity extends AppBase {
     .then(list => {
       return Promise.map(list, item => {
         return this.collection('item').find({
-          time_start: { $gte: moment().startOf('day').toDate() },
+          time_start: {
+            $gte: moment().startOf('day').toDate(),
+            $lt: moment().add(2,'days').startOf('day').toDate()
+          },
           company_id,
-          'room._id': item._id
+          'room._id': item._id,
+          status: C.ACTIVITY_STATUS.CREATED,
         })
-        .limit(C.ACTIVITY_QUERY_LIMIT)
+        .sort({time_start: -1})
         .then(activities => {
           item.activities = activities;
           return item;
@@ -545,8 +549,10 @@ export default class Activity extends AppBase {
         this.collection('item')
         .find({
           'room._id': room_id,
-          time_start: { $lt: moment().startOf('day').toDate() }
+          time_start: { $lt: moment().startOf('day').toDate() },
+          status: C.ACTIVITY_STATUS.CREATED,
         })
+        .sort({time_start: -1})
         .limit(C.ACTIVITY_QUERY_LIMIT),
         this.collection('item')
         .find({
@@ -555,13 +561,16 @@ export default class Activity extends AppBase {
             $gt: moment().startOf('day').toDate(),
             $lt: moment().startOf('day').add(1, 'day').toDate(),
           },
-        }),
+          status: C.ACTIVITY_STATUS.CREATED,
+        })
+        .sort({time_start: -1}),
         this.collection('item')
         .find({
           'room._id': room_id,
-          time_start: { $gte: moment().startOf('day').add(1, 'day').toDate() }
+          time_start: { $gte: moment().startOf('day').add(1, 'day').toDate() },
+          status: C.ACTIVITY_STATUS.CREATED,
         })
-        .limit(C.ACTIVITY_QUERY_LIMIT)
+        .sort({time_start: -1}),
       ]).then(([past, now, future]) => {
         room.past = past;
         room.now = now;
