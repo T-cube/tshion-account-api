@@ -12,7 +12,6 @@ export default class Activity extends AppBase {
   constructor(options) {
     super(options);
     this.baseInfo = {
-      room: 0,
       attachments: 0,
       comments: 0,
     };
