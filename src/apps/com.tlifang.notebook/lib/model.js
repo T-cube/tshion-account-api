@@ -474,6 +474,7 @@ export default class Notebook extends AppBase {
       company_id,
     })
     .then(doc => {
+      let now = new Date();
       let notebook = _.find(doc.notebooks, item => {
         return item.name == name && !item.abandoned;
       });
@@ -488,8 +489,11 @@ export default class Notebook extends AppBase {
       }, {
         $set: {
           'notebooks.$.name': name,
-          'notebooks.$.date_update': new Date()
+          'notebooks.$.date_update': now
         }
+      })
+      .then(() => {
+        return { id: notebook_id, name, date: now, abandoned: false };
       });
     });
   }
