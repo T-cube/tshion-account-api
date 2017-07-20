@@ -706,7 +706,7 @@ export default class Activity extends AppBase {
 
   _listCalc(list, user_id) {
     return _.map(list, item => {
-      item.total = item.assistants.length + item.members.length + 1;
+      item.total = _.uniq([].concat(item.assistants, item.creator, item.members)).length;
       item.isMember = _.some([].concat(item.assistants, item.creator, item.followers, item.members), member => member.equals(user_id));
       delete item.assistants;
       delete item.members;

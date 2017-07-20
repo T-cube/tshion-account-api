@@ -91,6 +91,7 @@ api.get('/shared/all', (req, res, next) => {
     user_id: req.user._id,
     company_id: req.company._id,
     last_id: req.query.last_id,
+    sort_type: req.query.sort_type,
   }).then(list => {
     res.json(list);
   }).catch(next);
