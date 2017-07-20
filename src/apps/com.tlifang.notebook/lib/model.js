@@ -477,7 +477,7 @@ export default class Notebook extends AppBase {
             company_id,
             tags: tag_id
           }, {
-            $push: {
+            $addToSet: {
               tags: tag._id
             }
           }, {
@@ -525,6 +525,7 @@ export default class Notebook extends AppBase {
       });
       if (notebook) {
         let names = _.pluck(doc.notebooks, 'name');
+        names = _.reject(names, item => item == name);
         name = getUniqName(names, name);
       }
       return this.collection('user').update({
@@ -747,7 +748,6 @@ export default class Notebook extends AppBase {
   }
 
   _getIdIndex(last_id, list) {
-    console.log(list);
     let id_index;
     for (let i = 0; i < list.length; i++) {
       if (list[i]._id.equals(last_id)) {
