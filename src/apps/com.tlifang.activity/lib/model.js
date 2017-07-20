@@ -32,7 +32,7 @@ export default class Activity extends AppBase {
         members: user_id
       },
     ];
-    let all = isMember.concat([{is_public: true}]);
+    let all = [].concat(isMember, [{is_public: true}]);
     return Promise.all([
       this.collection('item')
       .find({
@@ -82,14 +82,14 @@ export default class Activity extends AppBase {
       .count({
         company_id,
         status: C.ACTIVITY_STATUS.CREATED,
-        time_start: { $gte: moment().toDate() },
+        time_start: { $gte: moment().startOf('day').toDate() },
         $or: isMember,
       }),
       this.collection('item')
       .count({
         company_id,
         status: C.ACTIVITY_STATUS.CREATED,
-        time_start: { $gte: moment().toDate() },
+        time_start: { $gte: moment().startOf('day').toDate() },
         $or: all,
       }),
     ]).then(([now_mine, feature_mine, now_all, feature_all, mine_total, all_total]) => {
@@ -194,6 +194,7 @@ export default class Activity extends AppBase {
           company_id,
           manager: room.manager,
           status: C.APPROVAL_STATUS.PENDING,
+          date_create: new Date(),
           comments: []
         })
         .then(approval => {
@@ -367,8 +368,9 @@ export default class Activity extends AppBase {
   }
 
 
-  approvalList({user_id, page, pagesize}) {
+  approvalList({company_id, user_id, page, pagesize}) {
     let criteria = {
+      company_id,
       $or: [
         {
           creator: user_id
@@ -383,7 +385,14 @@ export default class Activity extends AppBase {
     .skip((page - 1) * pagesize)
     .limit(pagesize)
     .then(list => {
-      return list;
+      return Promise.map(list, item => {
+        return this.collection('item').findOne({
+          _id: item.activity_id
+        }).then(activity => {
+          item.activity = activity;
+          return item;
+        });
+      });
     });
   }
 

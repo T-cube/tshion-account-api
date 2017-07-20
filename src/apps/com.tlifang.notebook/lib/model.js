@@ -457,14 +457,59 @@ export default class Notebook extends AppBase {
   }
 
   tagChange({user_id, company_id, name, tag_id}) {
-    return this.collection('user').update({
+    return this.collection('user').findOne({
       user_id,
-      company_id,
-      'tags._id': tag_id
-    }, {
-      $set: {
-        'tags.$.name': name
+      company_id
+    }).then(doc => {
+      let tag = _.find(doc.tags, tag => tag.name == name);
+      if (tag) {
+        return Promise.all([
+          this.collection('user').update({
+            user_id,
+            company_id
+          }, {
+            $pull: {
+              tags: { _id: tag_id }
+            }
+          }),
+          this.collection('note').update({
+            user_id,
+            company_id,
+            tags: tag_id
+          }, {
+            $push: {
+              tags: tag._id
+            }
+          }, {
+            multi: true
+          }),
+        ])
+        .then(() => {
+          this.collection('note').update({
+            user_id,
+            company_id,
+            tags: tag_id
+          }, {
+            $pull: {
+              tags: tag_id
+            }
+          }, {
+            multi: true
+          });
+          return tag;
+        });
       }
+      return this.collection('user').update({
+        user_id,
+        company_id,
+        'tags._id': tag_id
+      }, {
+        $set: {
+          'tags.$.name': name
+        }
+      }).then(() => {
+        return { _id: tag_id, name };
+      });
     });
   }
 

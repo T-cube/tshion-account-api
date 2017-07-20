@@ -167,6 +167,7 @@ api.post('/activity/:activity_id/comment', (req, res, next) => {
 api.get('/approval', (req, res, next) => {
   validate('approvalList', req.query);
   req._app.approvalList({
+    company_id: req.company._id,
     user_id: req.user._id,
     page: req.query.page,
     pagesize: req.query.pagesize,
