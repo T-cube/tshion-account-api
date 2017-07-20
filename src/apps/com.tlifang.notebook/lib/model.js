@@ -255,18 +255,18 @@ export default class Notebook extends AppBase {
         return item.name == name && !item.abandoned;
       });
       if (notebook) {
-        return notebook;
-      } else {
-        let _id = ObjectId();
-        return this.collection('user').update({
-          user_id,
-          company_id,
-        }, {
-          $push: { notebooks: { name, _id, date_update: now, abandoned: false } }
-        }).then(() => {
-          return { name, _id, date_update: now, abandoned: false };
-        });
+        let names = _.pluck(doc.notebooks, 'name');
+        name = getUniqName(names, name);
       }
+      let _id = ObjectId();
+      return this.collection('user').update({
+        user_id,
+        company_id,
+      }, {
+        $push: { notebooks: { name, _id, date_update: now, abandoned: false } }
+      }).then(() => {
+        return { name, _id, date_update: now, abandoned: false };
+      });
     });
   }
 
@@ -469,15 +469,28 @@ export default class Notebook extends AppBase {
   }
 
   notebookChange({user_id, company_id, name, notebook_id}) {
-    return this.collection('user').update({
+    return this.collection('user').findOne({
       user_id,
       company_id,
-      'notebooks._id': notebook_id
-    }, {
-      $set: {
-        'notebooks.$.name': name,
-        'notebooks.$.date_update': new Date()
+    })
+    .then(doc => {
+      let notebook = _.find(doc.notebooks, item => {
+        return item.name == name && !item.abandoned;
+      });
+      if (notebook) {
+        let names = _.pluck(doc.notebooks, 'name');
+        name = getUniqName(names, name);
       }
+      return this.collection('user').update({
+        user_id,
+        company_id,
+        'notebooks._id': notebook_id
+      }, {
+        $set: {
+          'notebooks.$.name': name,
+          'notebooks.$.date_update': new Date()
+        }
+      });
     });
   }
 
