@@ -177,7 +177,6 @@ export default class Notebook extends AppBase {
       criteria.user_id = member_id;
     }
     if (last_id) {
-      criteria._id = { $lt: last_id };
       return this.collection('note')
       .find(criteria, {
         _id: 1,
@@ -686,6 +685,7 @@ export default class Notebook extends AppBase {
   }
 
   _getIdIndex(last_id, list) {
+    console.log(list);
     let id_index;
     for (let i = 0; i < list.length; i++) {
       if (list[i]._id.equals(last_id)) {
