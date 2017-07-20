@@ -1,5 +1,6 @@
 import express from 'express';
 import _ from 'underscore';
+import Promise from 'bluebird';
 
 import { validate } from './schema';
 import _C from './constants';
