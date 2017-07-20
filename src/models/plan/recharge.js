@@ -27,7 +27,7 @@ export default class Recharge {
     return this.ensureIsValid(amount)
     .then(() => this.createOrderNo())
     .then(recharge_no => {
-      let paid_sum = 1;
+      let paid_sum = amount;
       let data = {
         amount,
         company_id,
