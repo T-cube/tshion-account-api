@@ -74,6 +74,12 @@ let constants = {
     NEWS: 'news',
   },
 
+  APP_LIST_TYPE: {
+    ALL: 'all',
+    TOP: 'top',
+    NEW: 'new',
+  },
+
   APPROVAL_ITEM_STATUS: {
     PROCESSING: 'processing',
     APPROVED: 'approved',

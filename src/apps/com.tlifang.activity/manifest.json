@@ -1,0 +1,22 @@
+{
+  "appid": "com.tlifang.activity",
+  "version": "0.1.7",
+  "name": "活动",
+  "name_en": "",
+  "type": "team",
+  "icons": {
+    "16": "assets/icon16.png",
+    "64": "assets/icon64.png",
+    "128": "assets/icon128.png"
+  },
+  "slideshow": ["assets/slideshow1.png", "assets/slideshow2.png"],
+  "author": "tlifang",
+  "url": "https://tlifang.com/",
+  "description": "a activity",
+  "update_info": "",
+  "permissions": ["storage.mongo"],
+  "dependencies": [],
+  "storage": {
+    "mongo": ["item", "approval", "room"]
+  }
+}

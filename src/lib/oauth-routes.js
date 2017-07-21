@@ -174,7 +174,7 @@ export function userCheck() {
           throw new ApiError(400, 'missing_captcha');
         } else {
           redis.get(userCaptcha).then(captcha => {
-            if (req.body.captcha == captcha) {
+            if (req.body.captcha.toLowerCase() == captcha.toLowerCase()) {
               next();
             } else {
               redis.incr(userKey);

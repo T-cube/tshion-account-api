@@ -198,6 +198,8 @@ app.use(app.oauth.errorHandler());
 app.use(apiErrorHandler);
 app.use(apiRouteError);
 
+export default app;
+
 // starting server
 server.listen(config.get('server'), err => {
   if (err) {

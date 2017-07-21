@@ -316,5 +316,5 @@ module.exports = {
       min: 100,
       max: 500000,
     }
-  }
+  },
 };
