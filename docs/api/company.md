@@ -351,3 +351,22 @@ INPUT
 ### POST /company/:company_id/exit
 
 退出公司
+
+### GET /company/:company_id/recent/project
+
+获取用户该公司最近使用项目（4个），已排序
+```javascript
+[{
+  _id: ObjectId,
+  name: String,
+  company_id: ObjectId,
+  is_archived: Boolean,
+  owner: ObjectId,
+  members:[{
+    _id: ObjectId,
+    type: String,
+    title: String,
+  }],
+  date_create: Date,  
+}...]
+```
