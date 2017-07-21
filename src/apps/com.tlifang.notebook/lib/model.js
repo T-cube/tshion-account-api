@@ -181,7 +181,7 @@ export default class Notebook extends AppBase {
     });
   }
 
-  sharedQuery({user_id, company_id, last_id, member_id, sort_type}) {
+  sharedQuery({user_id, company_id, last_id, member_id, sort_type, key_word}) {
     let criteria = {
       company_id,
       shared: true,
@@ -189,6 +189,20 @@ export default class Notebook extends AppBase {
     };
     if (member_id) {
       criteria.user_id = member_id;
+    }
+    if (key_word) {
+      criteria['$or'] = [
+        {
+          title: {
+            $regex: strToReg(key_word, 'i')
+          },
+        },
+        {
+          content: {
+            $regex: strToReg(key_word, 'i')
+          },
+        },
+      ];
     }
     if (last_id) {
       return this.collection('note')
@@ -539,7 +553,6 @@ export default class Notebook extends AppBase {
       });
       if (notebook) {
         let names = _.pluck(doc.notebooks, 'name');
-        names = _.reject(names, item => item == name);
         name = getUniqName(names, name);
       }
       return this.collection('user').update({

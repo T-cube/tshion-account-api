@@ -89,12 +89,13 @@ api.get('/note/:note_id', (req, res, next) => {
 });
 
 api.get('/shared/all', (req, res, next) => {
-  validate('share', req.query, ['last_id', 'sort_type']);
+  validate('share', req.query, ['last_id', 'sort_type', 'key_word']);
   req._app.sharedQuery({
     user_id: req.user._id,
     company_id: req.company._id,
     last_id: req.query.last_id,
     sort_type: req.query.sort_type,
+    key_word: req.query.key_word,
   }).then(list => {
     res.json(list);
   }).catch(next);
