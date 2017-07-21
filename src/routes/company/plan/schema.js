@@ -175,6 +175,14 @@ const schema = {
       bank_subname: { type: 'string' },
     },
   },
+  transfer_info: {
+    sanitization: {
+      transfer_id: { $objectId: 1 },
+    },
+    validation: {
+      transfer_id: { $objectId: 1 },
+    }
+  },
   trial: {
     sanitization: {
       plan: { type: 'string' },

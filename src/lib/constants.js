@@ -232,6 +232,7 @@ let constants = {
 
   TRANSFER_STATUS: {
     CREATED: 'created',
+    TRANSFERED: 'transfered',
     REJECTED: 'rejected',
     CONFIRMED: 'confirmed',
   },
