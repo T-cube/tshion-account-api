@@ -1,4 +1,5 @@
 import RpcRoute from 'models/rpc-route';
+import { ObjectId } from 'mongodb';
 
 import TransferModel from './models/transfer';
 import { strToReg } from 'lib/utils';
@@ -24,5 +25,12 @@ route.on('/list', query => {
 
 route.on('/confirm', query => {
   let { transfer_id } = query;
+  transfer_id = ObjectId(transfer_id);
   return transferModel.confirm({transfer_id});
+});
+
+route.on('/reject', query => {
+  let { transfer_id } = query;
+  transfer_id = ObjectId(transfer_id);
+  return transferModel.reject({transfer_id});
 });
