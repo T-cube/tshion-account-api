@@ -38,6 +38,7 @@ api.get('/note', (req, res, next) => {
     user_id: req.user._id,
     last_id: req.query.last_id,
     sort_type: req.query.sort_type,
+    key_word: req.query.key_word,
   }).then(list => {
     res.json(list);
   }).catch(next);
@@ -52,6 +53,7 @@ api.get('/tag/:tag_id/note', (req, res, next) => {
     user_id: req.user._id,
     last_id: req.query.last_id,
     sort_type: req.query.sort_type,
+    key_word: req.query.key_word,
     tag_id,
   }).then(list => {
     res.json(list);
@@ -67,6 +69,7 @@ api.get('/notebook/:notebook_id/note', (req, res, next) => {
     user_id: req.user._id,
     last_id: req.query.last_id,
     sort_type: req.query.sort_type,
+    key_word: req.query.key_word,
     notebook_id
   }).then(list => {
     res.json(list);

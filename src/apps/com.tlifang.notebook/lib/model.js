@@ -4,7 +4,7 @@ import _ from 'underscore';
 
 import { ApiError } from 'lib/error';
 import AppBase from 'models/app-base';
-import { getUniqName } from 'lib/utils';
+import { getUniqName, strToReg } from 'lib/utils';
 
 export default class Notebook extends AppBase {
 
@@ -105,7 +105,7 @@ export default class Notebook extends AppBase {
     });
   }
 
-  note({user_id, company_id, last_id, sort_type, tag_id, notebook_id}) {
+  note({user_id, company_id, last_id, sort_type, tag_id, notebook_id, key_word}) {
     let criteria = {
       user_id,
       company_id,
@@ -116,6 +116,20 @@ export default class Notebook extends AppBase {
     }
     if (notebook_id) {
       criteria.notebook = notebook_id;
+    }
+    if (key_word) {
+      criteria['$or'] = [
+        {
+          title: {
+            $regex: strToReg(key_word, 'i')
+          },
+        },
+        {
+          content: {
+            $regex: strToReg(key_word, 'i')
+          },
+        },
+      ];
     }
     if (last_id) {
       return this.collection('note')

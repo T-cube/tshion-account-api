@@ -39,6 +39,7 @@ query:
 {
   last_id: objectId, //optional, 分页处理，为上一页最后一个笔记的id
   sort_type: String, //title, date_update, notebook, date_create
+  key_word: String, //optional, 搜索的关键字
 }
 ```
 
@@ -51,6 +52,7 @@ query:
 {
   last_id: objectId, //optional, 分页处理，为上一页最后一个笔记的id
   sort_type: String, //title, date_update, notebook, date_create
+  key_word: String, //optional, 搜索的关键字
 }
 ```
 
@@ -79,6 +81,7 @@ query:
 {
   last_id: objectId, //optional, 分页处理，为上一页最后一个笔记的id
   sort_type: String, //title, date_update, notebook, date_create
+  key_word: String, //optional, 搜索的关键字
 }
 ```
 OUTPUT:

@@ -5,10 +5,12 @@ const schema = {
     sanitization: {
       last_id: { $objectId: 1, optional: true },
       sort_type: { type: 'string' },
+      key_word: { type: 'string', rules: ['trim'], optional: true },
     },
     validation: {
       last_id: { $objectId: 1, optional: true },
       sort_type: { $enum: ['date_update', 'date_create', 'notebook', 'title'] },
+      key_word: { type: 'string', minLength: 1, optional: true },
     }
   },
   share: {
