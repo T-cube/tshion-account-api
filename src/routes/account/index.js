@@ -91,10 +91,6 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       sex: null,
       locale: 'zh-CN',
       timezone: 'Asia/Shanghai',
-      options: {
-        notice_request: true,
-        notice_project: true,
-      },
       activiated: type == C.USER_ID_TYPE.MOBILE,
       date_join: time(),
       date_create: time(),
