@@ -112,10 +112,12 @@ const schema={
     sanitization: {
       page: { type: 'integer' },
       pagesize: { type: 'integer' },
+      type: { type: 'string', rules:['trim'] }
     },
     validation: {
       page: { type: 'integer', gte: 1 },
       pagesize: { type: 'integer', gte: 1 },
+      type: { $enmu: ENUMS.APPROVAL_LIST },
     }
   },
   apply: {

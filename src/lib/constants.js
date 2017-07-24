@@ -128,6 +128,12 @@ let constants = {
     OWNER: 'owner',
   },
 
+  FILE_SORT_TYPE: {
+    DATE_CREATE: 'date_create',
+    NAME: 'name',
+    MIMETYPE: 'mimetype',
+  },
+
   FORM_TYPE: {
     TEXT: 'text',
     TEXTAREA: 'textarea',

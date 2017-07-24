@@ -30,18 +30,18 @@ api.post('/activity', (req, res, next) => {
     company_id: req.company._id
   })
   .then(activity => {
-    if (activity.room.status == _C.APPROVAL_STATUS.AGREED) {
-      // let from = activity.creator;
-      // let to = activity.assistants.concat(activity.members, activity.followers);
-      // let info = {
-      //   company: req.company._id,
-      //   action: C.ACTIVITY_ACTION.ADD,
-      //   target_type: _C.OBJECT_TYPE.ACTIVITY,
-      //   from,
-      //   to
-      // };
-      // req.model('notification').send(info, APP);
-    }
+    // if (activity.room.status == _C.APPROVAL_STATUS.AGREED) {
+    //   // let from = activity.creator;
+    //   // let to = activity.assistants.concat(activity.members, activity.followers);
+    //   // let info = {
+    //   //   company: req.company._id,
+    //   //   action: C.ACTIVITY_ACTION.ADD,
+    //   //   target_type: _C.OBJECT_TYPE.ACTIVITY,
+    //   //   from,
+    //   //   to
+    //   // };
+    //   // req.model('notification').send(info, APP);
+    // }
     res.json(activity);
   })
   .catch(next);
@@ -171,6 +171,7 @@ api.get('/approval', (req, res, next) => {
     user_id: req.user._id,
     page: req.query.page,
     pagesize: req.query.pagesize,
+    type: req.query.type,
   })
   .then(list => {
     res.json(list);
@@ -211,9 +212,6 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
     status: req.body.status
   })
   .then(activity => {
-    if (activity.room.status == _C.ACTIVITY_APPROVAL_STATUS.AGREED) {
-      //req.model('notification')
-    }
     res.json(activity);
   })
   .catch(next);

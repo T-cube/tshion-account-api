@@ -137,7 +137,7 @@ export default class Notebook extends AppBase {
       .then(doc => {
         let tag = _.find(doc.tags, item => item.name == key_word);
         if (tag) {
-          criteria['or'].push({
+          criteria['$or'].push({
             tags: tag._id
           });
         }

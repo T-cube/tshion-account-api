@@ -12,6 +12,18 @@ const schema = {
       description: { type: 'string', maxLength: 2000 },
     },
   },
+  user_file: {
+    sanitization: {
+      sort_type: { type: 'string' },
+      key_word: { type: 'string', rules: ['trim'], optional: true },
+      last_id: { $objectId: 1 , optional: true },
+    },
+    validation: {
+      sort_type: { $enum: ENUMS.FILE_SORT_TYPE },
+      key_word: { type: 'string', optional: true },
+      last_id: { $objectId: 1 , optional: true },
+    },
+  }
 };
 
 export const validate = buildValidator(schema);

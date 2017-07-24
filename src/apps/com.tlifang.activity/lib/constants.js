@@ -6,6 +6,11 @@ let constants = {
     PENDING: 'pending',
     REJECTED: 'rejected',
   },
+  APPROVAL_LIST: {
+    ALL: 'all',
+    APPLY: 'apply',
+    APPROVE: 'approve',
+  },
   ACTIVITY_QUERY_LIMIT: 2,
   LIST_RANGE: {
     PAST: 'past',

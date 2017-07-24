@@ -368,18 +368,24 @@ export default class Activity extends AppBase {
   }
 
 
-  approvalList({company_id, user_id, page, pagesize}) {
+  approvalList({company_id, user_id, page, pagesize, type}) {
     let criteria = {
       company_id,
-      $or: [
+    };
+    if (type == C.APPROVAL_LIST.ALL) {
+      criteria['$or'] = [
         {
           creator: user_id
         },
         {
           manager: user_id
         }
-      ]
-    };
+      ];
+    } else if (type == C.APPROVAL_LIST.APPLY) {
+      criteria.creator = user_id;
+    } else if (type == C.APPROVAL_LIST.APPROVE) {
+      criteria.manager = user_id;
+    }
     return this.collection('approval')
     .find(criteria)
     .skip((page - 1) * pagesize)
@@ -432,7 +438,7 @@ export default class Activity extends AppBase {
       if (!doc) {
         throw new ApiError(400, 'no_approval');
       }
-      if (!doc.creator.equals(user_id) || !doc.room.manager.equals(user_id)) {
+      if (!doc.creator.equals(user_id) || !doc.manager.equals(user_id)) {
         throw new ApiError(400, 'can_not_comment');
       }
       return this.collection('approval')
@@ -456,7 +462,7 @@ export default class Activity extends AppBase {
       if (!doc) {
         throw new ApiError(400, 'no_approval');
       }
-      if (!doc.room.manager.equals(user_id)) {
+      if (!doc.manager.equals(user_id)) {
         throw new ApiError(400, 'unable_to_confirm');
       }
       let activity_status;

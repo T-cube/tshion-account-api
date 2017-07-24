@@ -7,13 +7,14 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { time, mapObjectIdToData } from 'lib/utils';
+import { time, mapObjectIdToData, strToReg } from 'lib/utils';
 import { validate } from './schema';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
 import UserLevel from 'models/user-level';
 import { COMPANY_MEMBER_UPDATE } from 'models/notification-setting';
 import Plan from 'models/plan/plan';
+import { attachFileUrls } from 'routes/company/document/index';
 
 import {
   MODULE_PROJECT,
@@ -444,6 +445,79 @@ api.post('/:company_id/exit', (req, res, next) => {
   })
   .catch(next);
 });
+
+api.get('/:company_id/user/file', (req, res, next) => {
+  validate('user_file', req.query);
+  let last_id = req.query.last_id;
+  let key_word = req.query.key_word;
+  let sort_type = req.query.sort_type;
+  let criteria = {
+    author: req.user._id,
+    company: req.company._id,
+  };
+  if (key_word) {
+    criteria['$or'] = [
+      {
+        mimetype: {
+          $regex: strToReg(key_word, 'i')
+        },
+      },
+      {
+        name: {
+          $regex: strToReg(key_word, 'i')
+        },
+      },
+    ];
+  }
+  if (last_id) {
+    db.user.file
+    .find(criteria, {_id: 1})
+    .sort({[sort_type]: -1})
+    .then(list => {
+      let id_index = _getIdIndex(last_id, list);
+      let target_list = list.slice(id_index, id_index + 10);
+      return Promise.all(target_list.map(item => {
+        return db.user.file
+        .findOne({_id: item._id})
+        .then(doc => {
+          return attachFileUrls(req, doc).then(() => {
+            return doc;
+          });
+        });
+      }))
+      .then(data => {
+        res.json(data);
+      });
+    });
+  } else {
+    db.user.file.find(criteria).sort({[sort_type]: -1}).limit(10).then(list => {
+      return Promise.all(list.map(item => {
+        return attachFileUrls(req, item).then(() => {
+          return item;
+        });
+      })).then(() => {
+        res.json(list);
+      });
+    })
+    .catch(next);
+  }
+});
+
+function _getIdIndex(last_id, list) {
+  let id_index;
+  for (let i = 0; i < list.length; i++) {
+    if (list[i]._id.equals(last_id)) {
+      id_index = i + 1;
+      break;
+    }
+    if (i == list.length - 1) {
+      if (!id_index) {
+        throw new ApiError(400, 'invalid_last_id');
+      }
+    }
+  }
+  return id_index;
+}
 
 let ckeckAuth = (_module) => (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company._id);
