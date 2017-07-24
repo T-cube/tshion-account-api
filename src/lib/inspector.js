@@ -8,11 +8,15 @@ import moment from 'moment-timezone';
 
 const sanitizationCustom = {
   objectId: function (schema, post) {
-    if (/^[A-Fa-f0-9]{24}$/.test(post)) {
+    if (post === null || post === undefined) {
+      return post;
+    } else if (/^[A-Fa-f0-9]{24}$/.test(post)) {
       this.report();
       return ObjectId(post);
+    } else {
+      this.report();
+      return '[Invalid ObjectId]';
     }
-    return post;
   },
   emptyArray: function (schema, post) {
     this.report();
@@ -37,7 +41,7 @@ const validationCustom = {
       return;
     }
     if (candidate && !ObjectId.isValid(candidate)) {
-      this.report('invalid ObjectId: ' + candidate);
+      this.report('invalid ObjectId');
     }
   },
   enum: function(schema, candidate) {
@@ -59,7 +63,7 @@ const validationCustom = {
     }
   },
   email: function(schema, candidate) {
-    if (_.isString(candidate)  && candidate !== ''
+    if (_.isString(candidate) && candidate !== ''
       && !/^[a-z0-9-_\.]+@([a-z0-9\-]+\.)+[a-z]+$/.test(candidate)) {
       this.report('invalid email: ' + candidate);
     }

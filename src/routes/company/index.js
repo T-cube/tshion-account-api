@@ -7,7 +7,7 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { time } from 'lib/utils';
+import { time, mapObjectIdToData } from 'lib/utils';
 import { validate } from './schema';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
@@ -371,6 +371,26 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
+api.get('/:company_id/recent/project', (req, res, next) => {
+  Promise.all([
+    db.user.findOne({_id: req.user._id}),
+    db.company.findOne({_id: req.company._id}),
+  ])
+  .then(([user, company]) => {
+    if (!user.recent || !user.recent.projects || !user.recent.projects.length) {
+      let company_recent = _.intersection(company.projects, user.projects);
+      return mapObjectIdToData(company_recent.slice(-4), 'project').then(() => {
+        res.json(company_recent);
+      });
+    }
+    let company_recent = _.pluck(_.sortBy(user.recent.projects, item => -item.date), 'project_id').slice(0, 4);
+    return mapObjectIdToData(company_recent, 'project').then(() => {
+      res.json(company_recent);
+    });
+  })
+  .catch(next);
+});
+
 api.post('/:company_id/exit', (req, res, next) => {
   const company_id = req.company._id;
   const projects = req.company.projects;
@@ -451,3 +471,5 @@ api.use('/:company_id/structure', ckeckAuth(MODULE_STRUCTURE), require('./struct
 api.use('/:company_id/activity', require('./activity').default);
 api.use('/:company_id/member', require('./member').default);
 api.use('/:company_id/plan', require('./plan').default);
+api.use('/:company_id/app-center', require('./app-center').default);
+api.use('/:company_id/app', require('./app').default);

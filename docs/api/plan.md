@@ -600,6 +600,28 @@ OUTPUT
 }
 ```
 
+### POST /recharge/transfer
+
+提交转账信息记录
+
+request_body:
+```javascript
+{
+  account: Number, //转账账户
+  amount: Number, //转账金额
+  bank: String, //银行名称
+  bank_subname: String, //支行名称
+}
+```
+
+### GET /recharge/transfer
+
+获取转账信息列表，普通用户只能查看用自己，公司拥有者可以查看所有
+
+### PUT /recharge/transfer/:transfer_id/transfered
+
+确认转账信息，普通用户只能确认自己，公司拥有者可以确认所有
+
 ### GET /recharge
 
 获取充值记录列表
@@ -641,6 +663,21 @@ OUTPUT
 
 ```javascript
 
+```
+
+### POST /transfer
+
+提交转账记录
+
+INPUT
+
+```javascript
+{
+  amount: Number,
+  account: Number,
+  bank: String, //银行名 例：兴业银行
+  bank_subname: String, //分行名 例：莲前支行
+}
 ```
 
 ### GET /recharge/:rechargeId/query

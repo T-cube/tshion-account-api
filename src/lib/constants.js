@@ -74,6 +74,12 @@ let constants = {
     NEWS: 'news',
   },
 
+  APP_LIST_TYPE: {
+    ALL: 'all',
+    TOP: 'top',
+    NEW: 'new',
+  },
+
   APPROVAL_ITEM_STATUS: {
     PROCESSING: 'processing',
     APPROVED: 'approved',
@@ -228,6 +234,13 @@ let constants = {
     FOLLOW: 'follow',             // 关注
     UNFOLLOW: 'unfollow',         // 取消关注
     PRIORITY: 'priority',         // 优先级
+  },
+
+  TRANSFER_STATUS: {
+    CREATED: 'created',
+    TRANSFERED: 'transfered',
+    REJECTED: 'rejected',
+    CONFIRMED: 'confirmed',
   },
 
   USER_ID_TYPE: {

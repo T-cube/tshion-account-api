@@ -39,6 +39,70 @@ api.post('/', (req, res, next) => {
   .catch(next);
 });
 
+api.post('/transfer', (req, res, next) => {
+  let data = req.body;
+  validate('transfer', data);
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  let recharge = new Recharge({company_id, user_id});
+  let payment_method = 'transfer';
+  recharge.transfer({amount: data.amount, payment_method, transfer_data: data})
+  .then(recharge => {
+    data.company_name = req.company.name;
+    data.recharge_id = recharge._id;
+    data.user_id = user_id;
+    data.company_id = company_id;
+    data.date_create = new Date();
+    data.date_update = new Date();
+    data.status = C.TRANSFER_STATUS.CREATED;
+    return db.transfer.insert(data).then(doc => {
+      delete doc._id;
+      return {...recharge,...req.body};
+    });
+  }).catch(next);
+});
+
+api.get('/transfer', (req, res, next) => {
+  let criteria = {
+    company_id: req.company._id
+  };
+  if (!req.user._id.equals(req.company.user)) {
+    criteria.user_id = req.user._id;
+  }
+  db.transfer.find(criteria)
+  .then(list => {
+    res.json(list);
+  })
+  .catch(next);
+});
+
+api.put('/transfer/:transfer_id/transfered', (req, res, next) => {
+  validate('transfer_info', req.params);
+  db.transfer.findOne({
+    company_id: req.company._id,
+    _id: req.params.transfer_id
+  })
+  .then(transfer => {
+    if (!transfer) {
+      throw new ApiError(400, 'invalid_transfer');
+    }
+    if (!req.user._id.equals(req.company.owner) || !req.user._id.equals(transfer.user_id)) {
+      throw new ApiError(400, 'invalid_user');
+    }
+    return db.transfer.update({
+      company_id: req.company._id,
+      _id: req.params.transfer_id
+    }, {
+      status: C.TRANSFER_STATUS.TRANSFERED,
+      date_update: new Date()
+    })
+    .then(() => {
+      res.json({success: 1});
+    });
+  })
+  .catch(next);
+});
+
 api.get('/', (req, res, next) => {
   let company_id = req.company._id;
   let { page, pagesize } = getPageInfo(req.query);
