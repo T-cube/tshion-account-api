@@ -545,18 +545,29 @@ export default class Activity extends AppBase {
     })
     .then(list => {
       return Promise.map(list, item => {
-        return this.collection('item').find({
-          time_start: {
-            $gte: moment().startOf('day').toDate(),
-            $lt: moment().add(2,'days').startOf('day').toDate()
-          },
-          company_id,
-          'room._id': item._id,
-          status: C.ACTIVITY_STATUS.CREATED,
-        })
-        .sort({time_start: -1})
-        .then(activities => {
-          item.activities = activities;
+        return Promise.all([
+          this.collection('item').find({
+            time_start: {
+              $gte: moment().startOf('day').toDate(),
+              $lt: moment().startOf('day').add(1,'day').toDate()
+            },
+            company_id,
+            'room._id': item._id,
+            status: C.ACTIVITY_STATUS.CREATED,
+          }),
+          this.collection('item').find({
+            time_start: {
+              $gte: moment().startOf('day').add(1,'day').toDate(),
+              $lt: moment().startOf('day').add(2,'day').toDate()
+            },
+            company_id,
+            'room._id': item._id,
+            status: C.ACTIVITY_STATUS.CREATED,
+          }),
+        ])
+        .then(([today, tomorrow]) => {
+          item.today = today;
+          item.tomorrow = tomorrow;
           return item;
         });
       }).then(rooms => {
@@ -579,6 +590,7 @@ export default class Activity extends AppBase {
         this.collection('item')
         .find({
           'room._id': room_id,
+          company_id,
           time_start: { $lt: moment().startOf('day').toDate() },
           status: C.ACTIVITY_STATUS.CREATED,
         })
@@ -587,6 +599,7 @@ export default class Activity extends AppBase {
         this.collection('item')
         .find({
           'room._id': room_id,
+          company_id,
           time_start: {
             $gt: moment().startOf('day').toDate(),
             $lt: moment().startOf('day').add(1, 'day').toDate(),
@@ -597,6 +610,7 @@ export default class Activity extends AppBase {
         this.collection('item')
         .find({
           'room._id': room_id,
+          company_id,
           time_start: { $gte: moment().startOf('day').add(1, 'day').toDate() },
           status: C.ACTIVITY_STATUS.CREATED,
         })
