@@ -190,7 +190,7 @@ export default class Activity extends AppBase {
         return this.collection('approval').insert({
           room_id: activity.room._id,
           creator: user_id,
-          type: room.name,
+          name: room.name,
           company_id,
           manager: room.manager,
           status: C.APPROVAL_STATUS.PENDING,

@@ -106,14 +106,12 @@ export default class Notebook extends AppBase {
   }
 
   note({user_id, company_id, last_id, sort_type, tag_id, notebook_id, key_word}) {
+    let promise = Promise.resolve();
     let criteria = {
       user_id,
       company_id,
       abandoned: { $ne: true },
     };
-    let promise = new Promise((resolve) => {
-      resolve();
-    });
     if (tag_id) {
       criteria.tags = tag_id;
     }
@@ -146,7 +144,7 @@ export default class Notebook extends AppBase {
       });
     }
     if (last_id) {
-      return promise().then(() => {
+      return promise.then(() => {
         return this.collection('note')
         .find(criteria, {
           _id: 1,
@@ -170,7 +168,7 @@ export default class Notebook extends AppBase {
         });
       });
     } else {
-      return promise().then(() => {
+      return promise.then(() => {
         return this.collection('note')
         .find(criteria, {
           company_id: 0
