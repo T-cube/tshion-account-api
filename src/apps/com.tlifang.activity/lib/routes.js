@@ -181,7 +181,7 @@ api.get('/approval', (req, res, next) => {
 api.get('/approval/:approval_id', (req, res, next) => {
   validate('info', req.params, ['approval_id']);
   req._app.approvalDetail({
-    approval_id: req.query.approval_id,
+    approval_id: req.params.approval_id,
     user_id: req.user._id
   })
   .then(doc => {
