@@ -465,6 +465,9 @@ export default class Activity extends AppBase {
       if (!doc.manager.equals(user_id)) {
         throw new ApiError(400, 'unable_to_confirm');
       }
+      if (doc.status != C.APPROVAL_STATUS.PENDING) {
+        throw new ApiError(400, 'approval_is_already_confirm');
+      }
       let activity_status;
       if (status == C.APPROVAL_STATUS.AGREED) {
         activity_status = C.ACTIVITY_STATUS.CREATED;

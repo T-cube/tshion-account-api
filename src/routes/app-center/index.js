@@ -23,7 +23,9 @@ api.get('/app', (req, res, next) => {
   } else {
     sort = { date_update: -1 };
   }
-  db.app.find({}, {
+  db.app.find({
+    enabled: true
+  }, {
     permissions: 0,
     dependencies: 0,
     storage: 0,
@@ -42,7 +44,9 @@ api.get('/store/index', (req, res, next) => {
   Promise.all([
     db.app.slideshow.find({}, {pic_url: 1, appid: 1}).limit(3),
     db.app
-    .find({}, {
+    .find({
+      enabled: true
+    }, {
       permissions: 0,
       dependencies: 0,
       storage: 0,
@@ -51,7 +55,9 @@ api.get('/store/index', (req, res, next) => {
     .sort({ date_update: -1 })
     .limit(5),
     db.app
-    .find({}, {
+    .find({
+      enabled: true
+    }, {
       permissions: 0,
       dependencies: 0,
       storage: 0,

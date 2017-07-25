@@ -103,11 +103,13 @@ api.get('/shared/all', (req, res, next) => {
 
 api.get('/shared/member/:member_id', (req, res, next) => {
   validate('share', req.params, ['member_id']);
-  validate('share', req.query, ['last_id', 'sort_type']);
+  validate('share', req.query, ['last_id', 'sort_type', 'key_word']);
   req._app.sharedQuery({
     user_id: req.user._id,
     company_id: req.company._id,
     last_id: req.query.last_id,
+    sort_type: req.query.sort_type,
+    key_word: req.query.key_word,
     member_id: req.params.member_id,
   }).then(list => {
     res.json(list);
@@ -354,12 +356,13 @@ api.put('/note/:note_id/shared', (req, res, next) => {
 });
 
 api.get('/abandoned', (req, res, next) => {
-  validate('limit', req.query, ['last_id', 'sort_type']);
+  validate('limit', req.query, ['last_id', 'sort_type', 'key_word']);
   req._app.abandonList({
     user_id: req.user._id,
     company_id: req.company._id,
     last_id: req.query.last_id,
     sort_type: req.query.sort_type,
+    key_word: req.query.key_word,
   })
   .then(list => {
     res.json(list);

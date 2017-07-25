@@ -1,6 +1,6 @@
 {
   "appid": "com.tlifang.report",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "name": "工作汇报",
   "name_en": "",
   "type": "report",
@@ -10,6 +10,7 @@
     "64": "assets/icon64.png",
     "128": "assets/icon128.png"
   },
+  "enabled": true,
   "slideshow": ["assets/slideshow1.png", "assets/slideshow2.png"],
   "author": "tlifang",
   "url": "https://tlifang.com/",

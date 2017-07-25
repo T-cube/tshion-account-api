@@ -133,6 +133,7 @@ export default class Notebook extends AppBase {
       ];
       promise = this.collection('user').findOne({
         user_id,
+        company_id,
       })
       .then(doc => {
         let tag = _.find(doc.tags, item => item.name == key_word);
@@ -184,7 +185,8 @@ export default class Notebook extends AppBase {
 
   noteQuery({user_id, company_id, note_id}) {
     return this.collection('note').findOne({
-      _id: note_id
+      _id: note_id,
+      company_id
     })
     .then(doc => {
       if (!doc.user_id.equals(user_id) && !doc.shared) {
@@ -662,43 +664,74 @@ export default class Notebook extends AppBase {
     });
   }
 
-  abandonList({user_id, company_id, last_id, sort_type}) {
+  abandonList({user_id, company_id, last_id, sort_type, key_word}) {
     let criteria = {
       user_id,
       company_id,
       abandoned: true
     };
-    if (last_id) {
-      return this.collection('note')
-      .find(criteria, {
-        _id: 1,
+    let promise = Promise.resolve();
+    if (key_word) {
+      criteria['$or'] = [
+        {
+          title: {
+            $regex: strToReg(key_word, 'i')
+          },
+        },
+        {
+          content: {
+            $regex: strToReg(key_word, 'i')
+          },
+        },
+      ];
+      promise = this.collection('user').findOne({
+        user_id,
+        company_id,
       })
-      .sort({[sort_type]: -1})
-      .then(list => {
-        let id_index = this._getIdIndex(last_id, list);
-        let target_list = list.slice(id_index, id_index + 10);
-        return Promise.map(target_list, item => {
-          return this.collection('note')
-          .findOne({
-            _id: item._id
-          })
-          .then(doc => {
-            return doc;
+      .then(doc => {
+        let tag = _.find(doc.tags, item => item.name == key_word);
+        if (tag) {
+          criteria['$or'].push({
+            tags: tag._id
           });
+        }
+      });
+    }
+    if (last_id) {
+      return promise.then(() => {
+        return this.collection('note')
+        .find(criteria, {
+          _id: 1,
         })
-        .then(data => {
-          return data;
+        .sort({[sort_type]: -1})
+        .then(list => {
+          let id_index = this._getIdIndex(last_id, list);
+          let target_list = list.slice(id_index, id_index + 10);
+          return Promise.map(target_list, item => {
+            return this.collection('note')
+            .findOne({
+              _id: item._id
+            })
+            .then(doc => {
+              return doc;
+            });
+          })
+          .then(data => {
+            return data;
+          });
         });
       });
     } else {
-      return this.collection('note')
-      .find(criteria, {
-        company_id: 0
-      })
-      .sort({[sort_type]: -1 })
-      .limit(10)
-      .then(list => {
-        return list;
+      return promise.then(() => {
+        return this.collection('note')
+        .find(criteria, {
+          company_id: 0
+        })
+        .sort({[sort_type]: -1 })
+        .limit(10)
+        .then(list => {
+          return list;
+        });
       });
     }
   }

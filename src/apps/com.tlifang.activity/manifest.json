@@ -1,6 +1,6 @@
 {
   "appid": "com.tlifang.activity",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "name": "活动",
   "name_en": "",
   "type": "team",
@@ -9,6 +9,7 @@
     "64": "assets/icon64.png",
     "128": "assets/icon128.png"
   },
+  "enabled": false,
   "slideshow": ["assets/slideshow1.png", "assets/slideshow2.png"],
   "author": "tlifang",
   "url": "https://tlifang.com/",
