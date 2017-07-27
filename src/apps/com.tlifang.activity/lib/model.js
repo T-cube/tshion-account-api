@@ -271,6 +271,7 @@ export default class Activity extends AppBase {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
+      console.log(doc);
       if (!doc) {
         throw new ApiError(400, 'invalid_activity');
       }
@@ -749,7 +750,6 @@ export default class Activity extends AppBase {
     return _.map(list, item => {
       item.total = _.uniq([].concat(item.assistants, item.creator, item.members)).length;
       item.isMember = _.some([].concat(item.assistants, item.creator, item.followers, item.members), member => member.equals(user_id));
-      delete item.assistants;
       delete item.members;
       return item;
     });
