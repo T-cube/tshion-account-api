@@ -865,23 +865,8 @@ function generateFileToken(user_id, file_id) {
   });
 }
 
-function attachFileUrls(req, file, thumb_size) {
+export function attachFileUrls(req, file, thumb_size = '32') {
   const qiniu = req.model('qiniu').bucket('cdn-file');
-  if (!_.isString(thumb_size)) {
-    thumb_size = '32';
-  }
-  if (!/^\d+(,\d+)?/.test(thumb_size)) {
-    return Promise.reject('invalid thumbnail size!');
-  }
-  let sizes = thumb_size.split(',');
-  let thumb_width = parseInt(sizes[0]);
-  let thumb_height = parseInt(sizes[1]);
-  if (!thumb_height) {
-    thumb_height = thumb_width;
-  }
-  if (thumb_width > 1000 || thumb_height > 1000) {
-    return Promise.reject('thumbnail size should less than 1000!');
-  }
   if (!file.cdn_key) {
     if (path.extname(file.name) == '.html') {
       return generateFileToken(req.user._id, file._id)
@@ -901,8 +886,20 @@ function attachFileUrls(req, file, thumb_size) {
     }),
   ];
   if (isImageFile(file.name)) {
+    if (!/^\d+(,\d+)?/.test(thumb_size)) {
+      return Promise.reject('invalid thumbnail size!');
+    }
+    let sizes = thumb_size.split(',');
+    let thumb_width = parseInt(sizes[0]);
+    let thumb_height = parseInt(sizes[1]);
+    if (!thumb_height) {
+      thumb_height = thumb_width;
+    }
+    if (thumb_width > 1000 || thumb_height > 1000) {
+      return Promise.reject('thumbnail size should less than 1000!');
+    }
     promises.push(
-      qiniu.getThumnailUrl(file.cdn_key, thumb_width, thumb_height).then(link => {
+      qiniu.getThumbnailUrl(file.cdn_key, thumb_width, thumb_height).then(link => {
         file.thumbnail_url = link;
       })
     );

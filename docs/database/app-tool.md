@@ -1,77 +1,112 @@
 # app-tool 数据库结构文档
 
-## apps collection
+## app
 
 ```javascript
 {
   _id: ObjectId,
-  app_name: String, //"note"
-  storage: [String], //"note"
-  app_info: {
-    version: String, //"0.1.0"
-    author: String, //"foo"
-    introduction: String, //"this is an incredible note app"
-    organization: String, // "tlifang.com"
+  appid: String, // com.tlifang.app.notebook
+  name: String, //"note"
+  name_en: String,
+  version: String, //"0.1.0"
+  icons: {
+    '16': String,
+    '64': String,
+    '128': String,
   },
-  likes: Number, //2345
+  slideshow: [String, ...],
+  author: String, //"foo"
+  url: String,
+  description: String, //"this is an incredible note app"
+  update_info: String, //"fixed some bugs"
   star: Number, // 4.7  average of this app comments stars
-  comments: [
-    {
-      user_id: ObjectId,
-      star: Number[Enum=1,2,3,4,5], //5
-      content: String, //"wonderful!"
-    }...,
-  ]
+  permissions: [String...],
+  dependencies: [String...],
+  storage: {
+    "mongo": [String...]
+  },
+  date_create: Date,
 }
 ```
 
-## company.app.config collection
+## app.version
+
+```javascript
+{
+  appid: String, // com.tlifang.app.notebook
+  current: ObjectId,
+  versions: [ObjectId...],
+}
+```
+
+## app.author
+
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  website: String,
+  company: {
+    fullname: String,
+    address: {
+      province: String,
+      city: String,
+      district: String,
+      address: String,
+    },
+    postcode: String,
+    phone: String,
+    contact: String,
+  }
+}
+```
+
+## app.comment
+
+```javascript
+{
+  _id: ObjectId,
+  appid: ObjectId,
+  app_version: String, //"0.1.0"
+  user: ObjectId,
+  star: Number[Enum=1,2,3,4,5], //5
+  content: String, //"wonderful!"
+  likes: [ObjectId...], //users
+  date_create: Date,
+}
+```
+
+
+## company.app
 
 ```javascript
 {
   company_id: ObjectId,
   apps:[
     {
-      app_id: ObjectId,      
-      enable: Boolean, //true
-      options: {
-        showDirection: Boolean, //true
-        timeout: Number, //3000
-      }
-    }...,    
+      appid: ObjectId,
+      enabled: Boolean, //true
+    }...,
   ]
 }
 ```
 
-## app.note collection
+
+## company.app.config
 
 ```javascript
 {
+  _id: ObjectId,
   company_id: ObjectId,
-  company_activities: [
-    {
-      user_id: ObjectId,
-      create_date: Date, //2017-5-21
-      activity: String, //like gea's shared note
-    }...,
-  ]
-  content: [
-    {
-      user_id: ObjectId,
-      notes: [
-        {
-          note_name: String, //"react"
-          note_content: String, //"how to become a genius frontend engineer"
-          directory: String, //"work"
-          category: String, //"frontend"
-          create_date: Date, //2017-5-12
-          update_date: Date, //2017-5-20
-          tag: String, //"pink"
-          share: Boolean, //true
-          likes: Number, //16
-        }...,
-      ]
-    }...,
-  ]  
+  appid: ObjectId,
+  options: {
+    showDirection: Boolean, //true
+    timeout: Number, //3000
+    requirement: String,        
+  }
 }
 ```
+
+# app.store.<app_id_hash>.<app_collection_name>
+
+app_id_hash = md5(app_id)

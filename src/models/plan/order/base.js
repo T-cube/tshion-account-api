@@ -45,11 +45,11 @@ export default class BaseOrder {
   }
 
   init() {
-    return Promise.reject(new Error('please override init method'));
+    throw new Error('please override init method');
   }
 
   isValid() {
-    return Promise.reject(new Error('please override isValid method'));
+    throw new Error('please override isValid method');
   }
 
   save() {

@@ -318,6 +318,20 @@ class Structure {
     return uniqObjectIdArray(departments);
   }
 
+  findMemberAdminDepartments(member_id, node) {
+    let departments = [];
+    node = node || this.root;
+    if (node.admin && node.admin.equals(member_id)) {
+      departments.push(node._id);
+    }
+    if (node.children && node.children.length) {
+      node.children.forEach(i => {
+        departments = departments.concat(this.findMemberAdminDepartments(member_id, i));
+      });
+    }
+    return uniqObjectIdArray(departments);
+  }
+
   object() {
     return this.root;
   }

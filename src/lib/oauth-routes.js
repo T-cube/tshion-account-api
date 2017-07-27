@@ -167,15 +167,15 @@ export function userCheck() {
     }
     redis.get(userKey).then(times => {
       if (times < attemptTimes.userCaptchaTimes) {
-        next();
+        _checkUserActiviated(username, next);
       } else if (times > attemptTimes.userCaptchaTimes - 1 && times < attemptTimes.userLockTimes) {
         if (!req.body.captcha) {
           redis.incr(userKey);
           throw new ApiError(400, 'missing_captcha');
         } else {
           redis.get(userCaptcha).then(captcha => {
-            if (req.body.captcha == captcha) {
-              next();
+            if (req.body.captcha.toLowerCase() == captcha.toLowerCase()) {
+              _checkUserActiviated(username, next);
             } else {
               redis.incr(userKey);
               throw new ApiError(400, 'wrong_captcha');
@@ -235,4 +235,18 @@ export function tokenSuccess() {
     req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
     next();
   };
+}
+
+function _checkUserActiviated(username, next) {
+  db.user.findOne({
+    $or: [
+      { email: username },
+      { mobile: username },
+    ]
+  }, { activiated: 1 }).then(doc => {
+    if (!doc.activiated) {
+      throw new ApiError(403, 'account_not_confirm');
+    }
+    next();
+  }).catch(next);
 }

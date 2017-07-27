@@ -155,7 +155,7 @@ api.post('/check', (req, res, next) => {
   db.user.findOne({
     [type]: id,
   }, {
-    _id: 0,
+    _id: 1,
     name: 1,
     avatar: 1,
     email: 1,
@@ -181,7 +181,7 @@ api.post('/check', (req, res, next) => {
       data.name = member.name;
       data.status = member.status;
     }
-    console.log(typeof !!member);
+    delete data._id;
     res.json(data);
   })
   .catch(next);

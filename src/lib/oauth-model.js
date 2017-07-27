@@ -6,7 +6,7 @@ import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 
 import db from 'lib/database';
-import { comparePassword, camelCaseObjectKey, generateToken } from 'lib/utils';
+import { comparePassword, camelCaseObjectKey, isEmail, isMobile } from 'lib/utils';
 
 export default {
   getAccessToken(bearerToken, callback) {
@@ -96,9 +96,9 @@ export default {
 
   _getUser(username) {
     let query = {};
-    if (/^1[3|4|5|7|8]\d{9}$/.test(username)) {
+    if (isMobile(username)) {
       query.mobile = username;
-    } else if (!Joi.validate(username, Joi.string().email()).error) {
+    } else if (isEmail(username)) {
       query.email = username;
     } else {
       return Promise.resolve(null);

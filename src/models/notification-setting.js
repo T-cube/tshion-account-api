@@ -21,6 +21,7 @@ export const TASK_UPDATE = 'task_update';
 export const REQUEST = 'request';
 export const SCHEDULE_REMIND = 'schedule_remind';
 export const ATTENDANCE = 'attendance';
+export const APP = 'app';
 
 // config items
 export const APPROVAL_ITEM_RESULT = 'approval_item_result';
@@ -120,6 +121,11 @@ export default class NotificationSetting {
       [ATTENDANCE]: {
         web: { editable: true, default: true },
         wechat: { editable: true, default: true },
+        email: { editable: false, default: false },
+      },
+      [APP]: {
+        web: { editable: true, default: true },
+        wechat: { editable: false, default: false },
         email: { editable: false, default: false },
       },
     };

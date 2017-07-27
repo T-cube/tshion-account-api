@@ -30,12 +30,15 @@ node_modules
 config/local.*
 
 # Application runtime
-app
+/app
 runtime
 
 # User upload files
 public/cdn/upload
 public/cdn/resource/qrcode
+
+# appliaction temp pic storage
+application
 
 # temp
 temp/*
