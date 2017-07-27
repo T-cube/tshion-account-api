@@ -95,6 +95,10 @@ query:
 
 报名
 
+### POST /activity/:activity_id/accept
+
+接受邀请
+
 ### POST /activity/:activity_id/comment
 
 评论活动

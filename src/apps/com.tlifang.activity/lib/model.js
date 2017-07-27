@@ -386,19 +386,28 @@ export default class Activity extends AppBase {
     } else if (type == C.APPROVAL_LIST.APPROVE) {
       criteria.manager = user_id;
     }
-    return this.collection('approval')
-    .find(criteria)
-    .skip((page - 1) * pagesize)
-    .limit(pagesize)
-    .then(list => {
-      return Promise.map(list, item => {
-        return this.collection('item').findOne({
-          _id: item.activity_id
-        }).then(activity => {
-          item.activity = activity;
-          return item;
+    return Promise.all([
+      this.collection('approval')
+      .find(criteria)
+      .skip((page - 1) * pagesize)
+      .limit(pagesize)
+      .then(list => {
+        return Promise.map(list, item => {
+          return this.collection('item').findOne({
+            _id: item.activity_id
+          }).then(activity => {
+            item.activity = activity;
+            return item;
+          });
         });
-      });
+      }),
+      this.collection('approval')
+      .count(criteria),
+    ]).then(([list, count]) => {
+      return {
+        list,
+        count
+      };
     });
   }
 
@@ -411,7 +420,7 @@ export default class Activity extends AppBase {
       if (!approval) {
         throw new ApiError(400, 'no_approval');
       }
-      if (!approval.creator.equals(user_id) || !approval.manager.equals(user_id)) {
+      if (!approval.creator.equals(user_id) && !approval.manager.equals(user_id)) {
         throw new ApiError(400, 'can_not_get_detail');
       }
       return this.collection('item')
@@ -438,7 +447,7 @@ export default class Activity extends AppBase {
       if (!doc) {
         throw new ApiError(400, 'no_approval');
       }
-      if (!doc.creator.equals(user_id) || !doc.manager.equals(user_id)) {
+      if (!doc.creator.equals(user_id) && !doc.manager.equals(user_id)) {
         throw new ApiError(400, 'can_not_comment');
       }
       return this.collection('approval')

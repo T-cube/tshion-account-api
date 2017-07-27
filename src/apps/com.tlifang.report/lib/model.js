@@ -17,7 +17,14 @@ export default class Report extends AppBase {
   overview({user_id, company_id, memberDepartments}) {
     return Promise.all([
       this.collection('item').count({ user_id, company_id }),
-      this.collection('item').count({ report_target: { $in: memberDepartments }, company_id }),
+      this.collection('item').count({
+        company_id,
+        $or: [
+          { report_target: { $in: memberDepartments } },
+          { copy_to: user_id }
+        ],
+        status: { $ne: C.REPORT_STATUS.DRAFT }
+      }),
       this.collection('config').findOne({user_id}),
       Promise.map(['day', 'week', 'month'], item => {
         return this.collection('item').count({

@@ -42,7 +42,7 @@ api.get('/app', (req, res, next) => {
 
 api.get('/store/index', (req, res, next) => {
   Promise.all([
-    db.app.slideshow.find({}, {pic_url: 1, appid: 1}).limit(3),
+    db.app.slideshow.find({}, {pic_url: 1, appid: 1}).sort({_id: -1}).limit(3),
     db.app
     .find({
       enabled: true
