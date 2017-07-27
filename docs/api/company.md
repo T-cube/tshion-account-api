@@ -351,3 +351,35 @@ INPUT
 ### POST /company/:company_id/exit
 
 退出公司
+
+### GET /company/:company_id/recent/project
+
+获取用户该公司最近使用项目（4个），已排序
+```javascript
+[{
+  _id: ObjectId,
+  name: String,
+  company_id: ObjectId,
+  is_archived: Boolean,
+  owner: ObjectId,
+  members:[{
+    _id: ObjectId,
+    type: String,
+    title: String,
+  }],
+  date_create: Date,  
+}...]
+```
+
+### GET /company/:company_id/user/file
+
+获取用户应用中上传的文件,每次返回10个
+
+query:
+```javascript
+{
+  last_id: objectId, // optional ,加载更多时上一个文件的id
+  sort_type: String, // 枚举 ['mimetype', 'name', 'date_create']
+  key_word: String, // 搜索关键词
+}
+```

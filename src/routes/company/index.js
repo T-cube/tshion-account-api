@@ -1,21 +1,20 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
-import fs from 'fs';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { time } from 'lib/utils';
-import { sanitizeValidateObject } from 'lib/inspector';
-import { companySanitization, companyValidation } from './schema';
+import { time, mapObjectIdToData, strToReg } from 'lib/utils';
+import { validate } from './schema';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
 import UserLevel from 'models/user-level';
 import { COMPANY_MEMBER_UPDATE } from 'models/notification-setting';
 import Plan from 'models/plan/plan';
+import { attachFileUrls } from 'routes/company/document/index';
 
 import {
   MODULE_PROJECT,
@@ -57,7 +56,7 @@ api.get('/', (req, res, next) => {
 // Add new company
 api.post('/', (req, res, next) => {
   let data = req.body; // contains name, description only
-  sanitizeValidateObject(companySanitization, companyValidation, data);
+  validate('company', data);
 
   let userLevel = new UserLevel(req.user);
   userLevel.canOwnCompany().then(canOwnCompany => {
@@ -164,7 +163,7 @@ api.get('/:company_id', (req, res, next) => {
 
 api.put('/:company_id', (req, res, next) => {
   let data = req.body;
-  sanitizeValidateObject(companySanitization, companyValidation, data);
+  validate('company', data);
 
   db.company.update(
     {_id: ObjectId(req.params.company_id)},
@@ -373,6 +372,26 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   .catch(next);
 });
 
+api.get('/:company_id/recent/project', (req, res, next) => {
+  Promise.all([
+    db.user.findOne({_id: req.user._id}),
+    db.company.findOne({_id: req.company._id}),
+  ])
+  .then(([user, company]) => {
+    if (!user.recent || !user.recent.projects || !user.recent.projects.length) {
+      let company_recent = _.intersection(company.projects, user.projects);
+      return mapObjectIdToData(company_recent.slice(-4), 'project').then(() => {
+        res.json(company_recent);
+      });
+    }
+    let company_recent = _.pluck(_.sortBy(user.recent.projects, item => -item.date), 'project_id').slice(0, 4);
+    return mapObjectIdToData(company_recent, 'project').then(() => {
+      res.json(company_recent);
+    });
+  })
+  .catch(next);
+});
+
 api.post('/:company_id/exit', (req, res, next) => {
   const company_id = req.company._id;
   const projects = req.company.projects;
@@ -427,6 +446,79 @@ api.post('/:company_id/exit', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/:company_id/user/file', (req, res, next) => {
+  validate('user_file', req.query);
+  let last_id = req.query.last_id;
+  let key_word = req.query.key_word;
+  let sort_type = req.query.sort_type;
+  let criteria = {
+    author: req.user._id,
+    company: req.company._id,
+  };
+  if (key_word) {
+    criteria['$or'] = [
+      {
+        mimetype: {
+          $regex: strToReg(key_word, 'i')
+        },
+      },
+      {
+        name: {
+          $regex: strToReg(key_word, 'i')
+        },
+      },
+    ];
+  }
+  if (last_id) {
+    db.user.file
+    .find(criteria, {_id: 1})
+    .sort({[sort_type]: -1})
+    .then(list => {
+      let id_index = _getIdIndex(last_id, list);
+      let target_list = list.slice(id_index, id_index + 10);
+      return Promise.all(target_list.map(item => {
+        return db.user.file
+        .findOne({_id: item._id})
+        .then(doc => {
+          return attachFileUrls(req, doc).then(() => {
+            return doc;
+          });
+        });
+      }))
+      .then(data => {
+        res.json(data);
+      });
+    });
+  } else {
+    db.user.file.find(criteria).sort({[sort_type]: -1}).limit(10).then(list => {
+      return Promise.all(list.map(item => {
+        return attachFileUrls(req, item).then(() => {
+          return item;
+        });
+      })).then(() => {
+        res.json(list);
+      });
+    })
+    .catch(next);
+  }
+});
+
+function _getIdIndex(last_id, list) {
+  let id_index;
+  for (let i = 0; i < list.length; i++) {
+    if (list[i]._id.equals(last_id)) {
+      id_index = i + 1;
+      break;
+    }
+    if (i == list.length - 1) {
+      if (!id_index) {
+        throw new ApiError(400, 'invalid_last_id');
+      }
+    }
+  }
+  return id_index;
+}
+
 let ckeckAuth = (_module) => (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company._id);
   companyLevel.getPlanInfo()
@@ -453,3 +545,5 @@ api.use('/:company_id/structure', ckeckAuth(MODULE_STRUCTURE), require('./struct
 api.use('/:company_id/activity', require('./activity').default);
 api.use('/:company_id/member', require('./member').default);
 api.use('/:company_id/plan', require('./plan').default);
+api.use('/:company_id/app-center', require('./app-center').default);
+api.use('/:company_id/app', require('./app').default);

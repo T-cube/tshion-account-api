@@ -91,10 +91,6 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       sex: null,
       locale: 'zh-CN',
       timezone: 'Asia/Shanghai',
-      options: {
-        notice_request: true,
-        notice_project: true,
-      },
       activiated: type == C.USER_ID_TYPE.MOBILE,
       date_join: time(),
       date_create: time(),
@@ -254,7 +250,7 @@ api.post('/recover/send-code', (req, res, next) => {
   validate('register', data, ['type', type]);
   let account = req.body[type];
   const frequency = config.get('security.frequency.userVerifyCode');
-  req.model('security').limitRequestFrequency('verifycode', account, frequency)
+  req.model('security').limitRequestFrequency('send-code', account, frequency)
   .then(() => {
     return req.model('account').checkExistance(type, account, true);
   })
@@ -270,7 +266,10 @@ api.post('/recover/verify', (req, res, next) => {
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type, 'code']);
   let account = data[type];
-  req.model('account').checkExistance(type, account, true)
+  req.model('security').limitRequestFrequency('verify-code', account, 0.5)
+  .then(() => {
+    req.model('account').checkExistance(type, account, true);
+  })
   .then(() => {
     return req.model('account').verifyCode(type, account, data.code);
   })

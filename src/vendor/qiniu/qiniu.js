@@ -33,13 +33,14 @@ export default class Qiniu {
   // 上传文件
   upload(savekey, filePath, cb) {
     let self = this;
-    console.info('qiniu：uploading file', savekey, filePath);
+    console.info('qiniu：uploading file', savekey);
     let key = savekey;
     let token = this.getUploadToken(key, self);
     // 上传文件
     return new Promise(function(resolve, reject) {
       self.uploadFile(token, key, filePath).then(data => {
         data.server_url = self.conf.SERVER_URL;
+        data.url = self.conf.SERVER_URL + savekey;
         typeof cb == 'function' && cb(null, data);
         resolve(data);
         return data;
@@ -80,7 +81,7 @@ export default class Qiniu {
     });
   }
 
-  getThumnailUrl(url, width, height) {
+  getThumbnailUrl(url, width, height) {
     if (!/^http/.test(url)) {
       url = this.conf.SERVER_URL + url;
     }
@@ -91,7 +92,7 @@ export default class Qiniu {
       height = parseInt(height);
     }
     if (!/^\d+$/.test(width + '' + height)) {
-      throw new Error('getThumnailUrl: invalid thumbnail size');
+      throw new Error('getThumbnailUrl: invalid thumbnail size');
     }
     let find = /\?.+/;
     let replace = `?imageView2/1/w/${width}/h/${height}`;
