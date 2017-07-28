@@ -9,6 +9,7 @@ export let sanitization = {
   address: { type: 'string', def: '' },
   sex: { type: 'string', def: C.SEX.MALE },
   type: { type: 'string', def: C.COMPANY_MEMBER_TYPE.NORMAL },
+  ID: { type: 'number', def: '' },
 };
 
 export let validation = {
@@ -20,4 +21,5 @@ export let validation = {
   address: { type: 'string', optional: true },
   sex: { $enum: ENUMS.SEX, optional: true },
   type: { $enum: ENUMS.COMPANY_MEMBER_TYPE },
+  ID: { type: 'number', optional: true },
 };
