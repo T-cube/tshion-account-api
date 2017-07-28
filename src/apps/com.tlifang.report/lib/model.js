@@ -163,20 +163,22 @@ export default class Report extends AppBase {
   detail({user_id, company, report_id, memberDepartments}) {
     return this.collection('item')
     .findOne({
-      _id: report_id
+      _id: report_id,
+      company_id: company._id
     })
     .then(report => {
       let criteria = {
         company_id: company._id,
         type: report.type,
         report_target: report.report_target,
-        user_id: report.user_id
       };
-      if (!user_id.equals(report.user_id)) {
+      if (user_id.equals(report.user_id)) {
+        criteria.user_id = user_id;
+      } else {
         criteria.status = { $ne: C.REPORT_STATUS.DRAFT };
-      }
-      if (!_.some(memberDepartments, item => item.equals(report.report_target))) {
-        criteria.copy_to = user_id;
+        if (!_.some(memberDepartments, item => item.equals(report.report_target))) {
+          criteria.copy_to = user_id;
+        }
       }
       return this.collection('item')
       .find(
