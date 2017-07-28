@@ -126,22 +126,19 @@ api.get('/app/:appid/comment', oauthCheck(), (req, res, next) => {
   validate('appRequest', req.params, ['appid']);
   const { appid } = req.params;
   const user = req.user._id;
-  db.app.comment.aggregate([
-    { $match: {appid} },
-    {
-      $project: {
-        appid: 1,
-        app_version: 1,
-        user: 1,
-        rate: 1,
-        content: 1,
-        total_likes: { $size: '$likes'},
-        is_like: {
-          $in: [user, '$likes']
-        }
-      }
-    }
-  ]).then(list => {
+  db.app.comment.find({
+    appid: appid,
+  }, {
+    appid: 1,
+    app_version: 1,
+    user: 1,
+    rate: 1,
+    content: 1,
+  }).then(list => {
+    list.forEach((item) => {
+      item.total_likes = item.likes.length;
+      item.is_like = _.some(item.likes, item => item.equals(user));
+    });
     return mapObjectIdToData(list, 'user', 'name,avatar', 'user');
   })
   .then(list => {
