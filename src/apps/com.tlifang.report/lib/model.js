@@ -178,23 +178,24 @@ export default class Report extends AppBase {
       if (!_.some(memberDepartments, item => item.equals(report.report_target))) {
         criteria.copy_to = user_id;
       }
-      return Promise.all([
-        this.collection('item')
-        .findOne(
-          _.extend({}, criteria, {date_report: { $lt: report.date_report }}), {
-            _id: 1,
+      return this.collection('item')
+      .find(
+        criteria,
+        {
+          _id: 1,
+        }
+      )
+      .sort({date_report: -1})
+      .then(list => {
+        let report_index;
+        for (let i = 0; i < list.length; i++) {
+          if (list[i]._id.equals(report_id)) {
+            report_index = i;
+            break;
           }
-        ),
-        this.collection('item')
-        .findOne(
-          _.extend({}, criteria, {date_report: { $gt: report.date_report }}), {
-            _id: 1,
-          }
-        ),
-      ])
-      .then(([prev_report, next_report]) => {
-        report.prevId = prev_report ? prev_report._id : null;
-        report.nextId = next_report ? next_report._id : null;
+        }
+        report.prevId = list[report_index-1] ? list[report_index-1]._id : null;
+        report.nextId = list[report_index+1] ? list[report_index+1]._id : null;
         return report;
       });
     });
