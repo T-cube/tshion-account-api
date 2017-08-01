@@ -43,6 +43,15 @@ QUERY
 }
 ```
 
+### /slideshow/delete
+
+QUERY
+```javascript
+{
+  slideshows: [ObjectId...], //ObjectId array
+}
+```
+
 ### /slideshow/upload
 
 STREAM

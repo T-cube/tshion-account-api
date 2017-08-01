@@ -1,3 +1,5 @@
+import Promise from 'bluebird';
+
 import Model from './model';
 
 export default class AppCenterModel extends Model {
@@ -54,6 +56,22 @@ export default class AppCenterModel extends Model {
     }, {
       returnOriginal: false,
       returnNewDocument: true
+    });
+  }
+
+  slideshowDelete(props) {
+    let { slideshows, loader } = props;
+    return Promise.map(slideshows, slideshow_id => {
+      return this.db.app.slideshow.find({
+        _id: slideshow_id
+      })
+      .then(doc => {
+        if (!doc) {
+          return {};
+        }
+        loader.model('document').deleteFile(loader, doc);
+        return this.db.app.slideshow.remove({_id: slideshow_id});
+      });
     });
   }
 
