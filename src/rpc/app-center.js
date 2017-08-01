@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp-bluebird';
 import uuid from 'uuid';
+import db from 'lib/database';
 
 import AppCenterModel from './models/app-center';
 import { APP_ROOT_DIR } from 'bootstrap';
@@ -73,7 +74,7 @@ route.stream('/slideshow/upload', (stream, data, loader) => {
           relpath: `/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}/${uuidName}`,
           filename: uuidName,
         };
-        return this.db.slideshow.insert(slideshow_data);
+        return db.slideshow.insert(slideshow_data);
       });
     });
   })
