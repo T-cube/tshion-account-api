@@ -3,11 +3,11 @@ import { strToReg } from 'lib/utils';
 import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp-bluebird';
+import uuid from 'uuid';
 
 import AppCenterModel from './models/app-center';
 import { APP_ROOT_DIR } from 'bootstrap';
 import { getObjectId } from './utils';
-import app from 'index';
 
 const route = RpcRoute.router();
 export default route;
@@ -49,18 +49,24 @@ route.on('/slideshow/actived', query => {
 });
 
 route.stream('/slideshow/upload', (stream, data, loader) => {
-  let uuidName = data.uuidName;
+  let ext = data.name.split('.')[data.name.split('.').length - 1];
+  let uuidName = uuid.v4() + '.' + ext;
   let destination = path.normalize(`${APP_ROOT_DIR}/../public/cdn/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}`);
   let filepath = `${destination}/uuidName`;
   return mkdirp(destination).then(() => {
-    let writeStream = fs.createWriteStream(destination);
+    let writeStream = fs.createWriteStream(filepath);
     stream.pipe(writeStream);
     writeStream.on('finish', () => {
       const qiniu = loader.model('qiniu').bucket('cdn-public');
       let cdn_key = `upload/attachment/${uuidName}`;
       return qiniu.upload(cdn_key, filepath).then(qiniu_data => {
         let slideshow_data = {
-          ...data,
+          mimetype: data.type,
+          ext,
+          uuidName,
+          originalname: data.name,
+          size: data.size,
+          appid: data.appid,
           url: qiniu_data.url,
           cdn_key: cdn_key,
           destination: destination,
