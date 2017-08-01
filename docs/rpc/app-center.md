@@ -43,19 +43,15 @@ QUERY
 }
 ```
 
-### /slideshwo/upload
+### /slideshow/upload
 
 STREAM
 
 DATA
 ```javascript
 {
-  fieldname: <String>//document,
-  originalname: <String>//report.png,
-  encoding: <String>//7bit,
-  mimetype: <String>//image/png,
-  ext: <String>//.png,
-  uuidName: <String>//131ff2df-2091-4b10-8513-79cf8035ecb1.png,
+  name: <String>//report.png,
+  type: <String>//image/png,
   size: //9593,
   appid: //com.tlifang.report
 }
