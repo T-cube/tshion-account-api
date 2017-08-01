@@ -43,7 +43,9 @@ QUERY
 }
 ```
 
-### rpc.stream('slideshow')
+### /slideshwo/upload
+
+STREAM
 
 DATA
 ```javascript
