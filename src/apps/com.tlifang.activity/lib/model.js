@@ -167,8 +167,7 @@ export default class Activity extends AppBase {
     ]).then(([room, exist]) => {
       if (!room) {
         throw new ApiError(400, 'invalid_room_id');
-      }
-      if (exist) {
+      } else if (exist && room.order_require) {
         throw new ApiError(400, 'already_exist_activity_use_room');
       }
       activity.accept_members = [];

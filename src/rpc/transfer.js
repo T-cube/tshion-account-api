@@ -20,7 +20,7 @@ route.on('/list', query => {
       $regex: strToReg(keyword, 'i')
     };
   }
-  return transferModel.fetchList({ page, pagesize, criteria});
+  return transferModel.page({ page, pagesize, criteria});
 });
 
 route.on('/confirm', query => {

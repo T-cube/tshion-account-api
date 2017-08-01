@@ -9,9 +9,9 @@ export default class TransferModel extends Model {
   }
 
   fetchList(props) {
-    let { page, pagesize, criteria = {} } = props;
+    let { page, pagesize, criteria } = props;
     return this.db.transfer.find(criteria)
-    .skip(page * pagesize)
+    .skip((page - 1) * pagesize)
     .limit(pagesize)
     .sort({
       date_update: -1,
@@ -19,6 +19,10 @@ export default class TransferModel extends Model {
     .then(list => {
       return list;
     });
+  }
+
+  count(criteria) {
+    return this.db.transfer.count(criteria);
   }
 
   confirm(transfer_id) {

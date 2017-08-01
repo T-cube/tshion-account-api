@@ -45,6 +45,33 @@ export default class RpcRoute {
     });
   }
 
+  stream(uri, callback) {
+    this.socket.stream(`${this.prefix}${uri}`, (stream, data) => {
+      if (process.env.NODE_ENV != 'production') {
+        console.log(`--- rpc call ${this.prefix}${uri}, data:`, data);
+      }
+      let value;
+      try {
+        value = callback(stream, data, this.loader);
+      } catch (e) {
+        return this.emit(uri, this.errorHandler(e));
+      }
+      if (!this.isPromise(value)) {
+        return this.emit(uri, {
+          status: 200,
+          data: value,
+        });
+      }
+      value.then(data => this.emit(uri, {
+        status: 200,
+        data,
+      }))
+      .catch(e => {
+        this.emit(uri, this.errorHandler(e));
+      });
+    });
+  }
+
   isPromise(value) {
     return value && typeof value.then === 'function';
   }
@@ -73,6 +100,9 @@ export default class RpcRoute {
     _.each(routeBag.routes, (callback, uri) => {
       newInstance.route(uri, callback);
     });
+    _.each(routeBag.streams, (callback, uri) => {
+      newInstance.stream(uri, callback);
+    });
   }
 
   static router() {
@@ -86,10 +116,15 @@ class RouteBag {
   constructor() {
     this.routes = {};
     this.uses = {};
+    this.streams = {};
   }
 
   on(uri, callback) {
     this.routes[uri] = callback;
+  }
+
+  stream(uri, callback) {
+    this.streams[uri] = callback;
   }
 
   use(prefix, childRouteBag) {

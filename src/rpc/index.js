@@ -5,6 +5,8 @@ import companyRoutes from './company';
 import planRoutes from './plan';
 import qrcodeRoutes from './qrcode';
 import broadcastRoutes from './broadcast';
+import transferRoutes from './transfer';
+import appCenterRoutes from './app-center';
 
 import QrcodeModel from './models/qrcode';
 import PlanAuthModel from './models/plan-auth';
@@ -20,6 +22,8 @@ export default (socket, _loader) => {
   route.use('/plan', planRoutes);
   route.use('/qrcode', qrcodeRoutes);
   route.use('/broadcast', broadcastRoutes);
+  route.use('/transfer', transferRoutes);
+  route.use('/app-center', appCenterRoutes);
 
   // bind loader
   _loader.loadModel('qrcode-model', QrcodeModel);
