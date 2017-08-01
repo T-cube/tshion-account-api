@@ -74,7 +74,7 @@ route.stream('/slideshow/upload', (stream, data, loader) => {
           relpath: `/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}/${uuidName}`,
           filename: uuidName,
         };
-        return db.slideshow.insert(slideshow_data);
+        return db.app.slideshow.insert(slideshow_data);
       });
     });
   })
