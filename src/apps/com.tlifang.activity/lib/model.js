@@ -270,13 +270,13 @@ export default class Activity extends AppBase {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
-      console.log(doc);
       if (!doc) {
         throw new ApiError(400, 'invalid_activity');
       }
       if (!this._checkReadPermission(doc, user_id)) {
         throw new ApiError(400, 'not_member');
       } else {
+        doc.isMember = _.some([].concat(doc.creator, doc.assistants, doc.members), item => item.equals(user_id));
         return doc;
       }
     });

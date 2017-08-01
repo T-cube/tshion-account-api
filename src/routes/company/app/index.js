@@ -70,13 +70,16 @@ fs.readdir(APPS_ROOT, (err, result) => {
         }),
       ]).then(([app, doc]) => {
         if (!app || !app.enabled) {
-          throw new ApiError(400, 'app_is_forbiddon');
+          throw new ApiError(400, 'app_is_forbidden');
         }
         if (_.some(doc.apps, item => item.appid == appId && item.enabled)) {
           next();
         } else {
           throw new ApiError(400, 'no_app');
         }
+      })
+      .catch(err => {
+        next(err);
       });
     }, require(appDir).default);
     console.log(`app ${appId} loaded.`);
