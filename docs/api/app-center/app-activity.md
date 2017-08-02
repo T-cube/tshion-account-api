@@ -81,6 +81,18 @@ query:
 }
 ```
 
+### GET /month/activity
+
+某月内的活动
+
+query:
+```javascript
+{
+  year: int, //gte 1970
+  month: int, //1-12
+}
+```
+
 ### POST /upload
 
 上传文件，同app notebook上传接口

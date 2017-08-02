@@ -96,6 +96,19 @@ api.get('/activity/:activity_id', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/month/activity', (req, res, next) => {
+  validate('calendar', req.query);
+  req._app.month({
+    year: req.query.year,
+    month: req.query.month,
+    company_id: req.company._id,
+  })
+  .then(list => {
+    res.json(list);
+  })
+  .catch(next);
+});
+
 api.post('/upload',
 upload({type: 'attachment'}).single('document'),
 saveCdn('cdn-file'),

@@ -20,6 +20,16 @@ const schema={
       approval_id: { $objectId: 1 },
     }
   },
+  calendar: {
+    sanitization: {
+      year: { type: 'integer' },
+      month: { type: 'integer' },
+    },
+    validation: {
+      year: { type: 'integer', gte: 1970, code: 'invalid_year' },
+      month: { type: 'integer', gte: 1, lte: 12, code: 'invalid_month' },
+    }
+  },
   room: {
     sanitization: {
       name: { type: 'string', rules: ['trim'] },

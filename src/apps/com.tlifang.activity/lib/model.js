@@ -152,6 +152,26 @@ export default class Activity extends AppBase {
     });
   }
 
+  month({year, month, company_id}) {
+    let time = moment([year, month - 1]);
+    return this.collection('item')
+    .find({
+      company_id,
+      status: C.ACTIVITY_STATUS.CREATED,
+      time_start: time.startOf('month').toDate(),
+      time_end: time.endOf('month').toDate(),
+    }, {
+      time_start: 1,
+      time_end: 1,
+      departments: 1,
+      name: 1,
+    })
+    .sort({time_start: 1})
+    .then(list => {
+      return list;
+    });
+  }
+
   createActivity({activity, user_id, company_id}) {
     return Promise.all([
       this.collection('room').findOne({
@@ -358,6 +378,7 @@ export default class Activity extends AppBase {
               _id: ObjectId(),
               user_id,
               content,
+              date_create: new Date(),
             }
           }
         }).then(doc => {
@@ -623,14 +644,17 @@ export default class Activity extends AppBase {
         .find({
           'room._id': room_id,
           company_id,
-          time_start: { $gte: moment().startOf('day').add(1, 'day').toDate() },
+          time_start: {
+            $gte: moment().startOf('day').add(1, 'day').toDate(),
+            $lt: moment().startOf('day').add(2, 'day').toDate(),
+          },
           status: C.ACTIVITY_STATUS.CREATED,
         })
         .sort({time_start: -1}),
-      ]).then(([past, now, future]) => {
+      ]).then(([past, now, tomorrow]) => {
         room.past = past;
         room.now = now;
-        room.future = future;
+        room.tomorrow = tomorrow;
         return room;
       });
     });
