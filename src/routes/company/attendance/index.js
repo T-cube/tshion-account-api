@@ -151,6 +151,27 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
   .catch(next);
 });
 
+api.get('/sign/today', (req,res, next) => {
+  let year = moment().year();
+  let month = moment().month() + 1;
+  let date = moment().date();
+  return db.attendance.sign.find({
+    company: req.company._id,
+    year,
+    month: month,
+    'data.date': date
+  }, {
+    user: 1,
+    year: 1,
+    month: 1,
+    'data.$': 1
+  })
+  .then(list => {
+    res.json(list);
+  })
+  .catch(next);
+});
+
 api.get('/sign/department/:department_id/export', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   return generateToken(48)
   .then(token => {

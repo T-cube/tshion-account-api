@@ -123,6 +123,36 @@ OUT_PUT
 }
 ```
 
+### GET /attendence/sign/today
+
+获取所有成员当天签到情况
+
+OUTPUT:
+```javascript
+[
+  {
+    user: ObjectId,
+    year: number,
+    month: number,
+    data: [
+      {
+        date: number,
+        sign_in: {
+          time: Date,
+          from_pc: String,
+          setting: Date
+        },
+        sign_out: {
+          time: Date,
+          from_pc: String,
+          setting: Date
+        },
+      }
+    ], //该数组只有一个元素，就是当天的
+  }
+]
+```
+
 ### GET /attendence/sign/department/:department_id
 
 获取部门的签到信息
