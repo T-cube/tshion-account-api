@@ -66,7 +66,7 @@ api.get('/transfer', (req, res, next) => {
   let criteria = {
     company_id: req.company._id
   };
-  if (!req.user._id.equals(req.company.user)) {
+  if (!req.user._id.equals(req.company.owner)) {
     criteria.user_id = req.user._id;
   }
   db.transfer.find(criteria)

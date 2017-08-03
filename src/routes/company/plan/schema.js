@@ -163,12 +163,14 @@ const schema = {
   },
   transfer: {
     sanitization: {
+      account_name: { type: 'string', rules: ['trim']},
       account: { type: 'integer' },
       amount: { type: 'integer' },
       bank: { type: 'string', rules: ['trim'] },
       bank_subname: { type: 'string', rules: ['trim'] },
     },
     validation: {
+      account_name: { type: 'string', minLength: 1 },
       account: { type: 'integer' },
       amount: { type: 'integer', gt: 0 },
       bank: { type: 'string' },

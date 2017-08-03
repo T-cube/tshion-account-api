@@ -197,7 +197,7 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
   }
   db.plan.company.findOne({_id: ObjectId(companyId)}).then(doc => {
     if (doc) {
-      if (doc.current.type !== 'trail') {
+      if (doc.current && doc.current.type !== 'trail') {
         throw new ApiError(400, 'ent & pro company cannot delete');
       }
     }

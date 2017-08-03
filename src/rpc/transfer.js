@@ -16,9 +16,18 @@ route.on('/list', query => {
     criteria.status = status;
   }
   if (keyword) {
-    criteria['company_name'] = {
-      $regex: strToReg(keyword, 'i')
-    };
+    criteria['$or'] = [
+      {
+        company_name: {
+          $regex: strToReg(keyword, 'i')
+        }
+      },
+      {
+        account_name: {
+          $regex: strToReg(keyword, 'i')
+        }
+      }
+    ];
   }
   return transferModel.page({ page, pagesize, criteria});
 });
