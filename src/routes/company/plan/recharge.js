@@ -57,7 +57,7 @@ api.post('/transfer', (req, res, next) => {
     data.status = C.TRANSFER_STATUS.CREATED;
     return db.transfer.insert(data).then(doc => {
       delete doc._id;
-      return {...recharge,...req.body};
+      res.json({...recharge,...req.body});
     });
   }).catch(next);
 });

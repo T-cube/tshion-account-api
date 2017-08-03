@@ -41,6 +41,7 @@ export default class Activity extends AppBase {
           $gte: moment().startOf('day').toDate(),
           $lt: moment().endOf('day').toDate(),
         },
+        status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
       .sort({time_start: -1}),
@@ -51,6 +52,7 @@ export default class Activity extends AppBase {
           $gte: moment().add(1, 'day').startOf('day').toDate(),
           $lt: moment().add(3, 'day').startOf('day').toDate(),
         },
+        status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
       .sort({time_start: -1}),
@@ -81,6 +83,7 @@ export default class Activity extends AppBase {
         company_id,
         time_start: { $gte: moment().startOf('day').toDate() },
         $or: isMember,
+        status: C.ACTIVITY_STATUS.CREATED,
       }),
       this.collection('item')
       .count({
@@ -135,9 +138,12 @@ export default class Activity extends AppBase {
     }
     if (target == C.LIST_TARGET.MINE) {
       criteria['$or'] = isMember;
-    } else {
+      criteria.status = C.ACTIVITY_STATUS.CREATED;
+    } else if (target == C.LIST_TARGET.ALL) {
       criteria.status = C.ACTIVITY_STATUS.CREATED;
       criteria['$or'] = all;
+    } else {
+      criteria.creator = user_id;
     }
     return this.collection('item')
     .find(criteria, this.baseInfo)
@@ -145,6 +151,26 @@ export default class Activity extends AppBase {
     .limit(10)
     .sort({time_start: sortType})
     .then(list => {
+      if (target == C.LIST_TARGET.CREATOR) {
+        return Promise.map(list, item => {
+          if (item.room.approval_id) {
+            return this.collection('approval').findOne({
+              _id: item.room.approval_id
+            }, {
+              status: 1
+            })
+            .then(doc => {
+              item.room.approval_status = doc.status;
+              return item;
+            });
+          } else {
+            return item;
+          }
+        })
+        .then(list => {
+          return this._listCalc(list, user_id);
+        });
+      }
       return this._listCalc(list, user_id);
     });
   }

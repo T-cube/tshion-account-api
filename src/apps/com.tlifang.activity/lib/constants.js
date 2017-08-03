@@ -18,6 +18,7 @@ let constants = {
     FEATURE: 'feature'
   },
   LIST_TARGET: {
+    CREATOR: 'creator',
     MINE: 'mine',
     ALL: 'all',
   },
