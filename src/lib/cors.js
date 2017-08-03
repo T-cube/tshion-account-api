@@ -6,7 +6,12 @@ const allowedOrigins = config.get('allowedOrigins');
 export default cors({
   origin: function(url,callback){
     let corsOptions;
-    if (~allowedOrigins.indexOf(url)) {
+    if(allowedOrigins==='*'){
+      corsOptions = {
+        origin: true
+      };
+    }
+    else if (~allowedOrigins.indexOf(url)) {
       corsOptions = {
         origin: true
       };
