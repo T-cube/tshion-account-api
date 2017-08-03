@@ -1,13 +1,24 @@
 import config from 'config';
-import cors from 'cors';
 
 const allowedOrigins = config.get('allowedOrigins');
 
-const CORS_CONFIG = {
-  origin : allowedOrigins,
-  methods : 'GET,POST,PUT,DELETE,OPTIONS',
-  allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
-  credentials: true,
-};
+export default function cors(req,res,next){
+  let _origin = req.headers.origin,
+    can_next = ~allowedOrigins.indexOf(_origin),
+    Credentials = true;
+  if(allowedOrigins==='*'){
+    can_next = true;
+    Credentials = false;
+    _origin ='*';
+  }
+  res.set('Access-Control-Allow-Origin', _origin);
+  res.set('Access-Control-Allow-Credentials',  Credentials);
+  res.set('Access-Control-Allow-Methods',  'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
 
-export default cors(CORS_CONFIG);
+  if(can_next){
+    next();
+  }else{
+    res.set('Content-Length' , 0);
+    res.status(204).end();
+  }
+}

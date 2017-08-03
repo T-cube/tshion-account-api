@@ -41,7 +41,6 @@ export default class Activity extends AppBase {
           $gte: moment().startOf('day').toDate(),
           $lt: moment().endOf('day').toDate(),
         },
-        status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
       .sort({time_start: -1}),
@@ -52,7 +51,6 @@ export default class Activity extends AppBase {
           $gte: moment().add(1, 'day').startOf('day').toDate(),
           $lt: moment().add(3, 'day').startOf('day').toDate(),
         },
-        status: C.ACTIVITY_STATUS.CREATED,
         $or: isMember
       }, this.baseInfo)
       .sort({time_start: -1}),
@@ -81,7 +79,6 @@ export default class Activity extends AppBase {
       this.collection('item')
       .count({
         company_id,
-        status: C.ACTIVITY_STATUS.CREATED,
         time_start: { $gte: moment().startOf('day').toDate() },
         $or: isMember,
       }),
@@ -126,7 +123,6 @@ export default class Activity extends AppBase {
     let all = isMember.concat([{is_public: true}]);
     let criteria = {
       company_id,
-      status: C.ACTIVITY_STATUS.CREATED,
     };
     let sortType = 1;
     if (date_start && !date_end) {
@@ -140,6 +136,7 @@ export default class Activity extends AppBase {
     if (target == C.LIST_TARGET.MINE) {
       criteria['$or'] = isMember;
     } else {
+      criteria.status = C.ACTIVITY_STATUS.CREATED;
       criteria['$or'] = all;
     }
     return this.collection('item')
