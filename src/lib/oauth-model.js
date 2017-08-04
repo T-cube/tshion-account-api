@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import Promise from 'bluebird';
+import ServerError from 'oauth2-server';
 import Joi from 'joi';
 import _ from 'underscore';
 import { ApiError } from 'lib/error';
@@ -42,7 +43,11 @@ export default {
       }).catch(e => callback(e));
     }
     db.oauth.clients.findOne({client_id: clientId, client_secret: clientSecret})
-    .then(doc => callback(null, camelCaseObjectKey(doc)))
+    .then(doc => {
+      doc ?
+      callback(null, camelCaseObjectKey(doc)) :
+      callback(null, null);
+    })
     .catch(e => callback(e));
   },
 
