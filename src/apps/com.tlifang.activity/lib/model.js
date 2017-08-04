@@ -323,6 +323,18 @@ export default class Activity extends AppBase {
         throw new ApiError(400, 'not_member');
       } else {
         doc.isMember = _.some([].concat(doc.creator, doc.assistants, doc.members), item => item.equals(user_id));
+        if (doc.room.approval_id) {
+          return this.collection('approval')
+          .findOne({
+            _id: doc.room.approval_id
+          }, {
+            status: 1
+          })
+          .then(approval => {
+            doc.room.status = approval.status;
+            return doc;
+          });
+        }
         return doc;
       }
     });
