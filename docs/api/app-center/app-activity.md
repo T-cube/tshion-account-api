@@ -182,6 +182,7 @@ request_body:
   order_require: Boolean,
   approval_require: Boolean,
   description: String,
+  icon: String,
 }
 ```
 

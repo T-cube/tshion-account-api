@@ -52,6 +52,7 @@ const schema={
       order_require: { type: 'boolean' },
       approval_require: { type: 'boolean' },
       description: { type: 'string', optional: true },
+      icon: { type: 'string', rules: ['trim'] },
     },
     validation: {
       name: { type: 'string', minLength: 1 },
@@ -74,6 +75,7 @@ const schema={
       order_require: { type: 'boolean' },
       approval_require: { type: 'boolean' },
       description: { type: 'string', optional: true },
+      icon: { type: 'string', minLength: 1 },
     }
   },
   roomChange: {
@@ -84,6 +86,7 @@ const schema={
       order_require: { type: 'boolean', optional: true },
       approval_require: { type: 'boolean', optional: true },
       description: { type: 'string', optional: true },
+      icon: { type: 'string', rules: ['trim'], optional: true },
     },
     validation: {
       name: { type: 'string', minLength: 1, optional: true },
@@ -92,6 +95,7 @@ const schema={
       order_require: { type: 'boolean', optional: true },
       approval_require: { type: 'boolean', optional: true },
       description: { type: 'string', optional: true },
+      icon: { type: 'string', minLength: 1 },
     }
   },
   equipment: {
