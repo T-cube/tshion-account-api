@@ -131,6 +131,9 @@ query:
 {
   page: Number, //最小为1 页数
   pagesize: Number, //最小为1 每页数量
+  type: String, //all ,apply, approve,
+  start_date: Date, // optional , 2017-8-1
+  end_date: Date, // optional, 2017-8-1  
 }
 ```
 

@@ -126,12 +126,16 @@ const schema={
     sanitization: {
       page: { type: 'integer' },
       pagesize: { type: 'integer' },
-      type: { type: 'string', rules:['trim'] }
+      type: { type: 'string', rules:['trim'] },
+      start_date: { $date: 1, optional: true },
+      end_date: { $date: 1, optional: true },
     },
     validation: {
       page: { type: 'integer', gte: 1 },
       pagesize: { type: 'integer', gte: 1 },
       type: { $enmu: ENUMS.APPROVAL_LIST },
+      start_date: { type: ['date', 'null'], optional: true },
+      end_date: { type: ['date', 'null'], optional: true },
     }
   },
   apply: {

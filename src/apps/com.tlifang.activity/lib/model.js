@@ -176,13 +176,16 @@ export default class Activity extends AppBase {
   }
 
   month({year, month, company_id}) {
-    let time = moment([year, month - 1]);
+    let first_day = moment([year, month - 1]).startOf('month').toDate();
+    let last_day = moment([year, month - 1]).endOf('month').toDate();
     return this.collection('item')
     .find({
       company_id,
       status: C.ACTIVITY_STATUS.CREATED,
-      time_start: time.startOf('month').toDate(),
-      time_end: time.endOf('month').toDate(),
+      time_start: {
+        $gte: first_day,
+        $lt: last_day,
+      },
     }, {
       time_start: 1,
       time_end: 1,
@@ -412,7 +415,7 @@ export default class Activity extends AppBase {
   }
 
 
-  approvalList({company_id, user_id, page, pagesize, type}) {
+  approvalList({company_id, user_id, page, pagesize, type, start_date, end_date}) {
     let criteria = {
       company_id,
     };
@@ -430,11 +433,19 @@ export default class Activity extends AppBase {
     } else if (type == C.APPROVAL_LIST.APPROVE) {
       criteria.manager = user_id;
     }
+    if (start_date && end_date) {
+      criteria.date_create = { $gte: start_date, $lte: end_date };
+    } else if (start_date) {
+      criteria.date_create = { $gte: start_date };
+    } else if (end_date) {
+      criteria.date_create = { $lte: end_date };
+    }
     return Promise.all([
       this.collection('approval')
       .find(criteria)
       .skip((page - 1) * pagesize)
       .limit(pagesize)
+      .sort({date_create: -1})
       .then(list => {
         return Promise.map(list, item => {
           return this.collection('item').findOne({

@@ -1,6 +1,7 @@
 import express from 'express';
 import _ from 'underscore';
 import Promise from 'bluebird';
+import moment from 'moment';
 
 import { validate } from './schema';
 import _C from './constants';
@@ -179,12 +180,21 @@ api.post('/activity/:activity_id/comment', (req, res, next) => {
 
 api.get('/approval', (req, res, next) => {
   validate('approvalList', req.query);
+  let { page, pagesize, type, start_date, end_date } = req.query;
+  if (start_date) {
+    start_date = moment(start_date).startOf('day').toDate();
+  }
+  if (end_date) {
+    end_date = moment(end_date).startOf('day').toDate();
+  }
   req._app.approvalList({
     company_id: req.company._id,
     user_id: req.user._id,
-    page: req.query.page,
-    pagesize: req.query.pagesize,
-    type: req.query.type,
+    page,
+    pagesize,
+    type,
+    start_date,
+    end_date,
   })
   .then(list => {
     res.json(list);
