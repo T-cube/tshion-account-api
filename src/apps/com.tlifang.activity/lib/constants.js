@@ -5,6 +5,7 @@ let constants = {
     AGREED: 'agreed',
     PENDING: 'pending',
     REJECTED: 'rejected',
+    CANCELLED: 'cancelled',
   },
   APPROVAL_LIST: {
     ALL: 'all',

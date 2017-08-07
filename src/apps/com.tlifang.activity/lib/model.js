@@ -450,13 +450,15 @@ export default class Activity extends AppBase {
           creator: user_id
         },
         {
-          manager: user_id
+          manager: user_id,
+          status: { $ne: C.APPROVAL_STATUS.CANCELLED }
         }
       ];
     } else if (type == C.APPROVAL_LIST.APPLY) {
       criteria.creator = user_id;
     } else if (type == C.APPROVAL_LIST.APPROVE) {
       criteria.manager = user_id;
+      criteria.status = { $ne: C.APPROVAL_STATUS.CANCELLED };
     }
     if (start_date && end_date) {
       criteria.date_create = { $gte: start_date, $lte: end_date };
@@ -590,6 +592,16 @@ export default class Activity extends AppBase {
       }
       if (!activity.creator.equals(user_id)) {
         throw new ApiError(400, 'unable_to_cancel');
+      }
+      if (activity.room.approval_id) {
+        this.collection('approval')
+        .update({
+          _id: activity.room.approval_id
+        }, {
+          $set: {
+            status: C.APPROVAL_STATUS.CANCELLED
+          }
+        });
       }
       return this.collection('item')
       .update({

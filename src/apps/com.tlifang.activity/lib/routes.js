@@ -242,7 +242,7 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
 
 api.delete('/activity/:activity_id/cancel', (req, res, next) => {
   validate('info', req.params, ['activity_id']);
-  req._qpp.cancel({
+  req._app.cancel({
     user_id: req.user._id,
     activity_id: req.params.activity_id
   })
