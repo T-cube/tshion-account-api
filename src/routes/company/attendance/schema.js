@@ -1,4 +1,5 @@
 import { ENUMS } from 'lib/constants';
+import { buildValidator } from 'lib/inspector';
 
 export let settingSanitization = {
   is_open: { type: 'boolean' },
@@ -217,3 +218,18 @@ export let recordValidation = {
     }
   }
 };
+
+const schema = {
+  pageInfo: {
+    sanitization: {
+      page: { type: 'integer', gte: 1 },
+      pagesize: { type: 'integer', gte: 1 },
+    },
+    validation: {
+      page: { type: 'integer'},
+      pagesize: { type: 'integer'},
+    },
+  },
+};
+
+export const validate = buildValidator(schema);

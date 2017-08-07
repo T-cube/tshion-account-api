@@ -21,6 +21,7 @@ let constants = {
     CREATOR: 'creator',
     MINE: 'mine',
     ALL: 'all',
+    PERSONAL: 'personal'
   },
   ACTIVITY_STATUS: {
     CREATED: 'created',

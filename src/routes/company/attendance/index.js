@@ -16,7 +16,8 @@ import {
   auditSanitization,
   auditValidation,
   recordSanitization,
-  recordValidation
+  recordValidation,
+  validate,
 } from './schema';
 import C from 'lib/constants';
 import { checkUserTypeFunc, checkUserType } from '../utils';
@@ -151,10 +152,13 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
   .catch(next);
 });
 
-api.get('/sign/today', (req,res, next) => {
+api.get('/sign/today', (req, res, next) => {
+  validate('schema', req.query);
   let year = moment().year();
   let month = moment().month() + 1;
   let date = moment().date();
+  let page = req.query.page;
+  let pagesize = req.query.pagesize;
   return db.attendance.sign.find({
     company: req.company._id,
     year,
@@ -166,6 +170,8 @@ api.get('/sign/today', (req,res, next) => {
     month: 1,
     'data.$': 1
   })
+  .limit(pagesize)
+  .skip((page - 1) * pagesize)
   .then(list => {
     res.json(list);
   })

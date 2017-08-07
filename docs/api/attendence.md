@@ -127,6 +127,14 @@ OUT_PUT
 
 获取所有成员当天签到情况
 
+query
+```javascript
+{
+  page: integer, //gte 1
+  pagesize: integer, // gte 1
+}
+```
+
 OUTPUT:
 ```javascript
 [

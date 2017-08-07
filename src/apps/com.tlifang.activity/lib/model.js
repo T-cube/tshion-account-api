@@ -142,6 +142,9 @@ export default class Activity extends AppBase {
     } else if (target == C.LIST_TARGET.ALL) {
       criteria.status = C.ACTIVITY_STATUS.CREATED;
       criteria['$or'] = all;
+    } else if (target == C.LIST_TARGET.PERSONAL) {
+      let personal = [].concat(isMember, [{creator: user_id}]);
+      criteria['$or'] = personal;
     } else {
       criteria.creator = user_id;
     }

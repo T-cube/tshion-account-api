@@ -76,7 +76,7 @@ query:
 {
   date_start: Date, //optional
   date_end: Date, //optional
-  target: String, // mine, all, creator
+  target: String, // mine, all, creator, personal
   page: Number
 }
 ```
