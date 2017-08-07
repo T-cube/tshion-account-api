@@ -1,4 +1,4 @@
-# API Attendence
+# API Attendance
 
 [返回目录](index.md)
 
@@ -14,9 +14,9 @@
 
 ...
 
-## attendence setting
+## attendance setting
 
-### GET /attendence/setting
+### GET /attendance/setting
 
 获取签到的设置
 
@@ -41,9 +41,9 @@
 }
 ```
 
-### POST /attendence/setting
+### POST /attendance/setting
 
-### PUT /attendence/setting
+### PUT /attendance/setting
 
 ```javascript
 {
@@ -65,9 +65,9 @@
 }
 ```
 
-## attendence sign
+## attendance sign
 
-### POST /attendence/sign
+### POST /attendance/sign
 
 ```javascript
 {
@@ -77,7 +77,7 @@
 
 签到
 
-### GET /attendence/sign/user/:user_id
+### GET /attendance/sign/user/:user_id
 
 获取用户签到信息
 
@@ -98,7 +98,7 @@
 }...]
 ```
 
-### GET /attendence/sign/date
+### GET /attendance/sign/date
 
 获取当前用户指定日期的签到
 
@@ -123,7 +123,7 @@ OUT_PUT
 }
 ```
 
-### GET /attendence/sign/today
+### GET /attendance/sign/today
 
 获取所有成员当天签到情况
 
@@ -161,7 +161,7 @@ OUTPUT:
 ]
 ```
 
-### GET /attendence/sign/department/:department_id
+### GET /attendance/sign/department/:department_id
 
 获取部门的签到信息
 
@@ -182,9 +182,9 @@ OUTPUT:
 }...]
 ```
 
-## attendence audit
+## attendance audit
 
-### POST /attendence/audit
+### POST /attendance/audit
 
 提交签到的审批
 
