@@ -148,12 +148,16 @@ export default class Activity extends AppBase {
     } else {
       criteria.creator = user_id;
     }
-    return this.collection('item')
-    .find(criteria, this.baseInfo)
-    .skip((page - 1) * 10)
-    .limit(10)
-    .sort({time_start: sortType})
-    .then(list => {
+    return Promise.all([
+      this.collection('item')
+      .find(criteria, this.baseInfo)
+      .skip((page - 1) * 10)
+      .limit(10)
+      .sort({time_start: sortType}),
+      this.collection('item')
+      .count(criteria)
+    ])
+    .then(([list, count]) => {
       if (target == C.LIST_TARGET.CREATOR) {
         return Promise.map(list, item => {
           if (item.room.approval_id) {
@@ -171,10 +175,16 @@ export default class Activity extends AppBase {
           }
         })
         .then(list => {
-          return this._listCalc(list, user_id);
+          return {
+            list: this._listCalc(list, user_id),
+            count: count
+          };
         });
       }
-      return this._listCalc(list, user_id);
+      return {
+        list: this._listCalc(list, user_id),
+        count: count
+      };
     });
   }
 

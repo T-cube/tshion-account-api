@@ -159,21 +159,29 @@ api.get('/sign/today', (req, res, next) => {
   let date = moment().date();
   let page = req.query.page;
   let pagesize = req.query.pagesize;
-  return db.attendance.sign.find({
+  let criteria = {
     company: req.company._id,
     year,
     month: month,
     'data.date': date
-  }, {
-    user: 1,
-    year: 1,
-    month: 1,
-    'data.$': 1
-  })
-  .limit(pagesize)
-  .skip((page - 1) * pagesize)
-  .then(list => {
-    res.json(list);
+  };
+  return Promise.all([
+    db.attendance.sign.count(criteria),
+    db.attendance.sign.find(criteria, {
+      user: 1,
+      year: 1,
+      month: 1,
+      'data.$': 1
+    })
+    .limit(pagesize)
+    .skip((page - 1) * pagesize)
+
+  ])
+  .then(([count, list]) => {
+    res.json({
+      list,
+      count
+    });
   })
   .catch(next);
 });
