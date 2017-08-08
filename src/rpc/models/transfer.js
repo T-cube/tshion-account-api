@@ -46,29 +46,23 @@ export default class TransferModel extends Model {
       _id: transfer_id
     })
     .then(transfer => {
-      return this.db.payment.charge.order.findOne({
-        recharge_id: transfer.recharge_id
-      })
-      .then(charge => {
-        let charge_id = charge._id;
-        let recharge_id = transfer.recharge_id;
-        return RechargeOrder.handlePaySuccess(recharge_id, charge_id)
-        .then(() => {
-          return this.db.transfer.findOneAndUpdate({
-            _id: transfer_id
-          }, {
-            $set: {status: C.TRANSFER_STATUS.CONFIRMED},
-            $push: { operation: {
-              action: 'confirm',
-              date_create: new Date(),
-            }}
-          }, {
-            returnOriginal: false,
-            returnNewDocument: true
-          })
-          .then(doc => {
-            return doc.value;
-          });
+      let recharge_id = transfer.recharge_id;
+      return RechargeOrder.handleTransferSuccess(recharge_id)
+      .then(() => {
+        return this.db.transfer.findOneAndUpdate({
+          _id: transfer_id
+        }, {
+          $set: {status: C.TRANSFER_STATUS.CONFIRMED},
+          $push: { operation: {
+            action: 'confirm',
+            date_create: new Date(),
+          }}
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
+        })
+        .then(doc => {
+          return doc.value;
         });
       });
     });
