@@ -47,7 +47,7 @@ api.post('/transfer', (req, res, next) => {
   let recharge = new Recharge({company_id, user_id});
   let payment_method = 'transfer';
   let now = new Date();
-  recharge.transfer({amount: data.amount, payment_method, transfer_data: data})
+  recharge.transfer({amount: data.amount, payment_method})
   .then(recharge => {
     data.company_name = req.company.name;
     data.recharge_id = recharge._id;
@@ -63,6 +63,21 @@ api.post('/transfer', (req, res, next) => {
       res.json({...recharge,...req.body});
     });
   }).catch(next);
+});
+
+api.get('/transfer/:transfer_id', (req, res, next) => {
+  validate('transfer_info', req.params);
+  db.transfer.findOne({
+    company_id: req.company._id,
+    _id: req.params.transfer_id
+  })
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(400, 'invalid_transfer_id');
+    }
+    res.json(doc);
+  })
+  .catch(next);
 });
 
 api.get('/transfer', (req, res, next) => {
