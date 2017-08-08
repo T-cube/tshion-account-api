@@ -41,14 +41,11 @@ export default class TransferModel extends Model {
     });
   }
 
-  confirm(transfer_id) {
+  confirm({transfer_id}) {
     return this.db.transfer.findOne({
       _id: transfer_id
     })
     .then(transfer => {
-      if (!transfer) {
-        throw new Error(`${transfer_id},no_transfer`);
-      }
       return this.db.payment.charge.order.findOne({
         recharge_id: transfer.recharge_id
       })
@@ -77,7 +74,7 @@ export default class TransferModel extends Model {
     });
   }
 
-  reject(transfer_id) {
+  reject({transfer_id}) {
     return this.db.transfer.findOne({
       _id: transfer_id
     })

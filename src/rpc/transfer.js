@@ -45,9 +45,6 @@ route.on('/detail', query => {
 
 route.on('/confirm', query => {
   let { transfer_id } = query;
-  if (!ObjectId.isValid(transfer_id)) {
-    throw new Error('invalid_transfer_id');
-  }
   transfer_id = ObjectId(transfer_id);
   return transferModel.confirm({transfer_id});
 });
