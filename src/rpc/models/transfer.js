@@ -46,6 +46,9 @@ export default class TransferModel extends Model {
       _id: transfer_id
     })
     .then(transfer => {
+      if (!transfer) {
+        throw new Error('no_transfer');
+      }
       return this.db.payment.charge.order.findOne({
         recharge_id: transfer.recharge_id
       })
