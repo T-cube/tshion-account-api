@@ -153,7 +153,7 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
 });
 
 api.get('/sign/today', (req, res, next) => {
-  validate('schema', req.query);
+  validate('pageInfo', req.query);
   let year = moment().year();
   let month = moment().month() + 1;
   let date = moment().date();
