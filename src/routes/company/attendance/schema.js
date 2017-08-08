@@ -224,10 +224,12 @@ const schema = {
     sanitization: {
       page: { type: 'integer', gte: 1 },
       pagesize: { type: 'integer', gte: 1 },
+      department_id: { $objectId: 1, optional: true }
     },
     validation: {
       page: { type: 'integer'},
       pagesize: { type: 'integer'},
+      department_id: { $objectId: 1, optional: true }
     },
   },
 };

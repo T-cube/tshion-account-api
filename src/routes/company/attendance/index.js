@@ -30,6 +30,7 @@ import {
 } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
+import Structure from 'models/structure';
 
 const api = express.Router();
 export default api;
@@ -165,6 +166,11 @@ api.get('/sign/today', (req, res, next) => {
     month: month,
     'data.date': date
   };
+  if (req.query.department_id) {
+    let tree = new Structure(req.company.structure);
+    let members = tree.getMemberAll(req.query.department_id).map(member => member._id);
+    criteria.user = { $in: members };
+  }
   return Promise.all([
     db.attendance.sign.count(criteria),
     db.attendance.sign.find(criteria, {

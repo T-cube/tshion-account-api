@@ -132,6 +132,7 @@ query
 {
   page: integer, //gte 1
   pagesize: integer, // gte 1
+  department_id: ObjectId, //optional
 }
 ```
 
