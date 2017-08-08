@@ -10,7 +10,7 @@ export default class AppCenterModel extends Model {
   fetchList(props) {
     let { page, pagesize, criteria } = props;
     return this.db.app.find(criteria)
-    .skip((page - 1) * pagesize)
+    .skip(page * pagesize)
     .sort({_id: -1})
     .limit(pagesize)
     .then(list => {
@@ -36,7 +36,7 @@ export default class AppCenterModel extends Model {
     return Promise.all([
       this.db.app.slideshow.count(criteria),
       this.db.app.slideshow.find(criteria)
-      .skip((page -1) * pagesize)
+      .skip(page * pagesize)
       .sort({_id: -1})
       .limit(pagesize)
     ]).then(([count, list]) => {
