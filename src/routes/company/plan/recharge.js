@@ -50,6 +50,7 @@ api.post('/transfer', (req, res, next) => {
   .then(recharge => {
     data.company_name = req.company.name;
     data.recharge_id = recharge._id;
+    data.recharge_no = recharge.recharge_no;
     data.user_id = user_id;
     data.company_id = company_id;
     data.date_create = new Date();
