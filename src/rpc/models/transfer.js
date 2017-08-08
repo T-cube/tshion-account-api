@@ -42,17 +42,10 @@ export default class TransferModel extends Model {
   }
 
   confirm(transfer_id) {
-    return Promise.all([
-      this.db.transfer.update({
-        _id: transfer_id
-      }, {
-        $set: {status: C.TRANSFER_STATUS.CONFIRMED}
-      }),
-      this.db.transfer.findOne({
-        _id: transfer_id
-      }),
-    ])
-    .then(([updated, transfer]) => {
+    return this.db.transfer.findOne({
+      _id: transfer_id
+    })
+    .then(transfer => {
       return this.db.payment.charge.order.findOne({
         recharge_id: transfer.recharge_id
       })
@@ -64,6 +57,7 @@ export default class TransferModel extends Model {
           return this.db.transfer.findOneAndUpdate({
             _id: transfer_id
           }, {
+            $set: {status: C.TRANSFER_STATUS.CONFIRMED},
             $push: { operation: {
               action: 'confirm',
               date_create: new Date(),
@@ -89,7 +83,7 @@ export default class TransferModel extends Model {
         this.db.transfer.findOneAndUpdate({
           _id: transfer_id
         }, {
-          $set :{status: C.TRANSFER_STATUS.REJECTED,},
+          $set: {status: C.TRANSFER_STATUS.REJECTED},
           $push: { operation: {
             action: 'confirm',
             date_create: new Date(),
@@ -108,7 +102,10 @@ export default class TransferModel extends Model {
         }, {
           status: C.CHARGE_STATUS.CANCELLED
         }),
-      ]);
+      ])
+      .then(([doc, order, recharge]) => {
+        return doc.value;
+      });
     });
   }
 
