@@ -15,7 +15,7 @@ route.on('/list', query => {
   let { page, pagesize, status, keyword } = query;
   let criteria = {};
   if (status) {
-    if (!_.some(ENUMS, item => item == status)) {
+    if (!_.some(ENUMS.TRANSFER_STATUS, item => item == status)) {
       throw new Error('invalid_status');
     }
     criteria.status = status;
