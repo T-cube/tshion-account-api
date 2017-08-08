@@ -12,6 +12,15 @@ QUERY
 }
 ```
 
+### /transfer/detail
+
+QUERY
+```
+{
+  transfer_id: ObjectId
+}
+```
+
 ### /transfer/confirm
 
 QUERY

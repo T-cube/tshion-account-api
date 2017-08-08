@@ -37,6 +37,12 @@ route.on('/list', query => {
   return transferModel.page({ page, pagesize, criteria});
 });
 
+route.on('/detail', query => {
+  let { transfer_id } = query;
+  transfer_id = ObjectId(transfer_id);
+  return transferModel.detail({transfer_id});
+});
+
 route.on('/confirm', query => {
   let { transfer_id } = query;
   transfer_id = ObjectId(transfer_id);

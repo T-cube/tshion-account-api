@@ -617,6 +617,14 @@ request_body:
 
 ### GET /recharge/transfer
 
+query
+```javascript
+{
+  page: integer, //gte 1
+  pagesize: integer, //gte 1
+}
+```
+
 获取转账信息列表，普通用户只能查看用自己，公司拥有者可以查看所有
 
 ### PUT /recharge/transfer/:transfer_id/transfered

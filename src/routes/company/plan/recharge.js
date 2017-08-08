@@ -46,6 +46,7 @@ api.post('/transfer', (req, res, next) => {
   let company_id = req.company._id;
   let recharge = new Recharge({company_id, user_id});
   let payment_method = 'transfer';
+  let now = new Date();
   recharge.transfer({amount: data.amount, payment_method, transfer_data: data})
   .then(recharge => {
     data.company_name = req.company.name;
@@ -53,9 +54,10 @@ api.post('/transfer', (req, res, next) => {
     data.recharge_no = recharge.recharge_no;
     data.user_id = user_id;
     data.company_id = company_id;
-    data.date_create = new Date();
-    data.date_update = new Date();
+    data.date_create = now;
+    data.date_update = now;
     data.status = C.TRANSFER_STATUS.CREATED;
+    data.operation = [{action:'create', date_create: now}];
     return db.transfer.insert(data).then(doc => {
       delete doc._id;
       res.json({...recharge,...req.body});
@@ -64,6 +66,8 @@ api.post('/transfer', (req, res, next) => {
 });
 
 api.get('/transfer', (req, res, next) => {
+  validate('page_info', req.query);
+  let { page, pagesize } = req.query;
   let criteria = {
     company_id: req.company._id
   };
@@ -71,6 +75,8 @@ api.get('/transfer', (req, res, next) => {
     criteria.user_id = req.user._id;
   }
   db.transfer.find(criteria)
+  .skip((page - 1) * pagesize)
+  .limit(pagesize)
   .then(list => {
     res.json(list);
   })
@@ -79,6 +85,7 @@ api.get('/transfer', (req, res, next) => {
 
 api.put('/transfer/:transfer_id/transfered', (req, res, next) => {
   validate('transfer_info', req.params);
+  let now = new Date();
   db.transfer.findOne({
     company_id: req.company._id,
     _id: req.params.transfer_id
@@ -90,15 +97,21 @@ api.put('/transfer/:transfer_id/transfered', (req, res, next) => {
     if (!req.user._id.equals(req.company.owner) || !req.user._id.equals(transfer.user_id)) {
       throw new ApiError(400, 'invalid_user');
     }
-    return db.transfer.update({
+    return db.transfer.findOneAndUpdate({
       company_id: req.company._id,
       _id: req.params.transfer_id
     }, {
-      status: C.TRANSFER_STATUS.TRANSFERED,
-      date_update: new Date()
+      $set: {status: C.TRANSFER_STATUS.TRANSFERED,
+      date_update: now},
+      $push: {
+        operation: {action: 'transfer', date_create: now}
+      }
+    }, {
+      returnOriginal: false,
+      returnNewDocument: true
     })
-    .then(() => {
-      res.json({success: 1});
+    .then(doc => {
+      res.json(doc.value);
     });
   })
   .catch(next);

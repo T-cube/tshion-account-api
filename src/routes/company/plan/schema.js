@@ -185,6 +185,16 @@ const schema = {
       transfer_id: { $objectId: 1 },
     }
   },
+  page_info: {
+    sanitization: {
+      page: { type: 'integer', gte: 1 },
+      pagesize: { type: 'integer', gte: 1 },
+    },
+    validation: {
+      page: { type: 'integer'},
+      pagesize: { type: 'integer'},
+    },
+  },
   trial: {
     sanitization: {
       plan: { type: 'string' },
