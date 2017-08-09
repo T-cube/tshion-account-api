@@ -71,7 +71,7 @@ export default class TransferModel extends Model {
     });
   }
 
-  reject({transfer_id}) {
+  reject({transfer_id, reason}) {
     return this.db.transfer.findOne({
       _id: transfer_id
     })
@@ -85,8 +85,9 @@ export default class TransferModel extends Model {
         }, {
           $set: {status: C.TRANSFER_STATUS.REJECTED},
           $push: { operation: {
-            action: 'confirm',
+            action: 'reject',
             date_create: new Date(),
+            reason: reason,
           }}
         }, {
           returnOriginal: false,

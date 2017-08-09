@@ -50,7 +50,7 @@ route.on('/confirm', query => {
 });
 
 route.on('/reject', query => {
-  let { transfer_id } = query;
+  let { transfer_id, reason } = query;
   transfer_id = ObjectId(transfer_id);
-  return transferModel.reject({transfer_id});
+  return transferModel.reject({transfer_id, reason});
 });
