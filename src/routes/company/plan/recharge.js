@@ -91,6 +91,7 @@ api.get('/transfer', (req, res, next) => {
     criteria.user_id = req.user._id;
   }
   db.transfer.find(criteria)
+  .sort({date_create: -1})
   .skip((page - 1) * pagesize)
   .limit(pagesize)
   .then(list => {
@@ -145,7 +146,7 @@ api.delete('/transfer/:transfer_id/cancel', (req, res, next) => {
   .then(transfer => {
     if (!transfer || !_.some([C.TRANSFER_STATUS.TRANSFERED,C.TRANSFER_STATUS.CREATED], item => item == transfer.status)) {
       throw new ApiError(400, 'invalid_transfer');
-    }    
+    }
     if (!req.user._id.equals(req.company.owner) || !req.user._id.equals(transfer.user_id)) {
       throw new ApiError(400, 'invalid_user');
     }

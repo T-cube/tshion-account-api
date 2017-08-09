@@ -642,7 +642,7 @@ body:
 }
 ```
 
-### PUT /recharge/transfer/:transfer_id/cancel
+### DELETE /recharge/transfer/:transfer_id/cancel
 
 取消
 

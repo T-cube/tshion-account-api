@@ -61,7 +61,7 @@ export default class Recharge {
         status: C.ORDER_STATUS.CREATED,
         date_create: new Date(),
         date_update: new Date(),
-        date_expires: moment().add(3, 'days').toDate(),
+        date_expires: moment().add(15, 'days').toDate(),
       };
       return db.payment.recharge.insert(data)
       .then(recharge => {
