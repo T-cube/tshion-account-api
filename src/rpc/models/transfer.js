@@ -46,6 +46,9 @@ export default class TransferModel extends Model {
       _id: transfer_id
     })
     .then(transfer => {
+      if (transfer.status != C.TRANSFER_STATUS.TRANSFERED) {
+        throw new Error('invalid_transfer_status');
+      }
       let recharge_id = transfer.recharge_id;
       return RechargeOrder.handleTransferSuccess(recharge_id)
       .then(() => {
@@ -73,6 +76,9 @@ export default class TransferModel extends Model {
       _id: transfer_id
     })
     .then(transfer => {
+      if (transfer.status != C.TRANSFER_STATUS.TRANSFERED) {
+        throw new Error('invalid_transfer_status');
+      }
       return Promise.all([
         this.db.transfer.findOneAndUpdate({
           _id: transfer_id

@@ -247,6 +247,7 @@ let constants = {
     TRANSFERED: 'transfered',
     REJECTED: 'rejected',
     CONFIRMED: 'confirmed',
+    CANCELLED: 'cancelled',
   },
 
   USER_ID_TYPE: {

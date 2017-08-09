@@ -631,9 +631,20 @@ query
 
 获取转账详情
 
-### PUT /recharge/transfer/:transfer_id/transfered
+### PUT /recharge/transfer/:transfer_id/transfer
 
 确认转账信息，普通用户只能确认自己，公司拥有者可以确认所有
+
+body:
+```javascript
+{
+  transfer_no: string,
+}
+```
+
+### PUT /recharge/transfer/:transfer_id/cancel
+
+取消
 
 ### GET /recharge
 

@@ -1,5 +1,6 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import _ from 'underscore';
 
 import C from 'lib/constants';
 import db from 'lib/database';
@@ -66,7 +67,7 @@ api.post('/transfer', (req, res, next) => {
 });
 
 api.get('/transfer/:transfer_id', (req, res, next) => {
-  validate('transfer_info', req.params);
+  validate('transfer_info', req.params, ['transfer_id']);
   db.transfer.findOne({
     company_id: req.company._id,
     _id: req.params.transfer_id
@@ -98,28 +99,66 @@ api.get('/transfer', (req, res, next) => {
   .catch(next);
 });
 
-api.put('/transfer/:transfer_id/transfered', (req, res, next) => {
-  validate('transfer_info', req.params);
+api.put('/transfer/:transfer_id/transfer', (req, res, next) => {
+  validate('transfer_info', req.params, ['transfer_id']);
+  validate('transfer_info', req.body, ['transfer_no']);
   let now = new Date();
   db.transfer.findOne({
     company_id: req.company._id,
     _id: req.params.transfer_id
   })
   .then(transfer => {
-    if (!transfer) {
+    if (!transfer || transfer.status != C.TRANSFER_STATUS.CREATED) {
       throw new ApiError(400, 'invalid_transfer');
     }
     if (!req.user._id.equals(req.company.owner) || !req.user._id.equals(transfer.user_id)) {
       throw new ApiError(400, 'invalid_user');
     }
     return db.transfer.findOneAndUpdate({
-      company_id: req.company._id,
       _id: req.params.transfer_id
     }, {
-      $set: {status: C.TRANSFER_STATUS.TRANSFERED,
-      date_update: now},
+      $set: {
+        status: C.TRANSFER_STATUS.TRANSFERED,
+        date_update: now,
+        transfer_no: req.body.transfer_no,
+      },
       $push: {
         operation: {action: 'transfer', date_create: now}
+      }
+    }, {
+      returnOriginal: false,
+      returnNewDocument: true
+    })
+    .then(doc => {
+      res.json(doc.value);
+    });
+  })
+  .catch(next);
+});
+
+api.delete('/transfer/:transfer_id/cancel', (req, res, next) => {
+  validate('transfer_info', req.params, ['transfer_id']);
+  db.transfer.findOne({
+    _id: req.params.transfer_id,
+    company_id: req.company._id,
+  })
+  .then(transfer => {
+    if (!transfer || !_.some([C.TRANSFER_STATUS.TRANSFERED,C.TRANSFER_STATUS.CREATED], item => item == transfer.status)) {
+      throw new ApiError(400, 'invalid_transfer');
+    }    
+    if (!req.user._id.equals(req.company.owner) || !req.user._id.equals(transfer.user_id)) {
+      throw new ApiError(400, 'invalid_user');
+    }
+    let now = new Date();
+    return db.transfer.findOneAndUpdate({
+      _id: req.params.transfer_id
+    }, {
+      $set: {
+        status: C.TRANSFER_STATUS.CANCELLED,
+        date_update: now,
+      },
+      $push: {
+        operation: {action: 'cancel', date_create: now}
       }
     }, {
       returnOriginal: false,

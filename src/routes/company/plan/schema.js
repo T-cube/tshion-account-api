@@ -180,9 +180,11 @@ const schema = {
   transfer_info: {
     sanitization: {
       transfer_id: { $objectId: 1 },
+      transfer_no: { type: 'string' },
     },
     validation: {
       transfer_id: { $objectId: 1 },
+      transfer_no: { type: 'string' },
     }
   },
   page_info: {

@@ -7,7 +7,7 @@ QUERY
 {
   page: <Int>,
   pagesize: <Int>,
-  status: <Enums>,//'created', 'transfered', 'rejected', 'confirmed'
+  status: <Enums>,//'created', 'transfered', 'rejected', 'confirmed', 'cancelled'
   keyword: <String>,
 }
 ```
