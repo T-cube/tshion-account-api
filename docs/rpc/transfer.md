@@ -35,6 +35,7 @@ QUERY
 QUERY
 ```javascript
 {
-  transfer_id: ObjectId
+  transfer_id: ObjectId,
+  reason: String,
 }
 ```
