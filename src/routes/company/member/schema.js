@@ -5,11 +5,10 @@ export let sanitization = {
   email: { type: 'string', rules: ['trim', 'lower'] },
   mobile: { type: 'string', def: '' },
   birthdate: { type: 'date', def: '' },
-  joindate: { type: 'date', def: '' },
   address: { type: 'string', def: '' },
   sex: { type: 'string', def: C.SEX.MALE },
   type: { type: 'string', def: C.COMPANY_MEMBER_TYPE.NORMAL },
-  ID: { type: 'number', def: '' },
+  ID: { type: 'string', def: '', rules: ['trim'] },
 };
 
 export let validation = {
@@ -17,9 +16,8 @@ export let validation = {
   email: { type: 'string', $email: 1, optional: true },
   mobile: { type: 'string', $mobile: 1, optional: true },
   birthdate: { type: 'date', optional: true },
-  joindate: { type: 'date', optional: true },
   address: { type: 'string', optional: true },
   sex: { $enum: ENUMS.SEX, optional: true },
   type: { $enum: ENUMS.COMPANY_MEMBER_TYPE },
-  ID: { type: 'number', optional: true },
+  ID: { type: 'string', optional: true },
 };

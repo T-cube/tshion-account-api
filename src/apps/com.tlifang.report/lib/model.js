@@ -377,7 +377,7 @@ export default class Report extends AppBase {
     });
   }
 
-  reportDelete({user_id, report_id}) {
+  reportDelete({req, user_id, report_id}) {
     return this.collection('item').findOne({
       _id: report_id
     })
@@ -391,6 +391,7 @@ export default class Report extends AppBase {
       if (report.status != C.REPORT_STATUS.DRAFT) {
         throw new ApiError(400, 'invalid_delete');
       }
+      req.model('document').deleteFile(req, report);
       return this.collection('item').remove({
         _id: report_id
       });

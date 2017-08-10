@@ -76,8 +76,20 @@ query:
 {
   date_start: Date, //optional
   date_end: Date, //optional
-  target: String, // mine, all
+  target: String, // mine, all, creator, personal
   page: Number
+}
+```
+
+### GET /month/activity
+
+某月内的活动
+
+query:
+```javascript
+{
+  year: int, //gte 1970
+  month: int, //1-12
 }
 ```
 
@@ -119,6 +131,9 @@ query:
 {
   page: Number, //最小为1 页数
   pagesize: Number, //最小为1 每页数量
+  type: String, //all ,apply, approve,
+  start_date: Date, // optional , 2017-8-1
+  end_date: Date, // optional, 2017-8-1  
 }
 ```
 
@@ -170,6 +185,7 @@ request_body:
   order_require: Boolean,
   approval_require: Boolean,
   description: String,
+  icon: String,
 }
 ```
 

@@ -5,6 +5,7 @@ let constants = {
     AGREED: 'agreed',
     PENDING: 'pending',
     REJECTED: 'rejected',
+    CANCELLED: 'cancelled',
   },
   APPROVAL_LIST: {
     ALL: 'all',
@@ -18,8 +19,10 @@ let constants = {
     FEATURE: 'feature'
   },
   LIST_TARGET: {
+    CREATOR: 'creator',
     MINE: 'mine',
     ALL: 'all',
+    PERSONAL: 'personal'
   },
   ACTIVITY_STATUS: {
     CREATED: 'created',

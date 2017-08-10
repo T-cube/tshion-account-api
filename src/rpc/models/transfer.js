@@ -9,8 +9,14 @@ export default class TransferModel extends Model {
   }
 
   fetchList(props) {
-    let { page, pagesize, criteria = {} } = props;
-    return this.db.transfer.find(criteria)
+    let { page, pagesize, criteria } = props;
+    return this.db.transfer.find(criteria, {
+      recharge_no: 1,
+      company_name: 1,
+      amount: 1,
+      date_create: 1,
+      status: 1,
+    })
     .skip(page * pagesize)
     .limit(pagesize)
     .sort({
@@ -21,39 +27,71 @@ export default class TransferModel extends Model {
     });
   }
 
-  confirm(transfer_id) {
-    return Promise.all([
-      this.db.transfer.update({
-        _id: transfer_id
-      }, {
-        status: C.TRANSFER_STATUS.CONFIRMED
-      }),
-      this.db.transfer.findOne({
-        _id: transfer_id
-      }),
-    ])
-    .then(([updated, transfer]) => {
-      return this.db.payment.charge.order.findOne({
-        recharge_id: transfer.recharge_id
-      })
-      .then(charge => {
-        let charge_id = charge._id;
-        let recharge_id = transfer.recharge_id;
-        return RechargeOrder.handlePaySuccess(recharge_id, charge_id);
-      });
+  count(criteria) {
+    return this.db.transfer.count(criteria);
+  }
+
+  detail(props) {
+    let { transfer_id } = props;
+    return this.db.transfer.findOne({
+      _id: transfer_id
+    })
+    .then(doc => {
+      return doc;
     });
   }
 
-  reject(transfer_id) {
+  confirm({transfer_id}) {
     return this.db.transfer.findOne({
       _id: transfer_id
     })
     .then(transfer => {
-      return Promise.all([
-        this.db.transfer.update({
+      if (transfer.status != C.TRANSFER_STATUS.TRANSFERED) {
+        throw new Error('invalid_transfer_status');
+      }
+      let recharge_id = transfer.recharge_id;
+      return RechargeOrder.handleTransferSuccess(recharge_id)
+      .then(() => {
+        return this.db.transfer.findOneAndUpdate({
           _id: transfer_id
         }, {
-          status: C.TRANSFER_STATUS.REJECTED
+          $set: {status: C.TRANSFER_STATUS.CONFIRMED},
+          $push: { operation: {
+            action: 'confirm',
+            date_create: new Date(),
+          }}
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
+        })
+        .then(doc => {
+          return doc.value;
+        });
+      });
+    });
+  }
+
+  reject({transfer_id, reason}) {
+    return this.db.transfer.findOne({
+      _id: transfer_id
+    })
+    .then(transfer => {
+      if (transfer.status != C.TRANSFER_STATUS.TRANSFERED) {
+        throw new Error('invalid_transfer_status');
+      }
+      return Promise.all([
+        this.db.transfer.findOneAndUpdate({
+          _id: transfer_id
+        }, {
+          $set: {status: C.TRANSFER_STATUS.REJECTED},
+          $push: { operation: {
+            action: 'reject',
+            date_create: new Date(),
+            reason: reason,
+          }}
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
         }),
         this.db.payment.charge.order.update({
           recharge_id: transfer.recharge_id
@@ -65,7 +103,10 @@ export default class TransferModel extends Model {
         }, {
           status: C.CHARGE_STATUS.CANCELLED
         }),
-      ]);
+      ])
+      .then(([doc, order, recharge]) => {
+        return doc.value;
+      });
     });
   }
 

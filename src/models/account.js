@@ -160,7 +160,7 @@ export default class Account {
         throw new ApiError(400, 'verify_code_invalid', 'code is not valid');
       }
       if (time() > doc.expires) {
-        throw new ApiError(400, 'verify_code_expired', 'code has been expired');
+        throw new ApiError(400, 'verify_code_expired');
       }
       return db.user.confirm.email.update({
         _id: doc._id,

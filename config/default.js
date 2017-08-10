@@ -17,7 +17,7 @@ module.exports = {
     host: '127.0.0.1', // process.env.SERVER_HOST
     port: 3000, // process.env.SERVER_PORT
   },
-  allowedOrigins: '*',
+  allowedOrigins: ['*'],
   debug: {
     format: 'dev', // mongan log format
     httpInfo: false, //process.env.DEBUG_HTTP_INFO

@@ -6,8 +6,7 @@
 
 挂载点：
 * `/company/:company_id/project/:project_id/task`
-* `/company/:company_id/task`
-* `/task`
+
 
 ## Table of Contents
 
@@ -381,13 +380,10 @@ QUERY
 | page | int | page number |
 | pagesize | int | page size |
 | keyword | string | search keyword |
-| sort | string | field_name |
-| order | [asc,desc] | sort method |
-| status | list | comma separated list |
+| status | list | completed / processing |
 | type | string | assignee / creator / follower |
-| is_expired | int | 0 / 1 |
-| is_loop | int | 0 / 1 |
-| p_id | ObjectId | |
+
+'keyword', 'status', 'type'  all is optional
 
 OUTPUT
 ```javascript

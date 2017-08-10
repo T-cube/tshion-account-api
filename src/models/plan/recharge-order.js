@@ -52,6 +52,28 @@ export default class RechargeOrder {
     ]);
   }
 
+  static handleTransferSuccess(recharge_id) {
+    return db.payment.recharge.findOne({_id: recharge_id})
+    .then(recharge => {
+      if (!recharge) {
+        throw new Error('invalid_recharge');
+      }
+      return Transaction.init('recharge_success', {recharge: recharge_id})
+      .then(transactionId => (
+        Transaction.start(transactionId).then(() => (
+          Balance.incBalance(recharge.company_id, recharge.amount, {
+            recharge: _.pick(recharge, '_id', 'amount', 'recharge_no')
+          }, transactionId)
+        ))
+        .then(() => Transaction.commit(transactionId))
+        .then(() => (
+          RechargeOrder.commitHandlePaySuccess(recharge, transactionId)
+        ))
+        .then(() => Transaction.done(transactionId))
+      ));
+    });
+  }
+
   static commitHandlePaySuccess(recharge, transactionId) {
     let {company_id} = recharge;
     return Promise.all([

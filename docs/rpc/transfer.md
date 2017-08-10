@@ -7,8 +7,17 @@ QUERY
 {
   page: <Int>,
   pagesize: <Int>,
-  status: <String>,
+  status: <Enums>,//'created', 'transfered', 'rejected', 'confirmed', 'cancelled'
   keyword: <String>,
+}
+```
+
+### /transfer/detail
+
+QUERY
+```
+{
+  transfer_id: ObjectId
 }
 ```
 
@@ -26,6 +35,7 @@ QUERY
 QUERY
 ```javascript
 {
-  transfer_id: ObjectId
+  transfer_id: ObjectId,
+  reason: String,
 }
 ```

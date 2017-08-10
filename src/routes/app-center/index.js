@@ -2,12 +2,14 @@ import express from 'express';
 import db from 'lib/database';
 import C from 'lib/constants';
 import _ from 'underscore';
+import Promise from 'bluebird';
 
 import { ApiError } from 'lib/error';
 import { upload, saveCdn } from 'lib/upload';
 import { validate } from './schema';
 import { oauthCheck } from 'lib/middleware';
 import { mapObjectIdToData } from 'lib/utils';
+import { attachFileUrls } from 'routes/company/document/index';
 
 let api = express.Router();
 export default api;
@@ -40,9 +42,9 @@ api.get('/app', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/store/index', (req, res, next) => {
+api.get('/store/index', oauthCheck(), (req, res, next) => {
   Promise.all([
-    db.app.slideshow.find({}, {pic_url: 1, appid: 1}).sort({_id: -1}).limit(3),
+    db.app.slideshow.find({active: true}, {pic_url: 1, appid: 1}).sort({_id: -1}).limit(3),
     db.app
     .find({
       enabled: true
@@ -67,41 +69,19 @@ api.get('/store/index', (req, res, next) => {
     .limit(5),
   ])
   .then(([slideshows, new_apps, top_apps]) => {
-    res.json({
-      slideshows,
-      new_apps,
-      top_apps,
-    });
+    return Promise.map(slideshows, slideshow => {
+      return attachFileUrls(req, slideshow);
+    }).then(() => {
+      res.json({
+        slideshows,
+        new_apps,
+        top_apps,
+      });
+    }).catch(next);
   })
   .catch(next);
 });
 
-api.post('/slideshow/upload',
-  oauthCheck(),
-  upload({type: 'attachment'}).single('document'),
-  (req, res, next) => {
-    let file = req.file;
-    if (!file) {
-      throw new ApiError(400, 'file_not_upload');
-    }
-    const qiniu = req.model('qiniu').bucket('cdn-public');
-    qiniu.upload(file.cdn_key, file.path)
-    .then(data => {
-      let slide_file = _.extend({}, file,
-        {
-          pic_url: `${data.server_url}${file.cdn_key}`,
-          appid: req.body.appid,
-          order: req.body.order,
-        }
-      );
-      db.app.slideshow.insert(slide_file)
-      .then(doc => {
-        res.json(doc);
-      });
-    })
-    .catch(next);
-  }
-);
 
 api.param('appid', (req, res, next, appid) => {
   validate('appRequest', {appid}, ['appid']);

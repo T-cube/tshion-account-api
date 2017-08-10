@@ -20,6 +20,16 @@ const schema={
       approval_id: { $objectId: 1 },
     }
   },
+  calendar: {
+    sanitization: {
+      year: { type: 'integer' },
+      month: { type: 'integer' },
+    },
+    validation: {
+      year: { type: 'integer', gte: 1970, code: 'invalid_year' },
+      month: { type: 'integer', gte: 1, lte: 12, code: 'invalid_month' },
+    }
+  },
   room: {
     sanitization: {
       name: { type: 'string', rules: ['trim'] },
@@ -42,6 +52,7 @@ const schema={
       order_require: { type: 'boolean' },
       approval_require: { type: 'boolean' },
       description: { type: 'string', optional: true },
+      icon: { type: 'string', rules: ['trim'] },
     },
     validation: {
       name: { type: 'string', minLength: 1 },
@@ -64,6 +75,7 @@ const schema={
       order_require: { type: 'boolean' },
       approval_require: { type: 'boolean' },
       description: { type: 'string', optional: true },
+      icon: { type: 'string', minLength: 1 },
     }
   },
   roomChange: {
@@ -74,6 +86,7 @@ const schema={
       order_require: { type: 'boolean', optional: true },
       approval_require: { type: 'boolean', optional: true },
       description: { type: 'string', optional: true },
+      icon: { type: 'string', rules: ['trim'], optional: true },
     },
     validation: {
       name: { type: 'string', minLength: 1, optional: true },
@@ -82,6 +95,7 @@ const schema={
       order_require: { type: 'boolean', optional: true },
       approval_require: { type: 'boolean', optional: true },
       description: { type: 'string', optional: true },
+      icon: { type: 'string', minLength: 1 },
     }
   },
   equipment: {
@@ -112,12 +126,16 @@ const schema={
     sanitization: {
       page: { type: 'integer' },
       pagesize: { type: 'integer' },
-      type: { type: 'string', rules:['trim'] }
+      type: { type: 'string', rules:['trim'] },
+      start_date: { $date: 1, optional: true },
+      end_date: { $date: 1, optional: true },
     },
     validation: {
       page: { type: 'integer', gte: 1 },
       pagesize: { type: 'integer', gte: 1 },
       type: { $enmu: ENUMS.APPROVAL_LIST },
+      start_date: { type: ['date', 'null'], optional: true },
+      end_date: { type: ['date', 'null'], optional: true },
     }
   },
   apply: {

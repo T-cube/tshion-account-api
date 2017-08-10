@@ -81,9 +81,9 @@ export default class Activity extends AppBase {
       this.collection('item')
       .count({
         company_id,
-        status: C.ACTIVITY_STATUS.CREATED,
         time_start: { $gte: moment().startOf('day').toDate() },
         $or: isMember,
+        status: C.ACTIVITY_STATUS.CREATED,
       }),
       this.collection('item')
       .count({
@@ -126,7 +126,6 @@ export default class Activity extends AppBase {
     let all = isMember.concat([{is_public: true}]);
     let criteria = {
       company_id,
-      status: C.ACTIVITY_STATUS.CREATED,
     };
     let sortType = 1;
     if (date_start && !date_end) {
@@ -139,16 +138,76 @@ export default class Activity extends AppBase {
     }
     if (target == C.LIST_TARGET.MINE) {
       criteria['$or'] = isMember;
-    } else {
+      criteria.status = C.ACTIVITY_STATUS.CREATED;
+    } else if (target == C.LIST_TARGET.ALL) {
+      criteria.status = C.ACTIVITY_STATUS.CREATED;
       criteria['$or'] = all;
+    } else if (target == C.LIST_TARGET.PERSONAL) {
+      let personal = [].concat(isMember, [{creator: user_id}]);
+      criteria['$or'] = personal;
+    } else {
+      criteria.creator = user_id;
     }
+    return Promise.all([
+      this.collection('item')
+      .find(criteria, this.baseInfo)
+      .skip((page - 1) * 10)
+      .limit(10)
+      .sort({time_start: sortType}),
+      this.collection('item')
+      .count(criteria)
+    ])
+    .then(([list, count]) => {
+      if (target == C.LIST_TARGET.CREATOR) {
+        return Promise.map(list, item => {
+          if (item.room.approval_id) {
+            return this.collection('approval').findOne({
+              _id: item.room.approval_id
+            }, {
+              status: 1
+            })
+            .then(doc => {
+              item.room.approval_status = doc.status;
+              return item;
+            });
+          } else {
+            return item;
+          }
+        })
+        .then(list => {
+          return {
+            list: this._listCalc(list, user_id),
+            count: count
+          };
+        });
+      }
+      return {
+        list: this._listCalc(list, user_id),
+        count: count
+      };
+    });
+  }
+
+  month({year, month, company_id}) {
+    let first_day = moment([year, month - 1]).startOf('month').toDate();
+    let last_day = moment([year, month - 1]).endOf('month').toDate();
     return this.collection('item')
-    .find(criteria, this.baseInfo)
-    .skip((page - 1) * 10)
-    .limit(10)
-    .sort({time_start: sortType})
+    .find({
+      company_id,
+      status: C.ACTIVITY_STATUS.CREATED,
+      time_start: {
+        $gte: first_day,
+        $lt: last_day,
+      },
+    }, {
+      time_start: 1,
+      time_end: 1,
+      departments: 1,
+      name: 1,
+    })
+    .sort({time_start: 1})
     .then(list => {
-      return this._listCalc(list, user_id);
+      return list;
     });
   }
 
@@ -167,8 +226,7 @@ export default class Activity extends AppBase {
     ]).then(([room, exist]) => {
       if (!room) {
         throw new ApiError(400, 'invalid_room_id');
-      }
-      if (exist) {
+      } else if (exist && room.order_require) {
         throw new ApiError(400, 'already_exist_activity_use_room');
       }
       activity.accept_members = [];
@@ -271,13 +329,25 @@ export default class Activity extends AppBase {
     return this.collection('item').findOne({
       _id: activity_id
     }).then(doc => {
-      console.log(doc);
       if (!doc) {
         throw new ApiError(400, 'invalid_activity');
       }
       if (!this._checkReadPermission(doc, user_id)) {
         throw new ApiError(400, 'not_member');
       } else {
+        doc.isMember = _.some([].concat(doc.creator, doc.assistants, doc.members), item => item.equals(user_id));
+        if (doc.room.approval_id) {
+          return this.collection('approval')
+          .findOne({
+            _id: doc.room.approval_id
+          }, {
+            status: 1
+          })
+          .then(approval => {
+            doc.room.status = approval.status;
+            return doc;
+          });
+        }
         return doc;
       }
     });
@@ -359,6 +429,7 @@ export default class Activity extends AppBase {
               _id: ObjectId(),
               user_id,
               content,
+              date_create: new Date(),
             }
           }
         }).then(doc => {
@@ -369,7 +440,7 @@ export default class Activity extends AppBase {
   }
 
 
-  approvalList({company_id, user_id, page, pagesize, type}) {
+  approvalList({company_id, user_id, page, pagesize, type, start_date, end_date}) {
     let criteria = {
       company_id,
     };
@@ -379,19 +450,29 @@ export default class Activity extends AppBase {
           creator: user_id
         },
         {
-          manager: user_id
+          manager: user_id,
+          status: { $ne: C.APPROVAL_STATUS.CANCELLED }
         }
       ];
     } else if (type == C.APPROVAL_LIST.APPLY) {
       criteria.creator = user_id;
     } else if (type == C.APPROVAL_LIST.APPROVE) {
       criteria.manager = user_id;
+      criteria.status = { $ne: C.APPROVAL_STATUS.CANCELLED };
+    }
+    if (start_date && end_date) {
+      criteria.date_create = { $gte: start_date, $lte: end_date };
+    } else if (start_date) {
+      criteria.date_create = { $gte: start_date };
+    } else if (end_date) {
+      criteria.date_create = { $lte: end_date };
     }
     return Promise.all([
       this.collection('approval')
       .find(criteria)
       .skip((page - 1) * pagesize)
       .limit(pagesize)
+      .sort({date_create: -1})
       .then(list => {
         return Promise.map(list, item => {
           return this.collection('item').findOne({
@@ -512,6 +593,16 @@ export default class Activity extends AppBase {
       if (!activity.creator.equals(user_id)) {
         throw new ApiError(400, 'unable_to_cancel');
       }
+      if (activity.room.approval_id) {
+        this.collection('approval')
+        .update({
+          _id: activity.room.approval_id
+        }, {
+          $set: {
+            status: C.APPROVAL_STATUS.CANCELLED
+          }
+        });
+      }
       return this.collection('item')
       .update({
         _id: activity_id
@@ -624,14 +715,17 @@ export default class Activity extends AppBase {
         .find({
           'room._id': room_id,
           company_id,
-          time_start: { $gte: moment().startOf('day').add(1, 'day').toDate() },
+          time_start: {
+            $gte: moment().startOf('day').add(1, 'day').toDate(),
+            $lt: moment().startOf('day').add(2, 'day').toDate(),
+          },
           status: C.ACTIVITY_STATUS.CREATED,
         })
         .sort({time_start: -1}),
-      ]).then(([past, now, future]) => {
+      ]).then(([past, now, tomorrow]) => {
         room.past = past;
         room.now = now;
-        room.future = future;
+        room.tomorrow = tomorrow;
         return room;
       });
     });

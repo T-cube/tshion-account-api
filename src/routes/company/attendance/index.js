@@ -16,7 +16,8 @@ import {
   auditSanitization,
   auditValidation,
   recordSanitization,
-  recordValidation
+  recordValidation,
+  validate,
 } from './schema';
 import C from 'lib/constants';
 import { checkUserTypeFunc, checkUserType } from '../utils';
@@ -29,6 +30,7 @@ import {
 } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
+import Structure from 'models/structure';
 
 const api = express.Router();
 export default api;
@@ -148,6 +150,45 @@ api.get('/sign/department/:department_id', checkUserType(C.COMPANY_MEMBER_TYPE.A
     pageSize
   })
   .then(record => res.json(record))
+  .catch(next);
+});
+
+api.get('/sign/today', (req, res, next) => {
+  validate('pageInfo', req.query);
+  let year = moment().year();
+  let month = moment().month() + 1;
+  let date = moment().date();
+  let page = req.query.page;
+  let pagesize = req.query.pagesize;
+  let criteria = {
+    company: req.company._id,
+    year,
+    month: month,
+    'data.date': date
+  };
+  if (req.query.department_id) {
+    let tree = new Structure(req.company.structure);
+    let members = tree.getMemberAll(req.query.department_id).map(member => member._id);
+    criteria.user = { $in: members };
+  }
+  return Promise.all([
+    db.attendance.sign.count(criteria),
+    db.attendance.sign.find(criteria, {
+      user: 1,
+      year: 1,
+      month: 1,
+      'data.$': 1
+    })
+    .limit(pagesize)
+    .skip((page - 1) * pagesize)
+
+  ])
+  .then(([count, list]) => {
+    res.json({
+      list,
+      count
+    });
+  })
   .catch(next);
 });
 

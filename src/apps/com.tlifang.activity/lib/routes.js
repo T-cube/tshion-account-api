@@ -1,6 +1,7 @@
 import express from 'express';
 import _ from 'underscore';
 import Promise from 'bluebird';
+import moment from 'moment';
 
 import { validate } from './schema';
 import _C from './constants';
@@ -31,7 +32,6 @@ api.post('/activity', (req, res, next) => {
   })
   .then(activity => {
     // if (activity.room.status == _C.APPROVAL_STATUS.AGREED) {
-    //   // let from = activity.creator;
     //   // let to = activity.assistants.concat(activity.members, activity.followers);
     //   // let info = {
     //   //   company: req.company._id,
@@ -64,14 +64,14 @@ api.put('/activity/:activity_id', (req, res, next) => {
 
 api.get('/activity', (req, res, next) => {
   validate('list', req.query);
-  let { date_start, date_end, target, last_id } = req.query;
+  let { date_start, date_end, target, page } = req.query;
   req._app.list({
     user_id: req.user._id,
     company_id: req.company._id,
     date_start,
     date_end,
     target,
-    last_id
+    page
   })
   .then(list => {
     res.json(list);
@@ -92,6 +92,19 @@ api.get('/activity/:activity_id', (req, res, next) => {
     }).then(() => {
       res.json(doc);
     });
+  })
+  .catch(next);
+});
+
+api.get('/month/activity', (req, res, next) => {
+  validate('calendar', req.query);
+  req._app.month({
+    year: req.query.year,
+    month: req.query.month,
+    company_id: req.company._id,
+  })
+  .then(list => {
+    res.json(list);
   })
   .catch(next);
 });
@@ -166,12 +179,21 @@ api.post('/activity/:activity_id/comment', (req, res, next) => {
 
 api.get('/approval', (req, res, next) => {
   validate('approvalList', req.query);
+  let { page, pagesize, type, start_date, end_date } = req.query;
+  if (start_date) {
+    start_date = moment(start_date).startOf('day').toDate();
+  }
+  if (end_date) {
+    end_date = moment(end_date).startOf('day').toDate();
+  }
   req._app.approvalList({
     company_id: req.company._id,
     user_id: req.user._id,
-    page: req.query.page,
-    pagesize: req.query.pagesize,
-    type: req.query.type,
+    page,
+    pagesize,
+    type,
+    start_date,
+    end_date,
   })
   .then(list => {
     res.json(list);
@@ -219,7 +241,7 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
 
 api.delete('/activity/:activity_id/cancel', (req, res, next) => {
   validate('info', req.params, ['activity_id']);
-  req._qpp.cancel({
+  req._app.cancel({
     user_id: req.user._id,
     activity_id: req.params.activity_id
   })

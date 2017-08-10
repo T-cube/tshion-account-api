@@ -3,11 +3,24 @@ import cors from 'cors';
 
 const allowedOrigins = config.get('allowedOrigins');
 
-const CORS_CONFIG = {
-  origin : allowedOrigins,
-  methods : 'GET,POST,PUT,DELETE,OPTIONS',
-  allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
-  credentials: true,
-};
-
-export default cors(CORS_CONFIG);
+export default cors({
+  origin: function(url,callback){
+    let corsOptions;
+    if(allowedOrigins==='*'){
+      corsOptions = {
+        origin: true
+      };
+    }
+    else if (~allowedOrigins.indexOf(url)) {
+      corsOptions = {
+        origin: true
+      };
+    } else {
+      corsOptions = {
+        origin: false
+      };
+    }
+    callback(null, corsOptions);
+  },
+  optionsSuccessStatus: 204
+});

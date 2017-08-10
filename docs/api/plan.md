@@ -607,6 +607,7 @@ OUTPUT
 request_body:
 ```javascript
 {
+  account_name: String, //转账账户名
   account: Number, //转账账户
   amount: Number, //转账金额
   bank: String, //银行名称
@@ -616,11 +617,34 @@ request_body:
 
 ### GET /recharge/transfer
 
+query
+```javascript
+{
+  page: integer, //gte 1
+  pagesize: integer, //gte 1
+}
+```
+
 获取转账信息列表，普通用户只能查看用自己，公司拥有者可以查看所有
 
-### PUT /recharge/transfer/:transfer_id/transfered
+### GET /recharge/transfer/:transfer_id
+
+获取转账详情
+
+### PUT /recharge/transfer/:transfer_id/transfer
 
 确认转账信息，普通用户只能确认自己，公司拥有者可以确认所有
+
+body:
+```javascript
+{
+  transfer_no: string,
+}
+```
+
+### DELETE /recharge/transfer/:transfer_id/cancel
+
+取消
 
 ### GET /recharge
 

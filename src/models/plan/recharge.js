@@ -44,7 +44,7 @@ export default class Recharge {
     });
   }
 
-  transfer({amount, payment_method, transfer_data}) {
+  transfer({amount, payment_method}) {
     let {company_id, user_id} = this;
     amount = parseInt(amount);
     return this.ensureIsValid(amount)
@@ -61,23 +61,10 @@ export default class Recharge {
         status: C.ORDER_STATUS.CREATED,
         date_create: new Date(),
         date_update: new Date(),
-        date_expires: moment().add(3, 'days').toDate(),
+        date_expires: moment().add(15, 'days').toDate(),
       };
       return db.payment.recharge.insert(data)
       .then(recharge => {
-        let order = {
-          company_id,
-          amount: paid_sum,
-          charge_type: C.CHARGE_TYPE.RECHARGE,
-          payment_type: 'transfer',
-          payment_method,
-          date_create: new Date(),
-          status: C.CHARGE_STATUS.PAYING,
-          payment_data: transfer_data,
-          recharge_id: recharge._id,
-          recharge_no: recharge.recharge_no,
-        };
-        db.payment.charge.order.insert(order);
         return recharge;
       });
     });

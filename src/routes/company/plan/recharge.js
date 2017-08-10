@@ -1,5 +1,6 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import _ from 'underscore';
 
 import C from 'lib/constants';
 import db from 'lib/database';
@@ -46,58 +47,126 @@ api.post('/transfer', (req, res, next) => {
   let company_id = req.company._id;
   let recharge = new Recharge({company_id, user_id});
   let payment_method = 'transfer';
-  recharge.transfer({amount: data.amount, payment_method, transfer_data: data})
+  let now = new Date();
+  recharge.transfer({amount: data.amount, payment_method})
   .then(recharge => {
     data.company_name = req.company.name;
     data.recharge_id = recharge._id;
+    data.recharge_no = recharge.recharge_no;
     data.user_id = user_id;
     data.company_id = company_id;
-    data.date_create = new Date();
-    data.date_update = new Date();
+    data.date_create = now;
+    data.date_update = now;
     data.status = C.TRANSFER_STATUS.CREATED;
+    data.operation = [{action:'create', date_create: now}];
     return db.transfer.insert(data).then(doc => {
       delete doc._id;
-      return {...recharge,...req.body};
+      res.json({...recharge,...req.body});
     });
   }).catch(next);
 });
 
+api.get('/transfer/:transfer_id', (req, res, next) => {
+  validate('transfer_info', req.params, ['transfer_id']);
+  db.transfer.findOne({
+    company_id: req.company._id,
+    _id: req.params.transfer_id
+  })
+  .then(doc => {
+    if (!doc) {
+      throw new ApiError(400, 'invalid_transfer_id');
+    }
+    res.json(doc);
+  })
+  .catch(next);
+});
+
 api.get('/transfer', (req, res, next) => {
+  validate('page_info', req.query);
+  let { page, pagesize } = req.query;
   let criteria = {
     company_id: req.company._id
   };
-  if (!req.user._id.equals(req.company.user)) {
+  if (!req.user._id.equals(req.company.owner)) {
     criteria.user_id = req.user._id;
   }
   db.transfer.find(criteria)
+  .sort({date_create: -1})
+  .skip((page - 1) * pagesize)
+  .limit(pagesize)
   .then(list => {
     res.json(list);
   })
   .catch(next);
 });
 
-api.put('/transfer/:transfer_id/transfered', (req, res, next) => {
-  validate('transfer_info', req.params);
+api.put('/transfer/:transfer_id/transfer', (req, res, next) => {
+  validate('transfer_info', req.params, ['transfer_id']);
+  validate('transfer_info', req.body, ['transfer_no']);
+  let now = new Date();
   db.transfer.findOne({
     company_id: req.company._id,
     _id: req.params.transfer_id
   })
   .then(transfer => {
-    if (!transfer) {
+    if (!transfer || transfer.status != C.TRANSFER_STATUS.CREATED) {
       throw new ApiError(400, 'invalid_transfer');
     }
     if (!req.user._id.equals(req.company.owner) || !req.user._id.equals(transfer.user_id)) {
       throw new ApiError(400, 'invalid_user');
     }
-    return db.transfer.update({
-      company_id: req.company._id,
+    return db.transfer.findOneAndUpdate({
       _id: req.params.transfer_id
     }, {
-      status: C.TRANSFER_STATUS.TRANSFERED,
-      date_update: new Date()
+      $set: {
+        status: C.TRANSFER_STATUS.TRANSFERED,
+        date_update: now,
+        transfer_no: req.body.transfer_no,
+      },
+      $push: {
+        operation: {action: 'transfer', date_create: now}
+      }
+    }, {
+      returnOriginal: false,
+      returnNewDocument: true
     })
-    .then(() => {
-      res.json({success: 1});
+    .then(doc => {
+      res.json(doc.value);
+    });
+  })
+  .catch(next);
+});
+
+api.delete('/transfer/:transfer_id/cancel', (req, res, next) => {
+  validate('transfer_info', req.params, ['transfer_id']);
+  db.transfer.findOne({
+    _id: req.params.transfer_id,
+    company_id: req.company._id,
+  })
+  .then(transfer => {
+    if (!transfer || !_.some([C.TRANSFER_STATUS.TRANSFERED,C.TRANSFER_STATUS.CREATED], item => item == transfer.status)) {
+      throw new ApiError(400, 'invalid_transfer');
+    }
+    if (!req.user._id.equals(req.company.owner) || !req.user._id.equals(transfer.user_id)) {
+      throw new ApiError(400, 'invalid_user');
+    }
+    let now = new Date();
+    return db.transfer.findOneAndUpdate({
+      _id: req.params.transfer_id
+    }, {
+      $set: {
+        status: C.TRANSFER_STATUS.CANCELLED,
+        date_update: now,
+      },
+      $push: {
+        operation: {action: 'cancel', date_create: now}
+      }
+    }, {
+      returnOriginal: false,
+      returnNewDocument: true
+    })
+    .then(doc => {
+      res.json(doc.value);
     });
   })
   .catch(next);

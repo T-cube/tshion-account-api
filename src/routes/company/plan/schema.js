@@ -163,12 +163,14 @@ const schema = {
   },
   transfer: {
     sanitization: {
+      account_name: { type: 'string', rules: ['trim']},
       account: { type: 'integer' },
       amount: { type: 'integer' },
       bank: { type: 'string', rules: ['trim'] },
       bank_subname: { type: 'string', rules: ['trim'] },
     },
     validation: {
+      account_name: { type: 'string', minLength: 1 },
       account: { type: 'integer' },
       amount: { type: 'integer', gt: 0 },
       bank: { type: 'string' },
@@ -178,10 +180,22 @@ const schema = {
   transfer_info: {
     sanitization: {
       transfer_id: { $objectId: 1 },
+      transfer_no: { type: 'string' },
     },
     validation: {
       transfer_id: { $objectId: 1 },
+      transfer_no: { type: 'string' },
     }
+  },
+  page_info: {
+    sanitization: {
+      page: { type: 'integer', gte: 1 },
+      pagesize: { type: 'integer', gte: 1 },
+    },
+    validation: {
+      page: { type: 'integer'},
+      pagesize: { type: 'integer'},
+    },
   },
   trial: {
     sanitization: {

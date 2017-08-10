@@ -57,16 +57,29 @@ fs.readdir(APPS_ROOT, (err, result) => {
     console.log(`app ${appId} starting...`);
     api.use(apiRoute, (req, res, next) => {
       req._app = _app;
-      db.company.app.findOne({
-        company_id: req.company._id,
-      }, {
-        apps: 1
-      }).then(doc => {
+      Promise.all([
+        db.app.findOne({
+          appid: appId
+        }, {
+          enabled: 1
+        }),
+        db.company.app.findOne({
+          company_id: req.company._id,
+        }, {
+          apps: 1
+        }),
+      ]).then(([app, doc]) => {
+        if (!app || !app.enabled) {
+          throw new ApiError(400, 'app_is_forbidden');
+        }
         if (_.some(doc.apps, item => item.appid == appId && item.enabled)) {
           next();
         } else {
           throw new ApiError(400, 'no_app');
         }
+      })
+      .catch(err => {
+        next(err);
       });
     }, require(appDir).default);
     console.log(`app ${appId} loaded.`);
