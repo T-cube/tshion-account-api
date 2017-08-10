@@ -32,7 +32,6 @@ api.post('/activity', (req, res, next) => {
   })
   .then(activity => {
     // if (activity.room.status == _C.APPROVAL_STATUS.AGREED) {
-    //   // let from = activity.creator;
     //   // let to = activity.assistants.concat(activity.members, activity.followers);
     //   // let info = {
     //   //   company: req.company._id,
