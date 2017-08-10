@@ -65,14 +65,14 @@ api.put('/activity/:activity_id', (req, res, next) => {
 
 api.get('/activity', (req, res, next) => {
   validate('list', req.query);
-  let { date_start, date_end, target, last_id } = req.query;
+  let { date_start, date_end, target, page } = req.query;
   req._app.list({
     user_id: req.user._id,
     company_id: req.company._id,
     date_start,
     date_end,
     target,
-    last_id
+    page
   })
   .then(list => {
     res.json(list);
