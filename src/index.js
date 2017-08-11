@@ -113,6 +113,7 @@ app.loadModel('payment', Payment);
 
 let _loader = {};
 app.bindLoader(_loader);
+app.bindModel('redis', require('@ym/redis').promiseRedis(app.model('redis')));
 initRPC(config.get('rpc'), _loader).then(rpc => {
   let cfg = rpc.rpcConfig;
   let ClientRpc = rpc.clientRpc;

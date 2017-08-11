@@ -266,8 +266,9 @@ api.post('/recover/verify', (req, res, next) => {
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type, 'code']);
   let account = data[type];
-  req.model('security').limitRequestFrequency('verify-code', account, 1)
-  .then(() => {
+  req.model('security').limitRequestFrequency('verify-code', account, 1000)
+  .then((status) => {
+    console.log(status)
     req.model('account').checkExistance(type, account, true);
   })
   .then(() => {
