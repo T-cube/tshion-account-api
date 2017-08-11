@@ -49,7 +49,7 @@ export default class PlanOrderModel extends Model {
         return mapObjectIdToData(doc, [
           ['company', 'name,logo', 'company'],
           ['user', 'name,avatar', 'user'],
-          ['charge', 'charge_type, payment_type, payment_data, payment_query', 'charge']
+          ['payment.charge.order', 'charge_type, payment_type, payment_data, payment_query', 'charge']
         ]);
       }
       return mapObjectIdToData(doc, [
