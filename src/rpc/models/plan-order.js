@@ -43,6 +43,15 @@ export default class PlanOrderModel extends Model {
       doc.user = doc.user_id;
       delete doc.company_id;
       delete doc.user_id;
+      if (doc.charge_id) {
+        doc.charge = doc.charge_id;
+        delete doc.charge_id;
+        return mapObjectIdToData(doc, [
+          ['company', 'name,logo', 'company'],
+          ['user', 'name,avatar', 'user'],
+          ['charge', 'charge_type, payment_type, payment_data, payment_query', 'charge']
+        ]);
+      }
       return mapObjectIdToData(doc, [
         ['company', 'name,logo', 'company'],
         ['user', 'name,avatar', 'user'],

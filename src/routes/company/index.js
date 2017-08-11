@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import C from 'lib/constants';
+import C, { ENUMS } from 'lib/constants';
 import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { time, mapObjectIdToData, strToReg } from 'lib/utils';
@@ -164,26 +164,33 @@ api.get('/:company_id', (req, res, next) => {
 api.put('/:company_id', (req, res, next) => {
   let data = req.body;
   validate('company', data);
-
-  db.company.update(
-    {_id: ObjectId(req.params.company_id)},
-    {$set: data}
-  )
+  db.plan.auth.findOne({
+    company_id: req.company._id
+  })
   .then(doc => {
-    res.json(doc);
-    let update_fields = [];
-    if (data.name != req.company.name) {
-      update_fields.push(['name', req.company.name, data['name']]);
+    if (doc && doc.status == C.AUTH_STATUS.ACCEPTED ) {
+      throw new ApiError(400, 'certified_company_can_not_change_company_name');
     }
-    if (data.description != req.company.description) {
-      update_fields.push(['description']);
-    }
-    req.model('activity').insert({
-      creator: req.user._id,
-      action: C.ACTIVITY_ACTION.UPDATE,
-      target_type: C.OBJECT_TYPE.COMPANY,
-      company: req.company._id,
-      update_fields,
+    return db.company.update(
+      {_id: ObjectId(req.params.company_id)},
+      {$set: data}
+    )
+    .then(company => {
+      res.json(company);
+      let update_fields = [];
+      if (data.name != req.company.name) {
+        update_fields.push(['name', req.company.name, data['name']]);
+      }
+      if (data.description != req.company.description) {
+        update_fields.push(['description']);
+      }
+      req.model('activity').insert({
+        creator: req.user._id,
+        action: C.ACTIVITY_ACTION.UPDATE,
+        target_type: C.OBJECT_TYPE.COMPANY,
+        company: req.company._id,
+        update_fields,
+      });
     });
   })
   .catch(next);
