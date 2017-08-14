@@ -130,7 +130,7 @@ api.post('/', (req, res, next) => {
   validate('task', data, fields);
   let followers;
   if (data.followers && _.isArray(data.followers)) {
-    followers = [].concat(data.followers, [req.user._id]);
+    followers = data.followers;
   } else {
     followers = [req.user._id];
   }
