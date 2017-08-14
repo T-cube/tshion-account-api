@@ -9,6 +9,14 @@ const schema = {
       title: { type: 'string' },
       description: { type: 'string', optional: true },
       assignee: { $objectId: 1, optional: true },
+      followers: {
+        type: 'array',
+        optional: true,
+        items: {
+          $objectId: 1,
+          optional: true
+        }
+      },
       date_start: { $date: 1, optional: true },
       date_due: { $date: 1, optional: true },
       priority: { type: 'integer', optional: true },
@@ -40,6 +48,14 @@ const schema = {
       title: { type: 'string' },
       description: { type: 'string', optional: true },
       assignee: { $objectId: 1, optional: true },
+      followers: {
+        type: 'array',
+        optional: true,
+        items: {
+          $objectId: 1,
+          optional: true
+        }
+      },
       date_start: { type: ['date', 'null'], optional: true },
       date_due: { type: ['date', 'null'], optional: true },
       priority: { $enum: ENUMS.TASK_PRIORITY, optional: true },

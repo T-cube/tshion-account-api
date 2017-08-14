@@ -126,14 +126,20 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title', 'tags'];
+  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title', 'tags', 'followers'];
   validate('task', data, fields);
+  let followers;
+  if (data.followers && _.isArray(data.followers)) {
+    followers = [].concat(data.followers, [req.user._id]);
+  } else {
+    followers = [req.user._id];
+  }
   if (data.date_due && data.date_due <= data.date_start) {
     throw new ApiError(400, 'invalid_date');
   }
   _.extend(data, {
     creator: req.user._id,
-    followers: [req.user._id],
+    followers: followers,
     company_id: req.company._id,
     project_id: req.project._id,
     status: C.TASK_STATUS.PROCESSING,

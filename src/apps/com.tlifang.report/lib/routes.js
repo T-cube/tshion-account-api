@@ -133,7 +133,9 @@ saveCdn('cdn-file'),
 });
 
 api.post('/report', (req, res, next) => {
-  validate('report', req.body);
+  if (!req.body.status || req.body.status != C.REPORT_STATUS.DRAFT) {
+    validate('report', req.body);
+  }
   req._app.report({
     user_id: req.user._id,
     company_id: req.company._id,
