@@ -152,6 +152,14 @@ api.post('/', (req, res, next) => {
   .then(task => {
     res.json(task);
     req.task = task;
+    let notification = {
+      action: C.ACTIVITY_ACTION.ADD,
+      target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
+      task: task._id,
+      from: req.user._id,
+      to: followers
+    };
+    req.model('notification').send(notification, TASK_UPDATE);
     return Promise.all([
       data.loop && TaskLoop.updateLoop(task),
       addActivity(req, C.ACTIVITY_ACTION.CREATE),
@@ -346,16 +354,27 @@ api.post('/:task_id/unfollow', (req, res, next) => {
 });
 
 api.put('/:task_id/followers', (req, res, next) => {
-  if (!ObjectId.isValid(req.body._id)) {
+  if (!ObjectId.isValid(req.body._id) || !ObjectId.isValid(req.params.task_id)) {
     throw new ApiError(400);
   }
   let userId = ObjectId(req.body._id);
+  let taskId = ObjectId(req.params.task_id);
   taskFollow(req, userId)
   .then(() => logTask(req, C.ACTIVITY_ACTION.ADD, {
     target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
     user: userId,
   }))
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    let notification = {
+      action: C.ACTIVITY_ACTION.ADD,
+      target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
+      task: taskId,
+      from: req.user._id,
+      to: userId
+    };
+    req.model('notification').send(notification, TASK_UPDATE);
+  })
   .catch(next);
 });
 

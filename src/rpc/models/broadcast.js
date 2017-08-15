@@ -3,6 +3,8 @@ import _ from 'underscore';
 import { mapObjectIdToData } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import Model from './model';
+import { BROADCAST } from 'models/notification-setting';
+import app from 'index';
 
 export default class BroadcastModel extends Model {
 
@@ -19,7 +21,6 @@ export default class BroadcastModel extends Model {
       creator,
       date_start: new Date(),
       date_update: new Date(),
-      status: 'active'
     });
   }
 

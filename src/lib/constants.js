@@ -60,6 +60,8 @@ let constants = {
     RELEASE: 'release',       // 发布
 
     TASK_DAYLYREPORT: 'task_daylyreport',   // 任务日报
+
+    BROADCAST: 'broadcast', // 广播
   },
 
   ACTIVITY_TYPE: {
