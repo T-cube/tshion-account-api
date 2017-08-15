@@ -61,7 +61,7 @@ let constants = {
 
     TASK_DAYLYREPORT: 'task_daylyreport',   // 任务日报
 
-    BROADCAST: 'broadcast', // 广播
+    SYSTEM_REMIND: 'system_remind', // 系统提示
   },
 
   ACTIVITY_TYPE: {
@@ -185,7 +185,7 @@ let constants = {
     TASK_FOLLOWER: 'task.follower',
     TASK_EXPIRE: 'task.expire',
     USER: 'user',
-    BROADCAST: 'broadcast',
+    ALL_USER: 'alluser',
   },
 
   PROJECT_MEMBER_TYPE: {

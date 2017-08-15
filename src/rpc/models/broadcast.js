@@ -13,11 +13,12 @@ export default class BroadcastModel extends Model {
   }
 
   create(props) {
-    let { title, content, link, creator } = props;
+    let { title, content, link, creator, type } = props;
     let notification = {
-      action: C.ACTIVITY_ACTION.BROADCAST,
-      target_type: C.OBJECT_TYPE.BROADCAST,
-      ad: {
+      action: C.ACTIVITY_ACTION.SYSTEM_REMIND,
+      target_type: C.OBJECT_TYPE.ALL_USER,
+      remind_content: {
+        type,
         title,
         content,
         link,
