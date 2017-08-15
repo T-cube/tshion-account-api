@@ -14,6 +14,29 @@ export default class BroadcastModel extends Model {
 
   create(props) {
     let { title, content, link, creator } = props;
+    let notification = {
+      action: C.ACTIVITY_ACTION.BROADCAST,
+      target_type: C.OBJECT_TYPE.BROADCAST,
+      ad: {
+        title,
+        content,
+        link,
+      },
+      from: creator,
+    };
+    process.nextTick(() => {
+      this.db.user.find({
+        activiated: true
+      }, {
+        _id: 1
+      })
+      .then(list => {
+        list.forEach(item => {
+          notification.to = item._id;
+          app.model('notification').send(notification, BROADCAST);
+        });
+      });
+    });
     return this.db.broadcast.insert({
       title,
       content,

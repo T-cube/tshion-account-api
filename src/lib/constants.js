@@ -184,7 +184,8 @@ let constants = {
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
     TASK_EXPIRE: 'task.expire',
-    USER: 'user'
+    USER: 'user',
+    BROADCAST: 'broadcast',
   },
 
   PROJECT_MEMBER_TYPE: {
