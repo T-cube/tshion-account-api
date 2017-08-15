@@ -155,6 +155,7 @@ let constants = {
 
   OBJECT_TYPE: {
     FIELD: 'field',
+    ALL_USER: 'alluser',
     ANNOUNCEMENT: 'announcement',
     ANNOUNCEMENT_DRAFT: 'announcement.draft',
     APPROVAL_ITEM: 'approval.item',
@@ -166,6 +167,7 @@ let constants = {
     COMPANY_MEMBER: 'company.member',
     COMPANY_DIR: 'company.dir',
     COMPANY_FILE: 'company.file',
+    DISCUSSION_FOLLOWER: 'discussion.follower',
     DOCUMENT: 'document',
     DOCUMENT_DIR: 'document.dir',
     DOCUMENT_FILE: 'document.file',
@@ -185,7 +187,6 @@ let constants = {
     TASK_FOLLOWER: 'task.follower',
     TASK_EXPIRE: 'task.expire',
     USER: 'user',
-    ALL_USER: 'alluser',
   },
 
   PROJECT_MEMBER_TYPE: {

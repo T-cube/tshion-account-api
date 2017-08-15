@@ -126,7 +126,7 @@ export default class NotificationSetting {
       },
       [APP]: {
         web: { editable: true, default: true },
-        wechat: { editable: false, default: false },
+        wechat: { editable: true, default: true },
         email: { editable: false, default: false },
       },
       [BROADCAST]: {
