@@ -18,10 +18,10 @@ export default route;
 const appCenterModel = new AppCenterModel();
 
 route.on('/app/list', query => {
-  let { page, pagesize, keyword, enabled } = query;
+  let { page, pagesize, keyword, status } = query;
   let criteria = {};
-  if (enabled) {
-    criteria.enabled = enabled;
+  if (status) {
+    criteria.status = status;
   }
   if (keyword) {
     criteria['name'] = {
@@ -40,8 +40,9 @@ route.on('/app/info', query => {
 });
 
 route.on('/app/status', query => {
-  let { appid, enabled } = query;
-  return appCenterModel.update({appid, enabled});
+  let { app_id, status } = query;
+  app_id = ObjectId(app_id);
+  return appCenterModel.update({app_id, status});
 });
 
 route.on('/slideshow/info', query => {
