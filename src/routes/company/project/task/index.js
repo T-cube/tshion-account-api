@@ -207,6 +207,9 @@ api.param('task_id', (req, res, next, id) => {
 });
 
 api.delete('/:task_id', (req, res, next) => {
+  if (!req.user._id.equals(req.project.owner) && !req.user._id.equals(req.task.creator)) {
+    throw new ApiError(400, 'only_project_owner_and_task_creator_can_delete_task');
+  }
   db.task.remove({
     _id: req.task._id
   })
