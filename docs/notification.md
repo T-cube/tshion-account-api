@@ -25,3 +25,29 @@
 | request_reject | 管理员 | ! | - | - |
 | schedule_remind | 用户 | ! | ? Y | - |
 | attendance | 用户 | ! | ? Y | - |
+
+# 应用中心提示：
+
+## 活动：
+
+target_type: app.report
+action: submit
+report: {
+  title,
+  type,
+  departments,
+  company_id,
+  is_public,
+  creator  
+}
+
+## 汇报
+
+target_type: app.activity
+action: create
+activity: {
+  user_id,company_id,
+  report_target,
+  type,
+  date_repor
+}
