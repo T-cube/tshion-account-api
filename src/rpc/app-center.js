@@ -39,33 +39,40 @@ route.on('/app/info', query => {
   return appCenterModel.detail({criteria});
 });
 
-route.on('/app/enabled', query => {
+route.on('/app/status', query => {
   let { appid, enabled } = query;
   return appCenterModel.update({appid, enabled});
 });
 
+route.on('/slideshow/info', query => {
+  let { slideshow_id } = query;
+  slideshow_id = ObjectId(slideshow_id);
+  return appCenterModel.slideshowDetail({slideshow_id});
+});
+
 route.on('/slideshow/list', query => {
-  let { page, pagesize, active } = query;
+  let { page, pagesize, status } = query;
   let criteria = {};
-  if (active) {
-    criteria.active = active;
+  if (status) {
+    criteria.status = status;
   }
   return appCenterModel.slideshowPage({ page, pagesize, criteria});
 });
 
-route.on('/slideshow/actived', query => {
-  let { slideshow_id, active } = query;
+route.on('/slideshow/status', query => {
+  let { slideshow_id, status } = query;
   slideshow_id = ObjectId(slideshow_id);
-  return appCenterModel.slideshowUpdate({slideshow_id, active});
+  return appCenterModel.slideshowUpdate({slideshow_id, status});
 });
 
 route.on('/slideshow/delete', (query, loader) => {
-  let { slideshows } = query;
-  _.map(slideshows, item => {
-    item = ObjectId(item);
-    return item;
-  });
-  return appCenterModel.slideshowDelete({slideshows, loader});
+  let { slideshow_id } = query;
+  slideshow_id = ObjectId(slideshow_id);
+  // _.map(slideshows, item => {
+  //   item = ObjectId(item);
+  //   return item;
+  // });
+  return appCenterModel.slideshowDelete({slideshow_id, loader});
 });
 
 route.stream('/slideshow/upload', (stream, data, loader) => {

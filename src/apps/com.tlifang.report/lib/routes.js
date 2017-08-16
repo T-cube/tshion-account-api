@@ -9,6 +9,9 @@ import { validate } from './schema';
 import C from './constants';
 import { attachFileUrls } from 'routes/company/document/index';
 import Structure from 'models/structure';
+import {
+  APP,
+} from 'models/notification-setting';
 
 let api = express.Router();
 export default api;
@@ -142,19 +145,20 @@ api.post('/report', (req, res, next) => {
     company_id: req.company._id,
     report: req.body
   }).then(doc => {
+    if (doc.status != C.REPORT_STATUS.DRAFT) {
+      let s = new Structure(req.company.structure);
+      let department = s.findNodeById(doc.report_target);
+      let tos = [].concat(department.admin, doc.copy_to);
+      let notification = {
+        action: C.ACTIVITY_ACTION.SYSTEM_REMIND,
+        target_type: C.OBJECT_TYPE.APP_REPORT,
+        report: doc._id,
+        from: req.user._id,
+        to: tos
+      };
+      req.model('notification').send(notification, APP);
+    }
     res.json(doc);
-    // if (doc.status != C.REPORT_STATUS.DRAFT) {
-    //
-    //   let notification = {
-    //     action: C.ACTIVITY_ACTION.ADD,
-    //     target_type: C.OBJECT_TYPE.DISCUSSION_FOLLOWER,
-    //     discussion: discussion_id,
-    //     project: project_id,
-    //     from: req.user._id,
-    //     to: follower
-    //   };
-    //   req.model('notification').send(notification, APP);
-    // }
   }).catch(next);
 });
 

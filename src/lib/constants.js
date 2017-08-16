@@ -158,6 +158,8 @@ let constants = {
     ALL_USER: 'alluser',
     ANNOUNCEMENT: 'announcement',
     ANNOUNCEMENT_DRAFT: 'announcement.draft',
+    APP_REPORT: 'app.report',
+    APP_ACTIVITY: 'app.activity',
     APPROVAL_ITEM: 'approval.item',
     APPROVAL_TEMPLATE: 'approval.template',
     ATTENDANCE: 'attendance',

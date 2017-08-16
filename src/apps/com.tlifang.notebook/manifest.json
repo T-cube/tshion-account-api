@@ -1,6 +1,6 @@
 {
   "appid": "com.tlifang.notebook",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "工作笔记",
   "name_en": "",
   "type": "team",
@@ -10,7 +10,7 @@
     "64": "assets/icon64.png",
     "128": "assets/icon128.png"
   },
-  "enabled": true,
+  "status": "enabled",
   "slideshow": ["assets/slideshow1.png", "assets/slideshow2.png"],
   "author": "tlifang",
   "url": "https://tlifang.com/",
