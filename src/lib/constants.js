@@ -59,6 +59,9 @@ let constants = {
 
     RELEASE: 'release',       // 发布
 
+    TURN_ON: 'turn_on', // 开启
+    TURN_OFF: 'turn_off', // 关闭
+
     TASK_DAYLYREPORT: 'task_daylyreport',   // 任务日报
 
     SYSTEM_REMIND: 'system_remind', // 系统提示
@@ -158,6 +161,7 @@ let constants = {
     ALL_USER: 'alluser',
     ANNOUNCEMENT: 'announcement',
     ANNOUNCEMENT_DRAFT: 'announcement.draft',
+    APP_CENTER: 'app.center',
     APP_REPORT: 'app.report',
     APP_ACTIVITY: 'app.activity',
     APPROVAL_ITEM: 'approval.item',

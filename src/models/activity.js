@@ -43,6 +43,7 @@ export default class Activity {
         ['approval.item', 'title,company_id', 'approval_item'],
         ['schedule', 'title', 'schedule'],
         ['announcement', 'company_id,type,title,is_published', 'announcement,announcement_draft'],
+        ['app.all', 'appid,version,name', 'app']
       ]);
     });
   }
