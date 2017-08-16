@@ -35,7 +35,7 @@ export default class AppCenterModel extends Model {
     return this.db.app.update({
       _id: app_id
     }, {
-      status: status
+      $set: { status: status }
     });
   }
 
