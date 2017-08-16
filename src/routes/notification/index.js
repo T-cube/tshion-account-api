@@ -14,7 +14,7 @@ api.use(oauthCheck());
 
 api.get('/', (req, res, next) => {
   let userId = req.user._id;
-  let { is_read, last_id } = req.query;
+  let { is_read, last_id, type } = req.query;
   let query = {
     to: userId,
   };

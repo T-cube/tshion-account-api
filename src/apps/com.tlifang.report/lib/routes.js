@@ -8,6 +8,7 @@ import Promise from 'bluebird';
 import { validate } from './schema';
 import C from './constants';
 import { attachFileUrls } from 'routes/company/document/index';
+import Structure from 'models/structure';
 
 let api = express.Router();
 export default api;
@@ -142,6 +143,18 @@ api.post('/report', (req, res, next) => {
     report: req.body
   }).then(doc => {
     res.json(doc);
+    // if (doc.status != C.REPORT_STATUS.DRAFT) {
+    //
+    //   let notification = {
+    //     action: C.ACTIVITY_ACTION.ADD,
+    //     target_type: C.OBJECT_TYPE.DISCUSSION_FOLLOWER,
+    //     discussion: discussion_id,
+    //     project: project_id,
+    //     from: req.user._id,
+    //     to: follower
+    //   };
+    //   req.model('notification').send(notification, APP);
+    // }
   }).catch(next);
 });
 

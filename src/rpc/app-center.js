@@ -31,6 +31,14 @@ route.on('/app/list', query => {
   return appCenterModel.page({ page, pagesize, criteria });
 });
 
+route.on('/app/info', query => {
+  let { app_id } = query;
+  let criteria = {
+    _id: ObjectId(app_id)
+  };
+  return appCenterModel.detail({criteria});
+});
+
 route.on('/app/enabled', query => {
   let { appid, enabled } = query;
   return appCenterModel.update({appid, enabled});

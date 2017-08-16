@@ -22,6 +22,14 @@ export default class AppCenterModel extends Model {
     return this.db.app.count(criteria);
   }
 
+  detail(props) {
+    let { criteria } = props;
+    return this.db.app.findOne(criteria)
+    .then(doc => {
+      return doc;
+    });
+  }
+
   update(props) {
     let { appid, enabled } = props;
     return this.db.app.update({
