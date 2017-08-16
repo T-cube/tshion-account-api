@@ -31,9 +31,9 @@ export default class AppCenterModel extends Model {
   }
 
   update(props) {
-    let { appid, status } = props;
+    let { app_id, status } = props;
     return this.db.app.update({
-      appid: appid
+      _id: app_id
     }, {
       status: status
     });
