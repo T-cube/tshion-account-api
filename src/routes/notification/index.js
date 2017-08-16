@@ -6,6 +6,7 @@ import { ApiError } from 'lib/error';
 import { oauthCheck } from 'lib/middleware';
 import { sanitizeValidateObject } from 'lib/inspector';
 import { readSanitization, readValidation } from './schema';
+import C from 'lib/constants';
 
 const api = express.Router();
 export default api;
@@ -23,6 +24,10 @@ api.get('/', (req, res, next) => {
   }
   if (!last_id !== undefined) {
     last_id = ObjectId(last_id);
+  }
+  if (type) {
+    query.target_type = type == C.NOTIFICATION_TYPE.SYSTEM ?
+    C.OBJECT_TYPE.ALL_USER : { $ne: C.OBJECT_TYPE.ALL_USER };
   }
   req.model('notification').fetch(query, last_id)
   .then(list => res.json(list))

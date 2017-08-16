@@ -370,6 +370,11 @@ let constants = {
     INACTIVE: 'inactive'
   },
 
+  NOTIFICATION_TYPE: {
+    SYSTEM: 'system',
+    TEAM: 'team',
+  }
+
 };
 
 export default constants;
