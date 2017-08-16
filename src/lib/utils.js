@@ -224,7 +224,11 @@ export function mapObjectIdToData(data, collection, fields, keys, mergeList) {
   if (!keyList.length) {
     return Promise.resolve(isDataObjectId ? null : data);
   }
-  return objectPath.get(db, collection).find({
+  let database = objectPath.get(db, collection);
+  if (!database) {
+    database = db.collection(collection);
+  }
+  return database.find({
     _id: {
       $in: uniqObjectIdArray(keyList)
     }

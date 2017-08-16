@@ -7,6 +7,7 @@ import Promise from 'bluebird';
 
 import { validate } from './schema';
 import C from './constants';
+import _C from 'lib/constants';
 import { attachFileUrls } from 'routes/company/document/index';
 import Structure from 'models/structure';
 import {
@@ -150,8 +151,8 @@ api.post('/report', (req, res, next) => {
       let department = s.findNodeById(doc.report_target);
       let tos = [].concat(department.admin, doc.copy_to);
       let notification = {
-        action: C.ACTIVITY_ACTION.SYSTEM_REMIND,
-        target_type: C.OBJECT_TYPE.APP_REPORT,
+        action: _C.ACTIVITY_ACTION.SUBMIT,
+        target_type: _C.OBJECT_TYPE.APP_REPORT,
         report: doc._id,
         from: req.user._id,
         to: tos
