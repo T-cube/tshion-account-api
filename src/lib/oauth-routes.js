@@ -244,6 +244,9 @@ function _checkUserActiviated(username, next) {
       { mobile: username },
     ]
   }, { activiated: 1 }).then(doc => {
+    if (!doc) {
+      throw new ApiError(403, 'no_account');
+    }
     if (!doc.activiated) {
       throw new ApiError(403, 'account_not_confirm');
     }

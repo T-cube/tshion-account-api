@@ -1,6 +1,6 @@
 ## app-center
 
-### /app/list
+### /app-center/app/list
 
 QUERY
 ```javascript
@@ -12,7 +12,7 @@ QUERY
 }
 ```
 
-### /app/enabled
+### /app-center/app/enabled
 
 QUERY
 ```javascript
@@ -22,7 +22,7 @@ QUERY
 }
 ```
 
-### /slideshow/list
+### /app-center/slideshow/list
 
 QUERY
 ```javascript
@@ -33,7 +33,7 @@ QUERY
 }
 ```
 
-### /slideshow/actived
+### /app-center/slideshow/actived
 
 QUERY
 ```javascript
@@ -43,7 +43,7 @@ QUERY
 }
 ```
 
-### /slideshow/delete
+### /app-center/slideshow/delete
 
 QUERY
 ```javascript
@@ -52,7 +52,7 @@ QUERY
 }
 ```
 
-### /slideshow/upload
+### /app-center/slideshow/upload
 
 STREAM
 

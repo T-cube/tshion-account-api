@@ -26,7 +26,7 @@ api.get('/app', (req, res, next) => {
     sort = { date_update: -1 };
   }
   db.app.find({
-    enabled: true
+    status: 'enabled'
   }, {
     permissions: 0,
     dependencies: 0,
@@ -44,10 +44,10 @@ api.get('/app', (req, res, next) => {
 
 api.get('/store/index', oauthCheck(), (req, res, next) => {
   Promise.all([
-    db.app.slideshow.find({}).sort({_id: -1}).limit(3),
+    db.app.slideshow.find({status: 'enabled'}).sort({_id: -1}).limit(3),
     db.app
     .find({
-      enabled: true
+      status: 'enabled'
     }, {
       permissions: 0,
       dependencies: 0,
@@ -58,7 +58,7 @@ api.get('/store/index', oauthCheck(), (req, res, next) => {
     .limit(5),
     db.app
     .find({
-      enabled: true
+      status: 'enabled'
     }, {
       permissions: 0,
       dependencies: 0,

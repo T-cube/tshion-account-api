@@ -7,7 +7,12 @@ import Promise from 'bluebird';
 
 import { validate } from './schema';
 import C from './constants';
+import _C from 'lib/constants';
 import { attachFileUrls } from 'routes/company/document/index';
+import Structure from 'models/structure';
+import {
+  APP,
+} from 'models/notification-setting';
 
 let api = express.Router();
 export default api;
@@ -133,12 +138,27 @@ saveCdn('cdn-file'),
 });
 
 api.post('/report', (req, res, next) => {
-  validate('report', req.body);
+  if (!req.body.status || req.body.status != C.REPORT_STATUS.DRAFT) {
+    validate('report', req.body);
+  }
   req._app.report({
     user_id: req.user._id,
     company_id: req.company._id,
     report: req.body
   }).then(doc => {
+    if (doc.status != C.REPORT_STATUS.DRAFT) {
+      let s = new Structure(req.company.structure);
+      let department = s.findNodeById(doc.report_target);
+      let tos = [].concat(department.admin, doc.copy_to);
+      let notification = {
+        action: _C.ACTIVITY_ACTION.SUBMIT,
+        target_type: _C.OBJECT_TYPE.APP_REPORT,
+        report: doc._id,
+        from: req.user._id,
+        to: tos
+      };
+      req.model('notification').send(notification, APP);
+    }
     res.json(doc);
   }).catch(next);
 });

@@ -126,14 +126,20 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title', 'tags'];
+  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title', 'tags', 'followers'];
   validate('task', data, fields);
+  let followers;
+  if (data.followers && _.isArray(data.followers)) {
+    followers = data.followers;
+  } else {
+    followers = [req.user._id];
+  }
   if (data.date_due && data.date_due <= data.date_start) {
     throw new ApiError(400, 'invalid_date');
   }
   _.extend(data, {
     creator: req.user._id,
-    followers: [req.user._id],
+    followers: followers,
     company_id: req.company._id,
     project_id: req.project._id,
     status: C.TASK_STATUS.PROCESSING,
@@ -146,6 +152,14 @@ api.post('/', (req, res, next) => {
   .then(task => {
     res.json(task);
     req.task = task;
+    let notification = {
+      action: C.ACTIVITY_ACTION.ADD,
+      target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
+      task: task._id,
+      from: req.user._id,
+      to: followers
+    };
+    req.model('notification').send(notification, TASK_UPDATE);
     return Promise.all([
       data.loop && TaskLoop.updateLoop(task),
       addActivity(req, C.ACTIVITY_ACTION.CREATE),
@@ -193,6 +207,9 @@ api.param('task_id', (req, res, next, id) => {
 });
 
 api.delete('/:task_id', (req, res, next) => {
+  if (!req.user._id.equals(req.project.owner) && !req.user._id.equals(req.task.creator)) {
+    throw new ApiError(400, 'only_project_owner_and_task_creator_can_delete_task');
+  }
   db.task.remove({
     _id: req.task._id
   })
@@ -340,16 +357,27 @@ api.post('/:task_id/unfollow', (req, res, next) => {
 });
 
 api.put('/:task_id/followers', (req, res, next) => {
-  if (!ObjectId.isValid(req.body._id)) {
+  if (!ObjectId.isValid(req.body._id) || !ObjectId.isValid(req.params.task_id)) {
     throw new ApiError(400);
   }
   let userId = ObjectId(req.body._id);
+  let taskId = ObjectId(req.params.task_id);
   taskFollow(req, userId)
   .then(() => logTask(req, C.ACTIVITY_ACTION.ADD, {
     target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
     user: userId,
   }))
-  .then(() => res.json({}))
+  .then(() => {
+    res.json({});
+    let notification = {
+      action: C.ACTIVITY_ACTION.ADD,
+      target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
+      task: taskId,
+      from: req.user._id,
+      to: userId
+    };
+    req.model('notification').send(notification, TASK_UPDATE);
+  })
   .catch(next);
 });
 

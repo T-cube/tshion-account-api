@@ -1,6 +1,6 @@
 {
   "name": "tlf-api",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "description": "Tlifang API Server",
   "main": "app/index.js",
   "author": "tlifang.com <support@tlifang.com>",
@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@ym/payment": "^0.4.0",
-    "@ym/redis": "0.8.2",
-    "@ym/rpc": "0.6.5",
+    "@ym/redis": "^0.9.1",
+    "@ym/rpc": "^0.7.1",
     "app-module-path": "^1.0.6",
     "babel-cli": "^6.8.0",
     "babel-plugin-resolver": "0.0.7",

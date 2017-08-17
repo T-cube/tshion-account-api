@@ -86,7 +86,7 @@ rpc.install(server, config.get('rpc.trpc'));
 bindLoader(app);
 
 // load models
-app.loadModel('redis', Redis, config.get('vendor.redis'));
+// app.loadModel('redis', Redis, config.get('vendor.redis'));
 app.loadModel('qiniu', QiniuTools, config.get('vendor.qiniu'));
 app.loadModel('ow365', OfficeWeb365, config.get('vendor.officeweb365'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
@@ -113,6 +113,7 @@ app.loadModel('payment', Payment);
 
 let _loader = {};
 app.bindLoader(_loader);
+app.bindModel('redis', require('@ym/redis').promiseRedis(config.get('vendor.redis')));
 initRPC(config.get('rpc'), _loader).then(rpc => {
   let cfg = rpc.rpcConfig;
   let ClientRpc = rpc.clientRpc;
@@ -139,6 +140,7 @@ if (config.get('debug.apiError')) {
 app.use((req, res, next) => {
   // model loader
   app.bindLoader(req);
+
   // set application headers
   res.set({
     'X-Powered-By': `tlf-api/${API_VERSION}`,

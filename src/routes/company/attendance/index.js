@@ -181,7 +181,6 @@ api.get('/sign/today', (req, res, next) => {
     })
     .limit(pagesize)
     .skip((page - 1) * pagesize)
-
   ])
   .then(([count, list]) => {
     res.json({

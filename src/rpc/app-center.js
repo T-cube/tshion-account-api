@@ -18,10 +18,10 @@ export default route;
 const appCenterModel = new AppCenterModel();
 
 route.on('/app/list', query => {
-  let { page, pagesize, keyword, enabled } = query;
+  let { page, pagesize, keyword, status } = query;
   let criteria = {};
-  if (enabled) {
-    criteria.enabled = enabled;
+  if (status) {
+    criteria.status = status;
   }
   if (keyword) {
     criteria['name'] = {
@@ -31,33 +31,49 @@ route.on('/app/list', query => {
   return appCenterModel.page({ page, pagesize, criteria });
 });
 
-route.on('/app/enabled', query => {
-  let { appid, enabled } = query;
-  return appCenterModel.update({appid, enabled});
+route.on('/app/info', query => {
+  let { app_id } = query;
+  let criteria = {
+    _id: ObjectId(app_id)
+  };
+  return appCenterModel.detail({criteria});
+});
+
+route.on('/app/status', query => {
+  let { app_id, status } = query;
+  app_id = ObjectId(app_id);
+  return appCenterModel.update({app_id, status});
+});
+
+route.on('/slideshow/info', (query, loader) => {
+  let { slideshow_id } = query;
+  slideshow_id = ObjectId(slideshow_id);
+  return appCenterModel.slideshowDetail({slideshow_id, loader});
 });
 
 route.on('/slideshow/list', query => {
-  let { page, pagesize, active } = query;
+  let { page, pagesize, status } = query;
   let criteria = {};
-  if (active) {
-    criteria.active = active;
+  if (status) {
+    criteria.status = status;
   }
   return appCenterModel.slideshowPage({ page, pagesize, criteria});
 });
 
-route.on('/slideshow/actived', query => {
-  let { slideshow_id, active } = query;
+route.on('/slideshow/status', query => {
+  let { slideshow_id, status } = query;
   slideshow_id = ObjectId(slideshow_id);
-  return appCenterModel.slideshowUpdate({slideshow_id, active});
+  return appCenterModel.slideshowUpdate({slideshow_id, status});
 });
 
 route.on('/slideshow/delete', (query, loader) => {
-  let { slideshows } = query;
-  _.map(slideshows, item => {
-    item = ObjectId(item);
-    return item;
-  });
-  return appCenterModel.slideshowDelete({slideshows, loader});
+  let { slideshow_id } = query;
+  slideshow_id = ObjectId(slideshow_id);
+  // _.map(slideshows, item => {
+  //   item = ObjectId(item);
+  //   return item;
+  // });
+  return appCenterModel.slideshowDelete({slideshow_id, loader});
 });
 
 route.stream('/slideshow/upload', (stream, data, loader) => {
@@ -85,6 +101,7 @@ route.stream('/slideshow/upload', (stream, data, loader) => {
             url: qiniu_data.url,
             cdn_key: cdn_key,
             destination: destination,
+            path: destination,
             relpath: `/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}/${uuidName}`,
             filename: uuidName,
           };

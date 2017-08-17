@@ -111,7 +111,7 @@ api.get('/:project_id', (req, res, next) => {
   let data = req.project;
   let owner = data.owner;
   data.is_owner = owner.equals(req.user._id);
-  let myself = _.find(req.company.members, m => m._id.equals(req.user._id));
+  let myself = _.find(req.project.members, m => m._id.equals(req.user._id));
   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
   fetchCompanyMemberInfo(req.company, data, 'owner')
   .then(data => {
