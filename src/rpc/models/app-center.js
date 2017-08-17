@@ -1,6 +1,7 @@
 import Promise from 'bluebird';
 
 import Model from './model';
+import { attachFileUrls } from 'routes/company/document/index';
 
 export default class AppCenterModel extends Model {
   constructor(props) {
@@ -72,9 +73,14 @@ export default class AppCenterModel extends Model {
   }
 
   slideshowDetail(props) {
-    let { slideshow_id } = props;
+    let { slideshow_id, loader } = props;
     return this.db.app.slideshow.findOne({
       _id: slideshow_id
+    }).
+    then(doc => {
+      return attachFileUrls(loader, doc).then(() => {
+        return doc;
+      });
     });
   }
 

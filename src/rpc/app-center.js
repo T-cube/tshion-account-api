@@ -45,10 +45,10 @@ route.on('/app/status', query => {
   return appCenterModel.update({app_id, status});
 });
 
-route.on('/slideshow/info', query => {
+route.on('/slideshow/info', (query, loader) => {
   let { slideshow_id } = query;
   slideshow_id = ObjectId(slideshow_id);
-  return appCenterModel.slideshowDetail({slideshow_id});
+  return appCenterModel.slideshowDetail({slideshow_id, loader});
 });
 
 route.on('/slideshow/list', query => {
@@ -101,6 +101,7 @@ route.stream('/slideshow/upload', (stream, data, loader) => {
             url: qiniu_data.url,
             cdn_key: cdn_key,
             destination: destination,
+            path: destination,
             relpath: `/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}/${uuidName}`,
             filename: uuidName,
           };
