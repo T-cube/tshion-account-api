@@ -92,7 +92,7 @@ api.post('/:request_id/accept', (req, res, next) => {
           'members._id': request.to,
         }, {
           $set: {
-            joindate: new Date(),
+            'members.$.joindate': new Date(),
             'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL,
           }
         }),

@@ -14,14 +14,11 @@ export default class Security {
     const redis = this.model('redis');
     let key = `frequency_${type}_${id}`;
     return redis.exists(key)
-    .then(exist => {
-      if (exist) {
-        throw new ApiError(429, 'too_many_requests');
-      }
-      return redis.set(key, id);
-    })
-    .then(() => {
-      return redis.expire(key, time);
-    });
+      .then(exist => {
+        if (exist) {
+          throw new ApiError(429, 'too_many_requests');
+        }
+        return redis.setex(key, time, id);
+      });
   }
 }

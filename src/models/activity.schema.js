@@ -4,6 +4,7 @@ export let validation = {
   creator: { $objectId: 1 },
   action: { $enum: ENUMS.ACTIVITY_ACTION },
   target_type: { $enum: ENUMS.OBJECT_TYPE },
+  app: { $objectId: 1, optional: true },
   company: { $objectId: 1, optional: true },
   company_id: { $objectId: 1, optional: true },
   project: { $objectId: 1, optional: true },

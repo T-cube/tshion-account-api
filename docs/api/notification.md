@@ -10,6 +10,15 @@
 
 获取消息列表
 
+QUERY:
+```javascript
+{
+  is_read: Boolean, // 0,1  optional
+  type: String, // system, team , optional
+  last_id: ObjectId, //optional
+}
+```
+
 ```javascript
 [{
   _id: <ObjectId>,

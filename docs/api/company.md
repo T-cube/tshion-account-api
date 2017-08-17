@@ -90,6 +90,17 @@ OUTPUT
 }...]
 ```
 
+### GET /company/:company_id/invite
+
+OUTPUT:
+```javascript
+{
+  t: Number,
+  c: String,
+  h: String,
+}
+```
+
 ### POST /company
 
 增加公司

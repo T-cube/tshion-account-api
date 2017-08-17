@@ -18,8 +18,9 @@ QUERY
 {
   tilte: <String>,
   content: <String>,
-  link: <String>,
+  link: <String>, //optional
   creator: <String>,
+  type: <String>,
 }
 ```
 

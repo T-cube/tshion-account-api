@@ -7,6 +7,7 @@ import { validate } from './schema';
 import { ApiError } from 'lib/error';
 import { oauthCheck, authCheck } from 'lib/middleware';
 import { SRC_ROOT_DIR } from 'bootstrap';
+import C from 'lib/constants';
 
 let api = express.Router();
 export default api;
@@ -80,7 +81,6 @@ api.post('/app/:appid/add', (req, res, next) => {
         }
       });
     }
-
   })
   .then(() => {
     _incTotalInstalled(appid);
@@ -88,6 +88,19 @@ api.post('/app/:appid/add', (req, res, next) => {
       ...req._app,
       enabled: true,
     };
+    db.app.findOne({
+      appid,
+    })
+    .then(a => {
+      let info = {
+        company: company_id,
+        app: a._id,
+        action: C.ACTIVITY_ACTION.ADD,
+        target_type: C.OBJECT_TYPE.APP_CENTER,
+        creator: user_id
+      };
+      req.model('activity').insert(info);
+    });
     res.json(app);
   })
   .catch(next);
@@ -117,6 +130,19 @@ api.post('/app/:appid/uninstall', authCheck(), (req, res, next) => {
   })
   .then(() => {
     res.json({});
+    db.app.findOne({
+      appid,
+    })
+    .then(a => {
+      let info = {
+        company: company_id,
+        app: a._id,
+        action: C.ACTIVITY_ACTION.REMOVE,
+        target_type: C.OBJECT_TYPE.APP_CENTER,
+        creator: user_id
+      };
+      req.model('activity').insert(info);
+    });
     db.app.update({
       appid,
     }, {
@@ -145,6 +171,19 @@ api.post('/app/:appid/enabled', (req, res, next) => {
   })
   .then(() => {
     res.json({});
+    db.app.findOne({
+      appid,
+    })
+    .then(a => {
+      let info = {
+        company: company._id,
+        app: a._id,
+        action: enabled ? C.ACTIVITY_ACTION.TURN_ON : C.ACTIVITY_ACTION.TURN_OFF,
+        target_type: C.OBJECT_TYPE.APP_CENTER,
+        creator: user_id
+      };
+      req.model('activity').insert(info);
+    });
   })
   .catch(next);
 });

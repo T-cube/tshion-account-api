@@ -239,7 +239,7 @@ export default class Report extends AppBase {
 
   report({user_id, company_id, report}) {
     let { date_report, report_target, copy_to, content, type, status, attachments } = report;
-    date_report = moment(date_report).startOf('day').toDate();
+    date_report = date_report ? moment(date_report).startOf('day').toDate() : null;
     return this.collection('item').insert({
       user_id,
       company_id,

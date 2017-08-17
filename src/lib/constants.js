@@ -59,7 +59,12 @@ let constants = {
 
     RELEASE: 'release',       // 发布
 
+    TURN_ON: 'turn_on', // 开启
+    TURN_OFF: 'turn_off', // 关闭
+
     TASK_DAYLYREPORT: 'task_daylyreport',   // 任务日报
+
+    SYSTEM_REMIND: 'system_remind', // 系统提示
   },
 
   ACTIVITY_TYPE: {
@@ -153,8 +158,12 @@ let constants = {
 
   OBJECT_TYPE: {
     FIELD: 'field',
+    ALL_USER: 'alluser',
     ANNOUNCEMENT: 'announcement',
     ANNOUNCEMENT_DRAFT: 'announcement.draft',
+    APP_CENTER: 'app.center',
+    APP_REPORT: 'app.report',
+    APP_ACTIVITY: 'app.activity',
     APPROVAL_ITEM: 'approval.item',
     APPROVAL_TEMPLATE: 'approval.template',
     ATTENDANCE: 'attendance',
@@ -164,6 +173,7 @@ let constants = {
     COMPANY_MEMBER: 'company.member',
     COMPANY_DIR: 'company.dir',
     COMPANY_FILE: 'company.file',
+    DISCUSSION_FOLLOWER: 'discussion.follower',
     DOCUMENT: 'document',
     DOCUMENT_DIR: 'document.dir',
     DOCUMENT_FILE: 'document.file',
@@ -182,7 +192,7 @@ let constants = {
     TASK_TAG: 'task.tag',
     TASK_FOLLOWER: 'task.follower',
     TASK_EXPIRE: 'task.expire',
-    USER: 'user'
+    USER: 'user',
   },
 
   PROJECT_MEMBER_TYPE: {
@@ -365,6 +375,11 @@ let constants = {
     ACTIVE: 'active',
     INACTIVE: 'inactive'
   },
+
+  NOTIFICATION_TYPE: {
+    SYSTEM: 'system',
+    TEAM: 'team',
+  }
 
 };
 

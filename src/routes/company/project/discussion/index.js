@@ -174,7 +174,19 @@ api.post('/:discussion_id/follow', (req, res, next) => {
       followers: data._id
     }
   })
-  .then(doc => res.json(doc))
+  .then(doc => {
+    res.json(doc);
+    let follower = ObjectId(data._id);
+    let notification = {
+      action: C.ACTIVITY_ACTION.ADD,
+      target_type: C.OBJECT_TYPE.DISCUSSION_FOLLOWER,
+      discussion: discussion_id,
+      project: project_id,
+      from: req.user._id,
+      to: follower
+    };
+    req.model('notification').send(notification, PROJECT_DISCUSSION);
+  })
   .catch(next);
 });
 

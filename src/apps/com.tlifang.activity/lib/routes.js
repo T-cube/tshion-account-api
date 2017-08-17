@@ -31,17 +31,17 @@ api.post('/activity', (req, res, next) => {
     company_id: req.company._id
   })
   .then(activity => {
-    // if (activity.room.status == _C.APPROVAL_STATUS.AGREED) {
-    //   // let to = activity.assistants.concat(activity.members, activity.followers);
-    //   // let info = {
-    //   //   company: req.company._id,
-    //   //   action: C.ACTIVITY_ACTION.ADD,
-    //   //   target_type: _C.OBJECT_TYPE.ACTIVITY,
-    //   //   from,
-    //   //   to
-    //   // };
-    //   // req.model('notification').send(info, APP);
-    // }
+    if (activity.status == _C.ACTIVITY_STATUS.CREATED) {
+      let to = [].concat(activity.assistants, activity.members, activity.followers);
+      let info = {
+        company: req.company._id,
+        action: C.ACTIVITY_ACTION.CREATE,
+        target_type: C.OBJECT_TYPE.APP_ACTIVITY,
+        from: req.user._id,
+        to
+      };
+      req.model('notification').send(info, APP);
+    }
     res.json(activity);
   })
   .catch(next);
@@ -235,6 +235,17 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
   })
   .then(activity => {
     res.json(activity);
+    if (activity.status == _C.ACTIVITY_STATUS.CREATED) {
+      let to = [].concat(activity.assistants, activity.members, activity.followers);
+      let info = {
+        company: req.company._id,
+        action: C.ACTIVITY_ACTION.CREATE,
+        target_type: C.OBJECT_TYPE.APP_ACTIVITY,
+        from: req.user._id,
+        to
+      };
+      req.model('notification').send(info, APP);
+    }
   })
   .catch(next);
 });

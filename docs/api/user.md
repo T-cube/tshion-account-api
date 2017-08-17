@@ -296,3 +296,17 @@ OUTPUT
   }
 }
 ```
+
+### POST /user/invitation
+
+进入邀请
+
+body:
+
+```javascript
+{
+  h: String,
+  c: String,
+  t: Number,
+}
+```

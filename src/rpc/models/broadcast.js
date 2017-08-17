@@ -3,6 +3,8 @@ import _ from 'underscore';
 import { mapObjectIdToData } from 'lib/utils';
 import { ApiError } from 'lib/error';
 import Model from './model';
+import { BROADCAST } from 'models/notification-setting';
+import app from 'index';
 
 export default class BroadcastModel extends Model {
 
@@ -11,7 +13,31 @@ export default class BroadcastModel extends Model {
   }
 
   create(props) {
-    let { title, content, link, creator } = props;
+    let { title, content, link, creator, type } = props;
+    let notification = {
+      action: C.ACTIVITY_ACTION.SYSTEM_REMIND,
+      target_type: C.OBJECT_TYPE.ALL_USER,
+      remind_content: {
+        type,
+        title,
+        content,
+        link,
+      },
+      from: creator,
+    };
+    process.nextTick(() => {
+      this.db.user.find({
+        activiated: true
+      }, {
+        _id: 1
+      })
+      .then(list => {
+        list.forEach(item => {
+          notification.to = item._id;
+          app.model('notification').send(notification, BROADCAST);
+        });
+      });
+    });
     return this.db.broadcast.insert({
       title,
       content,
@@ -19,7 +45,6 @@ export default class BroadcastModel extends Model {
       creator,
       date_start: new Date(),
       date_update: new Date(),
-      status: 'active'
     });
   }
 
