@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import config from 'config';
 import compare from 'node-version-compare';
+import crypto from 'crypto';
 
 import C from 'lib/constants';
 import db from 'lib/database';
@@ -336,6 +337,65 @@ api.get('/realname', (req, res, next) => {
     });
   })
   .catch(next);
+});
+
+api.post('/invitation', (req, res, next) => {
+  let t = req.body.t;
+  let c = req.body.c;
+  let check = crypto.createHash('md5').update(''+t+c).digest('hex');
+  if (check == req.body.h) {
+    let now = new Date().getTime();
+    if (now - parseInt(t) > 1800000) {
+      throw new ApiError(400, 'url_expired');
+    }
+    let company_id = ObjectId(c);
+    let url = config.get('webUrl') + `/oa/company/${c}/home`;
+    db.company.findOne({
+      _id: ObjectId(c)
+    })
+    .then(doc => {
+      if (_.some(doc.members, m => m._id.equals(req.user._id))) {
+        res.redirect(301, url);
+      } else {
+        return Promise.all([
+          db.user.update({
+            _id: req.user._id
+          }, {
+            $addToSet:{
+              companies: company_id
+            }
+          }),
+          db.company.update({
+            _id: company_id,
+          }, {
+            $push: {
+              members: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+                mobile: req.user.mobile,
+                sex: null,
+                status: C.COMPANY_MEMBER_STATUS.NORMAL,
+                type: C.COMPANY_MEMBER_TYPE.NORMAL,
+                address: ''
+              }
+            }
+          }),
+          req.model('activity').insert({
+            creator: req.user._id,
+            company: company_id,
+            action: C.ACTIVITY_ACTION.JOIN,
+            target_type: C.OBJECT_TYPE.COMPANY,
+          })
+        ])
+        .then(() => {
+          res.redirect(301, url);
+        });
+      }
+    });
+  } else {
+    throw new ApiError(400, 'url_wrong');
+  }
 });
 
 api.use('/schedule', require('./schedule').default);
