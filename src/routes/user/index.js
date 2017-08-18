@@ -346,7 +346,7 @@ api.post('/invitation', (req, res, next) => {
   if (check == req.body.h) {
     let now = new Date().getTime();
     if (now - parseInt(t) > 1800000) {
-      throw new ApiError(400, 'url_expired');
+      throw new ApiError(400, 'invitation_url_expire');
     }
     let company_id = ObjectId(c);
     let url = config.get('webUrl') + `/oa/company/${c}/home`;
@@ -355,7 +355,7 @@ api.post('/invitation', (req, res, next) => {
     })
     .then(doc => {
       if (_.some(doc.members, m => m._id.equals(req.user._id))) {
-        res.redirect(301, url);
+        res.json({_id: doc._id, name: doc.name});
       } else {
         return Promise.all([
           db.user.update({
@@ -389,12 +389,12 @@ api.post('/invitation', (req, res, next) => {
           })
         ])
         .then(() => {
-          res.redirect(301, url);
+          res.json({_id: doc._id, name: doc.name});
         });
       }
     });
   } else {
-    throw new ApiError(400, 'url_wrong');
+    throw new ApiError(400, 'invitation_url_expire');
   }
 });
 
