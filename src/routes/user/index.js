@@ -355,7 +355,7 @@ api.post('/invitation', (req, res, next) => {
     })
     .then(doc => {
       if (_.some(doc.members, m => m._id.equals(req.user._id))) {
-        res.redirect(301, url);
+        res.json({_id: doc._id, name: doc.name});
       } else {
         return Promise.all([
           db.user.update({
@@ -389,12 +389,12 @@ api.post('/invitation', (req, res, next) => {
           })
         ])
         .then(() => {
-          res.redirect(301, url);
+          res.json({_id: doc._id, name: doc.name});
         });
       }
     });
   } else {
-    res.redirect(301, config.get('webUrl'));
+    res.json({_id: null});
   }
 });
 
