@@ -96,7 +96,7 @@ export default class Report extends AppBase {
     });
   }
 
-  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target, key_word}) {
+  list({user_id, company_id, page, pagesize, type, status, start_date, end_date, reporter, report_type, report_target, key_word, is_copy}) {
     let criteria = {};
     criteria.company_id = company_id;
     if (report_type) {
@@ -121,7 +121,12 @@ export default class Report extends AppBase {
       if (_.isArray(report_target)) {
         criteria['$or'] = [{ report_target: { $in: report_target } }, { copy_to: user_id }];
       } else {
-        criteria['$or'] = [{ report_target: report_target }, { copy_to: user_id }];
+        if (is_copy) {
+          criteria.report_target = report_target;
+          criteria.copy_to = user_id;
+        } else {
+          criteria['$or'] = [{ report_target: report_target }, { report_target: report_target, copy_to: user_id }];
+        }
       }
       if (reporter) {
         criteria.user_id = reporter;
