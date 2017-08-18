@@ -51,13 +51,13 @@ route.on('/slideshow/info', (query, loader) => {
   return appCenterModel.slideshowDetail({slideshow_id, loader});
 });
 
-route.on('/slideshow/list', query => {
+route.on('/slideshow/list', (query, loader) => {
   let { page, pagesize, status } = query;
   let criteria = {};
   if (status) {
     criteria.status = status;
   }
-  return appCenterModel.slideshowPage({ page, pagesize, criteria});
+  return appCenterModel.slideshowPage({ page, pagesize, criteria, loader});
 });
 
 route.on('/slideshow/status', query => {
@@ -95,6 +95,7 @@ route.stream('/slideshow/upload', (stream, data, loader) => {
             fieldname: 'document',
             ext,
             uuidName,
+            name: data.name,
             originalname: data.name,
             size: data.size,
             appid: data.appid,

@@ -394,7 +394,7 @@ api.post('/invitation', (req, res, next) => {
       }
     });
   } else {
-    res.json({_id: null});
+    throw new ApiError(400, 'invitation_url_expire');
   }
 });
 
