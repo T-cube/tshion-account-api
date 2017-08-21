@@ -41,22 +41,26 @@ export default class AppCenterModel extends Model {
   }
 
   slideshowPage(props) {
-    let { page, pagesize, criteria } = props;
+    let { page, pagesize, criteria, loader } = props;
     return Promise.all([
       this.db.app.slideshow.count(criteria),
-      this.db.app.slideshow.find(criteria, {
-        originalname: 1,
-        appid: 1,
-        status: 1,
-      })
+      this.db.app.slideshow.find(criteria)
       .skip(page * pagesize)
       .sort({_id: -1})
       .limit(pagesize)
-    ]).then(([count, list]) => {
-      return {
-        count,
-        list
-      };
+    ]).then(([count, slideshows]) => {
+      return Promise.map(slideshows, item => {
+        return attachFileUrls(loader, item, '46,23')
+        .then(() => {
+          return item;
+        });
+      })
+      .then(list => {
+        return {
+          count,
+          list
+        };
+      });
     });
   }
 

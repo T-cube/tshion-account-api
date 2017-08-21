@@ -32,11 +32,12 @@ api.get('/overview', (req, res, next) => {
 api.get('/report', (req, res, next) => {
   validate('list', req.query);
   let { page, type, pagesize, status, start_date, end_date, reporter, report_target, report_type, key_word } = req.query;
+  let is_copy;
   req._app.getStructure(req.company.structure, req.user._id).then(memberDepartments => {
     if (type == C.BOX_TYPE.INBOX) {
       if (report_target) {
         if (!_.some(memberDepartments, item => item.equals(report_target))) {
-          throw new ApiError(400, 'report_target_error');
+          is_copy = true;
         }
       } else {
         report_target = memberDepartments;
@@ -61,6 +62,7 @@ api.get('/report', (req, res, next) => {
       report_type,
       report_target,
       key_word,
+      is_copy,
     })
     .then(list => {
       res.json(list);
