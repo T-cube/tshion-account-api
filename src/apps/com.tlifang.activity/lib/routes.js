@@ -270,7 +270,8 @@ api.post('/room', (req, res, next) => {
   validate('room', req.body);
   let company_id = req.company._id;
   let user_id = req.user._id;
-  if (!user_id.equals(req.company.owner)) {
+  let admins = _.filter(req.company.members, mem => mem.type == 'admin');
+  if (!user_id.equals(req.company.owner) && !_.some(admins, admin => admin.equals(req.user._id))) {
     throw new ApiError(400, 'not_company_owner');
   }
   if (!_.some(req.company.members, member => member._id.equals(req.body.manager))) {
@@ -327,6 +328,7 @@ api.put('/room/:room_id', (req, res, next) => {
     room_id: req.params.room_id,
     room: req.body,
     user_id: req.user._id,
+    company: req.company,
   })
   .then(doc => {
     res.json(doc);

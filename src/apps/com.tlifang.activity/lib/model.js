@@ -33,6 +33,7 @@ export default class Activity extends AppBase {
       },
     ];
     let all = [].concat(isMember, [{is_public: true}]);
+    let personal = [].concat(isMember, [{creator: user_id}]);
     return Promise.all([
       this.collection('item')
       .find({
@@ -82,7 +83,7 @@ export default class Activity extends AppBase {
       .count({
         company_id,
         time_start: { $gte: moment().startOf('day').toDate() },
-        $or: isMember,
+        $or: personal,
         status: C.ACTIVITY_STATUS.CREATED,
       }),
       this.collection('item')
@@ -294,6 +295,7 @@ export default class Activity extends AppBase {
             throw new ApiError(400, 'invalid_room_id');
           }
           if (room.approval_require) {
+            console.log(1111);
             return this.collection('approval').insert({
               room_id: activity.room._id,
               creator: user_id,
@@ -301,17 +303,18 @@ export default class Activity extends AppBase {
               company_id,
               manager: room.manager,
               status: C.APPROVAL_STATUS.PENDING,
-              comments: []
+              comments: [],
+              activity_id: activity._id
             });
           } else {
-            return null;
+            return Promise.resolve({});
           }
         })
         .then(approval => {
           if (!approval) {
             delete activity.room.approval_id;
           } else {
-            activity.room.approval_id = approval._id;            
+            activity.room.approval_id = approval._id;
           }
           return this.collection('item')
           .update({
@@ -647,7 +650,10 @@ export default class Activity extends AppBase {
       if (!room.manager.equals(user_id)) {
         throw new ApiError(400, 'not_manager_can_not_delete');
       }
-      return this.collection('room').remove({_id: room_id});
+      return Promise.all([
+        this.collection('room').remove({_id: room_id}),
+        this.collection('approval').remove({room_id: room_id})
+      ]);
     });
   }
 
@@ -740,7 +746,7 @@ export default class Activity extends AppBase {
     });
   }
 
-  changeRoom({room_id, room, user_id}) {
+  changeRoom({room_id, room, user_id, company}) {
     return this.collection('room')
     .findOne({
       _id: room_id
@@ -749,7 +755,8 @@ export default class Activity extends AppBase {
       if (!doc) {
         throw new ApiError(400, 'invalid_room');
       }
-      if (!doc.manager.equals(user_id)) {
+      let admins = _.filter(company.members, mem => mem.type == 'admin');
+      if (!doc.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin.equals(user_id))) {
         throw new ApiError(400, 'no_change_room_permission');
       }
       return this.collection('room')

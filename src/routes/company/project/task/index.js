@@ -216,6 +216,14 @@ api.delete('/:task_id', (req, res, next) => {
   .then(() => {
     res.json({});
     logTask(req, C.ACTIVITY_ACTION.DELETE);
+    let notification = {
+      action: C.ACTIVITY_ACTION.DELETE,
+      target_type: C.OBJECT_TYPE.TASK,
+      task: req.task._id,
+      from: req.user._id,
+      to: req.task.followers
+    };
+    req.model('notification').send(notification, TASK_UPDATE);
   })
   .catch(next);
 });
