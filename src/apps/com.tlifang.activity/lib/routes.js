@@ -35,6 +35,8 @@ api.post('/activity', (req, res, next) => {
       let to = [].concat(activity.assistants, activity.members, activity.followers);
       let info = {
         company: req.company._id,
+        activity: activity._id,
+        appid: req.app_center,
         action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.APP_ACTIVITY,
         from: req.user._id,
@@ -239,6 +241,8 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
       let to = [].concat(activity.assistants, activity.members, activity.followers);
       let info = {
         company: req.company._id,
+        activity: activity._id,
+        appid: req.app_center,
         action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.APP_ACTIVITY,
         from: req.user._id,

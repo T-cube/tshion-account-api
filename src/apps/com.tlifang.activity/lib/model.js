@@ -127,12 +127,10 @@ export default class Activity extends AppBase {
     let criteria = {
       company_id,
     };
-    let sortType = 1;
     if (date_start && !date_end) {
       criteria.time_start = { $gte: moment(date_start).startOf('day').toDate() };
     } else if (!date_start && date_end) {
       criteria.time_start = { $lte: moment(date_end).endOf('day').toDate() };
-      sortType = -1;
     } else if (date_start && date_end) {
       criteria.time_start = { $gte: moment(date_start).startOf('day').toDate(), $lte: moment(date_end).endOf('day').toDate() };
     }
@@ -153,7 +151,7 @@ export default class Activity extends AppBase {
       .find(criteria, this.baseInfo)
       .skip((page - 1) * 10)
       .limit(10)
-      .sort({time_start: sortType}),
+      .sort({time_start: -1}),
       this.collection('item')
       .count(criteria)
     ])
@@ -292,18 +290,29 @@ export default class Activity extends AppBase {
           _id: activity.room._id
         })
         .then(room => {
-          return this.collection('approval').insert({
-            room_id: activity.room._id,
-            creator: user_id,
-            type: room.name,
-            company_id,
-            manager: room.manager,
-            status: C.APPROVAL_STATUS.PENDING,
-            comments: []
-          });
+          if (!room) {
+            throw new ApiError(400, 'invalid_room_id');
+          }
+          if (room.approval_require) {
+            return this.collection('approval').insert({
+              room_id: activity.room._id,
+              creator: user_id,
+              type: room.name,
+              company_id,
+              manager: room.manager,
+              status: C.APPROVAL_STATUS.PENDING,
+              comments: []
+            });
+          } else {
+            return null;
+          }
         })
         .then(approval => {
-          activity.room.approval_id = approval._id;
+          if (!approval) {
+            delete activity.room.approval_id;
+          } else {
+            activity.room.approval_id = approval._id;            
+          }
           return this.collection('item')
           .update({
             _id: activity_id
@@ -842,10 +851,16 @@ export default class Activity extends AppBase {
 
   _listCalc(list, user_id) {
     return _.map(list, item => {
-      item.total = _.uniq([].concat(item.assistants, item.creator, item.members)).length;
+      item.total = _.uniq(this._toString([].concat(item.assistants, item.creator, item.members))).length;
       item.isMember = _.some([].concat(item.assistants, item.creator, item.followers, item.members), member => member.equals(user_id));
       delete item.members;
       return item;
+    });
+  }
+
+  _toString(list) {
+    return _.map(list, item => {
+      return item.toString();
     });
   }
 
