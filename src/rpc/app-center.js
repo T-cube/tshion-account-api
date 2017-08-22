@@ -39,6 +39,66 @@ route.on('/app/info', query => {
   return appCenterModel.detail({criteria});
 });
 
+route.on('/app/info/change', query => {
+  validate('app_data', query);
+  return db.app.findOne({
+    appid: query.appid
+  })
+  .then(app => {
+    if (!app) {
+      throw new Error('no_app');
+    }
+    return appCenterModel.change(query);
+  });
+});
+
+// route.stream('/app/slideshow/upload', (stream, data, loader) => {
+//   const qiniu = loader.model('qiniu').bucket('cdn-public');
+//   db.app.findOne({
+//     _id: data.app_id
+//   })
+//   .then(app => {
+//     let ext = data.name.split('.')[data.name.split('.').length - 1];
+//     let uuidName = uuid.v4() + '.' + ext;
+//     let destination = path.normalize(`${APP_ROOT_DIR}/../public/cdn/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}`);
+//     let filepath = `${destination}/uuidName`;
+//     return mkdirp(destination).then(() => {
+//       let writeStream = fs.createWriteStream(filepath);
+//       stream.pipe(writeStream);
+//       return new Promise((resolve,reject) => {
+//         writeStream.on('finish', () => {
+//           const qiniu = loader.model('qiniu').bucket('cdn-public');
+//           let cdn_key = `upload/attachment/${uuidName}`;
+//           qiniu.upload(cdn_key, filepath).then(qiniu_data => {
+//             let slideshow_data = {
+//               mimetype: data.type,
+//               fieldname: 'document',
+//               ext,
+//               uuidName,
+//               name: data.name,
+//               originalname: data.name,
+//               size: data.size,
+//               appid: data.appid,
+//               url: qiniu_data.url,
+//               cdn_key: cdn_key,
+//               destination: destination,
+//               path: destination,
+//               relpath: `/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}/${uuidName}`,
+//               filename: uuidName,
+//             };
+//             db.app.slideshow.insert(slideshow_data).then(doc => {
+//               resolve(doc);
+//             });
+//           });
+//         });
+//       });
+//     });
+//   })
+//   .catch(e => {
+//     throw new Error(e);
+//   });
+// });
+
 route.on('/app/status', query => {
   let { app_id, status } = query;
   app_id = ObjectId(app_id);

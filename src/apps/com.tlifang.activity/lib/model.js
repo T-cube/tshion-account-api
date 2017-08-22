@@ -347,6 +347,7 @@ export default class Activity extends AppBase {
       if (!this._checkReadPermission(doc, user_id)) {
         throw new ApiError(400, 'not_member');
       } else {
+        doc.total = _.uniq(this._toString([].concat(doc.assistants, doc.creator, doc.members))).length;
         doc.isMember = _.some([].concat(doc.creator, doc.assistants, doc.members), item => item.equals(user_id));
         if (doc.room.approval_id) {
           return this.collection('approval')
@@ -356,7 +357,9 @@ export default class Activity extends AppBase {
             status: 1
           })
           .then(approval => {
-            doc.room.status = approval.status;
+            if (approval) {
+              doc.room.status = approval.status;              
+            }
             return doc;
           });
         }
