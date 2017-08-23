@@ -54,7 +54,7 @@ api.get('/unbind', oauthCheck(), (req, res, next) => {
   .catch(next);
 });
 
-api.post('/token', bodyParser.json(), wechatOauth.grant());
+api.post('/token', bodyParser.json(), wechatOauth.grant(), (req, res, next) => { console.log(9999); next(); });
 
 /**
  * if userLogin and wechat binded redirect to web app user page
@@ -66,6 +66,7 @@ api.post('/token', bodyParser.json(), wechatOauth.grant());
  *  -> if (!userLogin) redirect to web app get accesstoken by authCode page with query string: {authCode: authCode}
  */
 function access(req, res, next) {
+  console.log(11111);
   let gettingWechatOauth;
   let { code } = req.query;
   let { random_token } = req.body;
@@ -90,6 +91,7 @@ function access(req, res, next) {
     if (!wechat) {
       throw oauthInfoErr;
     }
+    console.log(2222);
     let { openid } = wechat;
     let loginUser = getLoginUser(req);
     let gettingUserWechat = loginUser ? wUtil.getUserWechat(loginUser._id) : Promise.resolve(null);
@@ -100,13 +102,16 @@ function access(req, res, next) {
       return wUtil.findUserByOpenid(openid)
       .then(user => {
         if (!user) {
+          console.log(3333);
           if (loginUser) {
+            console.log(4444);
             return wUtil.bindWechat(loginUser._id, wechat)
             .then(() => {
               res.json({});
               req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.BIND_WECHAT);
             });
           } else {
+            console.log(5555);
             return wUtil.storeWechatOAuthAndGetRandomToken(wechat)
             .then(oauthRandomToken => {
               return wUtil.findWechatUserinfo(openid)
@@ -129,6 +134,7 @@ function access(req, res, next) {
           }
         } else {
           if (!loginUser) {
+            console.log(6666);
             return wUtil.generateAuthCode(user._id)
             .then(authCode => res.redirect(urls.token(authCode)));
           }

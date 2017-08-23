@@ -63,7 +63,7 @@ route.stream('/app/slideshow/upload', (stream, data, loader) => {
     let ext = data.name.split('.')[data.name.split('.').length - 1];
     let uuidName = uuid.v4() + '.' + ext;
     let destination = path.normalize(`${APP_ROOT_DIR}/../public/cdn/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}`);
-    let filepath = `${destination}/uuidName`;
+    let filepath = `${destination}/${uuidName}`;
     return mkdirp(destination).then(() => {
       let writeStream = fs.createWriteStream(filepath);
       stream.pipe(writeStream);
@@ -98,7 +98,7 @@ route.on('/app/slideshow/delete', (query, loader) => {
   .then(doc => {
     let target_cdn = query.url.split('/');
     let cdn_key = _.find(doc.cdn_keys, item => {
-      let i = i.split('/');
+      let i = item.split('/');
       return i[i.length - 1] == target_cdn[target_cdn.length - 1];
     });
     let file;
