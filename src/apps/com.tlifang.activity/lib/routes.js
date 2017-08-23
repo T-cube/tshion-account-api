@@ -291,7 +291,8 @@ api.delete('/room/:room_id', (req, res, next) => {
   validate('info', req.params, ['room_id']);
   req._app.removeRoom({
     room_id: req.params.room_id,
-    user_id: req.user._id
+    user_id: req.user._id,
+    company: req.company,
   })
   .then(doc => {
     res.json(doc);

@@ -38,6 +38,16 @@ const schema = {
       author: { type: 'string' , minLength: 1, optional: true },
       star: { type: 'number', gte: 0, lte: 5, optional: true }
     }
+  },
+  delete_data: {
+    sanitization: {
+      appid: { type: 'string', rules: ['trim'] },
+      url: { type: 'string', rules: ['trim'] },
+    },
+    validation: {
+      appid: {type: 'string', minLength: 1 },
+      url: { type: 'string', minLength: 1 }
+    }
   }
 };
 export const validate = buildValidator(schema);

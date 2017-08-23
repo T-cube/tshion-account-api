@@ -358,7 +358,7 @@ export default class Activity extends AppBase {
           })
           .then(approval => {
             if (approval) {
-              doc.room.status = approval.status;              
+              doc.room.status = approval.status;
             }
             return doc;
           });
@@ -641,7 +641,7 @@ export default class Activity extends AppBase {
     .insert(room);
   }
 
-  removeRoom({room_id, user_id}) {
+  removeRoom({room_id, user_id, company}) {
     return this.collection('room')
     .findOne({
       _id: room_id
@@ -650,7 +650,8 @@ export default class Activity extends AppBase {
       if (!room) {
         throw new ApiError(400, 'invalid_room');
       }
-      if (!room.manager.equals(user_id)) {
+      let admins = _.filter(company.members, mem => mem.type == 'admin');
+      if (!room.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin.equals(user_id))) {
         throw new ApiError(400, 'not_manager_can_not_delete');
       }
       return Promise.all([

@@ -52,52 +52,80 @@ route.on('/app/info/change', query => {
   });
 });
 
-// route.stream('/app/slideshow/upload', (stream, data, loader) => {
-//   const qiniu = loader.model('qiniu').bucket('cdn-public');
-//   db.app.findOne({
-//     _id: data.app_id
-//   })
-//   .then(app => {
-//     let ext = data.name.split('.')[data.name.split('.').length - 1];
-//     let uuidName = uuid.v4() + '.' + ext;
-//     let destination = path.normalize(`${APP_ROOT_DIR}/../public/cdn/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}`);
-//     let filepath = `${destination}/uuidName`;
-//     return mkdirp(destination).then(() => {
-//       let writeStream = fs.createWriteStream(filepath);
-//       stream.pipe(writeStream);
-//       return new Promise((resolve,reject) => {
-//         writeStream.on('finish', () => {
-//           const qiniu = loader.model('qiniu').bucket('cdn-public');
-//           let cdn_key = `upload/attachment/${uuidName}`;
-//           qiniu.upload(cdn_key, filepath).then(qiniu_data => {
-//             let slideshow_data = {
-//               mimetype: data.type,
-//               fieldname: 'document',
-//               ext,
-//               uuidName,
-//               name: data.name,
-//               originalname: data.name,
-//               size: data.size,
-//               appid: data.appid,
-//               url: qiniu_data.url,
-//               cdn_key: cdn_key,
-//               destination: destination,
-//               path: destination,
-//               relpath: `/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}/${uuidName}`,
-//               filename: uuidName,
-//             };
-//             db.app.slideshow.insert(slideshow_data).then(doc => {
-//               resolve(doc);
-//             });
-//           });
-//         });
-//       });
-//     });
-//   })
-//   .catch(e => {
-//     throw new Error(e);
-//   });
-// });
+route.stream('/app/slideshow/upload', (stream, data, loader) => {
+  return db.app.findOne({
+    appid: data.appid
+  })
+  .then(app => {
+    if (!app) {
+      throw new Error('no_app');
+    }
+    let ext = data.name.split('.')[data.name.split('.').length - 1];
+    let uuidName = uuid.v4() + '.' + ext;
+    let destination = path.normalize(`${APP_ROOT_DIR}/../public/cdn/upload/attachment/${uuidName[0]}/${uuidName[1]}/${uuidName[2]}`);
+    let filepath = `${destination}/uuidName`;
+    return mkdirp(destination).then(() => {
+      let writeStream = fs.createWriteStream(filepath);
+      stream.pipe(writeStream);
+      return new Promise((resolve, reject) => {
+        writeStream.on('finish', () => {
+          const qiniu = loader.model('qiniu').bucket('cdn-public');
+          let cdn_key = `upload/attachment/${uuidName}`;
+          qiniu.upload(cdn_key, filepath).then(qiniu_data => {
+            db.app.update({
+              appid: data.appid
+            }, {
+              $push: {
+                cdn_keys: cdn_key
+              }
+            });
+            resolve({ url: qiniu_data.url });
+          });
+        });
+      });
+    });
+  })
+  .catch(e => {
+    throw new Error(e);
+  });
+});
+
+route.on('/app/slideshow/delete', (query, loader) => {
+  validate('delete_data', query);
+  return db.app.findOne({
+    appid: query.appid,
+  })
+  .then(doc => {
+    let target_cdn = query.url.split('/');
+    let cdn_key = _.find(doc.cdn_keys, item => {
+      let i = i.split('/');
+      return i[i.length - 1] == target_cdn[target_cdn.length - 1];
+    });
+    let file;
+    if (cdn_key) {
+      loader.model('qiniu').bucket('cdn-public').delete(cdn_key).catch(e => console.error(e));
+      file = cdn_key.split('/')[cdn_key.split('/').length - 1];
+      let destination = path.normalize(`${APP_ROOT_DIR}/../public/cdn/upload/attachment/${file[0]}/${file[1]}/${file[2]}/file`);
+      fs.stat(destination, (err, stat) => {
+        if (err) console.error(err);
+        fs.unlink(destination, e => e && console.error(e));
+      });
+      return db.app.update({
+        appid: query.appid
+      }, {
+        $pull: {
+          cdn_keys: cdn_key,
+          slideshow: query.url,
+        }
+      });
+    } else {
+      return {};
+    }
+  })
+  .catch(e => {
+    throw new Error(e);
+  });
+});
 
 route.on('/app/status', query => {
   let { app_id, status } = query;
@@ -145,7 +173,7 @@ route.stream('/slideshow/upload', (stream, data, loader) => {
   return mkdirp(destination).then(() => {
     let writeStream = fs.createWriteStream(filepath);
     stream.pipe(writeStream);
-    return new Promise((resolve,reject) => {
+    return new Promise((resolve, reject) => {
       writeStream.on('finish', () => {
         const qiniu = loader.model('qiniu').bucket('cdn-file');
         let cdn_key = `upload/attachment/${uuidName}`;
