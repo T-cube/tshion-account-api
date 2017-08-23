@@ -166,7 +166,9 @@ export default class Activity extends AppBase {
               status: 1
             })
             .then(doc => {
-              item.room.approval_status = doc.status;
+              if (doc) {
+                item.room.approval_status = doc.status;
+              }
               return item;
             });
           } else {
