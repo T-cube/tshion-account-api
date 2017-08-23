@@ -33,6 +33,7 @@ export default class Activity extends AppBase {
       },
     ];
     let all = [].concat(isMember, [{is_public: true}]);
+    let personal = [].concat(isMember, [{creator: user_id}]);
     return Promise.all([
       this.collection('item')
       .find({
@@ -82,7 +83,7 @@ export default class Activity extends AppBase {
       .count({
         company_id,
         time_start: { $gte: moment().startOf('day').toDate() },
-        $or: isMember,
+        $or: personal,
         status: C.ACTIVITY_STATUS.CREATED,
       }),
       this.collection('item')
@@ -127,12 +128,10 @@ export default class Activity extends AppBase {
     let criteria = {
       company_id,
     };
-    let sortType = 1;
     if (date_start && !date_end) {
       criteria.time_start = { $gte: moment(date_start).startOf('day').toDate() };
     } else if (!date_start && date_end) {
       criteria.time_start = { $lte: moment(date_end).endOf('day').toDate() };
-      sortType = -1;
     } else if (date_start && date_end) {
       criteria.time_start = { $gte: moment(date_start).startOf('day').toDate(), $lte: moment(date_end).endOf('day').toDate() };
     }
@@ -153,7 +152,7 @@ export default class Activity extends AppBase {
       .find(criteria, this.baseInfo)
       .skip((page - 1) * 10)
       .limit(10)
-      .sort({time_start: sortType}),
+      .sort({time_start: -1}),
       this.collection('item')
       .count(criteria)
     ])
@@ -292,18 +291,31 @@ export default class Activity extends AppBase {
           _id: activity.room._id
         })
         .then(room => {
-          return this.collection('approval').insert({
-            room_id: activity.room._id,
-            creator: user_id,
-            type: room.name,
-            company_id,
-            manager: room.manager,
-            status: C.APPROVAL_STATUS.PENDING,
-            comments: []
-          });
+          if (!room) {
+            throw new ApiError(400, 'invalid_room_id');
+          }
+          if (room.approval_require) {
+            console.log(1111);
+            return this.collection('approval').insert({
+              room_id: activity.room._id,
+              creator: user_id,
+              type: room.name,
+              company_id,
+              manager: room.manager,
+              status: C.APPROVAL_STATUS.PENDING,
+              comments: [],
+              activity_id: activity._id
+            });
+          } else {
+            return Promise.resolve({});
+          }
         })
         .then(approval => {
-          activity.room.approval_id = approval._id;
+          if (!approval) {
+            delete activity.room.approval_id;
+          } else {
+            activity.room.approval_id = approval._id;
+          }
           return this.collection('item')
           .update({
             _id: activity_id
@@ -335,6 +347,7 @@ export default class Activity extends AppBase {
       if (!this._checkReadPermission(doc, user_id)) {
         throw new ApiError(400, 'not_member');
       } else {
+        doc.total = _.uniq(this._toString([].concat(doc.assistants, doc.creator, doc.members))).length;
         doc.isMember = _.some([].concat(doc.creator, doc.assistants, doc.members), item => item.equals(user_id));
         if (doc.room.approval_id) {
           return this.collection('approval')
@@ -344,7 +357,9 @@ export default class Activity extends AppBase {
             status: 1
           })
           .then(approval => {
-            doc.room.status = approval.status;
+            if (approval) {
+              doc.room.status = approval.status;
+            }
             return doc;
           });
         }
@@ -626,7 +641,7 @@ export default class Activity extends AppBase {
     .insert(room);
   }
 
-  removeRoom({room_id, user_id}) {
+  removeRoom({room_id, user_id, company}) {
     return this.collection('room')
     .findOne({
       _id: room_id
@@ -635,10 +650,14 @@ export default class Activity extends AppBase {
       if (!room) {
         throw new ApiError(400, 'invalid_room');
       }
-      if (!room.manager.equals(user_id)) {
+      let admins = _.filter(company.members, mem => mem.type == 'admin');
+      if (!room.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin.equals(user_id))) {
         throw new ApiError(400, 'not_manager_can_not_delete');
       }
-      return this.collection('room').remove({_id: room_id});
+      return Promise.all([
+        this.collection('room').remove({_id: room_id}),
+        this.collection('approval').remove({room_id: room_id})
+      ]);
     });
   }
 
@@ -731,7 +750,7 @@ export default class Activity extends AppBase {
     });
   }
 
-  changeRoom({room_id, room, user_id}) {
+  changeRoom({room_id, room, user_id, company}) {
     return this.collection('room')
     .findOne({
       _id: room_id
@@ -740,7 +759,8 @@ export default class Activity extends AppBase {
       if (!doc) {
         throw new ApiError(400, 'invalid_room');
       }
-      if (!doc.manager.equals(user_id)) {
+      let admins = _.filter(company.members, mem => mem.type == 'admin');
+      if (!doc.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin.equals(user_id))) {
         throw new ApiError(400, 'no_change_room_permission');
       }
       return this.collection('room')
@@ -842,10 +862,16 @@ export default class Activity extends AppBase {
 
   _listCalc(list, user_id) {
     return _.map(list, item => {
-      item.total = _.uniq([].concat(item.assistants, item.creator, item.members)).length;
+      item.total = _.uniq(this._toString([].concat(item.assistants, item.creator, item.members))).length;
       item.isMember = _.some([].concat(item.assistants, item.creator, item.followers, item.members), member => member.equals(user_id));
       delete item.members;
       return item;
+    });
+  }
+
+  _toString(list) {
+    return _.map(list, item => {
+      return item.toString();
     });
   }
 

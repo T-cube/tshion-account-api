@@ -94,6 +94,11 @@ api.post('/:request_id/accept', (req, res, next) => {
           $set: {
             'members.$.joindate': new Date(),
             'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL,
+          },
+          $push: {
+            'structure.members': {
+              _id: req.user._id
+            }
           }
         }),
         req.model('notification').send({

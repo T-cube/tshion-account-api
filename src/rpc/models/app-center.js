@@ -40,6 +40,16 @@ export default class AppCenterModel extends Model {
     });
   }
 
+  change(data) {
+    let appid = data.appid;
+    delete data.appid;
+    return this.db.app.update({
+      appid,
+    }, {
+      $set: data
+    });
+  }
+
   slideshowPage(props) {
     let { page, pagesize, criteria, loader } = props;
     return Promise.all([
@@ -100,18 +110,6 @@ export default class AppCenterModel extends Model {
       loader.model('document').deleteFile(loader, doc);
       return this.db.app.slideshow.remove({_id: slideshow_id});
     });
-    // return Promise.map(slideshows, slideshow_id => {
-    //   return this.db.app.slideshow.find({
-    //     _id: slideshow_id
-    //   })
-    //   .then(doc => {
-    //     if (!doc) {
-    //       return {};
-    //     }
-    //     loader.model('document').deleteFile(loader, doc);
-    //     return this.db.app.slideshow.remove({_id: slideshow_id});
-    //   });
-    // });
   }
 
 }

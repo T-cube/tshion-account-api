@@ -233,6 +233,16 @@ export function tokenSuccess() {
     redis.delete(userKey);
     redis.delete(userCaptcha);
     req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
+    db.user.update({
+      _id: req.user._id
+    }, {
+      $set: {
+        last_login: {
+          type: 'PC',
+          time: new Date()
+        }
+      }
+    });
     next();
   };
 }

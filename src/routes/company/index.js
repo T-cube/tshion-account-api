@@ -87,7 +87,7 @@ api.post('/', (req, res, next) => {
         name: data.name,
         positions: [{
           _id: position_id,
-          title: __('administrator'),
+          title: __('member'),
         }],
         members: [{
           _id: member._id,
