@@ -61,6 +61,8 @@ fs.readdir(APPS_ROOT, (err, result) => {
         db.app.findOne({
           appid: appId
         }, {
+          name: 1,
+          appid: 1,          
           status: 1
         }),
         db.company.app.findOne({
@@ -73,6 +75,7 @@ fs.readdir(APPS_ROOT, (err, result) => {
           throw new ApiError(400, 'app_is_forbidden');
         }
         if (_.some(doc.apps, item => item.appid == appId && item.enabled)) {
+          req.app_center = app;
           next();
         } else {
           throw new ApiError(400, 'no_app');

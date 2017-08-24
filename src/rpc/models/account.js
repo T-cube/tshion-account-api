@@ -33,18 +33,7 @@ export default class CompanyModel extends Model {
   }
 
   fetchDetail(_id) {
-    return this.db.user.findOne({_id}, {
-      name: 1,
-      email: 1,
-      email_verified: 1,
-      mobile: 1,
-      mobile_verified: 1,
-      description: 1,
-      avatar: 1,
-      birthdate: 1,
-      address: 1,
-      sex: 1,
-    });
+    return this.db.user.findOne({_id});
   }
 
   fetchProjectList(props) {
