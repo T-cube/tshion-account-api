@@ -84,7 +84,6 @@ export default class Activity extends AppBase {
         company_id,
         time_start: { $gte: moment().startOf('day').toDate() },
         $or: personal,
-        status: C.ACTIVITY_STATUS.CREATED,
       }),
       this.collection('item')
       .count({
