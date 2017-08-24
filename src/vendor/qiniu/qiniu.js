@@ -115,7 +115,7 @@ export default class Qiniu {
     let self = this;
     // console.info("正在上传文件：", savekey, filePath);
 
-    var { key, callback } = this._generateUploadParams(savekey, folder, rename, cb);
+    var { key, callback } = this._generateUploadParams(savekey, folder, false, cb);
     // 生成上传token
     var token = uptoken(key, self);
 
@@ -123,6 +123,7 @@ export default class Qiniu {
     return new Promise((resolve, reject) => {
       uploadFile(token, key, filePath).then(data => {
         data.server_url = self.conf.SERVER_URL;
+        data.url = self.conf.SERVER_URL + savekey;
         typeof callback == 'function' && callback(null, data);
         resolve(data);
       }, err => {
@@ -317,6 +318,16 @@ export default class Qiniu {
     */
   makeLink(key, deadTime, delay, downloadName) {
     let self = this;
+    if (deadTime && !delay && !downloadName) {
+      downloadName = deadTime;
+    }
+    if (typeof deadTime !== 'number') {
+      deadTime = self.conf.TOKEN_EXPIRE;
+      delay = self.conf.TOKEN_CACHE_EXPIRE;
+    }
+    if (typeof delay !== 'number') {
+      delay = deadTime - 10;
+    }
     return new Promise((resolve, reject) => {
       // 如果启用redis
       if (self.redis) {
@@ -355,11 +366,12 @@ export default class Qiniu {
     * @param {String} downloadName
     */
   generateLink(key, deadTime, delay, downloadName) {
-    let self = this;
+    let self = this,
+      SERVER_URL=this.conf.SERVER_URL;
 
     // 构建私有空间的链接
     let url = key.indexOf('http') == 0 ? key :
-      key.indexOf('/') === 0 ? `${self.conf.SERVER_URL}${encodeURIComponent(key)}` : `${self.conf.SERVER_URL}/${encodeURIComponent(key)}`;
+      ((key.indexOf('/') === 0)||(SERVER_URL.lastIndexOf('/')===SERVER_URL.length-1)) ? `${SERVER_URL}${encodeURI(key)}` : `${SERVER_URL}/${encodeURI(key)}`;
 
     // 检测链接失效时间参数和延迟时间
     typeof deadTime == 'number' ?

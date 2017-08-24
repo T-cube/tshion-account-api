@@ -287,6 +287,9 @@ export default class Activity extends AppBase {
       if (!doc) {
         throw new ApiError(401, 'invalid_activity_id');
       }
+      if (doc.status == C.ACTIVITY_STATUS.CREATED) {
+        throw new ApiError(400, 'created_activity_can_not_change');
+      }
       if (activity.room && !activity.room._id.equals(doc.room._id)) {
         return this.collection('room')
         .findOne({
@@ -297,24 +300,33 @@ export default class Activity extends AppBase {
             throw new ApiError(400, 'invalid_room_id');
           }
           if (room.approval_require) {
-            console.log(1111);
-            return this.collection('approval').insert({
-              room_id: activity.room._id,
-              creator: user_id,
-              type: room.name,
-              company_id,
-              manager: room.manager,
-              status: C.APPROVAL_STATUS.PENDING,
-              comments: [],
-              activity_id: activity._id
+            return this.collection('approval').update({
+              _id: activity.room.approval_id
+            }, {
+              $set: {
+                activity_id: null,
+                status: C.APPROVAL_STATUS.CANCELLED
+              }
+            }).then(() => {
+              return this.collection('approval').insert({
+                room_id: activity.room._id,
+                creator: user_id,
+                name: room.name,
+                company_id,
+                manager: room.manager,
+                status: C.APPROVAL_STATUS.PENDING,
+                comments: [],
+                activity_id: activity_id
+              });
             });
           } else {
-            return Promise.resolve({});
+            return Promise.resolve(null);
           }
         })
         .then(approval => {
           if (!approval) {
             delete activity.room.approval_id;
+            activity.status = C.ACTIVITY_STATUS.CREATED;
           } else {
             activity.room.approval_id = approval._id;
           }

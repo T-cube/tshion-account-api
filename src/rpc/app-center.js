@@ -71,6 +71,7 @@ route.stream('/app/slideshow/upload', (stream, data, loader) => {
         writeStream.on('finish', () => {
           const qiniu = loader.model('qiniu').bucket('cdn-public');
           let cdn_key = `upload/attachment/${uuidName}`;
+          console.log(cdn_key);
           qiniu.upload(cdn_key, filepath).then(qiniu_data => {
             db.app.update({
               appid: data.appid
@@ -79,6 +80,7 @@ route.stream('/app/slideshow/upload', (stream, data, loader) => {
                 cdn_keys: cdn_key
               }
             });
+            console.log(qiniu_data);
             resolve({ url: qiniu_data.url });
           });
         });
