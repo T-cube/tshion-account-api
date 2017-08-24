@@ -665,7 +665,7 @@ export default class Activity extends AppBase {
         throw new ApiError(400, 'invalid_room');
       }
       let admins = _.filter(company.members, mem => mem.type == 'admin');
-      if (!room.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin.equals(user_id))) {
+      if (!room.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin._id.equals(user_id))) {
         throw new ApiError(400, 'not_manager_can_not_delete');
       }
       return Promise.all([
@@ -774,7 +774,7 @@ export default class Activity extends AppBase {
         throw new ApiError(400, 'invalid_room');
       }
       let admins = _.filter(company.members, mem => mem.type == 'admin');
-      if (!doc.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin.equals(user_id))) {
+      if (!doc.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin._id.equals(user_id))) {
         throw new ApiError(400, 'no_change_room_permission');
       }
       return this.collection('room')
