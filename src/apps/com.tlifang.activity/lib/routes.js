@@ -35,6 +35,8 @@ api.post('/activity', (req, res, next) => {
       let to = [].concat(activity.assistants, activity.members, activity.followers);
       let info = {
         company: req.company._id,
+        activity: activity._id,
+        appid: req.app_center,
         action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.APP_ACTIVITY,
         from: req.user._id,
@@ -239,6 +241,8 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
       let to = [].concat(activity.assistants, activity.members, activity.followers);
       let info = {
         company: req.company._id,
+        activity: activity._id,
+        appid: req.app_center,
         action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.APP_ACTIVITY,
         from: req.user._id,
@@ -266,7 +270,8 @@ api.post('/room', (req, res, next) => {
   validate('room', req.body);
   let company_id = req.company._id;
   let user_id = req.user._id;
-  if (!user_id.equals(req.company.owner)) {
+  let admins = _.filter(req.company.members, mem => mem.type == 'admin');
+  if (!user_id.equals(req.company.owner) && !_.some(admins, admin => admin._id.equals(req.user._id))) {
     throw new ApiError(400, 'not_company_owner');
   }
   if (!_.some(req.company.members, member => member._id.equals(req.body.manager))) {
@@ -286,7 +291,8 @@ api.delete('/room/:room_id', (req, res, next) => {
   validate('info', req.params, ['room_id']);
   req._app.removeRoom({
     room_id: req.params.room_id,
-    user_id: req.user._id
+    user_id: req.user._id,
+    company: req.company,
   })
   .then(doc => {
     res.json(doc);
@@ -323,6 +329,7 @@ api.put('/room/:room_id', (req, res, next) => {
     room_id: req.params.room_id,
     room: req.body,
     user_id: req.user._id,
+    company: req.company,
   })
   .then(doc => {
     res.json(doc);

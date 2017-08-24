@@ -153,6 +153,8 @@ api.post('/report', (req, res, next) => {
       let department = s.findNodeById(doc.report_target);
       let tos = [].concat(department.admin, doc.copy_to);
       let notification = {
+        company: req.company._id,
+        appid: req.app_center,
         action: _C.ACTIVITY_ACTION.SUBMIT,
         target_type: _C.OBJECT_TYPE.APP_REPORT,
         report: doc._id,

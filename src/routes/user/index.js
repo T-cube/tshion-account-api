@@ -378,6 +378,9 @@ api.post('/invitation', (req, res, next) => {
                 status: C.COMPANY_MEMBER_STATUS.NORMAL,
                 type: C.COMPANY_MEMBER_TYPE.NORMAL,
                 address: ''
+              },
+              'structure.members': {
+                _id: req.user._id
               }
             }
           }),

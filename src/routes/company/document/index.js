@@ -56,7 +56,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
       ['document.dir', 'name,date_update,updated_by', 'dirs'],
-      ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by', 'files'],
+      ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
     ])
     .then(() => {
       return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');

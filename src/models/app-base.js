@@ -27,19 +27,23 @@ export default class Base {
       if (!appVersion) {
         let appInfo = this._info;
         let slide = [];
+        let cdn_keys = [];
         return Promise.all([
           Promise.map(_.keys(appInfo.icons), item => {
-            return this._saveCdn(appInfo.icons[item]).then(url => {
-              return appInfo.icons[item] = url;
+            return this._saveCdn(appInfo.icons[item]).then(info => {
+              cdn_keys.push(info.cdn);
+              return appInfo.icons[item] = info.url;
             });
           }),
           Promise.map(appInfo.slideshow, item => {
-            return this._saveCdn(item).then(url => {
-              slide.push(url);
+            return this._saveCdn(item).then(info => {
+              cdn_keys.push(info.cdn);
+              slide.push(info.url);
             });
           })
         ]).then(() => {
           appInfo.slideshow = slide;
+          appInfo.cdn_keys = cdn_keys;
           appInfo = _.extend({}, appInfo, { star: 0, total_installed: 0, date_create: new Date(), date_update: new Date() });
           return db.collection('app.all')
           .insert(appInfo)
@@ -63,19 +67,27 @@ export default class Base {
           if (app.version != this._info.version) {
             let appInfo = this._info;
             let slide = [];
+            let cdn_keys = [];
             return Promise.all([
               Promise.map(_.keys(appInfo.icons), item => {
-                return this._saveCdn(appInfo.icons[item]).then(url => {
-                  return appInfo.icons[item] = url;
+                return this._saveCdn(appInfo.icons[item]).then(info => {
+                  cdn_keys.push(info.cdn);
+                  return appInfo.icons[item] = info.url;
                 });
               }),
               Promise.map(appInfo.slideshow, item => {
-                return this._saveCdn(item).then(url => {
-                  slide.push(url);
+                return this._saveCdn(item).then(info => {
+                  cdn_keys.push(info.cdn);
+                  slide.push(info.url);
                 });
+              }),
+              Promise.map(app.cdn_keys, item => {
+                const qiniu = this.model('qiniu').bucket('cdn-public');
+                return qiniu.delete(item);
               })
             ]).then(() => {
               appInfo.slideshow = slide;
+              appInfo.cdn_keys = cdn_keys;
               return db.collection('app')
               .findOne({appid: appInfo.appid})
               .then(doc => {
@@ -116,7 +128,10 @@ export default class Base {
     let key = `app/${this._info.appid}/v${this._info.version}/${filePath}`;
     let path = `${this._options.basepath}/${filePath}`;
     return qiniu.upload(key, path).then(data => {
-      return `${data.server_url}${key}`;
+      return {
+        url: `${data.server_url}${key}`,
+        cdn_key: key,
+      };
     });
   }
 

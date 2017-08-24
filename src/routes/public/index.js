@@ -27,12 +27,20 @@ api.get('/info', oauthCheck(), (req, res, next) => {
 
 api.get('/user-avatar/:user_id', (req, res, next) => {
   const userId = ObjectId(req.params.user_id);
-  db.user.findOne({_id: userId}, {avatar: 1})
-  .then(user => {
-    if (!user) {
-      throw new ApiError(404);
-    }
-    res.redirect(user.avatar + req._parsedUrl.search);
-  })
-  .catch(next);
+  db.user.findOne({ _id: userId }, { avatar: 1 })
+    .then(user => {
+      if (!user) {
+        throw new ApiError(404);
+      }
+      res.redirect(user.avatar + req._parsedUrl.search);
+    })
+    .catch(next);
 });
+
+if (!(process.env.NODE_ENV === 'production')) {
+  api.get('/changelogs/tlf-web', (req, res, next) => {
+    const changelogs = require('fs').readFileSync(__dirname + '/../../../changelogs/tlf-web.md');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(require('node-markdown').Markdown(changelogs.toString('utf-8')));
+  });
+}

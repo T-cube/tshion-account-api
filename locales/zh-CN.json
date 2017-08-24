@@ -49,6 +49,7 @@
   "invalid_request_status": "错误的请求状态",
   "login_fail_need_captcha": "账号登录密码错误三次以上，登陆需验证码",
   "magic horse": "神马",
+  "member":"成员",
   "member_not_exists": "不存在该成员",
   "member_exists": "已存在该成员",
   "member_task_not_empty": "用户还有待处理的任务",

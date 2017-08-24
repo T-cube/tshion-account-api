@@ -260,68 +260,78 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
   if (member_id.equals(req.user._id)) {
     throw new ApiError(400, 'can_not_remove_yourself');
   }
-  let tree = new Structure(req.company.structure);
-  let thisMember = _.find(req.company.members, m => m._id.equals(member_id));
-  thisMember && delete thisMember._id;
-  tree.deleteMemberAll(member_id);
-  req.structure = tree;
-  return Promise.all([
-    db.company.update({
-      _id: req.company._id,
-    }, {
-      $pull: {members: {_id: member_id}}
-    }),
-    db.user.update({
-      _id: member_id,
-    }, {
-      $pull: {companies: req.company._id}
-    }),
-    thisMember && db.company.member.old.update({
-      user: member_id,
-      company: req.company._id,
-    }, {
-      $set: thisMember
-    }, {
-      upsert: true
-    }),
-    db.project.update({
-      company_id: req.company._id,
-      'members._id': member_id,
-    }, {
-      $pull: {
-        members: {
-          _id: member_id
-        }
-      }
-    }),
-    db.request.update({
-      object: req.company._id,
-      to: member_id,
-    }, {
-      $set: {
-        status: C.REQUEST_STATUS.EXPIRED,
-      }
-    }, {
-      multi: true
-    }),
-    CompanyLevel.incMemberCount(req.company._id, -1),
-    save(req),
-  ])
-  .then(() => {
-    res.json({});
-    addActivity(req, C.ACTIVITY_ACTION.REMOVE, {
-      company_member: {
+  return db.project.findOne({
+    company_id: req.company.id,
+    owner: req.user._id,
+    is_archived: false
+  })
+  .then(doc => {
+    if (doc) {
+      throw new ApiError(400, 'this_member_still_hava_own_project');
+    }
+    let tree = new Structure(req.company.structure);
+    let thisMember = _.find(req.company.members, m => m._id.equals(member_id));
+    thisMember && delete thisMember._id;
+    tree.deleteMemberAll(member_id);
+    req.structure = tree;
+    return Promise.all([
+      db.company.update({
+        _id: req.company._id,
+      }, {
+        $pull: {members: {_id: member_id}}
+      }),
+      db.user.update({
         _id: member_id,
-        name: thisMember.name
-      }
+      }, {
+        $pull: {companies: req.company._id}
+      }),
+      thisMember && db.company.member.old.update({
+        user: member_id,
+        company: req.company._id,
+      }, {
+        $set: thisMember
+      }, {
+        upsert: true
+      }),
+      db.project.update({
+        company_id: req.company._id,
+        'members._id': member_id,
+      }, {
+        $pull: {
+          members: {
+            _id: member_id
+          }
+        }
+      }),
+      db.request.update({
+        object: req.company._id,
+        to: member_id,
+      }, {
+        $set: {
+          status: C.REQUEST_STATUS.EXPIRED,
+        }
+      }, {
+        multi: true
+      }),
+      CompanyLevel.incMemberCount(req.company._id, -1),
+      save(req),
+    ])
+    .then(() => {
+      res.json({});
+      addActivity(req, C.ACTIVITY_ACTION.REMOVE, {
+        company_member: {
+          _id: member_id,
+          name: thisMember.name
+        }
+      });
+      req.model('notification').send({
+        from: req.user._id,
+        to: member_id,
+        action: C.ACTIVITY_ACTION.REMOVE,
+        target_type: C.OBJECT_TYPE.COMPANY_MEMBER,
+        company: req.company._id,
+      }, COMPANY_MEMBER_REMOVE);
     });
-    req.model('notification').send({
-      from: req.user._id,
-      to: member_id,
-      action: C.ACTIVITY_ACTION.REMOVE,
-      target_type: C.OBJECT_TYPE.COMPANY_MEMBER,
-      company: req.company._id,
-    }, COMPANY_MEMBER_REMOVE);
   })
   .catch(next);
 });
@@ -331,36 +341,46 @@ api.post('/exit', (req, res, next) => {
   if (req.company.owner.equals(member_id)) {
     throw new ApiError(400, 'owner_can_not_exit');
   }
-  let thisMember = _.find(req.company.members, m => m._id.equals(member_id));
-  thisMember && delete thisMember._id;
-  return Promise.all([
-    db.company.update({
-      _id: req.company._id,
-    }, {
-      $pull: {members: {_id: member_id}}
-    }),
-    db.user.update({
-      _id: member_id,
-    }, {
-      $pull: {companies: req.company._id}
-    }),
-    thisMember && db.company.member.old.update({
-      user: member_id,
-      company: req.company._id,
-    }, {
-      $set: thisMember
-    }, {
-      upsert: true
-    }),
-    CompanyLevel.incMemberCount(req.company._id, -1),
-  ])
-  .then(() => {
-    res.json({});
-    addActivity(req, C.ACTIVITY_ACTION.EXIT, {
-      company_member: {
-        _id: req.user._id,
-        name: thisMember.name
-      }
+  return db.project.findOne({
+    company_id: req.company._id,
+    owner: req.user._id,
+    is_archived: false
+  })
+  .then(doc => {
+    if (doc) {
+      throw new ApiError(400, 'you_still_hava_own_project');
+    }
+    let thisMember = _.find(req.company.members, m => m._id.equals(member_id));
+    thisMember && delete thisMember._id;
+    return Promise.all([
+      db.company.update({
+        _id: req.company._id,
+      }, {
+        $pull: {members: {_id: member_id}}
+      }),
+      db.user.update({
+        _id: member_id,
+      }, {
+        $pull: {companies: req.company._id}
+      }),
+      thisMember && db.company.member.old.update({
+        user: member_id,
+        company: req.company._id,
+      }, {
+        $set: thisMember
+      }, {
+        upsert: true
+      }),
+      CompanyLevel.incMemberCount(req.company._id, -1),
+    ])
+    .then(() => {
+      res.json({});
+      addActivity(req, C.ACTIVITY_ACTION.EXIT, {
+        company_member: {
+          _id: req.user._id,
+          name: thisMember.name
+        }
+      });
     });
   })
   .catch(next);
