@@ -29,13 +29,13 @@ const schema = {
     },
     validation: {
       appid: { type: 'string', minLength: 1 },
-      type: { type: 'string' , minLength: 1, optional: true },
+      type: { type: 'string' , optional: true },
       total_installed: { type: 'integer', gte: 1, optional: true },
-      description: { type: 'string' , minLength: 1, optional: true },
-      update_info: { type: 'string' , minLength: 1, optional: true },
-      name: { type: 'string' , minLength: 1, optional: true },
-      slideshow: { type: 'array', optional: true, items: { type: 'string', minLength: 1, optional: true } },
-      author: { type: 'string' , minLength: 1, optional: true },
+      description: { type: 'string' , optional: true },
+      update_info: { type: 'string' , optional: true },
+      name: { type: 'string' , optional: true },
+      slideshow: { type: 'array', optional: true, items: { type: 'string', optional: true } },
+      author: { type: 'string' , optional: true },
       star: { type: 'number', gte: 0, lte: 5, optional: true }
     }
   },

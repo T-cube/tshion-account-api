@@ -84,7 +84,6 @@ export default class Activity extends AppBase {
         company_id,
         time_start: { $gte: moment().startOf('day').toDate() },
         $or: personal,
-        status: C.ACTIVITY_STATUS.CREATED,
       }),
       this.collection('item')
       .count({
@@ -166,7 +165,9 @@ export default class Activity extends AppBase {
               status: 1
             })
             .then(doc => {
-              item.room.approval_status = doc.status;
+              if (doc) {
+                item.room.approval_status = doc.status;
+              }
               return item;
             });
           } else {
@@ -285,6 +286,9 @@ export default class Activity extends AppBase {
       if (!doc) {
         throw new ApiError(401, 'invalid_activity_id');
       }
+      if (doc.status == C.ACTIVITY_STATUS.CREATED) {
+        throw new ApiError(400, 'created_activity_can_not_change');
+      }
       if (activity.room && !activity.room._id.equals(doc.room._id)) {
         return this.collection('room')
         .findOne({
@@ -295,26 +299,36 @@ export default class Activity extends AppBase {
             throw new ApiError(400, 'invalid_room_id');
           }
           if (room.approval_require) {
-            console.log(1111);
-            return this.collection('approval').insert({
-              room_id: activity.room._id,
-              creator: user_id,
-              type: room.name,
-              company_id,
-              manager: room.manager,
-              status: C.APPROVAL_STATUS.PENDING,
-              comments: [],
-              activity_id: activity._id
+            return this.collection('approval').update({
+              _id: activity.room.approval_id
+            }, {
+              $set: {
+                activity_id: null,
+                status: C.APPROVAL_STATUS.CANCELLED
+              }
+            }).then(() => {
+              return this.collection('approval').insert({
+                room_id: activity.room._id,
+                creator: user_id,
+                name: room.name,
+                company_id,
+                manager: room.manager,
+                status: C.APPROVAL_STATUS.PENDING,
+                comments: [],
+                activity_id: activity_id
+              });
             });
           } else {
-            return Promise.resolve({});
+            return Promise.resolve(null);
           }
         })
         .then(approval => {
           if (!approval) {
             delete activity.room.approval_id;
+            activity.status = C.ACTIVITY_STATUS.CREATED;
           } else {
             activity.room.approval_id = approval._id;
+            activity.status = C.ACTIVITY_STATUS.APPROVING;
           }
           return this.collection('item')
           .update({
@@ -327,11 +341,19 @@ export default class Activity extends AppBase {
           return newActivity;
         });
       } else {
-        return this.collection('item')
-        .update({
-          _id: activity_id
+        console.log(activity);
+        return this.collection('approval').update({
+          _id: doc.room.approval_id
         }, {
-          $set: activity
+          status: C.APPROVAL_STATUS.PENDING
+        })
+        .then(() => {
+          return this.collection('item')
+          .update({
+            _id: activity_id
+          }, {
+            $set: activity
+          });
         });
       }
     });
@@ -651,7 +673,7 @@ export default class Activity extends AppBase {
         throw new ApiError(400, 'invalid_room');
       }
       let admins = _.filter(company.members, mem => mem.type == 'admin');
-      if (!room.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin.equals(user_id))) {
+      if (!room.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin._id.equals(user_id))) {
         throw new ApiError(400, 'not_manager_can_not_delete');
       }
       return Promise.all([
@@ -760,7 +782,7 @@ export default class Activity extends AppBase {
         throw new ApiError(400, 'invalid_room');
       }
       let admins = _.filter(company.members, mem => mem.type == 'admin');
-      if (!doc.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin.equals(user_id))) {
+      if (!doc.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin._id.equals(user_id))) {
         throw new ApiError(400, 'no_change_room_permission');
       }
       return this.collection('room')

@@ -2,7 +2,6 @@ import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
-
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
@@ -16,7 +15,6 @@ import UserLevel from 'models/user-level';
 import { COMPANY_MEMBER_UPDATE } from 'models/notification-setting';
 import Plan from 'models/plan/plan';
 import { attachFileUrls } from 'routes/company/document/index';
-
 import {
   MODULE_PROJECT,
   MODULE_TASK,
@@ -26,13 +24,10 @@ import {
   MODULE_ATTENDANCE,
   MODULE_STRUCTURE,
 } from 'models/plan/auth-config';
-
 /* company collection */
 const api = express.Router();
 export default api;
-
 api.use(oauthCheck());
-
 // Get company list
 api.get('/', (req, res, next) => {
   db.user.findOne({
@@ -53,12 +48,10 @@ api.get('/', (req, res, next) => {
   .then(list => res.json(list))
   .catch(next);
 });
-
 // Add new company
 api.post('/', (req, res, next) => {
   let data = req.body; // contains name, description only
   validate('company', data);
-
   let userLevel = new UserLevel(req.user);
   userLevel.canOwnCompany().then(canOwnCompany => {
     if (false == canOwnCompany) {
@@ -87,7 +80,7 @@ api.post('/', (req, res, next) => {
         name: data.name,
         positions: [{
           _id: position_id,
-          title: __('member'),
+          title: __('administrator'),
         }],
         members: [{
           _id: member._id,
@@ -119,7 +112,6 @@ api.post('/', (req, res, next) => {
   })
   .catch(next);
 });
-
 api.param('company_id', (req, res, next, id) => {
   let company_id = ObjectId(id);
   db.company.findOne({
@@ -135,7 +127,6 @@ api.param('company_id', (req, res, next, id) => {
   })
   .catch(next);
 });
-
 // Get company detail
 api.get('/:company_id', (req, res, next) => {
   const members = req.company.members;
@@ -161,7 +152,6 @@ api.get('/:company_id', (req, res, next) => {
   })
   .catch(next);
 });
-
 api.put('/:company_id', (req, res, next) => {
   let data = req.body;
   validate('company', data);
@@ -196,7 +186,6 @@ api.put('/:company_id', (req, res, next) => {
   })
   .catch(next);
 });
-
 api.delete('/:company_id', authCheck(), (req, res, next) => {
   const company = req.company;
   const companyId = company._id;
@@ -282,7 +271,6 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
     .then(() => res.json({}));
   }).catch(next);
 });
-
 api.put('/:company_id/logo', (req, res, next) => {
   const data = {
     logo: cropAvatar(req),
@@ -295,7 +283,6 @@ api.put('/:company_id/logo', (req, res, next) => {
   .then(() => res.json(data))
   .catch(next);
 });
-
 api.put('/:company_id/logo/upload',
 upload({type: 'avatar'}).single('logo'),
 saveCdn('cdn-public'),
@@ -314,7 +301,6 @@ saveCdn('cdn-public'),
   .then(() => res.json(data))
   .catch(next);
 });
-
 api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   let user_id = ObjectId(req.body.user_id);
   let company = req.company;
@@ -379,7 +365,6 @@ api.post('/:company_id/transfer', authCheck(), (req, res, next) => {
   })
   .catch(next);
 });
-
 api.get('/:company_id/recent/project', (req, res, next) => {
   Promise.all([
     db.user.findOne({_id: req.user._id}),
@@ -399,7 +384,6 @@ api.get('/:company_id/recent/project', (req, res, next) => {
   })
   .catch(next);
 });
-
 api.post('/:company_id/exit', (req, res, next) => {
   const company_id = req.company._id;
   const projects = req.company.projects;
@@ -453,7 +437,6 @@ api.post('/:company_id/exit', (req, res, next) => {
   })
   .catch(next);
 });
-
 api.get('/:company_id/user/file', (req, res, next) => {
   validate('user_file', req.query);
   let last_id = req.query.last_id;
@@ -510,7 +493,6 @@ api.get('/:company_id/user/file', (req, res, next) => {
     .catch(next);
   }
 });
-
 api.get('/:company_id/invite', (req, res, next) => {
   if (!_.some(req.company.members, item => item._id.equals(req.user._id)&&(item.type=='admin'||item.type=='owner'))) {
     throw new ApiError(400, 'only_owner_and_admin_can_get_invite_url');
@@ -520,7 +502,6 @@ api.get('/:company_id/invite', (req, res, next) => {
   let h = crypto.createHash('md5').update(''+t+c).digest('hex');
   res.json({t,c,h});
 });
-
 function _getIdIndex(last_id, list) {
   let id_index;
   for (let i = 0; i < list.length; i++) {
@@ -536,7 +517,6 @@ function _getIdIndex(last_id, list) {
   }
   return id_index;
 }
-
 let ckeckAuth = (_module) => (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company._id);
   companyLevel.getPlanInfo()
@@ -552,7 +532,6 @@ let ckeckAuth = (_module) => (req, res, next) => {
   })
   .catch(next);
 };
-
 api.use('/:company_id/project', ckeckAuth(MODULE_PROJECT), require('./project').default);
 api.use('/:company_id/task', ckeckAuth(MODULE_TASK), require('../task').default);
 api.use('/:company_id/document', ckeckAuth(MODULE_DOCUMENT), require('./document').default);
