@@ -78,13 +78,9 @@ api.post('/', (req, res, next) => {
       structure: {
         _id: ObjectId(),
         name: data.name,
-        positions: [{
-          _id: position_id,
-          title: __('administrator'),
-        }],
+        positions: [],
         members: [{
           _id: member._id,
-          position: position_id,
         }],
         children: [],
       },
@@ -217,14 +213,12 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
       db.announcement.remove(query),
       db.approval.user.find({'map.company_id': companyId}, {'map.$': 1})
       .then(list => {
-        let listIds = _.pluck(list, 'id');
+        let listIds = _.pluck(list, '_id');
         let flowIds = _.map(list, item => item.map[0].flow_id);
-        // console.log(listIds);
-        // console.log(flowIds);
-        // return Promise.all([
-        //   db.approval.user.remove({id: {$in: listIds}}),
-        //   db.approval.flow.remove({id: {$in: flowIds}}),
-        // ]);
+        return Promise.all([
+          db.approval.user.remove({id: {$in: listIds}}),
+          db.approval.flow.remove({id: {$in: flowIds}}),
+        ]);
       }),
       db.approval.item.remove(query),
       db.approval.template.remove(query),
@@ -235,7 +229,7 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
       db.company.level.remove({_id: companyId}),
       db.discussion.find(projectQuery)
       .then(list => {
-        let listIds = _.pluck(list, 'id');
+        let listIds = _.pluck(list, '_id');
         return Promise.all([
           db.discussion.remove(projectQuery),
           db.discussion.comment.remove({discussion_id: {$in: listIds}}),
