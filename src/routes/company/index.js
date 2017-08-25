@@ -219,10 +219,12 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
       .then(list => {
         let listIds = _.pluck(list, 'id');
         let flowIds = _.map(list, item => item.map[0].flow_id);
-        return Promise.all([
-          db.approval.user.remove({id: {$in: listIds}}),
-          db.approval.flow.remove({id: {$in: flowIds}}),
-        ]);
+        // console.log(listIds);
+        // console.log(flowIds);
+        // return Promise.all([
+        //   db.approval.user.remove({id: {$in: listIds}}),
+        //   db.approval.flow.remove({id: {$in: flowIds}}),
+        // ]);
       }),
       db.approval.item.remove(query),
       db.approval.template.remove(query),
