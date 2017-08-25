@@ -328,6 +328,7 @@ export default class Activity extends AppBase {
             activity.status = C.ACTIVITY_STATUS.CREATED;
           } else {
             activity.room.approval_id = approval._id;
+            activity.status = C.ACTIVITY_STATUS.APPROVING;
           }
           return this.collection('item')
           .update({
@@ -340,11 +341,19 @@ export default class Activity extends AppBase {
           return newActivity;
         });
       } else {
-        return this.collection('item')
-        .update({
-          _id: activity_id
+        console.log(activity);
+        return this.collection('approval').update({
+          _id: doc.room.approval_id
         }, {
-          $set: activity
+          status: C.APPROVAL_STATUS.PENDING
+        })
+        .then(() => {
+          return this.collection('item')
+          .update({
+            _id: activity_id
+          }, {
+            $set: activity
+          });
         });
       }
     });

@@ -10,6 +10,7 @@ import C from 'lib/constants';
 import { APP } from 'models/notification-setting';
 import { upload, saveCdn } from 'lib/upload';
 import { attachFileUrls } from 'routes/company/document/index';
+import { uniqObjectIdArray } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -32,7 +33,7 @@ api.post('/activity', (req, res, next) => {
   })
   .then(activity => {
     if (activity.status == _C.ACTIVITY_STATUS.CREATED) {
-      let to = [].concat(activity.assistants, activity.members, activity.followers);
+      let to = uniqObjectIdArray([].concat(activity.assistants, activity.members, activity.followers));
       let info = {
         company: req.company._id,
         activity: activity._id,
@@ -238,7 +239,7 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
   .then(activity => {
     res.json(activity);
     if (activity.status == _C.ACTIVITY_STATUS.CREATED) {
-      let to = [].concat(activity.assistants, activity.members, activity.followers);
+      let to = uniqObjectIdArray([].concat(activity.assistants, activity.members, activity.followers));
       let info = {
         company: req.company._id,
         activity: activity._id,
