@@ -164,6 +164,7 @@ let constants = {
     APP_CENTER: 'app.center',
     APP_REPORT: 'app.report',
     APP_ACTIVITY: 'app.activity',
+    APP_ACTIVITY_APPROVAL: 'app.activity.approval',
     APPROVAL_ITEM: 'approval.item',
     APPROVAL_TEMPLATE: 'approval.template',
     ATTENDANCE: 'attendance',

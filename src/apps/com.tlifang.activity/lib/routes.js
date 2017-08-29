@@ -29,7 +29,8 @@ api.post('/activity', (req, res, next) => {
   req._app.createActivity({
     activity: req.body,
     user_id: req.user._id,
-    company_id: req.company._id
+    company_id: req.company._id,
+    req,
   })
   .then(activity => {
     if (activity.status == _C.ACTIVITY_STATUS.CREATED) {
@@ -57,7 +58,8 @@ api.put('/activity/:activity_id', (req, res, next) => {
     activity_id: req.params.activity_id,
     activity: req.body,
     user_id: req.user._id,
-    company_id: req.company._id
+    company_id: req.company._id,
+    req
   })
   .then(doc => {
     res.json(doc);

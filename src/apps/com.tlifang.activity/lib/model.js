@@ -6,6 +6,8 @@ import moment from 'moment';
 import AppBase from 'models/app-base';
 import { ApiError } from 'lib/error';
 import C from './constants';
+import _C from 'lib/constants';
+import { APP } from 'models/notification-setting';
 
 export default class Activity extends AppBase {
 
@@ -211,7 +213,7 @@ export default class Activity extends AppBase {
     });
   }
 
-  createActivity({activity, user_id, company_id}) {
+  createActivity({activity, user_id, company_id, req}) {
     return Promise.all([
       this.collection('room').findOne({
         _id: activity.room._id,
@@ -256,6 +258,16 @@ export default class Activity extends AppBase {
           comments: []
         })
         .then(approval => {
+          let info = {
+            company: company_id,
+            appid: req.app_center,
+            activity_approval: approval._id,
+            from: user_id,
+            to: room.manager,
+            target_type: _C.OBJECT_TYPE.APP_ACTIVITY_APPROVAL,
+            action: _C.ACTIVITY_ACTION.CREATE
+          };
+          req.model('notification').send(info, APP);
           activity.room.approval_id = approval._id;
           return this.collection('item')
           .insert(activity)
@@ -275,7 +287,7 @@ export default class Activity extends AppBase {
     });
   }
 
-  changeActivity({activity_id, activity, user_id, company_id}) {
+  changeActivity({activity_id, activity, user_id, company_id, req}) {
     return this.collection('item')
     .findOne({
       _id: activity_id,
@@ -316,6 +328,19 @@ export default class Activity extends AppBase {
                 status: C.APPROVAL_STATUS.PENDING,
                 comments: [],
                 activity_id: activity_id
+              })
+              .then(approval => {
+                let info = {
+                  company: company_id,
+                  appid: req.app_center,
+                  activity_approval: approval._id,
+                  from: user_id,
+                  to: room.manager,
+                  target_type: _C.OBJECT_TYPE.APP_ACTIVITY_APPROVAL,
+                  action: _C.ACTIVITY_ACTION.CREATE
+                };
+                req.model('notification').send(info, APP);
+                return approval;
               });
             });
           } else {
@@ -341,7 +366,6 @@ export default class Activity extends AppBase {
           return newActivity;
         });
       } else {
-        console.log(activity);
         return this.collection('approval').update({
           _id: doc.room.approval_id
         }, {
