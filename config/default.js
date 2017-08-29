@@ -282,6 +282,7 @@ module.exports = {
       'panel.schedule': true,
       'panel.weather': true,
       new_user_guide_showed: false,
+      new_user_approval_guide_showed: false
     }
   },
   plan: {

@@ -490,13 +490,18 @@ api.get('/:company_id/user/file', (req, res, next) => {
   }
 });
 api.get('/:company_id/invite', (req, res, next) => {
-  if (!_.some(req.company.members, item => item._id.equals(req.user._id)&&(item.type=='admin'||item.type=='owner'))) {
-    throw new ApiError(400, 'only_owner_and_admin_can_get_invite_url');
-  }
+  // if (!_.some(req.company.members, item => item._id.equals(req.user._id)&&(item.type=='admin'||item.type=='owner'))) {
+  //   throw new ApiError(400, 'only_owner_and_admin_can_get_invite_url');
+  // }
   let t = new Date().getTime();
   let c = req.company._id.toString();
-  let h = crypto.createHash('md5').update(''+t+c).digest('hex');
-  res.json({t,c,h});
+  // res.json({t,c,h});
+  let key = (Math.random() + t).toString(36);
+  let redis = req.model('redis');
+  redis.set(key, c).then(status => {
+    redis.expire(key, 3600);
+    res.json({key: key});
+  });
 });
 function _getIdIndex(last_id, list) {
   let id_index;
