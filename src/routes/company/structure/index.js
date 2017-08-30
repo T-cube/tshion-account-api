@@ -53,6 +53,14 @@ api.post('/:node_id', (req, res, next) => {
   let node_id = req.params.node_id;
   let data = req.body;
   sanitizeValidateObject(nodeSanitization, nodeValidation, data);
+  if (data.positions && data.positions.length) {
+    data.positions = _.map(data.positions, item => {
+      return { title: item, _id: ObjectId() };
+    });
+  }
+  if (data.admin) {
+    data.members = [{_id: data.admin}];
+  }
   let node = tree.addNode(data, node_id);
   if (!node) {
     return next(new ApiError(404, 'department_not_exists'));
