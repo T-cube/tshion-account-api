@@ -54,7 +54,7 @@ api.post('/:node_id', (req, res, next) => {
   let data = req.body;
   sanitizeValidateObject(nodeSanitization, nodeValidation, data);
   if (data.positions && data.positions.length) {
-    data.positions = _.map(data.positions, item => {
+    data.positions = _.map(_.uniq(data.positions), item => {
       return { title: item, _id: ObjectId() };
     });
   }
