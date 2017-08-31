@@ -34,15 +34,25 @@ export default class CompanyModel extends Model {
   }
 
   fetchDetail(_id) {
-    return this.db.company.findOne({_id}, {
-      structure: 0
-    })
-    .then(company => {
+    return Promise.all([
+      this.db.company.findOne({_id}, {
+        structure: 0
+      }),
+      this.db.plan.company.findOne({
+        _id
+      }),
+      this.db.company.level.findOne({
+        _id
+      })
+    ])
+    .then(([company, plan, company_level]) => {
       if (company) {
         company.member_count = company.members.length;
         company.project_count = company.projects ? company.projects.length : 0;
         delete company.members;
         delete company.projects;
+        company.plan = plan;
+        company.storage = company_level.file;
       }
       return company;
     });

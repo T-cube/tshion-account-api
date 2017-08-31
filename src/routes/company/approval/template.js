@@ -133,7 +133,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
     });
     checkAndInitForms(data.forms);
     data.company_id = req.company._id;
-    data.status = C.APPROVAL_STATUS.UNUSED;
+    data.status = C.APPROVAL_STATUS.NORMAL;
     return Approval.createTemplate(data);
   })
   .then(template => {
