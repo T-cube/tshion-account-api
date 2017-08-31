@@ -87,6 +87,8 @@ const schema={
       approval_require: { type: 'boolean', optional: true },
       description: { type: 'string', optional: true },
       icon: { type: 'string', rules: ['trim'], optional: true },
+      place: { type: 'string', rules: ['trim'], optional: true },
+      manager: { $objectId: 1, optional: true },
     },
     validation: {
       name: { type: 'string', minLength: 1, optional: true },
@@ -96,6 +98,8 @@ const schema={
       approval_require: { type: 'boolean', optional: true },
       description: { type: 'string', optional: true },
       icon: { type: 'string', minLength: 1 },
+      place: { type: 'string', optional: true },
+      manager: { $objectId: 1, optional: true },
     }
   },
   equipment: {
