@@ -342,7 +342,7 @@ api.get('/realname', (req, res, next) => {
 api.post('/invitation', (req, res, next) => {
   let redis = req.model('redis');
   let key = req.body.key;
-  redis.get(key).ten(c => {
+  redis.get(key).then(c => {
     if (!c) {
       throw new ApiError(400, 'invitation_url_expire');
     } else {
