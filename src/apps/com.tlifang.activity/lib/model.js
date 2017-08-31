@@ -265,7 +265,7 @@ export default class Activity extends AppBase {
             from: user_id,
             to: room.manager,
             target_type: _C.OBJECT_TYPE.APP_ACTIVITY_APPROVAL,
-            action: _C.ACTIVITY_ACTION.CREATE
+            action: _C.ACTIVITY_ACTION.SUBMIT
           };
           req.model('notification').send(info, APP);
           activity.room.approval_id = approval._id;
@@ -337,7 +337,7 @@ export default class Activity extends AppBase {
                   from: user_id,
                   to: room.manager,
                   target_type: _C.OBJECT_TYPE.APP_ACTIVITY_APPROVAL,
-                  action: _C.ACTIVITY_ACTION.CREATE
+                  action: _C.ACTIVITY_ACTION.SUBMIT
                 };
                 req.model('notification').send(info, APP);
                 return approval;
@@ -371,7 +371,7 @@ export default class Activity extends AppBase {
           _id: doc.room.approval_id
         }, {
           $set: {
-            status: C.APPROVAL_STATUS.PENDING            
+            status: C.APPROVAL_STATUS.PENDING
           }
         })
         .then(() => {
