@@ -165,7 +165,9 @@ class Structure {
     if (!_.isArray(node.members)) {
       node.members = [];
     }
-    node.members.push(member);
+    member.forEach(item => {
+      node.members.push(item);
+    });
     return member;
   }
 
