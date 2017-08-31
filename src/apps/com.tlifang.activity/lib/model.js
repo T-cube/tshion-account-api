@@ -630,10 +630,13 @@ export default class Activity extends AppBase {
         activity_status = C.ACTIVITY_STATUS.APPROVING;
       }
       return Promise.all([
-        this.collection('item').update({
+        this.collection('item').findOneAndUpdate({
           'room.approval_id': approval_id,
         }, {
           $set: { status: activity_status }
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
         }),
         this.collection('approval').update({
           _id: approval_id
@@ -641,7 +644,7 @@ export default class Activity extends AppBase {
           $set: { status: status }
         })
       ]).then(([activity, approval]) => {
-        return activity;
+        return activity.value;
       });
     });
   }
