@@ -340,65 +340,70 @@ api.get('/realname', (req, res, next) => {
 });
 
 api.post('/invitation', (req, res, next) => {
-  let t = req.body.t;
-  let c = req.body.c;
-  let check = crypto.createHash('md5').update(''+t+c).digest('hex');
-  if (check == req.body.h) {
-    let now = new Date().getTime();
-    if (now - parseInt(t) > 1800000) {
+  let redis = req.model('redis');
+  let key = req.body.key;
+  redis.get(key).then(c => {
+    if (!c) {
       throw new ApiError(400, 'invitation_url_expire');
-    }
-    let company_id = ObjectId(c);
-    let url = config.get('webUrl') + `/oa/company/${c}/home`;
-    db.company.findOne({
-      _id: ObjectId(c)
-    })
-    .then(doc => {
-      if (_.some(doc.members, m => m._id.equals(req.user._id))) {
-        res.json({_id: doc._id, name: doc.name});
-      } else {
-        return Promise.all([
-          db.user.update({
-            _id: req.user._id
-          }, {
-            $addToSet:{
-              companies: company_id
-            }
-          }),
-          db.company.update({
-            _id: company_id,
-          }, {
-            $push: {
-              members: {
-                _id: req.user._id,
-                name: req.user.name,
-                email: req.user.email,
-                mobile: req.user.mobile,
-                sex: null,
-                status: C.COMPANY_MEMBER_STATUS.NORMAL,
-                type: C.COMPANY_MEMBER_TYPE.NORMAL,
-                address: ''
-              },
-              'structure.members': {
-                _id: req.user._id
-              }
-            }
-          }),
-          req.model('activity').insert({
-            creator: req.user._id,
-            company: company_id,
-            action: C.ACTIVITY_ACTION.JOIN,
-            target_type: C.OBJECT_TYPE.COMPANY,
-          })
-        ])
-        .then(() => {
+    } else {
+      let company_id = ObjectId(c);
+      db.company.findOne({
+        _id: company_id
+      })
+      .then(doc => {
+        if (_.some(doc.members, m => m._id.equals(req.user._id)&&m.status=='normal')) {
           res.json({_id: doc._id, name: doc.name});
-        });
-      }
-    });
-  } else {
-    throw new ApiError(400, 'invitation_url_expire');
-  }
+        } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
+          return db.company.update({
+            _id: doc._id,
+            'members._id': req.user._id
+          }, {
+            'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
+          }).then(() => {
+            res.json({_id: doc._id, name: doc.name});
+          });
+        } else {
+          return Promise.all([
+            db.user.update({
+              _id: req.user._id
+            }, {
+              $addToSet:{
+                companies: company_id
+              }
+            }),
+            db.company.update({
+              _id: company_id,
+            }, {
+              $push: {
+                members: {
+                  _id: req.user._id,
+                  name: req.user.name,
+                  email: req.user.email,
+                  mobile: req.user.mobile,
+                  sex: null,
+                  status: C.COMPANY_MEMBER_STATUS.NORMAL,
+                  type: C.COMPANY_MEMBER_TYPE.NORMAL,
+                  address: ''
+                },
+                'structure.members': {
+                  _id: req.user._id
+                }
+              }
+            }),
+            req.model('activity').insert({
+              creator: req.user._id,
+              company: company_id,
+              action: C.ACTIVITY_ACTION.JOIN,
+              target_type: C.OBJECT_TYPE.COMPANY,
+            })
+          ])
+          .then(() => {
+            res.json({_id: doc._id, name: doc.name});
+          });
+        }
+      });
+    }
+  }).catch(next);
 });
 
 api.use('/schedule', require('./schedule').default);

@@ -268,7 +268,6 @@ api.post('/recover/verify', (req, res, next) => {
   let account = data[type];
   req.model('security').limitRequestFrequency('verify-code', account, 1000)
   .then((status) => {
-    console.log(status)
     req.model('account').checkExistance(type, account, true);
   })
   .then(() => {
