@@ -13,11 +13,21 @@ export let nodeValidation = {
 };
 
 export let memberSanitization = {
-	_id: { $objectId: 1 },
-	position: { $objectId: 1, optional: true }
+	data: {
+		type: 'array',
+		items: {
+			_id: { $objectId: 1 },
+			position: { $objectId: 1, optional: true }
+		}
+	}
 };
 
 export let memberValidation = {
-	_id: { $objectId: 1 },
-	position: { $objectId: 1, optional: true }
+	data: {
+		type: 'array',
+		items: {
+			_id: { $objectId: 1 },
+			position: { $objectId: 1, optional: true }
+		}
+	}
 };

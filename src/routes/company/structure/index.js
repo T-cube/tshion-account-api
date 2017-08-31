@@ -166,7 +166,7 @@ api.post('/:node_id/member', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
-  sanitizeValidateObject(memberSanitization, memberValidation, data);
+  sanitizeValidateObject(memberSanitization, memberValidation, {data});
   let member = tree.addMember(data, node_id);
   save(req)
   .then(() => {
