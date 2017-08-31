@@ -366,10 +366,13 @@ export default class Activity extends AppBase {
           return newActivity;
         });
       } else {
+        activity.room.approval_id = doc.room.approval_id;
         return this.collection('approval').update({
           _id: doc.room.approval_id
         }, {
-          status: C.APPROVAL_STATUS.PENDING
+          $set: {
+            status: C.APPROVAL_STATUS.PENDING            
+          }
         })
         .then(() => {
           return this.collection('item')
