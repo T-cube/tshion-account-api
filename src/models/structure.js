@@ -309,6 +309,17 @@ class Structure {
     return this._findPositionInfo(this.root, position_id);
   }
 
+  addPositionToMember(node_id, member_id, position) {
+    node_id = ObjectId(node_id);
+    member_id = ObjectId(member_id);
+    position = ObjectId(position);
+    let node = this.findNodeById(node_id);
+    if (!_.some(node.positions, item => item._id.equals(position))) {
+      return null;
+    }
+    return _.some(node.members, m => (m._id.equals(member_id)&&(m.position = position))) ? {_id: member_id, position} : null;    
+  }
+
   findMemberDepartments(member_id, node, path) {
     let departments = [];
     node = node || this.root;
