@@ -90,6 +90,9 @@ class Structure {
     if (node !== this.root) {
       let parent = this.findParent(node_id);
       data.name = getUniqName(this.getNames(parent, node_id), data.name);
+      if (!_.some(node.members, m => m._id.equals(ObjectId(data.admin)))) {
+        node.members.push({_id: ObjectId(data.admin)});
+      }
     }
     _.extend(node, data);
     return node;
@@ -120,6 +123,9 @@ class Structure {
     let node = this.findNodeById(node_id);
     if (node) {
       node.admin = member_id ? ObjectId(member_id) : null;
+      if (!_.some(node.members, m => m._id.equals(ObjectId(member_id)))) {
+        node.members.push({_id: member_id});
+      }
       return true;
     }
     return false;
