@@ -261,7 +261,7 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
     throw new ApiError(400, 'can_not_remove_yourself');
   }
   return db.project.findOne({
-    company_id: req.company.id,
+    company_id: req.company._id,
     owner: req.user._id,
     is_archived: false
   })
