@@ -247,6 +247,7 @@ class Structure {
 
   deletePosition(position_id, node_id) {
     node_id = ObjectId(node_id);
+    position_id = ObjectId(position_id);
     let node = this.findNodeById(node_id);
     if (!_.isArray(node.positions)) {
       node.positions = [];
@@ -255,7 +256,7 @@ class Structure {
     let index = _.findIndex(node.positions, pos => pos._id.equals(position_id));
     if (index >= 0) {
       node.positions.splice(index, 1);
-      node.members = _.reject(node.members, m => m.position.equals(position_id));
+      node.members = _.reject(node.members, m => m.position && m.position.equals(position_id));
       return true;
     } else {
       return false;
@@ -317,7 +318,7 @@ class Structure {
     if (!_.some(node.positions, item => item._id.equals(position))) {
       return null;
     }
-    return _.some(node.members, m => (m._id.equals(member_id))&&(m.position = position)) ? {_id: member_id, position} : null;    
+    return _.some(node.members, m => (m._id.equals(member_id))&&(m.position = position)) ? {_id: member_id, position} : null;
   }
 
   findMemberDepartments(member_id, node, path) {
