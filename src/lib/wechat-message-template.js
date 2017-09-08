@@ -75,7 +75,7 @@ export let templates = {
     title: '应用提醒',
     data: '{{first.DATA}}' +
           '姓名：{{keyword1.DATA}}' +
-          '{{keyword2.DATA}}' +
+          '操作：{{keyword2.DATA}}' +
           '{{remark.DATA}}'
   },
 };
