@@ -97,18 +97,6 @@ api.put('/info', (req, res, next) => {
   .catch(next);
 });
 
-api.get('/test', (req, res, next) => {
-  let cc = 'app.report';
-  let dd = 'app.activity';
-  let ee = 'app.activity.approval';
-  let data = {
-    a: __(cc),
-    b: __(dd),
-    k: __(ee)
-  };
-  res.json(data);
-});
-
 api.put('/settings', (req, res, next) => {
   let data = req.body;
   validate('settings', data);

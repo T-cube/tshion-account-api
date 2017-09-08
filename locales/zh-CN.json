@@ -94,5 +94,7 @@
   "over_actived_project_quantity": "超过最大激活项目数量",
   "app.report": "应用-工作汇报",
   "app.activity": "应用-活动",
-  "app.activity.approval": "应用-活动.审批"
+  "app.activity.approval": "应用-活动",
+  "submit": "提交",
+  "create": "创建活动"
 }
