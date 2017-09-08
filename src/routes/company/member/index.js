@@ -262,7 +262,7 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
   }
   return db.project.findOne({
     company_id: req.company._id,
-    owner: req.user._id,
+    owner: member_id,
     is_archived: false
   })
   .then(doc => {

@@ -213,6 +213,9 @@ class Structure {
     if (!node) {
       return false;
     }
+    if (node_id.equals(this.root._id)) {
+      return true;
+    }
     this._deleteMember(node, member_id);
     return true;
   }
@@ -256,7 +259,15 @@ class Structure {
     let index = _.findIndex(node.positions, pos => pos._id.equals(position_id));
     if (index >= 0) {
       node.positions.splice(index, 1);
-      node.members = _.reject(node.members, m => m.position && m.position.equals(position_id));
+      node.members = _.map(node.members, m => {
+        if (m.position && m.position.equals(position_id)) {
+          return {
+            _id: m._id
+          };
+        } else {
+          return m;
+        }
+      });
       return true;
     } else {
       return false;
