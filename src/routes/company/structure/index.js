@@ -14,9 +14,6 @@ import {
   memberValidation,
 } from './schema';
 import {
-  validate
-} from './nschema';
-import {
   STRUCTURE_MEMBER_ADD,
   STRUCTURE_MEMBER_REMOVE,
 } from 'models/notification-setting';
