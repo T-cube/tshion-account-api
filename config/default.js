@@ -216,7 +216,7 @@ module.exports = {
         apiUser: process.env.SENDCLOUD_EMAIL_APIUSER,
         apiKey: process.env.SENDCLOUD_EMAIL_APIKEY,
         url: 'http://api.sendcloud.net/apiv2/mail/sendtemplate',
-        from: 'no-reply@tlifang.com',
+        from: 'no-reply@mail.tlifang.com',
         fromName: 'T立方',
         templates: {
           tlifang_email_active: {
