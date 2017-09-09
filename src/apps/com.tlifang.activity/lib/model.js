@@ -191,8 +191,8 @@ export default class Activity extends AppBase {
   }
 
   month({year, month, company_id}) {
-    let first_day = moment([year, month - 1]).startOf('month').toDate();
-    let last_day = moment([year, month - 1]).endOf('month').toDate();
+    let first_day = month ? moment([year, month - 1]).startOf('month').toDate() : moment().startOf('year').toDate();
+    let last_day = month ? moment([year, month - 1]).endOf('month').toDate() : moment().endOf('year').toDate();
     return this.collection('item')
     .find({
       company_id,
