@@ -248,7 +248,7 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
         appid: req.app_center,
         action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.APP_ACTIVITY,
-        from: req.user._id,
+        from: activity.creator,
         to
       };
       req.model('notification').send(info, APP);
