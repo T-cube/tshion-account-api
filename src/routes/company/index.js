@@ -510,7 +510,7 @@ api.get('/:company_id/invite', (req, res, next) => {
   // res.json({t,c,h});
   let key = (Math.random() + timetemp).toString(36);
   let deepkey = (Math.random() + timetemp).toString(36);
-  let url  = config.get('apiUrl') + '/api/s/' + key;
+  let url  = config.get('apiUrl') + 'api/s/' + key;
   let redis = req.model('redis');
   redis.set(key, deepkey).then(status => {
     redis.expire(key, 3600);
