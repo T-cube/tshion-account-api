@@ -216,7 +216,7 @@ module.exports = {
         apiUser: process.env.SENDCLOUD_EMAIL_APIUSER,
         apiKey: process.env.SENDCLOUD_EMAIL_APIKEY,
         url: 'http://api.sendcloud.net/apiv2/mail/sendtemplate',
-        from: 'no-reply@tlifang.com',
+        from: 'no-reply@mail.tlifang.com',
         fromName: 'T立方',
         templates: {
           tlifang_email_active: {
@@ -270,6 +270,7 @@ module.exports = {
       REQUEST_ACCEPT: 'onWa4TDALZMy7ZaSpIUXneNzKlUed1UQNL_lq5eZdPA',
       SCHEDULE_REMIND: 'N6tGBD_tAvCDcgGIlgISZ9_3msM6TX5miFhooOXjMRE',
       ATTENDANCE: 'onRwwhajeVIHWW8wp6GlMajKBnmx3frvgni-x5pA5F4',
+      APP: '',
     },
     scanurl: 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=gQEH8DoAAAAAAAAAASxodHRwOi8vd2VpeGluLnFxLmNvbS9xL1Rqc2hsQkxtVHRzMzRWMTVIUmU4AAIEcmLGVwMEAAAAAA==', // id = 0 的二维码 非正常渠道
   },
@@ -282,6 +283,7 @@ module.exports = {
       'panel.schedule': true,
       'panel.weather': true,
       new_user_guide_showed: false,
+      new_user_approval_guide_showed: false
     }
   },
   plan: {

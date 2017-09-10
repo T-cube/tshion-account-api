@@ -12,6 +12,7 @@ import {
   REQUEST_ACCEPT,          //  成员加入提醒
   SCHEDULE_REMIND,         //  待办事项提醒
   ATTENDANCE,              //  考勤提醒
+  APP,                     //  应用提醒
 } from 'models/notification-setting';
 
 const colors = {
@@ -164,6 +165,32 @@ let render = {
       },
       'remark': {
         'value': '别忘了打卡哦！',
+      }
+    };
+  },
+  [APP]: (extended) => {
+    let { target_type, from, action } = extended;
+    let content;
+    if (action == 'submit') {
+      content = target_type == 'app.report' ? '工作汇报' : '活动审批';
+    }
+    target_type = __(target_type);
+    action = __(action) + content;
+    return {
+      'first': {
+        'value': `${target_type}，提醒`,
+        'color': colors.primary
+      },
+      'keyword1': {
+        'value': from.name,
+        'color': colors.primary
+      },
+      'keyword2': {
+        'value': action,
+        'color': colors.primary
+      },
+      'remark': {
+        'value': '等待查看。'
       }
     };
   },

@@ -11,7 +11,7 @@ import {
   nodeSanitization,
   nodeValidation,
   memberSanitization,
-  memberValidation
+  memberValidation,
 } from './schema';
 import {
   STRUCTURE_MEMBER_ADD,
@@ -53,6 +53,14 @@ api.post('/:node_id', (req, res, next) => {
   let node_id = req.params.node_id;
   let data = req.body;
   sanitizeValidateObject(nodeSanitization, nodeValidation, data);
+  if (data.positions && data.positions.length) {
+    data.positions = _.map(_.uniq(data.positions), item => {
+      return { title: item, _id: ObjectId() };
+    });
+  }
+  if (data.admin) {
+    data.members = [{_id: data.admin}];
+  }
   let node = tree.addNode(data, node_id);
   if (!node) {
     return next(new ApiError(404, 'department_not_exists'));
@@ -154,11 +162,25 @@ api.get('/:node_id/member', (req, res, next) => {
   res.json(members);
 });
 
+api.put('/:node_id/member/:member_id', (req, res, next) => {
+  let tree = req.structure;
+  let { node_id, member_id } = req.params;
+  let { position } = req.body;
+  let member = tree.addPositionToMember(node_id, member_id, position);
+  if (!member) {
+    throw new ApiError(400, 'wrong_positions_or_no_members');
+  }
+  save(req)
+  .then(() => {
+    res.json(member);
+  });
+});
+
 api.post('/:node_id/member', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
-  sanitizeValidateObject(memberSanitization, memberValidation, data);
+  sanitizeValidateObject(memberSanitization, memberValidation, {data});
   let member = tree.addMember(data, node_id);
   save(req)
   .then(() => {

@@ -47,12 +47,12 @@ const schema = {
     sanitization: {
       locale: { type: 'string', optional: true },
       timezone: { type: 'string', optional: true },
-      current_company: { $ObjectId: true, optional: true },
+      current_company: { $objectId: true, optional: true },
     },
     validation: {
       locale: { type: 'string', optional: true },
       timezone: { $timezone: true, optional: true },
-      current_company: { $ObjectId: true, optional: true },
+      current_company: { $objectId: true, optional: true },
     },
   },
   'options-notification': {
@@ -78,6 +78,7 @@ const schema = {
       'panel.locked': { type: 'boolean', optional: true },
       'panel.open': { type: 'boolean', optional: true },
       'new_user_guide_showed': { type: 'boolean', optional: true },
+      'new_user_approval_guide_showed': { type: 'boolean', optional: true },
     },
     validation: {
       'explore.sort_by': { type: 'string', optional: true },
@@ -89,6 +90,7 @@ const schema = {
       'panel.locked': { type: 'boolean', optional: true },
       'panel.open': { type: 'boolean', optional: true },
       'new_user_guide_showed': { type: 'boolean', optional: true },
+      'new_user_approval_guide_showed': { type: 'boolean', optional: true },
     }
   },
   preference_reset: {

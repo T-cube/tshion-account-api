@@ -29,7 +29,8 @@ api.post('/activity', (req, res, next) => {
   req._app.createActivity({
     activity: req.body,
     user_id: req.user._id,
-    company_id: req.company._id
+    company_id: req.company._id,
+    req,
   })
   .then(activity => {
     if (activity.status == _C.ACTIVITY_STATUS.CREATED) {
@@ -57,7 +58,8 @@ api.put('/activity/:activity_id', (req, res, next) => {
     activity_id: req.params.activity_id,
     activity: req.body,
     user_id: req.user._id,
-    company_id: req.company._id
+    company_id: req.company._id,
+    req
   })
   .then(doc => {
     res.json(doc);
@@ -246,7 +248,7 @@ api.put('/approval/:approval_id/status', (req, res, next) => {
         appid: req.app_center,
         action: C.ACTIVITY_ACTION.CREATE,
         target_type: C.OBJECT_TYPE.APP_ACTIVITY,
-        from: req.user._id,
+        from: activity.creator,
         to
       };
       req.model('notification').send(info, APP);
