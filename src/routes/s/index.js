@@ -14,10 +14,10 @@ api.get('/:hash', (req, res, next) => {
       return;
     }
     let url;
-    if (/MicroMessenger/.test(req['headers']['user-agent'])) {
+    if (/MicroMessenger|iPhone|iPad|Android|UCWEB/.test(req['headers']['user-agent'])) {
       url = config.get('mobileUrl') + 'oa/user/desktop?s=' + salt;
     } else {
-      url = config.get('web') + 'oa/user/desktop?s=' + salt;
+      url = config.get('webUrl') + 'oa/user/desktop?s=' + salt;
     }
     res.redirect(301, url);
   });
