@@ -15,7 +15,7 @@ api.get('/:hash', (req, res, next) => {
     }
     let url;
     if (/MicroMessenger|iPhone|iPad|Android|UCWEB/.test(req['headers']['user-agent'])) {
-      url = config.get('mobileUrl') + 'oa/user/desktop?s=' + salt;
+      url = config.get('mobileUrl') + 'oa/user/mine?s=' + salt;
     } else {
       url = config.get('webUrl') + 'oa/user/desktop?s=' + salt;
     }
