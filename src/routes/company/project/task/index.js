@@ -8,7 +8,7 @@ import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg } from 'lib/utils';
+import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg, fetchUserInfo } from 'lib/utils';
 import {
   TASK_ASSIGNED,
   TASK_UPDATE,
@@ -405,7 +405,9 @@ api.get('/:task_id/comment', (req, res, next) => {
     task_id: req.task._id
   })
   .then(data => {
-    res.json(data || []);
+    fetchUserInfo(data, 'creator').then(() => {
+      res.json(data || []);
+    });
   })
   .catch(next);
 });
@@ -429,7 +431,9 @@ api.post('/:task_id/comment', (req, res, next) => {
       }
     })
     .then(() => {
-      res.json(data);
+      fetchUserInfo(data, 'creator').then(() => {
+        res.json(data);        
+      });
       sendNotification(req, C.ACTIVITY_ACTION.REPLY, {}, TASK_REPLY);
     });
   })

@@ -4,7 +4,7 @@ import _ from 'underscore';
 
 import { ApiError } from 'lib/error';
 import AppBase from 'models/app-base';
-import { getUniqName, strToReg } from 'lib/utils';
+import { getUniqName, strToReg, fetchUserInfo } from 'lib/utils';
 
 export default class Notebook extends AppBase {
 
@@ -192,9 +192,11 @@ export default class Notebook extends AppBase {
       if (!doc.user_id.equals(user_id) && !doc.shared) {
         throw new ApiError(403);
       } else {
+        doc.user = doc.user_id;
+        delete doc.user_id;
         doc.is_like = _.some(doc.likes, item => item.equals(user_id));
         doc.total_likes = doc.likes.length;
-        return doc;
+        return fetchUserInfo(doc, 'user');
       }
     });
   }
@@ -252,17 +254,29 @@ export default class Notebook extends AppBase {
       .limit(10)
       .then(list => {
         _.map(list, item => {
+          item.user = item.user_id;
           item.total_likes = item.likes.length;
           item.is_like = _.some(item.likes, user => user.equals(user_id));
+          delete item.user_id;
           return item;
         });
-        return list;
+        return fetchUserInfo(list, 'user');
       });
     }
   }
 
   commentQuery({company_id, note_id}) {
-    return this.collection('comment').find({ company_id, note_id }).sort({date_create: -1});
+    return this.collection('comment')
+    .find({ company_id, note_id })
+    .sort({date_create: -1})
+    .then(list => {
+      _.map(list, item => {
+        item.user = item.user_id;
+        delete item.user_id;
+        return item;
+      });
+      return fetchUserInfo(list, 'user');
+    });
   }
 
   tagAdd({company_id, user_id, name}) {
@@ -353,14 +367,20 @@ export default class Notebook extends AppBase {
     });
   }
 
-  commentAdd({user_id, company_id, note_id, content}) {
+  commentAdd({user, company_id, note_id, content}) {
     return this.collection('comment').insert({
-      user_id,
+      user_id: user._id,
       company_id,
       note_id,
       content,
       date_create: new Date(),
     }).then(doc => {
+      doc.user = {
+        _id: user._id,
+        name: user.name,
+        avatar: user.avatar
+      };
+      delete doc.user_id;
       this.collection('note').update({
         _id: note_id
       }, {
