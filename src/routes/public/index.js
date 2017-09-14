@@ -38,8 +38,8 @@ api.get('/user-avatar/:user_id', (req, res, next) => {
 });
 
 if (!(process.env.NODE_ENV === 'production')) {
-  api.get('/changelogs/tlf-web', (req, res, next) => {
-    const changelogs = require('fs').readFileSync(__dirname + '/../../../changelogs/tlf-web.md');
+  api.get('/changelogs/:worker', (req, res, next) => {
+    const changelogs = require('fs').readFileSync(__dirname + `/../../../changelogs/${req.params.worker}.md`);
     res.setHeader('Content-Type', 'text/html');
     res.send(require('node-markdown').Markdown(changelogs.toString('utf-8')));
   });
