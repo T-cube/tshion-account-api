@@ -14,7 +14,6 @@ import PlanAuthModel from './models/plan-auth';
 export default (socket, _loader) => {
 
   const route = new RpcRoute(socket, '', _loader);
-
   route.on('pid', () => process.pid);
 
   route.use('/account', accountRoutes);

@@ -34,6 +34,10 @@ let routes = [
   'payment',
 ];
 
+routes = routes.concat([
+  'activity'
+]);
+
 _.each(routes, route => {
   let path = '/' + route;
   let file = '.' + path + '/';
