@@ -84,12 +84,18 @@ class Structure {
   updateNode(data, node_id) {
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
+    if (data.admin) {
+      data.admin = ObjectId(data.admin);
+    }
     if (!node) {
       return null;
     }
     if (node !== this.root) {
       let parent = this.findParent(node_id);
       data.name = getUniqName(this.getNames(parent, node_id), data.name);
+      if (!_.some(node.members, m => m._id.equals(data.admin))) {
+        node.members.push({_id: data.admin});
+      }
     }
     _.extend(node, data);
     return node;
@@ -117,9 +123,13 @@ class Structure {
 
   setAdmin(member_id, node_id) {
     node_id = ObjectId(node_id);
+    member_id = member_id ? ObjectId(member_id) : null;
     let node = this.findNodeById(node_id);
     if (node) {
-      node.admin = member_id ? ObjectId(member_id) : null;
+      node.admin = member_id;
+      if (!_.some(node.members, m => m._id.equals(member_id))) {
+        node.members.push({_id: member_id});
+      }
       return true;
     }
     return false;
@@ -165,7 +175,9 @@ class Structure {
     if (!_.isArray(node.members)) {
       node.members = [];
     }
-    node.members.push(member);
+    member.forEach(item => {
+      node.members.push(item);
+    });
     return member;
   }
 
@@ -205,6 +217,9 @@ class Structure {
     if (!node) {
       return false;
     }
+    if (node_id.equals(this.root._id)) {
+      return true;
+    }
     this._deleteMember(node, member_id);
     return true;
   }
@@ -239,6 +254,7 @@ class Structure {
 
   deletePosition(position_id, node_id) {
     node_id = ObjectId(node_id);
+    position_id = ObjectId(position_id);
     let node = this.findNodeById(node_id);
     if (!_.isArray(node.positions)) {
       node.positions = [];
@@ -247,7 +263,15 @@ class Structure {
     let index = _.findIndex(node.positions, pos => pos._id.equals(position_id));
     if (index >= 0) {
       node.positions.splice(index, 1);
-      node.members = _.reject(node.members, m => m.position.equals(position_id));
+      node.members = _.map(node.members, m => {
+        if (m.position && m.position.equals(position_id)) {
+          return {
+            _id: m._id
+          };
+        } else {
+          return m;
+        }
+      });
       return true;
     } else {
       return false;
@@ -299,6 +323,17 @@ class Structure {
   findPositionInfo(position_id) {
     position_id = ObjectId(position_id);
     return this._findPositionInfo(this.root, position_id);
+  }
+
+  addPositionToMember(node_id, member_id, position) {
+    node_id = ObjectId(node_id);
+    member_id = ObjectId(member_id);
+    position = ObjectId(position);
+    let node = this.findNodeById(node_id);
+    if (!_.some(node.positions, item => item._id.equals(position))) {
+      return null;
+    }
+    return _.some(node.members, m => (m._id.equals(member_id))&&(m.position = position)) ? {_id: member_id, position} : null;
   }
 
   findMemberDepartments(member_id, node, path) {

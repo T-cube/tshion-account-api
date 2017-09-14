@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import AppBase from 'models/app-base';
 import { ApiError } from 'lib/error';
 import C from './constants';
-import { strToReg } from 'lib/utils';
+import { strToReg, fetchUserInfo } from 'lib/utils';
 
 export default class Report extends AppBase {
 
@@ -161,7 +161,14 @@ export default class Report extends AppBase {
       .skip((page - 1) * pagesize)
       .limit(pagesize)
     ]).then(([count, list]) => {
-      return { count, list };
+      _.map(list, item => {
+        item.user = item.user_id;
+        delete item.user_id;
+        return item;
+      });
+      return fetchUserInfo(list, 'user').then(() => {
+        return { count, list };        
+      });
     });
   }
 
@@ -203,7 +210,18 @@ export default class Report extends AppBase {
         }
         report.prevId = list[report_index-1] ? list[report_index-1]._id : null;
         report.nextId = list[report_index+1] ? list[report_index+1]._id : null;
-        return report;
+        report.user = report.user_id;
+        delete report.user_id;
+        return fetchUserInfo(report, 'user', 'copy_to').then(() => {
+          _.map(report.comments, comment => {
+            comment.user = comment.user_id;
+            delete comment.user_id;
+            return comment;
+          });
+          return fetchUserInfo(report.comments, 'user').then(() => {
+            return report;
+          });
+        });
       });
     });
   }

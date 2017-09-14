@@ -24,6 +24,8 @@ import {
   MODULE_ATTENDANCE,
   MODULE_STRUCTURE,
 } from 'models/plan/auth-config';
+import config from 'config';
+
 /* company collection */
 const api = express.Router();
 export default api;
@@ -387,49 +389,59 @@ api.post('/:company_id/exit', (req, res, next) => {
   if (user_id.equals(req.company.owner)) {
     throw new ApiError(400, 'owner_can_not_exit');
   }
-  const tree = new Structure(req.company.structure);
-  tree.deleteMemberAll(user_id);
-  Promise.all([
-    db.user.update({
-      _id: user_id,
-    }, {
-      $pull: { companies: company_id },
-    }),
-    db.user.update({
-      _id: user_id,
-    }, {
-      $pull: { projects: {$in: projects} },
-    }),
-    db.company.update({
-      _id: company_id,
-    }, {
-      $pull: { members: {_id: user_id} },
-      $set: { structure: tree.object() },
-    }),
-    db.project.update({
-      _id: {$in: projects},
-    }, {
-      $pull: { members: {_id: user_id} },
-    }, {
-      multi: true,
-    }),
-  ])
-  .then(() => {
-    res.json({});
-    let info = {
-      company: company_id,
-      action: C.ACTIVITY_ACTION.EXIT,
-      target_type: C.OBJECT_TYPE.COMPANY
-    };
-    req.model('activity').insert(_.extend({}, info, {
-      creator: user_id,
-    }));
-    let to = req.company.members.filter(member => _.contains(['admin', 'owner'], member.type)).map(member => member._id);
-    req.model('notification').send(_.extend({}, info, {
-      from: user_id,
-      to
-    }), COMPANY_MEMBER_UPDATE)
-    .catch(e => console.error(e));
+  return db.project.findOne({
+    company_id: req.company._id,
+    owner: req.user._id,
+    is_archived: false
+  })
+  .then(doc => {
+    if (doc) {
+      throw new ApiError(400, 'this_member_still_hava_own_project');
+    }
+    const tree = new Structure(req.company.structure);
+    tree.deleteMemberAll(user_id);
+    Promise.all([
+      db.user.update({
+        _id: user_id,
+      }, {
+        $pull: { companies: company_id },
+      }),
+      db.user.update({
+        _id: user_id,
+      }, {
+        $pull: { projects: {$in: projects} },
+      }),
+      db.company.update({
+        _id: company_id,
+      }, {
+        $pull: { members: {_id: user_id} },
+        $set: { structure: tree.object() },
+      }),
+      db.project.update({
+        _id: {$in: projects},
+      }, {
+        $pull: { members: {_id: user_id} },
+      }, {
+        multi: true,
+      }),
+    ])
+    .then(() => {
+      res.json({});
+      let info = {
+        company: company_id,
+        action: C.ACTIVITY_ACTION.EXIT,
+        target_type: C.OBJECT_TYPE.COMPANY
+      };
+      req.model('activity').insert(_.extend({}, info, {
+        creator: user_id,
+      }));
+      let to = req.company.members.filter(member => _.contains(['admin', 'owner'], member.type)).map(member => member._id);
+      req.model('notification').send(_.extend({}, info, {
+        from: user_id,
+        to
+      }), COMPANY_MEMBER_UPDATE)
+      .catch(e => console.error(e));
+    });
   })
   .catch(next);
 });
@@ -493,14 +505,19 @@ api.get('/:company_id/invite', (req, res, next) => {
   // if (!_.some(req.company.members, item => item._id.equals(req.user._id)&&(item.type=='admin'||item.type=='owner'))) {
   //   throw new ApiError(400, 'only_owner_and_admin_can_get_invite_url');
   // }
-  let t = new Date().getTime();
-  let c = req.company._id.toString();
+  let timetemp = new Date().getTime();
+  let company_id = req.company._id.toString();
   // res.json({t,c,h});
-  let key = (Math.random() + t).toString(36);
+  let key = (Math.random() + timetemp).toString(36);
+  let deepkey = (Math.random() + timetemp).toString(36);
+  let url  = config.get('apiUrl') + 's/' + key;
   let redis = req.model('redis');
-  redis.set(key, c).then(status => {
+  redis.set(key, deepkey).then(status => {
     redis.expire(key, 3600);
-    res.json({key: key});
+    redis.set(deepkey, company_id).then(() => {
+      redis.expire(deepkey, 3600);
+      res.json({url: url});
+    });
   });
 });
 function _getIdIndex(last_id, list) {

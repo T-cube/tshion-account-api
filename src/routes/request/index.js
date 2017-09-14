@@ -148,10 +148,11 @@ api.post('/:request_id/reject', (req, res, next) => {
       return Promise.all([
         db.company.update({
           _id: companyId,
-          'members._id': request.to,
         }, {
-          $set: {
-            'members.$.status': C.COMPANY_MEMBER_STATUS.REJECTED,
+          $pull: {
+            members: {
+              _id: request.to,
+            }
           }
         }),
         req.model('notification').send({

@@ -23,11 +23,11 @@ const schema={
   calendar: {
     sanitization: {
       year: { type: 'integer' },
-      month: { type: 'integer' },
+      month: { type: 'integer', optional: true },
     },
     validation: {
       year: { type: 'integer', gte: 1970, code: 'invalid_year' },
-      month: { type: 'integer', gte: 1, lte: 12, code: 'invalid_month' },
+      month: { type: 'integer', gte: 1, lte: 12, code: 'invalid_month', optional: true },
     }
   },
   room: {
