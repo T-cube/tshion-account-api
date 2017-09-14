@@ -70,14 +70,14 @@ export let templates = {
           '考勤类型：{{keyword2.DATA}}' +
           '{{remark.DATA}}',
   },
-  [APP]: {
-    _id: config.get('wechat.templates.APP'),
-    title: '应用提醒',
-    data: '{{first.DATA}}' +
-          '姓名：{{keyword1.DATA}}' +
-          '操作：{{keyword2.DATA}}' +
-          '{{remark.DATA}}'
-  },
+  // [APP]: {
+  //   _id: config.get('wechat.templates.APP'),
+  //   title: '应用提醒',
+  //   data: '{{first.DATA}}' +
+  //         '姓名：{{keyword1.DATA}}' +
+  //         '操作：{{keyword2.DATA}}' +
+  //         '{{remark.DATA}}'
+  // },
 };
 
 export default function getTemplate(type) {
