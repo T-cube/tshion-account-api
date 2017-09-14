@@ -84,14 +84,17 @@ class Structure {
   updateNode(data, node_id) {
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
+    if (data.admin) {
+      data.admin = ObjectId(data.admin);
+    }
     if (!node) {
       return null;
     }
     if (node !== this.root) {
       let parent = this.findParent(node_id);
       data.name = getUniqName(this.getNames(parent, node_id), data.name);
-      if (!_.some(node.members, m => m._id.equals(ObjectId(data.admin)))) {
-        node.members.push({_id: ObjectId(data.admin)});
+      if (!_.some(node.members, m => m._id.equals(data.admin))) {
+        node.members.push({_id: data.admin});
       }
     }
     _.extend(node, data);
@@ -120,10 +123,11 @@ class Structure {
 
   setAdmin(member_id, node_id) {
     node_id = ObjectId(node_id);
+    member_id = member_id ? ObjectId(member_id) : null;
     let node = this.findNodeById(node_id);
     if (node) {
-      node.admin = member_id ? ObjectId(member_id) : null;
-      if (!_.some(node.members, m => m._id.equals(ObjectId(member_id)))) {
+      node.admin = member_id;
+      if (!_.some(node.members, m => m._id.equals(member_id))) {
         node.members.push({_id: member_id});
       }
       return true;

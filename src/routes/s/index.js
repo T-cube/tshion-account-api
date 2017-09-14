@@ -9,11 +9,11 @@ api.get('/:hash', (req, res, next) => {
   let redis = req.model('redis');
   let hash = req.params.hash;
   redis.get(hash).then(salt => {
+    let url;
     if (!salt) {
       res.json({ error: 404, string: 'url no found' });
       return;
     }
-    let url;
     if (/MicroMessenger|iPhone|iPad|Android|UCWEB/.test(req['headers']['user-agent'])) {
       url = config.get('mobileUrl') + 'oa/user/mine?s=' + salt;
     } else {
