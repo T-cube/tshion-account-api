@@ -261,8 +261,8 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
     throw new ApiError(400, 'can_not_remove_yourself');
   }
   return db.project.findOne({
-    company_id: req.company.id,
-    owner: req.user._id,
+    company_id: req.company._id,
+    owner: member_id,
     is_archived: false
   })
   .then(doc => {
@@ -271,6 +271,9 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
     }
     let tree = new Structure(req.company.structure);
     let thisMember = _.find(req.company.members, m => m._id.equals(member_id));
+    if (!thisMember) {
+      throw new ApiError(400, 'member_not_exists');
+    }
     thisMember && delete thisMember._id;
     tree.deleteMemberAll(member_id);
     req.structure = tree;

@@ -47,12 +47,12 @@ const schema = {
     sanitization: {
       locale: { type: 'string', optional: true },
       timezone: { type: 'string', optional: true },
-      current_company: { $ObjectId: true, optional: true },
+      current_company: { $objectId: true, optional: true },
     },
     validation: {
       locale: { type: 'string', optional: true },
       timezone: { $timezone: true, optional: true },
-      current_company: { $ObjectId: true, optional: true },
+      current_company: { $objectId: true, optional: true },
     },
   },
   'options-notification': {

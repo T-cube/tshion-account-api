@@ -19,7 +19,7 @@ import {
 } from './schema';
 import Structure from 'models/structure';
 import C from 'lib/constants';
-import { mapObjectIdToData, findObjectIdIndex, fetchCompanyMemberInfo, uniqObjectIdArray } from 'lib/utils';
+import { mapObjectIdToData, findObjectIdIndex, fetchCompanyMemberInfo, uniqObjectIdArray, fetchUserInfo } from 'lib/utils';
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 import {
@@ -100,17 +100,18 @@ api.get('/:item_id', (req, res, next) => {
         } else {
           data.is_processing = false;
         }
-        data.from = _.find(req.company.members, member => member._id.equals(data.from));
-        data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
-        data.department && (data.department = _.pick(tree.findNodeById(data.department), '_id', 'name'));
-        return data;
+        return fetchUserInfo(data, 'from').then(() => {
+          data.scope = data.scope ? data.scope.map(scope => tree.findNodeById(scope)) : [];
+          data.department && (data.department = _.pick(tree.findNodeById(data.department), '_id', 'name'));
+          return data;
+        });
       });
     });
   })
   .then(data => {
     return Promise.all([
       mapObjectIdToData(data, [
-        ['approval.template', 'name,steps,forms,status,number', 'template'],
+        ['approval.template', 'name,steps,forms,status,number,description', 'template'],
       ]),
       fetchCompanyMemberInfo(req.company, data, 'steps.approver')
     ])
