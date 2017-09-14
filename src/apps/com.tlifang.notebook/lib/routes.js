@@ -171,7 +171,7 @@ api.post('/note/:note_id/comment', (req, res, next) => {
   let { comment } = req.body;
   req._app.commentAdd({
     company_id: req.company._id,
-    user_id: req.user._id,
+    user: req.user,
     note_id,
     content: comment
   }).then(doc => {

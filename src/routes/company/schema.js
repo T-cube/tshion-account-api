@@ -4,12 +4,12 @@ import C, { ENUMS } from 'lib/constants';
 const schema = {
   company: {
     sanitization: {
-      name: { type: 'string' },
-      description: { type: 'string' },
+      name: { type: 'string', optional: true },
+      description: { type: 'string', optional: true },
     },
     validation: {
-      name: { type: 'string', minLength: 1, maxLength: 100 },
-      description: { type: 'string', maxLength: 2000 },
+      name: { type: 'string', optional: true, minLength: 1, maxLength: 100 },
+      description: { type: 'string', optional: true, maxLength: 2000 },
     },
   },
   user_file: {

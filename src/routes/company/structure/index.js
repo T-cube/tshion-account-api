@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import { ObjectId } from 'mongodb';
+
 import db from 'lib/database';
 import C from 'lib/constants';
 import { ApiError } from 'lib/error';
@@ -10,28 +11,33 @@ import {
   nodeSanitization,
   nodeValidation,
   memberSanitization,
-  memberValidation
+  memberValidation,
 } from './schema';
 import {
   STRUCTURE_MEMBER_ADD,
   STRUCTURE_MEMBER_REMOVE,
 } from 'models/notification-setting';
+
 /* company collection */
 const api = express.Router();
 export default api;
+
 api.use((req, res, next) => {
   req.structure = new Structure(req.company.structure);
   next();
 });
+
 api.get('/', (req, res, next) => {
   res.json(req.structure.object());
 });
+
 function save(req) {
   return db.company.update(
     {_id: req.company._id},
     {$set: {structure: req.structure.object()}}
   );
 }
+
 api.get('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
@@ -41,11 +47,20 @@ api.get('/:node_id', (req, res, next) => {
   }
   res.json(node);
 });
+
 api.post('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
   sanitizeValidateObject(nodeSanitization, nodeValidation, data);
+  if (data.positions && data.positions.length) {
+    data.positions = _.map(_.uniq(data.positions), item => {
+      return { title: item, _id: ObjectId() };
+    });
+  }
+  if (data.admin) {
+    data.members = [{_id: data.admin}];
+  }
   let node = tree.addNode(data, node_id);
   if (!node) {
     return next(new ApiError(404, 'department_not_exists'));
@@ -54,6 +69,7 @@ api.post('/:node_id', (req, res, next) => {
   .then(() => res.json(node))
   .catch(next);
 });
+
 api.put('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
@@ -67,6 +83,7 @@ api.put('/:node_id', (req, res, next) => {
     next(new ApiError(404, 'department_not_exists'));
   }
 });
+
 api.delete('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
@@ -75,6 +92,7 @@ api.delete('/:node_id', (req, res, next) => {
   .then(doc => res.json(doc))
   .catch(next);
 });
+
 api.put('/:node_id/admin', (req, res, next) => {
   let tree = req.structure;
   let data = req.body;
@@ -87,6 +105,7 @@ api.put('/:node_id/admin', (req, res, next) => {
   .then(() => res.json({}))
   .catch(next);
 });
+
 api.post('/:node_id/position', (req, res, next) => {
   let tree = req.structure;
   let data = req.body;
@@ -100,12 +119,14 @@ api.post('/:node_id/position', (req, res, next) => {
     throw new ApiError(400, 'position_exists');
   }
 });
+
 api.get('/:node_id/position', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let node = tree.findNodeById(node_id);
   res.json(node.positions || []);
 });
+
 api.put('/:node_id/position/:position_id', (req, res, next) => {
   let tree = req.structure;
   let data = req.body;
@@ -120,6 +141,7 @@ api.put('/:node_id/position/:position_id', (req, res, next) => {
     throw new ApiError(400, 'update_failed');
   }
 });
+
 api.delete('/:node_id/position/:position_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
@@ -132,17 +154,33 @@ api.delete('/:node_id/position/:position_id', (req, res, next) => {
     next(new ApiError(400, 'position_not_exists'));
   }
 });
+
 api.get('/:node_id/member', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let members = tree.getMemberAll(node_id);
   res.json(members);
 });
+
+api.put('/:node_id/member/:member_id', (req, res, next) => {
+  let tree = req.structure;
+  let { node_id, member_id } = req.params;
+  let { position } = req.body;
+  let member = tree.addPositionToMember(node_id, member_id, position);
+  if (!member) {
+    throw new ApiError(400, 'wrong_positions_or_no_members');
+  }
+  save(req)
+  .then(() => {
+    res.json(member);
+  });
+});
+
 api.post('/:node_id/member', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
-  sanitizeValidateObject(memberSanitization, memberValidation, data);
+  sanitizeValidateObject(memberSanitization, memberValidation, {data});
   let member = tree.addMember(data, node_id);
   save(req)
   .then(() => {
@@ -169,6 +207,7 @@ api.post('/:node_id/member', (req, res, next) => {
   })
   .catch(next);
 });
+
 api.delete('/:node_id/member/:member_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;

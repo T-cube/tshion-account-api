@@ -51,3 +51,4 @@ temp/*
 yarn.lock
 yarn-error.*
 /.env
+dump.rdb

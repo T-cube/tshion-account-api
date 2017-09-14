@@ -191,8 +191,8 @@ export default class Activity extends AppBase {
   }
 
   month({year, month, company_id}) {
-    let first_day = moment([year, month - 1]).startOf('month').toDate();
-    let last_day = moment([year, month - 1]).endOf('month').toDate();
+    let first_day = month ? moment([year, month - 1]).startOf('month').toDate() : moment().startOf('year').toDate();
+    let last_day = month ? moment([year, month - 1]).endOf('month').toDate() : moment().endOf('year').toDate();
     return this.collection('item')
     .find({
       company_id,
@@ -630,10 +630,13 @@ export default class Activity extends AppBase {
         activity_status = C.ACTIVITY_STATUS.APPROVING;
       }
       return Promise.all([
-        this.collection('item').update({
+        this.collection('item').findOneAndUpdate({
           'room.approval_id': approval_id,
         }, {
           $set: { status: activity_status }
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
         }),
         this.collection('approval').update({
           _id: approval_id
@@ -641,7 +644,7 @@ export default class Activity extends AppBase {
           $set: { status: status }
         })
       ]).then(([activity, approval]) => {
-        return activity;
+        return activity.value;
       });
     });
   }
