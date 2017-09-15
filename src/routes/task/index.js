@@ -134,7 +134,7 @@ api.get('/', (req, res, next) => {
         if (req.company) {
           return fetchCompanyMemberInfo(req.company, list, 'assignee');
         }
-        return fetchUserInfo(list, 'assignee');
+        return fetchUserInfo(list, 'creator', 'assignee');
       })
       // .then(list => {
       //   return db.project.find({

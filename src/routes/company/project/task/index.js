@@ -8,7 +8,7 @@ import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg } from 'lib/utils';
+import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg, fetchUserInfo } from 'lib/utils';
 import {
   TASK_ASSIGNED,
   TASK_UPDATE,
@@ -114,7 +114,8 @@ api.get('/', (req, res, next) => {
         // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
       });
       data.list = list;
-      return fetchCompanyMemberInfo(req.company, data.list, 'assignee');
+      // return fetchCompanyMemberInfo(req.company, data.list, 'assignee');
+      return fetchUserInfo(data.list, 'assignee', 'followers');
     })
     .then(() => {
       data.list.forEach(task => task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id)));
@@ -181,7 +182,8 @@ api.get('/:_task_id', (req, res, next) => {
       throw new ApiError(404);
     }
     // task.tags = task.tags && task.tags.map(_id => _.find(req.project.tags, tag => tag._id.equals(_id)));
-    return fetchCompanyMemberInfo(req.company, task, 'creator', 'assignee', 'checker');
+    // return fetchCompanyMemberInfo(req.company, task, 'creator', 'assignee', 'checker');
+    return fetchUserInfo(task, 'creator', 'assignee', 'checker', 'followers');
   })
   .then(task => {
     task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
@@ -405,7 +407,9 @@ api.get('/:task_id/comment', (req, res, next) => {
     task_id: req.task._id
   })
   .then(data => {
-    res.json(data || []);
+    fetchUserInfo(data, 'creator').then(() => {
+      res.json(data || []);
+    });
   })
   .catch(next);
 });
@@ -429,7 +433,9 @@ api.post('/:task_id/comment', (req, res, next) => {
       }
     })
     .then(() => {
-      res.json(data);
+      fetchUserInfo(data, 'creator').then(() => {
+        res.json(data);
+      });
       sendNotification(req, C.ACTIVITY_ACTION.REPLY, {}, TASK_REPLY);
     });
   })

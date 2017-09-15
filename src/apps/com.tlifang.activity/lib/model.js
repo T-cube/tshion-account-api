@@ -5,6 +5,7 @@ import moment from 'moment';
 
 import AppBase from 'models/app-base';
 import { ApiError } from 'lib/error';
+import { fetchUserInfo } from 'lib/utils';
 import C from './constants';
 import _C from 'lib/constants';
 import { APP } from 'models/notification-setting';
@@ -95,18 +96,29 @@ export default class Activity extends AppBase {
         $or: all,
       }),
     ]).then(([now_mine, feature_mine, now_all, feature_all, mine_total, all_total]) => {
-      return {
-        mine: {
-          now: this._listCalc(now_mine, user_id),
-          feature: this._listCalc(feature_mine, user_id)
-        },
-        all: {
-          now: this._listCalc(now_all, user_id),
-          feature: this._listCalc(feature_all, user_id)
-        },
-        mine_total,
-        all_total,
-      };
+      now_mine = this._listCalc(now_mine, user_id);
+      feature_mine = this._listCalc(feature_mine, user_id);
+      now_all = this._listCalc(now_all, user_id);
+      feature_all = this._listCalc(feature_all, user_id);
+      return Promise.all([
+        fetchUserInfo(now_mine, 'creator'),
+        fetchUserInfo(feature_mine, 'creator'),
+        fetchUserInfo(now_all, 'creator'),
+        fetchUserInfo(feature_all, 'creator'),        
+      ]).then(() => {
+        return {
+          mine: {
+            now: now_mine,
+            feature: feature_mine,
+          },
+          all: {
+            now: now_all,
+            feature: feature_all,
+          },
+          mine_total,
+          all_total,
+        };
+      });
     });
   }
 
@@ -158,35 +170,38 @@ export default class Activity extends AppBase {
       .count(criteria)
     ])
     .then(([list, count]) => {
-      if (target == C.LIST_TARGET.CREATOR) {
-        return Promise.map(list, item => {
-          if (item.room.approval_id) {
-            return this.collection('approval').findOne({
-              _id: item.room.approval_id
-            }, {
-              status: 1
-            })
-            .then(doc => {
-              if (doc) {
-                item.room.approval_status = doc.status;
-              }
+      list = this._listCalc(list, user_id);
+      return fetchUserInfo(list, 'creator').then(() => {
+        if (target == C.LIST_TARGET.CREATOR) {
+          return Promise.map(list, item => {
+            if (item.room.approval_id) {
+              return this.collection('approval').findOne({
+                _id: item.room.approval_id
+              }, {
+                status: 1
+              })
+              .then(doc => {
+                if (doc) {
+                  item.room.approval_status = doc.status;
+                }
+                return item;
+              });
+            } else {
               return item;
-            });
-          } else {
-            return item;
-          }
-        })
-        .then(list => {
-          return {
-            list: this._listCalc(list, user_id),
-            count: count
-          };
-        });
-      }
-      return {
-        list: this._listCalc(list, user_id),
-        count: count
-      };
+            }
+          })
+          .then(list => {
+            return {
+              list: list,
+              count: count
+            };
+          });
+        }
+        return {
+          list: list,
+          count: count
+        };
+      });
     });
   }
 
@@ -398,21 +413,30 @@ export default class Activity extends AppBase {
       } else {
         doc.total = _.uniq(this._toString([].concat(doc.assistants, doc.creator, doc.members))).length;
         doc.isMember = _.some([].concat(doc.creator, doc.assistants, doc.members), item => item.equals(user_id));
-        if (doc.room.approval_id) {
-          return this.collection('approval')
-          .findOne({
-            _id: doc.room.approval_id
-          }, {
-            status: 1
-          })
-          .then(approval => {
-            if (approval) {
-              doc.room.status = approval.status;
+        return fetchUserInfo(doc, 'accept_members', 'assistants', 'creator', 'followers', 'members', 'sign_in_members').then(() => {
+          _.map(doc.comments, comment => {
+            comment.user = comment.user_id;
+            delete comment.user_id;
+            return comment;
+          });
+          return fetchUserInfo(doc.comments, 'user').then(() => {
+            if (doc.room.approval_id) {
+              return this.collection('approval')
+              .findOne({
+                _id: doc.room.approval_id
+              }, {
+                status: 1
+              })
+              .then(approval => {
+                if (approval) {
+                  doc.room.status = approval.status;
+                }
+                return doc;
+              });
             }
             return doc;
           });
-        }
-        return doc;
+        });
       }
     });
   }
@@ -550,10 +574,12 @@ export default class Activity extends AppBase {
       this.collection('approval')
       .count(criteria),
     ]).then(([list, count]) => {
-      return {
-        list,
-        count
-      };
+      return fetchUserInfo(list, 'creator', 'manager').then(() => {
+        return {
+          list,
+          count
+        };
+      });
     });
   }
 
@@ -581,7 +607,17 @@ export default class Activity extends AppBase {
           throw new ApiError(400, 'no_activity');
         }
         approval.activity = activity;
-        return approval;
+        _.map(approval.comments, comment => {
+          comment.user = comment.user_id;
+          delete comment.user_id;
+          return comment;
+        });
+        return Promise.all([
+          fetchUserInfo(approval, 'creator', 'manager'),
+          fetchUserInfo(approval.comments, 'user')
+        ]).then(() => {
+          return approval;
+        });
       });
     });
   }
@@ -719,34 +755,36 @@ export default class Activity extends AppBase {
       company_id,
     })
     .then(list => {
-      return Promise.map(list, item => {
-        return Promise.all([
-          this.collection('item').find({
-            time_start: {
-              $gte: moment().startOf('day').toDate(),
-              $lt: moment().startOf('day').add(1,'day').toDate()
-            },
-            company_id,
-            'room._id': item._id,
-            status: C.ACTIVITY_STATUS.CREATED,
-          }),
-          this.collection('item').find({
-            time_start: {
-              $gte: moment().startOf('day').add(1,'day').toDate(),
-              $lt: moment().startOf('day').add(2,'day').toDate()
-            },
-            company_id,
-            'room._id': item._id,
-            status: C.ACTIVITY_STATUS.CREATED,
-          }),
-        ])
-        .then(([today, tomorrow]) => {
-          item.today = today;
-          item.tomorrow = tomorrow;
-          return item;
+      return fetchUserInfo(list, 'manager').then(() => {
+        return Promise.map(list, item => {
+          return Promise.all([
+            this.collection('item').find({
+              time_start: {
+                $gte: moment().startOf('day').toDate(),
+                $lt: moment().startOf('day').add(1,'day').toDate()
+              },
+              company_id,
+              'room._id': item._id,
+              status: C.ACTIVITY_STATUS.CREATED,
+            }),
+            this.collection('item').find({
+              time_start: {
+                $gte: moment().startOf('day').add(1,'day').toDate(),
+                $lt: moment().startOf('day').add(2,'day').toDate()
+              },
+              company_id,
+              'room._id': item._id,
+              status: C.ACTIVITY_STATUS.CREATED,
+            }),
+          ])
+          .then(([today, tomorrow]) => {
+            item.today = today;
+            item.tomorrow = tomorrow;
+            return item;
+          });
+        }).then(rooms => {
+          return rooms;
         });
-      }).then(rooms => {
-        return rooms;
       });
     });
   }
@@ -793,6 +831,7 @@ export default class Activity extends AppBase {
           status: C.ACTIVITY_STATUS.CREATED,
         })
         .sort({time_start: -1}),
+        fetchUserInfo(room, 'manager')
       ]).then(([past, now, tomorrow]) => {
         room.past = past;
         room.now = now;

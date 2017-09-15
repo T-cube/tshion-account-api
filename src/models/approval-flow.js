@@ -44,71 +44,72 @@ export default class ApprovalFlow {
   findItems() {
     let type = this.type;
     return ApprovalFlow
-    .getFlowByType(this.company_id, this.user_id, type)
-    .then(flow => {
-      let { page, pagesize } = this.getPageInfo();
-      if (!flow || !flow[type] || !flow[type].length) {
-        return this.getEmptyData(pagesize);
-      }
-      return this.getQueryCondition(flow[type])
-      .then(condition => {
-        let data = {};
-        let { export_count } = this.query;
-        let counting = null;
-        let listing = null;
-        _.extend(condition, this.getApplyDateCondition());
-        if (!this.forDownload) {
-          counting = db.approval.item.count(condition)
-          .then(sum => {
-            data.totalrows = sum;
-            data.page = page;
-            data.pagesize = pagesize;
-          });
+      .getFlowByType(this.company_id, this.user_id, type)
+      .then(flow => {
+        console.log('flow', flow);
+        let { page, pagesize } = this.getPageInfo();
+        if (!flow || !flow[type] || !flow[type].length) {
+          return this.getEmptyData(pagesize);
         }
-        if (!this.forDownload || !export_count || export_count == 'page') {
-          listing = db.approval.item.find(condition, this.fetchItemFields)
-            .sort({_id: -1})
-            .skip((page - 1) * pagesize)
-            .limit(pagesize);
-        } else {
-          listing = db.approval.item.find(condition, this.fetchItemFields)
-            .sort({_id: -1});
-        }
-        return Promise.all([
-          counting,
-          listing
-          .then(list => {
-            let templateFields = this.forDownload ? 'name,status,forms' : 'name,status';
+        return this.getQueryCondition(flow[type])
+          .then(condition => {
+            let data = {};
+            let { export_count } = this.query;
+            let counting = null;
+            let listing = null;
+            _.extend(condition, this.getApplyDateCondition());
+            if (!this.forDownload) {
+              counting = db.approval.item.count(condition)
+                .then(sum => {
+                  data.totalrows = sum;
+                  data.page = page;
+                  data.pagesize = pagesize;
+                });
+            }
+            if (!this.forDownload || !export_count || export_count == 'page') {
+              listing = db.approval.item.find(condition, this.fetchItemFields)
+                .sort({ _id: -1 })
+                .skip((page - 1) * pagesize)
+                .limit(pagesize);
+            } else {
+              listing = db.approval.item.find(condition, this.fetchItemFields)
+                .sort({ _id: -1 });
+            }
             return Promise.all([
-              mapObjectIdToData(list, 'approval.template', templateFields, 'template'),
-              fetchCompanyMemberInfo(this.company, list, 'from')
+              counting,
+              listing
+                .then(list => {
+                  let templateFields = this.forDownload ? 'name,status,forms' : 'name,status';
+                  return Promise.all([
+                    mapObjectIdToData(list, 'approval.template', templateFields, 'template'),
+                    fetchCompanyMemberInfo(this.company, list, 'from')
+                  ])
+                    .then(() => list);
+                })
+                .then(list => {
+                  // let tree = new Structure(this.company.structure);
+                  list.forEach(item => {
+                    // item.department && (item.department = tree.findNodeById(item.department));
+                    if (this.type == 'approve') {
+                      let approve = flow[type];
+                      let foundItemCurStep = _.find(
+                        approve,
+                        approveItem =>
+                        approveItem._id && approveItem._id.equals(item._id) && approveItem.step && approveItem.step.equals(item.step)
+                      );
+                      if (foundItemCurStep && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING) {
+                        item.is_processing = true;
+                      } else {
+                        item.is_processing = false;
+                      }
+                    }
+                  });
+                  data.list = list;
+                })
             ])
-            .then(() => list);
-          })
-          .then(list => {
-            // let tree = new Structure(this.company.structure);
-            list.forEach(item => {
-              // item.department && (item.department = tree.findNodeById(item.department));
-              if (this.type == 'approve') {
-                let approve = flow[type];
-                let foundItemCurStep = _.find(
-                  approve,
-                  approveItem =>
-                    approveItem._id && approveItem._id.equals(item._id) && approveItem.step && approveItem.step.equals(item.step)
-                  );
-                if (foundItemCurStep && item.status == C.APPROVAL_ITEM_STATUS.PROCESSING) {
-                  item.is_processing = true;
-                } else {
-                  item.is_processing = false;
-                }
-              }
-            });
-            data.list = list;
-          })
-        ])
-        .then(() => data);
+              .then(() => data);
+          });
       });
-    });
   }
 
   static getFlowByType(company_id, user_id, type) {
@@ -118,22 +119,23 @@ export default class ApprovalFlow {
     }, {
       'map.$': 1
     })
-    .then(mapData => {
-      let flow_id = mapData && mapData.map[0].flow_id;
-      if (!mapData || !flow_id) {
-        return null;
-      }
-      if (type) {
+      .then(mapData => {
+        console.log(mapData);
+        let flow_id = mapData && mapData.map[0].flow_id;
+        if (!mapData || !flow_id) {
+          return null;
+        }
+        if (type) {
+          return db.approval.flow.findOne({
+            _id: flow_id
+          }, {
+            [type]: 1
+          });
+        }
         return db.approval.flow.findOne({
           _id: flow_id
-        }, {
-          [type]: 1
         });
-      }
-      return db.approval.flow.findOne({
-        _id: flow_id
       });
-    });
   }
 
   getQueryCondition(flowType) {
@@ -178,12 +180,12 @@ export default class ApprovalFlow {
         }, {
           _id: 1
         })
-        .then(tpls => {
-          condition.template = {
-            $in: tpls.map(tpl => tpl._id)
-          };
-          return condition;
-        });
+          .then(tpls => {
+            condition.template = {
+              $in: tpls.map(tpl => tpl._id)
+            };
+            return condition;
+          });
       }
       if (ObjectId.isValid(template)) {
         condition.template = ObjectId(template);
@@ -196,9 +198,9 @@ export default class ApprovalFlow {
     let { page, pagesize } = this.query;
     page = parseInt(page) || 1;
     pagesize = parseInt(pagesize);
-    pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0)
-      ? pagesize
-      : config.get('view.approvalListNum');
+    pagesize = (pagesize <= config.get('view.maxListNum') && pagesize > 0) ?
+      pagesize :
+      config.get('view.approvalListNum');
     return {
       page,
       pagesize
@@ -219,7 +221,7 @@ export default class ApprovalFlow {
         $lt: moment().startOf('month').toDate(),
       };
     }
-    return apply_date ? {apply_date} : {};
+    return apply_date ? { apply_date } : {};
   }
 
   getEmptyData(pagesize) {
@@ -238,7 +240,7 @@ export default class ApprovalFlow {
     if (!data.list.length) {
       return '';
     }
-    let formFields = _.uniq(_.flatten(data.list.map(i => i.template.forms && i.template.forms.map(f => {if (f.required) {return f.label;} else {return [];}})).filter(i => i)));
+    let formFields = _.uniq(_.flatten(data.list.map(i => i.template.forms && i.template.forms.map(f => { if (f.required) { return f.label; } else { return []; } })).filter(i => i)));
     let parsedData = data.list.map(i => {
       let item = [
         moment(i.apply_date).format('YYYY-MM-DD HH:mm'),
@@ -253,12 +255,12 @@ export default class ApprovalFlow {
             let templateForm = _.find(i.template.forms, tf => tf._id.equals(itf._id) && tf._id.equals(f._id));
             if (templateForm) {
               switch (templateForm.type) {
-                case 'date':
-                  f.value = moment(f.value).format('YYYY-MM-DD');
-                  break;
-                case 'datetime':
-                  f.value = moment(f.value).format('YYYY-MM-DD HH:mm');
-                  break;
+              case 'date':
+                f.value = moment(f.value).format('YYYY-MM-DD');
+                break;
+              case 'datetime':
+                f.value = moment(f.value).format('YYYY-MM-DD HH:mm');
+                break;
               }
               item.push(f.value || '');
             }
@@ -285,23 +287,23 @@ export default class ApprovalFlow {
   static getStatusText(status) {
     let info;
     switch (status) {
-      case C.APPROVAL_ITEM_STATUS.PROCESSING:
-        info = __('approval_pressing');
-        break;
-      case C.APPROVAL_ITEM_STATUS.APPROVED:
-        info = __('approval_approved');
-        break;
-      case C.APPROVAL_ITEM_STATUS.REJECTED:
-        info = __('approval_rejected');
-        break;
-      case C.APPROVAL_ITEM_STATUS.REVOKED:
-        info = __('approval_revoked');
-        break;
-      case C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED:
-        info = __('approval_template_change');
-        break;
-      default:
-        info = '';
+    case C.APPROVAL_ITEM_STATUS.PROCESSING:
+      info = __('approval_pressing');
+      break;
+    case C.APPROVAL_ITEM_STATUS.APPROVED:
+      info = __('approval_approved');
+      break;
+    case C.APPROVAL_ITEM_STATUS.REJECTED:
+      info = __('approval_rejected');
+      break;
+    case C.APPROVAL_ITEM_STATUS.REVOKED:
+      info = __('approval_revoked');
+      break;
+    case C.APPROVAL_ITEM_STATUS.TEMPLATE_CHNAGED:
+      info = __('approval_template_change');
+      break;
+    default:
+      info = '';
     }
     return info;
   }

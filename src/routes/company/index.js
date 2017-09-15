@@ -24,6 +24,8 @@ import {
   MODULE_ATTENDANCE,
   MODULE_STRUCTURE,
 } from 'models/plan/auth-config';
+import config from 'config';
+
 /* company collection */
 const api = express.Router();
 export default api;
@@ -503,14 +505,19 @@ api.get('/:company_id/invite', (req, res, next) => {
   // if (!_.some(req.company.members, item => item._id.equals(req.user._id)&&(item.type=='admin'||item.type=='owner'))) {
   //   throw new ApiError(400, 'only_owner_and_admin_can_get_invite_url');
   // }
-  let t = new Date().getTime();
-  let c = req.company._id.toString();
+  let timetemp = new Date().getTime();
+  let company_id = req.company._id.toString();
   // res.json({t,c,h});
-  let key = (Math.random() + t).toString(36);
+  let key = (Math.random() + timetemp).toString(36);
+  let deepkey = (Math.random() + timetemp).toString(36);
+  let url  = config.get('apiUrl') + 's/' + key;
   let redis = req.model('redis');
-  redis.set(key, c).then(status => {
+  redis.set(key, deepkey).then(status => {
     redis.expire(key, 3600);
-    res.json({key: key});
+    redis.set(deepkey, company_id).then(() => {
+      redis.expire(deepkey, 3600);
+      res.json({url: url});
+    });
   });
 });
 function _getIdIndex(last_id, list) {
