@@ -198,6 +198,7 @@ api.get('/project', (req, res, next) =>  {
         return res.json([]);
       }
     }
+    condition['members._id'] = req.user._id;
     switch (type) {
       case 'archived':
         condition.is_archived = true;

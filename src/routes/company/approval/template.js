@@ -6,7 +6,7 @@ import Promise from 'bluebird';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { sanitization, validation, statusSanitization, statusValidation } from './schema';
+import { sanitization, validation, statusSanitization, statusValidation, autoSanitization, autoValidation } from './schema';
 import C from 'lib/constants';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
@@ -93,9 +93,9 @@ api.get('/related', (req, res, next) => {
       tplCondition['steps.copy_to._id'] = user;
       break;
     default:
-      tplCondition.scope = {
-        $in: new Structure(req.company.structure).findMemberDepartments(user)
-      };
+      // tplCondition.scope = {
+      //   $in: new Structure(req.company.structure).findMemberDepartments(user)
+      // };
       itemCondition.from = user;
   }
   db.approval.template.find(tplCondition, fields)
@@ -127,14 +127,22 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
     if (!enabled) {
       throw new ApiError(400, 'reach_plan_limit');
     }
-    sanitizeValidateObject(sanitization, validation, data);
-    data.steps.forEach(i => {
-      i._id = ObjectId();
-    });
-    checkAndInitForms(data.forms);
-    data.company_id = req.company._id;
-    data.status = C.APPROVAL_STATUS.NORMAL;
-    return Approval.createTemplate(data);
+    if (!data.auto) {
+      sanitizeValidateObject(sanitization, validation, data);
+      data.steps.forEach(i => {
+        i._id = ObjectId();
+      });
+      checkAndInitForms(data.forms);
+      data.company_id = req.company._id;
+      data.status = C.APPROVAL_STATUS.NORMAL;
+      return Approval.createTemplate(data);
+    } else {
+      sanitizeValidateObject(autoSanitization, autoValidation, data);
+      checkAndInitForms(data.forms);
+      data.company_id = req.company._id;
+      data.status = C.APPROVAL_STATUS.NORMAL;
+      return Approval.createTemplate(data);
+    }
   })
   .then(template => {
     res.json(template);
