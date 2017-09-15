@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import express from 'express';
 import config from 'config';
+import { ObjectId } from 'mongodb';
 
 import db from 'lib/database';
 import {
@@ -44,6 +45,7 @@ api.post('/check', (req, res, next) => {
 
 api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
+  let u = data.u;
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type, 'code', 'password']);
   let { password, code } = data;
@@ -103,6 +105,29 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       type: type,
       [type]: id,
     });
+    if (u) {
+      db.user.findOne({
+        _id: ObjectId(u)
+      })
+      .then(doc => {
+        if (doc) {
+          db.user.findOneAndUpdate({
+            _id: user._id
+          }, {
+            $set: {
+              recommend: doc._id
+            }
+          }, {
+            returnOriginal: false,
+            returnNewDocument: true
+          }).then(invitee => {
+            if (invitee.value) {
+              console.log(invitee.value._id, invitee.value.recommend);
+            }
+          });
+        }
+      });
+    }
     // init notification setting when user activiated
     if (type == C.USER_ID_TYPE.MOBILE) {
       req.model('notification-setting').initUserDefaultSetting(user._id);
