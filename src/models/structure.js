@@ -333,7 +333,7 @@ class Structure {
     if (!_.some(node.positions, item => item._id.equals(position))) {
       return null;
     }
-    return _.some(node.members, m => (m._id.equals(member_id))&&(m.position = position)) ? {_id: member_id, position} : null;
+    return _.some(node.members, m => (m._id)&&(m._id.equals(member_id))&&(m.position = position)) ? {_id: member_id, position} : null;
   }
 
   findMemberDepartments(member_id, node, path) {
