@@ -66,6 +66,7 @@ OUTPUT:
 ### POST /approval/template
 
 INPUT:
+普通模版：
 ```javascript
 {
   name: <String>,
@@ -85,10 +86,28 @@ INPUT:
   }]
 }
 ```
+自动模版：
+```javascript
+{
+  name: <String>,
+  description: <String>,
+  forms: [{
+    _id: <ObjectId>,
+    title: <String>,
+    form_type: <ENUM:text,textarea,date,...>
+  }],
+  copy_to: [{
+    _id: <objectId>,
+    type: <String>, //之前是个写死的 member字符串
+  }],
+  auto: <Boolean>, // true
+}
+```
 
 ### PUT /approval/template/:template_id
 
 INPUT:
+普通模版：
 ```javascript
 {
   _id: <ObjectId>,
@@ -107,6 +126,22 @@ INPUT:
     title: <String>,
     form_type: <ENUM:text,textarea,date...>
   }]
+}
+```
+自动模版：
+```javascript
+{
+  name: <String>,
+  description: <String>,
+  forms: [{
+    _id: <ObjectId>,
+    title: <String>,
+    form_type: <ENUM:text,textarea,date,...>
+  }],
+  copy_to: [{
+    _id: <objectId>,
+    type: <String>, //之前是个写死的 member字符串
+  }],
 }
 ```
 
