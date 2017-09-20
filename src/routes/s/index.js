@@ -10,14 +10,18 @@ api.get('/:hash', (req, res, next) => {
   let hash = req.params.hash;
   redis.get(hash).then(salt => {
     let url;
-    if (!salt) {
-      res.json({ error: 404, string: 'url no found' });
-      return;
-    }
     if (/MicroMessenger|iPhone|iPad|Android|UCWEB/.test(req['headers']['user-agent'])) {
-      url = config.get('mobileUrl') + 'oa/user/mine?s=' + salt;
+      if (!salt) {
+        url = config.get('mobileUrl') + 'account/invalidi';
+      } else {
+        url = config.get('mobileUrl') + 'oa/user/mine?s=' + salt;
+      }
     } else {
-      url = config.get('webUrl') + 'oa/user/desktop?s=' + salt;
+      if (!salt) {
+        url = config.get('webUrl') + 'account/invalidi';
+      } else {
+        url = config.get('webUrl') + 'oa/user/desktop?s=' + salt;
+      }
     }
     res.redirect(301, url);
   });

@@ -28,6 +28,52 @@ const fieldValidation = {
   }
 };
 
+export let autoSanitization = {
+  name: { type: 'string' },
+  description: { type: 'string', optional: true },
+  forms: {
+    type: 'array',
+    optional: true,
+    items: fieldValidation
+  },
+  copy_to: {
+    type: 'array',
+    items: {
+      type: 'object',
+      optional: true,
+      strict: true,
+      properties: {
+        _id: { $objectId: 1 },
+        type: { type: 'string' }
+      }
+    }
+  },
+  auto: { type: 'boolean' },
+};
+
+export let autoValidation = {
+  name: { type: 'string' },
+  description: { type: 'string', optional: true },
+  forms: {
+    type: 'array',
+    optional: true,
+    items: fieldValidation
+  },
+  copy_to: {
+    type: 'array',
+    optional: true,
+    items: {
+      type: 'object',
+      optional: true,
+      properties: {
+        _id: { $objectId: 1 },
+        type: { $enum: ENUMS.APPROVER_TYPE },
+      }
+    }
+  },
+  auto: { type: 'boolean' },
+};
+
 export let sanitization = {
   name: { type: 'string' },
   description: { type: 'string', optional: true },
