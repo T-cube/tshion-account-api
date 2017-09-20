@@ -122,6 +122,17 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
             returnNewDocument: true
           }).then(invitee => {
             if (invitee.value) {
+              let { a } = req.body;
+              if(a){
+                var rpc = req.model('clientRpc');
+                rpc.route('/activity/event/recommand',{
+                  recommender: invitee.value.recommend,
+                  user_id: invitee.value._id,
+                  activity_id: a
+                }, function(data){
+                  console.log(data);
+                });
+              }
               console.log(invitee.value._id, invitee.value.recommend);
             }
           });
