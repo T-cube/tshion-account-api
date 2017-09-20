@@ -37,3 +37,13 @@ export let memberValidation = {
 		}
 	}
 };
+
+export let changeNodeSanitization = {
+	name: { type: 'string' },
+	admin: { $objectId: 1 },
+}
+
+export let changeNodeValidation = {
+	name: { type: 'string' },
+	admin: { $objectId: 1 },
+}

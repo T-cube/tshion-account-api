@@ -18,7 +18,7 @@ export default class Security {
         if (exist) {
           throw new ApiError(429, 'too_many_requests');
         }
-        return redis.setex(key, time, id);
+        return redis.psetex(key, time, id);
       });
   }
 }
