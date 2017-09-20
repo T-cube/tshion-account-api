@@ -367,6 +367,9 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   if (checkDupliDate(data.workday_special) || checkDupliDate(data.holiday)) {
     throw new ApiError(400, 'validation_error');
   }
+  if (data.is_open) {
+    delete data.approval_template;
+  }
   let $set = _.clone(data);
   let update = {$set};
   if (data.auditor) {
