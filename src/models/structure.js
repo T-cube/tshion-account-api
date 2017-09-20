@@ -84,9 +84,6 @@ class Structure {
   updateNode(data, node_id) {
     node_id = ObjectId(node_id);
     let node = this.findNodeById(node_id);
-    if (data.admin) {
-      data.admin = ObjectId(data.admin);
-    }
     if (!node) {
       return null;
     }
