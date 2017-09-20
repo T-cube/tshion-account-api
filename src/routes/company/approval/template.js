@@ -291,12 +291,12 @@ api.get('/:template_id/versions', (req, res, next) => {
 api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
+  sanitizeValidateObject(statusSanitization, statusValidation, data);
   db.template.auto.findOne({
     _id: template_id
   })
   .then(doc => {
     if (!doc) {
-      sanitizeValidateObject(statusSanitization, statusValidation, data);
       return db.approval.template.update({
         _id: template_id,
         company_id: req.company._id,
@@ -327,18 +327,14 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
         return db.approval.template.update({
           _id: tpl.template_id
         }, {
-          $set: {
-            status: C.APPROVAL_STATUS.UNUSED
-          }
+          $set: data
         });
       })
       .then(() => {
         return db.approval.auto.findOneAndUpdate({
           _id: template_id
         }, {
-          $set: {
-            status: C.APPROVAL_STATUS.UNUSED
-          }
+          $set: data
         }, {
           returnOriginal: false,
           returnNewDocument: true
