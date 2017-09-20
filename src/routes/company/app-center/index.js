@@ -16,20 +16,67 @@ api.use(oauthCheck());
 
 api.get('/app', (req, res, next) => {
   let company_id = req.company._id;
-  db.company.app.findOne({company_id}).then(doc => {
+  Promise.all([
+    db.app.find({}, {
+      _id: 1,
+      name: 1,
+      appid: 1,
+      icons: 1,
+      version: 1,
+      description: 1,
+    }),
+    db.company.app.findOne({company_id})
+  ])
+  .then(([all_app, doc]) => {
     if (!doc) {
+      let apps = [];
+      all_app.forEach(app => {
+        app.enabled = true;
+        apps.push({
+          appid: app.appid,
+          enabled: true
+        });
+      });
       return db.company.app.insert({
         company_id,
-        apps: []
+        apps
       })
       .then(() => {
-        res.json([]);
+        res.json(all_app);
+      });
+    } else if (all_app.length != doc.apps.length) {
+      let company_app = doc.apps;
+      let all_app_list = _.pluck(all_app, 'appid');
+      let company_app_list = _.pluck(company_app, 'appid');
+      let unadd = _.difference(all_app_list, company_app_list);
+      unadd.forEach(item => {
+        company_app.push({
+          appid: item,
+          enabled: true
+        });
+      });
+      return db.company.app.update({
+        company_id: req.company._id
+      }, {
+        $set: {
+          apps: company_app
+        }
+      }).then(() => {
+        all_app.forEach(item => {
+          for (let i = 0; i < company_app.length; i++) {
+            if (company_app[i].appid == item.appid) {
+              item.enabled = company_app[i].enabled;
+            }
+          }
+        });
+        res.json(all_app);
+      });
+    } else {
+      return _mapCompanyAppList(doc)
+      .then(company => {
+        res.json(company.apps);
       });
     }
-    return _mapCompanyAppList(doc)
-    .then(company => {
-      res.json(company.apps);
-    });
   })
   .catch(next);
 });
