@@ -367,9 +367,6 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
   if (checkDupliDate(data.workday_special) || checkDupliDate(data.holiday)) {
     throw new ApiError(400, 'validation_error');
   }
-  if (data.is_open) {
-    delete data.approval_template;
-  }
   let $set = _.clone(data);
   let update = {$set};
   if (data.auditor) {
@@ -384,25 +381,41 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
       approval_template: 1
     };
   }
-  db.attendance.setting.findAndModify({
-    query: {
-      _id: company_id
-    },
-    update,
-    fields: {
-      approval_template: 1
-    },
-    upsert:true
-  })
-  .then(doc => {
-    let setting = doc.value;
-    res.json(_.extend({}, setting, data));
-    if (!data.approval_template && data.auditor) {
-      return createApprovalTemplate(req, data.auditor);
-    }
-    if (setting.approval_template && !data.auditor) {
-      return disableApprovalTemplate(req, setting.approval_template);
-    }
+  let prepare;
+  if (data.approval_template) {
+    prepare = db.approval.template.findOne({
+      _id: data.approval_template
+    })
+    .then(doc => {
+      if (doc && doc.status == C.APPROVAL_STATUS.DELETED) {
+        delete data.approval_template;
+      }
+      return;      
+    });
+  } else {
+    prepare = Promise.resolve();
+  }
+  prepare.then(() => {
+    db.attendance.setting.findAndModify({
+      query: {
+        _id: company_id
+      },
+      update,
+      fields: {
+        approval_template: 1
+      },
+      upsert:true
+    })
+    .then(doc => {
+      let setting = doc.value;
+      res.json(_.extend({}, setting, data));
+      if (!data.approval_template && data.auditor) {
+        return createApprovalTemplate(req, data.auditor);
+      }
+      if (setting.approval_template && !data.auditor) {
+        return disableApprovalTemplate(req, setting.approval_template);
+      }
+    });
   })
   .catch(next);
 });
