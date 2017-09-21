@@ -340,6 +340,30 @@ api.get('/realname', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/invite', (req, res, next) => {
+  let redis = req.model('redis');
+  let timetemp = new Date().getTime();
+  db.user.findOne({
+    _id: req.user._id
+  })
+  .then(doc => {
+    let user_id = req.user._id.toString();
+    let company_id = doc.current_company.toString();
+    let content = user_id + ',' + company_id;
+    let key = (Math.random() + timetemp).toString(36);
+    let deepkey = 'a' + (Math.random() + timetemp).toString(36);
+    let url  = config.get('apiUrl') + 's/' + key;
+    redis.set(key, deepkey).then(status => {
+      redis.expire(key, 3600);
+      redis.set(deepkey, content).then(() => {
+        redis.expire(deepkey, 3600);
+        res.json({url: url});
+      });
+    });
+  })
+  .catch(next);
+});
+
 api.post('/invitation', (req, res, next) => {
   let redis = req.model('redis');
   let s = req.body.s;
@@ -347,7 +371,8 @@ api.post('/invitation', (req, res, next) => {
     if (!c) {
       throw new ApiError(400, 'invitation_url_expire');
     } else {
-      let company_id = ObjectId(c);
+      let content = c.split(',');
+      let company_id = ObjectId(content[1]);
       db.company.findOne({
         _id: company_id
       })

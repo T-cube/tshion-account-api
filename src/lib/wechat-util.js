@@ -4,12 +4,49 @@ import moment from 'moment';
 import Promise from 'bluebird';
 import WechatApi from 'wechat-api';
 import { ObjectId } from 'mongodb';
-
+import eventEmitter from 'events';
 import db from 'lib/database';
+import request from 'request';
 import { generateToken, timestamp, getGpsDistance } from 'lib/utils';
 import MarsGPS from 'lib/mars-gps.js';
 
-export default class WechatUtil {
+export default class WechatUtil extends eventEmitter {
+  constructor(){
+    super();
+
+    this.prepareJsApi = false;
+
+    this._bindJsApi();
+  }
+
+  _bindJsApi(){
+    const self = this;
+
+    this.on('access.token', function(access_token){
+      if(self.prepareJsApi) return;
+      self.prepareJsApi=true;
+      self._getJsApiTicket();
+      setInterval(self._getJsApiTicket.bind(this), 100*60*1000);
+    });
+  }
+
+  _getJsApiTicket(){
+    const self = this;
+    request.get(`https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${self.access_token}&type=jsapi`,function(err,res,body){
+      if(err) return;
+      if(body) self.jsapi_ticket=JSON.parse(body);
+    });
+  }
+
+  _getAccessToken(APPID,APPSECRET){
+    const self = this;
+    request.get(`https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${APPID}&secret=${APPSECRET}`,function(err,res,body){
+      if(err) return console.error(err);
+
+      const token = JSON.parse(body);
+      self.wechatApi.saveToken(token);
+    });
+  }
 
   getUserWechat(user_id) {
     return db.user.findOne({
@@ -256,6 +293,7 @@ export default class WechatUtil {
   }
 
   getWechatApi() {
+    const self =this;
     let redis = this.model('redis');
     let wechatApi =  new WechatApi(
       config.get('wechat.appid'),
@@ -263,7 +301,10 @@ export default class WechatUtil {
       (callback) => {
         redis.get('wechat-api-token')
         .then(token => {
-          return callback(null, JSON.parse(token));
+          token=JSON.parse(token);
+          self.access_token=token.access_token;
+          self.emit('access.token');
+          return callback(null, token);
         })
         .catch(e => {
           callback(e);
@@ -271,7 +312,10 @@ export default class WechatUtil {
         });
       },
       (token, callback) => {
+        callback||(callback=()=>{});
         try {
+          self.access_token=token.access_token;
+          self.emit('access.token');
           token = JSON.stringify(token);
         } catch(e) {
           return callback(e);
@@ -313,6 +357,8 @@ export default class WechatUtil {
         });
       }
     );
+    this.wechatApi = wechatApi;
+    this._getAccessToken(wechatApi.appid,wechatApi.appsecret);
     return wechatApi;
   }
 

@@ -106,26 +106,41 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       [type]: id,
     });
     if (u) {
-      db.user.findOne({
-        _id: ObjectId(u)
-      })
-      .then(doc => {
-        if (doc) {
-          db.user.findOneAndUpdate({
-            _id: user._id
-          }, {
-            $set: {
-              recommend: doc._id
-            }
-          }, {
-            returnOriginal: false,
-            returnNewDocument: true
-          }).then(invitee => {
-            if (invitee.value) {
-              console.log(invitee.value._id, invitee.value.recommend);
-            }
-          });
-        }
+      let redis = req.model('redis');
+      redis.get(u).then(c => {
+        let content = c.split(',');
+        db.user.findOne({
+          _id: ObjectId(content[0])
+        })
+        .then(doc => {
+          if (doc) {
+            db.user.findOneAndUpdate({
+              _id: user._id
+            }, {
+              $set: {
+                recommend: doc._id
+              }
+            }, {
+              returnOriginal: false,
+              returnNewDocument: true
+            }).then(invitee => {
+              if (invitee.value) {
+                let { a } = req.body;
+                if(a){
+                  var rpc = req.model('clientRpc');
+                  rpc.route('/activity/event/recommand',{
+                    recommender: invitee.value.recommend,
+                    user_id: invitee.value._id,
+                    activity_id: a
+                  }, function(data){
+                    console.log(data);
+                  });
+                }
+                console.log(invitee.value._id, invitee.value.recommend);
+              }
+            });
+          }
+        });
       });
     }
     // init notification setting when user activiated

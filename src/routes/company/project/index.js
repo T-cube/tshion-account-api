@@ -9,7 +9,7 @@ import { upload, saveCdn, randomAvatar, cropAvatar } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { authCheck } from 'lib/middleware';
-import { time, fetchCompanyMemberInfo, findObjectIdIndex, mapObjectIdToData } from 'lib/utils';
+import { time, fetchCompanyMemberInfo, findObjectIdIndex, mapObjectIdToData, fetchUserInfo } from 'lib/utils';
 import {
   PROJECT_TRANSFER,
   PROJECT_QUIT,
@@ -113,8 +113,15 @@ api.get('/:project_id', (req, res, next) => {
   data.is_owner = owner.equals(req.user._id);
   let myself = _.find(req.project.members, m => m._id.equals(req.user._id));
   data.is_admin = myself.type == C.PROJECT_MEMBER_TYPE.ADMIN || data.is_owner;
-  fetchCompanyMemberInfo(req.company, data, 'owner')
-  .then(data => {
+  _.map(data.members, m => {
+    m.user = m._id;
+    delete m._id;
+    return m;
+  });
+  Promise.all([
+    fetchUserInfo(data, 'owner'),
+    fetchUserInfo(data.members, 'user')
+  ]).then(() => {
     res.json(data);
     recordUserRecentProjects(req);
   })

@@ -1,6 +1,6 @@
 {
   "name": "tlf-api",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Tlifang API Server",
   "main": "app/index.js",
   "author": "tlifang.com <support@tlifang.com>",
