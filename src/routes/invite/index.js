@@ -27,7 +27,7 @@ api.post('/', (req, res, next) => {
     throw new ApiError(400, 'invalid_type');
   }
   let url = [host, encodeURIComponent(querystring)].join('?');
-  res.json(url);
+  res.json({url});
 });
 
 api.get('/:type', (req, res, next) => {

@@ -66,12 +66,12 @@ api.post('/', (req, res) => {
   let short_host = `${req['headers']['host']}/s/`;
   // 对url进行重新urlencode编码
   let url = decodeURIComponent(body.url);
-  /^https?\:\/\//.test(url) || /^http?\:\/\//.test(url) || (url = 'http://' + url);
-  let host = url.substr(0, url.indexOf('?'));
+  let protocol = /^http[s]?\:\/\//.test(url) ? '' : 'http://';
+  let host = protocol + url.substr(0, url.indexOf('?'));
   let querystring = url.substr(url.indexOf('?') + 1, url.length);
   url = [host, encodeURIComponent(querystring)].join('?');
   redis.setex(key, time, url).then(() => {
-    res.json({ short_url: `${short_host}${key}` });
+    res.json({ short_url: `${protocol}${short_host}${key}` });
   });
 });
 
