@@ -1,6 +1,7 @@
 import db from 'lib/database';
 import { ObjectId } from 'mongodb';
 import config from 'config';
+import { oauthCheck } from 'lib/middleware';
 
 let api = require('express').Router();
 export default api;
@@ -10,20 +11,62 @@ api.get('/:hash', (req, res, next) => {
   let hash = req.params.hash;
   redis.get(hash).then(salt => {
     let url;
-    if (/MicroMessenger|iPhone|iPad|Android|UCWEB/.test(req['headers']['user-agent'])) {
+    if (/micromessenger|ios|iphone|ipad|android|ucweb/.test(req['headers']['user-agent'].toLowerCase())) {
       if (!salt) {
         url = config.get('mobileUrl') + 'account/invalidi';
-      } else {
+      } else if (salt[0] == 'c') {
         url = config.get('mobileUrl') + 'oa/user/mine?s=' + salt;
+      } else if (salt[0] == 'a') {
+        url = config.get('mobileUrl') + 'account/register?u=' + salt;
+      } else if (hash[0] == 'e') {
+        url = salt;
       }
     } else {
       if (!salt) {
         url = config.get('webUrl') + 'account/invalidi';
-      } else {
+      } else if (salt[0] == 'c') {
         url = config.get('webUrl') + 'oa/user/desktop?s=' + salt;
+      } else if (salt[0] == 'a') {
+        url = config.get('webUrl') + 'account/register?u=' + salt;
+      } else if (hash[0] == 'e') {
+        url = salt;
       }
     }
     res.redirect(301, url);
+  });
+});
+
+api.post('/', (req, res) => {
+  let redis = req.model('redis');
+  let timestamp = new Date().getTime();
+  let body = req.body;
+  let key = 'e' + (Math.random() + timestamp).toString(36);
+  let time = 3600;
+  if (body.time && typeof body.time == 'number') {
+    time = body.time;
+  }
+  let u;
+  if (body.user_id) {
+    let timetemp = new Date().getTime();
+    let key = (Math.random() + timetemp).toString(36);
+    let content = body.user_id + ',' + body.company_id;
+    redis.setex(key, time, content);
+    u = key;
+  }
+  let short_host = `${req['headers']['host']}/s/`;
+  // 对url进行重新urlencode编码
+  let url = decodeURIComponent(body.url);
+  /^https?\:\/\//.test(url) || /^http?\:\/\//.test(url) || (url = 'http://' + url);
+  let host = url.substr(0, url.indexOf('?'));
+  let querystring = url.substr(url.indexOf('?') + 1, url.length);
+  if (u && querystring && querystring.length) {
+    querystring += '&u=' + u;
+  } else if (u) {
+    querystring = 'u=' + u;
+  }
+  url = [host, encodeURIComponent(querystring)].join('?');
+  redis.setex(key, time, url).then(() => {
+    res.json({ short_url: `${short_host}${key}` });
   });
 });
 
