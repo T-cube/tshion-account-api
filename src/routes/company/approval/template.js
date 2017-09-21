@@ -29,13 +29,21 @@ api.get('/', (req, res, next) => {
       $ne: true
     }
   };
-  db.approval.template.master.find(masterQuery, {
-    current: 1
-  })
-  .then(masters => {
+  Promise.all([
+    db.approval.template.master.find(masterQuery, {
+      current: 1
+    }),
+    db.approval.auto.find({
+      company_id: req.company._id,
+      status: {
+        $ne: C.APPROVAL_STATUS.DELETED
+      }
+    })
+  ])
+  .then(([masters, auto]) => {
     masters = masters.map(master => master.current);
     if (!masters.length) {
-      return res.json([]);
+      return res.json(auto);
     }
     let condition = {
       _id: {
@@ -78,7 +86,8 @@ api.get('/', (req, res, next) => {
         if (list && list.length) {
           total = [].concat(template, list);
         }
-        res.json(total);
+        let final = [].concat(total, auto);
+        res.json(final);
       });
     });
   })
