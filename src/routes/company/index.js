@@ -33,7 +33,7 @@ api.use(oauthCheck());
 // Get company list
 
 api.get('/test', (req, res, next) => {
-  console.log(req);
+  console.log(req.originalUrl);
   res.json({});
 });
 api.get('/', (req, res, next) => {
