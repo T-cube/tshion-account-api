@@ -252,38 +252,54 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
 
 api.get('/:template_id', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
-  db.approval.template.findOne({
-    _id: template_id,
-    company_id: req.company._id
+  db.approval.auto.findOne({
+    _id: template_id
   })
   .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
+    if (doc) {
+      return res.json(doc);
     }
-    res.json(mapCompanyInfo(req.company, doc)[0]);
+    return db.approval.template.findOne({
+      _id: template_id,
+      company_id: req.company._id
+    })
+    .then(doc => {
+      if (!doc) {
+        throw new ApiError(404);
+      }
+      res.json(mapCompanyInfo(req.company, doc)[0]);
+    });
   })
   .catch(next);
 });
 
 api.get('/:template_id/versions', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
-  db.approval.template.findOne({
-    _id: template_id,
-    company_id: req.company._id,
-  }, {
-    master_id: 1
+  db.approval.auto.findOne({
+    _id: template_id
   })
   .then(template => {
-    return db.approval.template.find({
-      master_id: template.master_id
+    if (template) {
+      return res.json(template);
+    }
+    return db.approval.template.findOne({
+      _id: template_id,
+      company_id: req.company._id,
     }, {
-      name: 1,
-      number: 1
+      master_id: 1
     })
-    .sort({
-      _id: -1
-    })
-    .then(versions => res.json(versions));
+    .then(template => {
+      return db.approval.template.find({
+        master_id: template.master_id
+      }, {
+        name: 1,
+        number: 1
+      })
+      .sort({
+        _id: -1
+      })
+      .then(versions => res.json(versions));
+    });
   })
   .catch(next);
 });
