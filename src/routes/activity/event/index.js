@@ -18,7 +18,8 @@ api.post('/draw', function(req, res, next) {
   let rpc = req.model('clientRpc');
   let user = req.user;
 
-  rpc.route('/activity/draw', { user_id: user._id, ...req.query }, data => {
+
+  rpc.route('/activity/draw/redpacket', { user_id: user._id, ...req.body }, data => {
     if (data.code === 200) return res.json(data.data);
 
     res.status(data.code).json(data);

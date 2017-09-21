@@ -85,7 +85,7 @@ export default class Activity extends AppBase {
       this.collection('item')
       .count({
         company_id,
-        time_start: { $gte: moment().startOf('day').toDate() },
+        // time_start: { $gte: moment().startOf('day').toDate() },
         $or: personal,
       }),
       this.collection('item')
@@ -104,7 +104,7 @@ export default class Activity extends AppBase {
         fetchUserInfo(now_mine, 'creator'),
         fetchUserInfo(feature_mine, 'creator'),
         fetchUserInfo(now_all, 'creator'),
-        fetchUserInfo(feature_all, 'creator'),        
+        fetchUserInfo(feature_all, 'creator'),
       ]).then(() => {
         return {
           mine: {
