@@ -349,17 +349,7 @@ api.get('/invite', (req, res, next) => {
   .then(doc => {
     let user_id = req.user._id.toString();
     let company_id = doc.current_company.toString();
-    let content = user_id + ',' + company_id;
-    let key = (Math.random() + timetemp).toString(36);
-    let deepkey = 'a' + (Math.random() + timetemp).toString(36);
-    let url  = config.get('apiUrl') + 's/' + key;
-    redis.set(key, deepkey).then(status => {
-      redis.expire(key, 3600);
-      redis.set(deepkey, content).then(() => {
-        redis.expire(deepkey, 3600);
-        res.json({url: url});
-      });
-    });
+
   })
   .catch(next);
 });
