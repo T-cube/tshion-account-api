@@ -79,7 +79,7 @@ export default class ApprovalFlow {
               counting,
               listing
                 .then(list => {
-                  let templateFields = this.forDownload ? 'name,status,forms' : 'name,status';
+                  let templateFields = this.forDownload ? 'name,status,forms' : 'name,status,for';
                   return Promise.all([
                     mapObjectIdToData(list, 'approval.template', templateFields, 'template'),
                     fetchCompanyMemberInfo(this.company, list, 'from')

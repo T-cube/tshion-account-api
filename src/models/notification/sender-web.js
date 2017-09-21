@@ -8,10 +8,10 @@ export default class WebSender extends Sender {
   }
 
   send(type, data, extended) {
-    return Promise.all([
-      this.model('socket').send(data.to, extended),
-      db.notification.insert(data)
-    ]);
+    return db.notification.insert(data).then(inserted => {
+      extended._id = inserted._id;
+      this.model('socket').send(data.to, extended);
+    });
   }
 
 }

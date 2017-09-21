@@ -12,6 +12,8 @@ import {
   nodeValidation,
   memberSanitization,
   memberValidation,
+  changeNodeSanitization,
+  changeNodeValidation,
 } from './schema';
 import {
   STRUCTURE_MEMBER_ADD,
@@ -74,6 +76,7 @@ api.put('/:node_id', (req, res, next) => {
   let tree = req.structure;
   let node_id = req.params.node_id;
   let data = req.body;
+  sanitizeValidateObject(changeNodeSanitization, changeNodeValidation, data);
   let node = tree.updateNode(data, node_id);
   if (node) {
     save(req)
