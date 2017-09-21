@@ -45,7 +45,6 @@ api.post('/check', (req, res, next) => {
 
 api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
-  let u = data.u;
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type, 'code', 'password']);
   let { password, code } = data;
@@ -105,42 +104,39 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       type: type,
       [type]: id,
     });
-    if (u) {
-      let redis = req.model('redis');
-      redis.get(u).then(c => {
-        let content = c.split(',');
-        db.user.findOne({
-          _id: ObjectId(content[0])
-        })
-        .then(doc => {
-          if (doc) {
-            db.user.findOneAndUpdate({
-              _id: user._id
-            }, {
-              $set: {
-                recommend: doc._id
+    if (data.user_id && ObjectId.isValid(data.user_id)) {
+      db.user.findOne({
+        _id: ObjectId(data.user_id)
+      })
+      .then(inviter => {
+        if (inviter) {
+          db.user.findOneAndUpdate({
+            _id: user._id
+          }, {
+            $set: {
+              recommend: inviter._id
+            }
+          }, {
+            returnOriginal: false,
+            returnNewDocument: true
+          })
+          .then(invitee => {
+            if (invitee.value) {
+              let { a } = req.body;
+              if(a){
+                var rpc = req.model('clientRpc');
+                rpc.route('/activity/event/recommend',{
+                  recommender: invitee.value.recommend,
+                  user_id: invitee.value._id,
+                  activity_id: a
+                }, function(data){
+                  console.log(data);
+                });
               }
-            }, {
-              returnOriginal: false,
-              returnNewDocument: true
-            }).then(invitee => {
-              if (invitee.value) {
-                let { a } = req.body;
-                if(a){
-                  var rpc = req.model('clientRpc');
-                  rpc.route('/activity/event/recommand',{
-                    recommender: invitee.value.recommend,
-                    user_id: invitee.value._id,
-                    activity_id: a
-                  }, function(data){
-                    console.log(data);
-                  });
-                }
-                console.log(invitee.value._id, invitee.value.recommend);
-              }
-            });
-          }
-        });
+              console.log(invitee.value._id, invitee.value.recommend);
+            }
+          });
+        }
       });
     }
     // init notification setting when user activiated

@@ -31,6 +31,11 @@ const api = express.Router();
 export default api;
 api.use(oauthCheck());
 // Get company list
+
+api.get('/test', (req, res, next) => {
+  console.log(req.originalUrl);
+  res.json({});
+});
 api.get('/', (req, res, next) => {
   db.user.findOne({
     _id: req.user._id

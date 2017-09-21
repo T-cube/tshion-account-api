@@ -349,87 +349,70 @@ api.get('/invite', (req, res, next) => {
   .then(doc => {
     let user_id = req.user._id.toString();
     let company_id = doc.current_company.toString();
-    let content = user_id + ',' + company_id;
-    let key = (Math.random() + timetemp).toString(36);
-    let deepkey = 'a' + (Math.random() + timetemp).toString(36);
-    let url  = config.get('apiUrl') + 's/' + key;
-    redis.set(key, deepkey).then(status => {
-      redis.expire(key, 3600);
-      redis.set(deepkey, content).then(() => {
-        redis.expire(deepkey, 3600);
-        res.json({url: url});
-      });
-    });
+
   })
   .catch(next);
 });
 
 api.post('/invitation', (req, res, next) => {
   let redis = req.model('redis');
-  let s = req.body.s;
-  redis.get(s).then(c => {
-    if (!c) {
-      throw new ApiError(400, 'invitation_url_expire');
+  let company_id = ObjectId(req.body.company_id);
+  db.company.findOne({
+    _id: company_id
+  })
+  .then(doc => {
+    if (_.some(doc.members, m => m._id.equals(req.user._id)&&m.status=='normal')) {
+      res.json({_id: doc._id, name: doc.name});
+    } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
+      return db.company.update({
+        _id: doc._id,
+        'members._id': req.user._id
+      }, {
+        'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
+      }).then(() => {
+        res.json({_id: doc._id, name: doc.name});
+      });
     } else {
-      let content = c.split(',');
-      let company_id = ObjectId(content[1]);
-      db.company.findOne({
-        _id: company_id
-      })
-      .then(doc => {
-        if (_.some(doc.members, m => m._id.equals(req.user._id)&&m.status=='normal')) {
-          res.json({_id: doc._id, name: doc.name});
-        } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
-          return db.company.update({
-            _id: doc._id,
-            'members._id': req.user._id
-          }, {
-            'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
-          }).then(() => {
-            res.json({_id: doc._id, name: doc.name});
-          });
-        } else {
-          return Promise.all([
-            db.user.update({
+      return Promise.all([
+        db.user.update({
+          _id: req.user._id
+        }, {
+          $addToSet:{
+            companies: company_id
+          }
+        }),
+        db.company.update({
+          _id: company_id,
+        }, {
+          $push: {
+            members: {
+              _id: req.user._id,
+              name: req.user.name,
+              email: req.user.email,
+              mobile: req.user.mobile,
+              sex: null,
+              status: C.COMPANY_MEMBER_STATUS.NORMAL,
+              type: C.COMPANY_MEMBER_TYPE.NORMAL,
+              address: ''
+            },
+            'structure.members': {
               _id: req.user._id
-            }, {
-              $addToSet:{
-                companies: company_id
-              }
-            }),
-            db.company.update({
-              _id: company_id,
-            }, {
-              $push: {
-                members: {
-                  _id: req.user._id,
-                  name: req.user.name,
-                  email: req.user.email,
-                  mobile: req.user.mobile,
-                  sex: null,
-                  status: C.COMPANY_MEMBER_STATUS.NORMAL,
-                  type: C.COMPANY_MEMBER_TYPE.NORMAL,
-                  address: ''
-                },
-                'structure.members': {
-                  _id: req.user._id
-                }
-              }
-            }),
-            req.model('activity').insert({
-              creator: req.user._id,
-              company: company_id,
-              action: C.ACTIVITY_ACTION.JOIN,
-              target_type: C.OBJECT_TYPE.COMPANY,
-            })
-          ])
-          .then(() => {
-            res.json({_id: doc._id, name: doc.name});
-          });
-        }
+            }
+          }
+        }),
+        req.model('activity').insert({
+          creator: req.user._id,
+          company: company_id,
+          action: C.ACTIVITY_ACTION.JOIN,
+          target_type: C.OBJECT_TYPE.COMPANY,
+        })
+      ])
+      .then(() => {
+        res.json({_id: doc._id, name: doc.name});
       });
     }
-  }).catch(next);
+  })
+  .catch(next);
 });
 
 api.use('/schedule', require('./schedule').default);
