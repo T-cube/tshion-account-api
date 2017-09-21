@@ -100,6 +100,7 @@ export class SmsSender {
       pairs.push(key + '=' + params[key]);
     });
     let str = smsKey + '&' + pairs.join('&') + '&' + smsKey;
+    console.log('str is',str);
     let hash = crypto.createHash('md5').update(str).digest('hex');
     return hash;
   }
@@ -139,6 +140,67 @@ export class SmsSender {
     })
     .then(data => console.log(data))
     .catch(e => console.error(e));
+  }
+
+  findModel(query){
+    const {options} = this;
+    const isVerifyStr = query.status;
+    let params = {};
+    let uri = 'http://www.sendcloud.net/smsapi/list';
+    if(typeof isVerifyStr === 'undefined'){
+      params = {
+        smsUser:options.smsUser
+      };
+      uri = uri + '?smsUser=' + options.smsUser;
+    }else{
+      params = {
+        isVerifyStr:`${isVerifyStr}`,
+        smsUser:options.smsUser
+      };
+      uri = uri + '?smsUser=' + options.smsUser + '&isVerifyStr=' + isVerifyStr;
+    }
+    let signature = this.sign(params);
+    uri = uri + '&signature=' + signature;
+    return new Promise((resolve,reject)=>{
+      return rp.get({
+        uri:uri,
+        json:true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
+
+  findOneModel(query){
+    const {options} = this;
+    const {templateIdStr} = query;
+    let params = {
+      smsUser:options.smsUser,
+      templateIdStr:templateIdStr
+    };
+    let uri = 'http://www.sendcloud.net/smsapi/get';
+    let signature = this.sign(params);
+    uri = uri + '?templateIdStr='+templateIdStr+'&smsUser='+params.smsUser+'&signature=' + signature;
+    return new Promise((resolve,reject)=>{
+      return rp.get({
+        uri:uri,
+        json:true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
+
+
+
+
+
+  sndSMSTask(){
+
   }
 
 }

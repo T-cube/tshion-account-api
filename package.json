@@ -60,6 +60,7 @@
     "mongodb": "^2.1.18",
     "morgan": "^1.8.2",
     "multer": "^1.1.0",
+    "node-redis-queue-lh": "^1.0.7",
     "node-schedule": "^1.1.0",
     "node-string-pad": "0.0.4",
     "node-version-compare": "^1.0.1",
