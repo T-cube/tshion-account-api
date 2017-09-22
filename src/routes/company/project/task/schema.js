@@ -40,6 +40,10 @@ const schema = {
         }
       },
       checker: { $objectId: 1, optional: true },
+      attachments: {
+        type: 'array', optional: true,
+        items: { $objectId: 1 }
+      }
     },
 
     validation: {

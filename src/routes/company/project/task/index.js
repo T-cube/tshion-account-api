@@ -127,7 +127,7 @@ api.get('/', (req, res, next) => {
 
 api.post('/', (req, res, next) => {
   let data = req.body;
-  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title', 'tags', 'followers'];
+  let fields = ['assignee', 'date_due', 'date_start', 'description', 'priority', 'title', 'tags', 'followers', 'attachments'];
   validate('task', data, fields);
   let followers;
   if (data.followers && _.isArray(data.followers)) {
