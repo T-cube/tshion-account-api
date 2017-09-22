@@ -93,6 +93,7 @@ export class SmsSender {
   }
 
   sign(params) {
+    console.log('params',params);
     const { smsKey } = this.options;
     let keys = _.keys(params).sort();
     let pairs = [];
@@ -100,12 +101,13 @@ export class SmsSender {
       pairs.push(key + '=' + params[key]);
     });
     let str = smsKey + '&' + pairs.join('&') + '&' + smsKey;
-    console.log('str is',str);
+    console.log('str',str);
     let hash = crypto.createHash('md5').update(str).digest('hex');
     return hash;
   }
 
   encodeVars(data) {
+    console.log('data is',data);
     data = _.mapObject(data, val => {
       return encodeURIComponent(val);
     });
@@ -141,7 +143,7 @@ export class SmsSender {
     .then(data => console.log(data))
     .catch(e => console.error(e));
   }
-
+//查询多个短信模版
   findModel(query){
     const {options} = this;
     const isVerifyStr = query.status;
@@ -172,7 +174,7 @@ export class SmsSender {
       });
     });
   }
-
+//查询单个短信模版
   findOneModel(query){
     const {options} = this;
     const {templateIdStr} = query;
@@ -194,13 +196,197 @@ export class SmsSender {
       });
     });
   }
+// 创建短信模版
+  createModel(query){
+    const {options} = this;
+    const {templateName,templateText,signPositionStr,smsTypeStr,signId} = query;
 
+    let params = {
+      smsUser:options.smsUser,
+      templateName:templateName,
+      templateText:templateText,
+      signId:signId,
+      signPositionStr:signPositionStr,
+      smsTypeStr:smsTypeStr
+    };
 
+    let uri = 'http://www.sendcloud.net/smsapi/addsms';
+    let signature = this.sign(params);
+    Object.assign(params,{signature:signature});
+    return new Promise((resolve,reject)=>{
+      return rp.post({
+        uri: uri,
+        form: params,
+        json: true,
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
+//提交模版审核
+  checkModel(query){
+    const {options} = this;
+    const {templateIdStr} = query;
 
+    let params = {
+      smsUser:options.smsUser,
+      templateIdStr:templateIdStr
+    };
 
-
-  sndSMSTask(){
-
+    let uri = 'http://www.sendcloud.net/smsapi/submitsms';
+    let signature = this.sign(params);
+    Object.assign(params,{signature:signature});
+    // uri = uri + '?templateIdStr='+templateIdStr+'&smsUser='+params.smsUser+'&signature'+signature;
+    return new Promise((resolve,reject)=>{
+      return rp.post({
+        uri: uri,
+        form: params,
+        json: true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
   }
 
+//查询多个签名
+  signList(){
+    const {options} = this;
+    let params = {
+      smsUser:options.smsUser
+    };
+    let uri = 'http://www.sendcloud.net/smsapi/sign/list';
+    let signature = this.sign(params);
+    uri = uri + '?smsUser='+options.smsUser+'&signature='+signature;
+    return new Promise((resolve,reject)=>{
+      return rp.get({
+        uri:uri,
+        json:true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
+
+//查询单个签名
+  signDetail(query){
+    const {options} = this;
+    const {id} = query;
+    let params = {
+      smsUser:options.smsUser,
+      id:Number(id)
+    };
+    let uri = 'http://www.sendcloud.net/smsapi/sign/get';
+    let signature = this.sign(params);
+    let parmList = [];
+    for(let key in params){
+      let item = key + '=' + params[key];
+      parmList.push(item);
+    }
+    uri = uri + '?'+parmList.join('&')+'&signature='+signature;
+    return new Promise((resolve,reject)=>{
+      return rp.get({
+        uri:uri,
+        json:true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
+
+// 添加签名， 短信模板必须含有「签名」, 否则不能通过审核. 目前用户只能拥有1个签名.
+  addSign(query){
+    const {options} = this;
+    const {signType,signName} = query;
+    let params = {
+      smsUser:options.smsUser,
+      signType:Number(signType),
+      signName:signName
+    };
+    let uri = 'http://www.sendcloud.net/smsapi/sign/save';
+    let signature = this.sign(params);
+    let parmList = [];
+    for(let key in params){
+      let item = key + '=' + params[key];
+      parmList.push(item);
+    }
+    uri = uri + '?'+parmList.join('&')+'&signature='+signature;
+    return new Promise((resolve,reject)=>{
+      return rp.post({
+        uri:uri,
+        from:params,
+        json:true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
+
+// 更新签名
+  updateSign(query){
+    const {options} = this;
+    const {id,signType,signName} = query;
+    let params = {
+      smsUser:options.smsUser,
+      id:Number(id),
+      signType:Number(signType),
+      signName:signName
+    };
+    let uri = 'http://www.sendcloud.net/smsapi/sign/updatesms';
+    let signature = this.sign(params);
+    let parmList = [];
+    for(let key in params){
+      let item = key + '=' + params[key];
+      parmList.push(item);
+    }
+    uri = uri + '?'+parmList.join('&')+'&signature='+signature;
+    return new Promise((resolve,reject)=>{
+      return rp.get({
+        uri:uri,
+        json:true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
+
+// 发送任务
+  sendSMSTask(query){
+    const {options} = this;
+    const {phone,content,templateId} = query;
+    let artical = this.encodeVars({code:content});
+    console.log('artical is',artical);
+    let params = {
+      smsUser:options.smsUser,
+      templateId:templateId,
+      phone:phone,
+      vars:artical
+    };
+    let signature = this.sign(params);
+    _.extend(params, {
+      signature: signature,
+    });
+    console.log(params);
+    return new Promise((resolve,reject)=>{
+      return rp.post({
+        uri: 'http://www.sendcloud.net/smsapi/send',
+        form: params,
+        json: true,
+      })
+      .then((data)=>{resolve(data);})
+      .catch((err) => {reject(err);});
+    });
+
+  }
 }

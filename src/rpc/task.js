@@ -14,7 +14,7 @@ import { queue } from 'node-redis-queue-lh';
 import app from 'index';
 
 const route = RpcRoute.router();
-const options = { db:5 };
+const options = { db:3 };
 const client = new queue(options);
 
 export default route;
@@ -37,8 +37,9 @@ function startQueue(){
   client.shift(['smsTask'],0).then(task=>{
     if(task && task.length){
       task = JSON.parse(task[1]);
-      app.model('sms').send();
-      console.log('tasl0',task._id);
+      app.model('sms').sendSMSTask(task).then(data=>{
+        console.log('data is',data);
+      });
     }
   });
 }
@@ -147,14 +148,21 @@ route.on('/create',(query) => {
   let sendAll = query.sendAll;
   let target = query.target;
   let content = query.content;
+  let templateId = query.templateId;
   let createTime = new Date();
-
   if(!sendAll){
     Promise.all(target.map(elem => {
       let targetId = elem.targetId;
       let phone = elem.phone;
-      let params = {userId:userId,content:content,name:name,createTime:createTime,status:0,phone:phone,targetId:targetId};
-
+      let params = {
+        userId:userId,
+        content:content,
+        name:name,
+        createTime:createTime,
+        status:0,
+        templateId:templateId,
+        phone:phone,
+        targetId:targetId};
       return new Promise((resolve,reject)=>{
         taskModel.createTask(params).then(data=>{
           resolve();
@@ -178,7 +186,6 @@ route.on('/create',(query) => {
   }else{
     return [];
   }
-
 });
 
 //查询多个短信模版
@@ -199,4 +206,61 @@ route.on('/model/detail',(query)=>{
   });
 });
 
+// 创建短信模版
+route.on('/model/create',(query)=>{
+  return app.model('sms').createModel(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+//提交模版审核
+route.on('/model/check',(query)=>{
+  return app.model('sms').checkModel(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+//查询多个签名
+route.on('/sign/list',()=>{
+  return app.model('sms').signList().then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+// 查询单个签名
+route.on('/sign/detail',(query)=>{
+  return app.model('sms').signDetail(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+// 添加签名
+route.on('/sign/add',(query)=>{
+  console.log('query',query);
+  return app.model('sms').addSign(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+// 更新签名
+route.on('/sign/update',(query)=>{
+  return app.model('sms').updateSign(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+
+// 启动程序默认开启任务
 startQueue();

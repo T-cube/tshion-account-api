@@ -7,14 +7,16 @@ const schema = {
       content: { type: 'string' },
       target: { type: 'array' },
       userId:{ type:'string' },
-      sendAll:{type:'number'}
+      sendAll:{type:'number'},
+      templateId:{type:'number'}
     },
     validation: {
       name: { type: 'string' },
       content: { type: 'string' },
       target:{ type:'array' },
       userId:{ type:'string' },
-      sendAll:{type:'number'}
+      sendAll:{type:'number'},
+      templateId:{type:'number'}
     }
   }
 };
