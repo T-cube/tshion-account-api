@@ -34,7 +34,7 @@ api.get('/:type', (req, res, next) => {
   let url;
   let querystring = req.originalUrl.substr(req.originalUrl.indexOf('?') + 1, req.originalUrl.length);
   if (/micromessenger|ios|iphone|ipad|android|ucweb/.test(req['headers']['user-agent'].toLowerCase())) {
-    url = config.get('mobile');
+    url = config.get('mobileUrl');
     if (req.params.type == 'account') {
       url += `account/register?${querystring}`;
     } else if (req.params.type == 'company') {
