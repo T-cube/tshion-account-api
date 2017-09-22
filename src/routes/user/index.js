@@ -355,7 +355,6 @@ api.get('/invite', (req, res, next) => {
 });
 
 api.post('/invitation', (req, res, next) => {
-  let redis = req.model('redis');
   let company_id = ObjectId(req.body.company_id);
   db.company.findOne({
     _id: company_id

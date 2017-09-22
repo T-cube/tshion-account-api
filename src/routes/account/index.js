@@ -45,6 +45,7 @@ api.post('/check', (req, res, next) => {
 
 api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
+  let invite_data = _.clone(req.body);
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type, 'code', 'password']);
   let { password, code } = data;
@@ -104,9 +105,9 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       type: type,
       [type]: id,
     });
-    if (data.user_id && ObjectId.isValid(data.user_id)) {
+    if (invite_data.user_id && ObjectId.isValid(invite_data.user_id)) {
       db.user.findOne({
-        _id: ObjectId(data.user_id)
+        _id: ObjectId(invite_data.user_id)
       })
       .then(inviter => {
         if (inviter) {
@@ -122,7 +123,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
           })
           .then(invitee => {
             if (invitee.value) {
-              let { a } = req.body;
+              let { a } = invite_data;
               if(a){
                 var rpc = req.model('clientRpc');
                 rpc.route('/activity/event/recommend',{
