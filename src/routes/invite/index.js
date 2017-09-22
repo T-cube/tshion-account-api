@@ -15,7 +15,7 @@ api.post('/', (req, res, next) => {
     qs.push(`${key}=${body[key]}`);
   }
   let querystring = qs.join('&');
-  let host = `${req['headers']['host']}/api/invite`;
+  let host = config.get('webUrl') + 'api/invite';
   if (body.type == 'account') {
     host += '/account';
   } else if (body.type == 'company') {

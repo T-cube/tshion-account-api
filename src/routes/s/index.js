@@ -63,7 +63,7 @@ api.post('/', (req, res) => {
   if (body.time && typeof body.time == 'number') {
     time = body.time;
   }
-  let short_host = `${req['headers']['host']}/s/`;
+  let short_host = config.get('webUrl') + '/s/';
   // 对url进行重新urlencode编码
   let url = decodeURIComponent(body.url);
   let protocol = /^http[s]?\:\/\//.test(url) ? '' : 'http://';
@@ -71,7 +71,7 @@ api.post('/', (req, res) => {
   let querystring = url.substr(url.indexOf('?') + 1, url.length);
   url = [host, encodeURIComponent(querystring)].join('?');
   redis.setex(key, time, url).then(() => {
-    res.json({ short_url: `${protocol}${short_host}${key}` });
+    res.json({ short_url: `${short_host}${key}` });
   });
 });
 
