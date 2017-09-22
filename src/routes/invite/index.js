@@ -38,7 +38,7 @@ api.get('/:type', (req, res, next) => {
     if (req.params.type == 'account') {
       url += `account/register?${querystring}`;
     } else if (req.params.type == 'company') {
-      url += `oa/user/mine?${querystring}`;
+      url += `oa/user/desktop?${querystring}`;
     } else {
       url += 'account/invalidi';
     }
