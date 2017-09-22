@@ -63,7 +63,7 @@ api.post('/', (req, res) => {
   if (body.time && typeof body.time == 'number') {
     time = body.time;
   }
-  let short_host = config.get('webUrl') + '/s/';
+  let short_host = config.get('webUrl') + 's/';
   // 对url进行重新urlencode编码
   let url = decodeURIComponent(body.url);
   let protocol = /^http[s]?\:\/\//.test(url) ? '' : 'http://';
