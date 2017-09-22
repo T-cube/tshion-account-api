@@ -52,5 +52,5 @@ api.get('/:type', (req, res, next) => {
       url += 'account/invalidi';
     }
   }
-  res.redirect(301, url);
+  res.redirect(301, decodeURIComponent(url));
 });
