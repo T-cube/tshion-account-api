@@ -37,7 +37,7 @@ api.get('/:type', (req, res, next) => {
     url = config.get('mobile');
     if (req.params.type == 'account') {
       url += `account/register?${querystring}`;
-    } else if (req.params.type == 'account') {
+    } else if (req.params.type == 'company') {
       url += `oa/user/mine?${querystring}`;
     } else {
       url += 'account/invalidi';
@@ -46,7 +46,7 @@ api.get('/:type', (req, res, next) => {
     url = config.get('webUrl');
     if (req.params.type == 'account') {
       url += `account/register?${querystring}`;
-    } else if (req.params.type == 'account') {
+    } else if (req.params.type == 'company') {
       url += `oa/user/mine?${querystring}`;
     } else {
       url += 'account/invalidi';
