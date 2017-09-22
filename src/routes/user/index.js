@@ -360,6 +360,9 @@ api.post('/invitation', (req, res, next) => {
     _id: company_id
   })
   .then(doc => {
+    if (!doc) {
+      res.json(...req.body);
+    }
     if (_.some(doc.members, m => m._id.equals(req.user._id)&&m.status=='normal')) {
       res.json({_id: doc._id, name: doc.name});
     } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
