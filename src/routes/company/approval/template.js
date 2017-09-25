@@ -77,18 +77,8 @@ api.get('/', (req, res, next) => {
           item.scope = item.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
         }
       });
-      return db.approval.auto.find({
-        company_id: req.company._id,
-        status: C.APPROVAL_STATUS.NORMAL
-      })
-      .then(list => {
-        let total = template;
-        if (list && list.length) {
-          total = [].concat(template, list);
-        }
-        let final = [].concat(total, auto);
-        res.json(final);
-      });
+      let final = [].concat(template, auto);
+      res.json(final);
     });
   })
   .catch(next);
