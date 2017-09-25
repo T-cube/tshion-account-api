@@ -74,6 +74,50 @@ export let autoValidation = {
   auto: { type: 'boolean' },
 };
 
+export let changeAutoSanitization = {
+  name: { type: 'string' },
+  description: { type: 'string', optional: true },
+  forms: {
+    type: 'array',
+    optional: true,
+    items: fieldValidation
+  },
+  copy_to: {
+    type: 'array',
+    items: {
+      type: 'object',
+      optional: true,
+      strict: true,
+      properties: {
+        _id: { $objectId: 1 },
+        type: { type: 'string' }
+      }
+    }
+  },
+};
+
+export let changeAutoValidation = {
+  name: { type: 'string' },
+  description: { type: 'string', optional: true },
+  forms: {
+    type: 'array',
+    optional: true,
+    items: fieldValidation
+  },
+  copy_to: {
+    type: 'array',
+    optional: true,
+    items: {
+      type: 'object',
+      optional: true,
+      properties: {
+        _id: { $objectId: 1 },
+        type: { $enum: ENUMS.APPROVER_TYPE },
+      }
+    }
+  },
+};
+
 export let sanitization = {
   name: { type: 'string' },
   description: { type: 'string', optional: true },
@@ -211,6 +255,40 @@ export let itemValidation = {
     properties: {
       _id: { $objectId: 1 },
       type: { $enum: ENUMS.APPROVAL_TARGET }
+    }
+  },
+};
+
+export let autoItemSanitization = {
+  template: { $objectId: 1 },
+  department: { $objectId: 1 },
+  content: { type: 'string' },
+  forms: {
+    type: 'array',
+    optional: true,
+    items: {
+      type: 'object',
+      properties: {
+        _id: { $objectId: 1 },
+        value: { type: 'string' }
+      }
+    }
+  },
+};
+
+export let autoItemValidation = {
+  template: { $objectId: 1 },
+  department: { $objectId: 1 },
+  content: { type: 'string' },
+  forms: {
+    type: 'array',
+    optional: true,
+    items: {
+      type: 'object',
+      properties: {
+        _id: { $objectId: 1 },
+        value: { type: 'string' }
+      }
     }
   },
 };

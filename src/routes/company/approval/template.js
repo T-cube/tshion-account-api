@@ -6,7 +6,7 @@ import Promise from 'bluebird';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import { sanitizeValidateObject } from 'lib/inspector';
-import { sanitization, validation, statusSanitization, statusValidation, autoSanitization, autoValidation } from './schema';
+import { sanitization, validation, statusSanitization, statusValidation, autoSanitization, autoValidation, changeAutoSanitization, changeAutoValidation } from './schema';
 import C from 'lib/constants';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
@@ -24,15 +24,26 @@ api.get('/', (req, res, next) => {
     company_id: req.company._id,
     status: {
       $ne: C.APPROVAL_STATUS.DELETED
+    },
+    auto: {
+      $ne: true
     }
   };
-  db.approval.template.master.find(masterQuery, {
-    current: 1
-  })
-  .then(masters => {
+  Promise.all([
+    db.approval.template.master.find(masterQuery, {
+      current: 1
+    }),
+    db.approval.auto.find({
+      company_id: req.company._id,
+      status: {
+        $ne: C.APPROVAL_STATUS.DELETED
+      }
+    })
+  ])
+  .then(([masters, auto]) => {
     masters = masters.map(master => master.current);
     if (!masters.length) {
-      return res.json([]);
+      return res.json(auto);
     }
     let condition = {
       _id: {
@@ -66,7 +77,8 @@ api.get('/', (req, res, next) => {
           item.scope = item.scope.map(scope => _.pick(tree.findNodeById(scope), '_id', 'name'));
         }
       });
-      res.json(template);
+      let final = [].concat(template, auto);
+      res.json(final);
     });
   })
   .catch(next);
@@ -100,9 +112,11 @@ api.get('/related', (req, res, next) => {
       itemCondition.from = user;
   }
   db.approval.template.find(tplCondition, fields)
-  .then(tpls => Promise.filter(tpls, tpl => db.approval.item.count(_.extend({
-    template: tpl._id,
-  }, itemCondition))))
+  .then(tpls => {
+    return Promise.filter(tpls, tpl => db.approval.item.count(_.extend({
+      template: tpl._id,
+    }, itemCondition)));
+  })
   .then(tpls => {
     // template used push ahead
     let newTpls = [];
@@ -141,8 +155,9 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
       sanitizeValidateObject(autoSanitization, autoValidation, data);
       checkAndInitForms(data.forms);
       data.company_id = req.company._id;
+      data.templates = [];
       data.status = C.APPROVAL_STATUS.NORMAL;
-      return Approval.createTemplate(data);
+      return Approval.createAutoTemplate(data);
     }
   })
   .then(template => {
@@ -158,63 +173,136 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
 api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
-  sanitizeValidateObject(sanitization, validation, data);
-  data.steps.forEach(i => {
-    i._id = ObjectId();
-  });
-  checkAndInitForms(data.forms);
-  let criteria = {
-    _id: template_id,
-    company_id: req.company._id,
-    status: C.APPROVAL_STATUS.UNUSED
-  };
-  Approval.createNewVersionTemplate(data, {
-    criteria
+  db.approval.auto.findOne({
+    _id: template_id
   })
-  .then(newTpl => {
-    res.json(newTpl);
-    addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
-      approval_template: template_id
-    });
-    return Approval.cancelItemsUseTemplate(req, template_id);
+  .then(tpl => {
+    if (!tpl) {
+      sanitizeValidateObject(sanitization, validation, data);
+      data.steps.forEach(i => {
+        i._id = ObjectId();
+      });
+      checkAndInitForms(data.forms);
+      let criteria = {
+        _id: template_id,
+        company_id: req.company._id,
+        status: C.APPROVAL_STATUS.UNUSED
+      };
+      return Approval.createNewVersionTemplate(data, {
+        criteria
+      })
+      .then(newTpl => {
+        res.json(newTpl);
+        addActivity(req, C.ACTIVITY_ACTION.UPDATE, {
+          approval_template: template_id
+        });
+        return Approval.cancelItemsUseTemplate(req, template_id);
+      });
+    } else {
+      sanitizeValidateObject(changeAutoSanitization, changeAutoValidation, data);
+      checkAndInitForms(data.forms);
+      return Promise.map(tpl.templates, item => {
+        return db.approval.template.findOneAndUpdate({
+          _id: item.template_id
+        }, {
+          $set: {
+            status: C.APPROVAL_STATUS.UNUSED
+          }
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
+        })
+        .then(doc => {
+          let old = doc.value;
+          data.scope = old.scope;
+          data.steps = old.steps;
+          data.steps[0].copy_to = data.copy_to;
+          let criteria = {
+            _id: old._id,
+            company_id: req.company._id,
+            status: C.APPROVAL_STATUS.UNUSED
+          };
+          return Approval.createNewVersionTemplate(data, {
+            criteria
+          })
+          .then(() => {
+            return Approval.cancelItemsUseTemplate(req, old._id);
+          });
+        });
+      })
+      .then(() => {
+        return db.approval.auto.findOneAndUpdate({
+          _id: template_id
+        }, {
+          $set: {
+            name: data.name,
+            description: data.description,
+            forms: data.forms,
+            copy_to: data.copy_to
+          }
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
+        })
+        .then(doc => {
+          res.json(doc.value);
+        });
+      });
+    }
   })
   .catch(next);
 });
 
 api.get('/:template_id', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
-  db.approval.template.findOne({
-    _id: template_id,
-    company_id: req.company._id
+  db.approval.auto.findOne({
+    _id: template_id
   })
   .then(doc => {
-    if (!doc) {
-      throw new ApiError(404);
+    if (doc) {
+      return res.json(doc);
     }
-    res.json(mapCompanyInfo(req.company, doc)[0]);
+    return db.approval.template.findOne({
+      _id: template_id,
+      company_id: req.company._id
+    })
+    .then(doc => {
+      if (!doc) {
+        throw new ApiError(404);
+      }
+      res.json(mapCompanyInfo(req.company, doc)[0]);
+    });
   })
   .catch(next);
 });
 
 api.get('/:template_id/versions', (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
-  db.approval.template.findOne({
-    _id: template_id,
-    company_id: req.company._id,
-  }, {
-    master_id: 1
+  db.approval.auto.findOne({
+    _id: template_id
   })
   .then(template => {
-    return db.approval.template.find({
-      master_id: template.master_id
+    if (template) {
+      return res.json(template);
+    }
+    return db.approval.template.findOne({
+      _id: template_id,
+      company_id: req.company._id,
     }, {
-      name: 1,
-      number: 1
+      master_id: 1
     })
-    .sort({
-      _id: -1
-    })
-    .then(versions => res.json(versions));
+    .then(template => {
+      return db.approval.template.find({
+        master_id: template.master_id
+      }, {
+        name: 1,
+        number: 1
+      })
+      .sort({
+        _id: -1
+      })
+      .then(versions => res.json(versions));
+    });
   })
   .catch(next);
 });
@@ -223,28 +311,59 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
   let data = req.body;
   let template_id = ObjectId(req.params.template_id);
   sanitizeValidateObject(statusSanitization, statusValidation, data);
-  db.approval.template.update({
-    _id: template_id,
-    company_id: req.company._id,
-    status: {
-      $ne: C.APPROVAL_STATUS.DELETED
-    }
-  }, {
-    $set: data
+  db.approval.auto.findOne({
+    _id: template_id
   })
   .then(doc => {
-    res.json(doc);
-    if (!doc.nModified) {
-      return;
-    }
-    if (data.status == C.APPROVAL_STATUS.UNUSED) {
-      addActivity(req, C.ACTIVITY_ACTION.DISABLE_APPROVAL_TPL, {
-        approval_template: template_id
+    if (!doc) {
+      return db.approval.template.findOneAndUpdate({
+        _id: template_id,
+        company_id: req.company._id,
+        status: {
+          $ne: C.APPROVAL_STATUS.DELETED
+        }
+      }, {
+        $set: data
+      }, {
+        returnOriginal: false,
+        returnNewDocument: true
+      })
+      .then(doc => {
+        res.json(doc.value);
+        if (!doc.ok) {
+          return;
+        }
+        if (doc.value.status == C.APPROVAL_STATUS.UNUSED) {
+          addActivity(req, C.ACTIVITY_ACTION.DISABLE_APPROVAL_TPL, {
+            approval_template: template_id
+          });
+          return Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
+        } else {
+          return addActivity(req, C.ACTIVITY_ACTION.ENABLE_APPROVAL_TPL, {
+            approval_template: template_id
+          });
+        }
       });
-      return Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.UPDATE);
     } else {
-      return addActivity(req, C.ACTIVITY_ACTION.ENABLE_APPROVAL_TPL, {
-        approval_template: template_id
+      return Promise.map(doc.templates, tpl => {
+        return db.approval.template.update({
+          _id: tpl.template_id
+        }, {
+          $set: data
+        });
+      })
+      .then(() => {
+        return db.approval.auto.findOneAndUpdate({
+          _id: template_id
+        }, {
+          $set: data
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
+        })
+        .then(auto => {
+          res.json(auto.value);
+        });
       });
     }
   })
@@ -253,42 +372,86 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
 
 api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   let template_id = ObjectId(req.params.template_id);
-  db.approval.template.findAndModify({
-    query: {
-      _id: template_id,
-      company_id: req.company._id,
-      for: {
-        $exists: false
-      }
-    },
-    update: {
-      $set: {
-        status: C.APPROVAL_STATUS.DELETED
-      }
-    },
-    fields: {
-      master_id: 1
-    }
+  db.approval.auto.findOne({
+    _id: template_id
   })
-  .then(template => {
-    if (!template || !template.value) {
-      throw new ApiError(404);
-    }
-    return Promise.all([
-      db.approval.template.master.update({
-        _id: template.value.master_id
-      }, {
-        $set: {
-          status: C.APPROVAL_STATUS.DELETED
+  .then(doc => {
+    if (!doc) {
+      db.approval.template.findAndModify({
+        query: {
+          _id: template_id,
+          company_id: req.company._id,
+          for: {
+            $exists: false
+          }
+        },
+        update: {
+          $set: {
+            status: C.APPROVAL_STATUS.DELETED
+          }
+        },
+        fields: {
+          master_id: 1
         }
-      }),
-      Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.DELETE),
-      addActivity(req, C.ACTIVITY_ACTION.DELETE, {
-        approval_template: template_id
       })
-    ]);
+      .then(template => {
+        if (!template || !template.value) {
+          throw new ApiError(404);
+        }
+        return Promise.all([
+          db.approval.template.master.update({
+            _id: template.value.master_id
+          }, {
+            $set: {
+              status: C.APPROVAL_STATUS.DELETED
+            }
+          }),
+          Approval.cancelItemsUseTemplate(req, template_id, C.ACTIVITY_ACTION.DELETE),
+          addActivity(req, C.ACTIVITY_ACTION.DELETE, {
+            approval_template: template_id
+          })
+        ]);
+      })
+      .then(() => res.json({}));
+    } else {
+
+      return Promise.map(doc.templates, tpl => {
+        return db.approval.template.findOneAndUpdate({
+          _id: tpl.template_id
+        }, {
+          $set: {
+            status: C.APPROVAL_STATUS.DELETED
+          }
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
+        }).then(doc => {
+          return db.approval.template.master.update({
+            _id: doc.value.master_id
+          }, {
+            $set: {
+              status: C.APPROVAL_STATUS.DELETED
+            }
+          });
+        });
+      })
+      .then(() => {
+        return db.approval.auto.findOneAndUpdate({
+          _id: template_id
+        }, {
+          $set: {
+            status: C.APPROVAL_STATUS.DELETED
+          }
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true
+        })
+        .then(auto => {
+          res.json(auto.value);
+        });
+      });
+    }
   })
-  .then(() => res.json({}))
   .catch(next);
 });
 

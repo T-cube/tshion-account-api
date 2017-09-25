@@ -16,6 +16,8 @@ import {
   stepValidation,
   revokeSanitization,
   revokeValidation,
+  autoItemSanitization,
+  autoItemValidation
 } from './schema';
 import Structure from 'models/structure';
 import C from 'lib/constants';
@@ -37,26 +39,181 @@ api.post('/',
   let data = req.body;
   let user_id = req.user._id;
   let company_id = req.company._id;
-  sanitizeValidateObject(itemSanitization, itemValidation, data);
-  if (req.files) {
-    data.files = _.map(req.files, file => {
-      if (config.get('upload.approval_attachment.max_file_size') < file.size) {
-        throw new ApiError(400, 'file_too_large');
+  if (!data.template) {
+    throw new ApiError(400, 'template_is_missing');
+  } else {
+    let template_id = ObjectId(data.template);
+    db.approval.auto.findOne({
+      _id: template_id
+    })
+    .then(tpl => {
+      if (!tpl) {
+        sanitizeValidateObject(itemSanitization, itemValidation, data);
+        if (req.files) {
+          data.files = _.map(req.files, file => {
+            if (config.get('upload.approval_attachment.max_file_size') < file.size) {
+              throw new ApiError(400, 'file_too_large');
+            }
+            return _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size');
+          });
+        }
+        _.extend(data, {
+          from: user_id,
+          company_id: company_id,
+          apply_date: new Date(),
+          status: C.APPROVAL_ITEM_STATUS.PROCESSING,
+          is_archived: false,
+        });
+        return Approval.createItem(data, req)
+        .then(item => res.json(item));
+      } else {
+        sanitizeValidateObject(autoItemSanitization, autoItemValidation, data);
+        _.extend(data, {
+          from: user_id,
+          company_id: company_id,
+          apply_date: new Date(),
+          status: C.APPROVAL_ITEM_STATUS.PROCESSING,
+          is_archived: false,
+        });
+        let tree = new Structure(req.company.structure);
+        let departments = tree.findMemberDepartments(req.user._id);
+        if (!_.some(departments, d => d.equals(data.department))) {
+          throw new ApiError(400, 'invalid_department');
+        }
+        let template = _.find(tpl.templates, item => item.department.equals(data.department));
+        if (template) {
+          return db.approval.template.findOne({
+            _id: template.template_id
+          }).then(doc => {
+            let template_admins = _.pluck(_.pluck(doc.steps, 'approver'), '_id');
+            let admins = _.compact(tree.findParentsAdmins(data.department));
+            admins = admins.length ? admins : [req.company.owner];
+            admins.reverse();
+            if (template_admins.length != admins.length) {
+              let newTemplate = _.pick(tpl, 'name', 'description', 'forms');
+              newTemplate.company_id = req.company._id;
+              return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template._id)
+              .then(doc => {
+                data.template = doc._id;
+                return Approval.createItem(data, req)
+                .then(item => {
+                  res.json(item);
+                  return Approval.cancelItemsUseTemplate(req, template._id);
+                });
+              });
+            } else {
+              let flag = false;
+              for (let i = 0; i < admins.length; i++) {
+                if (template_admins[i].equals(admins[i])) {
+                  flag = true;
+                }
+              }
+              if (flag) {
+                let newTemplate = _.pick(tpl, 'name', 'description', 'forms');
+                newTemplate.steps = [];
+                newTemplate.company_id = req.company._id;
+                return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template.template_id)
+                .then(doc => {
+                  data.template = doc._id;
+                  data.company_id = req.company._id;
+                  return Approval.createItem(data, req)
+                  .then(item => {
+                    res.json(item);
+                    return Approval.cancelItemsUseTemplate(req, template._id);
+                  });
+                });
+              } else {
+                data.template = template.template_id;
+                data.company_id = req.company._id;
+                return Approval.createItem(data, req)
+                .then(item => res.json(item));
+              }
+            }
+          });
+        } else {
+          let autoTemplate = _.pick(tpl, 'name', 'description', 'forms', 'copy_to');
+          autoTemplate.auto = true;
+          autoTemplate.scope = [data.department];
+          let admins = _.compact(tree.findParentsAdmins(data.department));
+          admins = admins.length ? admins : [req.company.owner];
+          admins.reverse();
+          autoTemplate.steps = [];
+          autoTemplate.status = C.APPROVAL_STATUS.NORMAL;
+          autoTemplate.company_id = req.company._id;
+          admins.forEach(admin => {
+            autoTemplate.steps.push({
+              approver: {
+                _id: admin,
+                type: 'member',
+              },
+              copy_to: [],
+              _id: ObjectId()
+            });
+          });
+          autoTemplate.steps[0].copy_to = tpl.copy_to;
+          return Approval.createTemplate(autoTemplate).then(doc => {
+            return db.approval.auto.update({
+              _id: template_id
+            }, {
+              $push: {
+                templates: {
+                  department: data.department,
+                  template_id: doc._id
+                }
+              }
+            })
+            .then(() => {
+              data.template = doc._id;
+              delete data.department;
+              return Approval.createItem(data, req)
+              .then(item => res.json(item));
+            });
+          });
+        }
       }
-      return _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size');
-    });
+    })
+    .catch(next);
   }
-  _.extend(data, {
-    from: user_id,
-    company_id: company_id,
-    apply_date: new Date(),
-    status: C.APPROVAL_ITEM_STATUS.PROCESSING,
-    is_archived: false,
-  });
-  Approval.createItem(data, req)
-  .then(item => res.json(item))
-  .catch(next);
 });
+
+function _updateApprovalTemplate(admins, data, tpl, Approval, old_id) {
+  admins.forEach(admin => {
+    data.steps.push({
+      approver: {
+        _id: admin,
+        type: 'member',
+      },
+      copy_to: [],
+      _id: ObjectId()
+    });
+  });
+  data._id = old_id;
+  data.steps[0].copy_to = tpl.copy_to;
+  let criteria = {
+    _id: old_id,
+    status: C.APPROVAL_STATUS.UNUSED
+  };
+  return db.approval.template.findOne({
+    _id: old_id
+  })
+  .then(doc => {
+    data.scope = doc.scope;
+    return db.approval.template.update({
+      _id: old_id
+    }, {
+      $set: {
+        status: C.APPROVAL_STATUS.UNUSED
+      }
+    }).then(() => {
+      return Approval.createNewVersionTemplate(data, {
+        criteria
+      })
+      .then(newTpl => {
+        return newTpl;
+      });
+    });
+  });
+}
 
 api.get('/:item_id', (req, res, next) => {
   let item_id = ObjectId(req.params.item_id);
