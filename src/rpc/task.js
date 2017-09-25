@@ -1,50 +1,29 @@
 import RpcRoute from 'models/rpc-route';
 import { strToReg } from 'lib/utils';
 import path from 'path';
+// import EventEmitter from 'events';
 import db from 'lib/database';
 import _ from 'underscore';
 import { ObjectId,DBRef } from 'mongodb';
 import moment from 'moment-timezone';
 import { validate } from './schema/task';
+import { ApiError } from 'lib/error';
 
 
 import AccountModel from './models/account';
 import TaskModel from './models/task';
-import { queue } from 'node-redis-queue-lh';
 import app from 'index';
 
 const route = RpcRoute.router();
-const options = { db:3 };
-const client = new queue(options);
-
 export default route;
 
 const accountModel = new AccountModel();
 const taskModel = new TaskModel();
-
 //给任务表添加索引,根据用户名，创建时间来创造索引
-db.task.count().then(result=>{
-  if(result === 0){
-    return  db.task.createIndex({userId:1,createTime:-1,status:1});
-  }else{
-    return;
-  }
-});
+taskModel.createIndex();
 
-let ctrlTask = false;
-
-function startQueue(){
-  client.shift(['smsTask'],0).then(task=>{
-    if(task && task.length){
-      task = JSON.parse(task[1]);
-      app.model('sms').sendSMSTask(task).then(data=>{
-        console.log('data is',data);
-      });
-    }
-  });
-}
-
-
+// 启动程序默认开启任务
+taskModel.startQueue();
 
 
 //筛选用户
@@ -176,7 +155,7 @@ route.on('/create',(query) => {
           return JSON.stringify(result);
         });
         // 加入队列
-        return client.add('smsTask',results).then(function(count){
+        return taskModel.addList(results).then(function(count){
           return;
         }).catch(err=>{
           return;
@@ -184,7 +163,50 @@ route.on('/create',(query) => {
       });
     });
   }else{
-    return [];
+    let userCount = db.user.find({mobile:{$exists:true,$ne:null}}).count();
+      // 节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
+    const pageSize = 1000;
+    let page = 0;
+    const pageCount = Math.floor(userCount/1000);
+    let Recursive = function(){
+      if(page>pageCount){
+        return;
+      }
+      createTime = new Date();
+      db.user.find({mobile:{$exists:true,$ne:null}},{_id:1,mobile:1}).skip(page*pageSize).limit(pageSize).then((data)=>{
+        if(data && data.length){
+          target = data.map(elem => {
+            return elem = {
+              userId:userId,
+              content:content,
+              name:name,
+              createTime:createTime,
+              status:0,
+              templateId:templateId,
+              phone : elem.mobile,
+              targetId:elem._id
+            };
+          });
+          return db.task.insertMany(target,{_id:1,phone:1,content:1,templateId:1}).then((result)=>{
+            return taskModel.findTask({status:0,createTime:createTime,userId:userId}).then((results) => {
+              results = results.map(result=>{
+                return JSON.stringify(result);
+              });
+              // 加入队列
+              return taskModel.addList(results).then(function(count){
+                page = page + 1;
+                return Recursive();
+              }).catch(err=>{
+                throw new ApiError(500,err);
+              });
+            });
+          });
+        }else{
+          return;
+        }
+      });
+    };
+    Recursive();
   }
 });
 
@@ -262,5 +284,3 @@ route.on('/sign/update',(query)=>{
 });
 
 
-// 启动程序默认开启任务
-startQueue();

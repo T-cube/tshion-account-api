@@ -365,8 +365,9 @@ export class SmsSender {
   sendSMSTask(query){
     const {options} = this;
     const {phone,content,templateId} = query;
-    let artical = this.encodeVars({code:content});
-    console.log('artical is',artical);
+    // let artical = this.encodeVars({code:content});
+    // content = encodeURIComponent();
+    let artical = JSON.stringify({code:content});
     let params = {
       smsUser:options.smsUser,
       templateId:templateId,
@@ -377,16 +378,19 @@ export class SmsSender {
     _.extend(params, {
       signature: signature,
     });
+
     console.log(params);
     return new Promise((resolve,reject)=>{
-      return rp.post({
-        uri: 'http://www.sendcloud.net/smsapi/send',
-        form: params,
-        json: true,
-      })
-      .then((data)=>{resolve(data);})
-      .catch((err) => {reject(err);});
+      resolve({statusCode:200,message:'发送成功'});
     });
-
+    // return new Promise((resolve,reject)=>{
+    //   return rp.post({
+    //     uri: 'http://www.sendcloud.net/smsapi/send',
+    //     form: params,
+    //     json: true,
+    //   })
+    //   .then((data)=>{resolve(data);})
+    //   .catch((err) => {reject(err);});
+    // });
   }
 }
