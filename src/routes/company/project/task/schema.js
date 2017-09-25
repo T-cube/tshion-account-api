@@ -6,7 +6,7 @@ const schema = {
     sanitization: {
       parent_id: { $objectId: 1, optional: true },
       status: { type: 'string' },
-      title: { type: 'string' },
+      title: { type: 'string', rules: ['trim'] },
       description: { type: 'string', optional: true },
       assignee: { $objectId: 1, optional: true },
       followers: {
@@ -49,7 +49,7 @@ const schema = {
     validation: {
       parent_id: { $objectId: 1, optional: true },
       status: { $enum: ENUMS.TASK_STATUS },
-      title: { type: 'string' },
+      title: { type: 'string', minLength: 1 },
       description: { type: 'string', optional: true },
       assignee: { $objectId: 1, optional: true },
       followers: {
