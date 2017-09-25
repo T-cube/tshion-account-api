@@ -235,7 +235,8 @@ api.put('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, 
           $set: {
             name: data.name,
             description: data.description,
-            forms: data.forms
+            forms: data.forms,
+            copy_to: data.copy_to
           }
         }, {
           returnOriginal: false,
