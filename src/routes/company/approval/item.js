@@ -87,10 +87,11 @@ api.post('/',
           }).then(doc => {
             let template_admins = _.pluck(_.pluck(doc.steps, 'approver'), '_id');
             let admins = _.compact(tree.findParentsAdmins(data.department));
-            admins = admins.length ? admins : req.company.owner;
+            admins = admins.length ? admins : [req.company.owner];
             admins.reverse();
             if (template_admins.length != admins.length) {
               let newTemplate = _.pick(tpl, 'name', 'description', 'forms');
+              newTemplate.company_id = req.company._id;
               return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template._id)
               .then(doc => {
                 data.template = doc._id;
@@ -109,9 +110,12 @@ api.post('/',
               }
               if (flag) {
                 let newTemplate = _.pick(tpl, 'name', 'description', 'forms');
-                return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template._id)
+                newTemplate.steps = [];
+                newTemplate.company_id = req.company._id;
+                return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template.template_id)
                 .then(doc => {
                   data.template = doc._id;
+                  data.company_id = req.company._id;
                   return Approval.createItem(data, req)
                   .then(item => {
                     res.json(item);
@@ -120,6 +124,7 @@ api.post('/',
                 });
               } else {
                 data.template = template.template_id;
+                data.company_id = req.company._id;
                 return Approval.createItem(data, req)
                 .then(item => res.json(item));
               }
@@ -130,10 +135,13 @@ api.post('/',
           autoTemplate.auto = true;
           autoTemplate.scope = [data.department];
           let admins = _.compact(tree.findParentsAdmins(data.department));
-          admins = admins.length ? admins : req.company.owner;
+          admins = admins.length ? admins : [req.company.owner];
           admins.reverse();
+          autoTemplate.steps = [];
+          autoTemplate.status = C.APPROVAL_STATUS.NORMAL;
+          autoTemplate.company_id = req.company._id;
           admins.forEach(admin => {
-            data.steps.push({
+            autoTemplate.steps.push({
               approver: {
                 _id: admin,
                 type: 'member',
@@ -142,7 +150,7 @@ api.post('/',
               _id: ObjectId()
             });
           });
-          data.steps[0].copy_to = tpl.copy_to;
+          autoTemplate.steps[0].copy_to = tpl.copy_to;
           return Approval.createTemplate(autoTemplate).then(doc => {
             return db.approval.auto.update({
               _id: template_id
@@ -156,7 +164,8 @@ api.post('/',
             })
             .then(() => {
               data.template = doc._id;
-              return Approval.createTemplate(data, req)
+              delete data.department;
+              return Approval.createItem(data, req)
               .then(item => res.json(item));
             });
           });
@@ -182,7 +191,6 @@ function _updateApprovalTemplate(admins, data, tpl, Approval, old_id) {
   data.steps[0].copy_to = tpl.copy_to;
   let criteria = {
     _id: old_id,
-    company_id: tpl.company_id,
     status: C.APPROVAL_STATUS.UNUSED
   };
   return db.approval.template.findOne({

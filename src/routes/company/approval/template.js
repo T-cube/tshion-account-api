@@ -112,9 +112,11 @@ api.get('/related', (req, res, next) => {
       itemCondition.from = user;
   }
   db.approval.template.find(tplCondition, fields)
-  .then(tpls => Promise.filter(tpls, tpl => db.approval.item.count(_.extend({
-    template: tpl._id,
-  }, itemCondition))))
+  .then(tpls => {
+    return Promise.filter(tpls, tpl => db.approval.item.count(_.extend({
+      template: tpl._id,
+    }, itemCondition)));
+  })
   .then(tpls => {
     // template used push ahead
     let newTpls = [];
