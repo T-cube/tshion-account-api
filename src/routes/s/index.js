@@ -39,6 +39,7 @@ export default api;
 api.get('/:hash', (req, res, next) => {
   let redis = req.model('redis');
   let hash = req.params.hash;
+  console.log(hash);
   redis.get(hash).then(url => {
     if (url) {
       res.redirect(301, url);
