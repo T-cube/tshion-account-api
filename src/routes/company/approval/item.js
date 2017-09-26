@@ -87,9 +87,16 @@ api.post('/',
           }).then(doc => {
             let template_admins = _.pluck(_.pluck(doc.steps, 'approver'), '_id');
             let admins = _.compact(tree.findParentsAdmins(data.department));
-            admins = admins.length ? admins : [req.company.owner];
+            let flag = admins.length ? true : false;
+            admins = flag ? admins.push(req.company.owner) : [req.company.owner];
             admins.reverse();
-            if (template_admins.length != admins.length) {
+            let need_change = false;
+            for (let i = 0; i < admins.length; i++) {
+              if (!admins[i].equals(template_admins[i])) {
+                need_change = true;
+              }
+            }
+            if ((template_admins.length != admins.length) || need_change) {
               let newTemplate = _.pick(tpl, 'name', 'description', 'forms');
               newTemplate.company_id = req.company._id;
               return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template._id)
@@ -135,7 +142,8 @@ api.post('/',
           autoTemplate.auto = true;
           autoTemplate.scope = [data.department];
           let admins = _.compact(tree.findParentsAdmins(data.department));
-          admins = admins.length ? admins : [req.company.owner];
+          let flag = admins.length ? true : false;
+          admins = flag ? admins : [req.company.owner];
           admins.reverse();
           autoTemplate.steps = [];
           autoTemplate.status = C.APPROVAL_STATUS.NORMAL;
@@ -149,6 +157,14 @@ api.post('/',
               copy_to: [],
               _id: ObjectId()
             });
+          });
+          flag && autoTemplate.steps.push({
+            approver: {
+              _id: req.company.owner,
+              type: 'member',
+            },
+            copy_to: [],
+            _id: ObjectId()
           });
           autoTemplate.steps[0].copy_to = tpl.copy_to;
           return Approval.createTemplate(autoTemplate).then(doc => {

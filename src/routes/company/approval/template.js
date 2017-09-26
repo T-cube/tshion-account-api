@@ -51,6 +51,9 @@ api.get('/', (req, res, next) => {
       },
       status: {
         $ne: C.APPROVAL_STATUS.DELETED
+      },
+      auto: {
+        $ne: true
       }
     };
     if (user && ObjectId.isValid(user)) {
