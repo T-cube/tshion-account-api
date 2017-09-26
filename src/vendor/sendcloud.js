@@ -251,6 +251,60 @@ export class SmsSender {
       });
     });
   }
+// 更新短信模版
+  updateModel(query){
+    const {options} = this;
+    const {templateIdStr,templateName,templateText,signId,signPositionStr,smsTypeStr} = query;
+    let params = {
+      smsUser:options.smsUser,
+      templateIdStr:templateIdStr,
+      templateName:templateName,
+      signId:signId,
+      signPositionStr:signPositionStr,
+      smsTypeStr:smsTypeStr
+    };
+    if(templateText){
+      Object.assign(params,{templateText:templateText});
+    }
+    let uri = 'http://www.sendcloud.net/smsapi/updatesms';
+    let signature = this.sign(params);
+    Object.assign(params,{signature:signature});
+    return new Promise((resolve,reject)=>{
+      return rp.post({
+        uri: uri,
+        form: params,
+        json: true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
+
+// 删除短信模版
+  deleteModel(query){
+    const {options} = this;
+    const {templateIdStr} = query;
+    let params = {
+      smsUser:options.smsUser,
+      templateIdStr:templateIdStr
+    };
+    let uri = 'http://www.sendcloud.net/smsapi/deletesms';
+    let signature = this.sign(params);
+    Object.assign(params,{signature:signature});
+    return new Promise((resolve,reject)=>{
+      return rp.post({
+        uri: uri,
+        form: params,
+        json: true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
+    });
+  }
 
 //查询多个签名
   signList(){

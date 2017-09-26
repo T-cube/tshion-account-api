@@ -130,10 +130,10 @@ route.on('/create',(query) => {
   let templateId = query.templateId;
   let createTime = new Date();
   if(!sendAll){
-    Promise.all(target.map(elem => {
+    let params = target.map(elem=>{
       let targetId = elem.targetId;
       let phone = elem.phone;
-      let params = {
+      return elem = {
         userId:userId,
         content:content,
         name:name,
@@ -141,15 +141,10 @@ route.on('/create',(query) => {
         status:0,
         templateId:templateId,
         phone:phone,
-        targetId:targetId};
-      return new Promise((resolve,reject)=>{
-        taskModel.createTask(params).then(data=>{
-          resolve();
-        }).catch(err=>{
-          reject(err);
-        });
-      });
-    })).then(()=>{
+        targetId:targetId
+      };
+    });
+    db.task.insertMany(params).then(()=>{
       return taskModel.findTask({status:0,createTime:createTime,userId:userId}).then(results=>{
         results = results.map(result=>{
           return JSON.stringify(result);
@@ -187,7 +182,7 @@ route.on('/create',(query) => {
               targetId:elem._id
             };
           });
-          return db.task.insertMany(target,{_id:1,phone:1,content:1,templateId:1}).then((result)=>{
+          return db.task.insertMany(target).then((result)=>{
             return taskModel.findTask({status:0,createTime:createTime,userId:userId}).then((results) => {
               results = results.map(result=>{
                 return JSON.stringify(result);
@@ -237,9 +232,27 @@ route.on('/model/create',(query)=>{
   });
 });
 
+// 更新短信模版
+route.on('/model/update',(query)=>{
+  return app.model('sms').updateModel(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
 //提交模版审核
 route.on('/model/check',(query)=>{
   return app.model('sms').checkModel(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+//删除短信模版
+route.on('/model/delete',(query)=>{
+  return app.model('sms').deleteModel(query).then((data)=>{
     return data;
   }).catch((err)=>{
     throw new Error(err);
@@ -283,4 +296,59 @@ route.on('/sign/update',(query)=>{
   });
 });
 
+// 查询任务
+route.on('/list',(query)=>{
+  const {keyword,status,createTime} = query;
+  let params = {};
+  if(keyword){
+    let text = keyword.replace(/\"|\"|\'|\'/g,"");
+    let reg = new RegExp(text,'i');
+    console.log('reg is ',reg);
+    Object.assign(params,{
+      $or : [
+        {
+          name: {
+            $regex: reg
+          }
+        },
+        {
+          phone: {
+            $regex: reg
+          }
+        }
+      ]
+    });
+  }
+  if(status){
+    Object.assign(params,{
+      status:status
+    });
+  }
+  if(createTime){
+    let begin = new Date(createTime);
+    let after = moment(begin).add(1,'day').toDate();
+    Object.assign(params,{
+      $and:[
+        {createTime:{$gt:begin}},
+        {createTime:{$lt:begin}}
+      ]
+    });
+  }
+  return taskModel.findTask(params,{
+    _id:1,
+    phone:1,
+    name:1,
+    content:1,
+    status:1,
+    message:1,
+    createTime:1,
+    templateId:1
+  }).then((result)=>{
+    return result;
+  }).catch((err)=>{
+    throw new ApiError(500,err);
+  }).catch((err)=>{
+    return [];
+  });
+});
 

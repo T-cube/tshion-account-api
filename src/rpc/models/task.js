@@ -32,13 +32,17 @@ export default class Task{
     return this.db.task.insert(param);
   }
 
-  findTask(param){
-    return this.db.task.find(param,{
+  findTask(param,returnData){
+    let params = {
       _id:1,
       phone:1,
       content:1,
       templateId:1
-    });
+    };
+    if (returnData){
+      params = returnData;
+    }
+    return this.db.task.find(param,params);
   }
 
   updateTask(param,setParam,cb){
