@@ -145,7 +145,7 @@ route.on('/create',(query) => {
         type:'sms'
       };
     });
-    db.task.insertMany(params).then(()=>{
+    db.queue.task.insertMany(params).then(()=>{
       return taskModel.findTask({status:0,createTime:createTime,userId:userId,type:'sms'}).then(results=>{
         results = results.map(result=>{
           return JSON.stringify(result);
@@ -184,7 +184,7 @@ route.on('/create',(query) => {
               type:'sms'
             };
           });
-          return db.task.insertMany(target).then((result)=>{
+          return db.queue.task.insertMany(target).then((result)=>{
             return taskModel.findTask({status:0,createTime:createTime,userId:userId,type:'sms'}).then((results) => {
               results = results.map(result=>{
                 return JSON.stringify(result);

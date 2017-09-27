@@ -29,7 +29,7 @@ export default class Task{
   }
 
   createTask(param){
-    return this.db.task.insert(param);
+    return this.db.queue.task.insert(param);
   }
 
   findTask(param,returnData,pageInfo){
@@ -43,12 +43,12 @@ export default class Task{
       params = returnData;
     }
     if(!pageInfo){
-      return this.db.task.find(param,params);
+      return this.db.queue.task.find(param,params);
     }else{
       const {page,pagesize} = pageInfo;
       return Promise.all([
-        this.db.task.find(param).count(),
-        this.db.task.find(param).skip(page*pagesize).limit(pagesize).sort({createTime:-1})
+        this.db.queue.task.count(param),
+        this.db.queue.task.find(param).skip(page*pagesize).limit(pagesize).sort({createTime:-1})
       ]).then(([count,tasks])=>{
         return {
           count,
@@ -61,14 +61,14 @@ export default class Task{
   }
 
   updateTask(param,setParam,cb){
-    return this.db.task.update(param,setParam);
+    return this.db.queue.task.update(param,setParam);
   }
 
   //给任务表添加索引,根据用户名，创建时间来创造索引
   createIndex(){
-    this.db.task.count().then(result=>{
+    this.db.queue.task.count({}).then(result=>{
       if(result === 0){
-        return  db.task.createIndex({userId:1,createTime:-1,status:1,type:1});
+        return  this.db.queue.task.createIndex({userId:1,createTime:-1,status:1,type:1});
       }else{
         return;
       }
