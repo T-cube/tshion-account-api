@@ -83,13 +83,9 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
 
 api.get('/sign/user/:user_id', (req, res, next) => {
   let user_id = ObjectId(req.params.user_id);
-  let year = parseInt(req.query.year);
-  let month = parseInt(req.query.month);
-  if (!year || !month) {
-    let date = new Date();
-    year = date.getFullYear();
-    month = date.getMonth() + 1;
-  }
+  let date = new Date();
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
   if (!user_id.equals(req.user._id) && !checkUserTypeFunc(req, C.COMPANY_MEMBER_TYPE.ADMIN)) {
     throw new ApiError(400, 'forbidden');
   }
@@ -390,7 +386,7 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
       if (doc && doc.status == C.APPROVAL_STATUS.DELETED) {
         delete data.approval_template;
       }
-      return;      
+      return;
     });
   } else {
     prepare = Promise.resolve();
