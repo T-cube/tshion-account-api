@@ -93,7 +93,6 @@ export class SmsSender {
   }
 
   sign(params) {
-    console.log('params',params);
     const { smsKey } = this.options;
     let keys = _.keys(params).sort();
     let pairs = [];
@@ -101,13 +100,11 @@ export class SmsSender {
       pairs.push(key + '=' + params[key]);
     });
     let str = smsKey + '&' + pairs.join('&') + '&' + smsKey;
-    console.log('str',str);
     let hash = crypto.createHash('md5').update(str).digest('hex');
     return hash;
   }
 
   encodeVars(data) {
-    console.log('data is',data);
     data = _.mapObject(data, val => {
       return encodeURIComponent(val);
     });
@@ -117,7 +114,6 @@ export class SmsSender {
   send(template, phone, data) {
     const { options } = this;
     let templateData = options.templates[template];
-    console.log(template, options.templates);
     if (!templateData) {
       throw new SendCloudError(`invalid sms template: ${template}`);
     }
@@ -432,8 +428,6 @@ export class SmsSender {
     _.extend(params, {
       signature: signature,
     });
-
-    console.log(params);
     return new Promise((resolve,reject)=>{
       resolve({statusCode:200,message:'发送成功'});
     });

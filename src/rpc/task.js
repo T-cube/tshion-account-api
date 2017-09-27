@@ -141,11 +141,12 @@ route.on('/create',(query) => {
         status:0,
         templateId:templateId,
         phone:phone,
-        targetId:targetId
+        targetId:targetId,
+        type:'sms'
       };
     });
     db.task.insertMany(params).then(()=>{
-      return taskModel.findTask({status:0,createTime:createTime,userId:userId}).then(results=>{
+      return taskModel.findTask({status:0,createTime:createTime,userId:userId,type:'sms'}).then(results=>{
         results = results.map(result=>{
           return JSON.stringify(result);
         });
@@ -179,11 +180,12 @@ route.on('/create',(query) => {
               status:0,
               templateId:templateId,
               phone : elem.mobile,
-              targetId:elem._id
+              targetId:elem._id,
+              type:'sms'
             };
           });
           return db.task.insertMany(target).then((result)=>{
-            return taskModel.findTask({status:0,createTime:createTime,userId:userId}).then((results) => {
+            return taskModel.findTask({status:0,createTime:createTime,userId:userId,type:'sms'}).then((results) => {
               results = results.map(result=>{
                 return JSON.stringify(result);
               });
@@ -279,7 +281,6 @@ route.on('/sign/detail',(query)=>{
 
 // 添加签名
 route.on('/sign/add',(query)=>{
-  console.log('query',query);
   return app.model('sms').addSign(query).then((data)=>{
     return data;
   }).catch((err)=>{
@@ -298,12 +299,11 @@ route.on('/sign/update',(query)=>{
 
 // 查询任务
 route.on('/list',(query)=>{
-  const {keyword,status,createTime} = query;
-  let params = {};
+  const {keyword,status,createTime,page,pagesize} = query;
+  let params = {type:'sms'};
   if(keyword){
     let text = keyword.replace(/\"|\"|\'|\'/g,"");
     let reg = new RegExp(text,'i');
-    console.log('reg is ',reg);
     Object.assign(params,{
       $or : [
         {
@@ -343,12 +343,17 @@ route.on('/list',(query)=>{
     message:1,
     createTime:1,
     templateId:1
-  }).then((result)=>{
+  },{page:page,pagesize:pagesize}).then((result)=>{
     return result;
   }).catch((err)=>{
     throw new ApiError(500,err);
   }).catch((err)=>{
-    return [];
+    return {
+      count:0,
+      tasks:[],
+      page:page,
+      pagesize:pagesize
+    };
   });
 });
 

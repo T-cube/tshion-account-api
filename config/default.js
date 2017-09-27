@@ -326,7 +326,9 @@ module.exports = {
       pageSize:1000 //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
     },
     email:{
-
+      listName:'emailTask',
+      timeout:0,
+      pageSize:1000 //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
     }
   }
 };

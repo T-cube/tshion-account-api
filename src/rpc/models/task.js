@@ -32,7 +32,7 @@ export default class Task{
     return this.db.task.insert(param);
   }
 
-  findTask(param,returnData){
+  findTask(param,returnData,pageInfo){
     let params = {
       _id:1,
       phone:1,
@@ -42,7 +42,22 @@ export default class Task{
     if (returnData){
       params = returnData;
     }
-    return this.db.task.find(param,params);
+    if(!pageInfo){
+      return this.db.task.find(param,params);
+    }else{
+      const {page,pagesize} = pageInfo;
+      return Promise.all([
+        this.db.task.find(param).count(),
+        this.db.task.find(param).skip(page*pagesize).limit(pagesize).sort({createTime:-1})
+      ]).then(([count,tasks])=>{
+        return {
+          count,
+          tasks,
+          page,
+          pagesize
+        };
+      });
+    }
   }
 
   updateTask(param,setParam,cb){
@@ -53,7 +68,7 @@ export default class Task{
   createIndex(){
     this.db.task.count().then(result=>{
       if(result === 0){
-        return  db.task.createIndex({userId:1,createTime:-1,status:1});
+        return  db.task.createIndex({userId:1,createTime:-1,status:1,type:1});
       }else{
         return;
       }
