@@ -41,17 +41,17 @@ api.post('/wechat-jsapi-signture', (req, res, next) => {
   var WechatUtil = req.model('wechat-util');
 
   WechatUtil.getWechatApi().getJsConfig({
-    debug: true,
+    debug: false,
     jsApiList: [
       'onMenuShareTimeline',
       'onMenuShareAppMessage',
-      'onMenuShareQQ',
-      'onMenuShareWeibo',
-      'onMenuShareQZone',
-      'startRecord',
-      'stopRecord',
-      'onVoiceRecordEnd',
-      'playVoice',
+      // 'onMenuShareQQ',
+      // 'onMenuShareWeibo',
+      // 'onMenuShareQZone',
+      // 'startRecord',
+      // 'stopRecord',
+      // 'onVoiceRecordEnd',
+      // 'playVoice',
       'getNetworkType'
     ],
     url: req.body.url
