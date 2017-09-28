@@ -92,7 +92,11 @@ export default class Notification {
   }
 
   sendToMany(list, type, data) {
-    let promises = list.map(user => this.sendToSingle(user, type, data));
+    let promises = list.sort().map((user, index) => {
+      if(user.equals(list[index-1]||{})) return null;
+
+      return this.sendToSingle(user, type, data);
+    });
     return Promise.all(promises);
   }
 
