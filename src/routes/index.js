@@ -32,6 +32,7 @@ let routes = [
   'weather',
   'wechat',
   'payment',
+  'invite',
 ];
 
 routes = routes.concat([

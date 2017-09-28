@@ -41,6 +41,9 @@ api.get('/report', (req, res, next) => {
         }
       } else {
         report_target = memberDepartments;
+        if (req.user._id.equals(req.company.owner)) {
+          report_target.push(req.company.structure._id);
+        }
       }
     }
     if (start_date) {

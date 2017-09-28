@@ -101,7 +101,6 @@ app.loadModel('activity', Activity);
 app.loadModel('account', Account);
 app.loadModel('document', Document);
 app.loadModel('wechat-util', WechatUtil);
-app.model('wechat-util').getWechatApi();
 app.loadModel('notification-setting', NotificationSetting);
 app.loadModel('broadcast', Broadcast);
 

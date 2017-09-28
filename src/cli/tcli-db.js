@@ -5,10 +5,12 @@ import moment from 'moment';
 import path from 'path';
 import _ from 'underscore';
 const fs = Promise.promisifyAll(require('fs'));
+import { ObjectId } from 'mongodb';
 
 import '../bootstrap';
 import program from 'commander';
 import { handleError } from './lib/utils';
+import db from 'lib/database';
 
 function backup(options) {
   const spawn = require('child_process').spawn;
@@ -128,6 +130,129 @@ function restore(options) {
   });
 }
 
+function member() {
+  return db.company.find({}, {members: 1, structure: 1})
+  .then(companies => {
+    return Promise.map(companies, company => {
+      let all_member = _.pluck(company.members, '_id');
+      let root_node_member = _.pluck(company.structure.members, '_id');
+      let need_add_member = [];
+      let flag;
+      if (!root_node_member.length) {
+        all_member.forEach(item => {
+          need_add_member.push({
+            _id: item
+          });
+        });
+      } else {
+        for (let i = 0; i < all_member.length; i++) {
+          flag = false;
+          for (let m = 0; m < root_node_member.length; m++) {
+            if (all_member[i].equals(root_node_member[m])) {
+              flag = true;
+            }
+            if ((m == root_node_member.length - 1) && !flag) {
+              need_add_member.push({_id: all_member[i]});
+            }
+          }
+        }
+      }
+      let total_members = [].concat(company.structure.members, need_add_member);
+      return db.company.update({
+        _id: company._id
+      }, {
+        $set: {
+          'structure.members': total_members
+        }
+      })
+      .then(() => {
+        console.log('1 company complete');
+      });
+    })
+    .then(() => {
+      console.log('update complete, starting check');
+      return Promise.map(companies, item => {
+        return db.company.findOne({
+          _id: item._id
+        }, {
+          members: 1,
+          structure: 1
+        })
+        .then(company => {
+          if (company.structure.members.length < company.members.length) {
+            console.log('1 error occured');
+            return fs.appendFile(__dirname + '/../../failedCompanyList.log', company._id.toString() + ',');
+          }
+        });
+      });
+    });
+  });
+}
+
+function initMember() {
+  let positions = ['CEO', 'CTO', 'COO', 'designer', 'manager', 'engineer', 'hoter'];
+  return db.company.find({}, {members: 1, structure: 1})
+  .then(companies => {
+    return Promise.map(companies, company => {
+      let length = company.members.length;
+      let random = Math.ceil(length * Math.random());
+      let position_random = Math.ceil(positions.length * Math.random());
+      let random_position = positions.sort((a, b) => Math.random()>0.5 ? -1 : 1);
+      let origin_member = company.members.sort((a, b) => Math.random()>0.5 ? -1 : 1);
+      let company_positions = [];
+      let company_members = [];
+      for (let i = 0; i < position_random; i++) {
+        company_positions.push({
+          _id: ObjectId(),
+          title: random_position[i]
+        });
+      }
+      for (let i = 0; i < (position_random < origin_member.length ? position_random : origin_member.length); i++) {
+        company_members.push({
+          _id: origin_member[i]._id,
+          position: company_positions[i]._id
+        });
+      }
+      return db.company.update({
+        _id: company._id
+      }, {
+        $set: {
+          'structure.positions': company_positions,
+          'structure.members': company_members
+        }
+      })
+      .then(() => {
+        console.log('1 company complete');
+      });
+    });
+  });
+}
+
+function initstructure() {
+  return db.company.find({}, {name: 1, structure: 1, members: 1})
+  .then(companies => {
+    return Promise.map(companies, company => {
+      let structure = {
+        _id: ObjectId(),
+        children: [],
+        positions: [],
+        members: [],
+        name: company.name
+      };
+      return db.company.update({
+        _id: company._id
+      }, {
+        $set: {
+          structure
+        }
+      })
+      .then(() => {
+        console.log('1 company complete');
+      });
+    });
+  });
+}
+
 program
   .command('backup')
   .description('backup database using -m for comments which is required, -t -f -l is optional')
@@ -158,6 +283,36 @@ program
   .option('-f --file <file>', 'restore file name without extend name')
   .action((options) => {
     restore(options);
+  });
+
+program
+  .command('member')
+  .description('put all company members into structure root node members')
+  .action(() => {
+    member()
+    .then(() => {
+      console.log('all done');
+    });
+  });
+
+program
+  .command('initmember')
+  .description('clear structure root node members for test')
+  .action(() => {
+    initMember()
+    .then(() => {
+      console.log('all done');
+    });
+  });
+
+program
+  .command('init')
+  .description('init structure')
+  .action(() => {
+    initstructure()
+    .then(() => {
+      console.log('all done');
+    });
   });
 
 

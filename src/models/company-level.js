@@ -89,11 +89,20 @@ export default class CompanyLevel {
             $ne: C.APPROVAL_TARGET.ATTENDANCE_AUDIT
           }
         };
-        return db.approval.template.count(condition).then(total => {
-          if (total >= _setting.max_approval_templete) {
-            return false;
-          }
-          return true;
+        return db.approval.template.count(condition).then(normal_count => {
+          return db.approval.auto.count({
+            company_id: this.company_id,
+            status: {
+              $ne: C.APPROVAL_STATUS.DELETED
+            },
+          })
+          .then(auto_count => {
+            let total = normal_count + auto_count;
+            if (total >= _setting.max_approval_templete) {
+              return false;
+            }
+            return true;
+          });
         });
       }
     });

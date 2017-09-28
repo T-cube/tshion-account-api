@@ -87,6 +87,7 @@ export default class Activity extends AppBase {
         company_id,
         // time_start: { $gte: moment().startOf('day').toDate() },
         $or: personal,
+        status: C.ACTIVITY_STATUS.CREATED,
       }),
       this.collection('item')
       .count({
@@ -157,6 +158,7 @@ export default class Activity extends AppBase {
     } else if (target == C.LIST_TARGET.PERSONAL) {
       let personal = [].concat(isMember, [{creator: user_id}]);
       criteria['$or'] = personal;
+      criteria.status = C.ACTIVITY_STATUS.CREATED;
     } else {
       criteria.creator = user_id;
     }
