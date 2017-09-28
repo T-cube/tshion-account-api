@@ -370,7 +370,9 @@ api.post('/invitation', (req, res, next) => {
         _id: doc._id,
         'members._id': req.user._id
       }, {
-        'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
+        $set:{
+          'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
+        }
       }).then(() => {
         res.json({_id: doc._id, name: doc.name});
       });
@@ -386,7 +388,7 @@ api.post('/invitation', (req, res, next) => {
         db.company.update({
           _id: company_id,
         }, {
-          $push: {
+          $addToSet: {
             members: {
               _id: req.user._id,
               name: req.user.name,
