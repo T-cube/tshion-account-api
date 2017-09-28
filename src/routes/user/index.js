@@ -366,12 +366,35 @@ api.post('/invitation', (req, res, next) => {
     if (_.some(doc.members, m => m._id.equals(req.user._id)&&m.status=='normal')) {
       res.json({_id: doc._id, name: doc.name});
     } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
-      return db.company.update({
-        _id: doc._id,
-        'members._id': req.user._id
-      }, {
-        'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
-      }).then(() => {
+      return Promise.all([
+        db.user.update({
+          _id: req.user._id
+        }, {
+          $addToSet:{
+            companies: company_id
+          }
+        }),
+        db.company.update({
+          _id: doc._id,
+          'members._id': req.user._id
+        }, {
+          $set:{
+            'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
+          },
+          $addToSet: {
+            'structure.members': {
+              _id: req.user._id
+            }
+          }
+        }),
+        req.model('activity').insert({
+          creator: req.user._id,
+          company: company_id,
+          action: C.ACTIVITY_ACTION.JOIN,
+          target_type: C.OBJECT_TYPE.COMPANY,
+        })
+      ])
+      .then(() => {
         res.json({_id: doc._id, name: doc.name});
       });
     } else {
@@ -386,7 +409,7 @@ api.post('/invitation', (req, res, next) => {
         db.company.update({
           _id: company_id,
         }, {
-          $push: {
+          $addToSet: {
             members: {
               _id: req.user._id,
               name: req.user.name,
