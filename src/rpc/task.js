@@ -457,7 +457,8 @@ route.on('/list',(query)=>{
     status:1,
     message:1,
     createTime:1,
-    templateId:1
+    templateId:1,
+    templateName:1
   },{page:Number(page),pagesize:Number(pagesize)}).then((result)=>{
     return result;
   }).catch((err)=>{
