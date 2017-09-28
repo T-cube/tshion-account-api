@@ -28,7 +28,12 @@ taskModel.startQueue();
 
 //筛选用户
 route.on('/user/list',(query)=>{
-  let criteria = {};
+  let criteria = {
+    mobile:{
+      $exists:true,
+      $ne:null
+    }
+  };
   let {keyword,lastlogin,creator,page,pagesize} = query;
   page = parseInt(page);
   pagesize = parseInt(pagesize);
@@ -36,10 +41,6 @@ route.on('/user/list',(query)=>{
     keyword = keyword.replace(/\"|\"/g,"");
     let reg = new RegExp(keyword,'i');
     criteria = {
-      mobile:{
-        $exists:true,
-        $ne:null
-      },
       $or : [
         {
           name: {
@@ -54,69 +55,180 @@ route.on('/user/list',(query)=>{
       ]
     };
   }
+  let lookup =
+  {$lookup:{
+    from:'company',
+    localField:'_id',
+    foreignField:'owner',
+    as:'ownerCompany'
+  }};
+  let returnField = {
+    $project:{
+      name: 1,
+      mobile: 1,
+      mobile_verified: 1,
+      description: 1,
+      avatar: 1,
+      birthdate: 1,
+      sex: 1,
+      last_login:1
+    }
+  };
   if (lastlogin) {
-    let time = moment().subtract(lastlogin,'month').toDate();
+    // let time = moment().subtract(lastlogin,'month').toDate();
+    let time = new Date(lastlogin);
     let loginTime = {'last_login.time':{$lt:time}};
     Object.assign(criteria,loginTime);
   }
-  if(!creator){
+  if(creator == 0){
     return accountModel.page({criteria,page,pagesize});
-  }else{
-    if(creator == 1){
-      return db.company.distinct('owner').then(lists => {
-        let totalRows = lists.length;
-        if(lists && totalRows && (page*pagesize <= totalRows)){
-          lists = lists.slice(page*pagesize,pagesize*(page+1));
-          return Promise.all(lists.map(elem => {
-            return new Promise(function(resolve,reject){
-              taskModel.findOneUser(elem,resolve);
-            });
-          })).then(list=>{
-            return {
-              list,
-              page,
-              pagesize,
-              totalRows
-            };
-          });
-        }else{
-          return {
-            list:[],
-            page:page,
-            pagesize:pagesize,
-            totalRows:totalRows
-          };
+  }else if(creator == 1){
+    return Promise.all([
+      db.user.aggregate([
+        {
+          $match:criteria
+        },
+        lookup,
+        {
+          $match:{'ownerCompany':{$ne:[]}}
+        },
+        {
+          $count:'ownerCompantCount'
         }
-      });
-    }else if(creator == 2){
-      let params = {'current':{$exists:true},'current.type':'paid'};
-      return Promise.all([
-        db.plan.company.count(params),
-        db.plan.company.find(params,{_id:1}).skip(page*pagesize).limit(pagesize).then(result=>{
-          if(result && result.length){
-            return Promise.all(result.map(elem => {
-              return new Promise((resolve,reject)=>{
-                db.company.findOne({_id:elem._id},{owner:1}).then(owner => {
-                  taskModel.findOneUser(owner.owner,resolve);
-                });
-              });
-            })).then(list=>{
-              return list;
-            });
-          }else{
-            return [];
+      ]).then((totalRows)=>{
+        return totalRows[0].ownerCompantCount;
+      }),
+      db.user.aggregate([
+        {
+          $match:criteria
+        },
+        lookup,
+        {
+          $match:{'ownerCompany':{$ne:[]}}
+        },
+        returnField,
+        {
+          $skip:pagesize*page
+        },{
+          $limit:pagesize
+        }
+      ]).then((list)=>{
+        return list;
+      })
+    ]).then(([totalRows,list])=>{
+      return {
+        list,
+        page,
+        pagesize,
+        totalRows
+      };
+    }).catch((err)=>{
+      throw new ApiError(500,err);
+    }).catch(()=>{
+      return {
+        list:[],
+        page:page,
+        pagesize:pagesize,
+        totalRows:0
+      };
+    });
+  }else if(creator == 2){
+    return Promise.all([
+      db.user.aggregate([
+        {
+          $match:criteria
+        },
+        {$lookup:{
+          from:'company',
+          localField:'_id',
+          foreignField:'owner',
+          as:'ownerCompany'
+        }},
+        {
+          $match:{'ownerCompany':{$ne:[]}}
+        },{
+          $unwind:'$ownerCompany',
+        },{
+          $lookup:{
+            from:'plan.company',
+            localField:'ownerCompany._id',
+            foreignField:'_id',
+            as:'ownerPayCompany'
           }
-        })
-      ]).then(([totalRows,list])=>{
-        return {
-          list,
-          page,
-          pagesize,
-          totalRows
-        };
-      });
-    }
+        },{
+          $match:{'ownerPayCompany':{$ne:[]}}
+        },{
+          $unwind:'$ownerPayCompany'
+        },{
+          $match:{
+            'ownerPayCompany.current.type':'paid'
+          }
+        },
+        {
+          $count:'ownerPayComCount'
+        }
+      ]).then((companyCount)=>{
+        return companyCount[0].ownerPayComCount;
+      }),
+      db.user.aggregate([
+        {
+          $match:criteria
+        },
+        {$lookup:{
+          from:'company',
+          localField:'_id',
+          foreignField:'owner',
+          as:'ownerCompany'
+        }},
+        {
+          $match:{'ownerCompany':{$ne:[]}}
+        },{
+          $unwind:'$ownerCompany',
+        },{
+          $lookup:{
+            from:'plan.company',
+            localField:'ownerCompany._id',
+            foreignField:'_id',
+            as:'ownerPayCompany'
+          }
+        },{
+          $match:{'ownerPayCompany':{$ne:[]}}
+        },{
+          $unwind:'$ownerPayCompany'
+        },{
+          $match:{
+            'ownerPayCompany.current.type':'paid'
+          }
+        },
+        returnField,
+        {
+          $skip:pagesize*page
+        },{
+          $limit:pagesize
+        }
+      ]).then((list)=>{
+        return list;
+      })
+    ]).then(([totalRows,list])=>{
+      return {
+        totalRows,
+        list,
+        page,
+        pagesize
+      };
+    }).catch((err)=>{
+      throw ApiError(500,err);
+    }).catch((err)=>{
+      return {
+        totalRows:0,
+        list:[],
+        page:page,
+        pagesize:pagesize
+      };
+    });
+
   }
+
 });
 
 //创建任务
@@ -128,6 +240,7 @@ route.on('/create',(query) => {
   let target = query.target;
   let content = query.content;
   let templateId = query.templateId;
+  let templateName = query.templateName;
   let createTime = new Date();
   if(!sendAll){
     let params = target.map(elem=>{
@@ -142,6 +255,7 @@ route.on('/create',(query) => {
         templateId:templateId,
         phone:phone,
         targetId:targetId,
+        templateName:templateName,
         type:'sms'
       };
     });
@@ -179,6 +293,7 @@ route.on('/create',(query) => {
               createTime:createTime,
               status:0,
               templateId:templateId,
+              templateName:templateName,
               phone : elem.mobile,
               targetId:elem._id,
               type:'sms'
@@ -299,7 +414,7 @@ route.on('/sign/update',(query)=>{
 
 // 查询任务
 route.on('/list',(query)=>{
-  const {keyword,status,createTime,page,pagesize} = query;
+  let {keyword,status,createTime,page,pagesize} = query;
   let params = {type:'sms'};
   if(keyword){
     let text = keyword.replace(/\"|\"|\'|\'/g,"");
@@ -321,7 +436,7 @@ route.on('/list',(query)=>{
   }
   if(status){
     Object.assign(params,{
-      status:status
+      status:Number(status)
     });
   }
   if(createTime){
@@ -343,7 +458,7 @@ route.on('/list',(query)=>{
     message:1,
     createTime:1,
     templateId:1
-  },{page:page,pagesize:pagesize}).then((result)=>{
+  },{page:Number(page),pagesize:Number(pagesize)}).then((result)=>{
     return result;
   }).catch((err)=>{
     throw new ApiError(500,err);
