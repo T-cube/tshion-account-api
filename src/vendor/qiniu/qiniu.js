@@ -332,7 +332,7 @@ export default class Qiniu {
       // 如果启用redis
       if (self.redis) {
         // 检查redis缓存中是否存在
-        let REDIS_KEY = `${self.conf.BUCKET}:${key}`;
+        let REDIS_KEY = `${self.conf.BUCKET}:${key}:${downloadName ? downloadName : ''}`;
         self.redis.get(REDIS_KEY, (err, res) => {
           if (err) {
             reject(err);

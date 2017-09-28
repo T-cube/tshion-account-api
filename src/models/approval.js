@@ -242,6 +242,13 @@ export default class Approval {
     });
   }
 
+  static createAutoTemplate(template) {
+    return db.approval.auto.insert(template)
+    .then(inserted => {
+      return inserted;
+    });
+  }
+
   static createNewVersionTemplate(data, options) {
     let { criteria, createNew, templateStatus, company_id } = options;
     return db.approval.template.findOne(criteria, {

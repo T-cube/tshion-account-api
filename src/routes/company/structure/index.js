@@ -188,25 +188,25 @@ api.post('/:node_id/member', (req, res, next) => {
   save(req)
   .then(() => {
     res.json(member);
-    let position = tree.findPositionInfo(data.position) || {};
-    req.model('activity').insert({
-      company: req.company._id,
-      action: C.ACTIVITY_ACTION.ADD_POSITION,
-      target_type: C.OBJECT_TYPE.USER,
-      creator: req.user._id,
-      user: data._id,
-      position,
-    });
-    if (!req.user._id.equals(data._id)) {
-      req.model('notification').send({
-        company: req.company._id,
-        action: C.ACTIVITY_ACTION.ADD_POSITION,
-        target_type: C.OBJECT_TYPE.USER,
-        from: req.user._id,
-        to: ObjectId(data._id),
-        position,
-      }, STRUCTURE_MEMBER_ADD);
-    }
+    // let position = tree.findPositionInfo(data.position) || {};
+    // req.model('activity').insert({
+    //   company: req.company._id,
+    //   action: C.ACTIVITY_ACTION.ADD_POSITION,
+    //   target_type: C.OBJECT_TYPE.USER,
+    //   creator: req.user._id,
+    //   user: data._id,
+    //   position,
+    // });
+    // if (!req.user._id.equals(data._id)) {
+    //   req.model('notification').send({
+    //     company: req.company._id,
+    //     action: C.ACTIVITY_ACTION.ADD_POSITION,
+    //     target_type: C.OBJECT_TYPE.USER,
+    //     from: req.user._id,
+    //     to: ObjectId(data._id),
+    //     position,
+    //   }, STRUCTURE_MEMBER_ADD);
+    // }
   })
   .catch(next);
 });

@@ -390,7 +390,7 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
       if (doc && doc.status == C.APPROVAL_STATUS.DELETED) {
         delete data.approval_template;
       }
-      return;      
+      return;
     });
   } else {
     prepare = Promise.resolve();

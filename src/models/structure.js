@@ -63,6 +63,32 @@ class Structure {
     return this._findParent(this.root, node_id);
   }
 
+  findParentsAdmins(node_id) {
+    let node = this.root;
+    var result = [];
+    var flag = false;
+    function _search(node, index) {
+      for (var i = 0; i < node.length; i++) {
+        var item = node[i];
+        if (item._id.equals(node_id)) {
+          flag = true;
+          return result[index] = item.admin;
+        } else if (item.children && item.children.length) {
+          result[index] = item.admin;
+          _search(item.children, index + 1);
+          if (flag) return;
+          else result.pop();
+        }
+      }
+    }
+    if (node.children) {
+      _search(node.children, 0);
+      return result;
+    } else {
+      return [];
+    }
+  }
+
   addNode(node, parent_id) {
     parent_id = ObjectId(parent_id);
     let parent = this.findNodeById(parent_id);
