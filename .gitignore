@@ -28,6 +28,7 @@ node_modules
 
 # Local config
 config/local.*
+config/*
 
 # Application runtime
 /app
