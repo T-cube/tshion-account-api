@@ -104,7 +104,7 @@ api.post('/',
               let newTemplate = _.pick(tpl, 'name', 'description', 'forms');
               newTemplate.company_id = req.company._id;
               newTemplate.steps = [];
-              return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template._id)
+              return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template.template_id)
               .then(doc => {
                 data.template = doc._id;
                 return Approval.createItem(data, req)
@@ -204,11 +204,11 @@ function _updateApprovalTemplate(admins, data, tpl, Approval, old_id) {
       _id: ObjectId()
     });
   });
-  data._id = old_id;
   data.steps[0].copy_to = tpl.copy_to;
   let criteria = {
     _id: old_id,
-    status: C.APPROVAL_STATUS.UNUSED
+    status: C.APPROVAL_STATUS.UNUSED,
+    company_id: data.company_id,
   };
   return db.approval.template.findOne({
     _id: old_id
@@ -223,7 +223,8 @@ function _updateApprovalTemplate(admins, data, tpl, Approval, old_id) {
       }
     }).then(() => {
       return Approval.createNewVersionTemplate(data, {
-        criteria
+        criteria,
+        templateStatus: C.APPROVAL_STATUS.NORMAL
       })
       .then(newTpl => {
         return newTpl;
