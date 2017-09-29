@@ -1,29 +1,78 @@
 import db from 'lib/database';
 import { ObjectId } from 'mongodb';
 import config from 'config';
+import { oauthCheck } from 'lib/middleware';
 
 let api = require('express').Router();
 export default api;
 
+// api.get('/:hash', (req, res, next) => {
+//   let redis = req.model('redis');
+//   let hash = req.params.hash;
+//   redis.get(hash).then(salt => {
+//     let url;
+//     if (/micromessenger|ios|iphone|ipad|android|ucweb/.test(req['headers']['user-agent'].toLowerCase())) {
+//       if (!salt) {
+//         url = config.get('mobileUrl') + 'account/invalidi';
+//       } else if (salt[0] == 'c') {
+//         url = config.get('mobileUrl') + 'oa/user/mine?s=' + salt;
+//       } else if (salt[0] == 'a') {
+//         url = config.get('mobileUrl') + 'account/register?u=' + salt;
+//       } else if (hash[0] == 'e') {
+//         url = salt;
+//       }
+//     } else {
+//       if (!salt) {
+//         url = config.get('webUrl') + 'account/invalidi';
+//       } else if (salt[0] == 'c') {
+//         url = config.get('webUrl') + 'oa/user/desktop?s=' + salt;
+//       } else if (salt[0] == 'a') {
+//         url = config.get('webUrl') + 'account/register?u=' + salt;
+//       } else if (hash[0] == 'e') {
+//         url = salt;
+//       }
+//     }
+//     res.redirect(301, url);
+//   });
+// });
+
 api.get('/:hash', (req, res, next) => {
   let redis = req.model('redis');
   let hash = req.params.hash;
-  redis.get(hash).then(salt => {
-    let url;
-    if (/MicroMessenger|iPhone|iPad|Android|UCWEB/.test(req['headers']['user-agent'])) {
-      if (!salt) {
-        url = config.get('mobileUrl') + 'account/invalidi';
-      } else {
-        url = config.get('mobileUrl') + 'oa/user/mine?s=' + salt;
-      }
+  console.log(hash);
+  redis.get(hash).then(url => {
+    if (url) {
+      res.redirect(301, url);
     } else {
-      if (!salt) {
-        url = config.get('webUrl') + 'account/invalidi';
+      if (/micromessenger|ios|iphone|ipad|android|ucweb/.test(req['headers']['user-agent'].toLowerCase())) {
+        url = config.get('mobileUrl') + '404.html';
+        res.redirect(301, url);
       } else {
-        url = config.get('webUrl') + 'oa/user/desktop?s=' + salt;
+        url = config.get('webUrl') + '404.html';
+        res.redirect(301, url);
       }
     }
-    res.redirect(301, url);
+  });
+});
+
+api.post('/', (req, res) => {
+  let redis = req.model('redis');
+  let timestamp = new Date().getTime();
+  let body = req.body;
+  let key = (Math.random() + timestamp).toString(36);
+  let time = 3600;
+  if (body.time && typeof body.time == 'number') {
+    time = body.time;
+  }
+  let short_host = config.get('webUrl') + 's/';
+  // 对url进行重新urlencode编码
+  let url = decodeURIComponent(body.url);
+  let protocol = /^http[s]?\:\/\//.test(url) ? '' : 'http://';
+  let host = protocol + url.substr(0, url.indexOf('?'));
+  let querystring = url.substr(url.indexOf('?') + 1, url.length);
+  url = [host, encodeURIComponent(querystring)].join('?');
+  redis.setex(key, time, url).then(() => {
+    res.json({ short_url: `${short_host}${key}` });
   });
 });
 

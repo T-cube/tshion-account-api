@@ -23,6 +23,7 @@ const collections = [
   'approval.template.master',
   'approval.template.default',
   'approval.user',
+  'approval.auto',
   'attendance.setting',
   'attendance.sign',
   'attendance.audit',

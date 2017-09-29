@@ -69,16 +69,43 @@ export default class CompanyLevel {
         company_id: this.company_id,
         status: {
           $ne: C.APPROVAL_STATUS.DELETED
-        }
+        },
       };
-      return db.approval.template.master.count(masterQuery);
+      return db.approval.template.master.find(masterQuery);
     })
-    .then(total => {
-      if (total >= _setting.max_approval_templete) {
-        return false;
+    .then(masters => {
+      masters = masters.map(master => master.current);
+      if (!masters.length) {
+        return true;
+      } else {
+        let condition = {
+          _id: {
+            $in: masters
+          },
+          status: {
+            $ne: C.APPROVAL_STATUS.DELETED
+          },
+          for: {
+            $ne: C.APPROVAL_TARGET.ATTENDANCE_AUDIT
+          }
+        };
+        return db.approval.template.count(condition).then(normal_count => {
+          return db.approval.auto.count({
+            company_id: this.company_id,
+            status: {
+              $ne: C.APPROVAL_STATUS.DELETED
+            },
+          })
+          .then(auto_count => {
+            let total = normal_count + auto_count;
+            if (total >= _setting.max_approval_templete) {
+              return false;
+            }
+            return true;
+          });
+        });
       }
-      return true;
-    })
+    });
   }
 
   canAddMember() {

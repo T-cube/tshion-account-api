@@ -31,6 +31,11 @@ const api = express.Router();
 export default api;
 api.use(oauthCheck());
 // Get company list
+
+api.get('/test', (req, res, next) => {
+  console.log(req.originalUrl);
+  res.json({});
+});
 api.get('/', (req, res, next) => {
   db.user.findOne({
     _id: req.user._id
@@ -506,15 +511,17 @@ api.get('/:company_id/invite', (req, res, next) => {
   //   throw new ApiError(400, 'only_owner_and_admin_can_get_invite_url');
   // }
   let timetemp = new Date().getTime();
+  let user_id = req.user._id.toString();
   let company_id = req.company._id.toString();
+  let content = user_id + ',' + company_id;
   // res.json({t,c,h});
   let key = (Math.random() + timetemp).toString(36);
-  let deepkey = (Math.random() + timetemp).toString(36);
+  let deepkey = 'c' + (Math.random() + timetemp).toString(36);
   let url  = config.get('apiUrl') + 's/' + key;
   let redis = req.model('redis');
   redis.set(key, deepkey).then(status => {
     redis.expire(key, 3600);
-    redis.set(deepkey, company_id).then(() => {
+    redis.set(deepkey, content).then(() => {
       redis.expire(deepkey, 3600);
       res.json({url: url});
     });

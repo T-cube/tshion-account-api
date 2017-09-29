@@ -37,6 +37,30 @@ api.get('/user-avatar/:user_id', (req, res, next) => {
     .catch(next);
 });
 
+api.post('/wechat-jsapi-signture', (req, res, next) => {
+  var WechatUtil = req.model('wechat-util');
+
+  WechatUtil.getWechatApi().getJsConfig({
+    debug: false,
+    jsApiList: [
+      'onMenuShareTimeline',
+      'onMenuShareAppMessage',
+      // 'onMenuShareQQ',
+      // 'onMenuShareWeibo',
+      // 'onMenuShareQZone',
+      // 'startRecord',
+      // 'stopRecord',
+      // 'onVoiceRecordEnd',
+      // 'playVoice',
+      'getNetworkType'
+    ],
+    url: req.body.url
+  }, (err, result) => {
+    if (err) return next(err);
+    res.json(result);
+  });
+});
+
 if (!(process.env.NODE_ENV === 'production')) {
   api.get('/changelogs/:worker', (req, res, next) => {
     const changelogs = require('fs').readFileSync(__dirname + `/../../../changelogs/${req.params.worker}.md`);

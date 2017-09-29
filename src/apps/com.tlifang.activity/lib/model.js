@@ -85,8 +85,9 @@ export default class Activity extends AppBase {
       this.collection('item')
       .count({
         company_id,
-        time_start: { $gte: moment().startOf('day').toDate() },
+        // time_start: { $gte: moment().startOf('day').toDate() },
         $or: personal,
+        status: C.ACTIVITY_STATUS.CREATED,
       }),
       this.collection('item')
       .count({
@@ -104,7 +105,7 @@ export default class Activity extends AppBase {
         fetchUserInfo(now_mine, 'creator'),
         fetchUserInfo(feature_mine, 'creator'),
         fetchUserInfo(now_all, 'creator'),
-        fetchUserInfo(feature_all, 'creator'),        
+        fetchUserInfo(feature_all, 'creator'),
       ]).then(() => {
         return {
           mine: {
@@ -157,6 +158,7 @@ export default class Activity extends AppBase {
     } else if (target == C.LIST_TARGET.PERSONAL) {
       let personal = [].concat(isMember, [{creator: user_id}]);
       criteria['$or'] = personal;
+      criteria.status = C.ACTIVITY_STATUS.CREATED;
     } else {
       criteria.creator = user_id;
     }
