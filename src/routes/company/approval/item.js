@@ -86,10 +86,11 @@ api.post('/',
             _id: template.template_id
           }).then(doc => {
             let template_admins = _.pluck(_.pluck(doc.steps, 'approver'), '_id');
-            let admins = _.compact(tree.findParentsAdmins(data.department));
-            let flag = admins.length ? true : false;
-            admins = flag ? admins.push(req.company.owner) : [req.company.owner];
-            admins.reverse();
+            let origin_admins = _.compact(tree.findParentsAdmins(data.department));
+            let flag = origin_admins.length ? true : false;
+            origin_admins = flag ? origin_admins : [req.company.owner];
+            origin_admins.reverse();
+            let admins = origin_admins.slice(0, 5);
             let need_change = false;
             for (let i = 0; i < admins.length; i++) {
               if (!admins[i].equals(template_admins[i])) {
@@ -141,10 +142,11 @@ api.post('/',
           let autoTemplate = _.pick(tpl, 'name', 'description', 'forms', 'copy_to');
           autoTemplate.auto = true;
           autoTemplate.scope = [data.department];
-          let admins = _.compact(tree.findParentsAdmins(data.department));
-          let flag = admins.length ? true : false;
-          admins = flag ? admins : [req.company.owner];
-          admins.reverse();
+          let origin_admins = _.compact(tree.findParentsAdmins(data.department));
+          let flag = origin_admins.length ? true : false;
+          origin_admins = flag ? origin_admins : [req.company.owner];
+          origin_admins.reverse();
+          let admins = origin_admins.slice(0, 5);
           autoTemplate.steps = [];
           autoTemplate.status = C.APPROVAL_STATUS.NORMAL;
           autoTemplate.company_id = req.company._id;
@@ -157,14 +159,6 @@ api.post('/',
               copy_to: [],
               _id: ObjectId()
             });
-          });
-          flag && autoTemplate.steps.push({
-            approver: {
-              _id: req.company.owner,
-              type: 'member',
-            },
-            copy_to: [],
-            _id: ObjectId()
           });
           autoTemplate.steps[0].copy_to = tpl.copy_to;
           return Approval.createTemplate(autoTemplate).then(doc => {
