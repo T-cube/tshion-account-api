@@ -521,7 +521,7 @@ function createApprovalTemplate(req, auditor) {
     for: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
     forms_not_editable: true,
     name: '补签',
-    description: '考勤的补签流程，审批通过之后会自动修改考勤记录',
+    description: '考勤补签开启后自动生成的流程，审批通过之后会自动修改考勤记录',
     scope: [req.company.structure._id],
     company_id: req.company._id,
     status: C.APPROVAL_STATUS.NORMAL,
