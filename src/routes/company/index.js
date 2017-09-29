@@ -86,6 +86,7 @@ api.post('/', (req, res, next) => {
       structure: {
         _id: ObjectId(),
         name: data.name,
+        admin: req.user._id,
         positions: [],
         members: [{
           _id: member._id,

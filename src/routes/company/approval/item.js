@@ -90,7 +90,10 @@ api.post('/',
             let flag = origin_admins.length ? true : false;
             origin_admins = flag ? origin_admins : [req.company.owner];
             origin_admins.reverse();
-            let admins = origin_admins.slice(0, 5);
+            if (!req.company.structure.admin) {
+              origin_admins.push(req.company.owner);
+            }
+            let admins = _.compact(origin_admins).slice(0, 5);
             let need_change = false;
             for (let i = 0; i < admins.length; i++) {
               if (!admins[i].equals(template_admins[i])) {
@@ -146,7 +149,10 @@ api.post('/',
           let flag = origin_admins.length ? true : false;
           origin_admins = flag ? origin_admins : [req.company.owner];
           origin_admins.reverse();
-          let admins = origin_admins.slice(0, 5);
+          if (!req.company.structure.admin) {
+            origin_admins.push(req.company.owner);
+          }
+          let admins = _.compact(origin_admins).slice(0, 5);
           autoTemplate.steps = [];
           autoTemplate.status = C.APPROVAL_STATUS.NORMAL;
           autoTemplate.company_id = req.company._id;
