@@ -36,7 +36,7 @@ api.get('/:type', (req, res, next) => {
   if (/micromessenger|ios|iphone|ipad|android|ucweb/.test(req['headers']['user-agent'].toLowerCase())) {
     url = config.get('mobileUrl');
     if (req.params.type == 'account') {
-      url += `account/register?${querystring}`;
+      url += `account/login?${querystring}`;
     } else if (req.params.type == 'company') {
       url += `oa/user/mine?${querystring}`;
     } else {
