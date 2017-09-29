@@ -20,6 +20,18 @@ const schema = {
       templateId:{type:'number'},
       templateName:{type:'String'}
     }
+  },
+  task_resend:{
+    sanitization:{
+      sendId:{type:'array'},
+      sendAll:{type:'boolean'},
+      type:{ $enum:['sms','email'] }
+    },
+    validation:{
+      sendId:{type:'array'},
+      sendAll:{type:'boolean'},
+      type:{$enum:['sms','email']}
+    }
   }
 };
 

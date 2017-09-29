@@ -428,17 +428,18 @@ export class SmsSender {
     _.extend(params, {
       signature: signature,
     });
-    return new Promise((resolve,reject)=>{
-      resolve({statusCode:200,message:'发送成功'});
-    });
+    // 测试时撤销注释
     // return new Promise((resolve,reject)=>{
-    //   return rp.post({
-    //     uri: 'http://www.sendcloud.net/smsapi/send',
-    //     form: params,
-    //     json: true,
-    //   })
-    //   .then((data)=>{resolve(data);})
-    //   .catch((err) => {reject(err);});
+    //   resolve({statusCode:200,message:'发送成功'});
     // });
+    return new Promise((resolve,reject)=>{
+      return rp.post({
+        uri: 'http://www.sendcloud.net/smsapi/send',
+        form: params,
+        json: true,
+      })
+      .then((data)=>{resolve(data);})
+      .catch((err) => {reject(err);});
+    });
   }
 }

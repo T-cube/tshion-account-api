@@ -43,6 +43,7 @@ export default class Task{
       params = returnData;
     }
     if(!pageInfo){
+      console.log('done this this');
       return this.db.queue.task.find(param,params);
     }else{
       const {page,pagesize} = pageInfo;

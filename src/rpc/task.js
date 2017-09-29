@@ -412,10 +412,10 @@ route.on('/sign/update',(query)=>{
   });
 });
 
-// 查询任务
+// 查询任务(短信任务／邮件任务)
 route.on('/list',(query)=>{
-  let {keyword,status,createTime,page,pagesize} = query;
-  let params = {type:'sms'};
+  let {keyword,status,createTime,page,pagesize,type} = query;
+  let params = {type:type};
   if(keyword){
     let text = keyword.replace(/\"|\"|\'|\'/g,"");
     let reg = new RegExp(text,'i');
@@ -458,7 +458,8 @@ route.on('/list',(query)=>{
     message:1,
     createTime:1,
     templateId:1,
-    templateName:1
+    templateName:1,
+    type:1
   },{page:Number(page),pagesize:Number(pagesize)}).then((result)=>{
     return result;
   }).catch((err)=>{
@@ -473,3 +474,31 @@ route.on('/list',(query)=>{
   });
 });
 
+// 重发失败任务
+route.on('/resend',(query)=>{
+  validate('task_resend',query);
+  let {sendId,sendAll,type} = query;
+  let params = {
+    status:-1,
+    type:type
+  };
+  if(!sendAll){
+    sendId = sendId.map((id)=>{
+      return ObjectId(id);
+    });
+    Object.assign(params,{_id:{$in:sendId}});
+  }
+  return taskModel.findTask(params).then((result)=>{
+    if(!result || !result.length){
+      return true;
+    }
+    result = result.map(result=>{
+      return JSON.stringify(result);
+    });
+    return taskModel.addList(result).then((count)=>{
+      return true;
+    }).catch((err)=>{
+      throw new Error(err);
+    });
+  });
+});
