@@ -299,7 +299,7 @@ export default class Qiniu {
   delete(key, cb) {
     let self = this;
     return new Promise((resolve, reject) => {
-      self.qiniuClient.remove(self.conf.BUCKET, key, (err, ret) => {
+      self.qiniuClient.delete(self.conf.BUCKET, key, (err, ret) => {
         typeof cb == 'function' && cb(ret, err);
         if (!err) {
           resolve(ret);
