@@ -21,6 +21,7 @@ import {
   COMPANY_MEMBER_UPDATE_SETADMIN,
   COMPANY_MEMBER_UPDATE_REMOVEADMIN,
 } from 'models/notification-setting';
+import Approval from 'models/approval';
 
 /* company collection */
 const api = express.Router();
@@ -315,6 +316,18 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
         }
       }, {
         multi: true
+      }),
+      db.template.find({
+        company_id: req.company._id,
+        status: C.APPROVAL_STATUS.NORMAL,
+        'steps.approver._id': member_id,
+      }, {
+        _id: 1
+      })
+      .then(list => {
+        return Promise.map(list, item => {
+          return Approval.cancelItemsUseTemplate(req, item._id);
+        });
       }),
       CompanyLevel.incMemberCount(req.company._id, -1),
       save(req),
