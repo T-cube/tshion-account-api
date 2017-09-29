@@ -56,6 +56,7 @@ api.post('/wechat-jsapi-signture', (req, res, next) => {
     ],
     url: req.body.url
   }, (err, result) => {
+    console.log('js api error',err);
     if (err) return next(err);
     res.json(result);
   });

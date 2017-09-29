@@ -317,7 +317,7 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
       }, {
         multi: true
       }),
-      db.template.find({
+      db.approval.template.find({
         company_id: req.company._id,
         status: C.APPROVAL_STATUS.NORMAL,
         'steps.approver._id': member_id,
