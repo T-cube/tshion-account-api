@@ -235,6 +235,7 @@ route.on('/user/list',(query)=>{
 route.on('/create',(query) => {
   validate('task_create',query);
   let userId = query.userId;
+  let username = query.username;
   let name = query.name;
   let sendAll = query.sendAll;
   let target = query.target;
@@ -248,6 +249,7 @@ route.on('/create',(query) => {
       let phone = elem.phone;
       return elem = {
         userId:userId,
+        username:username,
         content:content,
         name:name,
         createTime:createTime,
@@ -288,6 +290,7 @@ route.on('/create',(query) => {
           target = data.map(elem => {
             return elem = {
               userId:userId,
+              username:username,
               content:content,
               name:name,
               createTime:createTime,
@@ -444,8 +447,8 @@ route.on('/list',(query)=>{
     let after = moment(begin).add(1,'day').toDate();
     Object.assign(params,{
       $and:[
-        {createTime:{$gt:begin}},
-        {createTime:{$lt:begin}}
+        {createTime:{$gte:begin}},
+        {createTime:{$lte:after}}
       ]
     });
   }
@@ -459,7 +462,8 @@ route.on('/list',(query)=>{
     createTime:1,
     templateId:1,
     templateName:1,
-    type:1
+    type:1,
+    username:1
   },{page:Number(page),pagesize:Number(pagesize)}).then((result)=>{
     return result;
   }).catch((err)=>{

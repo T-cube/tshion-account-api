@@ -9,7 +9,8 @@ const schema = {
       userId:{ type:'string' },
       sendAll:{type:'number'},
       templateId:{type:'number'},
-      templateName:{type:'string'}
+      templateName:{type:'string'},
+      username:{type:'string'}
     },
     validation: {
       name: { type: 'string' },
@@ -18,7 +19,8 @@ const schema = {
       userId:{ type:'string' },
       sendAll:{type:'number'},
       templateId:{type:'number'},
-      templateName:{type:'String'}
+      templateName:{type:'String'},
+      username:{type:'string'}
     }
   },
   task_resend:{
