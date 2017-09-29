@@ -45,7 +45,7 @@ api.get('/:type', (req, res, next) => {
   } else {
     url = config.get('webUrl');
     if (req.params.type == 'account') {
-      url += `account/register?${querystring}`;
+      url += `account/login?${querystring}`;
     } else if (req.params.type == 'company') {
       url += `oa/user/desktop?${querystring}`;
     } else {
