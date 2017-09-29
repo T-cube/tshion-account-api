@@ -103,6 +103,7 @@ api.post('/',
             if ((template_admins.length != admins.length) || need_change) {
               let newTemplate = _.pick(tpl, 'name', 'description', 'forms');
               newTemplate.company_id = req.company._id;
+              newTemplate.steps = [];
               return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template._id)
               .then(doc => {
                 data.template = doc._id;
