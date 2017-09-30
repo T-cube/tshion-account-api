@@ -75,6 +75,10 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
         sign_record: record[data.type]
       };
 
+      req.model('activity').insert(info);
+
+      res.json({});
+
       // 打卡积分
       if(info.action) {
         const clientRpc = req.model('clientRpc');
@@ -83,11 +87,8 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
           if(data.code!==200) console.log(data);
         });
       }
-
-      return req.model('activity').insert(info);
     });
   })
-  .then(() => res.json({}))
   .catch(next);
 });
 
