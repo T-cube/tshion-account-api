@@ -138,12 +138,11 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
               req.model('notification').send({
                 action: C.ACTIVITY_ACTION.SYSTEM_REMIND,
                 to: invitee.value.recommend,
-                from: invitee.value._id,
                 target_type: 'inviter',
                 remind_content: {
                   type: null,
                   title: '邀请提醒',
-                  content: `用户${invitee.value.name}接收您的邀请，注册加入T立方。`,
+                  content: `用户${invitee.value.name}接受您的邀请，注册加入了T立方。`,
                   link: '',
                 },
               }, BROADCAST);
