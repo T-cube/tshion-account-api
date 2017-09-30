@@ -21,6 +21,7 @@ import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
 import { validate } from './schema';
 import { randomAvatar, cropAvatar } from 'lib/upload';
 import { ValidationError } from 'lib/inspector';
+import { BROADCAST } from 'models/notification-setting';
 
 const api = express.Router();
 export default api;
@@ -134,7 +135,18 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
                   console.log(data);
                 });
               }
-              console.log(invitee.value._id, invitee.value.recommend);
+              req.model('notification').send({
+                action: C.ACTIVITY_ACTION.SYSTEM_REMIND,
+                to: invitee.value.recommend,
+                from: invitee.value._id,
+                target_type: 'inviter',
+                remind_content: {
+                  type: null,
+                  title: '邀请提醒',
+                  content: `用户${invitee.value.name}接收您的邀请，注册加入T立方。`,
+                  link: '',
+                },
+              }, BROADCAST);
             }
           });
         }
