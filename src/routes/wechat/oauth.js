@@ -37,7 +37,8 @@ api.use(bodyParser.urlencoded({ extended: true }));
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
   let wechatOAuthClient = getOAuthClient(req.model('redis'));
-  let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'api/wechat/oauth/access', checkCode, 'snsapi_userinfo');
+  // let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'api/wechat/oauth/access', checkCode, 'snsapi_userinfo');
+  let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'api/wechat/oauth/access', checkCode, 'snsapi_base');
   res.redirect(url);
 });
 
