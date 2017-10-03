@@ -25,6 +25,7 @@ import {
   MODULE_STRUCTURE,
 } from 'models/plan/auth-config';
 import config from 'config';
+import Approval from 'models/approval';
 
 /* company collection */
 const api = express.Router();
@@ -85,6 +86,7 @@ api.post('/', (req, res, next) => {
       structure: {
         _id: ObjectId(),
         name: data.name,
+        admin: req.user._id,
         positions: [],
         members: [{
           _id: member._id,
@@ -429,6 +431,18 @@ api.post('/:company_id/exit', (req, res, next) => {
       }, {
         multi: true,
       }),
+      db.template.find({
+        company_id: req.company._id,
+        status: C.APPROVAL_STATUS.NORMAL,
+        'steps.approver._id': req.user._id,
+      }, {
+        _id: 1
+      })
+      .then(list => {
+        return Promise.map(list, item => {
+          return Approval.cancelItemsUseTemplate(req, item._id);
+        });
+      })
     ])
     .then(() => {
       res.json({});

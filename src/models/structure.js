@@ -119,6 +119,8 @@ class Structure {
       if (!_.some(node.members, m => m._id.equals(data.admin))) {
         node.members.push({_id: data.admin});
       }
+    } else {
+      node.admin = data.admin;
     }
     _.extend(node, data);
     return node;

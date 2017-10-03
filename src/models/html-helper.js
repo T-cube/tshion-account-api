@@ -74,7 +74,7 @@ export default class HtmlHelper {
       let promise = Promise.map(replaces, url => qiniu.makeLink(url))
       .then(links => {
         _.each(founds, (found, i) => {
-          html = html.replace(found, this.encodeHTML(links[i]));
+          html = html.replace(found + '\"', this.encodeHTML(links[i]) + '\"');
         });
       });
       promises.push(promise);

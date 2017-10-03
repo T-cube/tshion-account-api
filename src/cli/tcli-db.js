@@ -264,6 +264,7 @@ program
     backup(options)
     .then(() => {
       console.log('backup complete');
+      process.exit(0);
     });
   });
 
@@ -274,6 +275,7 @@ program
   .option('--all', 'clean all data')
   .action((options) => {
     clean(options);
+    process.exit(0);
   });
 
 program
@@ -283,6 +285,7 @@ program
   .option('-f --file <file>', 'restore file name without extend name')
   .action((options) => {
     restore(options);
+    process.exit(0);
   });
 
 program
@@ -292,6 +295,7 @@ program
     member()
     .then(() => {
       console.log('all done');
+      process.exit(0);
     });
   });
 
@@ -302,6 +306,7 @@ program
     initMember()
     .then(() => {
       console.log('all done');
+      process.exit(0);
     });
   });
 
