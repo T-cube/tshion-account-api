@@ -182,7 +182,7 @@ let render = {
         'color': colors.primary
       },
       'keyword1': {
-        'value': from.name,
+        'value': `${from.name}+${action}`,
         'color': colors.primary
       },
       'keyword2': {
