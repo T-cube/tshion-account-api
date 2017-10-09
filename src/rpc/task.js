@@ -506,3 +506,25 @@ route.on('/resend',(query)=>{
     });
   });
 });
+
+
+// 邮件群发
+//查询邮件模版
+route.on('/mail/model/list',(query)=>{
+  let {page,pagesize,templateStat} = query;
+  page = +page;
+  pagesize =+pagesize;
+  let params = {
+    page,
+    pagesize
+  };
+  if(typeof templateStat === 'number'){
+    templateStat = +templateStat;
+    Object.assign(params,{templateStat:templateStat});
+  }
+  return app.model('email').getTemplateList(params).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});

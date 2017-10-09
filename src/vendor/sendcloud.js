@@ -83,6 +83,30 @@ export class EmailSender {
       sub: sub,
     });
   }
+// 批量查询邮件模版
+  getTemplateList(query){
+    let {templateStat,page,pagesize} = query;
+    let params = {
+      apiUser: this.options.apiUser,
+      apiKey: this.options.apiKey,
+      start:page*pagesize,
+      limit:pagesize
+    };
+    if(typeof templateStat === 'number'){
+      Object.assign(params,{templateStat:templateStat});
+    }
+    console.log('params is ',params);
+    let paramList = [];
+    for(let key in params){
+      paramList.push(key+'='+params[key]);
+    }
+    let uri = 'http://api.sendcloud.net/apiv2/template/list?'+paramList.join('&');
+    return rp.get({
+      uri:uri,
+      json:true
+    });
+  }
+// 添加短信模版
 
 }
 
