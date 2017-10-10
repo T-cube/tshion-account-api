@@ -74,10 +74,21 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
         company: req.company._id,
         sign_record: record[data.type]
       };
-      return req.model('activity').insert(info);
+
+      req.model('activity').insert(info);
+
+      res.json({});
+
+      // 打卡积分
+      if(info.action==C.ACTIVITY_ACTION.SIGN_IN) {
+        const clientRpc = req.model('clientRpc');
+        const user = req.user;
+        clientRpc.route('/activity/sign', {user_id: user._id, activity_id: '59cb69fbf3eb0a3e16acf5b7',mobile: user.mobile, email: user.email}, data=>{
+          if(data.code!==200) console.log(data);
+        });
+      }
     });
   })
-  .then(() => res.json({}))
   .catch(next);
 });
 

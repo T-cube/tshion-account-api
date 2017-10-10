@@ -25,6 +25,7 @@ export default {
         email: 1,
         mobile: 1,
         avatar: 1,
+        'wechat.openid': 1
       })
       .then(user => {
         token.user = user;
