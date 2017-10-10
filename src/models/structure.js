@@ -82,15 +82,10 @@ class Structure {
       }
     }
     if (node.children) {
-      if (node.admin) {
-        result[0] = node.admin;
-        _search(node.children, 1);
-      } else {
-        _search(node.children, 0);        
-      }
+      _search(node.children, 0);
       return result;
     } else {
-      return [];
+      return result;
     }
   }
 
