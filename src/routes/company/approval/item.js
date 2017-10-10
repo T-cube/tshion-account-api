@@ -87,11 +87,11 @@ api.post('/',
           }).then(doc => {
             let template_admins = _.pluck(_.pluck(doc.steps, 'approver'), '_id');
             let origin_admins = _.compact(tree.findParentsAdmins(data.department));
-            let flag = origin_admins.length ? true : false;
-            origin_admins = flag ? origin_admins : [req.company.owner];
             origin_admins.reverse();
             if (!req.company.structure.admin) {
               origin_admins.push(req.company.owner);
+            } else {
+              origin_admins.push(req.company.structure.admin);
             }
             let admins = _.compact(origin_admins).slice(0, 5);
             let need_change = false;
@@ -147,11 +147,11 @@ api.post('/',
           autoTemplate.auto = true;
           autoTemplate.scope = [data.department];
           let origin_admins = _.compact(tree.findParentsAdmins(data.department));
-          let flag = origin_admins.length ? true : false;
-          origin_admins = flag ? origin_admins : [req.company.owner];
           origin_admins.reverse();
           if (!req.company.structure.admin) {
             origin_admins.push(req.company.owner);
+          } else {
+            origin_admins.push(req.company.structure.admin);
           }
           let admins = _.compact(origin_admins).slice(0, 5);
           autoTemplate.steps = [];

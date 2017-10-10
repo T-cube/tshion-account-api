@@ -80,7 +80,7 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
       res.json({});
 
       // 打卡积分
-      if(info.action) {
+      if(info.action==C.ACTIVITY_ACTION.SIGN_IN) {
         const clientRpc = req.model('clientRpc');
         const user = req.user;
         clientRpc.route('/activity/sign', {user_id: user._id, activity_id: '59cb69fbf3eb0a3e16acf5b7',mobile: user.mobile, email: user.email}, data=>{
