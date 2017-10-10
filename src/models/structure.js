@@ -85,7 +85,7 @@ class Structure {
       _search(node.children, 0);
       return result;
     } else {
-      return [];
+      return result;
     }
   }
 
