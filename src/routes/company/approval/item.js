@@ -87,11 +87,11 @@ api.post('/',
           }).then(doc => {
             let template_admins = _.pluck(_.pluck(doc.steps, 'approver'), '_id');
             let origin_admins = _.compact(tree.findParentsAdmins(data.department));
-            let flag = origin_admins.length ? true : false;
-            origin_admins = flag ? origin_admins : [req.company.owner];
             origin_admins.reverse();
             if (!req.company.structure.admin) {
               origin_admins.push(req.company.owner);
+            } else {
+              origin_admins.push(req.company.structure.admin);
             }
             let admins = _.compact(origin_admins).slice(0, 5);
             let need_change = false;
@@ -114,32 +114,10 @@ api.post('/',
                 });
               });
             } else {
-              let flag = false;
-              for (let i = 0; i < admins.length; i++) {
-                if (template_admins[i].equals(admins[i])) {
-                  flag = true;
-                }
-              }
-              if (flag) {
-                let newTemplate = _.pick(tpl, 'name', 'description', 'forms');
-                newTemplate.steps = [];
-                newTemplate.company_id = req.company._id;
-                return _updateApprovalTemplate(admins, newTemplate, tpl, Approval, template.template_id)
-                .then(doc => {
-                  data.template = doc._id;
-                  data.company_id = req.company._id;
-                  return Approval.createItem(data, req)
-                  .then(item => {
-                    res.json(item);
-                    return Approval.cancelItemsUseTemplate(req, template._id);
-                  });
-                });
-              } else {
-                data.template = template.template_id;
-                data.company_id = req.company._id;
-                return Approval.createItem(data, req)
-                .then(item => res.json(item));
-              }
+              data.template = template.template_id;
+              data.company_id = req.company._id;
+              return Approval.createItem(data, req)
+              .then(item => res.json(item));
             }
           });
         } else {
@@ -147,11 +125,11 @@ api.post('/',
           autoTemplate.auto = true;
           autoTemplate.scope = [data.department];
           let origin_admins = _.compact(tree.findParentsAdmins(data.department));
-          let flag = origin_admins.length ? true : false;
-          origin_admins = flag ? origin_admins : [req.company.owner];
           origin_admins.reverse();
           if (!req.company.structure.admin) {
             origin_admins.push(req.company.owner);
+          } else {
+            origin_admins.push(req.company.structure.admin);
           }
           let admins = _.compact(origin_admins).slice(0, 5);
           autoTemplate.steps = [];
@@ -215,6 +193,7 @@ function _updateApprovalTemplate(admins, data, tpl, Approval, old_id) {
   })
   .then(doc => {
     data.scope = doc.scope;
+    data.auto = true;
     return db.approval.template.update({
       _id: old_id
     }, {
@@ -227,7 +206,16 @@ function _updateApprovalTemplate(admins, data, tpl, Approval, old_id) {
         templateStatus: C.APPROVAL_STATUS.NORMAL
       })
       .then(newTpl => {
-        return newTpl;
+        return db.approval.auto.update({
+          _id: tpl._id,
+          'templates.department': doc.scope
+        }, {
+          $set: {
+            'templates.$.template_id': newTpl._id
+          }
+        }).then(() => {
+          return newTpl;
+        });
       });
     });
   });

@@ -182,11 +182,11 @@ let render = {
         'color': colors.primary
       },
       'keyword1': {
-        'value': from.name,
+        'value': `${from.name}+${action}`,
         'color': colors.primary
       },
       'keyword2': {
-        'value': date_create,
+        'value': moment(date_create).format('YYYY-MM-DD HH:mm'),
         'color': colors.primary
       },
       'remark': {

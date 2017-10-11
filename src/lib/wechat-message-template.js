@@ -74,8 +74,8 @@ export let templates = {
     _id: config.get('wechat.templates.APP'),
     title: '待办事项提醒',
     data: '{{first.DATA}}' +
-          '姓名：{{keyword1.DATA}}' +
-          '操作：{{keyword2.DATA}}' +
+          '待办事项：{{keyword1.DATA}}' +
+          '提醒时间：{{keyword2.DATA}}' +
           '{{remark.DATA}}'
   },
 };
