@@ -232,3 +232,24 @@ request_body:
 ### DELETE /room/:room_id/euqipment/:equipment_id
 
 管理员删除设备
+
+### GET /annual/:year
+
+查询一年中每个月所有活动的数量和自己参加活动的数量
+
+```javascript
+{
+  all: [
+    {
+      _id: Number, // 月份数字 有就有
+      count: Number, // 活动数量
+    },...
+  ],
+  mine: [
+    {
+      _id: Number, // 月份数字 有就有
+      count: Number, // 活动数量
+    },...
+  ]
+}
+```
