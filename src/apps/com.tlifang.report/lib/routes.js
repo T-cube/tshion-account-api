@@ -194,7 +194,8 @@ api.post('/report/:report_id/mark', (req, res, next) => {
       report_id,
       memberDepartments,
       status,
-      content
+      content,
+      company: req.company
     }).then(doc => {
       res.json(doc);
     }).catch(next);
