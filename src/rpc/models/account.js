@@ -10,6 +10,7 @@ export default class CompanyModel extends Model {
 
   fetchList(props) {
     let { page, pagesize, criteria } = props;
+    console.dir(criteria);
     return this.db.user.find(criteria, {
       name: 1,
       email: 1,
@@ -20,6 +21,7 @@ export default class CompanyModel extends Model {
       avatar: 1,
       birthdate: 1,
       sex: 1,
+      last_login:1
     })
     .skip(page * pagesize)
     .limit(pagesize)
