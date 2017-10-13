@@ -169,6 +169,7 @@ let constants = {
     APPROVAL_TEMPLATE: 'approval.template',
     ATTENDANCE: 'attendance',
     ATTENDANCE_SIGN_DATA: 'attendance.sign.data',
+    ATTENDANCE_OUTDOOR: 'attendance.outdoor',
     COMPANY: 'company',
     COMPANY_ADMIN: 'company.admin',
     COMPANY_MEMBER: 'company.member',

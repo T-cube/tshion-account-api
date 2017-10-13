@@ -29,6 +29,7 @@ const collections = [
   'attendance.audit',
   'attendance.record',
   'attendance.export',
+  'attendance.outdoor',
   'auth_check_token',
   'company',
   'company.app',
