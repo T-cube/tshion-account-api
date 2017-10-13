@@ -169,6 +169,7 @@ let constants = {
     APPROVAL_TEMPLATE: 'approval.template',
     ATTENDANCE: 'attendance',
     ATTENDANCE_SIGN_DATA: 'attendance.sign.data',
+    ATTENDANCE_OUTDOOR: 'attendance.outdoor',
     COMPANY: 'company',
     COMPANY_ADMIN: 'company.admin',
     COMPANY_MEMBER: 'company.member',
@@ -273,6 +274,11 @@ let constants = {
     CHANGE_PASSWORD: 'change_password',
     BIND_WECHAT: 'bind_wechat',
     UNBIND_WECHAT: 'unbind_wechat',
+  },
+
+  UPLOAD_TYPE: {
+    ATTENDANCE: 'attendance',
+    TASK: 'task',
   },
 
   CLIENT_ID: {

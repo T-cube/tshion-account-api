@@ -29,6 +29,7 @@ const collections = [
   'attendance.audit',
   'attendance.record',
   'attendance.export',
+  'attendance.outdoor',
   'auth_check_token',
   'company',
   'company.app',
@@ -103,7 +104,10 @@ const collections = [
   'temp.file',
 
   'broadcast',
-  'payment.order.schedule'
+  'payment.order.schedule',
+
+  // 短信群发，邮件群发队列任务
+  'queue.task'
 ];
 
 const dbConfig = config.get('database');

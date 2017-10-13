@@ -953,6 +953,69 @@ export default class Activity extends AppBase {
     });
   }
 
+  annualCount({year, company, user_id}) {
+    let isMember = [
+      {
+        creator: user_id
+      },
+      {
+        assistants: user_id
+      },
+      {
+        followers: user_id
+      },
+      {
+        members: user_id
+      },
+    ];
+    return Promise.all([
+      this.collection('item').aggregate([
+        {
+          $match: {
+            company_id: company._id,
+            time_start: {
+              $gte: moment({year}).startOf('year').toDate(),
+              $lte: moment({year}).endOf('year').toDate()
+            },
+            status: C.ACTIVITY_STATUS.CREATED,
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $month: '$time_start'
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+      this.collection('item').aggregate([
+        {
+          $match: {
+            company_id: company._id,
+            time_start: {
+              $gte: moment({year}).startOf('year').toDate(),
+              $lte: moment({year}).endOf('year').toDate()
+            },
+            status: C.ACTIVITY_STATUS.CREATED,
+            $or: isMember
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $month: '$time_start'
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ])
+    ])
+    .then(([all, mine]) => {
+      return {all, mine};
+    });
+  }
+
   _listCalc(list, user_id) {
     return _.map(list, item => {
       item.total = _.uniq(this._toString([].concat(item.assistants, item.creator, item.members))).length;

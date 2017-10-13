@@ -39,6 +39,7 @@ INPUT
   priority: <0,1,2,3>,         // 优先级别
   subtask: [<String>, ...],    // 子任务
   tags: [<ObjectId>, ...],        // 标签
+  attachments: [ObjectId,...]  // 附件objecid数组
 }
 ```
 

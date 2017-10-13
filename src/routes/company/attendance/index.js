@@ -20,7 +20,7 @@ import {
   validate,
 } from './schema';
 import C from 'lib/constants';
-import { checkUserTypeFunc, checkUserType } from '../utils';
+import { checkUserTypeFunc, checkUserType, fetchUserInfo } from '../utils';
 import {
   fetchCompanyMemberInfo,
   mapObjectIdToData,
@@ -31,6 +31,8 @@ import {
 import Attendance from 'models/attendance';
 import Approval from 'models/approval';
 import Structure from 'models/structure';
+import { upload, saveCdn } from 'lib/upload';
+import { attachFileUrls } from 'routes/company/document/index';
 
 const api = express.Router();
 export default api;
@@ -87,6 +89,90 @@ api.post('/sign', ensureFetchSettingOpened, (req, res, next) => {
           if(data.code!==200) console.log(data);
         });
       }
+    });
+  })
+  .catch(next);
+});
+
+api.post('/outdoor/sign', (req, res, next) => {
+  validate('outdoorSign', req.body);
+  let sign_data = req.body;
+  _.extend(sign_data, {
+    company: req.company._id,
+    user: req.user._id,
+    date_create: new Date(),
+  });
+  db.attendance.outdoor.insert(sign_data)
+  .then(doc => {
+    let info = {
+      action: 'sign',
+      target_type: C.OBJECT_TYPE.ATTENDANCE_OUTDOOR,
+      creator: req.user._id,
+      company: req.company._id,
+      address: sign_data.location.address,
+    };
+    req.model('activity').insert(info);
+    return doc;
+  })
+  .catch(next);
+});
+
+// api.get('/outdoor/range', (req, res, next) => {
+//   validate('outdoorQuery', req.query);
+//   let query = {
+//     company: req.company._id,
+//     date_create: {
+//       $gte: req.query.date_start,
+//       $lte: req.queyr.date_end,
+//     }
+//   };
+//   if (req.query.user_id) {
+//     _.extend(query, {
+//       user: req.query.user_id
+//     });
+//   }
+//   db.attendance.outdoor.find(query)
+//   .then(list => {
+//     return fetchUserInfo(list, 'user').then(() => {
+//       return Promise.map(list, item => {
+//         return mapObjectIdToData(item.pic_record, 'cdn_key').then(() => {
+//           return Promise.map(item.pic_record, pic => {
+//             return attachFileUrls(req, pic);
+//           });
+//         });
+//       });
+//     }).then(() => {
+//       res.json(list);
+//     });
+//   })
+//   .catch(next);
+// });
+
+api.get('/outdoor', (req, res, next) => {
+  const limit = config.get('view.userLoginListNum');
+  validate('outdoorList', req.query);
+  let query = {};
+  if (req.query.type == 'mine') {
+    _.extend(query, {user: req.user._id});
+  }
+  if (req.query.last_id) {
+    _.extend(query, { _id: { $lt: req.query.last_id } });
+  }
+  return db.attendance.outdoor
+  .find(query)
+  .sort({_id: -1})
+  .limit(limit)
+  .then(list => {
+    return fetchUserInfo(list, 'user').then(() => {
+      return Promise.map(list, item => {
+        return mapObjectIdToData(item.pic_record, 'user.file', 'cdn_key').then(() => {
+          return Promise.map(item.pic_record, pic => {
+            return attachFileUrls(req, pic);
+          });
+        });
+      });
+    }).then(() => {
+      res.json(list);
     });
   })
   .catch(next);
