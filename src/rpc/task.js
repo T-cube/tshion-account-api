@@ -24,6 +24,7 @@ taskModel.createIndex();
 
 // 启动程序默认开启任务
 taskModel.startQueue();
+taskModel.startEmailQueue();
 
 
 //筛选用户
@@ -37,6 +38,7 @@ route.on('/user/list',(query)=>{
   let {keyword,lastlogin,creator,page,pagesize} = query;
   page = parseInt(page);
   pagesize = parseInt(pagesize);
+  creator = parseInt(creator);
   if (keyword) {
     keyword = keyword.replace(/\"|\"/g,"");
     let reg = new RegExp(keyword,'i');
@@ -415,7 +417,7 @@ route.on('/sign/update',(query)=>{
   });
 });
 
-// 查询任务(短信任务／邮件任务)
+// 查询任务(短信任务)
 route.on('/list',(query)=>{
   let {keyword,status,createTime,page,pagesize,type} = query;
   let params = {type:type};
@@ -526,5 +528,211 @@ route.on('/mail/model/list',(query)=>{
     return data;
   }).catch((err)=>{
     throw new Error(err);
+  });
+});
+
+// 查询单个邮件模版
+route.on('/mail/model/detail',(query)=>{
+  let {invokeName} = query;
+  return app.model('email').getDetailModel({invokeName:invokeName}).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+// 批量查询
+route.on('/mail/domain/list',()=>{
+  return app.model('email').getDomainList().then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+// 添加短信模版
+route.on('/mail/model/add',(query)=>{
+  validate('task_model_add',query);
+  return app.model('email').addModel(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+// 更新短信模版
+route.on('/mail/model/update',(query)=>{
+  return app.model('email').updateModel(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+// 查询邮箱用户列表
+route.on('/mail/user/list',(query)=>{
+  let criteria = {
+    email:{
+      $exists:true,
+      $ne:null
+    }
+  };
+  let {lastlogin,page,pagesize} = query;
+  if(lastlogin){
+    let time = new Date(lastlogin);
+    let loginTime = {'last_login.time':{$lt:time}};
+    Object.assign(criteria,loginTime);
+  }
+  return accountModel.page({criteria,page,pagesize});
+});
+
+// 创建邮件群发任务
+route.on('/mail/task/create',(query)=>{
+  validate('email_task_create',query);
+  console.log('done this');
+  let {target,sendAll,userId,username,type,content,gallery,templateInvokeName,status,name} = query;
+  let createTime = new Date();
+  if(!sendAll){
+    let params = {
+      userId,
+      username,
+      type,
+      content,
+      gallery,
+      createTime,
+      templateInvokeName,
+      status,
+      name
+    };
+    target = target.map(function(value){
+      Object.assign(value,params);
+      return value;
+    });
+    db.queue.task.insertMany(target).then(()=>{
+      return taskModel.findTask({
+        type:type,
+        createTime:createTime,
+        name:name},{
+          _id:1,
+          email:1,
+          targetName:1,
+          content:1,
+          gallery:1,
+          templateInvokeName:1
+        }).then((data)=>{
+          console.log('data is ',data);
+          if(data.length){
+            return taskModel.addEmailList(data).then(count=>{
+              return;
+            }).catch((err)=>{
+              throw new ApiError(500,err);
+            });
+          }else{
+            return;
+          }
+        });
+    }).catch((err)=>{
+      throw new ApiError(500,err);
+    });
+  }else{
+    return  {};
+  }
+});
+
+// 查询任务列表
+route.on('/mail/task/list',(query)=>{
+  let {page,pagesize,keyword,createTime,status} = query;
+  let params = {type:'email'};
+  if(status){
+    Object.assign(params,{status:parseInt(status)});
+  }
+  if(keyword){
+    let reg = new RegExp(keyword,'i');
+    Object.assign(params,{
+      $or : [
+        {
+          name: {
+            $regex: reg
+          }
+        },
+        {
+          email: {
+            $regex: reg
+          }
+        }
+      ]
+    });
+  }
+  if(createTime){
+    let begin = new Date(createTime);
+    let after = moment(begin).add(1,'day').toDate();
+    Object.assign(params,{
+      $and:[
+        {createTime:{$gte:begin}},
+        {createTime:{$lte:after}}
+      ]
+    });
+  }
+  return taskModel.findTask(params,{
+    _id:1,
+    email:1,
+    targetName:1,
+    username:1,
+    createTime:1,
+    templateInvokeName:1,
+    status:1,
+    name:1,
+    message:1,
+    from:1,
+    type:-1
+  },{page,pagesize}).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    return {
+      count:0,
+      tasks:[],
+      page:page,
+      pagesize:pagesize
+    };
+  });
+});
+
+// 取消订阅列表
+route.on('/mail/unsub/list',(query)=>{
+  let {page,pagesize,email,startDate,endDate} = query;
+  let params = {
+    start:page,
+    limit:pagesize
+  };
+  if(email){
+    Object.assign(params,{email:email});
+  }
+  if(startDate&&endDate){
+    startDate = moment(startDate).format('YYYY-MM-DD');
+    endDate = moment(endDate).format('YYYY-MM-DD');
+    Object.assign(params,{startDate:startDate,endDate:endDate});
+  }
+  return app.model('email').unsubList(params).then((data)=>{
+    return data;
+  });
+});
+
+// 删除订阅列表
+route.on('/mail/unsub/delete',(query)=>{
+  let {email} = query;
+  return app.model('email').delUnSub({email:email}).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new ApiError(500,err);
+  });
+});
+
+// 添加取消订阅地址
+route.on('/mail/unsub/add',(query)=>{
+  let {email} = query;
+  return app.model('email').addUnSub({email:email}).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new ApiError(500,err);
   });
 });

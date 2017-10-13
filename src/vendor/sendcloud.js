@@ -64,6 +64,34 @@ export class EmailSender {
     });
   }
 
+  // 批量发送
+  queueSend(query){
+    const { options } = this;
+    let formData = {
+      apiUser:options.apiUser,
+      apiKey:options.apiKey,
+      from:options.from,
+      fromName:options.fromName,
+      templateInvokeName: query.templateInvokeName
+    };
+    let x_smtpapi = {
+      'to':[query.email],
+      'sub':{
+        '%name%':[query.targetName],
+        '%content%':[query.content],
+        '%gallery%':[query.gallery]
+      }
+    };
+    x_smtpapi = JSON.stringify(x_smtpapi);
+    console.log('x_smtpapi is ',x_smtpapi);
+    Object.assign(formData,{xsmtpapi:x_smtpapi});
+    return rp.post({
+      uri:'http://api.sendcloud.net/apiv2/mail/sendtemplate',
+      form:formData,
+      json:true
+    });
+  }
+
   getApiData(template, data) {
     const { options } = this;
     const { variables } = options.templates[template];
@@ -106,8 +134,123 @@ export class EmailSender {
       json:true
     });
   }
-// 添加短信模版
-
+// 查询单个邮件模版
+  getDetailModel(query){
+    let {invokeName} = query;
+    let params = {
+      apiUser: this.options.apiUser,
+      apiKey: this.options.apiKey,
+      invokeName:invokeName
+    };
+    let paramList = [];
+    for(let key in params){
+      paramList.push(key+'='+params[key]);
+    }
+    let uri = 'http://api.sendcloud.net/apiv2/template/get?'+paramList.join('&');
+    return rp.get({
+      uri:uri,
+      json:true
+    });
+  }
+//  查询域名
+  getDomainList(){
+    let params = {
+      apiUser: this.options.apiUser,
+      apiKey: this.options.apiKey
+    };
+    let paramList = [];
+    for(let key in params){
+      paramList.push(key+'='+params[key]);
+    }
+    let uri = 'http://api.sendcloud.net/apiv2/domain/list?'+paramList.join('&');
+    console.log('uri is ',uri);
+    return rp.get({
+      uri:uri,
+      json:true
+    });
+  }
+// 添加邮件模版
+  addModel(query){
+    let {invokeName,name,html,subject,templateType} = query;
+    let params = {
+      apiUser: this.options.apiUser,
+      apiKey: this.options.apiKey,
+      invokeName:invokeName,
+      name:name,
+      html:html,
+      subject:subject,
+      templateType:templateType
+    };
+    return rp.post({
+      uri: 'http://api.sendcloud.net/apiv2/template/add',
+      form: params,
+      json: true,
+    });
+  }
+  // 更新邮件模版
+  updateModel(query){
+    let params = {
+      apiUser: this.options.apiUser,
+      apiKey: this.options.apiKey
+    };
+    Object.assign(params,query);
+    return rp.post({
+      uri: 'http://api.sendcloud.net/apiv2/template/update',
+      form: params,
+      json: true,
+    });
+  }
+  // 查询取消订阅的用户
+  unsubList(query){
+    let params = {
+      apiUser:this.options.apiUser,
+      apiKey:this.options.apiKey
+    };
+    Object.assign(params,query);
+    let paramList = [];
+    for(let key in params){
+      paramList.push(key+'='+params[key]);
+    }
+    let uri = 'http://api.sendcloud.net/apiv2/unsubscribe/list?'+paramList.join('&');
+    return rp.get({
+      uri:uri,
+      json:true
+    });
+  }
+  // 删除取消订阅的用户
+  delUnSub(query){
+    let params = {
+      apiUser:this.options.apiUser,
+      apiKey:this.options.apiKey
+    };
+    Object.assign(params,query);
+    let paramList = [];
+    for(let key in params){
+      paramList.push(key+'='+params[key]);
+    }
+    let uri = 'http://api.sendcloud.net/apiv2/unsubscribe/delete?'+paramList.join('&');
+    return rp.get({
+      uri:uri,
+      json:true
+    });
+  }
+  // 添加取消订阅的用户
+  addUnSub(query){
+    let params = {
+      apiUser:this.options.apiUser,
+      apiKey:this.options.apiKey
+    };
+    Object.assign(params,query);
+    let paramList = [];
+    for(let key in params){
+      paramList.push(key+'='+params[key]);
+    }
+    let uri = 'http://api.sendcloud.net/apiv2/unsubscribe/add?'+paramList.join('&');
+    return rp.get({
+      uri:uri,
+      json:true
+    });
+  }
 }
 
 export class SmsSender {
