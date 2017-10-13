@@ -8,13 +8,14 @@ import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg, fetchUserInfo } from 'lib/utils';
+import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg, fetchUserInfo, upload, saveCdn, mapObjectIdToData } from 'lib/utils';
 import {
   TASK_ASSIGNED,
   TASK_UPDATE,
   TASK_REPLY,
 } from 'models/notification-setting';
 import { validate } from './schema';
+import { attachFileUrls } from 'routes/company/document/index';
 
 const api = express.Router();
 export default api;
@@ -152,6 +153,15 @@ api.post('/', (req, res, next) => {
   return db.task.insert(data)
   .then(task => {
     res.json(task);
+    Promise.map(task.attachments, attachment => {
+      db.user.file.update({
+        _id: attachment
+      }, {
+        $set: {
+          'module.task_id': task._id
+        }
+      });
+    });
     req.task = task;
     let notification = {
       action: C.ACTIVITY_ACTION.ADD,
@@ -186,8 +196,14 @@ api.get('/:_task_id', (req, res, next) => {
     return fetchUserInfo(task, 'creator', 'assignee', 'checker', 'followers');
   })
   .then(task => {
-    task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
-    res.json(task);
+    return mapObjectIdToData(task.attachments, 'user.file', 'cdn_key').then(() => {
+      return Promise.map(task.attachments, attachment => {
+        return attachFileUrls(req, attachment);
+      });
+    }).then(() => {
+      task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
+      res.json(task);
+    });
   })
   .catch(next);
 });
@@ -239,6 +255,8 @@ api.put('/:task_id/priority', updateField('priority'));
 api.put('/:task_id/date_start', updateField('date_start'));
 
 api.put('/:task_id/date_due', updateField('date_due'));
+
+api.put('/:task_id/attachments', updateField('attachments'));
 
 api.put('/:task_id/checker', (req, res, next) => {
   let checker = req.body.checker;

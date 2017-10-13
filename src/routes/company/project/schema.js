@@ -44,6 +44,14 @@ const schema = {
       content: {  type: 'string', optional: true },
     },
   },
+  upload: {
+    sanitization: {
+      name: { type: 'string' },
+    },
+    validation: {
+      name: { $enum: C.UPLOAD_TYPE },
+    }
+  }
 };
 
 export const validate = buildValidator(schema);

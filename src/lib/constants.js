@@ -276,6 +276,11 @@ let constants = {
     UNBIND_WECHAT: 'unbind_wechat',
   },
 
+  UPLOAD_TYPE: {
+    ATTENDANCE: 'attendance',
+    TASK: 'task',
+  },
+
   CLIENT_ID: {
     WEB: 'com_tlifang_web',
     MOBILE: 'com_tlifang_mobile',

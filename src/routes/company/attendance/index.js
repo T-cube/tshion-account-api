@@ -165,7 +165,7 @@ api.get('/outdoor', (req, res, next) => {
   .then(list => {
     return fetchUserInfo(list, 'user').then(() => {
       return Promise.map(list, item => {
-        return mapObjectIdToData(item.pic_record, 'cdn_key').then(() => {
+        return mapObjectIdToData(item.pic_record, 'user.file', 'cdn_key').then(() => {
           return Promise.map(item.pic_record, pic => {
             return attachFileUrls(req, pic);
           });
@@ -176,33 +176,6 @@ api.get('/outdoor', (req, res, next) => {
     });
   })
   .catch(next);
-});
-
-api.post('/upload',
-upload({type: 'attachment'}).single('document'),
-saveCdn('cdn-file'),
-(req, res, next) => {
-  let file = req.file;
-  if (!file) {
-    throw new ApiError(400, 'file_not_upload');
-  }
-  let user_id = req.user._id;
-  let company_id = req.company._id;
-  let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
-  _.extend(fileData, {
-    name: file.originalname,
-    company: company_id,
-    module: {
-      name: 'attendance',
-    },
-    author: user_id,
-    date_update: new Date(),
-    date_create: new Date(),
-    updated_by: user_id,
-  });
-  return db.user.file.insert(fileData).then(doc => {
-    return doc;
-  }).catch(next);
 });
 
 api.get('/sign/user/:user_id', (req, res, next) => {

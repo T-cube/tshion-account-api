@@ -132,6 +132,36 @@ api.param('company_id', (req, res, next, id) => {
   })
   .catch(next);
 });
+
+
+api.post('/:company_id/upload',
+upload({type: 'attachment'}).single('document'),
+saveCdn('cdn-file'),
+(req, res, next) => {
+  validate('upload', req.body);
+  let file = req.file;
+  if (!file) {
+    throw new ApiError(400, 'file_not_upload');
+  }
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+  _.extend(fileData, {
+    name: file.originalname,
+    company: company_id,
+    module: {
+      name: req.body.name,
+    },
+    author: user_id,
+    date_update: new Date(),
+    date_create: new Date(),
+    updated_by: user_id,
+  });
+  return db.user.file.insert(fileData).then(doc => {
+    return doc;
+  }).catch(next);
+});
+
 // Get company detail
 api.get('/:company_id', (req, res, next) => {
   const members = req.company.members;
