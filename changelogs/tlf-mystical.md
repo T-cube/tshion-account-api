@@ -2,7 +2,7 @@
 
 ## 2015年12月23日 立项
 
-  ![web 版](./tlf-mystical/web.png "设计图")
+  ![web 版](http://oxwjq8idu.bkt.clouddn.com/web.png "设计图")
 
 
   * 产品方向
@@ -39,7 +39,7 @@
 
 ## 2016年6月8日 微信版开发
 
-  ![微信版](./tlf-mystical/mobile.jpg "设计图")
+  ![微信版](http://oxwjq8idu.bkt.clouddn.com/mobile.jpg "设计图")
 
   * 确定开发需求
   * 版本 v0.0.1
@@ -64,7 +64,7 @@
 
 ## 2017年01月06日 web版本 改版
 
-  ![web](./tlf-mystical/web1.0.png "设计图")
+  ![web](http://oxwjq8idu.bkt.clouddn.com/web1.0.png "设计图")
 
   * 改版
 
@@ -76,16 +76,24 @@
 
 ## 2017年01月12日 小程序 考勤助理
 
-  ![web](./tlf-mystical/attendance.png "设计图")
+  ![web](http://oxwjq8idu.bkt.clouddn.com/attendance.png "设计图")
 
 
   * 开发考勤助理小程序
 
   * 版本 v0.1.0
+## 2017年02月23日 小程序 任务清单
+
+  ![web](http://oxwjq8idu.bkt.clouddn.com/1%E6%B8%85%E5%8D%95.png "设计图")
+
+
+  * 开发任务清单小程序
+
+  * 版本 v0.1.0
 
 ## 2017年02月25日 微信版 改版
 
-  ![web](./tlf-mystical/mobile.png "设计图")
+  ![web](http://oxwjq8idu.bkt.clouddn.com/mobile.png "设计图")
 
   * 改版：主题色、页面UI、 图标
 
@@ -93,7 +101,7 @@
 
 ## 2017年04月07日 T立方 APP 开发
 
-   ![web](./tlf-mystical/app.png "设计图")
+   ![web](http://oxwjq8idu.bkt.clouddn.com/app.png "设计图")
 
   * 技术选型： ReactNative
 
