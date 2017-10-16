@@ -196,8 +196,8 @@ api.get('/:_task_id', (req, res, next) => {
     return fetchUserInfo(task, 'creator', 'assignee', 'checker', 'followers');
   })
   .then(task => {
-    return mapObjectIdToData(task.attachments, 'user.file', 'cdn_key').then(() => {
-      return Promise.map(task.attachments, attachment => {
+    return mapObjectIdToData(task.attachments || [], 'user.file', 'cdn_key').then(() => {
+      return Promise.map(task.attachments || [], attachment => {
         return attachFileUrls(req, attachment);
       });
     }).then(() => {
