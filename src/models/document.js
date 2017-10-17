@@ -19,14 +19,14 @@ class Document {
       if (!_.isEmpty(children)) {
         dir.children = children;
       }
-      return _.pick(dir, '_id', 'name', 'children');
+      return _.pick(dir, '_id', 'name', 'children', 'attachment_dir');
     });
   }
 
   buildTree(dirs) {
     let dir = _.find(dirs, dir => !dir.parent_dir);
     dir.children = this.getChildren(dirs, dir.dirs);
-    return _.pick(dir, '_id', 'name', 'children');
+    return _.pick(dir, '_id', 'name', 'children', 'attachment_dir');
   }
 
   queryItemInfoUnderDir(dir, name) {

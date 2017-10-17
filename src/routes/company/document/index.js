@@ -55,7 +55,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
-      ['document.dir', 'name,date_update,updated_by', 'dirs'],
+      ['document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs'],
       ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
     ])
     .then(() => {
@@ -203,10 +203,14 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
     parent_dir: 1,
     name: 1,
     path: 1,
+    attachment_dir: 1
   })
   .then(dirInfo => {
     if (!dirInfo) {
       throw new ApiError(404);
+    }
+    if (!dirInfo.attachment_dir) {
+      throw new ApiError(400,'can_not_change_attachment_dir');
     }
     return checkNameValid(req, data.name, dirInfo.parent_dir)
     .then(() => {
@@ -415,21 +419,18 @@ saveCdn('cdn-file'),
   }
   getParentPaths(dir_id)
   .then(path => {
-    return _.map(req.files, file => {
-      let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
-      _.extend(fileData, {
-        [req.document.posKey]: req.document.posVal,
-        dir_id: dir_id,
-        name: file.originalname,
-        author: req.user._id,
-        date_update: new Date(),
-        date_create: new Date(),
-        updated_by: req.user._id,
-        dir_path: path,
-        path: undefined,
+    if (path[1]) {
+      return db.document.dir.findOne({
+        _id: path[1]
+      })
+      .then(doc => {
+        if (doc.attachment_dir) {
+          return _uploadFileOpreation(req, data, dir_id, true);
+        }
+        _uploadFileOpreation(req, data, dir_id, false);
       });
-      data.push(fileData);
-    });
+    }
+    _uploadFileOpreation(req, data, dir_id, false);
   })
   .then(() => createFile(req, data, dir_id))
   .then(files => {
@@ -706,32 +707,42 @@ function deleteDirs(req, dirs) {
       return null;
     }
     dirsDeleted.push(_.pick(dir, '_id', 'name'));
-    return Promise.all([
-      db.document.dir.update({
-        _id: dir.parent_dir
-      }, {
-        $pull: {
-          dirs: dir._id
-        }
-      }),
-      dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
-      .then(items => {
-        return Promise.all([
-          mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
-          .then(files => deleteFiles(req, files)),
-          db.document.dir.remove({
-            _id: {
-              $in: items.dirs
-            }
-          })
-        ]);
-      })
-    ])
-    .then(() => {
-      return db.document.dir.remove({
-        _id: {
-          $in: (dir.dirs || []).concat(dir._id)
-        }
+    return db.document.dir.findOne({
+      _id: dir._id
+    }, {
+      attachment_dir: 1,
+    })
+    .then(doc => {
+      if (doc.attachment_dir) {
+        return null;
+      }
+      return Promise.all([
+        db.document.dir.update({
+          _id: dir.parent_dir
+        }, {
+          $pull: {
+            dirs: dir._id
+          }
+        }),
+        dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
+        .then(items => {
+          return Promise.all([
+            mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
+            .then(files => deleteFiles(req, files)),
+            db.document.dir.remove({
+              _id: {
+                $in: items.dirs
+              }
+            })
+          ]);
+        })
+      ])
+      .then(() => {
+        return db.document.dir.remove({
+          _id: {
+            $in: (dir.dirs || []).concat(dir._id)
+          }
+        });
       });
     });
   }))
@@ -748,31 +759,41 @@ function deleteFiles(req, files, dirCheckAndPull) {
   let incSize = 0;
   let filesDeleted = [];
   return Promise.all(files.map(file => {
-    filesDeleted.push(_.pick(file, '_id', 'name'));
-    let removeFileFromDb;
-    if (dirCheckAndPull) {
-      removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
-        return Promise.all([
-          db.document.file.remove({
-            _id: file._id,
-          }),
-          db.document.dir.update({
-            _id: file.dir_id,
-          }, {
-            $pull: {
-              files: file._id
-            }
-          }),
-        ]);
+    return db.document.file.findOne({
+      _id: file._id
+    }, {
+      attachment_dir_file: 1
+    })
+    .then(doc => {
+      if (doc.attachment_dir_file) {
+        return null;
+      }
+      filesDeleted.push(_.pick(file, '_id', 'name'));
+      let removeFileFromDb;
+      if (dirCheckAndPull) {
+        removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
+          return Promise.all([
+            db.document.file.remove({
+              _id: file._id,
+            }),
+            db.document.dir.update({
+              _id: file.dir_id,
+            }, {
+              $pull: {
+                files: file._id
+              }
+            }),
+          ]);
+        });
+      } else {
+        removeFileFromDb = db.document.file.remove({
+          _id: file._id,
+        });
+      }
+      return removeFileFromDb.then(() => {
+        incSize -= file.size;
+        req.model('document').deleteFile(req, file);
       });
-    } else {
-      removeFileFromDb = db.document.file.remove({
-        _id: file._id,
-      });
-    }
-    return removeFileFromDb.then(() => {
-      incSize -= file.size;
-      req.model('document').deleteFile(req, file);
     });
   }))
   .then(() => {
@@ -939,6 +960,29 @@ function generateFileToken(user_id, file_id) {
       file: file_id,
       expires: new Date(timestamp() + config.get('download.tokenExpires')),
     });
+  });
+}
+
+function _uploadFileOpreation(req, data, dir_id, attachment_check) {
+  return _.map(req.files, file => {
+    let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+    _.extend(fileData, {
+      [req.document.posKey]: req.document.posVal,
+      dir_id: dir_id,
+      name: file.originalname,
+      author: req.user._id,
+      date_update: new Date(),
+      date_create: new Date(),
+      updated_by: req.user._id,
+      dir_path: path,
+      path: undefined,
+    });
+    if (attachment_check) {
+      _.extend(fileData, {
+        attachment_dir_file: true
+      });
+    }
+    data.push(fileData);
   });
 }
 
