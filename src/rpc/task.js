@@ -604,7 +604,7 @@ route.on('/mail/domain/list',()=>{
   });
 });
 
-// 添加短信模版
+// 添加邮件模版
 route.on('/mail/model/add',(query)=>{
   validate('task_model_add',query);
   return app.model('email').addModel(query).then((data)=>{
@@ -614,9 +614,18 @@ route.on('/mail/model/add',(query)=>{
   });
 });
 
-// 更新短信模版
+// 更新邮件模版
 route.on('/mail/model/update',(query)=>{
   return app.model('email').updateModel(query).then((data)=>{
+    return data;
+  }).catch((err)=>{
+    throw new Error(err);
+  });
+});
+
+// 删除邮件模版
+route.on('/mail/model/delete',(query)=>{
+  return app.model('email').deleteModel(query).then((data)=>{
     return data;
   }).catch((err)=>{
     throw new Error(err);
@@ -631,11 +640,29 @@ route.on('/mail/user/list',(query)=>{
       $ne:null
     }
   };
-  let {lastlogin,page,pagesize} = query;
+  let {lastlogin,page,pagesize,keyword} = query;
   if(lastlogin){
     let time = new Date(lastlogin);
     let loginTime = {'last_login.time':{$lt:time}};
     Object.assign(criteria,loginTime);
+  }
+  if(keyword){
+    let text = keyword.replace(/\"|\"|\'|\'/g,"");
+    let reg = new RegExp(text,'i');
+    Object.assign(criteria,{
+      $or : [
+        {
+          name: {
+            $regex: reg
+          }
+        },
+        {
+          email: {
+            $regex: reg
+          }
+        }
+      ]
+    });
   }
   return accountModel.page({criteria,page,pagesize});
 });
@@ -671,7 +698,6 @@ route.on('/mail/task/create',(query)=>{
           content:1,
           templateInvokeName:1
         }).then((data)=>{
-          console.log('data is ',data);
           if(data.length){
             return taskModel.addEmailList(data).then(count=>{
               return;
@@ -853,7 +879,6 @@ route.on('/mail/sendStatus',(query)=>{
     startDate:startDate,
     endDate:endDate
   };
-  console.log('parms is ',params);
   if(emailIds){
     Object.assign(params,{emailIds:emailIds});
   }

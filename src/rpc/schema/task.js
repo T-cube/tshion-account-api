@@ -59,7 +59,6 @@ const schema = {
       username:{type:'username'},
       type:{type:'string'},
       content:{type:'string'},
-      gallery:{type:'string'},
       templateInvokeName:{type:'string'},
       status:{type:'number'},
       name:{type:'string'}
@@ -71,7 +70,6 @@ const schema = {
       username:{type:'username'},
       type:{type:'string'},
       content:{type:'string'},
-      gallery:{type:'string'},
       templateInvokeName:{type:'string'},
       status:{type:'number'},
       name:{type:'string'}

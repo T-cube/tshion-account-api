@@ -59,7 +59,6 @@ export class EmailSender {
         form: formData,
         json: true,
       };
-      console.log(params);
       return rp.post(params);
     });
   }
@@ -83,7 +82,6 @@ export class EmailSender {
       }
     };
     x_smtpapi = JSON.stringify(x_smtpapi);
-    console.log('x_smtpapi is ',x_smtpapi);
     Object.assign(formData,{xsmtpapi:x_smtpapi});
     return rp.post({
       uri:'http://api.sendcloud.net/apiv2/mail/sendtemplate',
@@ -123,7 +121,6 @@ export class EmailSender {
     if(typeof templateStat === 'number'){
       Object.assign(params,{templateStat:templateStat});
     }
-    console.log('params is ',params);
     let paramList = [];
     for(let key in params){
       paramList.push(key+'='+params[key]);
@@ -163,7 +160,6 @@ export class EmailSender {
       paramList.push(key+'='+params[key]);
     }
     let uri = 'http://api.sendcloud.net/apiv2/domain/list?'+paramList.join('&');
-    console.log('uri is ',uri);
     return rp.get({
       uri:uri,
       json:true
@@ -198,6 +194,23 @@ export class EmailSender {
       uri: 'http://api.sendcloud.net/apiv2/template/update',
       form: params,
       json: true,
+    });
+  }
+  // 删除短信模版
+  deleteModel(query){
+    let params = {
+      apiUser: this.options.apiUser,
+      apiKey: this.options.apiKey
+    };
+    Object.assign(params,query);
+    let paramList = [];
+    for(let key in params){
+      paramList.push(key+'='+params[key]);
+    }
+    let uri = 'http://api.sendcloud.net/apiv2/template/delete?'+paramList.join('&');
+    return rp.get({
+      uri:uri,
+      json:true
     });
   }
   // 查询取消订阅的用户
@@ -263,7 +276,6 @@ export class EmailSender {
       paramList.push(key+'='+params[key]);
     }
     let uri = 'http://api.sendcloud.net/apiv2/data/emailStatus?'+paramList.join('&');
-    console.log('uri is ',uri);
     return rp.get({
       uri:uri,
       json:true
