@@ -55,7 +55,7 @@ api.get('/group', (req, res, next) => {
 });
 
 api.post('/group', (req, res, next) => {
-  validate('group', req.body, ['name']);
+  validate('group', req.body);
   db.project.group.update({
     user_id: req.user._id,
     company_id: req.company._id,
@@ -64,7 +64,7 @@ api.post('/group', (req, res, next) => {
       groups: {
         _id: ObjectId(),
         name: req.body.name,
-        projects: []
+        projects: req.body.projects
       }
     }
   }, {

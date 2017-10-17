@@ -93,6 +93,7 @@ request_body:
 ```javascript
 {
   name: String, //分组名
+  projects: [objectId,...], //项目id的数组 或者是 []
 }
 ```
 
