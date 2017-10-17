@@ -56,51 +56,71 @@ api.get('/group', (req, res, next) => {
 
 api.post('/group', (req, res, next) => {
   validate('group', req.body);
-  db.project.group.update({
+  let projects = req.body.projects;
+  db.project.group.findOne({
     user_id: req.user._id,
     company_id: req.company._id,
-  }, {
-    $push: {
-      groups: {
-        _id: ObjectId(),
-        name: req.body.name,
-        projects: req.body.projects
-      }
-    }
-  }, {
-    upsert: true,
-    returnOriginal: false,
-    returnNewDocument: true
   })
   .then(doc => {
-    res.json(doc.value);
-  });
+    let groups = doc.groups;
+    let promise = _checkExistProjectsReturnChange(req, groups, projects);
+    return promise.then(() => db.project.group.findOneAndUpdate({
+      user_id: req.user._id,
+      company_id: req.company._id,
+    }, {
+      $push: {
+        groups: {
+          _id: ObjectId(),
+          name: req.body.name,
+          projects: req.body.projects
+        }
+      }
+    }, {
+      upsert: true,
+      returnOriginal: false,
+      returnNewDocument: true
+    })
+    .then(doc => {
+      res.json(doc.value);
+    }));
+  })
+  .catch(next);
 });
 
 api.put('/group/:group_id', (req, res, next) => {
   validate('group', req.body);
+  let projects = req.body.projects;
   let group_id = ObjectId(req.params.group_id);
-  db.project.group.update({
+  db.project.group.findOne({
     user_id: req.user._id,
     company_id: req.company._id,
-    'groups._id': group_id
-  }, {
-    $set: {
-      'groups.$.name': req.body.name,
-      'groups.$.projects': req.body.projects
-    }
-  }, {
-    returnOriginal: false,
-    returnNewDocument: true
   })
   .then(doc => {
-    res.json(doc.value);
-  });
+    let groups = doc.groups;
+    let promise = _checkExistProjectsReturnChange(req, groups, projects);
+    return promise.then(() => db.project.group.findOneAndUpdate({
+      user_id: req.user._id,
+      company_id: req.company._id,
+      'groups._id': group_id
+    }, {
+      $set: {
+        'groups.$.name': req.body.name,
+        'groups.$.projects': req.body.projects
+      }
+    }, {
+      returnOriginal: false,
+      returnNewDocument: true
+    })
+    .then(doc => {
+      res.json(doc.value);
+    }));
+  })
+  .catch(next);
 });
 
 api.delete('/group/:group_id', (req, res, next) => {
   let group_id = ObjectId(req.params.group_id);
-  db.project.group.update({
+  db.project.group.findOneAndUpdate({
     user_id: req.user._id,
     company_id: req.company._id
   }, {
@@ -109,9 +129,12 @@ api.delete('/group/:group_id', (req, res, next) => {
         _id: group_id
       }
     }
+  }, {
+    returnOriginal: false,
+    returnNewDocument: true
   })
-  .then(() => {
-    res.json({});
+  .then(doc => {
+    res.json(doc.value);
   });
 });
 
@@ -882,6 +905,37 @@ function recordUserRecentProjects(req) {
       }
     });
   });
+}
+
+function _checkExistProjectsReturnChange(req, groups, projects) {
+  let group_project = _.flatten(_.pluck(groups, 'projects'));
+  let exists_project = [];
+  if (projects && projects.length && group_project && group_project.length) {
+    for (let i = 0; i < projects.length; i++) {
+      for (let a = 0; a < group_project.length; a++) {
+        if(projects[i].equals(group_project[a])) {
+          exists_project.push(projects[i]);
+        }
+      }
+    }
+  }
+  let promise;
+  if (exists_project.length) {
+    promise = db.project.group.update({
+      user_id: req.user._id,
+      company_id: req.company._id,
+      'groups.projects': { $in: exists_project },
+    }, {
+      $pull: {
+        'groups.$.projects': {
+          $in: exists_project
+        }
+      }
+    });
+  } else {
+    promise = Promise.resolve();
+  }
+  return promise;
 }
 
 api.use('/:project_id/task', require('./task').default);
