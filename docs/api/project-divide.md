@@ -28,29 +28,30 @@
 
 ## 改造方法
 
-为了不影响原数据结构和原接口使用，单独创建新的字段来进行项目分组，方便分组管理和修改，在原功能情景一，匹配分组的情况。
-
-## 新建字段数据结构
-
-在user的collection中添加
-```javascript
-{
-  project_groups: [
-    {
-      id: ObjectId,
-      company_id: ObjectId,
-      name: String,
-      projects: [
-        ObjectId,
-        ObjectId,...
-      ]
-    }
-  ]
-}
-```
+为了不影响原数据结构和原接口使用，单独创建新的collection来进行项目分组，方便分组管理和修改，在原功能情景一，匹配分组的情况。
 
 ## 新接口
 1. 查询分组情况
 2. 创建新分组
 3. 修改分组名称或分组中项目
 4. 删除分组
+
+## collection   user.project.group
+
+```javascript
+{
+  _id: ObjectId,
+  user_id: ObjectId,
+  company_id: ObjectId,
+  groups: [
+    {
+      _id: ObjectId,
+      name: String,
+      projects: [
+        ObjectId,
+        ObjectId,...
+      ]
+    },...
+  ]
+}
+```
