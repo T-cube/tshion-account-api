@@ -62,8 +62,13 @@ api.post('/group', (req, res, next) => {
     company_id: req.company._id,
   })
   .then(doc => {
-    let groups = doc.groups;
-    let promise = _checkExistProjectsReturnChange(req, groups, projects);
+    let promise;
+    if (doc && doc.groups) {
+      let groups = doc.groups;
+      promise = _checkExistProjectsReturnChange(req, groups, projects);
+    } else {
+      promise = Promise.resolve();
+    }
     return promise.then(() => db.project.group.findOneAndUpdate({
       user_id: req.user._id,
       company_id: req.company._id,
