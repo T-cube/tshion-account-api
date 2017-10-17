@@ -44,6 +44,77 @@ api.get('/', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/group', (req, res, next) => {
+  db.project.group.findOne({
+    user_id: req.user._id,
+    company_id: req.company._id,
+  })
+  .then(doc => {
+    res.json(doc);
+  });
+});
+
+api.post('/group', (req, res, next) => {
+  validate('group', req.body, ['name']);
+  db.project.group.update({
+    user_id: req.user._id,
+    company_id: req.company._id,
+  }, {
+    $push: {
+      groups: {
+        _id: ObjectId(),
+        name: req.body.name,
+        projects: []
+      }
+    }
+  }, {
+    upsert: true,
+    returnOriginal: false,
+    returnNewDocument: true
+  })
+  .then(doc => {
+    res.json(doc.value);
+  });
+});
+
+api.put('/group/:group_id', (req, res, next) => {
+  validate('group', req.body);
+  let group_id = ObjectId(req.params.group_id);
+  db.project.group.update({
+    user_id: req.user._id,
+    company_id: req.company._id,
+    'groups._id': group_id
+  }, {
+    $set: {
+      'groups.$.name': req.body.name,
+      'groups.$.projects': req.body.projects
+    }
+  }, {
+    returnOriginal: false,
+    returnNewDocument: true
+  })
+  .then(doc => {
+    res.json(doc.value);
+  });
+});
+
+api.delete('/group/:group_id', (req, res, next) => {
+  let group_id = ObjectId(req.params.group_id);
+  db.project.group.update({
+    user_id: req.user._id,
+    company_id: req.company._id
+  }, {
+    $pull: {
+      groups: {
+        _id: group_id
+      }
+    }
+  })
+  .then(() => {
+    res.json({});
+  });
+});
+
 api.post('/', (req, res, next) => {
   let data = req.body;
   validate('project', data);

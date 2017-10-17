@@ -51,6 +51,26 @@ const schema = {
     validation: {
       name: { $enum: C.UPLOAD_TYPE },
     }
+  },
+  group: {
+    sanitization: {
+      name: { type: 'string', rules: ['trim'] },
+      projects: {
+        type: ['array', 'null'],
+        items: {
+          $objectId: 1,
+        }
+      }
+    },
+    validation: {
+      name: { type: 'string', minLength: 1 },
+      projects: {
+        type: ['array', 'null'],
+        items: {
+          $objectId: 1,
+        }
+      }
+    }
   }
 };
 

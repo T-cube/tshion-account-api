@@ -36,7 +36,7 @@
 3. 修改分组名称或分组中项目
 4. 删除分组
 
-## collection   user.project.group
+## collection project.group
 
 ```javascript
 {
@@ -55,3 +55,58 @@
   ]
 }
 ```
+
+## API 挂载点
+
+```javascript
+/company/:company_id/project/group
+```
+
+### GET /
+
+获取用户在该公司的所有分组
+
+OUTPUT
+```javascript
+{
+  _id: ObjectId,
+  user_id: ObjectId,
+  company_id: ObjectId,
+  groups: [
+    {
+      _id: ObjectId,
+      name: String, //分组名
+      projects: [
+        ObjectId, //项目id
+        ObjectId,...
+      ]
+    },...
+  ], // 所有的组
+}
+```
+
+### POST ／
+
+新建分组
+
+request_body:
+```javascript
+{
+  name: String, //分组名
+}
+```
+
+### PUT /:group_id
+
+修改分组信息
+
+```javascript
+{
+  name: String, //分组名
+  groups: [ObjectId,ObjectId,...], //该分组所有项目id
+}
+```
+
+### DELETE /:group_id
+
+删除分组
