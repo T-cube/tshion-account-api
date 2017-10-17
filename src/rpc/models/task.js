@@ -50,7 +50,7 @@ export default class Task{
       const {page,pagesize} = pageInfo;
       return Promise.all([
         this.db.queue.task.count(param),
-        this.db.queue.task.find(param).skip(page*pagesize).limit(pagesize).sort({createTime:-1})
+        this.db.queue.task.find(param,params).skip(page*pagesize).limit(pagesize).sort({createTime:-1})
       ]).then(([count,tasks])=>{
         return {
           count,
@@ -87,7 +87,7 @@ export default class Task{
         app.model('sms').sendSMSTask(task).then(data=>{
           console.log('data is',data);
           if(data.statusCode === 200){
-            this.updateTask({_id:ObjectId(task._id)},{$set:{status:1,message:data.message}}).then((result)=>{
+            this.updateTask({_id:ObjectId(task._id)},{$set:{status:1,message:data.message,smsIds:data.info.smsIds[0]}}).then((result)=>{
               this.startQueue();
             });
           }else{
@@ -109,9 +109,10 @@ export default class Task{
         task = JSON.parse(task[1]);
         console.log('task',task);
         app.model('email').queueSend(task).then(data=>{
+          console.log('done this');
           console.log('data is',data);
           if(data.statusCode === 200){
-            this.updateTask({_id:ObjectId(task._id)},{$set:{status:1,message:data.message}}).then(
+            this.updateTask({_id:ObjectId(task._id)},{$set:{status:1,message:data.message,emailIds:data.info.emailIdList[0]}}).then(
               (result)=>{
                 this.startEmailQueue();
               }

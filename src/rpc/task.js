@@ -277,53 +277,54 @@ route.on('/create',(query) => {
       });
     });
   }else{
-    let userCount = db.user.find({mobile:{$exists:true,$ne:null}}).count();
-      // 节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
-    const pageSize = 1000;
-    let page = 0;
-    const pageCount = Math.floor(userCount/1000);
-    let Recursive = function(){
-      if(page>pageCount){
-        return;
-      }
-      createTime = new Date();
-      db.user.find({mobile:{$exists:true,$ne:null}},{_id:1,mobile:1}).skip(page*pageSize).limit(pageSize).then((data)=>{
-        if(data && data.length){
-          target = data.map(elem => {
-            return elem = {
-              userId:userId,
-              username:username,
-              content:content,
-              name:name,
-              createTime:createTime,
-              status:0,
-              templateId:templateId,
-              templateName:templateName,
-              phone : elem.mobile,
-              targetId:elem._id,
-              type:'sms'
-            };
-          });
-          return db.queue.task.insertMany(target).then((result)=>{
-            return taskModel.findTask({status:0,createTime:createTime,userId:userId,type:'sms'}).then((results) => {
-              results = results.map(result=>{
-                return JSON.stringify(result);
-              });
-              // 加入队列
-              return taskModel.addList(results).then(function(count){
-                page = page + 1;
-                return Recursive();
-              }).catch(err=>{
-                throw new ApiError(500,err);
-              });
-            });
-          });
-        }else{
+    db.user.count({mobile:{$exists:true,$ne:null}}).then(userCount=>{
+       // 节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
+      const pageSize = 1000;
+      let page = 0;
+      const pageCount = Math.floor(userCount/1000);
+      let Recursive = function(){
+        if(page>pageCount){
           return;
         }
-      });
-    };
-    Recursive();
+        createTime = new Date();
+        db.user.find({mobile:{$exists:true,$ne:null}},{_id:1,mobile:1}).skip(page*pageSize).limit(pageSize).then((data)=>{
+          if(data && data.length){
+            target = data.map(elem => {
+              return elem = {
+                userId:userId,
+                username:username,
+                content:content,
+                name:name,
+                createTime:createTime,
+                status:0,
+                templateId:templateId,
+                templateName:templateName,
+                phone : elem.mobile,
+                targetId:elem._id,
+                type:'sms'
+              };
+            });
+            return db.queue.task.insertMany(target).then((result)=>{
+              return taskModel.findTask({status:0,createTime:createTime,userId:userId,type:'sms'}).then((results) => {
+                results = results.map(result=>{
+                  return JSON.stringify(result);
+                });
+                // 加入队列
+                return taskModel.addList(results).then(function(count){
+                  page = page + 1;
+                  return Recursive();
+                }).catch(err=>{
+                  throw new ApiError(500,err);
+                });
+              });
+            });
+          }else{
+            return;
+          }
+        });
+      };
+      Recursive();
+    });
   }
 });
 
@@ -465,7 +466,8 @@ route.on('/list',(query)=>{
     templateId:1,
     templateName:1,
     type:1,
-    username:1
+    username:1,
+    smsIds:1
   },{page:Number(page),pagesize:Number(pagesize)}).then((result)=>{
     return result;
   }).catch((err)=>{
@@ -480,7 +482,7 @@ route.on('/list',(query)=>{
   });
 });
 
-// 重发失败任务
+// 重发失败短信任务
 route.on('/resend',(query)=>{
   validate('task_resend',query);
   let {sendId,sendAll,type} = query;
@@ -509,6 +511,58 @@ route.on('/resend',(query)=>{
   });
 });
 
+// 重发失败邮件任务
+route.on('/email/resend',(query)=>{
+  validate('task_resend',query);
+  let {sendId,sendAll,type} = query;
+  let params = {
+    status:-1,
+    type:type
+  };
+  if(!sendAll){
+    sendId = sendId.map((id)=>{
+      return ObjectId(id);
+    });
+    Object.assign(params,{_id:{$in:sendId}});
+  }
+  return taskModel.findTask(params,{
+    _id:1,
+    email:1,
+    targetName:1,
+    content:1,
+    templateInvokeName:1
+  }).then((result)=>{
+    if(!result || !result.length){
+      return {success:false};
+    }
+    return taskModel.addEmailList(result).then((count)=>{
+      return {success:true};
+    }).catch((err)=>{
+      throw new Error(err);
+    });
+  });
+});
+
+// 投递回应
+route.on('/sms/sendStatus',(query)=>{
+  let {page,pagesize,startDate,endDate,smsIds} = query;
+  startDate = moment(startDate).format('YYYY-MM-DD');
+  endDate = moment(endDate).format('YYYY-MM-DD');
+  let params = {
+    start:page*pagesize,
+    limit:pagesize,
+    startDate:startDate,
+    endDate:endDate
+  };
+  if(smsIds){
+    Object.assign(params,{smsIds:smsIds});
+  }
+  return app.model('sms').sendStatus(params).then(data=>{
+    return data;
+  }).catch(err=>{
+    throw new Error(err);
+  });
+});
 
 // 邮件群发
 //查询邮件模版
@@ -589,21 +643,19 @@ route.on('/mail/user/list',(query)=>{
 // 创建邮件群发任务
 route.on('/mail/task/create',(query)=>{
   validate('email_task_create',query);
-  console.log('done this');
-  let {target,sendAll,userId,username,type,content,gallery,templateInvokeName,status,name} = query;
+  let {target,sendAll,userId,username,type,content,templateInvokeName,status,name} = query;
   let createTime = new Date();
+  let params = {
+    userId,
+    username,
+    type,
+    content,
+    createTime,
+    templateInvokeName,
+    status,
+    name
+  };
   if(!sendAll){
-    let params = {
-      userId,
-      username,
-      type,
-      content,
-      gallery,
-      createTime,
-      templateInvokeName,
-      status,
-      name
-    };
     target = target.map(function(value){
       Object.assign(value,params);
       return value;
@@ -617,7 +669,6 @@ route.on('/mail/task/create',(query)=>{
           email:1,
           targetName:1,
           content:1,
-          gallery:1,
           templateInvokeName:1
         }).then((data)=>{
           console.log('data is ',data);
@@ -635,11 +686,63 @@ route.on('/mail/task/create',(query)=>{
       throw new ApiError(500,err);
     });
   }else{
-    return  {};
+    db.user.count({email:{$exists:true,$ne:null}}).then(userCount=>{
+      let page = 0;
+      let pagesize = 1000;
+      let count = Math.floor(userCount/pagesize);
+      //截流
+      let Recursive = function(){
+        if(page>count){
+          return;
+        }
+        return db.user.find({email:{$exists:true,$ne:null}},{_id:1,email:1,name:1}).skip(page*pagesize).limit(pagesize).then(result=>{
+          if(result&&result.length){
+            let results = result.map((value)=>{
+              value = {
+                targetId:value._id,
+                email:value.email,
+                targetName:value.name
+              };
+              return Object.assign(value,params);
+            });
+            return db.queue.task.insertMany(results).then(()=>{
+              return taskModel.findTask({
+                type:type,
+                createTime:createTime,
+                name:name},{
+                  _id:1,
+                  email:1,
+                  targetName:1,
+                  content:1,
+                  templateInvokeName:1
+                }).then((data)=>{
+                  if(data.length){
+                    return taskModel.addEmailList(data).then(count=>{
+                      page = page+1;
+                      Recursive();
+                    }).catch((err)=>{
+                      throw new ApiError(500,err);
+                    });
+                  }else{
+                    return;
+                  }
+                });
+            }).catch((err)=>{
+              throw new ApiError(500,err);
+            });
+          }else{
+            return;
+          }
+        }).catch(err=>{
+          throw new ApiError(500,err);
+        });
+      };
+      Recursive();
+    });
   }
 });
 
-// 查询任务列表
+// 查询邮件群发任务列表
 route.on('/mail/task/list',(query)=>{
   let {page,pagesize,keyword,createTime,status} = query;
   let params = {type:'email'};
@@ -684,7 +787,8 @@ route.on('/mail/task/list',(query)=>{
     name:1,
     message:1,
     from:1,
-    type:-1
+    type:1,
+    emailIds:1
   },{page,pagesize}).then((data)=>{
     return data;
   }).catch((err)=>{
@@ -697,11 +801,12 @@ route.on('/mail/task/list',(query)=>{
   });
 });
 
+
 // 取消订阅列表
 route.on('/mail/unsub/list',(query)=>{
   let {page,pagesize,email,startDate,endDate} = query;
   let params = {
-    start:page,
+    start:page*pagesize,
     limit:pagesize
   };
   if(email){
@@ -736,3 +841,26 @@ route.on('/mail/unsub/add',(query)=>{
     throw new ApiError(500,err);
   });
 });
+
+// 投递回应
+route.on('/mail/sendStatus',(query)=>{
+  let {page,pagesize,emailIds,startDate,endDate} = query;
+  startDate = moment(startDate).format('YYYY-MM-DD');
+  endDate = moment(endDate).format('YYYY-MM-DD');
+  let params = {
+    start:page * pagesize,
+    limit:parseInt(pagesize),
+    startDate:startDate,
+    endDate:endDate
+  };
+  console.log('parms is ',params);
+  if(emailIds){
+    Object.assign(params,{emailIds:emailIds});
+  }
+  return app.model('email').sendRespond(params).then(data=>{
+    return data;
+  }).catch((err)=>{
+    throw new ApiError(500,err);
+  });
+});
+

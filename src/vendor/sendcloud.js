@@ -251,6 +251,24 @@ export class EmailSender {
       json:true
     });
   }
+  // 查询投递回应
+  sendRespond(query){
+    let params = {
+      apiUser:this.options.apiUser,
+      apiKey:this.options.apiKey
+    };
+    Object.assign(params,query);
+    let paramList = [];
+    for(let key in params){
+      paramList.push(key+'='+params[key]);
+    }
+    let uri = 'http://api.sendcloud.net/apiv2/data/emailStatus?'+paramList.join('&');
+    console.log('uri is ',uri);
+    return rp.get({
+      uri:uri,
+      json:true
+    });
+  }
 }
 
 export class SmsSender {
@@ -607,6 +625,40 @@ export class SmsSender {
       })
       .then((data)=>{resolve(data);})
       .catch((err) => {reject(err);});
+    });
+  }
+
+  // 投递回应
+  sendStatus(query){
+    const options = this.options;
+    const {start,limit,startDate,endDate,smsIds} = query;
+    let params = {
+      smsUser:options.smsUser,
+      limit:limit,
+      start:start,
+      startDate:startDate,
+      endDate:endDate
+    };
+    if(smsIds){
+      Object.assign(params,{smsIds:smsIds});
+    }
+    let uri = 'http://www.sendcloud.net/smsapi/status/query';
+    let signature = this.sign(params);
+    let parmList = [];
+    for(let key in params){
+      let item = key + '=' + params[key];
+      parmList.push(item);
+    }
+    uri = uri + '?'+parmList.join('&')+'&signature='+signature;
+    return new Promise((resolve,reject)=>{
+      return rp.get({
+        uri:uri,
+        json:true
+      }).then((data)=>{
+        resolve(data);
+      }).catch((err)=>{
+        reject(err);
+      });
     });
   }
 }
