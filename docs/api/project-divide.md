@@ -104,7 +104,7 @@ request_body:
 ```javascript
 {
   name: String, //分组名
-  groups: [ObjectId,ObjectId,...], //该分组所有项目id
+  projects: [ObjectId,ObjectId,...], //该分组所有项目id
 }
 ```
 
