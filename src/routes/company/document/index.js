@@ -96,6 +96,53 @@ api.get('/tree', (req, res, next) => {
   .catch(next);
 });
 
+api.post('/attachment/dir', (req, res, next) => {
+  let dir_id = ObjectId(req.body.parent_dir);
+  let extra_dir = {
+    name: '附件',
+    parent_dir: dir_id._id,
+    files: [],
+    dirs: [],
+    project_id: req.project._id,
+    updated_by: null,
+    date_create: new Date(),
+    date_update: new Date(),
+    path: [dir_id._id],
+    attachment_dir: true,
+  };
+  db.document.dir.insert(extra_dir)
+  .then(extra => {
+    return db.document.dir.findOneAndUpdate({
+      _id: dir_id
+    }, {
+      $push: {
+        dirs: extra._id
+      }
+    }, {
+      returnOriginal: false,
+      returnNewDocument: true,
+    })
+    .then(data => {
+      let doc = data.value;
+      return mapObjectIdToData(doc, [
+        ['document.dir', 'name', 'path'],
+        ['document.dir', 'name,date_update,updated_by', 'dirs'],
+        ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
+      ])
+      .then(() => {
+        return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+      })
+      .then(() => {
+        return Promise.map(doc.files, file => {
+          return attachFileUrls(req, file);
+        });
+      })
+      .then(() => res.json(doc));
+    });
+  })
+  .catch(next);
+});
+
 api.post('/dir', (req, res, next) => {
   let data = req.body;
   validate('dir', data);
@@ -851,7 +898,37 @@ function createRootDir(condition) {
     files: [],
     // total_size: 0
   });
-  return db.document.dir.insert(condition);
+  return db.document.dir.insert(condition)
+  .then(root => {
+    let extra_dir = {
+      name: '附件',
+      parent_dir: root._id,
+      files: [],
+      dirs: [],
+      project_id: condition.project_id,
+      updated_by: null,
+      date_create: new Date(),
+      date_update: new Date(),
+      path: [root._id],
+      attachment_dir: true,
+    };
+    return db.document.dir.insert(extra_dir)
+    .then(doc => {
+      return db.document.dir.findOneAndUpdate({
+        _id: root._id
+      }, {
+        $push: {
+          dirs: doc._id
+        }
+      }, {
+        returnOriginal: false,
+        returnNewDocument: true,
+      })
+      .then(data => {
+        return data.value;
+      });
+    });
+  });
 }
 
 function generateFileToken(user_id, file_id) {
