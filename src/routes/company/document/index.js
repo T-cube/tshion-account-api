@@ -212,7 +212,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
     if (!dirInfo) {
       throw new ApiError(404);
     }
-    if (!dirInfo.attachment_dir) {
+    if (dirInfo.attachment_dir) {
       throw new ApiError(400,'can_not_change_attachment_dir');
     }
     return checkNameValid(req, data.name, dirInfo.parent_dir)

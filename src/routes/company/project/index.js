@@ -50,8 +50,20 @@ api.get('/group', (req, res, next) => {
     company_id: req.company._id,
   })
   .then(doc => {
-    res.json(doc);
-  });
+    if (!doc) {
+      return db.project.group.insert({
+        company_id: req.company._id,
+        user_id: req.user._id,
+        groups:[]
+      })
+      .then(group => {
+        res.json(group);
+      });
+    } else {
+      res.json(doc);
+    }
+  })
+  .catch(next);
 });
 
 api.post('/group', (req, res, next) => {
