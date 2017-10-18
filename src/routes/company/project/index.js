@@ -182,6 +182,36 @@ api.post('/', (req, res, next) => {
         }, {
           $push: { projects: doc._id }
         }),
+        db.document.dir.insert({
+          project_id: doc._id,
+          parent_dir: null,
+          name: '',
+          dirs: [],
+          files: []
+        }).then(root => {
+          let extra_dir = {
+            name: '附件',
+            parent_dir: root._id,
+            files: [],
+            dirs: [],
+            project_id: doc._id,
+            updated_by: req.user._id,
+            date_create: new Date(),
+            date_update: new Date(),
+            path: [root._id],
+            attachment_dir: true,
+          };
+          return db.document.dir.insert(extra_dir)
+          .then(doc => {
+            return db.document.dir.update({
+              _id: root._id
+            }, {
+              $push: {
+                dirs: doc._id
+              }
+            });
+          });
+        })
       ])
       .then(() => logProject(req, C.ACTIVITY_ACTION.CREATE))
       .then(() => res.json(doc));

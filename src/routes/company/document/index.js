@@ -103,14 +103,14 @@ api.post('/attachment/dir', (req, res, next) => {
   let dir_id = ObjectId(req.body.parent_dir);
   let extra_dir = {
     name: '附件',
-    parent_dir: dir_id._id,
+    parent_dir: dir_id,
     files: [],
     dirs: [],
     project_id: req.project._id,
     updated_by: req.user._id,
     date_create: new Date(),
     date_update: new Date(),
-    path: [dir_id._id],
+    path: [dir_id],
     attachment_dir: true,
   };
   db.document.dir.insert(extra_dir)
@@ -428,12 +428,12 @@ saveCdn('cdn-file'),
       })
       .then(doc => {
         if (doc.attachment_dir) {
-          return _uploadFileOpreation(req, data, dir_id, true);
+          return _uploadFileOpreation(req, data, dir_id, path, true);
         }
-        _uploadFileOpreation(req, data, dir_id, false);
+        _uploadFileOpreation(req, data, dir_id, path, false);
       });
     }
-    _uploadFileOpreation(req, data, dir_id, false);
+    _uploadFileOpreation(req, data, dir_id, path, false);
   })
   .then(() => createFile(req, data, dir_id))
   .then(files => {
@@ -966,7 +966,7 @@ function generateFileToken(user_id, file_id) {
   });
 }
 
-function _uploadFileOpreation(req, data, dir_id, attachment_check) {
+function _uploadFileOpreation(req, data, dir_id, path, attachment_check) {
   return _.map(req.files, file => {
     let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
     _.extend(fileData, {
