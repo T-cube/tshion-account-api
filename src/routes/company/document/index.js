@@ -46,7 +46,10 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   .then(doc => {
     if (!doc) {
       if (!condition._id && null == condition.parent_dir) {
-        return createRootDir(condition);
+        return createRootDir(condition, req.user._id)
+        .then(data => {
+          return fetchCompanyMemberInfo(req.company, data, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+        });
       }
       throw new ApiError(404);
     }
@@ -104,7 +107,7 @@ api.post('/attachment/dir', (req, res, next) => {
     files: [],
     dirs: [],
     project_id: req.project._id,
-    updated_by: null,
+    updated_by: req.user._id,
     date_create: new Date(),
     date_update: new Date(),
     path: [dir_id._id],
@@ -912,7 +915,7 @@ function searchByName(req, dir, name) {
   });
 }
 
-function createRootDir(condition) {
+function createRootDir(condition, user_id) {
   _.extend(condition, {
     name: '',
     dirs: [],
@@ -927,7 +930,7 @@ function createRootDir(condition) {
       files: [],
       dirs: [],
       project_id: condition.project_id,
-      updated_by: null,
+      updated_by: user_id,
       date_create: new Date(),
       date_update: new Date(),
       path: [root._id],
@@ -946,7 +949,7 @@ function createRootDir(condition) {
         returnNewDocument: true,
       })
       .then(data => {
-        return data.value;
+        return mapObjectIdToData(data.value, 'document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs');
       });
     });
   });
