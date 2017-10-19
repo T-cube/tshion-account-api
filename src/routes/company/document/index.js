@@ -46,7 +46,10 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   .then(doc => {
     if (!doc) {
       if (!condition._id && null == condition.parent_dir) {
-        return createRootDir(condition);
+        return createRootDir(condition, req.user._id)
+        .then(data => {
+          return fetchCompanyMemberInfo(req.company, data, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+        });
       }
       throw new ApiError(404);
     }
@@ -55,7 +58,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
-      ['document.dir', 'name,date_update,updated_by', 'dirs'],
+      ['document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs'],
       ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
     ])
     .then(() => {
@@ -92,6 +95,53 @@ api.get('/tree', (req, res, next) => {
   .then(dirs => {
     let tree = req.model('document').buildTree(dirs);
     res.json(tree);
+  })
+  .catch(next);
+});
+
+api.post('/attachment/dir', (req, res, next) => {
+  let dir_id = ObjectId(req.body.parent_dir);
+  let extra_dir = {
+    name: '附件',
+    parent_dir: dir_id,
+    files: [],
+    dirs: [],
+    project_id: req.project._id,
+    updated_by: req.user._id,
+    date_create: new Date(),
+    date_update: new Date(),
+    path: [dir_id],
+    attachment_dir: true,
+  };
+  db.document.dir.insert(extra_dir)
+  .then(extra => {
+    return db.document.dir.findOneAndUpdate({
+      _id: dir_id
+    }, {
+      $push: {
+        dirs: extra._id
+      }
+    }, {
+      returnOriginal: false,
+      returnNewDocument: true,
+    })
+    .then(data => {
+      let doc = data.value;
+      return mapObjectIdToData(doc, [
+        ['document.dir', 'name', 'path'],
+        ['document.dir', 'name,date_update,updated_by', 'dirs'],
+        ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
+      ])
+      .then(() => {
+        return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+      })
+      .then(() => {
+        return Promise.map(doc.files, file => {
+          return attachFileUrls(req, file);
+        });
+      })
+      .then(() => res.json(doc));
+    });
   })
   .catch(next);
 });
@@ -156,10 +206,14 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
     parent_dir: 1,
     name: 1,
     path: 1,
+    attachment_dir: 1
   })
   .then(dirInfo => {
     if (!dirInfo) {
       throw new ApiError(404);
+    }
+    if (!dirInfo.attachment_dir) {
+      throw new ApiError(400,'can_not_change_attachment_dir');
     }
     return checkNameValid(req, data.name, dirInfo.parent_dir)
     .then(() => {
@@ -368,21 +422,18 @@ saveCdn('cdn-file'),
   }
   getParentPaths(dir_id)
   .then(path => {
-    return _.map(req.files, file => {
-      let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
-      _.extend(fileData, {
-        [req.document.posKey]: req.document.posVal,
-        dir_id: dir_id,
-        name: file.originalname,
-        author: req.user._id,
-        date_update: new Date(),
-        date_create: new Date(),
-        updated_by: req.user._id,
-        dir_path: path,
-        path: undefined,
+    if (path[1]) {
+      return db.document.dir.findOne({
+        _id: path[1]
+      })
+      .then(doc => {
+        if (doc.attachment_dir) {
+          return _uploadFileOpreation(req, data, dir_id, path, true);
+        }
+        _uploadFileOpreation(req, data, dir_id, path, false);
       });
-      data.push(fileData);
-    });
+    }
+    _uploadFileOpreation(req, data, dir_id, path, false);
   })
   .then(() => createFile(req, data, dir_id))
   .then(files => {
@@ -659,32 +710,42 @@ function deleteDirs(req, dirs) {
       return null;
     }
     dirsDeleted.push(_.pick(dir, '_id', 'name'));
-    return Promise.all([
-      db.document.dir.update({
-        _id: dir.parent_dir
-      }, {
-        $pull: {
-          dirs: dir._id
-        }
-      }),
-      dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
-      .then(items => {
-        return Promise.all([
-          mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
-          .then(files => deleteFiles(req, files)),
-          db.document.dir.remove({
-            _id: {
-              $in: items.dirs
-            }
-          })
-        ]);
-      })
-    ])
-    .then(() => {
-      return db.document.dir.remove({
-        _id: {
-          $in: (dir.dirs || []).concat(dir._id)
-        }
+    return db.document.dir.findOne({
+      _id: dir._id
+    }, {
+      attachment_dir: 1,
+    })
+    .then(doc => {
+      if (doc.attachment_dir) {
+        return null;
+      }
+      return Promise.all([
+        db.document.dir.update({
+          _id: dir.parent_dir
+        }, {
+          $pull: {
+            dirs: dir._id
+          }
+        }),
+        dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
+        .then(items => {
+          return Promise.all([
+            mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
+            .then(files => deleteFiles(req, files)),
+            db.document.dir.remove({
+              _id: {
+                $in: items.dirs
+              }
+            })
+          ]);
+        })
+      ])
+      .then(() => {
+        return db.document.dir.remove({
+          _id: {
+            $in: (dir.dirs || []).concat(dir._id)
+          }
+        });
       });
     });
   }))
@@ -701,31 +762,41 @@ function deleteFiles(req, files, dirCheckAndPull) {
   let incSize = 0;
   let filesDeleted = [];
   return Promise.all(files.map(file => {
-    filesDeleted.push(_.pick(file, '_id', 'name'));
-    let removeFileFromDb;
-    if (dirCheckAndPull) {
-      removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
-        return Promise.all([
-          db.document.file.remove({
-            _id: file._id,
-          }),
-          db.document.dir.update({
-            _id: file.dir_id,
-          }, {
-            $pull: {
-              files: file._id
-            }
-          }),
-        ]);
+    return db.document.file.findOne({
+      _id: file._id
+    }, {
+      attachment_dir_file: 1
+    })
+    .then(doc => {
+      if (doc.attachment_dir_file) {
+        return null;
+      }
+      filesDeleted.push(_.pick(file, '_id', 'name'));
+      let removeFileFromDb;
+      if (dirCheckAndPull) {
+        removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
+          return Promise.all([
+            db.document.file.remove({
+              _id: file._id,
+            }),
+            db.document.dir.update({
+              _id: file.dir_id,
+            }, {
+              $pull: {
+                files: file._id
+              }
+            }),
+          ]);
+        });
+      } else {
+        removeFileFromDb = db.document.file.remove({
+          _id: file._id,
+        });
+      }
+      return removeFileFromDb.then(() => {
+        incSize -= file.size;
+        req.model('document').deleteFile(req, file);
       });
-    } else {
-      removeFileFromDb = db.document.file.remove({
-        _id: file._id,
-      });
-    }
-    return removeFileFromDb.then(() => {
-      incSize -= file.size;
-      req.model('document').deleteFile(req, file);
     });
   }))
   .then(() => {
@@ -844,14 +915,44 @@ function searchByName(req, dir, name) {
   });
 }
 
-function createRootDir(condition) {
+function createRootDir(condition, user_id) {
   _.extend(condition, {
     name: '',
     dirs: [],
     files: [],
     // total_size: 0
   });
-  return db.document.dir.insert(condition);
+  return db.document.dir.insert(condition)
+  .then(root => {
+    let extra_dir = {
+      name: '附件',
+      parent_dir: root._id,
+      files: [],
+      dirs: [],
+      project_id: condition.project_id,
+      updated_by: user_id,
+      date_create: new Date(),
+      date_update: new Date(),
+      path: [root._id],
+      attachment_dir: true,
+    };
+    return db.document.dir.insert(extra_dir)
+    .then(doc => {
+      return db.document.dir.findOneAndUpdate({
+        _id: root._id
+      }, {
+        $push: {
+          dirs: doc._id
+        }
+      }, {
+        returnOriginal: false,
+        returnNewDocument: true,
+      })
+      .then(data => {
+        return mapObjectIdToData(data.value, 'document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs');
+      });
+    });
+  });
 }
 
 function generateFileToken(user_id, file_id) {
@@ -862,6 +963,29 @@ function generateFileToken(user_id, file_id) {
       file: file_id,
       expires: new Date(timestamp() + config.get('download.tokenExpires')),
     });
+  });
+}
+
+function _uploadFileOpreation(req, data, dir_id, path, attachment_check) {
+  return _.map(req.files, file => {
+    let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+    _.extend(fileData, {
+      [req.document.posKey]: req.document.posVal,
+      dir_id: dir_id,
+      name: file.originalname,
+      author: req.user._id,
+      date_update: new Date(),
+      date_create: new Date(),
+      updated_by: req.user._id,
+      dir_path: path,
+      path: undefined,
+    });
+    if (attachment_check) {
+      _.extend(fileData, {
+        attachment_dir_file: true
+      });
+    }
+    data.push(fileData);
   });
 }
 

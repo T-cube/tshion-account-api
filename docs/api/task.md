@@ -103,6 +103,17 @@ INPUT
 }
 ```
 
+### PUT /task/:task_id/attachments
+
+更新任务附件
+
+INPUT
+```javascript
+{
+  attachments: [objectId,objectId,...], // 文件的id数组
+}
+```
+
 ### PUT /task/:task_id/followers
 
 添加关注者

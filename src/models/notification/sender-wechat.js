@@ -169,10 +169,12 @@ let render = {
     };
   },
   [APP]: (extended) => {
-    let { target_type, from, action, date_create } = extended;
+    let { target_type, from, action, date_create, activity } = extended;
     let content;
     if (action == 'submit') {
       content = target_type == 'app.report' ? '工作汇报' : '活动审批';
+    } else {
+      content = activity ? activity.name : '';
     }
     target_type = __(target_type);
     action = __(action) + `${content ? content : ''}`;
@@ -182,7 +184,7 @@ let render = {
         'color': colors.primary
       },
       'keyword1': {
-        'value': `${from.name}+${action}`,
+        'value': `${from.name}${action}`,
         'color': colors.primary
       },
       'keyword2': {

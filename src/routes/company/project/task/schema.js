@@ -117,6 +117,25 @@ const schema = {
     },
   },
 
+  attachment: {
+    sanitization: {
+      attachments: {
+        type: ['array', 'null'],
+        items: {
+          $objectId: 1,
+        }
+      }
+    },
+    validation: {
+      attachments: {
+        type: ['array', 'null'],
+        items: {
+          $objectId: 1,
+        }
+      }
+    }
+  }
+
 };
 
 export const validate = buildValidator(schema);
