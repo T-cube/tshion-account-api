@@ -13,6 +13,9 @@ import { ApiError } from 'lib/error';
 import AccountModel from './models/account';
 import TaskModel from './models/task';
 import app from 'index';
+import config from 'config';
+
+const emailConfig = config.sendTask.email;
 
 const route = RpcRoute.router();
 export default route;
@@ -671,6 +674,9 @@ route.on('/mail/user/list',(query)=>{
 route.on('/mail/task/create',(query)=>{
   validate('email_task_create',query);
   let {target,sendAll,userId,username,type,content,templateInvokeName,status,name} = query;
+  if(templateInvokeName !== emailConfig.defaultModel){
+    throw new ApiError(400,'传输的模版调用名称不能用在群发任务中');
+  }
   let createTime = new Date();
   let params = {
     userId,

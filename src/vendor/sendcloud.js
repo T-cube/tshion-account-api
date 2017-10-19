@@ -77,8 +77,7 @@ export class EmailSender {
       'to':[query.email],
       'sub':{
         '%name%':[query.targetName],
-        '%content%':[query.content],
-        '%gallery%':[query.gallery]
+        '%content%':[query.content]
       }
     };
     x_smtpapi = JSON.stringify(x_smtpapi);
