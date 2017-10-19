@@ -128,7 +128,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
               if(a){
                 var rpc = req.model('clientRpc');
                 var user = invitee.value;
-                rpc.route('/activity/event/recommend',{
+                rpc.route('/activity/handler/recommend',{
                   recommender: user.recommend,
                   user_id: user._id,
                   activity_id: a,
