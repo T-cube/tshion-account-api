@@ -2,7 +2,7 @@ import config from 'config';
 import db from 'lib/database';
 import { ObjectId,DBRef } from 'mongodb';
 import app from 'index';
-import { queue } from 'node-redis-queue-lh';
+import { queue } from '@ym/redis-queue';
 const options = { db:3 };
 
 export default class Task{
