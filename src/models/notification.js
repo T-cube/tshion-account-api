@@ -24,7 +24,7 @@ export const extendedProps = [
   ['announcement', 'title,is_published,company_id,type', 'announcement'],
   ['discussion', 'title,content,creator', 'discussion'],
   ['app.store.com.tlifang.report.item', 'user_id,company_id,report_target,type,date_report,status', 'report'],
-  ['app.store.com.tlifang.activity.item', 'name,type,departments,company_id,is_public,creator', 'activity'],
+  ['app.store.com.tlifang.activity.item', 'name,type,departments,company_id,is_public,creator,time_start', 'activity'],
   ['app.store.com.tlifang.activity.approval', 'name,room_id', 'activity_approval']
 ];
 
