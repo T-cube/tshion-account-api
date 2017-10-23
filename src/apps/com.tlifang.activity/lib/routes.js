@@ -107,6 +107,7 @@ api.get('/month/activity', (req, res, next) => {
     year: req.query.year,
     month: req.query.month,
     company_id: req.company._id,
+    user_id: req.user._id
   })
   .then(list => {
     res.json(list);
