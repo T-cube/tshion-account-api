@@ -410,7 +410,9 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/dir/:dir_id/upload',
+api.post('/dir/:dir_id/upload', (req, res, next) => {
+  next();
+},
 upload({type: 'attachment'}).array('document'),
 saveCdn('cdn-file'),
 (req, res, next) => {
@@ -650,9 +652,9 @@ function createFile(req, data, dir_id) {
       _.map(data, item => {
         if (item.cdn_key) {
           req.model('qiniu').bucket('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
-          fs.unlink(item.path, e => {
-            e && console.error(e);
-          });
+          // fs.unlink(item.path, e => {
+          //   e && console.error(e);
+          // });
         }
       });
       if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
@@ -969,6 +971,7 @@ function generateFileToken(user_id, file_id) {
 function _uploadFileOpreation(req, data, dir_id, path, attachment_check) {
   return _.map(req.files, file => {
     let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+    console.log(123,fileData, path);
     _.extend(fileData, {
       [req.document.posKey]: req.document.posVal,
       dir_id: dir_id,
@@ -980,6 +983,7 @@ function _uploadFileOpreation(req, data, dir_id, path, attachment_check) {
       dir_path: path,
       path: undefined,
     });
+    console.log(456, fileData);
     if (attachment_check) {
       _.extend(fileData, {
         attachment_dir_file: true

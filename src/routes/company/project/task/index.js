@@ -154,15 +154,6 @@ api.post('/', (req, res, next) => {
   return db.task.insert(data)
   .then(task => {
     res.json(task);
-    Promise.map(task.attachments, attachment => {
-      db.user.file.update({
-        _id: attachment
-      }, {
-        $set: {
-          'module.task_id': task._id
-        }
-      });
-    });
     req.task = task;
     let notification = {
       action: C.ACTIVITY_ACTION.ADD,
@@ -199,7 +190,12 @@ api.get('/:_task_id', (req, res, next) => {
   .then(task => {
     return mapObjectIdToData(task.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
       return Promise.map(task.attachments || [], attachment => {
-        return attachFileUrls(req, attachment);
+        if (attachment == null) {
+          attachment = {type: 'deleted'};
+          return Promise.resolve(attachment);
+        } else {
+          return attachFileUrls(req, attachment);
+        }
       });
     }).then(() => {
       task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
@@ -426,8 +422,21 @@ api.get('/:task_id/comment', (req, res, next) => {
     task_id: req.task._id
   })
   .then(data => {
-    fetchUserInfo(data, 'creator').then(() => {
-      res.json(data || []);
+    return fetchUserInfo(data, 'creator').then(() => {
+      return Promise.map(data, comment => {
+        return mapObjectIdToData(comment.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
+          return Promise.map(comment.attachments || [], attachment => {
+            if (attachment == null) {
+              attachment = {type: 'deleted'};
+              return Promise.resolve(attachment);
+            } else {
+              return attachFileUrls(req, attachment);
+            }
+          });
+        });
+      }).then(() => {
+        res.json(data || []);
+      });
     });
   })
   .catch(next);
