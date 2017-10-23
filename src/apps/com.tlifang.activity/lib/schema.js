@@ -29,6 +29,14 @@ const schema={
       year: { type: 'integer', gte: 1970, code: 'invalid_year' },
       month: { type: 'integer', gte: 1, lte: 12, code: 'invalid_month', optional: true },
     }
+  },  
+  annual: {
+    sanitization: {
+      year: { type: 'integer' },
+    },
+    validation: {
+      year: { type: 'integer', gte: 1970 },
+    }
   },
   room: {
     sanitization: {

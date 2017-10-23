@@ -169,20 +169,29 @@ let render = {
     };
   },
   [APP]: (extended) => {
-    let { target_type, from, action, date_create } = extended;
-    let content;
-    if (action == 'submit') {
-      content = target_type == 'app.report' ? '工作汇报' : '活动审批';
-    }
+    let { target_type, from, action, date_create, activity, activity_approval, report } = extended;
+    let remark;
     target_type = __(target_type);
-    action = __(action) + `${content ? content : ''}`;
+    if (activity) {
+      action = __(action) + '活动';
+      let activity_time = moment(activity.time_start).format('YYYY-MM-DD HH:mm');
+      remark = `请于${activity_time}准时参加活动`;
+    }
+    if (activity_approval) {
+      action = __(action) + '活动审批';
+      remark = '请及时完成审批工作。';
+    }
+    if (report) {
+      action = __(action) + '工作汇报';
+      remark = '请到T立方工作平台查看。';
+    }
     return {
       'first': {
         'value': `${target_type}，提醒`,
         'color': colors.primary
       },
       'keyword1': {
-        'value': `${from.name}+${action}`,
+        'value': `${from.name}${action}`,
         'color': colors.primary
       },
       'keyword2': {
@@ -190,7 +199,7 @@ let render = {
         'color': colors.primary
       },
       'remark': {
-        'value': '等待查看。'
+        'value': remark
       }
     };
   },

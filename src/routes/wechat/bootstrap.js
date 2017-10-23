@@ -47,9 +47,26 @@ api.use('/', wechat(wechatConfig, function (req, res) {
           })
           .catch(e => console.error(e));
         }
-        return res.reply('Hello，欢迎关注T立方！\n\n'
-          + '点击菜单「工作台」，即刻开启协作办公之旅！\n\n'
-          + '想要体验更多更强大的功能，请登录tlifang.com');
+        return res.reply([
+          {
+            title: 'T立方云工作平台正式上线 十项全能助力简单工作',
+            description: '',
+            picurl: 'https://cdn-public.tlifang.com/F7D43C6121FA059D26260C10CA5388F5.jpg',
+            url: 'https://www.tlifang.com'
+          },
+          {
+            title: '简单办公，T立方可以如此操作！',
+            description: '',
+            picurl: 'https://cdn-public.tlifang.com/4349E3273435971F99B6CF0AA05340CF.jpg',
+            url: 'https://www.tlifang.com/help'
+          },
+          {
+            title: '注册邀请签到双重红包福利，红包数量由你定！',
+            description: '',
+            picurl: 'https://cdn-public.tlifang.com/78D1D6514C34DCB603CFBBF432246859.jpg',
+            url: 'https://www.tlifang.com/article/post-59dd8955485bdf9c73ecaf6f'
+          },
+        ]);
       }
       break;
     }

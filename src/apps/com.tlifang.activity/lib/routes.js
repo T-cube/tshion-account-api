@@ -381,3 +381,15 @@ api.delete('/room/:room_id/equipment/:equipment_id', (req, res, next) => {
   })
   .catch(next);
 });
+
+api.get('/annual/:year', (req, res, next) => {
+  validate('annual', req.params);
+  req._app.annualCount({
+    year: req.params.year,
+    company: req.company,
+    user_id: req.user._id
+  }).then(doc => {
+    res.json(doc);
+  })
+  .then(next);
+});

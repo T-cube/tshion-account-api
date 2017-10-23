@@ -167,7 +167,7 @@ export default class Report extends AppBase {
         return item;
       });
       return fetchUserInfo(list, 'user').then(() => {
-        return { count, list };        
+        return { count, list };
       });
     });
   }
@@ -305,7 +305,7 @@ export default class Report extends AppBase {
     });
   }
 
-  mark({user_id, status, content, memberDepartments, report_id}) {
+  mark({user_id, status, content, memberDepartments, report_id, company}) {
     return this.collection('item').findOne({
       _id: report_id
     }).then(doc => {
@@ -313,7 +313,9 @@ export default class Report extends AppBase {
         throw new ApiError(400, 'invalid_report');
       }
       if (!_.some(memberDepartments, item => item.equals(doc.report_target))) {
-        throw new ApiError(400, 'invalid_user');
+        if (!user_id.equals(company.owner)) {
+          throw new ApiError(400, 'invalid_user');          
+        }
       }
       let action;
       if (status == C.REPORT_STATUS.AGREED) {

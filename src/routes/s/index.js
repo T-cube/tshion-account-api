@@ -6,6 +6,9 @@ import { oauthCheck } from 'lib/middleware';
 let api = require('express').Router();
 export default api;
 
+
+let shortURL = db.short.url;
+
 // api.get('/:hash', (req, res, next) => {
 //   let redis = req.model('redis');
 //   let hash = req.params.hash;
@@ -39,8 +42,19 @@ export default api;
 api.get('/:hash', (req, res, next) => {
   let redis = req.model('redis');
   let hash = req.params.hash;
-  console.log(hash);
-  redis.get(hash).then(url => {
+
+  let promise;
+  if(/^m\_/.test(hash)) {
+    promise = shortURL.findOne({key: hash}).then(doc=>{
+      if(doc && (new Date < doc.expire)) return doc.url;
+      return null;
+    });
+  } else {
+    promise = redis.get(hash);
+  }
+
+
+  promise.then(url => {
     if (url) {
       res.redirect(301, url);
     } else {
@@ -60,10 +74,11 @@ api.post('/', (req, res) => {
   let timestamp = new Date().getTime();
   let body = req.body;
   let key = (Math.random() + timestamp).toString(36);
-  let time = 3600;
+  let time = 3600, always = false;
   if (body.time && typeof body.time == 'number') {
     time = body.time;
   }
+  if(body.always) always = true;
   let short_host = config.get('webUrl') + 's/';
   // 对url进行重新urlencode编码
   let url = decodeURIComponent(body.url);
@@ -71,7 +86,23 @@ api.post('/', (req, res) => {
   let host = protocol + url.substr(0, url.indexOf('?'));
   let querystring = url.substr(url.indexOf('?') + 1, url.length);
   url = [host, encodeURIComponent(querystring)].join('?');
-  redis.setex(key, time, url).then(() => {
+
+  let promise;
+  if(always){
+    key = 'm_'+key;
+    promise = shortURL.findOne({url}).then(doc=>{
+      let expire = new Date(+new Date + time * 1000);
+      if(doc) {
+        key = doc.key;
+        return shortURL.update({_id: doc._id}, {$set: {expire}});
+      } else {
+        return shortURL.insert({key, time, url, expire});
+      }
+    });
+  } else {
+    promise = redis.setex(key, time, url);
+  }
+  promise.then(() => {
     res.json({ short_url: `${short_host}${key}` });
   });
 });
