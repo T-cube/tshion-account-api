@@ -92,7 +92,6 @@ OUTPUT
 request_body:
 ```javascript
 {
-  name: String, //分组名
   projects: [objectId,...], //项目id的数组 或者是 []
 }
 ```
@@ -108,6 +107,12 @@ request_body:
 }
 ```
 
-### DELETE /:group_id
+### DELETE /
 
-删除分组
+移除组外
+
+```javascript
+{
+  projects: [ObjectId,ObjectId,...] //需要移除组外的项目id
+}
+```
