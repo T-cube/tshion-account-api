@@ -44,6 +44,7 @@ class Document {
         date_update: 1,
         updated_by: 1,
         dir_path: 1,
+        cdn_key: 1,
       })
       .limit(config.get('view.maxListNum'))
       .then(files => items.files = files.map(file => {

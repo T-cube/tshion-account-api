@@ -40,6 +40,7 @@ const schema = {
           $objectId: 1
         }
       },
+      // original_dir: { $objectId: 1 }
     },
     validation: {
       files: {
@@ -56,6 +57,7 @@ const schema = {
           $objectId: 1
         }
       },
+      // original_dir: { $objectId: 1 }
     },
   },
   move: {
