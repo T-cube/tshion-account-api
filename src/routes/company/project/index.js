@@ -181,44 +181,50 @@ api.put('/group/:group_id', (req, res, next) => {
   .catch(next);
 });
 
-api.delete('/group', (req, res, next) => {
+api.delete('/group/projects', (req, res, next) => {
   validate('group', req.body, ['projects']);
   let {projects} = req.body;
-  db.project.group.findOneAndUpdate({
-    user_id: req.user._id,
-    company_id: req.company._id,
-    'groups.projects': {$in:projects}
-  }, {
-    $pull: {
-      'groups.$.projects': {$in:projects}
-    }
-  }, {
-    returnOriginal: false,
-    returnNewDocument: true
-  })
-  .then(doc => {
-    let result = doc.value;
-    let pull_groups = [];
-    result.groups = result.groups.filter(item => {
-      if (!item.projects.length) {
-        pull_groups.push(item._id);
-      }
-      return item.projects.length;
-    });
-    res.json(result);
-    db.project.group.update({
+  Promise.map(projects, project => {
+    return db.project.group.update({
       user_id: req.user._id,
       company_id: req.company._id,
+      'groups.projects': project
     }, {
       $pull: {
-        groups: {
-          _id: {
-            $in: pull_groups
-          }
-        }
+        'groups.$.projects': project
       }
     });
-  });
+  })
+  .then(() => {
+    return db.project.group.findOne({
+      user_id: req.user._id,
+      company_id: req.company._id,
+    })
+    .then(doc => {
+      let result = doc;
+      let pull_groups = [];
+      result.groups = result.groups.filter(item => {
+        if (!item.projects.length) {
+          pull_groups.push(item._id);
+        }
+        return item.projects.length;
+      });
+      res.json(result);
+      db.project.group.update({
+        user_id: req.user._id,
+        company_id: req.company._id,
+      }, {
+        $pull: {
+          groups: {
+            _id: {
+              $in: pull_groups
+            }
+          }
+        }
+      });
+    });
+  })
+  .catch(next);
 });
 
 api.post('/', (req, res, next) => {
