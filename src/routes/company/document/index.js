@@ -773,11 +773,9 @@ function _beforeDeleteDirOperation(req, dir, dirsDeleted) {
     }),
     dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
     .then(items => {
-      console.log(111111,items);
       return Promise.all([
         mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
         .then(files => {
-          console.log(22222,files);
           deleteFiles(req, files);
         }),
         db.document.dir.remove({
