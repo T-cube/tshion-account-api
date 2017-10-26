@@ -375,3 +375,18 @@ QUERY: `type: creator|follower`
 挂载点：/project/:project_id
 
 详见：[document](document.md)
+
+# project document
+
+## 挂载点: /project/:project_id/document
+
+### POST /attachment/dir
+
+get项目根文件夹，检测无attachment_dir为true字段的文件夹，调用该接口，返回根目录文件夹情况
+
+request_body:
+```javascript
+{
+  parent_dir: ObjectId,
+}
+```

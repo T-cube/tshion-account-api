@@ -8,13 +8,15 @@ import TaskLoop from 'models/task-loop';
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
-import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg, fetchUserInfo } from 'lib/utils';
+import { fetchCompanyMemberInfo, findObjectIdIndex, strToReg, fetchUserInfo, upload, saveCdn, mapObjectIdToData } from 'lib/utils';
 import {
   TASK_ASSIGNED,
   TASK_UPDATE,
   TASK_REPLY,
 } from 'models/notification-setting';
 import { validate } from './schema';
+import { attachFileUrls } from 'routes/company/document/index';
+import CompanyLevel from 'models/company-level';
 
 const api = express.Router();
 export default api;
@@ -186,8 +188,19 @@ api.get('/:_task_id', (req, res, next) => {
     return fetchUserInfo(task, 'creator', 'assignee', 'checker', 'followers');
   })
   .then(task => {
-    task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
-    res.json(task);
+    return mapObjectIdToData(task.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
+      return Promise.map(task.attachments || [], attachment => {
+        if (attachment == null) {
+          attachment = {type: 'deleted'};
+          return Promise.resolve(attachment);
+        } else {
+          return attachFileUrls(req, attachment);
+        }
+      });
+    }).then(() => {
+      task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
+      res.json(task);
+    });
   })
   .catch(next);
 });
@@ -239,6 +252,8 @@ api.put('/:task_id/priority', updateField('priority'));
 api.put('/:task_id/date_start', updateField('date_start'));
 
 api.put('/:task_id/date_due', updateField('date_due'));
+
+api.put('/:task_id/attachments', updateAttachment());
 
 api.put('/:task_id/checker', (req, res, next) => {
   let checker = req.body.checker;
@@ -407,8 +422,21 @@ api.get('/:task_id/comment', (req, res, next) => {
     task_id: req.task._id
   })
   .then(data => {
-    fetchUserInfo(data, 'creator').then(() => {
-      res.json(data || []);
+    return fetchUserInfo(data, 'creator').then(() => {
+      return Promise.map(data, comment => {
+        return mapObjectIdToData(comment.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
+          return Promise.map(comment.attachments || [], attachment => {
+            if (attachment == null) {
+              attachment = {type: 'deleted'};
+              return Promise.resolve(attachment);
+            } else {
+              return attachFileUrls(req, attachment);
+            }
+          });
+        });
+      }).then(() => {
+        res.json(data || []);
+      });
     });
   })
   .catch(next);
@@ -568,6 +596,117 @@ api.put('/:task_id/subtask/:subtask', (req, res, next) => {
   })
   .catch(next);
 });
+
+function updateAttachment() {
+  return (req, res, next) => {
+    validate('attachment', req.body);
+    db.task.findOneAndUpdate({
+      _id: req.task._id
+    }, {
+      $set: {
+        attachments: req.body.attachments
+      }
+    })
+    .then(updated_task => {
+      res.json(updated_task.value);
+    })
+    .catch(next);
+    db.task.findOne({
+      _id: req.task._id
+    })
+    .then(task => {
+      if (task.attachments && task.attachments.length) {
+        if (req.body.attachments && !req.body.attachments.length) {
+          Promise.map(task.attachments, item => {
+            return db.document.file.findOne({
+              _id: item
+            })
+            .then(doc =>{
+              if (!doc.attachment_dir_file) {
+                return null;
+              } else {
+                db.task.findOne({
+                  project_id: req.project._id,
+                  attachments: item
+                },{
+                  _id: 1,
+                })
+                .then(t => {
+                  if (!t) {
+                    _deleteAttachmentFile(req, doc);
+                  }
+                });
+              }
+            });
+          });
+        } else if (req.body.attachments && req.body.attachments.length) {
+          let removed_file = [];
+          for (let i = 0; i < task.attachments.length; i++) {
+            let flag = false;
+            for (let a = 0; a < req.body.attachments.length; a++) {
+              if (task.attachments[i].equals(req.body.attachments[a])) {
+                flag = true;
+              }
+              if (a == req.body.attachments.length - 1) {
+                if (!flag) {
+                  removed_file.push(task.attachments[i]);
+                }
+              }
+            }
+          }
+          if (removed_file.length) {
+            Promise.map(removed_file, item => {
+              return db.document.file.findOne({
+                _id: item
+              })
+              .then(doc =>{
+                if (!doc.attachment_dir_file) {
+                  return null;
+                } else {
+                  db.task.findOne({
+                    project_id: req.project._id,
+                    attachments: item
+                  },{
+                    _id: 1,
+                  })
+                  .then(t => {
+                    if (!t) {
+                      _deleteAttachmentFile(req, doc);
+                    }
+                  });
+                }
+              });
+            });
+          }
+        }
+      }
+    });
+  };
+}
+
+function _deleteAttachmentFile(req, file) {
+  let incSize = 0;
+  db.document.dir.update({
+    _id: file.dir_id,
+  }, {
+    $pull: {
+      files: file._id
+    }
+  });
+  db.document.file.remove({
+    _id: file._id,
+  })
+  .then(() => {
+    incSize -= file.size;
+    req.model('document').deleteFile(req, file);
+    let companyLevel = new CompanyLevel(req.company._id);
+    return companyLevel.updateUpload({
+      size: incSize,
+      target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
+      target_id: req.document.posVal,
+    });
+  });
+}
 
 function updateField(field) {
   return (req, res, next) => {
