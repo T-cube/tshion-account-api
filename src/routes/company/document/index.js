@@ -108,6 +108,7 @@ api.post('/attachment/dir', (req, res, next) => {
     dirs: [],
     project_id: req.project._id,
     updated_by: req.user._id,
+    company_id: req.company._id,
     date_create: new Date(),
     date_update: new Date(),
     path: [dir_id],
@@ -256,7 +257,6 @@ api.delete('/', (req, res, next) => {
     ['document.file', `${req.document.posKey},name,size,dir_id,path,cdn_key,relpath`, 'files'],
   ])
   .then(() => {
-    console.log(data);
     data.dirs = data.dirs.filter(dir => dir && dir[req.document.posKey].equals(req.document.posVal));
     data.files = data.files.filter(file => file && file[req.document.posKey].equals(req.document.posVal));
     let parent_dir = uniqObjectIdArray(data.dirs.map(dir => dir.parent_dir).concat(data.files.map(file => file.dir_id)));
@@ -1020,6 +1020,7 @@ function createRootDir(condition, user_id) {
       files: [],
       dirs: [],
       project_id: condition.project_id,
+      company_id: condition.company._id,
       updated_by: user_id,
       date_create: new Date(),
       date_update: new Date(),

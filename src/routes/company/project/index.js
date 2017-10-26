@@ -280,6 +280,7 @@ api.post('/', (req, res, next) => {
             dirs: [],
             project_id: doc._id,
             updated_by: req.user._id,
+            company_id: req.company._id,
             date_create: new Date(),
             date_update: new Date(),
             path: [root._id],
