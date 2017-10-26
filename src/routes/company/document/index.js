@@ -745,9 +745,26 @@ function deleteDirs(req, dirs) {
         })
         .then(second_dir => {
           if (second_dir.attachment_dir) {
-            return mapObjectIdToData(doc.files, 'document.file', 'name,size,dir_id,path,cdn_key')
-            .then(files => {
-              return deleteFiles(req, files);
+            return doc.dirs && req.model('document').fetchItemIdsUnderDir(doc.dirs)
+            .then(items => {
+              return mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
+              .then(files => {
+                return deleteFiles(req, files)
+                .then(() => {
+                  return db.document.dir.findOne({
+                    _id: doc._id
+                  })
+                  .then(after => {
+                    if (!after.dirs.length && !after.files.length) {
+                      dirsDeleted.push(_.pick(after, '_id', 'name'));
+                      return Promise.all([
+                        db.document.dir.remove({_id: after._id}),
+                        db.document.dir.update({_id: after.parent_dir}, {$pull: {dirs: after._id}})
+                      ]);
+                    }
+                  });
+                });
+              });
             });
           } else {
             return _beforeDeleteDirOperation(req, dir, dirsDeleted);
