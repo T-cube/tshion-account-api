@@ -1050,19 +1050,16 @@ function _checkExistProjectsReturnChange(req, groups, projects) {
   }
   let promise;
   if (exists_project.length) {
-    promise = db.project.group.findOneAndUpdate({
-      user_id: req.user._id,
-      company_id: req.company._id,
-      'groups.projects': { $in: exists_project },
-    }, {
-      $pull: {
-        'groups.$.projects': {
-          $in: exists_project
+    promise = Promise.map(exists_project, project => {
+      return db.project.group.update({
+        user_id: req.user._id,
+        company_id: req.company._id,
+        'groups.projects': project,
+      }, {
+        $pull: {
+          'groups.$.projects': project
         }
-      }
-    }, {
-      returnOriginal: false,
-      returnNewDocument: true
+      });
     });
   } else {
     promise = Promise.resolve();
