@@ -14,13 +14,13 @@ export default api;
 
 const mobileUrl = config.get('mobileUrl');
 
-const urls = {
+let urls = {
   user: mobileUrl + 'oa/company',
-  reg: token => {
-    return mobileUrl + 'account/login?from_open=wechat&random_token=' + token;
+  reg: (token, qs) => {
+    return mobileUrl + 'account/login?from_open=wechat&random_token=' + token + '&' + qs;
   },
-  token: authCode => {
-    return mobileUrl + 'account/login?wechat_authcode=' + authCode;
+  token: (authCode, qs) => {
+    return mobileUrl + 'account/login?wechat_authcode=' + authCode + '&' + qs;
   },
 };
 
@@ -37,6 +37,7 @@ api.use(bodyParser.urlencoded({ extended: true }));
 api.get('/entry', (req, res) => {
   let checkCode = req.user ? req.user._id : '';
   let wechatOAuthClient = getOAuthClient(req.model('redis'));
+  checkCode = Object.keys(req.query).map(key => `${key}|${req.query[key]}`).join('|');
   let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'api/wechat/oauth/access', checkCode, 'snsapi_userinfo');
   // let url = wechatOAuthClient.getAuthorizeURL(config.get('apiUrl') + 'api/wechat/oauth/access', checkCode, 'snsapi_base');
   res.redirect(url);
@@ -69,7 +70,14 @@ api.post('/token', bodyParser.json(), wechatOauth.grant(), (req, res, next) => {
 function access(req, res, next) {
   console.log(11111);
   let gettingWechatOauth;
-  let { code } = req.query;
+  let { code, state } = req.query;
+  let qs = '';
+  if (state) {
+    qs = state.split('|').map((key, index) => {
+      if (index % 2 == 0) return `${key}=`;
+      else return `${key}&`;
+    }).join('');
+  }
   let { random_token } = req.body;
   let wechatOAuthClient = getOAuthClient(req.model('redis'));
   let oauthInfoErr = new Error('can not get access_token from wechat server');
@@ -118,7 +126,7 @@ function access(req, res, next) {
               return wUtil.findWechatUserinfo(openid)
               .then(userInfo => {
                 if (userInfo) {
-                  return res.redirect(urls.reg(oauthRandomToken));
+                  return res.redirect(urls.reg(oauthRandomToken, qs));
                 }
                 return new Promise((resolve, reject) => {
                   wechatOAuthClient.getUser(openid, (err, userInfo) => {
@@ -129,7 +137,7 @@ function access(req, res, next) {
                   });
                 })
                 .then(userInfo => wUtil.storeWechatUserinfo(userInfo))
-                .then(() => res.redirect(urls.reg(oauthRandomToken)));
+                .then(() => res.redirect(urls.reg(oauthRandomToken, qs)));
               });
             });
           }
@@ -137,7 +145,7 @@ function access(req, res, next) {
           if (!loginUser) {
             console.log(6666);
             return wUtil.generateAuthCode(user._id)
-            .then(authCode => res.redirect(urls.token(authCode)));
+            .then(authCode => res.redirect(urls.token(authCode, qs)));
           }
         }
       });

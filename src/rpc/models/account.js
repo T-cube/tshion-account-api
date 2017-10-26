@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import { mapObjectIdToData } from 'lib/utils';
 import Model from './model';
+import Promise from 'bluebird';
 
 export default class CompanyModel extends Model {
 
@@ -81,17 +82,31 @@ export default class CompanyModel extends Model {
         logo: 1,
         'members.$': 1
       })
-      .then(list => ({
-        list: list.filter(i => i).map(i => {
+      .then(list => {
+        list.filter(i => i).map(i => {
           i.member_type = i.members.length ? i.members[0].type : null;
           i.member_count = i.members.length;
           delete i.members;
           return i;
-        }),
-        page,
-        pagesize,
-        totalRows
-      }));
+        });
+        return Promise.map(list, item => {
+          return this.db.plan.company.findOne({
+            _id: item._id
+          })
+          .then(doc => {
+            item.plan = doc;
+            return item;
+          });
+        })
+        .then(company_list => {
+          return {
+            list: company_list,
+            page,
+            pagesize,
+            totalRows,
+          };
+        });
+      });
     });
   }
 

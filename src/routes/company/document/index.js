@@ -113,35 +113,43 @@ api.post('/attachment/dir', (req, res, next) => {
     path: [dir_id],
     attachment_dir: true,
   };
-  db.document.dir.insert(extra_dir)
-  .then(extra => {
-    return db.document.dir.findOneAndUpdate({
-      _id: dir_id
-    }, {
-      $push: {
-        dirs: extra._id
-      }
-    }, {
-      returnOriginal: false,
-      returnNewDocument: true,
-    })
-    .then(data => {
-      let doc = data.value;
-      return mapObjectIdToData(doc, [
-        ['document.dir', 'name', 'path'],
-        ['document.dir', 'name,date_update,updated_by', 'dirs'],
-        ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
-      ])
-      .then(() => {
-        return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
-      })
-      .then(() => {
-        return Promise.map(doc.files, file => {
-          return attachFileUrls(req, file);
+  db.document.dir.findOne({
+    _id: dir_id
+  }).then(rootDir => {
+    if (rootDir.parent_dir) {
+      res.json();
+    } else {
+      db.document.dir.insert(extra_dir)
+      .then(extra => {
+        return db.document.dir.findOneAndUpdate({
+          _id: dir_id
+        }, {
+          $push: {
+            dirs: extra._id
+          }
+        }, {
+          returnOriginal: false,
+          returnNewDocument: true,
+        })
+        .then(data => {
+          let doc = data.value;
+          return mapObjectIdToData(doc, [
+            ['document.dir', 'name', 'path'],
+            ['document.dir', 'name,date_update,updated_by', 'dirs'],
+            ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
+          ])
+          .then(() => {
+            return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+          })
+          .then(() => {
+            return Promise.map(doc.files, file => {
+              return attachFileUrls(req, file);
+            });
+          })
+          .then(() => res.json(doc));
         });
-      })
-      .then(() => res.json(doc));
-    });
+      });
+    }
   })
   .catch(next);
 });
@@ -212,7 +220,7 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
     if (!dirInfo) {
       throw new ApiError(404);
     }
-    if (!dirInfo.attachment_dir) {
+    if (dirInfo.attachment_dir) {
       throw new ApiError(400,'can_not_change_attachment_dir');
     }
     return checkNameValid(req, data.name, dirInfo.parent_dir)
@@ -242,11 +250,13 @@ api.put('/dir/:dir_id/name', (req, res, next) => {
 api.delete('/', (req, res, next) => {
   let data = req.body;
   validate('del', data);
+  let {original_dir} = data;
   mapObjectIdToData(data, [
     ['document.dir', '', 'dirs'],
     ['document.file', `${req.document.posKey},name,size,dir_id,path,cdn_key,relpath`, 'files'],
   ])
   .then(() => {
+    console.log(data);
     data.dirs = data.dirs.filter(dir => dir && dir[req.document.posKey].equals(req.document.posVal));
     data.files = data.files.filter(file => file && file[req.document.posKey].equals(req.document.posVal));
     let parent_dir = uniqObjectIdArray(data.dirs.map(dir => dir.parent_dir).concat(data.files.map(file => file.dir_id)));
@@ -255,20 +265,20 @@ api.delete('/', (req, res, next) => {
     }
     parent_dir = parent_dir[0];
     return Promise.all([
-      deleteDirs(req, data.dirs),
+      deleteDirs(req, data.dirs, original_dir),
       deleteFiles(req, data.files, true),
       mapObjectIdToData(parent_dir, 'document.dir', 'name,path')
     ]);
   })
   .then(document => {
-    res.json({});
+    res.json({deleteDirs:document[0],deleteFiles:document[1]});
     let document_dir = document[0];
     let document_file = document[1];
     let document_path = document[2];
     let target_type;
     document_dir.length && (target_type = C.OBJECT_TYPE.DOCUMENT_DIR);
     document_file.length && (target_type = target_type ? C.OBJECT_TYPE.DOCUMENT : C.OBJECT_TYPE.DOCUMENT_FILE);
-    addActivity(req, C.ACTIVITY_ACTION.DELETE, {
+    (document_dir.length || document_file.length) && addActivity(req, C.ACTIVITY_ACTION.DELETE, {
       document_path,
       document_dir,
       document_file,
@@ -410,7 +420,22 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/dir/:dir_id/upload',
+api.post('/dir/:dir_id/upload', (req, res, next) => {
+  let file_size = parseInt(req.headers['content-length']);
+  let companyLevel = new CompanyLevel(req.company._id);
+  return companyLevel.canUpload(file_size).then(info => {
+    if (!info.ok) {
+      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
+        throw new ApiError(400, 'over_storage');
+      }
+      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
+        throw new ApiError(400, 'file_too_large');
+      }
+    }
+    next();
+  })
+  .catch(next);
+},
 upload({type: 'attachment'}).array('document'),
 saveCdn('cdn-file'),
 (req, res, next) => {
@@ -456,17 +481,37 @@ saveCdn('cdn-file'),
 api.post('/move', (req, res, next) => {
   let data = req.body;
   validate('move', data);
-  let { files, dirs, dest_dir } = data;
+  let { files, dirs, dest_dir, original_dir } = data;
+  delete data.original_dir;
   let moveInfo = _.clone(data);
   let parent_dir;
   if (findObjectIdIndex(dirs, dest_dir) >= 0) {
     throw new ApiError(400, 'invalid_dest_dir');
   }
-  mapObjectIdToData(moveInfo, [
+  Promise.all([
+    db.document.dir.findOne({
+      _id: dest_dir,
+    })
+    .then(dest => {
+      return _checkDirType(dest);
+    }),
+    db.document.dir.findOne({
+      _id: original_dir
+    })
+    .then(origin => {
+      return _checkDirType(origin);
+    }),
+  ])
+  .then(([des_type, ori_type]) => {
+    if (des_type.normal_dir != ori_type.normal_dir) {
+      throw new ApiError(400, 'can_not_move_between_attachment_dir_and_normal_dir');
+    }
+  })
+  .then(() => mapObjectIdToData(moveInfo, [
     ['document.dir', `name,files,parent_dir,dirs,path,${req.document.posKey}`, 'dest_dir'],
     ['document.dir', `name,parent_dir,${req.document.posKey}`, 'dirs'],
     ['document.file', `name,dir_id,${req.document.posKey}`, 'files'],
-  ])
+  ]))
   .then(() => {
     parent_dir = uniqObjectIdArray(moveInfo.dirs.map(dir => dir.parent_dir).concat(moveInfo.files.map(file => file.dir_id)));
     if (parent_dir.length != 1) {
@@ -640,58 +685,39 @@ function createFile(req, data, dir_id) {
     throw new ApiError(400, 'file_not_upload');
   }
   let total_size = 0;
-  let sizes = data.map(item => parseFloat(item.size));
   data.forEach(item => {
     total_size += parseFloat(item.size);
   });
   let companyLevel = new CompanyLevel(req.company._id);
-  return companyLevel.canUpload(sizes).then(info => {
-    if (!info.ok) {
-      _.map(data, item => {
-        if (item.cdn_key) {
-          req.model('qiniu').bucket('cdn-file').delete(item.cdn_key).catch(e => console.error(e));
-          fs.unlink(item.path, e => {
-            e && console.error(e);
-          });
-        }
+  return checkDirExist(req, dir_id)
+  .then(() => {
+    return getFileListOfDir(dir_id)
+    .then(filelist => {
+      data.forEach((item, i) => {
+        data[i].name = getUniqFileName(filelist.map(i => i.name), data[i].name);
+        filelist.push({
+          name: data[i].name
+        });
       });
-      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
-        throw new ApiError(400, 'over_storage');
-      }
-      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
-        throw new ApiError(400, 'file_too_large');
-      }
-    }
-    return checkDirExist(req, dir_id)
+    })
     .then(() => {
-      return getFileListOfDir(dir_id)
-      .then(filelist => {
-        data.forEach((item, i) => {
-          data[i].name = getUniqFileName(filelist.map(i => i.name), data[i].name);
-          filelist.push({
-            name: data[i].name
-          });
-        });
-      })
-      .then(() => {
-        return db.document.file.insert(data)
-        .then(doc => {
-          return db.document.dir.update({
-            _id: dir_id,
-          }, {
-            $push: {
-              files: {
-                $each: doc.map(item => item._id)
-              }
+      return db.document.file.insert(data)
+      .then(doc => {
+        return db.document.dir.update({
+          _id: dir_id,
+        }, {
+          $push: {
+            files: {
+              $each: doc.map(item => item._id)
             }
-          })
-          .then(() => companyLevel.updateUpload({
-            size: total_size,
-            target_type: req.document.isCompany ? 'knowledge' : 'project',
-            target_id: req.document.posVal,
-          }))
-          .then(() => doc);
-        });
+          }
+        })
+        .then(() => companyLevel.updateUpload({
+          size: total_size,
+          target_type: req.document.isCompany ? 'knowledge' : 'project',
+          target_id: req.document.posVal,
+        }))
+        .then(() => doc);
       });
     });
   });
@@ -709,47 +735,81 @@ function deleteDirs(req, dirs) {
     if (!dir || dir.parent_dir == null) {
       return null;
     }
-    dirsDeleted.push(_.pick(dir, '_id', 'name'));
-    return db.document.dir.findOne({
-      _id: dir._id
-    }, {
-      attachment_dir: 1,
-    })
+    return db.document.dir.findOne({_id: dir._id})
     .then(doc => {
-      if (doc.attachment_dir) {
-        return null;
-      }
-      return Promise.all([
-        db.document.dir.update({
-          _id: dir.parent_dir
-        }, {
-          $pull: {
-            dirs: dir._id
-          }
-        }),
-        dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
-        .then(items => {
-          return Promise.all([
-            mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
-            .then(files => deleteFiles(req, files)),
-            db.document.dir.remove({
-              _id: {
-                $in: items.dirs
-              }
-            })
-          ]);
+      if (!doc.attachment_dir && !doc.path[1]) {
+        return _beforeDeleteDirOperation(req, dir, dirsDeleted);
+      } else if (!doc.attachment_dir && doc.path[1]) {
+        return db.document.dir.findOne({
+          _id: doc.path[1]
         })
-      ])
-      .then(() => {
-        return db.document.dir.remove({
-          _id: {
-            $in: (dir.dirs || []).concat(dir._id)
+        .then(second_dir => {
+          if (second_dir.attachment_dir) {
+            return doc.dirs && req.model('document').fetchItemIdsUnderDir(doc.dirs)
+            .then(items => {
+              return mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
+              .then(files => {
+                return deleteFiles(req, files)
+                .then(() => {
+                  return db.document.dir.findOne({
+                    _id: doc._id
+                  })
+                  .then(after => {
+                    if (!after.dirs.length && !after.files.length) {
+                      dirsDeleted.push(_.pick(after, '_id', 'name'));
+                      return Promise.all([
+                        db.document.dir.remove({_id: after._id}),
+                        db.document.dir.update({_id: after.parent_dir}, {$pull: {dirs: after._id}})
+                      ]);
+                    }
+                  });
+                });
+              });
+            });
+          } else {
+            return _beforeDeleteDirOperation(req, dir, dirsDeleted);
           }
         });
-      });
+      } else if (doc.attachment_dir) {
+        return null;
+      }
     });
   }))
   .then(() => dirsDeleted);
+}
+
+function _beforeDeleteDirOperation(req, dir, dirsDeleted) {
+  dirsDeleted.push(_.pick(dir, '_id', 'name'));
+  return Promise.all([
+    db.document.dir.update({
+      _id: dir.parent_dir
+    }, {
+      $pull: {
+        dirs: dir._id
+      }
+    }),
+    dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
+    .then(items => {
+      return Promise.all([
+        mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
+        .then(files => {
+          deleteFiles(req, files);
+        }),
+        db.document.dir.remove({
+          _id: {
+            $in: items.dirs
+          }
+        })
+      ]);
+    })
+  ])
+  .then(() => {
+    return db.document.dir.remove({
+      _id: {
+        $in: (dir.dirs || []).concat(dir._id)
+      }
+    });
+  });
 }
 
 /**
@@ -768,38 +828,61 @@ function deleteFiles(req, files, dirCheckAndPull) {
       attachment_dir_file: 1
     })
     .then(doc => {
+      let checkAttachmentFile;
       if (doc.attachment_dir_file) {
-        return null;
-      }
-      filesDeleted.push(_.pick(file, '_id', 'name'));
-      let removeFileFromDb;
-      if (dirCheckAndPull) {
-        removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
-          return Promise.all([
-            db.document.file.remove({
-              _id: file._id,
-            }),
-            db.document.dir.update({
-              _id: file.dir_id,
-            }, {
-              $pull: {
-                files: file._id
-              }
-            }),
-          ]);
+        checkAttachmentFile = Promise.all([
+          db.task.findOne({
+            attachments: doc._id
+          }),
+          db.task.comments.findOne({
+            attachments: doc._id
+          })
+        ])
+        .then(([task, comment]) => {
+          if (task || comment) {
+            return { is_using: true };
+          } else {
+            return { is_using: false };
+          }
         });
       } else {
-        removeFileFromDb = db.document.file.remove({
-          _id: file._id,
-        });
+        checkAttachmentFile = Promise.resolve({is_using: false});
       }
-      return removeFileFromDb.then(() => {
-        incSize -= file.size;
-        req.model('document').deleteFile(req, file);
+      return checkAttachmentFile.then(check_result => {
+        if (check_result.is_using) {
+          return null;
+        } else {
+          let removeFileFromDb;
+          if (dirCheckAndPull) {
+            removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
+              return Promise.all([
+                db.document.file.remove({
+                  _id: file._id,
+                }),
+                db.document.dir.update({
+                  _id: file.dir_id,
+                }, {
+                  $pull: {
+                    files: file._id
+                  }
+                }),
+              ]);
+            });
+          } else {
+            removeFileFromDb = db.document.file.remove({
+              _id: file._id,
+            });
+          }
+          return removeFileFromDb.then(() => {
+            filesDeleted.push(_.pick(file, '_id', 'name'));
+            incSize -= file.size;
+            req.model('document').deleteFile(req, file);
+          });
+        }
       });
     });
   }))
-  .then(() => {
+  .then(doc => {
     let companyLevel = new CompanyLevel(req.company._id);
     return companyLevel.updateUpload({
       size: incSize,
@@ -911,7 +994,14 @@ function searchByName(req, dir, name) {
       mapObjectIdToData(doc, 'document.dir', 'name', 'path,dirs.path,files.path'),
       fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by'),
     ])
-    .then(() => doc);
+    .then(() => {
+      return Promise.map(doc.files, file => {
+        return attachFileUrls(req, file);
+      })
+      .then(() => {
+        return doc;
+      });
+    });
   });
 }
 
@@ -987,6 +1077,27 @@ function _uploadFileOpreation(req, data, dir_id, path, attachment_check) {
     }
     data.push(fileData);
   });
+}
+
+function _checkDirType(dir) {
+  if (!dir.parent_dir) {
+    return {normal_dir: true, attachment_dir: false};
+  } else if (dir.attachment_dir) {
+    return {normal_dir: false, attachment_dir: true};
+  } else if (dir.path.length < 2) {
+    return {normal_dir: true, attachment_dir: false};
+  } else {
+    return db.document.dir.findOne({
+      _id: dir.path[1]
+    })
+    .then(doc => {
+      if (doc.attachment_dir) {
+        return {normal_dir: false, attachment_dir: true};
+      } else {
+        return {normal_dir: true, attachment_dir: false};
+      }
+    });
+  }
 }
 
 export function attachFileUrls(req, file, thumb_size = '32') {
