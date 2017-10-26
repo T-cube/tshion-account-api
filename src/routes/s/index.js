@@ -90,7 +90,15 @@ api.post('/', (req, res) => {
   let promise;
   if(always){
     key = 'm_'+key;
-    promise = shortURL.insert({key, time, url, expire: new Date(+new Date + time * 1000)});
+    promise = shortURL.findOne({url}).then(doc=>{
+      let expire = new Date(+new Date + time * 1000);
+      if(doc) {
+        key = doc.key;
+        return shortURL.update({_id: doc._id}, {$set: {expire}});
+      } else {
+        return shortURL.insert({key, time, url, expire});
+      }
+    });
   } else {
     promise = redis.setex(key, time, url);
   }

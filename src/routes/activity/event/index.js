@@ -32,7 +32,7 @@ api.post('/sign/pick', function(req, res, next) {
   let rpc = req.model('clientRpc');
   let user = req.user;
   let { activity_id, prize } = req.body;
-  rpc.route('/activity/sign/pick', { activity_id, prize, user_id: user._id, openid: user.wechat ? user.wechat.openid : null }, data => {
+  rpc.route('/activity/sign/pick', { activity_id, prize, user_id: user._id, openid: user.wechat ? user.wechat.openid : null, mobile: user.mobile, email: user.email }, data => {
     if (data.code === 200) return res.json(data.data);
 
     res.status(data.code).json(data);
