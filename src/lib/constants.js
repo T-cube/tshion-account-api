@@ -37,8 +37,10 @@ let constants = {
     ENABLE_APPROVAL_TPL: 'enable_approval_tpl',     // 启用审批模板
     DISABLE_APPROVAL_TPL: 'disable_approval_tpl',   // 禁用审批模板
     // 任务
-    COMPLETE: 'complete',     // 关注
-    REOPEN: 'reopen',         // 取消关注
+    COMPLETE: 'complete',     // 完成任务
+    REOPEN: 'reopen',         // 重新打开任务
+    DELETE_ATTACHMENT: 'delete_attachment', //删除任务附件
+    ADD_ATTACHMENT: 'add_attachment', //添加任务附件
     // 关注
     FOLLOW: 'follow',         // 关注
     UNFOLLOW: 'unfollow',     // 取消关注
