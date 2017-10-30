@@ -600,86 +600,121 @@ api.put('/:task_id/subtask/:subtask', (req, res, next) => {
 function updateAttachment() {
   return (req, res, next) => {
     validate('attachment', req.body);
-    db.task.findOneAndUpdate({
-      _id: req.task._id
-    }, {
-      $set: {
-        attachments: req.body.attachments
-      }
-    })
-    .then(updated_task => {
-      res.json(updated_task.value);
-    })
-    .catch(next);
     db.task.findOne({
       _id: req.task._id
     })
     .then(task => {
-      if (task.attachments && task.attachments.length) {
-        if (req.body.attachments && !req.body.attachments.length) {
-          Promise.map(task.attachments, item => {
-            return db.document.file.findOne({
-              _id: item
-            })
-            .then(doc =>{
-              if (!doc.attachment_dir_file) {
-                return null;
-              } else {
-                db.task.findOne({
-                  project_id: req.project._id,
-                  attachments: item
-                },{
-                  _id: 1,
-                })
-                .then(t => {
-                  if (!t) {
-                    _deleteAttachmentFile(req, doc);
-                  }
+      db.task.findOneAndUpdate({
+        _id: req.task._id
+      }, {
+        $set: {
+          attachments: req.body.attachments
+        }
+      })
+      .then(updated_task => {
+        res.json(updated_task.value);
+        if (task.attachments && task.attachments.length) {
+          if (req.body.attachments && !req.body.attachments.length) {
+            mapObjectIdToData(task.attachments, 'document.file', 'name').then(list => {
+              addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list})
+              .then(() => {
+                Promise.map(task.attachments, item => {
+                  return db.document.file.findOne({
+                    _id: item
+                  })
+                  .then(doc =>{
+                    if (doc && !doc.attachment_dir_file) {
+                      return null;
+                    } else {
+                      db.task.findOne({
+                        project_id: req.project._id,
+                        attachments: item
+                      },{
+                        _id: 1,
+                      })
+                      .then(t => {
+                        if (!t) {
+                          _deleteAttachmentFile(req, doc);
+                        }
+                      });
+                    }
+                  });
                 });
-              }
+              });
             });
-          });
-        } else if (req.body.attachments && req.body.attachments.length) {
-          let removed_file = [];
-          for (let i = 0; i < task.attachments.length; i++) {
-            let flag = false;
-            for (let a = 0; a < req.body.attachments.length; a++) {
-              if (task.attachments[i].equals(req.body.attachments[a])) {
-                flag = true;
-              }
-              if (a == req.body.attachments.length - 1) {
-                if (!flag) {
-                  removed_file.push(task.attachments[i]);
+          } else if (req.body.attachments && req.body.attachments.length) {
+            let body_attachment_length = req.body.attachments.length;
+            let task_attachment_length = task.attachments.length;
+            let removed_file = [];
+            for (let i = 0; i < task_attachment_length; i++) {
+              let flag = false;
+              for (let a = 0; a < body_attachment_length; a++) {
+                if (task.attachments[i].equals(req.body.attachments[a])) {
+                  flag = true;
+                }
+                if (a == body_attachment_length - 1) {
+                  if (!flag) {
+                    removed_file.push(task.attachments[i]);
+                  }
                 }
               }
             }
-          }
-          if (removed_file.length) {
-            Promise.map(removed_file, item => {
-              return db.document.file.findOne({
-                _id: item
-              })
-              .then(doc =>{
-                if (!doc.attachment_dir_file) {
-                  return null;
-                } else {
-                  db.task.findOne({
-                    project_id: req.project._id,
-                    attachments: item
-                  },{
-                    _id: 1,
-                  })
-                  .then(t => {
-                    if (!t) {
-                      _deleteAttachmentFile(req, doc);
-                    }
-                  });
+            let new_file = [];
+            for (let i = 0; i < body_attachment_length; i++) {
+              let flag = false;
+              for (let a = 0; a < task_attachment_length; a++) {
+                if (task.attachments[a].equals(req.body.attachments[i])) {
+                  flag = true;
                 }
+                if (a == task_attachment_length) {
+                  if (!flag) {
+                    new_file.push(req.body.attachments[i]);
+                  }
+                }
+              }
+            }
+            if (new_file.length) {
+              mapObjectIdToData(new_file, 'document.file', 'name').then(list => {
+                addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
               });
-            });
+            }
+            if (removed_file.length) {
+              mapObjectIdToData(removed_file, 'document.file', 'name').then(list => {
+                addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list})
+                .then(() => {
+                  Promise.map(removed_file, item => {
+                    return db.document.file.findOne({
+                      _id: item
+                    })
+                    .then(doc =>{
+                      if (doc && !doc.attachment_dir_file) {
+                        return null;
+                      } else {
+                        db.task.findOne({
+                          project_id: req.project._id,
+                          attachments: item
+                        },{
+                          _id: 1,
+                        })
+                        .then(t => {
+                          if (!t) {
+                            _deleteAttachmentFile(req, doc);
+                          }
+                        });
+                      }
+                    });
+                  });
+                });
+              });
+            }
           }
+        } else if (req.body.attachments && req.body.attachments.length) {
+          mapObjectIdToData(req.body.attachments, 'document.file', 'name').then(list => {
+            addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
+          });
         }
-      }
+      })
+      .catch(next);
     });
   };
 }
