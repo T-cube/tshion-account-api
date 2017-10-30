@@ -610,9 +610,19 @@ function updateAttachment() {
         $set: {
           attachments: req.body.attachments
         }
+      }, {
+        returnOriginal: false,
+        returnNewDocument: true,
       })
       .then(updated_task => {
-        res.json(updated_task.value);
+        let new_task = updated_task.value;
+        mapObjectIdToData(new_task.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
+          return Promise.map(new_task.attachments || [], attachment => {
+            return attachFileUrls(req, attachment);
+          });
+        }).then(() => {
+          res.json(new_task);
+        });
         if (task.attachments && task.attachments.length) {
           if (req.body.attachments && !req.body.attachments.length) {
             mapObjectIdToData(task.attachments, 'document.file', 'name').then(list => {
@@ -634,7 +644,7 @@ function updateAttachment() {
                       })
                       .then(t => {
                         if (!t) {
-                          _deleteAttachmentFile(req, doc);
+                          doc && _deleteAttachmentFile(req, doc);
                         }
                       });
                     }
@@ -698,7 +708,7 @@ function updateAttachment() {
                         })
                         .then(t => {
                           if (!t) {
-                            _deleteAttachmentFile(req, doc);
+                            doc && _deleteAttachmentFile(req, doc);
                           }
                         });
                       }
@@ -721,6 +731,8 @@ function updateAttachment() {
 
 function _deleteAttachmentFile(req, file) {
   let incSize = 0;
+  console.log(2, file);
+  console.log(111, file, file.dir_id);
   db.document.dir.update({
     _id: file.dir_id,
   }, {
