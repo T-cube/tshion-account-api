@@ -600,15 +600,16 @@ api.put('/:task_id/subtask/:subtask', (req, res, next) => {
 function updateAttachment() {
   return (req, res, next) => {
     validate('attachment', req.body);
+    let need_update_attachments = req.body.attachments;
     db.task.findOne({
       _id: req.task._id
     })
-    .then(task => {
+    .then(original_task => {
       db.task.findOneAndUpdate({
         _id: req.task._id
       }, {
         $set: {
-          attachments: req.body.attachments
+          attachments: need_update_attachments
         }
       }, {
         returnOriginal: false,
@@ -623,103 +624,45 @@ function updateAttachment() {
         }).then(() => {
           res.json(new_task);
         });
-        if (task.attachments && task.attachments.length) {
-          if (req.body.attachments && !req.body.attachments.length) {
-            mapObjectIdToData(task.attachments, 'document.file', 'name').then(list => {
-              addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list})
-              .then(() => {
-                Promise.map(task.attachments, item => {
-                  return db.document.file.findOne({
-                    _id: item
-                  })
-                  .then(doc =>{
-                    if (doc && !doc.attachment_dir_file) {
-                      return null;
-                    } else {
-                      db.task.findOne({
-                        project_id: req.project._id,
-                        attachments: item
-                      },{
-                        _id: 1,
-                      })
-                      .then(t => {
-                        if (!t) {
-                          doc && _deleteAttachmentFile(req, doc);
-                        }
-                      });
-                    }
-                  });
-                });
-              });
-            });
-          } else if (req.body.attachments && req.body.attachments.length) {
-            let body_attachment_length = req.body.attachments.length;
-            let task_attachment_length = task.attachments.length;
-            let removed_file = [];
-            for (let i = 0; i < task_attachment_length; i++) {
-              let flag = false;
-              for (let a = 0; a < body_attachment_length; a++) {
-                if (task.attachments[i].equals(req.body.attachments[a])) {
-                  flag = true;
-                }
-                if (a == body_attachment_length - 1) {
-                  if (!flag) {
-                    removed_file.push(task.attachments[i]);
-                  }
-                }
+        let old_remove_attachments = [];
+        let new_add_attachments = [];
+        if (!need_update_attachments.length && original_task.attachments.length) {
+          mapObjectIdToData(need_update_attachments, 'document.file', 'name').then(list => {
+            addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list});
+          });
+        }
+        if (need_update_attachments.length && !original_task.attachments.length) {
+          mapObjectIdToData(need_update_attachments, 'document.file', 'name').then(list => {
+            addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
+          });
+        }
+        if (need_update_attachments.length && original_task.attachments.length) {
+          for (let i = 0; i < original_task.attachments.length; i++) {
+            let flag = false;
+            for (let n = 0; n < need_update_attachments.length; n++) {
+              if (original_task.attachments[i].equals(need_update_attachments[n])) {
+                flag = true;
               }
-            }
-            let new_file = [];
-            for (let i = 0; i < body_attachment_length; i++) {
-              let flag = false;
-              for (let a = 0; a < task_attachment_length; a++) {
-                if (task.attachments[a].equals(req.body.attachments[i])) {
-                  flag = true;
-                }
-                if (a == task_attachment_length) {
-                  if (!flag) {
-                    new_file.push(req.body.attachments[i]);
-                  }
-                }
+              if (n == need_update_attachments.length && !flag) {
+                old_remove_attachments.push(original_task.attachments[i]);
               }
-            }
-            if (new_file.length) {
-              mapObjectIdToData(new_file, 'document.file', 'name').then(list => {
-                addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
-              });
-            }
-            if (removed_file.length) {
-              mapObjectIdToData(removed_file, 'document.file', 'name').then(list => {
-                addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list})
-                .then(() => {
-                  Promise.map(removed_file, item => {
-                    return db.document.file.findOne({
-                      _id: item
-                    })
-                    .then(doc =>{
-                      if (doc && !doc.attachment_dir_file) {
-                        return null;
-                      } else {
-                        db.task.findOne({
-                          project_id: req.project._id,
-                          attachments: item
-                        },{
-                          _id: 1,
-                        })
-                        .then(t => {
-                          if (!t) {
-                            doc && _deleteAttachmentFile(req, doc);
-                          }
-                        });
-                      }
-                    });
-                  });
-                });
-              });
             }
           }
-        } else if (req.body.attachments && req.body.attachments.length) {
-          mapObjectIdToData(req.body.attachments, 'document.file', 'name').then(list => {
+          for (let i = 0; i < need_update_attachments.length; i++) {
+            let flag = false;
+            for (var n = 0; n < original_task.attachments.length; n++) {
+              if (need_update_attachments[i].equals(original_task.attachments[n])) {
+                flag = true;
+              }
+              if (n == original_task.attachments.length && !flag) {
+                new_add_attachments.push(need_update_attachments[i]);
+              }
+            }
+          }
+          mapObjectIdToData(old_remove_attachments, 'document.file', 'name').then(list => {
+            addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list});
+          });
+          mapObjectIdToData(new_add_attachments, 'document.file', 'name').then(list => {
             addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
           });
         }
