@@ -60,7 +60,8 @@ const schema = {
         items: {
           $objectId: 1,
         }
-      }
+      },
+      type: { $enum: C.GROUP_TYPE }
     },
     validation: {
       name: { type: 'string', minLength: 1 },
@@ -69,7 +70,8 @@ const schema = {
         items: {
           $objectId: 1,
         }
-      }
+      },
+      type: { $enum: C.GROUP_TYPE }
     }
   }
 };

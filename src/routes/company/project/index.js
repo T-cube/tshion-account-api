@@ -68,7 +68,7 @@ api.get('/group', (req, res, next) => {
 });
 
 api.post('/group', (req, res, next) => {
-  validate('group', req.body, ['projects']);
+  validate('group', req.body, ['projects', 'type']);
   let projects = req.body.projects;
   db.project.group.findOne({
     user_id: req.user._id,
@@ -93,7 +93,8 @@ api.post('/group', (req, res, next) => {
         groups: {
           _id: ObjectId(),
           name: name,
-          projects: req.body.projects
+          projects: req.body.projects,
+          type: req.body.type,
         }
       }
     }, {
@@ -392,12 +393,11 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
         $pull: {projects: project_id}
       }),
       db.project.group.update({
-        company_id: req.company._id
+        company_id: req.company._id,
+        'groups.projects': project_id
       }, {
         $pull: {
-          groups: {
-            projects: project_id
-          }
+          'groups.*.projects': project_id,
         }
       }),
       db.task.find({project_id}, {
