@@ -118,7 +118,9 @@ api.post('/group', (req, res, next) => {
       }, {
         $pull: {
           groups: {
-            _id: {$in: pull_groups}
+            _id: {
+              $in: pull_groups
+            }
           }
         }
       });
@@ -128,15 +130,15 @@ api.post('/group', (req, res, next) => {
 });
 
 api.put('/group/:group_id', (req, res, next) => {
-  validate('group', req.body);
+  validate('group', req.body, ['name', 'projects']);
   let projects = req.body.projects;
   let group_id = ObjectId(req.params.group_id);
   db.project.group.findOne({
     user_id: req.user._id,
     company_id: req.company._id,
   })
-  .then(doc => {
-    let groups = doc.groups;
+  .then(original => {
+    let groups = original.groups;
     let names = _.pluck(groups, names);
     if (_.contains(names, req.body.name)) {
       throw new ApiError('400', 'have_same_group_name');
@@ -165,6 +167,7 @@ api.put('/group/:group_id', (req, res, next) => {
         return item.projects.length;
       });
       res.json(result);
+      let target = _.findWhere(original.groups, {_id: group_id});
       db.project.group.update({
         user_id: req.user._id,
         company_id: req.company._id,
@@ -1037,7 +1040,7 @@ function recordUserRecentProjects(req) {
 }
 
 function _checkExistProjectsReturnChange(req, groups, projects) {
-  let group_project = _.flatten(_.pluck(groups, 'projects'));
+  let group_project = _.flatten(_.pluck(_.filter(groups, (group) => group.type == req.body.type), 'projects'));
   let exists_project = [];
   if (projects && projects.length && group_project && group_project.length) {
     for (let i = 0; i < projects.length; i++) {
@@ -1054,6 +1057,7 @@ function _checkExistProjectsReturnChange(req, groups, projects) {
       return db.project.group.update({
         user_id: req.user._id,
         company_id: req.company._id,
+        'groups.type': req.body.type,
         'groups.projects': project,
       }, {
         $pull: {
