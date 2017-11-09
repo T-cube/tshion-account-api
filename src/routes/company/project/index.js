@@ -76,7 +76,7 @@ api.post('/group', (req, res, next) => {
   })
   .then(doc => {
     let promise;
-    let names = _.pluck(doc.groups, 'name');
+    let names = _.pluck(_.filter(doc.groups, (group) => group.type == req.body.type), 'name');
     let name = '新分组';
     name = getUniqName(names, name);
     if (doc && doc.groups) {
