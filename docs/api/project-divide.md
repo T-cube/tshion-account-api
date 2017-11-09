@@ -93,6 +93,7 @@ request_body:
 ```javascript
 {
   projects: [objectId,...], //项目id的数组 或者是 []
+  type: ['all', 'mine', 'archived'], // 不同类别的分组
 }
 ```
 

@@ -114,10 +114,20 @@ api.post('/attachment/dir', (req, res, next) => {
     path: [dir_id],
     attachment_dir: true,
   };
-  db.document.dir.findOne({
-    _id: dir_id
-  }).then(rootDir => {
-    if (rootDir.parent_dir) {
+  Promise.all([
+    db.document.dir.findOne({
+      _id: dir_id
+    }),
+    db.document.dir.findOne({
+      company_id: req.company._id,
+      project_id: req.project._id,
+      attachment_dir: true
+    })
+  ])
+  .then(([rootDir, attachment_dir]) => {
+    if (attachment_dir) {
+      res.json();
+    } else if (rootDir.parent_dir) {
       res.json();
     } else {
       db.document.dir.insert(extra_dir)
