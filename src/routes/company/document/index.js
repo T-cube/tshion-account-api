@@ -507,16 +507,34 @@ api.post('/move', (req, res, next) => {
   if (findObjectIdIndex(dirs, dest_dir) >= 0) {
     throw new ApiError(400, 'invalid_dest_dir');
   }
-  db.document.dir.findOne({
-    _id: dest_dir
-  }, {
-    attachment_root_dir: 1,
-    attachment_dir: 1,
-  })
-  .then(dest => {
+  Promise.all([
+    db.document.dir.findOne({
+      _id: dest_dir
+    }, {
+      attachment_root_dir: 1,
+      attachment_dir: 1,
+    }),
+    db.document.dir.findOne({
+      _id: original_dir
+    }, {
+      attachment_root_dir: 1,
+      attachment_dir: 1,
+    })
+    .then(original_dir => {
+      if (original_dir.attachment_root_dir || original_dir.attachment_dir) {
+        return { success: false, description: 'attachment_dir_can_not_move' };
+      } else {
+        return { success: true };
+      }
+    })
+  ])
+  .then(([dest,ori]) => {
     attachment_dir_flag = dest.attachment_dir ? true : false;
     if (dest.attachment_root_dir) {
       throw new ApiError(400, 'can_not_move_to_root_attachment_dir');
+    }
+    if (!ori.success) {
+      throw new ApiError(400, ori.description);
     }
   })
   .then(() => mapObjectIdToData(moveInfo, [
