@@ -80,18 +80,18 @@ api.get('/tree', (req, res, next) => {
     [req.document.posKey]: req.document.posVal
   };
   db.document.dir.find(condition)
-  .then(dirs => {
-    if (dirs.length == 0) {
-      _.extend(condition, {
-        name: '',
-        dirs: [],
-        files: [],
-      });
-      return db.document.dir.insert(condition)
-      .then(rootDir => [rootDir]);
-    }
-    return dirs;
-  })
+  // .then(dirs => {
+  //   if (dirs.length == 0) {
+  //     _.extend(condition, {
+  //       name: '',
+  //       dirs: [],
+  //       files: [],
+  //     });
+  //     return db.document.dir.insert(condition)
+  //     .then(rootDir => [rootDir]);
+  //   }
+  //   return dirs;
+  // })
   .then(dirs => {
     let tree = req.model('document').buildTree(dirs);
     res.json(tree);
@@ -173,7 +173,25 @@ api.post('/dir', (req, res, next) => {
       if (path.length > max_dir_path_length) {
         throw new ApiError(400, 'folder_path_too_long');
       }
-      data.path = path;
+      if (path[1]) {
+        return db.document.dir.findOne({
+          _id: path[1]
+        }, {
+          attachment_root_dir: 1,
+          attachment_dir: 1,
+        })
+        .then(doc => {
+          if (doc.attachment_root_dir) {
+            throw new ApiError(400, 'can_not_create_dir_in_root_attachment_dir');
+          }
+          if (doc.attachment_dir) {
+            _.extend(data, {attachment_dir_file: true});
+            data.path = path;
+          }
+        });
+      } else {
+        data.path = path;
+      }
     });
   })
   .then(() => {
@@ -482,29 +500,23 @@ api.post('/move', (req, res, next) => {
   let data = req.body;
   validate('move', data);
   let { files, dirs, dest_dir, original_dir } = data;
+  let attachment_dir_flag;
   delete data.original_dir;
   let moveInfo = _.clone(data);
   let parent_dir;
   if (findObjectIdIndex(dirs, dest_dir) >= 0) {
     throw new ApiError(400, 'invalid_dest_dir');
   }
-  Promise.all([
-    db.document.dir.findOne({
-      _id: dest_dir,
-    })
-    .then(dest => {
-      return _checkDirType(dest);
-    }),
-    db.document.dir.findOne({
-      _id: original_dir
-    })
-    .then(origin => {
-      return _checkDirType(origin);
-    }),
-  ])
-  .then(([des_type, ori_type]) => {
-    if (des_type.normal_dir != ori_type.normal_dir) {
-      throw new ApiError(400, 'can_not_move_between_attachment_dir_and_normal_dir');
+  db.document.dir.findOne({
+    _id: dest_dir
+  }, {
+    attachment_root_dir: 1,
+    attachment_dir: 1,
+  })
+  .then(dest => {
+    attachment_dir_flag = dest.attachment_dir ? true : false;
+    if (dest.attachment_root_dir) {
+      throw new ApiError(400, 'can_not_move_to_root_attachment_dir');
     }
   })
   .then(() => mapObjectIdToData(moveInfo, [
@@ -544,6 +556,7 @@ api.post('/move', (req, res, next) => {
             $set: {
               parent_dir: dest_dir,
               path,
+              attachment_dir_file: attachment_dir_flag
             }
           }),
           db.document.dir.update({
@@ -572,6 +585,7 @@ api.post('/move', (req, res, next) => {
             $set: {
               dir_id: dest_dir,
               dir_path: path,
+              attachment_dir_file: attachment_dir_flag
             }
           }),
           db.document.dir.update({
@@ -737,79 +751,41 @@ function deleteDirs(req, dirs) {
     }
     return db.document.dir.findOne({_id: dir._id})
     .then(doc => {
-      if (!doc.attachment_dir && !doc.path[1]) {
-        return _beforeDeleteDirOperation(req, dir, dirsDeleted);
-      } else if (!doc.attachment_dir && doc.path[1]) {
-        return db.document.dir.findOne({
-          _id: doc.path[1]
-        })
-        .then(second_dir => {
-          if (second_dir.attachment_dir) {
-            return doc.dirs && req.model('document').fetchItemIdsUnderDir(doc.dirs)
-            .then(items => {
-              return mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
-              .then(files => {
-                return deleteFiles(req, files)
-                .then(() => {
-                  return db.document.dir.findOne({
-                    _id: doc._id
-                  })
-                  .then(after => {
-                    if (!after.dirs.length && !after.files.length) {
-                      dirsDeleted.push(_.pick(after, '_id', 'name'));
-                      return Promise.all([
-                        db.document.dir.remove({_id: after._id}),
-                        db.document.dir.update({_id: after.parent_dir}, {$pull: {dirs: after._id}})
-                      ]);
-                    }
-                  });
-                });
-              });
-            });
-          } else {
-            return _beforeDeleteDirOperation(req, dir, dirsDeleted);
-          }
-        });
-      } else if (doc.attachment_dir) {
+      if (doc.attachment_dir) {
         return null;
       }
+      dirsDeleted.push(_.pick(dir, '_id', 'name'));
+      return Promise.all([
+        db.document.dir.update({
+          _id: dir.parent_dir
+        }, {
+          $pull: {
+            dirs: dir._id
+          }
+        }),
+        dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
+        .then(items => {
+          return Promise.all([
+            mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
+            .then(files => deleteFiles(req, files)),
+            db.document.dir.remove({
+              _id: {
+                $in: items.dirs
+              }
+            })
+          ]);
+        })
+      ])
+      .then(() => {
+        return db.document.dir.remove({
+          _id: {
+            $in: (dir.dirs || []).concat(dir._id)
+          }
+        });
+      });
     });
   }))
   .then(() => dirsDeleted);
-}
-
-function _beforeDeleteDirOperation(req, dir, dirsDeleted) {
-  dirsDeleted.push(_.pick(dir, '_id', 'name'));
-  return Promise.all([
-    db.document.dir.update({
-      _id: dir.parent_dir
-    }, {
-      $pull: {
-        dirs: dir._id
-      }
-    }),
-    dir.dirs && req.model('document').fetchItemIdsUnderDir(dir.dirs)
-    .then(items => {
-      return Promise.all([
-        mapObjectIdToData(items.files.concat(dir.files), 'document.file', 'name,size,dir_id,path,cdn_key')
-        .then(files => {
-          deleteFiles(req, files);
-        }),
-        db.document.dir.remove({
-          _id: {
-            $in: items.dirs
-          }
-        })
-      ]);
-    })
-  ])
-  .then(() => {
-    return db.document.dir.remove({
-      _id: {
-        $in: (dir.dirs || []).concat(dir._id)
-      }
-    });
-  });
 }
 
 /**
@@ -822,67 +798,34 @@ function deleteFiles(req, files, dirCheckAndPull) {
   let incSize = 0;
   let filesDeleted = [];
   return Promise.all(files.map(file => {
-    return db.document.file.findOne({
-      _id: file._id
-    }, {
-      attachment_dir_file: 1
-    })
-    .then(doc => {
-      let checkAttachmentFile;
-      if (doc.attachment_dir_file) {
-        checkAttachmentFile = Promise.all([
-          db.task.findOne({
-            attachments: doc._id
+    filesDeleted.push(_.pick(file, '_id', 'name'));
+    let removeFileFromDb;
+    if (dirCheckAndPull) {
+      removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
+        return Promise.all([
+          db.document.file.remove({
+            _id: file._id,
           }),
-          db.task.comments.findOne({
-            attachments: doc._id
-          })
-        ])
-        .then(([task, comment]) => {
-          if (task || comment) {
-            return { is_using: true };
-          } else {
-            return { is_using: false };
-          }
-        });
-      } else {
-        checkAttachmentFile = Promise.resolve({is_using: false});
-      }
-      return checkAttachmentFile.then(check_result => {
-        if (check_result.is_using) {
-          return null;
-        } else {
-          let removeFileFromDb;
-          if (dirCheckAndPull) {
-            removeFileFromDb = checkDirExist(req, file.dir_id).then(() => {
-              return Promise.all([
-                db.document.file.remove({
-                  _id: file._id,
-                }),
-                db.document.dir.update({
-                  _id: file.dir_id,
-                }, {
-                  $pull: {
-                    files: file._id
-                  }
-                }),
-              ]);
-            });
-          } else {
-            removeFileFromDb = db.document.file.remove({
-              _id: file._id,
-            });
-          }
-          return removeFileFromDb.then(() => {
-            filesDeleted.push(_.pick(file, '_id', 'name'));
-            incSize -= file.size;
-            req.model('document').deleteFile(req, file);
-          });
-        }
+          db.document.dir.update({
+            _id: file.dir_id,
+          }, {
+            $pull: {
+              files: file._id
+            }
+          }),
+        ]);
       });
+    } else {
+      removeFileFromDb = db.document.file.remove({
+        _id: file._id,
+      });
+    }
+    return removeFileFromDb.then(() => {
+      incSize -= file.size;
+      req.model('document').deleteFile(req, file);
     });
   }))
-  .then(doc => {
+  .then(() => {
     let companyLevel = new CompanyLevel(req.company._id);
     return companyLevel.updateUpload({
       size: incSize,
@@ -1020,7 +963,7 @@ function createRootDir(condition, user_id) {
       files: [],
       dirs: [],
       project_id: condition.project_id,
-      company_id: condition.company._id,
+      company_id: condition.company_id,
       updated_by: user_id,
       date_create: new Date(),
       date_update: new Date(),
@@ -1040,7 +983,10 @@ function createRootDir(condition, user_id) {
         returnNewDocument: true,
       })
       .then(data => {
-        return mapObjectIdToData(data.value, 'document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs');
+        return mapObjectIdToData(data.value, 'document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs')
+        .then(() => {
+          return data.value;
+        });
       });
     });
   });
@@ -1078,27 +1024,6 @@ function _uploadFileOpreation(req, data, dir_id, path, attachment_check) {
     }
     data.push(fileData);
   });
-}
-
-function _checkDirType(dir) {
-  if (!dir.parent_dir) {
-    return {normal_dir: true, attachment_dir: false};
-  } else if (dir.attachment_dir) {
-    return {normal_dir: false, attachment_dir: true};
-  } else if (dir.path.length < 2) {
-    return {normal_dir: true, attachment_dir: false};
-  } else {
-    return db.document.dir.findOne({
-      _id: dir.path[1]
-    })
-    .then(doc => {
-      if (doc.attachment_dir) {
-        return {normal_dir: false, attachment_dir: true};
-      } else {
-        return {normal_dir: true, attachment_dir: false};
-      }
-    });
-  }
 }
 
 export function attachFileUrls(req, file, thumb_size = '32') {
