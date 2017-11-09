@@ -297,16 +297,6 @@ api.delete('/:member_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res,
       }, {
         upsert: true
       }),
-      db.project.update({
-        company_id: req.company._id,
-        'members._id': member_id,
-      }, {
-        $pull: {
-          members: {
-            _id: member_id
-          }
-        }
-      }),
       db.request.update({
         object: req.company._id,
         to: member_id,
