@@ -643,7 +643,7 @@ function updateAttachment() {
               if (original_task.attachments[i].equals(need_update_attachments[n])) {
                 flag = true;
               }
-              if (n == need_update_attachments.length && !flag) {
+              if (n == need_update_attachments.length - 1 && !flag) {
                 old_remove_attachments.push(original_task.attachments[i]);
               }
             }
@@ -654,48 +654,22 @@ function updateAttachment() {
               if (need_update_attachments[i].equals(original_task.attachments[n])) {
                 flag = true;
               }
-              if (n == original_task.attachments.length && !flag) {
+              if (n == original_task.attachments.length - 1 && !flag) {
                 new_add_attachments.push(need_update_attachments[i]);
               }
             }
           }
           mapObjectIdToData(old_remove_attachments, 'document.file', 'name').then(list => {
-            addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list});
+            list && list.length && addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list});
           });
           mapObjectIdToData(new_add_attachments, 'document.file', 'name').then(list => {
-            addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
+            list && list.length && addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
           });
         }
       })
       .catch(next);
     });
   };
-}
-
-function _deleteAttachmentFile(req, file) {
-  let incSize = 0;
-  console.log(2, file);
-  console.log(111, file, file.dir_id);
-  db.document.dir.update({
-    _id: file.dir_id,
-  }, {
-    $pull: {
-      files: file._id
-    }
-  });
-  db.document.file.remove({
-    _id: file._id,
-  })
-  .then(() => {
-    incSize -= file.size;
-    req.model('document').deleteFile(req, file);
-    let companyLevel = new CompanyLevel(req.company._id);
-    return companyLevel.updateUpload({
-      size: incSize,
-      target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
-      target_id: req.document.posVal,
-    });
-  });
 }
 
 function updateField(field) {
