@@ -400,7 +400,7 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
         'groups.projects': project_id
       }, {
         $pull: {
-          'groups.*.projects': project_id,
+          'groups.$.projects': project_id,
         }
       }),
       db.task.find({project_id}, {
