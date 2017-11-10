@@ -676,7 +676,7 @@ function updateAttachment() {
                 if (task.attachments[a].equals(req.body.attachments[i])) {
                   flag = true;
                 }
-                if (a == task_attachment_length) {
+                if (a == task_attachment_length - 1) {
                   if (!flag) {
                     new_file.push(req.body.attachments[i]);
                   }
