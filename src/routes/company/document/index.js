@@ -126,9 +126,9 @@ api.post('/attachment/dir', (req, res, next) => {
   ])
   .then(([rootDir, attachment_dir]) => {
     if (attachment_dir) {
-      res.json();
+      res.json({});
     } else if (rootDir.parent_dir) {
-      res.json();
+      res.json({});
     } else {
       db.document.dir.insert(extra_dir)
       .then(extra => {
