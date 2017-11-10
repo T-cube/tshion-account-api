@@ -616,6 +616,7 @@ function updateAttachment() {
   return (req, res, next) => {
     validate('attachment', req.body);
     let need_update_attachments = req.body.attachments;
+    console.log(need_update_attachments);
     return db.task.findOne({
       _id: req.task._id
     })
@@ -674,8 +675,9 @@ function updateAttachment() {
           });
         }
         let new_task = updated_task.value;
-        return Promise.map(new_task.attachments, attachment => {
-          mapObjectIdToData(attachment || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(a => {
+        let as = new_task.attachments;
+        return Promise.map(as, attachment => {
+          return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(a => {
             if (a) {
               return attachFileUrls(req, a)
               .then(() => {
