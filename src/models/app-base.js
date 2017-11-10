@@ -155,7 +155,9 @@ export default class Base {
     _.extend(fileData, {
       name: file.originalname,
       company: company_id,
-      appid: this.getId(),
+      module: {
+        name: this.getId(),
+      },
       author: user_id,
       date_update: new Date(),
       date_create: new Date(),

@@ -92,9 +92,9 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   })
   .then(hash => {
     let doc = {
-      email: data.email || null,
+      email: data.email || '',
       email_verified: false,
-      mobile: data.mobile || null,
+      mobile: data.mobile || '',
       mobile_verified: type == C.USER_ID_TYPE.MOBILE,
       name: type == C.USER_ID_TYPE.MOBILE ? data.mobile : getEmailName(data.email),
       description: '',
