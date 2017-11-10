@@ -388,6 +388,12 @@ let constants = {
   NOTIFICATION_TYPE: {
     SYSTEM: 'system',
     TEAM: 'team',
+  },
+
+  GROUP_TYPE: {
+    ALL: 'all',
+    MINE: 'mine',
+    ARCHIVED: 'archived',
   }
 
 };
