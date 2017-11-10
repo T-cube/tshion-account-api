@@ -188,16 +188,21 @@ api.get('/:_task_id', (req, res, next) => {
     return fetchUserInfo(task, 'creator', 'assignee', 'checker', 'followers');
   })
   .then(task => {
-    return mapObjectIdToData(task.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
-      return Promise.map(task.attachments || [], attachment => {
-        if (attachment == null) {
-          attachment = {type: 'deleted'};
-          return Promise.resolve(attachment);
+    return Promise.map(task.attachments, attachment => {
+      return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype')
+      .then(a => {
+        if (a) {
+          return attachFileUrls(req, a)
+          .then(() => {
+            return a;
+          });
         } else {
-          return attachFileUrls(req, attachment);
+          return {_id:attachment, deleted: true};
         }
       });
-    }).then(() => {
+    })
+    .then(task_attachment_list => {
+      task.attachments = task_attachment_list;
       task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
       res.json(task);
     });
@@ -424,15 +429,22 @@ api.get('/:task_id/comment', (req, res, next) => {
   .then(data => {
     return fetchUserInfo(data, 'creator').then(() => {
       return Promise.map(data, comment => {
-        return mapObjectIdToData(comment.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
-          return Promise.map(comment.attachments || [], attachment => {
-            if (attachment == null) {
-              attachment = {type: 'deleted'};
-              return Promise.resolve(attachment);
+        return Promise.map(comment.attachments, attachment => {
+          return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype')
+          .then(a => {
+            if (a) {
+              return attachFileUrls(req, a)
+              .then(() => {
+                return a;
+              });
             } else {
-              return attachFileUrls(req, attachment);
+              return {_id:attachment, deleted: true};
             }
           });
+        })
+        .then(task_attachment_list => {
+          comment.attachments = task_attachment_list;
+          return comment;
         });
       }).then(() => {
         res.json(data || []);

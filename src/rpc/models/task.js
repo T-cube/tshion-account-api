@@ -2,14 +2,16 @@ import config from 'config';
 import db from 'lib/database';
 import { ObjectId,DBRef } from 'mongodb';
 import app from 'index';
-import { queue } from 'node-redis-queue-lh';
+import { queue } from '@ym/redis-queue';
 const options = { db:3 };
 
 export default class Task{
   constructor(query){
     this.db = db;
     this.config = config.sendTask.sms;
+    this.emailConfig = config.sendTask.email;
     this.client = new queue(options);
+    this.emailClient = new queue(options);//新建一个线程
   }
 
   findOneUser(id,cb){
@@ -43,13 +45,12 @@ export default class Task{
       params = returnData;
     }
     if(!pageInfo){
-      console.log('done this this');
       return this.db.queue.task.find(param,params);
     }else{
       const {page,pagesize} = pageInfo;
       return Promise.all([
         this.db.queue.task.count(param),
-        this.db.queue.task.find(param).skip(page*pagesize).limit(pagesize).sort({createTime:-1})
+        this.db.queue.task.find(param,params).skip(page*pagesize).limit(pagesize).sort({createTime:-1})
       ]).then(([count,tasks])=>{
         return {
           count,
@@ -76,7 +77,7 @@ export default class Task{
     });
   }
 
-  // 启动任务队列，当队列为空时线程挂起
+  // 启动短信任务队列，当队列为空时线程挂起
   startQueue(){
     let list = [this.config.listName];
     let timeout = this.config.timeout;
@@ -86,7 +87,7 @@ export default class Task{
         app.model('sms').sendSMSTask(task).then(data=>{
           console.log('data is',data);
           if(data.statusCode === 200){
-            this.updateTask({_id:ObjectId(task._id)},{$set:{status:1,message:data.message}}).then((result)=>{
+            this.updateTask({_id:ObjectId(task._id)},{$set:{status:1,message:data.message,smsIds:data.info.smsIds[0]}}).then((result)=>{
               this.startQueue();
             });
           }else{
@@ -99,9 +100,45 @@ export default class Task{
     });
   }
 
+// 启动邮件任务队列,当队列为空时线程挂起
+  startEmailQueue(){
+    let list = [this.emailConfig.listName];
+    let timeout = this.emailConfig.timeout;
+    this.emailClient.shift(list,timeout).then(task=>{
+      if(task && task.length){
+        task = JSON.parse(task[1]);
+        console.log('task',task);
+        app.model('email').queueSend(task).then(data=>{
+          console.log('done this');
+          console.log('data is',data);
+          if(data.statusCode === 200){
+            this.updateTask({_id:ObjectId(task._id)},{$set:{status:1,message:data.message,emailIds:data.info.emailIdList[0]}}).then(
+              (result)=>{
+                this.startEmailQueue();
+              }
+            );
+          }else{
+            this.updateTask({_id:ObjectId(task._id)},{$set:{status:-1,message:data.message}}).then((result)=>{
+              this.startEmailQueue();
+            });
+          }
+        });
+      }
+    }).catch(err=>{
+      throw new Error(500,err);
+    });
+  }
+
   // 加入任务队列
   addList(values){
     return this.client.add(this.config.listName,values);
   }
 
+  // 加入邮件任务队列
+  addEmailList(values){
+    values = values.map(value=>{
+      return JSON.stringify(value);
+    });
+    return this.emailClient.add(this.emailConfig.listName,values);
+  }
 }

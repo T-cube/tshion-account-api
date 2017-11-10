@@ -39,10 +39,6 @@ module.exports = {
       }
     },
   },
-  aes: {
-    'key': '6evT6DnWlbNG5711',
-    iv: '6evT6DnWlbNG5711'
-  },
   database: '127.0.0.1/tlf_core', // process.env.DATABASE
   locale: 'zh-CN',
   // list view config
@@ -314,8 +310,8 @@ module.exports = {
     expire_minutes: 30, // order expire
   },
   invoice: {
-    min_tax_free_amount: 100000, // free ship limit
-    tax_rate: 2000, // ship charge under limit
+    min_tax_free_amount: 100000,  // free ship limit
+    tax_rate: 2000,               // ship charge under limit
   },
   recharge: {
     amount: {
@@ -323,16 +319,17 @@ module.exports = {
       max: 500000,
     }
   },
-  sendTask: {
-    sms: {
-      listName: 'smsTask',
-      timeout: 0,
-      pageSize: 1000 //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
+  sendTask:{
+    sms:{
+      listName:'smsTask',
+      timeout:0,
+      pageSize:1000 //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
     },
-    email: {
-      listName: 'emailTask',
-      timeout: 0,
-      pageSize: 1000 //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
+    email:{
+      listName:'emailTask',
+      timeout:0,
+      pageSize:1000, //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
+      defaultModel:'tlifang_email_advert'
     }
   }
 };

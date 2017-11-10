@@ -169,20 +169,28 @@ let render = {
     };
   },
   [APP]: (extended) => {
-    let { target_type, from, action, date_create, activity, activity_approval, report } = extended;
+    let { target_type, from, action, date_create, activity, activity_approval, report, name, type } = extended;
     let remark;
     target_type = __(target_type);
     if (activity) {
-      action = __(action) + '活动';
+      action = __(action) + `${name}活动`;
       let activity_time = moment(activity.time_start).format('YYYY-MM-DD HH:mm');
       remark = `请于${activity_time}准时参加活动`;
     }
     if (activity_approval) {
-      action = __(action) + '活动审批';
+      action = __(action) + `${name}活动审批`;
       remark = '请及时完成审批工作。';
     }
     if (report) {
-      action = __(action) + '工作汇报';
+      let report_type;
+      if (type == 'day') {
+        report_type = '日报';
+      } else if (type == 'week') {
+        report_type = '周报';
+      } else if (type == 'month') {
+        report_type = '月报';
+      }
+      action = __(action) + `工作汇报-${report_type}`;
       remark = '请到T立方工作平台查看。';
     }
     return {
