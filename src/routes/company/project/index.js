@@ -68,6 +68,7 @@ api.get('/group', (req, res, next) => {
 });
 
 api.post('/group', (req, res, next) => {
+  req.body.projects = _.uniq(req.body.projects);
   validate('group', req.body, ['projects', 'type']);
   let projects = req.body.projects;
   db.project.group.findOne({
