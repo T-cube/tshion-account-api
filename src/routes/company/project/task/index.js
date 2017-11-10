@@ -188,9 +188,12 @@ api.get('/:_task_id', (req, res, next) => {
     return fetchUserInfo(task, 'creator', 'assignee', 'checker', 'followers');
   })
   .then(task => {
+    console.log(1111, task);
     return Promise.map(task.attachments, attachment => {
+      console.log(2222, attachment);
       return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype')
       .then(a => {
+        console.log(3333, a);
         if (a) {
           return attachFileUrls(req, a)
           .then(() => {
@@ -613,11 +616,11 @@ function updateAttachment() {
   return (req, res, next) => {
     validate('attachment', req.body);
     let need_update_attachments = req.body.attachments;
-    db.task.findOne({
+    return db.task.findOne({
       _id: req.task._id
     })
     .then(original_task => {
-      db.task.findOneAndUpdate({
+      return db.task.findOneAndUpdate({
         _id: req.task._id
       }, {
         $set: {
@@ -628,14 +631,6 @@ function updateAttachment() {
         returnNewDocument: true,
       })
       .then(updated_task => {
-        let new_task = updated_task.value;
-        mapObjectIdToData(new_task.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
-          return Promise.map(new_task.attachments || [], attachment => {
-            return attachFileUrls(req, attachment);
-          });
-        }).then(() => {
-          res.json(new_task);
-        });
         let old_remove_attachments = [];
         let new_add_attachments = [];
         if (!need_update_attachments.length && original_task.attachments.length) {
@@ -678,6 +673,23 @@ function updateAttachment() {
             list && list.length && addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
           });
         }
+        let new_task = updated_task.value;
+        return Promise.map(new_task.attachments, attachment => {
+          mapObjectIdToData(attachment || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(a => {
+            if (a) {
+              return attachFileUrls(req, a)
+              .then(() => {
+                return a;
+              });
+            } else {
+              return {_id:attachment, deleted: true};
+            }
+          });
+        })
+        .then(attachment_list => {
+          new_task.attachments = attachment_list;
+          res.json(new_task);
+        });
       })
       .catch(next);
     });
