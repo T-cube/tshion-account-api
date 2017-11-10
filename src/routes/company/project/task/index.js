@@ -189,7 +189,7 @@ api.get('/:_task_id', (req, res, next) => {
   })
   .then(task => {
     console.log(1111, task);
-    return Promise.map(task.attachments, attachment => {
+    return Promise.map(task.attachments || [] , attachment => {
       console.log(2222, attachment);
       return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype')
       .then(a => {
