@@ -46,23 +46,15 @@ api.get('/', (req, res, next) => {
 });
 
 api.get('/group', (req, res, next) => {
-  db.project.group.findOne({
+  db.project.group.find({
     user_id: req.user._id,
     company_id: req.company._id,
+  }, {
+    user_id: 0,
+    company_id: 0
   })
-  .then(doc => {
-    if (!doc) {
-      return db.project.group.insert({
-        company_id: req.company._id,
-        user_id: req.user._id,
-        groups:[]
-      })
-      .then(group => {
-        res.json(group);
-      });
-    } else {
-      res.json(doc);
-    }
+  .then(list => {
+    res.json(list);
   })
   .catch(next);
 });
@@ -71,61 +63,42 @@ api.post('/group', (req, res, next) => {
   req.body.projects = _.uniq(req.body.projects);
   validate('group', req.body, ['projects', 'type']);
   let projects = req.body.projects;
-  db.project.group.findOne({
+  db.project.group.updated({
     user_id: req.user._id,
     company_id: req.company._id,
-  })
-  .then(doc => {
-    let promise;
-    let names = _.pluck(_.filter(doc.groups, (group) => group.type == req.body.type), 'name');
-    let name = '新分组';
-    name = getUniqName(names, name);
-    if (doc && doc.groups) {
-      let groups = doc.groups;
-      promise = _checkExistProjectsReturnChange(req, groups, projects);
-    } else {
-      promise = Promise.resolve();
+  }, {
+    $pull: {
+      projects: projects
     }
-    return promise.then(() => db.project.group.findOneAndUpdate({
+  }, {
+    multi: true
+  })
+  .then(() => {
+    return db.project.group.remove({
       user_id: req.user._id,
       company_id: req.company._id,
-    }, {
-      $push: {
-        groups: {
-          _id: ObjectId(),
-          name: name,
-          projects: req.body.projects,
-          type: req.body.type,
-        }
+      'projects.0': {
+        $exists: false
       }
-    }, {
-      upsert: true,
-      returnOriginal: false,
-      returnNewDocument: true
+    });
+  })
+  .then(() => {
+    return db.project.group.find({
+      user_id: req.user._id,
+      company_id: req.company._id,
     })
-    .then(doc => {
-      let result = doc.value;
-      let pull_groups = [];
-      result.groups = result.groups.filter(item => {
-        if (!item.projects.length) {
-          pull_groups.push(item._id);
-        }
-        return item.projects.length;
-      });
-      res.json(result);
-      db.project.group.update({
-        user_id: req.user._id,
+    .then(list => {
+      let names = _.pluck(_.filter(list, (group) => group.type == req.body.type), 'name');
+      let name = '新分组';
+      name = getUniqName(names, name);
+      return db.project.group.insert({
+        name: name,
         company_id: req.company._id,
-      }, {
-        $pull: {
-          groups: {
-            _id: {
-              $in: pull_groups
-            }
-          }
-        }
+        user_id: req.user._id,
+        projects: req.body.projects,
+        type: req.body.type,
       });
-    }));
+    });
   })
   .catch(next);
 });
@@ -134,100 +107,79 @@ api.put('/group/:group_id', (req, res, next) => {
   validate('group', req.body, ['name', 'projects']);
   let projects = req.body.projects;
   let group_id = ObjectId(req.params.group_id);
-  db.project.group.findOne({
+  db.project.group.updated({
     user_id: req.user._id,
     company_id: req.company._id,
-  })
-  .then(original => {
-    let groups = original.groups;
-    let names = _.pluck(groups, names);
-    if (_.contains(names, req.body.name)) {
-      throw new ApiError('400', 'have_same_group_name');
+  }, {
+    $pull: {
+      projects: projects
     }
-    let promise = _checkExistProjectsReturnChange(req, groups, projects);
-    return promise.then(() => db.project.group.findOneAndUpdate({
+  }, {
+    multi: true
+  })
+  .then(() => {
+    return db.project.group.remove({
       user_id: req.user._id,
       company_id: req.company._id,
-      'groups._id': group_id
-    }, {
-      $set: {
-        'groups.$.name': req.body.name,
-        'groups.$.projects': req.body.projects
+      'projects.0': {
+        $exists: false
       }
+    });
+  })
+  .then(() => {
+    return db.project.group.findOneAndUpdate({
+      _id: group_id,
+      company_id: req.company._id,
+      user_id: req.user._id,
     }, {
+      $set: req.body
+    }, {
+      projection: {
+        projects: 1,
+        type: 1,
+        name: 1
+      },
       returnOriginal: false,
-      returnNewDocument: true
-    }))
+      returnNewDocument: true,
+    })
     .then(doc => {
-      let result = doc.value;
-      let pull_groups = [];
-      result.groups = result.groups.filter(item => {
-        if (!item.projects.length) {
-          pull_groups.push(item._id);
-        }
-        return item.projects.length;
-      });
-      res.json(result);
-      let target = _.findWhere(original.groups, {_id: group_id});
-      db.project.group.update({
-        user_id: req.user._id,
-        company_id: req.company._id,
-      }, {
-        $pull: {
-          groups: {
-            _id: {
-              $in: pull_groups
-            }
-          }
-        }
-      });
+      res.json(doc.value);
     });
   })
   .catch(next);
 });
 
 api.delete('/group/projects', (req, res, next) => {
-  validate('group', req.body, ['projects']);
-  let {projects} = req.body;
-  Promise.map(projects, project => {
-    return db.project.group.update({
+  validate('group', req.body, ['projects', 'type']);
+  db.project.group.update({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    type: req.body.type,
+  }, {
+    $pull: req.body.projects
+  }, {
+    multi: true
+  })
+  .then(() => {
+    return db.project.group.remove({
       user_id: req.user._id,
       company_id: req.company._id,
-      'groups.projects': project
-    }, {
-      $pull: {
-        'groups.$.projects': project
+      'projects.0': {
+        $exists: false
       }
     });
   })
   .then(() => {
-    return db.project.group.findOne({
+    return db.project.group.find({
       user_id: req.user._id,
       company_id: req.company._id,
-    })
-    .then(doc => {
-      let result = doc;
-      let pull_groups = [];
-      result.groups = result.groups.filter(item => {
-        if (!item.projects.length) {
-          pull_groups.push(item._id);
-        }
-        return item.projects.length;
-      });
-      res.json(result);
-      db.project.group.update({
-        user_id: req.user._id,
-        company_id: req.company._id,
-      }, {
-        $pull: {
-          groups: {
-            _id: {
-              $in: pull_groups
-            }
-          }
-        }
-      });
+    }, {
+      user_id: 0,
+      company_id: 0,
     });
+  })
+  .then(list => {
+    res.json(list);
   })
   .catch(next);
 });

@@ -12,6 +12,14 @@ const schema = {
       description: { type: 'string', optional: true, maxLength: 2000 },
     },
   },
+  remind: {
+    sanitization: {
+      status: { type: 'boolean' },
+    },
+    validation: {
+      status: { type: 'boolean' },      
+    }
+  },
   user_file: {
     sanitization: {
       sort_type: { type: 'string' },

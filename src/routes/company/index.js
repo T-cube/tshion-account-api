@@ -308,6 +308,36 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
     .then(() => res.json({}));
   }).catch(next);
 });
+
+api.put('/:company_id/remind/plan', (req, res, next) => {
+  validate('remind', req.body);
+  // if (!req.user._id.equals(req.company.owner)) {
+  //   throw new ApiError(400, 'no_owner_can_not_change');
+  // }
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.getPlanInfo(true)
+  .then(planInfo => {
+    if (planInfo.status != 'expired') {
+      res.json({});
+    } else {
+      return db.plan.company.update({
+        _id: req.company._id
+      }, {
+        $set: {
+          'current.close_plan_expired_remind': req.body.status
+        }
+      })
+      .then(() => {
+        return companyLevel.getPlanInfo(true)
+        .then(planInfo => {
+          res.json(planInfo);
+        });
+      });
+    }
+  })
+  .catch(next);
+});
+
 api.put('/:company_id/logo', (req, res, next) => {
   const data = {
     logo: cropAvatar(req),
