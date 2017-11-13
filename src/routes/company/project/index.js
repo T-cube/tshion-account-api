@@ -66,9 +66,12 @@ api.post('/group', (req, res, next) => {
   db.project.group.update({
     user_id: req.user._id,
     company_id: req.company._id,
+    type: req.body.type
   }, {
     $pull: {
-      projects: projects
+      projects: {
+        $in: req.body.projects
+      }
     }
   }, {
     multi: true
@@ -114,7 +117,7 @@ api.put('/group/:group_id', (req, res, next) => {
     user_id: req.user._id,
     company_id: req.company._id,
   }, {
-    $pull: {
+    $set: {
       projects: projects
     }
   }, {
@@ -159,7 +162,11 @@ api.delete('/group/projects', (req, res, next) => {
     user_id: req.user._id,
     type: req.body.type,
   }, {
-    $pull: req.body.projects
+    $pull: {
+      projects: {
+        $in: req.body.projects
+      }
+    }
   }, {
     multi: true
   })

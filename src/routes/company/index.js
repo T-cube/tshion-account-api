@@ -34,7 +34,6 @@ api.use(oauthCheck());
 // Get company list
 
 api.get('/test', (req, res, next) => {
-  console.log(req.originalUrl);
   res.json({});
 });
 api.get('/', (req, res, next) => {
@@ -317,13 +316,13 @@ api.put('/:company_id/remind/plan', (req, res, next) => {
   let companyLevel = new CompanyLevel(req.company._id);
   companyLevel.getPlanInfo(true)
   .then(planInfo => {
-    if (planInfo.status != 'expired') {
+    if (planInfo.status == 'actived') {
       res.json({});
     } else {
       let { close_plan_expired_remind, close_before_expired_remind } = req.body;
       let data;
-      close_before_expired_remind ? (data = { 'current.close_before_expired_remind': close_before_expired_remind }) : null;
-      close_plan_expired_remind ? (data = { 'current.close_plan_expired_remind': close_plan_expired_remind }) : null;
+      req.body.hasOwnProperty('close_before_expired_remind') ? (data = { 'current.close_before_expired_remind': close_before_expired_remind }) : null;
+      req.body.hasOwnProperty('close_plan_expired_remind') ? (data = { 'current.close_plan_expired_remind': close_plan_expired_remind }) : null;
       return db.plan.company.update({
         _id: req.company._id
       }, {
@@ -698,7 +697,7 @@ function createAppDir(company_id, user_id, root_id) {
           _id: root_id
         }, {
           $push: {
-            dirs: [app._id]
+            dirs: app._id
           }
         }),
         db.document.dir.update({

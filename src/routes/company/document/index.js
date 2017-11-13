@@ -58,7 +58,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
-      ['document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs'],
+      ['document.dir', 'name,date_update,updated_by,attachment_root_dir,attachment_dir', 'dirs'],
       ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
     ])
     .then(() => {
