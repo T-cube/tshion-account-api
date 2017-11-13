@@ -73,13 +73,16 @@ function access(req, res, next) {
   console.log(11111);
   let gettingWechatOauth;
   let whiteUrl;
-  if (/tlifang\.cn$/.test(req.headers.origin)) {
-    whiteUrl = req.headers.origin + '/';
-  }
   let { code, state } = req.query;
   let qs = '';
+  let whiteUrl_index;
   if (state) {
     qs = state.split('|').map((key, index) => {
+      if (key=='whiteurl') {
+        whiteUrl_index = index;
+      } else if(~whiteUrl_index && (index == whiteUrl_index + 1)) {
+        whiteUrl = key;
+      }
       if (index % 2 == 0) return `${key}=`;
       else return `${key}&`;
     }).join('');
