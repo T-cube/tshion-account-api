@@ -42,10 +42,16 @@ export default class Plan {
       && planInfo.current
       && _.find(planInfo.list, item => item._id.equals(planInfo.current._id));
     if (current) {
-      if (current.date_end > new Date()) {
+      let now = new Date();
+      let expire_days = this._calcExpireDays(now, current.date_end);
+      if (expire_days < -7) {
         return _.extend({}, current, {status: C.PLAN_STATUS.ACTIVED}, planInfo.current);
-      } else if (moment().diff(current.date_end, 'days', true) < config.get('plan.expire_days')) {
+      } else if (expire_days > -7 && expire_days < 0) {
+        return _.extend({}, current, {status: C.PLAN_STATUS.NEARDUE}, planInfo.current);
+      } else if (expire_days > 0 && expire_days < 7) {
         return _.extend({}, current, {status: C.PLAN_STATUS.OVERDUE}, planInfo.current);
+      } else if (expire_days > 7) {
+        return _.extend({}, current, {status: C.PLAN_STATUS.EXPIRED}, planInfo.current);
       } else if (showExpired) {
         return _.extend({}, current, {status: C.PLAN_STATUS.EXPIRED}, planInfo.current);
       }
@@ -55,6 +61,10 @@ export default class Plan {
       member_count: 0,
       status: null
     };
+  }
+
+  _calcExpireDays(now, expire_date) {
+    return moment(now).diff(moment(expire_date), 'days');
   }
 
   getPlanInfo() {

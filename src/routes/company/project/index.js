@@ -63,7 +63,7 @@ api.post('/group', (req, res, next) => {
   req.body.projects = _.uniq(req.body.projects);
   validate('group', req.body, ['projects', 'type']);
   let projects = req.body.projects;
-  db.project.group.updated({
+  db.project.group.update({
     user_id: req.user._id,
     company_id: req.company._id,
   }, {
@@ -97,6 +97,9 @@ api.post('/group', (req, res, next) => {
         user_id: req.user._id,
         projects: req.body.projects,
         type: req.body.type,
+      })
+      .then(group => {
+        res.json(group);
       });
     });
   })
@@ -107,7 +110,7 @@ api.put('/group/:group_id', (req, res, next) => {
   validate('group', req.body, ['name', 'projects']);
   let projects = req.body.projects;
   let group_id = ObjectId(req.params.group_id);
-  db.project.group.updated({
+  db.project.group.update({
     user_id: req.user._id,
     company_id: req.company._id,
   }, {
