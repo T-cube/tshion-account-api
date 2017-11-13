@@ -39,6 +39,10 @@ module.exports = {
       }
     },
   },
+  aes: {
+    'key': '6evT6DnWlbNG5711',
+    iv: '6evT6DnWlbNG5711'
+  },
   database: '127.0.0.1/tlf_core', // process.env.DATABASE
   locale: 'zh-CN',
   // list view config
