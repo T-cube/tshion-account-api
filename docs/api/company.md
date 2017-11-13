@@ -28,6 +28,17 @@ OUTPUT
 }...]
 ```
 
+### POST /company/:company_id/upload
+
+上传文件
+
+request body:
+```javascript
+{
+  name: String, // enum :  attendance, task
+}
+```
+
 ### GET /company/:company_id
 
 获取公司详情

@@ -183,6 +183,62 @@ OUTPUT:
 }...]
 ```
 
+### POST /attendance/outdoor/sign
+
+外勤签到
+
+```javascript
+{
+  location: {
+    latitude: Number
+    longitude: Number
+    address: String
+  },
+  content: String,
+  pic_record: [objectId...],
+}
+```
+
+### POST /attendance/upload
+
+图片上传
+
+OUTPUT:
+```javascript
+{
+  _id: objectId, // 在推到外勤签到pic_record数组中
+  ...
+}
+```
+
+### GET /attendance/outdoor
+
+获取外勤列表
+
+query:
+
+```javascript
+{
+  last_id: objectId //optional
+}
+```
+
+OUTPUT:
+```javascript
+[{
+  company: objectId,
+  user: { name: String, avatar: String },
+  pic_record: [{preview_url:String , download_url: String, thumbnail_url: String}],
+  date_create: Date,
+  content: String,
+  location: {
+    latitude: Number
+    longitude: Number
+    address: String
+  },  
+}...]
+```
+
 ## attendance audit
 
 ### POST /attendance/audit

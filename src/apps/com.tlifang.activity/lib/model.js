@@ -207,7 +207,7 @@ export default class Activity extends AppBase {
     });
   }
 
-  month({year, month, company_id}) {
+  month({year, month, company_id, user_id}) {
     let first_day = month ? moment([year, month - 1]).startOf('month').toDate() : moment().startOf('year').toDate();
     let last_day = month ? moment([year, month - 1]).endOf('month').toDate() : moment().endOf('year').toDate();
     return this.collection('item')
@@ -218,6 +218,26 @@ export default class Activity extends AppBase {
         $gte: first_day,
         $lt: last_day,
       },
+      $or: [
+        {
+          creator: user_id
+        },
+        {
+          assistants: user_id
+        },
+        {
+          followers: user_id
+        },
+        {
+          members: user_id
+        },
+        {
+          creator: user_id
+        },
+        {
+          is_public: true
+        }
+      ]
     }, {
       time_start: 1,
       time_end: 1,
@@ -280,6 +300,7 @@ export default class Activity extends AppBase {
             appid: req.app_center,
             activity_approval: approval._id,
             from: user_id,
+            activity_name: activity.name,
             to: room.manager,
             target_type: _C.OBJECT_TYPE.APP_ACTIVITY_APPROVAL,
             action: _C.ACTIVITY_ACTION.SUBMIT
@@ -352,6 +373,7 @@ export default class Activity extends AppBase {
                   appid: req.app_center,
                   activity_approval: approval._id,
                   from: user_id,
+                  activity_name: activity.name,
                   to: room.manager,
                   target_type: _C.OBJECT_TYPE.APP_ACTIVITY_APPROVAL,
                   action: _C.ACTIVITY_ACTION.SUBMIT
@@ -768,6 +790,9 @@ export default class Activity extends AppBase {
               company_id,
               'room._id': item._id,
               status: C.ACTIVITY_STATUS.CREATED,
+            }, {
+              time_start: 1,
+              time_end: 1,
             }),
             this.collection('item').find({
               time_start: {
@@ -777,6 +802,9 @@ export default class Activity extends AppBase {
               company_id,
               'room._id': item._id,
               status: C.ACTIVITY_STATUS.CREATED,
+            }, {
+              time_start: 1,
+              time_end: 1,
             }),
           ])
           .then(([today, tomorrow]) => {
@@ -806,20 +834,14 @@ export default class Activity extends AppBase {
         .find({
           'room._id': room_id,
           company_id,
-          time_start: { $lt: moment().startOf('day').toDate() },
-          status: C.ACTIVITY_STATUS.CREATED,
-        })
-        .sort({time_start: -1})
-        .limit(C.ACTIVITY_QUERY_LIMIT),
-        this.collection('item')
-        .find({
-          'room._id': room_id,
-          company_id,
           time_start: {
             $gt: moment().startOf('day').toDate(),
             $lt: moment().startOf('day').add(1, 'day').toDate(),
           },
           status: C.ACTIVITY_STATUS.CREATED,
+        }, {
+          time_start: 1,
+          time_end: 1
         })
         .sort({time_start: -1}),
         this.collection('item')
@@ -831,11 +853,13 @@ export default class Activity extends AppBase {
             $lt: moment().startOf('day').add(2, 'day').toDate(),
           },
           status: C.ACTIVITY_STATUS.CREATED,
+        }, {
+          time_start: 1,
+          time_end: 1
         })
         .sort({time_start: -1}),
         fetchUserInfo(room, 'manager')
-      ]).then(([past, now, tomorrow]) => {
-        room.past = past;
+      ]).then(([now, tomorrow]) => {
         room.now = now;
         room.tomorrow = tomorrow;
         return room;

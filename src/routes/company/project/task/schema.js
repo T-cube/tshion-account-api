@@ -90,15 +90,27 @@ const schema = {
         $objectId: 1,
         optional: true,
       },
+      attachments: {
+        type: 'array', optional: true,
+        items: { $objectId: 1 }
+      }
     },
   },
 
   comment: {
     sanitization: {
-      content: { type: 'string' }
+      content: { type: 'string', rules: ['trim'] },
+      attachments: {
+        type: 'array', optional: true,
+        items: { $objectId: 1 }
+      }
     },
     validation: {
-      content: { type: 'string', minLength: 2, maxLength: 1000 }
+      content: { type: 'string', minLength: 1, maxLength: 1000 },
+      attachments: {
+        type: 'array', optional: true,
+        items: { $objectId: 1 }
+      }
     },
   },
 
@@ -112,6 +124,25 @@ const schema = {
       status: { $enum: [C.TASK_STATUS.PROCESSING, C.TASK_STATUS.COMPLETED] },
     },
   },
+
+  attachment: {
+    sanitization: {
+      attachments: {
+        type: ['array', 'null'],
+        items: {
+          $objectId: 1,
+        }
+      }
+    },
+    validation: {
+      attachments: {
+        type: ['array', 'null'],
+        items: {
+          $objectId: 1,
+        }
+      }
+    }
+  }
 
 };
 

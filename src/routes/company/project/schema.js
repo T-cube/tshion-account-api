@@ -44,6 +44,36 @@ const schema = {
       content: {  type: 'string', optional: true },
     },
   },
+  upload: {
+    sanitization: {
+      name: { type: 'string' },
+    },
+    validation: {
+      name: { $enum: C.UPLOAD_TYPE },
+    }
+  },
+  group: {
+    sanitization: {
+      name: { type: 'string', rules: ['trim'] },
+      projects: {
+        type: ['array', 'null'],
+        items: {
+          $objectId: 1,
+        }
+      },
+      type: { $enum: C.GROUP_TYPE }
+    },
+    validation: {
+      name: { type: 'string', minLength: 1 },
+      projects: {
+        type: ['array', 'null'],
+        items: {
+          $objectId: 1,
+        }
+      },
+      type: { $enum: C.GROUP_TYPE }
+    }
+  }
 };
 
 export const validate = buildValidator(schema);

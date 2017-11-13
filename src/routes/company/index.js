@@ -105,6 +105,8 @@ api.post('/', (req, res, next) => {
       target_type: C.OBJECT_TYPE.COMPANY,
       company: company._id
     });
+    // create root dir include application dirs such as report, notebook , activity and so on
+    createRootDir(company._id, req.user._id);
     // init company level
     CompanyLevel.init(company._id);
     // add company to user
@@ -132,6 +134,36 @@ api.param('company_id', (req, res, next, id) => {
   })
   .catch(next);
 });
+
+
+api.post('/:company_id/upload',
+upload({type: 'attachment'}).single('document'),
+saveCdn('cdn-file'),
+(req, res, next) => {
+  validate('upload', req.body);
+  let file = req.file;
+  if (!file) {
+    throw new ApiError(400, 'file_not_upload');
+  }
+  let user_id = req.user._id;
+  let company_id = req.company._id;
+  let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+  _.extend(fileData, {
+    name: file.originalname,
+    company: company_id,
+    module: {
+      name: req.body.name,
+    },
+    author: user_id,
+    date_update: new Date(),
+    date_create: new Date(),
+    updated_by: user_id,
+  });
+  return db.user.file.insert(fileData).then(doc => {
+    return doc;
+  }).catch(next);
+});
+
 // Get company detail
 api.get('/:company_id', (req, res, next) => {
   const members = req.company.members;
@@ -424,13 +456,6 @@ api.post('/:company_id/exit', (req, res, next) => {
         $pull: { members: {_id: user_id} },
         $set: { structure: tree.object() },
       }),
-      db.project.update({
-        _id: {$in: projects},
-      }, {
-        $pull: { members: {_id: user_id} },
-      }, {
-        multi: true,
-      }),
       db.template.find({
         company_id: req.company._id,
         status: C.APPROVAL_STATUS.NORMAL,
@@ -541,6 +566,15 @@ api.get('/:company_id/invite', (req, res, next) => {
     });
   });
 });
+
+api.post('/:company_id/root/dir', (req, res, next) => {
+  let dir_id = ObjectId(req.body.root_id);
+  createAppDir(req.company._id, req.user._id, dir_id)
+  .then(doc => {
+    res.json(doc);
+  });
+});
+
 function _getIdIndex(last_id, list) {
   let id_index;
   for (let i = 0; i < list.length; i++) {
@@ -571,6 +605,74 @@ let ckeckAuth = (_module) => (req, res, next) => {
   })
   .catch(next);
 };
+
+function createRootDir (company_id, user_id) {
+  db.document.dir.insert({
+    company_id,
+    parent_dir: null,
+    name: '',
+    dirs: [],
+    files: []
+  })
+  .then(root => {
+    createAppDir(company_id, user_id, root._id);
+  });
+}
+
+function createAppDir(company_id, user_id, root_id) {
+  let date = new Date();
+  let app_dir = {
+    name: '应用附件',
+    parent_dir: root_id,
+    files: [],
+    dirs: [],
+    company_id,
+    updated_by: user_id,
+    date_update: date,
+    date_create: date,
+    path: [root_id],
+    attachment_dir: true,
+    attachment_root_dir: true
+  };
+  return db.document.dir.insert(app_dir)
+  .then(app => {
+    let base = {
+      parent_dir: app._id,
+      files: [],
+      dirs: [],
+      company_id,
+      updated_by: user_id,
+      date_create: date,
+      date_update: date,
+      path: [root_id, app._id],
+      attachment_dir: true
+    };
+    return Promise.all([
+      db.document.dir.insert(_.extend({}, base, {name: '活动', for: 'com.tlifang.activity'})),
+      db.document.dir.insert(_.extend({}, base, {name: '工作汇报', for: 'com.tlifang.report'})),
+    ])
+    .then(([activity, report]) => {
+      return Promise.all([
+        db.document.dir.update({
+          _id: root_id
+        }, {
+          $push: {
+            dirs: [app._id]
+          }
+        }),
+        db.document.dir.update({
+          _id: app._id
+        }, {
+          $set: {
+            dirs: [activity._id, report._id]
+          }
+        }),
+      ]);
+    });
+  });
+
+}
+
 api.use('/:company_id/project', ckeckAuth(MODULE_PROJECT), require('./project').default);
 api.use('/:company_id/task', ckeckAuth(MODULE_TASK), require('../task').default);
 api.use('/:company_id/document', ckeckAuth(MODULE_DOCUMENT), require('./document').default);

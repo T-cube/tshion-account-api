@@ -39,6 +39,7 @@ INPUT
   priority: <0,1,2,3>,         // 优先级别
   subtask: [<String>, ...],    // 子任务
   tags: [<ObjectId>, ...],        // 标签
+  attachments: [ObjectId,...]  // 附件objecid数组
 }
 ```
 
@@ -99,6 +100,17 @@ INPUT
 ```javascript
 {
   priority: <Int[Enum:0,1,2,3]>
+}
+```
+
+### PUT /task/:task_id/attachments
+
+更新任务附件
+
+INPUT
+```javascript
+{
+  attachments: [objectId,objectId,...], // 文件的id数组
 }
 ```
 

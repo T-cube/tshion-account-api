@@ -232,6 +232,60 @@ const schema = {
       department_id: { $objectId: 1, optional: true }
     },
   },
+  outdoorSign: {
+    sanitization: {
+      location: {
+        type: 'object',
+        properties: {
+          latitude: { type: 'number' },
+          longitude: { type: 'number' },
+          address: { type: 'string' },
+        }
+      },
+      content: { type: 'string', rules: ['trim'] },
+      pic_record: {
+        type: 'array',
+        items: { $objectId: 1 }
+      }
+    },
+    validation: {
+      location: {
+        type: 'object',
+        properties: {
+          latitude: { type: 'number', gte: -90, lte: 90 },
+          longitude: { type: 'number', gte: -180, lte: 180 },
+          address: { type: 'string', maxLength: 500 },
+        }
+      },
+      content: { type: 'string', minLength: 1 },
+      pic_record: {
+        type: 'array',
+        items: { $objectId: 1 }
+      }
+    }
+  },
+  outdoorQuery: {
+    sanitization: {
+      date_start: { $date: 1 },
+      date_end: { $date: 1 },
+      user_id: { $objectId: 1, optional: true }
+    },
+    validation: {
+      date_start: { $date: 1 },
+      date_end: { $date: 1 },
+      user_id: { $objectId: 1, optional: true }
+    }
+  },
+  outdoorList: {
+    sanitization: {
+      type: { type: 'string', optional: true },
+      last_id: { $objectId: 1, optional: true },
+    },
+    validation: {
+      type: { $enum: ['mine', 'all'], optional:true },
+      last_id: { $objectId: 1, optional: true },
+    }
+  }
 };
 
 export const validate = buildValidator(schema);
