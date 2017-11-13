@@ -14,10 +14,12 @@ const schema = {
   },
   remind: {
     sanitization: {
-      status: { type: 'boolean' },
+      close_plan_expired_remind: { type: 'boolean', optional: true },
+      close_before_expired_remind: { type: 'boolean', optional: true }
     },
     validation: {
-      status: { type: 'boolean' },      
+      close_plan_expired_remind: { type: 'boolean', optional: true },
+      close_before_expired_remind: { type: 'boolean', optional: true }
     }
   },
   user_file: {

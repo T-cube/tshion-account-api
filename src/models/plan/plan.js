@@ -43,11 +43,11 @@ export default class Plan {
       && _.find(planInfo.list, item => item._id.equals(planInfo.current._id));
     if (current) {
       if (current.date_end > new Date()) {
-        return _.extend({}, current, {status: C.PLAN_STATUS.ACTIVED});
+        return _.extend({}, current, {status: C.PLAN_STATUS.ACTIVED}, planInfo.current);
       } else if (moment().diff(current.date_end, 'days', true) < config.get('plan.expire_days')) {
-        return _.extend({}, current, {status: C.PLAN_STATUS.OVERDUE});
+        return _.extend({}, current, {status: C.PLAN_STATUS.OVERDUE}, planInfo.current);
       } else if (showExpired) {
-        return _.extend({}, current, {status: C.PLAN_STATUS.EXPIRED});
+        return _.extend({}, current, {status: C.PLAN_STATUS.EXPIRED}, planInfo.current);
       }
     }
     return {

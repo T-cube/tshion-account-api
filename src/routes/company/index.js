@@ -311,27 +311,26 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
 
 api.put('/:company_id/remind/plan', (req, res, next) => {
   validate('remind', req.body);
-  // if (!req.user._id.equals(req.company.owner)) {
-  //   throw new ApiError(400, 'no_owner_can_not_change');
-  // }
+  if (!req.user._id.equals(req.company.owner)) {
+    throw new ApiError(400, 'no_owner_can_not_change');
+  }
   let companyLevel = new CompanyLevel(req.company._id);
   companyLevel.getPlanInfo(true)
   .then(planInfo => {
     if (planInfo.status != 'expired') {
       res.json({});
     } else {
+      let { close_plan_expired_remind, close_before_expired_remind } = req.body;
+      let data;
+      close_before_expired_remind ? (data = { 'current.close_before_expired_remind': close_before_expired_remind }) : null;
+      close_plan_expired_remind ? (data = { 'current.close_plan_expired_remind': close_plan_expired_remind }) : null;
       return db.plan.company.update({
         _id: req.company._id
       }, {
-        $set: {
-          'current.close_plan_expired_remind': req.body.status
-        }
+        $set: data
       })
       .then(() => {
-        return companyLevel.getPlanInfo(true)
-        .then(planInfo => {
-          res.json(planInfo);
-        });
+        res.json({});
       });
     }
   })
@@ -598,11 +597,23 @@ api.get('/:company_id/invite', (req, res, next) => {
 });
 
 api.post('/:company_id/root/dir', (req, res, next) => {
-  let dir_id = ObjectId(req.body.root_id);
-  createAppDir(req.company._id, req.user._id, dir_id)
+  let root_id = ObjectId(req.body.root_id);
+  db.document.dir.findOne({
+    parent_dir: root_id,
+    attachment_dir: true,
+    attachment_root_dir: true
+  })
   .then(doc => {
-    res.json(doc);
-  });
+    if (doc) {
+      res.json(doc);
+    } else {
+      createAppDir(req.company._id, req.user._id, root_id)
+      .then(doc => {
+        res.json(doc);
+      });
+    }
+  })
+  .catch(next);
 });
 
 function _getIdIndex(last_id, list) {
