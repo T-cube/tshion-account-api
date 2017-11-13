@@ -110,27 +110,20 @@ api.post('/group', (req, res, next) => {
 });
 
 api.put('/group/:group_id', (req, res, next) => {
-  validate('group', req.body, ['name', 'projects']);
+  validate('group', req.body, ['name', 'projects', 'type']);
   let projects = req.body.projects;
   let group_id = ObjectId(req.params.group_id);
+  let result;
   db.project.group.update({
     user_id: req.user._id,
     company_id: req.company._id,
+    type: req.body.type,
   }, {
-    $set: {
-      projects: projects
+    $pull: {
+      projects: {$in:projects}
     }
   }, {
     multi: true
-  })
-  .then(() => {
-    return db.project.group.remove({
-      user_id: req.user._id,
-      company_id: req.company._id,
-      'projects.0': {
-        $exists: false
-      }
-    });
   })
   .then(() => {
     return db.project.group.findOneAndUpdate({
@@ -149,8 +142,21 @@ api.put('/group/:group_id', (req, res, next) => {
       returnNewDocument: true,
     })
     .then(doc => {
-      res.json(doc.value);
+      result = doc.value;
+      return null;
     });
+  })
+  .then(() => {
+    return db.project.group.remove({
+      user_id: req.user._id,
+      company_id: req.company._id,
+      'projects.0': {
+        $exists: false
+      }
+    });
+  })
+  .then(() => {
+    res.json(result);
   })
   .catch(next);
 });
