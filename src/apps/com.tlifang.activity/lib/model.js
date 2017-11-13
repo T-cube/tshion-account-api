@@ -300,6 +300,7 @@ export default class Activity extends AppBase {
             appid: req.app_center,
             activity_approval: approval._id,
             from: user_id,
+            activity_name: activity.name,
             to: room.manager,
             target_type: _C.OBJECT_TYPE.APP_ACTIVITY_APPROVAL,
             action: _C.ACTIVITY_ACTION.SUBMIT
@@ -372,6 +373,7 @@ export default class Activity extends AppBase {
                   appid: req.app_center,
                   activity_approval: approval._id,
                   from: user_id,
+                  activity_name: activity.name,
                   to: room.manager,
                   target_type: _C.OBJECT_TYPE.APP_ACTIVITY_APPROVAL,
                   action: _C.ACTIVITY_ACTION.SUBMIT
