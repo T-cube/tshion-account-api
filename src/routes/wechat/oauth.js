@@ -94,7 +94,7 @@ function access(req, res, next) {
     gettingWechatOauth = new Promise((resolve, reject) => {
       wechatOAuthClient.getAccessToken(code, (err, result) => {
         if (!result || !result.data) {
-          reject(oauthInfoErr);
+          return reject(oauthInfoErr);
         }
         resolve(result.data);
       });
@@ -137,7 +137,7 @@ function access(req, res, next) {
                 return new Promise((resolve, reject) => {
                   wechatOAuthClient.getUser(openid, (err, userInfo) => {
                     if (err) {
-                      reject(err);
+                      return reject(err);
                     }
                     resolve(userInfo);
                   });
