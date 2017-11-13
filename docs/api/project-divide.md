@@ -108,7 +108,7 @@ request_body:
 }
 ```
 
-### DELETE /
+### DELETE /projects
 
 移除组外
 
