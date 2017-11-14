@@ -106,7 +106,7 @@ api.post('/', (req, res, next) => {
       company: company._id
     });
     // create root dir include application dirs such as report, notebook , activity and so on
-    createRootDir(company._id, req.user._id);
+    // createRootDir(company._id, req.user._id);
     // init company level
     CompanyLevel.init(company._id);
     // add company to user
