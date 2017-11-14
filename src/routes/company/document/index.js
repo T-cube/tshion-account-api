@@ -46,7 +46,12 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   .then(doc => {
     if (!doc) {
       if (!condition._id && null == condition.parent_dir) {
-        return createRootDir(condition, req.user._id)
+        _.extend(condition, {
+          name: '',
+          dirs: [],
+          files: [],
+        });
+        return db.document.dir.insert(condition)
         .then(data => {
           return fetchCompanyMemberInfo(req.company, data, 'updated_by', 'files.updated_by', 'dirs.updated_by');
         });
