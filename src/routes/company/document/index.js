@@ -33,6 +33,7 @@ api.use((req, res, next) => {
 });
 
 api.get('/dir/:dir_id?', (req, res, next) => {
+  console.log(123456789);
   let { search, thumb_size } = req.query;
   let condition = {
     [req.document.posKey]: req.document.posVal
@@ -65,6 +66,7 @@ api.get('/dir/:dir_id?', (req, res, next) => {
       return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
     })
     .then(() => {
+      console.log(1111,doc);
       let root_dir_index;
       for (var i = 0; i < doc.dirs.length; i++) {
         if (doc.dirs[i].attachment_root_dir) {
@@ -72,13 +74,13 @@ api.get('/dir/:dir_id?', (req, res, next) => {
           break;
         }
       }
-      if (root_dir_index) {
+      if (root_dir_index !== undefined) {
         return db.document.dir.findOne({
           _id: doc.dirs[i]._id,
         })
         .then(root_dir => {
           doc.dirs[i].children_dir = root_dir.dirs;
-          return mapObjectIdToData(doc.dirs[i], ['document.dir', 'attachment_dir,for,name', 'children_dir']);
+          return mapObjectIdToData(doc.dirs[i].children_dir, 'document.dir', 'attachment_dir,for,name');
         });
       } else {
         return null;
@@ -99,6 +101,7 @@ api.get('/tree', (req, res, next) => {
   let condition = {
     [req.document.posKey]: req.document.posVal
   };
+  console.log(condition);
   db.document.dir.find(condition)
   // .then(dirs => {
   //   if (dirs.length == 0) {

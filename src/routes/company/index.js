@@ -7,7 +7,7 @@ import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
 import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { time, mapObjectIdToData, strToReg } from 'lib/utils';
+import { time, mapObjectIdToData, strToReg, fetchCompanyMemberInfo } from 'lib/utils';
 import { validate } from './schema';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
@@ -105,7 +105,7 @@ api.post('/', (req, res, next) => {
       company: company._id
     });
     // create root dir include application dirs such as report, notebook , activity and so on
-    createRootDir(company._id, req.user._id);
+    createRootDir(company._id, req.user._id, req.company);
     // init company level
     CompanyLevel.init(company._id);
     // add company to user
@@ -606,7 +606,7 @@ api.post('/:company_id/root/dir', (req, res, next) => {
     if (doc) {
       res.json(doc);
     } else {
-      createAppDir(req.company._id, req.user._id, root_id)
+      createAppDir(req.company._id, req.user._id, root_id, req.company)
       .then(doc => {
         res.json(doc);
       });
@@ -646,7 +646,7 @@ let ckeckAuth = (_module) => (req, res, next) => {
   .catch(next);
 };
 
-function createRootDir (company_id, user_id) {
+function createRootDir (company_id, user_id, company) {
   db.document.dir.insert({
     company_id,
     parent_dir: null,
@@ -655,11 +655,11 @@ function createRootDir (company_id, user_id) {
     files: []
   })
   .then(root => {
-    createAppDir(company_id, user_id, root._id);
+    createAppDir(company_id, user_id, root._id, company);
   });
 }
 
-function createAppDir(company_id, user_id, root_id) {
+function createAppDir(company_id, user_id, root_id, company) {
   let date = new Date();
   let app_dir = {
     name: '应用附件',
@@ -708,6 +708,26 @@ function createAppDir(company_id, user_id, root_id) {
           }
         }),
       ]);
+    })
+    .then(() => {
+      return db.document.dir.findOne({
+        _id: app._id
+      }, {
+        updated_by: 1,
+        name: 1,
+        date_update: 1,
+        attachment_dir: 1,
+        attachment_root_dir: 1,
+        dirs: 1,
+      })
+      .then(result => {
+        result.children_dir = result.dirs;
+        delete result.dirs;
+        return mapObjectIdToData(result.children_dir, 'document.dir', 'attachment_dir,for,name')
+        .then(() => {
+          return fetchCompanyMemberInfo(company, result, 'updated_by', 'children_dir.updated_by');
+        });
+      });
     });
   });
 
