@@ -193,14 +193,10 @@ api.post('/dir', (req, res, next) => {
           _id: path[1]
         }, {
           attachment_root_dir: 1,
-          attachment_dir: 1,
         })
         .then(doc => {
           if (doc.attachment_root_dir) {
             throw new ApiError(400, 'can_not_create_dir_in_root_attachment_dir');
-          }
-          if (doc.attachment_dir) {
-            _.extend(data, {attachment_dir_file: true});
           }
           data.path = path;
         });
@@ -480,18 +476,21 @@ saveCdn('cdn-file'),
   }
   getParentPaths(dir_id)
   .then(path => {
-    if (path[1]) {
-      return db.document.dir.findOne({
-        _id: path[1]
-      })
-      .then(doc => {
-        if (doc.attachment_dir) {
-          return _uploadFileOpreation(req, data, dir_id, path, true);
-        }
-        _uploadFileOpreation(req, data, dir_id, path, false);
+    return _.map(req.files, file => {
+      let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+      _.extend(fileData, {
+        [req.document.posKey]: req.document.posVal,
+        dir_id: dir_id,
+        name: file.originalname,
+        author: req.user._id,
+        date_update: new Date(),
+        date_create: new Date(),
+        updated_by: req.user._id,
+        dir_path: path,
+        path: undefined,
       });
-    }
-    _uploadFileOpreation(req, data, dir_id, path, false);
+      data.push(fileData);
+    });
   })
   .then(() => createFile(req, data, dir_id))
   .then(files => {
@@ -522,35 +521,22 @@ api.post('/move', (req, res, next) => {
   if (findObjectIdIndex(dirs, dest_dir) >= 0) {
     throw new ApiError(400, 'invalid_dest_dir');
   }
-  Promise.all([
-    db.document.dir.findOne({
-      _id: dest_dir
+  let ignore_dirs = [];
+  Promise.map(moveInfo.dirs, dir => {
+    return db.document.dir.findOne({
+      _id: dir
     }, {
       attachment_root_dir: 1,
-      attachment_dir: 1,
-    }),
-    db.document.dir.findOne({
-      _id: original_dir
-    }, {
-      attachment_root_dir: 1,
-      attachment_dir: 1,
+      attachment_dir: 1
     })
-    .then(original_dir => {
-      if (original_dir.attachment_root_dir || original_dir.attachment_dir) {
-        return { success: false, description: 'attachment_dir_can_not_move' };
-      } else {
-        return { success: true };
+    .then(doc => {
+      if (doc.attachment_dir || doc.attachment_root_dir) {
+        ignore_dirs.push(dir);
       }
-    })
-  ])
-  .then(([dest,ori]) => {
-    attachment_dir_flag = dest.attachment_dir ? true : false;
-    if (dest.attachment_root_dir) {
-      throw new ApiError(400, 'can_not_move_to_root_attachment_dir');
-    }
-    if (!ori.success) {
-      throw new ApiError(400, ori.description);
-    }
+    });
+  })
+  .then(() => {
+    moveInfo.dirs = moveInfo.dirs.filter(item => !~ignore_dirs.findIndex(child => child.equals(item)));
   })
   .then(() => mapObjectIdToData(moveInfo, [
     ['document.dir', `name,files,parent_dir,dirs,path,${req.document.posKey}`, 'dest_dir'],
@@ -560,7 +546,10 @@ api.post('/move', (req, res, next) => {
   .then(() => {
     parent_dir = uniqObjectIdArray(moveInfo.dirs.map(dir => dir.parent_dir).concat(moveInfo.files.map(file => file.dir_id)));
     if (parent_dir.length != 1) {
-      throw new ApiError(400);
+      if (ignore_dirs.length) {
+        throw res.json({dirs_include_attachment_dir: true});
+      }
+      throw res.json({});
     }
     parent_dir = parent_dir[0];
     let filter = item => (!!item && item[req.document.posKey].equals(req.document.posVal));
