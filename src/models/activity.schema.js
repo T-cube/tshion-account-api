@@ -17,6 +17,7 @@ export let validation = {
   tag: { type: 'object', optional: true },
   approval_item: { $objectId: 1, optional: true },
   approval_template: { $objectId: 1, optional: true },
+  approval_auto_template: { $objectId: 1, optional: true },
   document_dir: { type: ['object', 'array'], optional: true },
   document_file: { type: ['object', 'array'], optional: true },
   document_path: { type: ['object', 'array'], optional: true },
