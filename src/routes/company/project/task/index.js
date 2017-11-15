@@ -429,7 +429,7 @@ api.get('/:task_id/comment', (req, res, next) => {
   .then(data => {
     return fetchUserInfo(data, 'creator').then(() => {
       return Promise.map(data, comment => {
-        return Promise.map(comment.attachments, attachment => {
+        return Promise.map(comment.attachments || [], attachment => {
           return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype')
           .then(a => {
             if (a) {

@@ -219,8 +219,8 @@ api.post('/dir', (req, res, next) => {
           }
           if (doc.attachment_dir) {
             _.extend(data, {attachment_dir_file: true});
-            data.path = path;
           }
+          data.path = path;
         });
       } else {
         data.path = path;
