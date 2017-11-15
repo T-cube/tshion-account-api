@@ -456,7 +456,7 @@ api.post('/:company_id/exit', (req, res, next) => {
         $pull: { members: {_id: user_id} },
         $set: { structure: tree.object() },
       }),
-      db.template.find({
+      db.approval.template.find({
         company_id: req.company._id,
         status: C.APPROVAL_STATUS.NORMAL,
         'steps.approver._id': req.user._id,
