@@ -169,6 +169,7 @@ let constants = {
     APP_ACTIVITY_APPROVAL: 'app.activity.approval',
     APPROVAL_ITEM: 'approval.item',
     APPROVAL_TEMPLATE: 'approval.template',
+    APPROVAL_AUTO_TEMPLATE: 'approval.auto.template',
     ATTENDANCE: 'attendance',
     ATTENDANCE_SIGN_DATA: 'attendance.sign.data',
     ATTENDANCE_OUTDOOR: 'attendance.outdoor',
