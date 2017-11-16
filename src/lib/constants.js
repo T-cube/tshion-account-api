@@ -303,6 +303,7 @@ let constants = {
     ACTIVED: 'actived',
     EXPIRED: 'expired',
     OVERDUE: 'overdue',
+    NEARDUE: 'neardue',
   },
   AUTH_STATUS: {
     POSTED: 'posted',
