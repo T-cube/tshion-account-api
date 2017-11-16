@@ -29,7 +29,7 @@ const schema={
       year: { type: 'integer', gte: 1970, code: 'invalid_year' },
       month: { type: 'integer', gte: 1, lte: 12, code: 'invalid_month', optional: true },
     }
-  },  
+  },
   annual: {
     sanitization: {
       year: { type: 'integer' },
@@ -172,15 +172,7 @@ const schema={
       attachments: {
         type: 'array',
         optional: true,
-        items: {
-          type: 'object',
-          optional: true,
-          properties: {
-            _id: { $objectId: 1 },
-            name: { type: 'string' },
-            url: { type: 'string' },
-          }
-        }
+        items: { $objectId: 1 }
       },
       sign_in_require: { type: 'boolean' },
       loop: { type: 'boolean' },
@@ -237,15 +229,7 @@ const schema={
       attachments: {
         type: 'array',
         optional: true,
-        items: {
-          type: 'object',
-          optional: true,
-          properties: {
-            _id: { $objectId: 1 },
-            name: { type: 'string' },
-            url: { type: 'string' },
-          }
-        }
+        items: { $objectId: 1 }
       },
       sign_in_require: { type: 'boolean' },
       loop: { type: 'boolean' },
@@ -305,15 +289,7 @@ const schema={
       attachments: {
         type: 'array',
         optional: true,
-        items: {
-          type: 'object',
-          optional: true,
-          properties: {
-            _id: { $objectId: 1 },
-            name: { type: 'string' },
-            url: { type: 'string' },
-          }
-        }
+        items: { $objectId: 1 }
       },
       sign_in_require: { type: 'boolean', optional: true },
       loop: { type: 'boolean', optional: true },
@@ -374,15 +350,7 @@ const schema={
       attachments: {
         type: 'array',
         optional: true,
-        items: {
-          type: 'object',
-          optional: true,
-          properties: {
-            _id: { $objectId: 1 },
-            name: { type: 'string' },
-            url: { type: 'string' },
-          }
-        }
+        items: { $objectId: 1 }
       },
       sign_in_require: { type: 'boolean', optional: true },
       loop: { type: 'boolean', optional: true },
