@@ -166,8 +166,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   .then(template => {
     res.json(template);
     return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-      approval_template: template._id,
-      company: null
+      approval_auto_template: template._id,
     });
   })
   .catch(next);
@@ -451,6 +450,9 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
         })
         .then(auto => {
           res.json(auto.value);
+          addActivity(req, C.ACTIVITY_ACTION.DELETE, {
+            approval_auto_template: auto.value._id
+          });
         });
       });
     }
@@ -461,7 +463,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
 function addActivity(req, action, data) {
   let info = {
     action: action,
-    target_type: C.OBJECT_TYPE.APPROVAL_TEMPLATE,
+    target_type: data.approval_template ? C.OBJECT_TYPE.APPROVAL_TEMPLATE : C.OBJECT_TYPE.APPROVAL_AUTO_TEMPLATE,
     company: req.company._id,
     creator: req.user._id,
   };

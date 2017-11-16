@@ -46,7 +46,12 @@ api.get('/dir/:dir_id?', (req, res, next) => {
   .then(doc => {
     if (!doc) {
       if (!condition._id && null == condition.parent_dir) {
-        return createRootDir(condition, req.user._id)
+        _.extend(condition, {
+          name: '',
+          dirs: [],
+          files: [],
+        });
+        return db.document.dir.insert(condition)
         .then(data => {
           return fetchCompanyMemberInfo(req.company, data, 'updated_by', 'files.updated_by', 'dirs.updated_by');
         });
@@ -58,11 +63,31 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
-      ['document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs'],
+      ['document.dir', 'name,date_update,updated_by,attachment_root_dir,attachment_dir', 'dirs'],
       ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
     ])
     .then(() => {
       return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+    })
+    .then(() => {
+      let root_dir_index;
+      for (var i = 0; i < doc.dirs.length; i++) {
+        if (doc.dirs[i].attachment_root_dir) {
+          root_dir_index = i;
+          break;
+        }
+      }
+      if (root_dir_index !== undefined) {
+        return db.document.dir.findOne({
+          _id: doc.dirs[i]._id,
+        })
+        .then(root_dir => {
+          doc.dirs[i].children_dir = root_dir.dirs;
+          return mapObjectIdToData(doc.dirs[i].children_dir, 'document.dir', 'attachment_dir,for,name');
+        });
+      } else {
+        return null;
+      }
     })
     .then(() => {
       return Promise.map(doc.files, file => {
@@ -114,11 +139,21 @@ api.post('/attachment/dir', (req, res, next) => {
     path: [dir_id],
     attachment_dir: true,
   };
-  db.document.dir.findOne({
-    _id: dir_id
-  }).then(rootDir => {
-    if (rootDir.parent_dir) {
-      res.json();
+  Promise.all([
+    db.document.dir.findOne({
+      _id: dir_id
+    }),
+    db.document.dir.findOne({
+      company_id: req.company._id,
+      project_id: req.project._id,
+      attachment_dir: true
+    })
+  ])
+  .then(([rootDir, attachment_dir]) => {
+    if (attachment_dir) {
+      res.json({});
+    } else if (rootDir.parent_dir) {
+      res.json({});
     } else {
       db.document.dir.insert(extra_dir)
       .then(extra => {
@@ -173,25 +208,17 @@ api.post('/dir', (req, res, next) => {
       if (path.length > max_dir_path_length) {
         throw new ApiError(400, 'folder_path_too_long');
       }
-      if (path[1]) {
-        return db.document.dir.findOne({
-          _id: path[1]
-        }, {
-          attachment_root_dir: 1,
-          attachment_dir: 1,
-        })
-        .then(doc => {
-          if (doc.attachment_root_dir) {
-            throw new ApiError(400, 'can_not_create_dir_in_root_attachment_dir');
-          }
-          if (doc.attachment_dir) {
-            _.extend(data, {attachment_dir_file: true});
-            data.path = path;
-          }
-        });
-      } else {
+      return db.document.dir.findOne({
+        _id: data.parent_dir
+      }, {
+        attachment_root_dir: 1,
+      })
+      .then(doc => {
+        if (doc.attachment_root_dir) {
+          throw new ApiError(400, 'can_not_create_dir_in_root_attachment_dir');
+        }
         data.path = path;
-      }
+      });
     });
   })
   .then(() => {
@@ -418,7 +445,15 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     mimetype: 'text/plain',
     size: Buffer.byteLength(data.content, 'utf8'),
   });
-  return req.model('html-helper').sanitize(data.content)
+  return db.document.dir.findOne({
+    _id: dir_id
+  })
+  .then(target_dir => {
+    if (target_dir.attachment_root_dir) {
+      throw new ApiError(400, 'can_not_upload_file_in_attachement_root_dir');
+    }
+    return req.model('html-helper').sanitize(data.content);
+  })
   .then(content => {
     data.content = content;
     return getParentPaths(dir_id);
@@ -438,22 +473,9 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/dir/:dir_id/upload', (req, res, next) => {
-  let file_size = parseInt(req.headers['content-length']);
-  let companyLevel = new CompanyLevel(req.company._id);
-  return companyLevel.canUpload(file_size).then(info => {
-    if (!info.ok) {
-      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
-        throw new ApiError(400, 'over_storage');
-      }
-      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
-        throw new ApiError(400, 'file_too_large');
-      }
-    }
-    next();
-  })
-  .catch(next);
-},
+api.post('/dir/:dir_id/upload',
+_checkFileSize(),
+_checkFileDir(),
 upload({type: 'attachment'}).array('document'),
 saveCdn('cdn-file'),
 (req, res, next) => {
@@ -465,18 +487,21 @@ saveCdn('cdn-file'),
   }
   getParentPaths(dir_id)
   .then(path => {
-    if (path[1]) {
-      return db.document.dir.findOne({
-        _id: path[1]
-      })
-      .then(doc => {
-        if (doc.attachment_dir) {
-          return _uploadFileOpreation(req, data, dir_id, path, true);
-        }
-        _uploadFileOpreation(req, data, dir_id, path, false);
+    return _.map(req.files, file => {
+      let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+      _.extend(fileData, {
+        [req.document.posKey]: req.document.posVal,
+        dir_id: dir_id,
+        name: file.originalname,
+        author: req.user._id,
+        date_update: new Date(),
+        date_create: new Date(),
+        updated_by: req.user._id,
+        dir_path: path,
+        path: undefined,
       });
-    }
-    _uploadFileOpreation(req, data, dir_id, path, false);
+      data.push(fileData);
+    });
   })
   .then(() => createFile(req, data, dir_id))
   .then(files => {
@@ -507,35 +532,30 @@ api.post('/move', (req, res, next) => {
   if (findObjectIdIndex(dirs, dest_dir) >= 0) {
     throw new ApiError(400, 'invalid_dest_dir');
   }
-  Promise.all([
-    db.document.dir.findOne({
-      _id: dest_dir
-    }, {
-      attachment_root_dir: 1,
-      attachment_dir: 1,
-    }),
-    db.document.dir.findOne({
-      _id: original_dir
-    }, {
-      attachment_root_dir: 1,
-      attachment_dir: 1,
-    })
-    .then(original_dir => {
-      if (original_dir.attachment_root_dir || original_dir.attachment_dir) {
-        return { success: false, description: 'attachment_dir_can_not_move' };
-      } else {
-        return { success: true };
-      }
-    })
-  ])
-  .then(([dest,ori]) => {
-    attachment_dir_flag = dest.attachment_dir ? true : false;
+  let ignore_dirs = [];
+  db.document.dir.findOne({
+    _id: dest_dir
+  })
+  .then(dest => {
     if (dest.attachment_root_dir) {
       throw new ApiError(400, 'can_not_move_to_root_attachment_dir');
     }
-    if (!ori.success) {
-      throw new ApiError(400, ori.description);
-    }
+    return Promise.map(moveInfo.dirs, dir => {
+      return db.document.dir.findOne({
+        _id: dir
+      }, {
+        attachment_root_dir: 1,
+        attachment_dir: 1
+      })
+      .then(doc => {
+        if (doc.attachment_dir || doc.attachment_root_dir) {
+          ignore_dirs.push(dir);
+        }
+      });
+    });
+  })
+  .then(() => {
+    moveInfo.dirs = moveInfo.dirs.filter(item => !~ignore_dirs.findIndex(child => child.equals(item)));
   })
   .then(() => mapObjectIdToData(moveInfo, [
     ['document.dir', `name,files,parent_dir,dirs,path,${req.document.posKey}`, 'dest_dir'],
@@ -545,7 +565,10 @@ api.post('/move', (req, res, next) => {
   .then(() => {
     parent_dir = uniqObjectIdArray(moveInfo.dirs.map(dir => dir.parent_dir).concat(moveInfo.files.map(file => file.dir_id)));
     if (parent_dir.length != 1) {
-      throw new ApiError(400);
+      if (ignore_dirs.length) {
+        throw res.json({dirs_include_attachment_dir: true});
+      }
+      throw res.json({});
     }
     parent_dir = parent_dir[0];
     let filter = item => (!!item && item[req.document.posKey].equals(req.document.posVal));
@@ -1042,6 +1065,41 @@ function _uploadFileOpreation(req, data, dir_id, path, attachment_check) {
     }
     data.push(fileData);
   });
+}
+
+function _checkFileSize() {
+  return (req, res, next) => {
+    let file_size = parseInt(req.headers['content-length']);
+    let companyLevel = new CompanyLevel(req.company._id);
+    return companyLevel.canUpload(file_size).then(info => {
+      if (!info.ok) {
+        if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
+          throw new ApiError(400, 'over_storage');
+        }
+        if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
+          throw new ApiError(400, 'file_too_large');
+        }
+      }
+      next();
+    })
+    .catch(next);
+  };
+}
+
+function _checkFileDir() {
+  return (req, res, next) => {
+    let dir_id = ObjectId(req.params.dir_id);
+    return db.document.dir.findOne({
+      _id: dir_id
+    })
+    .then(root => {
+      if (root.attachment_root_dir) {
+        throw new ApiError(400, 'can_not_upload_file_in_attachement_root_dir');
+      }
+      next();
+    })
+    .catch(next);
+  };
 }
 
 export function attachFileUrls(req, file, thumb_size = '32') {

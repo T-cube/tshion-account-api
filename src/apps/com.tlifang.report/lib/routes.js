@@ -4,6 +4,7 @@ import { upload, saveCdn } from 'lib/upload';
 import { ApiError } from 'lib/error';
 import moment from 'moment';
 import Promise from 'bluebird';
+import { ObjectId } from 'mongodb';
 
 import { validate } from './schema';
 import C from './constants';
@@ -13,6 +14,7 @@ import Structure from 'models/structure';
 import {
   APP,
 } from 'models/notification-setting';
+import { mapObjectIdToData } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -115,28 +117,23 @@ api.get('/report/:report_id', (req, res, next) => {
       memberDepartments,
     });
   }).then(doc => {
+    doc.attachments = doc.attachments.map(attachment => ObjectId.isValid(attachment) ? attachment : attachment._id);
+    console.log(doc.attachments);
     return Promise.map(doc.attachments, attachment => {
-      return attachFileUrls(req, attachment);
-    }).then(() => {
-      res.json(doc);
-    });
-  }).catch(next);
-});
-
-// TODO: may write a common api for user to upload their attachment in their apps
-
-api.post('/upload',
-upload({type: 'attachment'}).single('document'),
-saveCdn('cdn-file'),
-(req, res, next) => {
-  let file = req.file;
-  if (!file) {
-    throw new ApiError(400, 'file_not_upload');
-  }
-  let user_id = req.user._id;
-  let company_id = req.company._id;
-  req._app.uploadSave(file, user_id, company_id).then(doc => {
-    return attachFileUrls(req, doc).then(() => {
+      return mapObjectIdToData(attachment, 'document.file', 'name,size,dir_id,path,cdn_key')
+      .then(a => {
+        console.log(a);
+        if (a) {
+          return attachFileUrls(req, a)
+          .then(() => {
+            return a;
+          });
+        } else {
+          return { _id: attachment, deleted: true };
+        }
+      });
+    }).then(report_attachments => {
+      doc.attachments = report_attachments;
       res.json(doc);
     });
   }).catch(next);

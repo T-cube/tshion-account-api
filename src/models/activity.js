@@ -41,6 +41,7 @@ export default class Activity {
         // ['task', 'title,company_id,project_id', 'task'],
         ['approval.template', 'name,company_id', 'approval_template'],
         ['approval.item', 'title,company_id', 'approval_item'],
+        ['approval.auto', 'name,company_id', 'approval_auto_template'],
         ['schedule', 'title', 'schedule'],
         ['announcement', 'company_id,type,title,is_published', 'announcement,announcement_draft'],
         ['app.all', 'appid,version,name', 'app']

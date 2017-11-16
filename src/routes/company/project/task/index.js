@@ -155,14 +155,6 @@ api.post('/', (req, res, next) => {
   .then(task => {
     res.json(task);
     req.task = task;
-    let notification = {
-      action: C.ACTIVITY_ACTION.ADD,
-      target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
-      task: task._id,
-      from: req.user._id,
-      to: followers
-    };
-    req.model('notification').send(notification, TASK_UPDATE);
     return Promise.all([
       data.loop && TaskLoop.updateLoop(task),
       addActivity(req, C.ACTIVITY_ACTION.CREATE),
@@ -188,16 +180,21 @@ api.get('/:_task_id', (req, res, next) => {
     return fetchUserInfo(task, 'creator', 'assignee', 'checker', 'followers');
   })
   .then(task => {
-    return mapObjectIdToData(task.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
-      return Promise.map(task.attachments || [], attachment => {
-        if (attachment == null) {
-          attachment = {type: 'deleted'};
-          return Promise.resolve(attachment);
+    return Promise.map(task.attachments || [] , attachment => {
+      return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype')
+      .then(a => {
+        if (a) {
+          return attachFileUrls(req, a)
+          .then(() => {
+            return a;
+          });
         } else {
-          return attachFileUrls(req, attachment);
+          return {_id:attachment, deleted: true};
         }
       });
-    }).then(() => {
+    })
+    .then(task_attachment_list => {
+      task.attachments = task_attachment_list;
       task.assignee.project_member = !!_.find(req.project.members, m => m._id.equals(task.assignee._id));
       res.json(task);
     });
@@ -231,14 +228,6 @@ api.delete('/:task_id', (req, res, next) => {
   .then(() => {
     res.json({});
     logTask(req, C.ACTIVITY_ACTION.DELETE);
-    let notification = {
-      action: C.ACTIVITY_ACTION.DELETE,
-      target_type: C.OBJECT_TYPE.TASK,
-      task: req.task._id,
-      from: req.user._id,
-      to: req.task.followers
-    };
-    req.model('notification').send(notification, TASK_UPDATE);
   })
   .catch(next);
 });
@@ -394,14 +383,6 @@ api.put('/:task_id/followers', (req, res, next) => {
   }))
   .then(() => {
     res.json({});
-    let notification = {
-      action: C.ACTIVITY_ACTION.ADD,
-      target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
-      task: taskId,
-      from: req.user._id,
-      to: userId
-    };
-    req.model('notification').send(notification, TASK_UPDATE);
   })
   .catch(next);
 });
@@ -424,15 +405,22 @@ api.get('/:task_id/comment', (req, res, next) => {
   .then(data => {
     return fetchUserInfo(data, 'creator').then(() => {
       return Promise.map(data, comment => {
-        return mapObjectIdToData(comment.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
-          return Promise.map(comment.attachments || [], attachment => {
-            if (attachment == null) {
-              attachment = {type: 'deleted'};
-              return Promise.resolve(attachment);
+        return Promise.map(comment.attachments || [], attachment => {
+          return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype')
+          .then(a => {
+            if (a) {
+              return attachFileUrls(req, a)
+              .then(() => {
+                return a;
+              });
             } else {
-              return attachFileUrls(req, attachment);
+              return {_id:attachment, deleted: true};
             }
           });
+        })
+        .then(task_attachment_list => {
+          comment.attachments = task_attachment_list;
+          return comment;
         });
       }).then(() => {
         res.json(data || []);
@@ -600,159 +588,86 @@ api.put('/:task_id/subtask/:subtask', (req, res, next) => {
 function updateAttachment() {
   return (req, res, next) => {
     validate('attachment', req.body);
-    db.task.findOne({
+    let need_update_attachments = req.body.attachments;
+    return db.task.findOne({
       _id: req.task._id
     })
-    .then(task => {
-      db.task.findOneAndUpdate({
+    .then(original_task => {
+      return db.task.findOneAndUpdate({
         _id: req.task._id
       }, {
         $set: {
-          attachments: req.body.attachments
+          attachments: need_update_attachments
         }
       }, {
         returnOriginal: false,
         returnNewDocument: true,
       })
       .then(updated_task => {
-        let new_task = updated_task.value;
-        mapObjectIdToData(new_task.attachments || [], 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(() => {
-          return Promise.map(new_task.attachments || [], attachment => {
-            return attachFileUrls(req, attachment);
+        let old_remove_attachments = [];
+        let new_add_attachments = [];
+        if (!need_update_attachments.length && original_task.attachments.length) {
+          mapObjectIdToData(need_update_attachments, 'document.file', 'name').then(list => {
+            addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list});
           });
-        }).then(() => {
-          res.json(new_task);
-        });
-        if (task.attachments && task.attachments.length) {
-          if (req.body.attachments && !req.body.attachments.length) {
-            mapObjectIdToData(task.attachments, 'document.file', 'name').then(list => {
-              addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list})
-              .then(() => {
-                Promise.map(task.attachments, item => {
-                  return db.document.file.findOne({
-                    _id: item
-                  })
-                  .then(doc =>{
-                    if (doc && !doc.attachment_dir_file) {
-                      return null;
-                    } else {
-                      db.task.findOne({
-                        project_id: req.project._id,
-                        attachments: item
-                      },{
-                        _id: 1,
-                      })
-                      .then(t => {
-                        if (!t) {
-                          doc && _deleteAttachmentFile(req, doc);
-                        }
-                      });
-                    }
-                  });
-                });
-              });
-            });
-          } else if (req.body.attachments && req.body.attachments.length) {
-            let body_attachment_length = req.body.attachments.length;
-            let task_attachment_length = task.attachments.length;
-            let removed_file = [];
-            for (let i = 0; i < task_attachment_length; i++) {
-              let flag = false;
-              for (let a = 0; a < body_attachment_length; a++) {
-                if (task.attachments[i].equals(req.body.attachments[a])) {
-                  flag = true;
-                }
-                if (a == body_attachment_length - 1) {
-                  if (!flag) {
-                    removed_file.push(task.attachments[i]);
-                  }
-                }
-              }
-            }
-            let new_file = [];
-            for (let i = 0; i < body_attachment_length; i++) {
-              let flag = false;
-              for (let a = 0; a < task_attachment_length; a++) {
-                if (task.attachments[a].equals(req.body.attachments[i])) {
-                  flag = true;
-                }
-                if (a == task_attachment_length) {
-                  if (!flag) {
-                    new_file.push(req.body.attachments[i]);
-                  }
-                }
-              }
-            }
-            if (new_file.length) {
-              mapObjectIdToData(new_file, 'document.file', 'name').then(list => {
-                addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
-              });
-            }
-            if (removed_file.length) {
-              mapObjectIdToData(removed_file, 'document.file', 'name').then(list => {
-                addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list})
-                .then(() => {
-                  Promise.map(removed_file, item => {
-                    return db.document.file.findOne({
-                      _id: item
-                    })
-                    .then(doc =>{
-                      if (doc && !doc.attachment_dir_file) {
-                        return null;
-                      } else {
-                        db.task.findOne({
-                          project_id: req.project._id,
-                          attachments: item
-                        },{
-                          _id: 1,
-                        })
-                        .then(t => {
-                          if (!t) {
-                            doc && _deleteAttachmentFile(req, doc);
-                          }
-                        });
-                      }
-                    });
-                  });
-                });
-              });
-            }
-          }
-        } else if (req.body.attachments && req.body.attachments.length) {
-          mapObjectIdToData(req.body.attachments, 'document.file', 'name').then(list => {
+        }
+        if (need_update_attachments.length && !original_task.attachments.length) {
+          mapObjectIdToData(need_update_attachments, 'document.file', 'name').then(list => {
             addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
           });
         }
+        if (need_update_attachments.length && original_task.attachments.length) {
+          for (let i = 0; i < original_task.attachments.length; i++) {
+            let flag = false;
+            for (let n = 0; n < need_update_attachments.length; n++) {
+              if (original_task.attachments[i].equals(need_update_attachments[n])) {
+                flag = true;
+              }
+              if (n == need_update_attachments.length - 1 && !flag) {
+                old_remove_attachments.push(original_task.attachments[i]);
+              }
+            }
+          }
+          for (let i = 0; i < need_update_attachments.length; i++) {
+            let flag = false;
+            for (var n = 0; n < original_task.attachments.length; n++) {
+              if (need_update_attachments[i].equals(original_task.attachments[n])) {
+                flag = true;
+              }
+              if (n == original_task.attachments.length - 1 && !flag) {
+                new_add_attachments.push(need_update_attachments[i]);
+              }
+            }
+          }
+          mapObjectIdToData(old_remove_attachments, 'document.file', 'name').then(list => {
+            list && list.length && addActivity(req, C.ACTIVITY_ACTION.DELETE_ATTACHMENT, {attachment_list: list});
+          });
+          mapObjectIdToData(new_add_attachments, 'document.file', 'name').then(list => {
+            list && list.length && addActivity(req, C.ACTIVITY_ACTION.ADD_ATTACHMENT, {attachment_list: list});
+          });
+        }
+        let new_task = updated_task.value;
+        let as = new_task.attachments;
+        return Promise.map(as, attachment => {
+          return mapObjectIdToData(attachment, 'document.file', 'cdn_key,path,relpath,name,size,mimetype').then(a => {
+            if (a) {
+              return attachFileUrls(req, a)
+              .then(() => {
+                return a;
+              });
+            } else {
+              return {_id:attachment, deleted: true};
+            }
+          });
+        })
+        .then(attachment_list => {
+          new_task.attachments = attachment_list;
+          res.json(new_task);
+        });
       })
       .catch(next);
     });
   };
-}
-
-function _deleteAttachmentFile(req, file) {
-  let incSize = 0;
-  console.log(2, file);
-  console.log(111, file, file.dir_id);
-  db.document.dir.update({
-    _id: file.dir_id,
-  }, {
-    $pull: {
-      files: file._id
-    }
-  });
-  db.document.file.remove({
-    _id: file._id,
-  })
-  .then(() => {
-    incSize -= file.size;
-    req.model('document').deleteFile(req, file);
-    let companyLevel = new CompanyLevel(req.company._id);
-    return companyLevel.updateUpload({
-      size: incSize,
-      target_type: req.document.posKey == 'company_id' ? 'knowledge' : 'project',
-      target_id: req.document.posVal,
-    });
-  });
 }
 
 function updateField(field) {

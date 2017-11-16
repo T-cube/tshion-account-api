@@ -7,7 +7,7 @@ import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
 import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
 import { oauthCheck, authCheck } from 'lib/middleware';
-import { time, mapObjectIdToData, strToReg } from 'lib/utils';
+import { time, mapObjectIdToData, strToReg, fetchCompanyMemberInfo } from 'lib/utils';
 import { validate } from './schema';
 import Structure from 'models/structure';
 import CompanyLevel from 'models/company-level';
@@ -34,7 +34,6 @@ api.use(oauthCheck());
 // Get company list
 
 api.get('/test', (req, res, next) => {
-  console.log(req.originalUrl);
   res.json({});
 });
 api.get('/', (req, res, next) => {
@@ -106,7 +105,7 @@ api.post('/', (req, res, next) => {
       company: company._id
     });
     // create root dir include application dirs such as report, notebook , activity and so on
-    createRootDir(company._id, req.user._id);
+    createRootDir(company._id, req.user._id, req.company);
     // init company level
     CompanyLevel.init(company._id);
     // add company to user
@@ -308,6 +307,35 @@ api.delete('/:company_id', authCheck(), (req, res, next) => {
     .then(() => res.json({}));
   }).catch(next);
 });
+
+api.put('/:company_id/remind/plan', (req, res, next) => {
+  validate('remind', req.body);
+  if (!req.user._id.equals(req.company.owner)) {
+    throw new ApiError(400, 'no_owner_can_not_change');
+  }
+  let companyLevel = new CompanyLevel(req.company._id);
+  companyLevel.getPlanInfo(true)
+  .then(planInfo => {
+    if (planInfo.status == 'actived') {
+      res.json({});
+    } else {
+      let { close_plan_expired_remind, close_before_expired_remind } = req.body;
+      let data;
+      req.body.hasOwnProperty('close_before_expired_remind') ? (data = { 'current.close_before_expired_remind': close_before_expired_remind }) : null;
+      req.body.hasOwnProperty('close_plan_expired_remind') ? (data = { 'current.close_plan_expired_remind': close_plan_expired_remind }) : null;
+      return db.plan.company.update({
+        _id: req.company._id
+      }, {
+        $set: data
+      })
+      .then(() => {
+        res.json({});
+      });
+    }
+  })
+  .catch(next);
+});
+
 api.put('/:company_id/logo', (req, res, next) => {
   const data = {
     logo: cropAvatar(req),
@@ -456,7 +484,7 @@ api.post('/:company_id/exit', (req, res, next) => {
         $pull: { members: {_id: user_id} },
         $set: { structure: tree.object() },
       }),
-      db.template.find({
+      db.approval.template.find({
         company_id: req.company._id,
         status: C.APPROVAL_STATUS.NORMAL,
         'steps.approver._id': req.user._id,
@@ -568,11 +596,23 @@ api.get('/:company_id/invite', (req, res, next) => {
 });
 
 api.post('/:company_id/root/dir', (req, res, next) => {
-  let dir_id = ObjectId(req.body.root_id);
-  createAppDir(req.company._id, req.user._id, dir_id)
+  let root_id = ObjectId(req.body.root_id);
+  db.document.dir.findOne({
+    parent_dir: root_id,
+    attachment_dir: true,
+    attachment_root_dir: true
+  })
   .then(doc => {
-    res.json(doc);
-  });
+    if (doc) {
+      res.json(doc);
+    } else {
+      createAppDir(req.company._id, req.user._id, root_id, req.company)
+      .then(doc => {
+        res.json(doc);
+      });
+    }
+  })
+  .catch(next);
 });
 
 function _getIdIndex(last_id, list) {
@@ -606,7 +646,7 @@ let ckeckAuth = (_module) => (req, res, next) => {
   .catch(next);
 };
 
-function createRootDir (company_id, user_id) {
+function createRootDir (company_id, user_id, company) {
   db.document.dir.insert({
     company_id,
     parent_dir: null,
@@ -615,11 +655,11 @@ function createRootDir (company_id, user_id) {
     files: []
   })
   .then(root => {
-    createAppDir(company_id, user_id, root._id);
+    createAppDir(company_id, user_id, root._id, company);
   });
 }
 
-function createAppDir(company_id, user_id, root_id) {
+function createAppDir(company_id, user_id, root_id, company) {
   let date = new Date();
   let app_dir = {
     name: '应用附件',
@@ -657,7 +697,7 @@ function createAppDir(company_id, user_id, root_id) {
           _id: root_id
         }, {
           $push: {
-            dirs: [app._id]
+            dirs: app._id
           }
         }),
         db.document.dir.update({
@@ -668,6 +708,26 @@ function createAppDir(company_id, user_id, root_id) {
           }
         }),
       ]);
+    })
+    .then(() => {
+      return db.document.dir.findOne({
+        _id: app._id
+      }, {
+        updated_by: 1,
+        name: 1,
+        date_update: 1,
+        attachment_dir: 1,
+        attachment_root_dir: 1,
+        dirs: 1,
+      })
+      .then(result => {
+        result.children_dir = result.dirs;
+        delete result.dirs;
+        return mapObjectIdToData(result.children_dir, 'document.dir', 'attachment_dir,for,name')
+        .then(() => {
+          return fetchCompanyMemberInfo(company, result, 'updated_by', 'children_dir.updated_by');
+        });
+      });
     });
   });
 
