@@ -96,6 +96,9 @@ export default class CompanyLevel {
           },
           for: {
             $ne: C.APPROVAL_TARGET.ATTENDANCE_AUDIT
+          },
+          auto: {
+            $exists: false
           }
         };
         return db.approval.template.count(condition);
