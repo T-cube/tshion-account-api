@@ -2,6 +2,7 @@ import express from 'express';
 import _ from 'underscore';
 import Promise from 'bluebird';
 import moment from 'moment';
+import { ObjectId } from 'mongodb';
 
 import { validate } from './schema';
 import _C from './constants';
@@ -10,7 +11,7 @@ import C from 'lib/constants';
 import { APP } from 'models/notification-setting';
 import { upload, saveCdn } from 'lib/upload';
 import { attachFileUrls } from 'routes/company/document/index';
-import { uniqObjectIdArray } from 'lib/utils';
+import { uniqObjectIdArray, mapObjectIdToData } from 'lib/utils';
 
 let api = express.Router();
 export default api;
@@ -92,9 +93,21 @@ api.get('/activity/:activity_id', (req, res, next) => {
     activity_id: req.params.activity_id
   })
   .then(doc => {
+    doc.attachments = doc.attachments.map(attachment => ObjectId.isValid(attachment) ? attachment : attachment._id);
     return Promise.map(doc.attachments, attachment => {
-      return attachFileUrls(req, attachment);
-    }).then(() => {
+      return mapObjectIdToData(attachment, 'document.file', 'name,size,dir_id,path,cdn_key')
+      .then(a => {
+        if (a) {
+          return attachFileUrls(req, a)
+          .then(() => {
+            return a;
+          });
+        } else {
+          return { _id: attachment, deleted: true };
+        }
+      });
+    }).then(activity_attachments => {
+      doc.attachments = activity_attachments;
       res.json(doc);
     });
   })
@@ -113,23 +126,6 @@ api.get('/month/activity', (req, res, next) => {
     res.json(list);
   })
   .catch(next);
-});
-
-api.post('/upload',
-upload({type: 'attachment'}).single('document'),
-saveCdn('cdn-file'),
-(req, res, next) => {
-  let file = req.file;
-  if (!file) {
-    throw new ApiError(400, 'file_not_upload');
-  }
-  let user_id = req.user._id;
-  let company_id = req.company._id;
-  req._app.uploadSave(file, user_id, company_id).then(doc => {
-    return attachFileUrls(req, doc).then(() => {
-      res.json(doc);
-    });
-  }).catch(next);
 });
 
 api.post('/activity/:activity_id/sign-in', (req, res, next) => {

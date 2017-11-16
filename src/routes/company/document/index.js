@@ -208,21 +208,17 @@ api.post('/dir', (req, res, next) => {
       if (path.length > max_dir_path_length) {
         throw new ApiError(400, 'folder_path_too_long');
       }
-      if (path[1]) {
-        return db.document.dir.findOne({
-          _id: path[1]
-        }, {
-          attachment_root_dir: 1,
-        })
-        .then(doc => {
-          if (doc.attachment_root_dir) {
-            throw new ApiError(400, 'can_not_create_dir_in_root_attachment_dir');
-          }
-          data.path = path;
-        });
-      } else {
+      return db.document.dir.findOne({
+        _id: data.parent_dir
+      }, {
+        attachment_root_dir: 1,
+      })
+      .then(doc => {
+        if (doc.attachment_root_dir) {
+          throw new ApiError(400, 'can_not_create_dir_in_root_attachment_dir');
+        }
         data.path = path;
-      }
+      });
     });
   })
   .then(() => {
@@ -449,7 +445,15 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     mimetype: 'text/plain',
     size: Buffer.byteLength(data.content, 'utf8'),
   });
-  return req.model('html-helper').sanitize(data.content)
+  return db.document.dir.findOne({
+    _id: dir_id
+  })
+  .then(target_dir => {
+    if (target_dir.attachment_root_dir) {
+      throw new ApiError(400, 'can_not_upload_file_in_attachement_root_dir');
+    }
+    return req.model('html-helper').sanitize(data.content);
+  })
   .then(content => {
     data.content = content;
     return getParentPaths(dir_id);
@@ -529,17 +533,25 @@ api.post('/move', (req, res, next) => {
     throw new ApiError(400, 'invalid_dest_dir');
   }
   let ignore_dirs = [];
-  Promise.map(moveInfo.dirs, dir => {
-    return db.document.dir.findOne({
-      _id: dir
-    }, {
-      attachment_root_dir: 1,
-      attachment_dir: 1
-    })
-    .then(doc => {
-      if (doc.attachment_dir || doc.attachment_root_dir) {
-        ignore_dirs.push(dir);
-      }
+  db.document.dir.findOne({
+    _id: dest_dir
+  })
+  .then(dest => {
+    if (dest.attachment_root_dir) {
+      throw new ApiError(400, 'can_not_move_to_root_attachment_dir');
+    }
+    return Promise.map(moveInfo.dirs, dir => {
+      return db.document.dir.findOne({
+        _id: dir
+      }, {
+        attachment_root_dir: 1,
+        attachment_dir: 1
+      })
+      .then(doc => {
+        if (doc.attachment_dir || doc.attachment_root_dir) {
+          ignore_dirs.push(dir);
+        }
+      });
     });
   })
   .then(() => {
