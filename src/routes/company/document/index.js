@@ -63,11 +63,31 @@ api.get('/dir/:dir_id?', (req, res, next) => {
     }
     return mapObjectIdToData(doc, [
       ['document.dir', 'name', 'path'],
-      ['document.dir', 'name,date_update,updated_by,attachment_dir', 'dirs'],
+      ['document.dir', 'name,date_update,updated_by,attachment_root_dir,attachment_dir', 'dirs'],
       ['document.file', 'name,mimetype,size,date_update,cdn_key,updated_by,author', 'files'],
     ])
     .then(() => {
       return fetchCompanyMemberInfo(req.company, doc, 'updated_by', 'files.updated_by', 'dirs.updated_by');
+    })
+    .then(() => {
+      let root_dir_index;
+      for (var i = 0; i < doc.dirs.length; i++) {
+        if (doc.dirs[i].attachment_root_dir) {
+          root_dir_index = i;
+          break;
+        }
+      }
+      if (root_dir_index !== undefined) {
+        return db.document.dir.findOne({
+          _id: doc.dirs[i]._id,
+        })
+        .then(root_dir => {
+          doc.dirs[i].children_dir = root_dir.dirs;
+          return mapObjectIdToData(doc.dirs[i].children_dir, 'document.dir', 'attachment_dir,for,name');
+        });
+      } else {
+        return null;
+      }
     })
     .then(() => {
       return Promise.map(doc.files, file => {
@@ -188,21 +208,17 @@ api.post('/dir', (req, res, next) => {
       if (path.length > max_dir_path_length) {
         throw new ApiError(400, 'folder_path_too_long');
       }
-      if (path[1]) {
-        return db.document.dir.findOne({
-          _id: path[1]
-        }, {
-          attachment_root_dir: 1,
-        })
-        .then(doc => {
-          if (doc.attachment_root_dir) {
-            throw new ApiError(400, 'can_not_create_dir_in_root_attachment_dir');
-          }
-          data.path = path;
-        });
-      } else {
+      return db.document.dir.findOne({
+        _id: data.parent_dir
+      }, {
+        attachment_root_dir: 1,
+      })
+      .then(doc => {
+        if (doc.attachment_root_dir) {
+          throw new ApiError(400, 'can_not_create_dir_in_root_attachment_dir');
+        }
         data.path = path;
-      }
+      });
     });
   })
   .then(() => {
@@ -429,7 +445,15 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
     mimetype: 'text/plain',
     size: Buffer.byteLength(data.content, 'utf8'),
   });
-  return req.model('html-helper').sanitize(data.content)
+  return db.document.dir.findOne({
+    _id: dir_id
+  })
+  .then(target_dir => {
+    if (target_dir.attachment_root_dir) {
+      throw new ApiError(400, 'can_not_upload_file_in_attachement_root_dir');
+    }
+    return req.model('html-helper').sanitize(data.content);
+  })
   .then(content => {
     data.content = content;
     return getParentPaths(dir_id);
@@ -449,22 +473,9 @@ api.post('/dir/:dir_id/create', (req, res, next) => {
   .catch(next);
 });
 
-api.post('/dir/:dir_id/upload', (req, res, next) => {
-  let file_size = parseInt(req.headers['content-length']);
-  let companyLevel = new CompanyLevel(req.company._id);
-  return companyLevel.canUpload(file_size).then(info => {
-    if (!info.ok) {
-      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
-        throw new ApiError(400, 'over_storage');
-      }
-      if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
-        throw new ApiError(400, 'file_too_large');
-      }
-    }
-    next();
-  })
-  .catch(next);
-},
+api.post('/dir/:dir_id/upload',
+_checkFileSize(),
+_checkFileDir(),
 upload({type: 'attachment'}).array('document'),
 saveCdn('cdn-file'),
 (req, res, next) => {
@@ -522,17 +533,25 @@ api.post('/move', (req, res, next) => {
     throw new ApiError(400, 'invalid_dest_dir');
   }
   let ignore_dirs = [];
-  Promise.map(moveInfo.dirs, dir => {
-    return db.document.dir.findOne({
-      _id: dir
-    }, {
-      attachment_root_dir: 1,
-      attachment_dir: 1
-    })
-    .then(doc => {
-      if (doc.attachment_dir || doc.attachment_root_dir) {
-        ignore_dirs.push(dir);
-      }
+  db.document.dir.findOne({
+    _id: dest_dir
+  })
+  .then(dest => {
+    if (dest.attachment_root_dir) {
+      throw new ApiError(400, 'can_not_move_to_root_attachment_dir');
+    }
+    return Promise.map(moveInfo.dirs, dir => {
+      return db.document.dir.findOne({
+        _id: dir
+      }, {
+        attachment_root_dir: 1,
+        attachment_dir: 1
+      })
+      .then(doc => {
+        if (doc.attachment_dir || doc.attachment_root_dir) {
+          ignore_dirs.push(dir);
+        }
+      });
     });
   })
   .then(() => {
@@ -1046,6 +1065,41 @@ function _uploadFileOpreation(req, data, dir_id, path, attachment_check) {
     }
     data.push(fileData);
   });
+}
+
+function _checkFileSize() {
+  return (req, res, next) => {
+    let file_size = parseInt(req.headers['content-length']);
+    let companyLevel = new CompanyLevel(req.company._id);
+    return companyLevel.canUpload(file_size).then(info => {
+      if (!info.ok) {
+        if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_TOTAL_SIZE) {
+          throw new ApiError(400, 'over_storage');
+        }
+        if (info.code == C.LEVEL_ERROR.OVER_STORE_MAX_FILE_SIZE) {
+          throw new ApiError(400, 'file_too_large');
+        }
+      }
+      next();
+    })
+    .catch(next);
+  };
+}
+
+function _checkFileDir() {
+  return (req, res, next) => {
+    let dir_id = ObjectId(req.params.dir_id);
+    return db.document.dir.findOne({
+      _id: dir_id
+    })
+    .then(root => {
+      if (root.attachment_root_dir) {
+        throw new ApiError(400, 'can_not_upload_file_in_attachement_root_dir');
+      }
+      next();
+    })
+    .catch(next);
+  };
 }
 
 export function attachFileUrls(req, file, thumb_size = '32') {

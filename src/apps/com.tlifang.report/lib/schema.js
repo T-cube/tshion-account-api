@@ -89,15 +89,7 @@ const schema={
       attachments: {
         type: 'array',
         optional: true,
-        items: {
-          type: 'object',
-          optional: true,
-          properties: {
-            _id: { $objectId: 1 },
-            name: { type: 'string' },
-            url: { type: 'string' },
-          }
-        }
+        items: { $objectId: 1 }
       },
     },
     validation: {
@@ -114,15 +106,7 @@ const schema={
       attachments: {
         type: 'array',
         optional: true,
-        items: {
-          type: 'object',
-          optional: true,
-          properties: {
-            _id: { $objectId: 1 },
-            name: { type: 'string' },
-            url: { type: 'string' },
-          }
-        }
+        items: { $objectId: 1 }
       },
     }
   },
@@ -141,10 +125,7 @@ const schema={
       attachments: {
         type: 'array',
         optional: true,
-        items: {
-          type: 'object',
-          optional: true,
-        }
+        items: { $objectId: 1 }
       },
     },
     validation: {
@@ -161,10 +142,7 @@ const schema={
       attachments: {
         type: 'array',
         optional: true,
-        items: {
-          type: 'object',
-          optional: true,
-        }
+        items: { $objectId: 1 }
       },
     }
   }

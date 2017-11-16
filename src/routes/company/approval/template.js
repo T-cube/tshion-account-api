@@ -463,7 +463,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
 function addActivity(req, action, data) {
   let info = {
     action: action,
-    target_type: C.OBJECT_TYPE.APPROVAL_TEMPLATE,
+    target_type: data.approval_template ? C.OBJECT_TYPE.APPROVAL_TEMPLATE : C.OBJECT_TYPE.APPROVAL_AUTO_TEMPLATE,
     company: req.company._id,
     creator: req.user._id,
   };
