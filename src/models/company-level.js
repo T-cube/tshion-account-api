@@ -67,16 +67,25 @@ export default class CompanyLevel {
       _setting = setting;
       let masterQuery = {
         company_id: this.company_id,
-        status: {
-          $ne: C.APPROVAL_STATUS.DELETED
-        },
+        $or: [
+          {
+            status: {
+              $ne: C.APPROVAL_STATUS.DELETED,
+            }
+          },
+          {
+            status: {
+              $exists: false
+            }
+          }
+        ]
       };
       return db.approval.template.master.find(masterQuery);
     })
     .then(masters => {
       masters = masters.map(master => master.current);
       if (!masters.length) {
-        return true;
+        return 0;
       } else {
         let condition = {
           _id: {
@@ -89,22 +98,23 @@ export default class CompanyLevel {
             $ne: C.APPROVAL_TARGET.ATTENDANCE_AUDIT
           }
         };
-        return db.approval.template.count(condition).then(normal_count => {
-          return db.approval.auto.count({
-            company_id: this.company_id,
-            status: {
-              $ne: C.APPROVAL_STATUS.DELETED
-            },
-          })
-          .then(auto_count => {
-            let total = normal_count + auto_count;
-            if (total >= _setting.max_approval_templete) {
-              return false;
-            }
-            return true;
-          });
-        });
+        return db.approval.template.count(condition);
       }
+    })
+    .then(normal_count => {
+      return db.approval.auto.count({
+        company_id: this.company_id,
+        status: {
+          $ne: C.APPROVAL_STATUS.DELETED
+        },
+      })
+      .then(auto_count => {
+        let total = normal_count + auto_count;
+        if (total >= _setting.max_approval_templete) {
+          return false;
+        }
+        return true;
+      });
     });
   }
 

@@ -155,14 +155,6 @@ api.post('/', (req, res, next) => {
   .then(task => {
     res.json(task);
     req.task = task;
-    let notification = {
-      action: C.ACTIVITY_ACTION.ADD,
-      target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
-      task: task._id,
-      from: req.user._id,
-      to: followers
-    };
-    req.model('notification').send(notification, TASK_UPDATE);
     return Promise.all([
       data.loop && TaskLoop.updateLoop(task),
       addActivity(req, C.ACTIVITY_ACTION.CREATE),
@@ -236,14 +228,6 @@ api.delete('/:task_id', (req, res, next) => {
   .then(() => {
     res.json({});
     logTask(req, C.ACTIVITY_ACTION.DELETE);
-    let notification = {
-      action: C.ACTIVITY_ACTION.DELETE,
-      target_type: C.OBJECT_TYPE.TASK,
-      task: req.task._id,
-      from: req.user._id,
-      to: req.task.followers
-    };
-    req.model('notification').send(notification, TASK_UPDATE);
   })
   .catch(next);
 });
@@ -399,14 +383,6 @@ api.put('/:task_id/followers', (req, res, next) => {
   }))
   .then(() => {
     res.json({});
-    let notification = {
-      action: C.ACTIVITY_ACTION.ADD,
-      target_type: C.OBJECT_TYPE.TASK_FOLLOWER,
-      task: taskId,
-      from: req.user._id,
-      to: userId
-    };
-    req.model('notification').send(notification, TASK_UPDATE);
   })
   .catch(next);
 });
@@ -613,7 +589,6 @@ function updateAttachment() {
   return (req, res, next) => {
     validate('attachment', req.body);
     let need_update_attachments = req.body.attachments;
-    console.log(need_update_attachments);
     return db.task.findOne({
       _id: req.task._id
     })

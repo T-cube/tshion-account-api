@@ -166,8 +166,7 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   .then(template => {
     res.json(template);
     return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-      approval_template: template._id,
-      company: null
+      approval_auto_template: template._id,
     });
   })
   .catch(next);
@@ -451,6 +450,9 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
         })
         .then(auto => {
           res.json(auto.value);
+          addActivity(req, C.ACTIVITY_ACTION.DELETE, {
+            approval_auto_template: auto.value._id
+          });
         });
       });
     }
