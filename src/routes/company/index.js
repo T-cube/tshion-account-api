@@ -653,9 +653,9 @@ function createRootDir (company_id, user_id, company) {
     name: '',
     dirs: [],
     files: []
-  // })
-  // .then(root => {
-  //   createAppDir(company_id, user_id, root._id, company);
+  })
+  .then(root => {
+    createAppDir(company_id, user_id, root._id, company);
   });
 }
 
