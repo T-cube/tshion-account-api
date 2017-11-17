@@ -366,11 +366,21 @@ api.delete('/:project_id', authCheck(), (req, res, next) => {
       }),
       db.project.group.update({
         company_id: req.company._id,
-        'groups.projects': project_id
       }, {
         $pull: {
-          'groups.$.projects': project_id,
+          projects: project_id
         }
+      }, {
+        multi: true
+      })
+      .then(() => {
+        db.project.group.remove({
+          user_id: req.user._id,
+          company_id: req.company._id,
+          'projects.0': {
+            $exists: false
+          }
+        });
       }),
       db.task.find({project_id}, {
         _id: 1
@@ -580,6 +590,15 @@ api.post('/:project_id/transfer', authCheck(), (req, res, next) => {
   ])
   .then(() => {
     res.json({});
+    db.project.group.update({
+      user_id: req.user._id,
+      company_id: req.company._id,
+      type: 'mine'
+    }, {
+      $pull: {
+        projects: project_id
+      }
+    });
     logProject(req, C.ACTIVITY_ACTION.TRANSFER, {
       project_member: member_id
     });
@@ -843,6 +862,24 @@ function archiveProject(req, res, next, archived) {
   })
   .then(() => {
     res.json({});
+    db.project.group.update({
+      company_id: req.company._id,
+    }, {
+      $pull: {
+        projects: req.project._id
+      }
+    }, {
+      multi: true
+    })
+    .then(() => {
+      db.project.group.remove({
+        user_id: req.user._id,
+        company_id: req.company._id,
+        'projects.0': {
+          $exists: false
+        }
+      });
+    });
     let update = archived ? {
       $set: {
         project_archived: true
