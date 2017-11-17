@@ -3,6 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
 import db from 'lib/database';
+import Promise from 'bluebird';
 import { ApiError } from 'lib/error';
 import C, { ENUMS } from 'lib/constants';
 import { upload, saveCdn, randomAvatar, defaultAvatar, cropAvatar } from 'lib/upload';
