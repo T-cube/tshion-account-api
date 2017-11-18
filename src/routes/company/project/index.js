@@ -303,6 +303,7 @@ api.get('/:project_id', (req, res, next) => {
   _.map(data.members, m => {
     m.user = m._id;
     delete m._id;
+    m.type = req.company.members.findIndex(cm => cm._id.equals(m.user)) == -1 ? 'exited' : m.type;
     return m;
   });
   Promise.all([
