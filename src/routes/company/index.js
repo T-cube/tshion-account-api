@@ -199,6 +199,9 @@ api.put('/:company_id', (req, res, next) => {
     if (doc && doc.status == C.AUTH_STATUS.ACCEPTED ) {
       throw new ApiError(400, 'certified_company_can_not_change_company_name');
     }
+    if (data.name) {
+      data['structure.name'] = data.name;
+    }
     return db.company.update(
       {_id: ObjectId(req.params.company_id)},
       {$set: data}

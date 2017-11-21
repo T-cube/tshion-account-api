@@ -211,6 +211,7 @@ api.get('/project', (req, res, next) =>  {
       condition.is_archived = false;
     }
     return db.project.find(condition)
+    .sort({date_create: -1})
     .then(data => res.json(data));
   })
   .catch(next);
