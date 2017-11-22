@@ -47,6 +47,9 @@ temp/*
 # mac dstore
 .DS_Store
 
+#npm
+package-lock.json
+
 # yarn
 .yarn.*
 yarn.lock
