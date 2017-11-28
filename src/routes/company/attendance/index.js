@@ -537,29 +537,41 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
           company_id: req.company._id,
           status: C.APPROVAL_STATUS.UNUSED
         };
-        return db.approval.template.findOne({
-          _id:data.approval_template
+        return db.approval.template.update({
+          _id: data.approval_template
         }, {
-          description: 1,
-          forms: 1,
-          name: 1,
-          scope: 1,
+          $set: {
+            status: C.APPROVAL_STATUS.UNUSED
+          }
         })
-        .then(template => {
-          delete template._id;
-          _.extend({steps: data.steps}, data);
-          return Approval.createNewVersionTemplate(data, {
-            criteria
+        .then(() => {
+          return Approval.cancelItemsUseTemplate(req, data.approval_template, C.ACTIVITY_ACTION.UPDATE);
+        })
+        .then(() => {
+          return db.approval.template.findOne({
+            _id: data.approval_template
+          }, {
+            description: 1,
+            forms: 1,
+            name: 1,
+            scope: 1,
           })
-          .then(() => {
-            return createApprovalTemplate(req, data.steps)
+          .then(template => {
+            delete template._id;
+            _.extend({steps: data.steps}, data);
+            return Approval.createNewVersionTemplate(data, {
+              criteria
+            })
             .then(() => {
-              return db.attendance.setting.update({
-                _id: req.company._id,
-              }, {
-                $set: {
-                  steps: data.steps
-                }
+              return createApprovalTemplate(req, data.steps)
+              .then(() => {
+                return db.attendance.setting.update({
+                  _id: req.company._id,
+                }, {
+                  $set: {
+                    steps: data.steps
+                  }
+                });
               });
             });
           });
