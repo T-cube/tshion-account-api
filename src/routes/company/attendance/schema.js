@@ -63,11 +63,16 @@ export let settingSanitization = {
             type: {type: 'string'},
           }
         },
-        copyto:{
+        copy_to:{
           type: 'array',
           optional: true,
           items: {
-            $objectId: 1
+            type: 'object',
+            optional: true,
+            properties: {
+              _id: { $objectId: 1 },
+              type: {type: 'string'},
+            }
           }
         }
       }
@@ -141,11 +146,16 @@ export let settingValidation = {
             type: {type: 'string'},
           }
         },
-        copyto:{
+        copy_to:{
           type: 'array',
           optional: true,
           items: {
-            $objectId: 1
+            type: 'object',
+            optional: true,
+            properties: {
+              _id: { $objectId: 1 },
+              type: {type: 'string'},
+            }
           }
         }
       }
