@@ -16,13 +16,13 @@ const mobileUrl = config.get('mobileUrl');
 
 let urls = {
   user: (whiteUrl) => {
-    return `${whiteUrl ? whiteUrl : mobileUrl}` + 'oa/company';
+    return `${whiteUrl ? whiteUrl : (mobileUrl + 'oa/company')}`;
   },
   reg: (token, qs, whiteUrl) => {
-    return `${whiteUrl ? whiteUrl : mobileUrl}` + 'account/login?from_open=wechat&random_token=' + token + '&' + qs;
+    return `${whiteUrl ? whiteUrl : (mobileUrl + 'account/login') }` + '?from_open=wechat&random_token=' + token + '&' + qs;
   },
   token: (authCode, qs, whiteUrl) => {
-    return `${whiteUrl ? whiteUrl : mobileUrl}` + 'account/login?wechat_authcode=' + authCode + '&' + qs;
+    return `${whiteUrl ? whiteUrl : (mobileUrl + 'account/login') }` + '?wechat_authcode=' + authCode + '&' + qs;
   },
 };
 
