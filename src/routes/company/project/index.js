@@ -805,9 +805,10 @@ api.delete('/:project_id/tag/:tag_id', (req, res, next) => {
 api.get('/:project_id/activity', (req, res, next) => {
   const project_id = req.project._id;
   const { last_id } = req.query;
+  let members = req.company.members;
   req.model('activity').fetch({
     project: project_id,
-  }, last_id)
+  }, last_id, members)
   .then(list => res.json(list))
   .catch(next);
 });

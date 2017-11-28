@@ -525,7 +525,6 @@ api.post('/move', (req, res, next) => {
   let data = req.body;
   validate('move', data);
   let { files, dirs, dest_dir, original_dir } = data;
-  let attachment_dir_flag;
   delete data.original_dir;
   let moveInfo = _.clone(data);
   let parent_dir;
@@ -597,7 +596,6 @@ api.post('/move', (req, res, next) => {
             $set: {
               parent_dir: dest_dir,
               path,
-              attachment_dir_file: attachment_dir_flag
             }
           }),
           db.document.dir.update({
@@ -626,7 +624,6 @@ api.post('/move', (req, res, next) => {
             $set: {
               dir_id: dest_dir,
               dir_path: path,
-              attachment_dir_file: attachment_dir_flag
             }
           }),
           db.document.dir.update({
