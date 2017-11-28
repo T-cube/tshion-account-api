@@ -481,13 +481,14 @@ api.delete('/:task_id/comment/:comment_id', (req, res, next) => {
 api.get('/:task_id/activity', (req, res, next) => {
   let taskId = req.task._id;
   let { last_id } = req.query;
+  let members = req.company.members;
   req.model('activity').fetch({
     $or: [{
       task: taskId
     }, {
       'task._id': taskId
     }],
-  }, last_id)
+  }, last_id, members)
   .then(list => res.json(list))
   .catch(next);
 });

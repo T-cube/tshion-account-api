@@ -434,25 +434,29 @@ api.get('/setting', (req, res, next) => {
     _id: req.company._id
   })
   .then(doc => {
-    return Promise.all([
-      fetchCompanyMemberInfo(req.company, doc, 'auditor'),
-      mapObjectIdToData(doc, 'approval.template', 'name,status', 'approval_template'),
-    ])
-    .then(() => res.json(doc || {
-      is_open: false,
-      time_start: '09:00',
-      time_end: '18:00',
-      ahead_time: 0,
-      workday: [1, 2, 3, 4, 5],
-      location: {
-        // latitude: 39.998766,
-        // longitude: 116.273938,
-      },
-      max_distance: 200,
-      workday_special: [],
-      holiday: [],
-      audit: true,
-    }));
+    if (!doc) {
+      res.json({
+        is_open: false,
+        time_start: '09:00',
+        time_end: '18:00',
+        ahead_time: 0,
+        workday: [1, 2, 3, 4, 5],
+        location: {
+          // latitude: 39.998766,
+          // longitude: 116.273938,
+        },
+        max_distance: 200,
+        workday_special: [],
+        holiday: [],
+        audit: true,
+      });
+    } else {
+      return Promise.all([
+        fetchCompanyMemberInfo(req.company, doc, 'auditor'),
+        mapObjectIdToData(doc, 'approval.template', 'name,status,steps', 'approval_template'),
+      ])
+      .then(() => res.json(doc));
+    }
   })
   .catch(next);
 });
@@ -506,11 +510,60 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
     .then(doc => {
       let setting = doc.value;
       res.json(_.extend({}, setting, data));
-      if (!data.approval_template && data.auditor) {
-        return createApprovalTemplate(req, data.auditor);
+      if (!data.approval_template && data.auditor && data.steps) {
+        data.steps.forEach(step => {
+          step._id = ObjectId();
+        });
+        return createApprovalTemplate(req, data.steps)
+        .then(() => {
+          return db.attendance.setting.update({
+            _id: req.company._id,
+          }, {
+            $set: {
+              steps: data.steps
+            }
+          });
+        });
       }
       if (setting.approval_template && !data.auditor) {
         return disableApprovalTemplate(req, setting.approval_template);
+      }
+      if (data.approval_template && data.auditor && data.steps) {
+        data.steps.forEach(step => {
+          step._id = ObjectId();
+        });
+        let criteria = {
+          _id: data.approval_template,
+          company_id: req.company._id,
+          status: C.APPROVAL_STATUS.UNUSED
+        };
+        return db.approval.template.findOne({
+          _id:data.approval_template
+        }, {
+          description: 1,
+          forms: 1,
+          name: 1,
+          scope: 1,
+        })
+        .then(template => {
+          delete template._id;
+          _.extend({steps: data.steps}, data);
+          return Approval.createNewVersionTemplate(data, {
+            criteria
+          })
+          .then(() => {
+            return createApprovalTemplate(req, data.steps)
+            .then(() => {
+              return db.attendance.setting.update({
+                _id: req.company._id,
+              }, {
+                $set: {
+                  steps: data.steps
+                }
+              });
+            });
+          });
+        });
       }
     });
   })
@@ -613,7 +666,7 @@ function checkUserLocation(companyId, pos) {
   });
 }
 
-function createApprovalTemplate(req, auditor) {
+function createApprovalTemplate(req, steps) {
   let template = {
     for: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
     forms_not_editable: true,
@@ -622,14 +675,7 @@ function createApprovalTemplate(req, auditor) {
     scope: [req.company.structure._id],
     company_id: req.company._id,
     status: C.APPROVAL_STATUS.NORMAL,
-    steps: [{
-      _id: ObjectId(),
-      approver: {
-        _id: auditor,
-        type: 'member',
-      },
-      copy_to: []
-    }],
+    steps: steps,
     forms: [
       {
         _id: ObjectId(),
