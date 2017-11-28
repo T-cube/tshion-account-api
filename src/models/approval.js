@@ -251,14 +251,7 @@ export default class Approval {
 
   static createNewVersionTemplate(data, options) {
     let { criteria, createNew, templateStatus, company_id } = options;
-    return db.approval.template.findOne(criteria, {
-      master_id: 1,
-      status: 1,
-      for: 1,
-      forms_not_editable: 1,
-      forms: 1,
-      number: 1,
-    })
+    return db.approval.template.findOne(criteria)
     .then(oldTpl => {
       if (createNew && !oldTpl) {
         return Approval.createTemplate(_.extend({}, criteria, data));
@@ -295,6 +288,9 @@ export default class Approval {
         } else {
           let number = oldTpl.number.toString().split('-');
           number[1] = (parseInt(number[1]) || 0) + 1;
+          oldTpl.for ? data.for = oldTpl.for : null;
+          oldTpl.forms_not_editable ? data.forms_not_editable = oldTpl.forms_not_editable : null;
+          oldTpl.auto ? data.auto = oldTpl.auto : null;
           _.extend(data, {
             master_id: oldTpl.master_id,
             company_id: criteria.company_id || company_id,

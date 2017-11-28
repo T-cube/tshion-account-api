@@ -48,6 +48,31 @@ export let settingSanitization = {
     }
   },
   approval_template: { $objectId: 1, optional: true },
+  steps: {
+    type: 'array',
+    optional: true,
+    items: {
+      type: 'object',
+      optional: true,
+      properties: {
+        approver: {
+          type: 'object',
+          optional: true,
+          properties: {
+            _id: { $objectId: 1 },
+            type: {type: 'string'},
+          }
+        },
+        copyto:{
+          type: 'array',
+          optional: true,
+          items: {
+            $objectId: 1
+          }
+        }
+      }
+    }
+  }
 };
 
 export let settingValidation = {
@@ -101,6 +126,31 @@ export let settingValidation = {
     }
   },
   approval_template: { $objectId: 1, optional: true },
+  steps: {
+    type: 'array',
+    optional: true,
+    items: {
+      type: 'object',
+      optional: true,
+      properties: {
+        approver: {
+          type: 'object',
+          optional: true,
+          properties: {
+            _id: { $objectId: 1 },
+            type: {type: 'string'},
+          }
+        },
+        copyto:{
+          type: 'array',
+          optional: true,
+          items: {
+            $objectId: 1
+          }
+        }
+      }
+    }
+  }
 };
 
 export let signSanitization = {
