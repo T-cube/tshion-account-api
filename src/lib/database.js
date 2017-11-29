@@ -41,6 +41,7 @@ const collections = [
   'document.dir',
   'document.file',
   'document.token',
+  'frequent.project',
   'notification',
   'notification.setting',
   'oauth.accesstoken',
