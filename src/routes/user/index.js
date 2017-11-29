@@ -70,16 +70,24 @@ api.get('/info', (req, res, next) => {
 });
 
 api.get('/recent/projects', (req, res, next) => {
-  db.user.findOne({_id: req.user._id}, {'recent.projects': 1}).then(doc => {
-    if (!doc.recent || !doc.recent.projects || !doc.recent.projects.length) {
-      return db.user.findOne({_id: req.user._id}, {projects: 1}).then(doc => {
-        mapObjectIdToData(doc.projects.slice(-4), 'project').then(projects => {
-          res.json(projects);
-        });
-      });
-    }
-    let projects = _.sortBy(doc.recent.projects, item => -item.date).slice(0, 4).map(project => project.project_id);
-    mapObjectIdToData(projects, 'project').then(() => {
+  let { company_id } = req.query;
+  let criteria = {
+    user_id: req.user._id,
+  };
+  if (company_id) {
+    _.extend(criteria, { company_id: ObjectId(company_id) });
+  }
+  db.frequent.project
+  .find(criteria)
+  .then(list => {
+    let projects = [];
+    list.forEach(item => {
+      projects = projects.concat(item.projects);
+    });
+    projects = projects.sort((a, b) => b.counts - a.counts).map(item => item.project_id);
+    return mapObjectIdToData(projects, 'project')
+    .then(() => {
+      projects = _.compact(projects).filter(item => item.is_archived != true);
       res.json(projects);
     });
   }).catch(next);
