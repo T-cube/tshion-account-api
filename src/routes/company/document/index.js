@@ -485,8 +485,10 @@ saveCdn('cdn-file'),
   if (!req.files || !req.files.length) {
     throw new ApiError(400, 'file_not_upload');
   }
+  let second_dir;
   getParentPaths(dir_id)
   .then(path => {
+    second_dir = path[1];
     return _.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
       _.extend(fileData, {
@@ -512,11 +514,28 @@ saveCdn('cdn-file'),
   })
   .then(files => {
     res.json(files);
-    addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
-      document_path: files[0] && files[0].dir_path,
-      document_file: files.map(file => _.pick(file, '_id', 'name')),
-      target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
-    });
+    if (second_dir) {
+      db.document.dir.findOne({
+        _id: second_dir
+      }, {
+        attachment_root_dir: 1,
+      })
+      .then(doc => {
+        if (!doc.attachment_root_dir) {
+          addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
+            document_path: files[0] && files[0].dir_path,
+            document_file: files.map(file => _.pick(file, '_id', 'name')),
+            target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
+          });
+        }
+      });
+    } else {
+      addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
+        document_path: files[0] && files[0].dir_path,
+        document_file: files.map(file => _.pick(file, '_id', 'name')),
+        target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
+      });
+    }
   })
   .catch(next);
 });

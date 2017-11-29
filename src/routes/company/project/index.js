@@ -1020,30 +1020,41 @@ function fetchFilesUnderDir(dir, files) {
 }
 
 function recordUserRecentProjects(req) {
-  db.user.findOne({
-    _id: req.user._id,
-    'recent.projects.project_id': req.project._id,
-  }).then(doc => {
-    if(!doc) {
-      return db.user.update({
-        _id: req.user._id
+  db.frequent.project.findOne({
+    company_id: req.company._id,
+    user_id: req.user._id,
+    'projects.project_id': req.project._id
+  })
+  .then(doc => {
+    if (doc) {
+      db.frequent.project.update({
+        _id: doc._id,
+        'projects.project_id': req.project._id
+      }, {
+        $inc: {'projects.$.counts': 1}
+      });
+    } else {
+      db.frequent.project.update({
+        company_id: req.company._id,
+        user_id: req.user._id,
       }, {
         $push: {
-          'recent.projects': {
+          projects: {
             project_id: req.project._id,
-            date: new Date()
+            counts: 1
           }
         }
+      }, {
+        upsert: true
       });
     }
-    db.user.update({
-      _id: req.user._id,
-      'recent.projects.project_id': req.project._id,
-    }, {
-      $set: {
-        'recent.projects.$.date': new Date()
-      }
-    });
+  });
+  db.user.update({
+    _id: req.user._id,
+  }, {
+    $unset: {
+      recent: 1
+    }
   });
 }
 
