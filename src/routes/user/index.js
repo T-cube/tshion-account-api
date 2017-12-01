@@ -162,6 +162,10 @@ api.put('/avatar', (req, res, next) => {
 });
 
 api.put('/avatar/upload',
+(req, res, next) => {
+  console.log(req.body, req.headers);
+  next();
+},
 upload({type: 'avatar'}).single('avatar'),
 saveCdn('cdn-public'),
 (req, res, next) => {
