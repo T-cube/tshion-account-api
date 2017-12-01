@@ -305,6 +305,7 @@ const schema = {
       content: { type: 'string', rules: ['trim'] },
       pic_record: {
         type: 'array',
+        optional: true,
         items: { $objectId: 1 }
       }
     },
@@ -320,6 +321,7 @@ const schema = {
       content: { type: 'string', minLength: 1 },
       pic_record: {
         type: 'array',
+        optional: true,
         items: { $objectId: 1 }
       }
     }
