@@ -104,15 +104,7 @@ api.post('/outdoor/sign', (req, res, next) => {
   });
   db.attendance.outdoor.insert(sign_data)
   .then(doc => {
-    let info = {
-      action: 'sign',
-      target_type: C.OBJECT_TYPE.ATTENDANCE_OUTDOOR,
-      creator: req.user._id,
-      company: req.company._id,
-      address: sign_data.location.address,
-    };
-    req.model('activity').insert(info);
-    return doc;
+    res.json(doc);
   })
   .catch(next);
 });
@@ -147,6 +139,36 @@ api.post('/outdoor/sign', (req, res, next) => {
 //   })
 //   .catch(next);
 // });
+
+api.post('/outdoor/upload',
+  (req,res, next) => {
+    let file_size = parseInt(req.headers['content-length']);
+    if (file_size > 20 * 1024 * 1024) {
+      throw new ApiError(400, 'pic_too_large');
+    }
+    next();
+  },
+  upload({type: 'attachment'}).single('document'),
+  saveCdn('cdn-file'),
+  (req, res, next) => {
+    let file = req.file;
+    let fileData = _.pick(file, 'mimetype', 'url', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+    _.extend(fileData, {
+      name: file.originalname,
+      company: req.company._id,
+      author: req.user._id,
+      date_update: new Date(),
+      date_create: new Date(),
+      updated_by: req.user._id,
+      path: null
+    });
+    return db.user.file.insert(fileData).then(doc => {
+      return attachFileUrls(req, doc).then(() => {
+        res.json(doc);
+      });
+    });
+  }
+);
 
 api.get('/outdoor', (req, res, next) => {
   const limit = config.get('view.userLoginListNum');
