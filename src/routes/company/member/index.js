@@ -85,10 +85,6 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
     delete data.id;
     sanitizeValidateObject(sanitization, validation, data);
     data.type = C.COMPANY_MEMBER_TYPE.NORMAL;
-    let member = _.find(req.company.members, m => m[type] == data[type]);
-    if (member) {
-      throw new ApiError(400, 'member_exists');
-    }
     return db.user.findOne({
       [type]: id,
     }, {
@@ -96,6 +92,10 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
       name: 1,
     })
     .then(user => {
+      let member = _.find(req.company.members, m => m._id == user._id);
+      if (member) {
+        throw new ApiError(400, 'member_exists');
+      }
       data.status = C.COMPANY_MEMBER_STATUS.PENDING;
       if (user) {
         // invite registered user;

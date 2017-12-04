@@ -43,7 +43,7 @@ export function isImageFile(name) {
   if (!_.isString(name)) {
     return false;
   }
-  let ext = path.extname(name).replace('.', '');
+  let ext = path.extname(name).replace('.', '').toLowerCase();
   return _.contains('jpeg,jpg,gif,png'.split(','), ext);
 }
 

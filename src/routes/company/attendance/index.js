@@ -20,7 +20,8 @@ import {
   validate,
 } from './schema';
 import C from 'lib/constants';
-import { checkUserTypeFunc, checkUserType, fetchUserInfo } from '../utils';
+import { checkUserTypeFunc, checkUserType } from '../utils';
+import { fetchUserInfo } from 'lib/utils';
 import {
   fetchCompanyMemberInfo,
   mapObjectIdToData,
@@ -109,6 +110,19 @@ api.post('/outdoor/sign', (req, res, next) => {
   .catch(next);
 });
 
+api.get('/outdoor/today', (req, res, next) => {
+  db.attendance.outdoor.count({
+    user: req.user._id,
+    date_create: {
+      $gte: moment().startOf('day').toDate()
+    }
+  })
+  .then(counts => {
+    res.json({counts: counts});
+  })
+  .catch(next);
+});
+
 // api.get('/outdoor/range', (req, res, next) => {
 //   validate('outdoorQuery', req.query);
 //   let query = {
@@ -187,7 +201,7 @@ api.get('/outdoor', (req, res, next) => {
   .then(list => {
     return fetchUserInfo(list, 'user').then(() => {
       return Promise.map(list, item => {
-        return mapObjectIdToData(item.pic_record, 'user.file', 'cdn_key').then(() => {
+        return mapObjectIdToData(item.pic_record, 'user.file', 'name,cdn_key').then(() => {
           return Promise.map(item.pic_record, pic => {
             return attachFileUrls(req, pic);
           });
