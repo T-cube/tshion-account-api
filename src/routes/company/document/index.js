@@ -1118,7 +1118,7 @@ function _checkFileDir() {
   };
 }
 
-export function attachFileUrls(req, file, thumb_size = '32') {
+export function attachFileUrls(req, file, thumb_size = '32', slim_size) {
   const qiniu = req.model('qiniu').bucket('cdn-file');
   if (!file.cdn_key) {
     if (path.extname(file.name) == '.html') {
@@ -1150,6 +1150,17 @@ export function attachFileUrls(req, file, thumb_size = '32') {
     }
     if (thumb_width > 1000 || thumb_height > 1000) {
       return Promise.reject('thumbnail size should less than 1000!');
+    }
+    if (slim_size) {
+      let slim = slim_size.split(',');
+      let slim_width = parseInt(slim[0]);
+      let slim_height = parseInt(slim[1]);
+      let key = file.cdn_key + `?imageView2/0/w/${slim_width}/h/${slim_height}/q/75|imageslim`;
+      promises.push(
+        qiniu.makeLink(key).then(link => {
+          file.slim_url = link;
+        })
+      );
     }
     promises.push(
       qiniu.getThumbnailUrl(file.cdn_key, thumb_width, thumb_height).then(link => {
