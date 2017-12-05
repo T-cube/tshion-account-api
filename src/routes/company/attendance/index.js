@@ -177,7 +177,8 @@ api.post('/outdoor/upload',
       path: null
     });
     return db.user.file.insert(fileData).then(doc => {
-      return attachFileUrls(req, doc).then(() => {
+      let slim_size = '1920,1920';
+      return attachFileUrls(req, doc, '32', slim_size).then(() => {
         res.json(doc);
       });
     });
@@ -203,7 +204,8 @@ api.get('/outdoor', (req, res, next) => {
       return Promise.map(list, item => {
         return mapObjectIdToData(item.pic_record, 'user.file', 'name,cdn_key').then(() => {
           return Promise.map(item.pic_record, pic => {
-            return attachFileUrls(req, pic);
+            let slim_size = '1920,1920';
+            return attachFileUrls(req, pic, '32', slim_size);
           });
         });
       });
