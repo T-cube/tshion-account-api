@@ -80,7 +80,7 @@ export default class CompanyModel extends Model {
         name: 1,
         description: 1,
         logo: 1,
-        member: 1
+        members: 1
       })
       .then(list => {
         list.filter(i => i).map(i => {
