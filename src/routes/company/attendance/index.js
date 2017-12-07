@@ -205,7 +205,7 @@ api.get('/outdoor', (req, res, next) => {
         return mapObjectIdToData(item.pic_record, 'user.file', 'name,cdn_key').then(() => {
           return Promise.map(item.pic_record, pic => {
             let slim_size = '1920,1920';
-            return attachFileUrls(req, pic, '32', slim_size);
+            return attachFileUrls(req, pic, '128,128', slim_size);
           });
         });
       });
