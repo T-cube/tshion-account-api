@@ -165,9 +165,8 @@ api.post('/', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next) => {
   })
   .then(template => {
     res.json(template);
-    return addActivity(req, C.ACTIVITY_ACTION.CREATE, {
-      approval_auto_template: template._id,
-    });
+    let info = data.auto ? { approval_auto_template: template._id } : { approval_template: template._id };
+    return addActivity(req, C.ACTIVITY_ACTION.CREATE, info);
   })
   .catch(next);
 });

@@ -43,7 +43,7 @@ export default class Plan {
       && _.find(planInfo.list, item => item._id.equals(planInfo.current._id));
     if (current) {
       let now = new Date();
-      let expire_days = this._calcExpireDays(now, current.date_end);
+      let expire_days = this._calcExpireDays(now, moment(current.date_end));
       if (expire_days < -7) {
         return _.extend({}, current, {status: C.PLAN_STATUS.ACTIVED}, planInfo.current);
       } else if (expire_days > -7 && expire_days < 0) {
