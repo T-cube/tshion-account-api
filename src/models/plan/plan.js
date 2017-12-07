@@ -46,9 +46,9 @@ export default class Plan {
       let expire_days = this._calcExpireDays(now, current.date_end);
       if (expire_days < -7) {
         return _.extend({}, current, {status: C.PLAN_STATUS.ACTIVED}, planInfo.current);
-      } else if (expire_days > -7 && expire_days < 0) {
+      } else if (expire_days >= -7 && expire_days <= 0) {
         return _.extend({}, current, {status: C.PLAN_STATUS.NEARDUE}, planInfo.current);
-      } else if (expire_days > 0 && expire_days < 7) {
+      } else if (expire_days > 0 && expire_days <= 7) {
         return _.extend({}, current, {status: C.PLAN_STATUS.OVERDUE}, planInfo.current);
       } else if (expire_days > 7) {
         return _.extend({}, current, {status: C.PLAN_STATUS.EXPIRED}, planInfo.current);
