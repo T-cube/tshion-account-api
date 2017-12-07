@@ -485,8 +485,10 @@ saveCdn('cdn-file'),
   if (!req.files || !req.files.length) {
     throw new ApiError(400, 'file_not_upload');
   }
+  let second_dir;
   getParentPaths(dir_id)
   .then(path => {
+    second_dir = path[1];
     return _.map(req.files, file => {
       let fileData = _.pick(file, 'mimetype', 'url', 'path', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
       _.extend(fileData, {
@@ -512,11 +514,28 @@ saveCdn('cdn-file'),
   })
   .then(files => {
     res.json(files);
-    addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
-      document_path: files[0] && files[0].dir_path,
-      document_file: files.map(file => _.pick(file, '_id', 'name')),
-      target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
-    });
+    if (second_dir) {
+      db.document.dir.findOne({
+        _id: second_dir
+      }, {
+        attachment_root_dir: 1,
+      })
+      .then(doc => {
+        if (!doc.attachment_root_dir) {
+          addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
+            document_path: files[0] && files[0].dir_path,
+            document_file: files.map(file => _.pick(file, '_id', 'name')),
+            target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
+          });
+        }
+      });
+    } else {
+      addActivity(req, C.ACTIVITY_ACTION.UPLOAD, {
+        document_path: files[0] && files[0].dir_path,
+        document_file: files.map(file => _.pick(file, '_id', 'name')),
+        target_type: C.OBJECT_TYPE.DOCUMENT_FILE,
+      });
+    }
   })
   .catch(next);
 });
@@ -525,7 +544,6 @@ api.post('/move', (req, res, next) => {
   let data = req.body;
   validate('move', data);
   let { files, dirs, dest_dir, original_dir } = data;
-  let attachment_dir_flag;
   delete data.original_dir;
   let moveInfo = _.clone(data);
   let parent_dir;
@@ -597,7 +615,6 @@ api.post('/move', (req, res, next) => {
             $set: {
               parent_dir: dest_dir,
               path,
-              attachment_dir_file: attachment_dir_flag
             }
           }),
           db.document.dir.update({
@@ -626,7 +643,6 @@ api.post('/move', (req, res, next) => {
             $set: {
               dir_id: dest_dir,
               dir_path: path,
-              attachment_dir_file: attachment_dir_flag
             }
           }),
           db.document.dir.update({
@@ -1102,7 +1118,7 @@ function _checkFileDir() {
   };
 }
 
-export function attachFileUrls(req, file, thumb_size = '32') {
+export function attachFileUrls(req, file, thumb_size = '32', slim_size) {
   const qiniu = req.model('qiniu').bucket('cdn-file');
   if (!file.cdn_key) {
     if (path.extname(file.name) == '.html') {
@@ -1134,6 +1150,17 @@ export function attachFileUrls(req, file, thumb_size = '32') {
     }
     if (thumb_width > 1000 || thumb_height > 1000) {
       return Promise.reject('thumbnail size should less than 1000!');
+    }
+    if (slim_size) {
+      let slim = slim_size.split(',');
+      let slim_width = parseInt(slim[0]);
+      let slim_height = parseInt(slim[1]);
+      let key = file.cdn_key + `?imageView2/0/w/${slim_width}/h/${slim_height}/q/75|imageslim`;
+      promises.push(
+        qiniu.makeLink(key).then(link => {
+          file.slim_url = link;
+        })
+      );
     }
     promises.push(
       qiniu.getThumbnailUrl(file.cdn_key, thumb_width, thumb_height).then(link => {

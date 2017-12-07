@@ -80,11 +80,12 @@ export default class CompanyModel extends Model {
         name: 1,
         description: 1,
         logo: 1,
-        'members.$': 1
+        members: 1
       })
       .then(list => {
         list.filter(i => i).map(i => {
-          i.member_type = i.members.length ? i.members[0].type : null;
+          let target = i.members.findIndex(m => m._id.equals(_id));
+          i.member_type = i.members.length ? i.members[target].type : null;
           i.member_count = i.members.length;
           delete i.members;
           return i;

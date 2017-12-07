@@ -48,6 +48,36 @@ export let settingSanitization = {
     }
   },
   approval_template: { $objectId: 1, optional: true },
+  steps: {
+    type: 'array',
+    optional: true,
+    items: {
+      type: 'object',
+      optional: true,
+      properties: {
+        approver: {
+          type: 'object',
+          optional: true,
+          properties: {
+            _id: { $objectId: 1 },
+            type: {type: 'string'},
+          }
+        },
+        copy_to:{
+          type: 'array',
+          optional: true,
+          items: {
+            type: 'object',
+            optional: true,
+            properties: {
+              _id: { $objectId: 1 },
+              type: {type: 'string'},
+            }
+          }
+        }
+      }
+    }
+  }
 };
 
 export let settingValidation = {
@@ -101,6 +131,36 @@ export let settingValidation = {
     }
   },
   approval_template: { $objectId: 1, optional: true },
+  steps: {
+    type: 'array',
+    optional: true,
+    items: {
+      type: 'object',
+      optional: true,
+      properties: {
+        approver: {
+          type: 'object',
+          optional: true,
+          properties: {
+            _id: { $objectId: 1 },
+            type: {type: 'string'},
+          }
+        },
+        copy_to:{
+          type: 'array',
+          optional: true,
+          items: {
+            type: 'object',
+            optional: true,
+            properties: {
+              _id: { $objectId: 1 },
+              type: {type: 'string'},
+            }
+          }
+        }
+      }
+    }
+  }
 };
 
 export let signSanitization = {
@@ -245,6 +305,7 @@ const schema = {
       content: { type: 'string', rules: ['trim'] },
       pic_record: {
         type: 'array',
+        optional: true,
         items: { $objectId: 1 }
       }
     },
@@ -260,6 +321,7 @@ const schema = {
       content: { type: 'string', minLength: 1 },
       pic_record: {
         type: 'array',
+        optional: true,
         items: { $objectId: 1 }
       }
     }

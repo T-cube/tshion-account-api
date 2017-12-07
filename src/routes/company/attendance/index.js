@@ -20,7 +20,8 @@ import {
   validate,
 } from './schema';
 import C from 'lib/constants';
-import { checkUserTypeFunc, checkUserType, fetchUserInfo } from '../utils';
+import { checkUserTypeFunc, checkUserType } from '../utils';
+import { fetchUserInfo } from 'lib/utils';
 import {
   fetchCompanyMemberInfo,
   mapObjectIdToData,
@@ -104,15 +105,20 @@ api.post('/outdoor/sign', (req, res, next) => {
   });
   db.attendance.outdoor.insert(sign_data)
   .then(doc => {
-    let info = {
-      action: 'sign',
-      target_type: C.OBJECT_TYPE.ATTENDANCE_OUTDOOR,
-      creator: req.user._id,
-      company: req.company._id,
-      address: sign_data.location.address,
-    };
-    req.model('activity').insert(info);
-    return doc;
+    res.json(doc);
+  })
+  .catch(next);
+});
+
+api.get('/outdoor/today', (req, res, next) => {
+  db.attendance.outdoor.count({
+    user: req.user._id,
+    date_create: {
+      $gte: moment().startOf('day').toDate()
+    }
+  })
+  .then(counts => {
+    res.json({counts: counts});
   })
   .catch(next);
 });
@@ -148,6 +154,37 @@ api.post('/outdoor/sign', (req, res, next) => {
 //   .catch(next);
 // });
 
+api.post('/outdoor/upload',
+  (req,res, next) => {
+    let file_size = parseInt(req.headers['content-length']);
+    if (file_size > 20 * 1024 * 1024) {
+      throw new ApiError(400, 'pic_too_large');
+    }
+    next();
+  },
+  upload({type: 'attachment'}).single('document'),
+  saveCdn('cdn-file'),
+  (req, res, next) => {
+    let file = req.file;
+    let fileData = _.pick(file, 'mimetype', 'url', 'relpath', 'size', 'cdn_bucket', 'cdn_key');
+    _.extend(fileData, {
+      name: file.originalname,
+      company: req.company._id,
+      author: req.user._id,
+      date_update: new Date(),
+      date_create: new Date(),
+      updated_by: req.user._id,
+      path: null
+    });
+    return db.user.file.insert(fileData).then(doc => {
+      let slim_size = '1920,1920';
+      return attachFileUrls(req, doc, '32', slim_size).then(() => {
+        res.json(doc);
+      });
+    });
+  }
+);
+
 api.get('/outdoor', (req, res, next) => {
   const limit = config.get('view.userLoginListNum');
   validate('outdoorList', req.query);
@@ -165,9 +202,10 @@ api.get('/outdoor', (req, res, next) => {
   .then(list => {
     return fetchUserInfo(list, 'user').then(() => {
       return Promise.map(list, item => {
-        return mapObjectIdToData(item.pic_record, 'user.file', 'cdn_key').then(() => {
+        return mapObjectIdToData(item.pic_record, 'user.file', 'name,cdn_key').then(() => {
           return Promise.map(item.pic_record, pic => {
-            return attachFileUrls(req, pic);
+            let slim_size = '1920,1920';
+            return attachFileUrls(req, pic, '128,128', slim_size);
           });
         });
       });
@@ -434,25 +472,29 @@ api.get('/setting', (req, res, next) => {
     _id: req.company._id
   })
   .then(doc => {
-    return Promise.all([
-      fetchCompanyMemberInfo(req.company, doc, 'auditor'),
-      mapObjectIdToData(doc, 'approval.template', 'name,status', 'approval_template'),
-    ])
-    .then(() => res.json(doc || {
-      is_open: false,
-      time_start: '09:00',
-      time_end: '18:00',
-      ahead_time: 0,
-      workday: [1, 2, 3, 4, 5],
-      location: {
-        // latitude: 39.998766,
-        // longitude: 116.273938,
-      },
-      max_distance: 200,
-      workday_special: [],
-      holiday: [],
-      audit: true,
-    }));
+    if (!doc) {
+      res.json({
+        is_open: false,
+        time_start: '09:00',
+        time_end: '18:00',
+        ahead_time: 0,
+        workday: [1, 2, 3, 4, 5],
+        location: {
+          // latitude: 39.998766,
+          // longitude: 116.273938,
+        },
+        max_distance: 200,
+        workday_special: [],
+        holiday: [],
+        audit: true,
+      });
+    } else {
+      return Promise.all([
+        fetchCompanyMemberInfo(req.company, doc, 'auditor'),
+        mapObjectIdToData(doc, 'approval.template', 'name,status,steps', 'approval_template'),
+      ])
+      .then(() => res.json(doc));
+    }
   })
   .catch(next);
 });
@@ -506,11 +548,72 @@ api.put('/setting', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, res, next)
     .then(doc => {
       let setting = doc.value;
       res.json(_.extend({}, setting, data));
-      if (!data.approval_template && data.auditor) {
-        return createApprovalTemplate(req, data.auditor);
+      if (!data.approval_template && data.auditor && data.steps) {
+        data.steps.forEach(step => {
+          step._id = ObjectId();
+        });
+        return createApprovalTemplate(req, data.steps)
+        .then(() => {
+          return db.attendance.setting.update({
+            _id: req.company._id,
+          }, {
+            $set: {
+              steps: data.steps
+            }
+          });
+        });
       }
       if (setting.approval_template && !data.auditor) {
         return disableApprovalTemplate(req, setting.approval_template);
+      }
+      if (data.approval_template && data.auditor && data.steps) {
+        data.steps.forEach(step => {
+          step._id = ObjectId();
+        });
+        let criteria = {
+          _id: data.approval_template,
+          company_id: req.company._id,
+          status: C.APPROVAL_STATUS.UNUSED
+        };
+        return db.approval.template.update({
+          _id: data.approval_template
+        }, {
+          $set: {
+            status: C.APPROVAL_STATUS.UNUSED
+          }
+        })
+        .then(() => {
+          return Approval.cancelItemsUseTemplate(req, data.approval_template, C.ACTIVITY_ACTION.UPDATE);
+        })
+        .then(() => {
+          return db.approval.template.findOne({
+            _id: data.approval_template
+          }, {
+            description: 1,
+            forms: 1,
+            name: 1,
+            scope: 1,
+          })
+          .then(template => {
+            delete template._id;
+            _.extend({steps: data.steps}, data);
+            return Approval.createNewVersionTemplate(data, {
+              criteria
+            })
+            .then(() => {
+              return createApprovalTemplate(req, data.steps)
+              .then(() => {
+                return db.attendance.setting.update({
+                  _id: req.company._id,
+                }, {
+                  $set: {
+                    steps: data.steps
+                  }
+                });
+              });
+            });
+          });
+        });
       }
     });
   })
@@ -613,7 +716,7 @@ function checkUserLocation(companyId, pos) {
   });
 }
 
-function createApprovalTemplate(req, auditor) {
+function createApprovalTemplate(req, steps) {
   let template = {
     for: C.APPROVAL_TARGET.ATTENDANCE_AUDIT,
     forms_not_editable: true,
@@ -622,14 +725,7 @@ function createApprovalTemplate(req, auditor) {
     scope: [req.company.structure._id],
     company_id: req.company._id,
     status: C.APPROVAL_STATUS.NORMAL,
-    steps: [{
-      _id: ObjectId(),
-      approver: {
-        _id: auditor,
-        type: 'member',
-      },
-      copy_to: []
-    }],
+    steps: steps,
     forms: [
       {
         _id: ObjectId(),
