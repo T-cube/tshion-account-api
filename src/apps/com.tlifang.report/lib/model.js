@@ -155,7 +155,8 @@ export default class Report extends AppBase {
           date_report: 1,
           status: 1,
           report_target: 1,
-          attachments: 1
+          attachments: 1,
+          content: 1,
         })
       .sort({date_report: -1})
       .skip((page - 1) * pagesize)
@@ -314,7 +315,7 @@ export default class Report extends AppBase {
       }
       if (!_.some(memberDepartments, item => item.equals(doc.report_target))) {
         if (!user_id.equals(company.owner)) {
-          throw new ApiError(400, 'invalid_user');          
+          throw new ApiError(400, 'invalid_user');
         }
       }
       let action;
