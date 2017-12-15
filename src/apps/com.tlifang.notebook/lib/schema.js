@@ -38,6 +38,7 @@ const schema = {
         optional: true,
         items: { $objectId: 1, optional: true },
       },
+      app: { type: 'boolean', optional: true }
     },
     validation: {
       title: { type: 'string', minLength: 1 },
@@ -49,6 +50,7 @@ const schema = {
         optional: true,
         items: { $objectId: 1, optional: true },
       },
+      app: { type: 'boolean', optional: true }
     }
   },
   change: {

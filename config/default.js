@@ -39,10 +39,6 @@ module.exports = {
       }
     },
   },
-  aes: {
-    'key': '6evT6DnWlbNG5711',
-    'iv': '6evT6DnWlbNG5711'
-  },
   database: '127.0.0.1/tlf_core', // process.env.DATABASE
   locale: 'zh-CN',
   // list view config
@@ -70,7 +66,7 @@ module.exports = {
   security: {
     passwordHashRounds: 10,
     frequency: {
-      userVerifyCode: 60,
+      userVerifyCode: 60 * 1000,
     },
     attemptTimes: {
       ipTimes: 150,
@@ -287,7 +283,8 @@ module.exports = {
       'panel.schedule': true,
       'panel.weather': true,
       new_user_guide_showed: false,
-      new_user_approval_guide_showed: false
+      new_user_approval_guide_showed: false,
+      new_user_company_guide_showed: false
     }
   },
   plan: {
