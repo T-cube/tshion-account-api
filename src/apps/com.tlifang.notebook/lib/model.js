@@ -331,7 +331,7 @@ export default class Notebook extends AppBase {
   }
 
   noteAdd({user_id, company_id, note}) {
-    let { title, content, tags, notebook, shared } = note;
+    let { title, content, tags, notebook, shared, app } = note;
     this.collection('user').update({
       user_id,
       company_id,
@@ -358,6 +358,7 @@ export default class Notebook extends AppBase {
         content,
         tags,
         notebook,
+        app,
         comments: [],
         likes: [],
         shared,

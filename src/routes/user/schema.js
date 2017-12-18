@@ -79,6 +79,7 @@ const schema = {
       'panel.open': { type: 'boolean', optional: true },
       'new_user_guide_showed': { type: 'boolean', optional: true },
       'new_user_approval_guide_showed': { type: 'boolean', optional: true },
+      'new_user_company_guide_showed': { type: 'boolean', optional: true },
     },
     validation: {
       'explore.sort_by': { type: 'string', optional: true },
@@ -91,6 +92,7 @@ const schema = {
       'panel.open': { type: 'boolean', optional: true },
       'new_user_guide_showed': { type: 'boolean', optional: true },
       'new_user_approval_guide_showed': { type: 'boolean', optional: true },
+      'new_user_company_guide_showed': { type: 'boolean', optional: true },
     }
   },
   preference_reset: {
