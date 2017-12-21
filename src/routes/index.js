@@ -46,6 +46,6 @@ _.each(routes, route => {
   if (route == 'wechat') {
     api.use(path, module);
   } else {
-    api.use(path, module);
+    api.use(path, bodyParser.json(), module);
   }
 });
