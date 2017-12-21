@@ -193,7 +193,7 @@ app.all('/oauth/revoke', oauthRoute.revokeToken);
 // app.use('/', express.static('./public'));
 
 // api routes bind here
-app.use('/api', bodyParser.json(), apiRouter);
+app.use('/api', apiRouter);
 app.use(app.oauth.errorHandler());
 
 // global error handler
