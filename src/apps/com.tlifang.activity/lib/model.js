@@ -143,11 +143,12 @@ export default class Activity extends AppBase {
       company_id,
     };
     if (date_start && !date_end) {
-      criteria.time_start = { $gte: moment(date_start).startOf('day').toDate() };
+      criteria.time_end = { $gte: moment(date_start).toDate() };
     } else if (!date_start && date_end) {
-      criteria.time_start = { $lte: moment(date_end).endOf('day').toDate() };
+      criteria.time_end = { $lte: moment(date_end).toDate() };
     } else if (date_start && date_end) {
-      criteria.time_start = { $gte: moment(date_start).startOf('day').toDate(), $lte: moment(date_end).endOf('day').toDate() };
+      criteria.time_start = { $gte: moment(date_start).toDate(), $lte: moment(date_end).toDate() };
+      criteria.time_end = { $lte: moment(date_end).toDate() };
     }
     if (target == C.LIST_TARGET.MINE) {
       criteria['$or'] = isMember;
@@ -167,7 +168,20 @@ export default class Activity extends AppBase {
       .find(criteria, this.baseInfo)
       .skip((page - 1) * 10)
       .limit(10)
-      .sort({time_start: -1}),
+      .sort({time_start: -1})
+      .then(list => {
+        return Promise.map(list, item => {
+          return this.collection('room').findOne({
+            _id: item.room._id
+          }, {
+            name: 1
+          })
+          .then(room => {
+            item.room.name = room.name;
+            return item;
+          });
+        });
+      }),
       this.collection('item')
       .count(criteria)
     ])
