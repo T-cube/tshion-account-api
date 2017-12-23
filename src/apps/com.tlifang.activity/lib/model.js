@@ -165,11 +165,15 @@ export default class Activity extends AppBase {
     }
     return Promise.all([
       this.collection('item')
-      .find(criteria, this.baseInfo)
+      .find(criteria)
       .skip((page - 1) * 10)
       .limit(10)
       .sort({time_start: -1})
       .then(list => {
+        list.forEach(item => {
+          item.attachments = item.attachments.length || 0;
+          item.comments = item.comments.length || 0;
+        });
         return Promise.map(list, item => {
           return this.collection('room').findOne({
             _id: item.room._id
@@ -473,6 +477,18 @@ export default class Activity extends AppBase {
               });
             }
             return doc;
+          });
+        })
+        .then(activity => {
+          return this.collection('room').
+          findOne({
+            _id: activity.room._id
+          }, {
+            name: 1,
+          })
+          .then(room => {
+            activity.room.name = room.name;
+            return activity;
           });
         });
       }
