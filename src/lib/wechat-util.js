@@ -25,18 +25,37 @@ export default class WechatUtil {
     });
   }
 
-  findUserByOpenid(openid) {
-    if (!openid) {
+  findUserByOpenidUnionid(openid, unionid) {
+    if (!openid && !unionid) {
       return Promise.resolve(null);
     }
     return db.user.findOne({
-      'wechat.openid': openid
-    }, {
-      name: 1,
-      avatar: 1,
-      email: 1,
-      mobile: 1,
-      wechat: 1,
+      'wechat.unionid': unionid
+    })
+    .then(user => {
+      if (!user) {
+        return db.user.findOne({
+          'wechat.openid': openid
+        }, {
+          name: 1,
+          avatar: 1,
+          email: 1,
+          mobile: 1,
+          wechat: 1,
+        })
+        .then(doc => {
+          if (doc && !doc.wechat.unionid) {
+            db.user.update({
+              _id: doc._id
+            }, {
+              'wechat.unionid': unionid
+            });
+          }
+          return doc;
+        });
+      } else {
+        return user;
+      }
     });
   }
 
