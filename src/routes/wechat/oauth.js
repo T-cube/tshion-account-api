@@ -122,7 +122,7 @@ function access(req, res, next) {
           .then(authCode => res.redirect((whiteUrl ? whiteUrl : mobileUrl) + 'account/login' + '?wechat_authcode=' + authCode + '&' + qs));
       } else {
         _storeNoaccountAuthcode(openid, unionid).then(authCode => {
-          res.redirect(mobileUrl + 'test' + '?wechat_authcode=' + authCode + '&' + qs);
+          res.redirect(mobileUrl + 'account/est' + '?wechat_authcode=' + authCode + '&' + qs);
         });
       }
     });
