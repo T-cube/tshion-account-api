@@ -70,6 +70,7 @@ const collections = [
   'wechat.location',
   'wechat.oauth',
   'wechat.user',
+  'wechat.authcode',
   'wiki',
 
   // plan
