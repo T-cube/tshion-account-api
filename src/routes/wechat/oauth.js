@@ -250,7 +250,7 @@ function create(req, res, next) {
 }
 
 function _checkAuthcode(auth_code) {
-  return db.wechat_authcode.findOne({
+  return db.wechat.authcode.findOne({
     auth_code,
     used: false
   })
