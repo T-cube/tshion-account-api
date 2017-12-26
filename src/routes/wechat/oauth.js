@@ -276,10 +276,12 @@ function _checkAccount(account, password, doc) {
         return db.user.update({
           _id: user._id
         }, {
-          'wechat.web_openid': doc.openid,
-          'wechat.unionid': doc.unionid,
-          'wechat.auth.code': doc.auth_code,
-          'wechat.auth.expired': moment().add(config.get('wechat.auth_code_lifetime'), 'seconds').toDate()
+          $set: {
+            'wechat.web_openid': doc.openid,
+            'wechat.unionid': doc.unionid,
+            'wechat.auth.code': doc.auth_code,
+            'wechat.auth.expired': moment().add(config.get('wechat.auth_code_lifetime'), 'seconds').toDate()
+          }
         })
         .then(() => {
           return user;
