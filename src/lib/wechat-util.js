@@ -63,7 +63,7 @@ export default class WechatUtil {
             db.user.update({
               _id: doc._id
             }, {
-              'wechat.unionid': unionid
+              $set: {'wechat.unionid': unionid}
             });
           }
           return doc;
