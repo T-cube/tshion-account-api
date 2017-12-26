@@ -95,11 +95,8 @@ function webAccess(req, res, next) {
       let wUtil = req.model('wechat-util');
       let wechat = result.data;
       let { openid, unionid } = wechat;
-      wUtil.findUserByOpenidUnionid(openid, unionid)
+      wUtil.findUserByWebOpenidUnionid(openid, unionid)
       .then(user => {
-        console.log(openid);
-        console.log(unionid);
-        console.log(user);
         if (user) {
           return wUtil.generateAuthCode(user._id)
           .then(authCode => res.redirect(webUrl + 'account/wechat?wechat_authcode=' + authCode));
@@ -279,7 +276,7 @@ function _checkAccount(account, password, doc) {
         return db.user.update({
           _id: user._id
         }, {
-          'wechat.openid': doc.openid,
+          'wechat.web_openid': doc.openid,
           'wechat.unionid': doc.unionid,
           'wechat.auth.code': doc.auth_code,
           'wechat.auth.expired': moment().add(config.get('wechat.auth_code_lifetime'), 'seconds').toDate()
