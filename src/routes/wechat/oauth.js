@@ -97,6 +97,9 @@ function webAccess(req, res, next) {
       let { openid, unionid } = wechat;
       wUtil.findUserByOpenidUnionid(openid, unionid)
       .then(user => {
+        console.log(openid);
+        console.log(unionid);
+        console.log(user);
         if (user) {
           return wUtil.generateAuthCode(user._id)
           .then(authCode => res.redirect(webUrl + 'account/wechat?wechat_authcode=' + authCode));
@@ -153,6 +156,7 @@ function access(req, res, next) {
     }
     console.log(2222);
     let { openid } = wechat;
+    console.log(openid);
     let loginUser = getLoginUser(req);
     let gettingUserWechat = loginUser ? wUtil.getUserWechat(loginUser._id) : Promise.resolve(null);
     return gettingUserWechat.then(loginUserWechat => {
