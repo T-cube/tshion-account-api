@@ -155,15 +155,16 @@ function access(req, res, next) {
       throw oauthInfoErr;
     }
     console.log(2222);
-    let { openid } = wechat;
+    let { openid, unionid } = wechat;
     console.log(openid);
+    console.log(unionid);
     let loginUser = getLoginUser(req);
     let gettingUserWechat = loginUser ? wUtil.getUserWechat(loginUser._id) : Promise.resolve(null);
     return gettingUserWechat.then(loginUserWechat => {
       if (loginUserWechat) {
         return res.redirect(urls.user(whiteUrl));
       }
-      return wUtil.findUserByOpenid(openid)
+      return wUtil.findUserByOpenidUnionid(openid, unionid)
       .then(user => {
         if (!user) {
           console.log(3333);
