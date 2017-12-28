@@ -105,6 +105,23 @@ api.post('/', (req, res, next) => {
       target_type: C.OBJECT_TYPE.COMPANY,
       company: company._id
     });
+    db.app.find({}, {
+      appid: 1,
+    })
+    .then(all_app => {
+      let apps = [];
+      all_app.forEach(app => {
+        app.enabled = true;
+        apps.push({
+          appid: app.appid,
+          enabled: true
+        });
+      });
+      return db.company.app.insert({
+        company_id: company._id,
+        apps
+      });
+    });
     // create root dir include application dirs such as report, notebook , activity and so on
     createRootDir(company._id, req.user._id, req.company);
     // init company level

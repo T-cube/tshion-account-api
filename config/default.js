@@ -70,7 +70,7 @@ module.exports = {
   security: {
     passwordHashRounds: 10,
     frequency: {
-      userVerifyCode: 60,
+      userVerifyCode: 60 * 1000,
     },
     attemptTimes: {
       ipTimes: 150,
@@ -287,7 +287,8 @@ module.exports = {
       'panel.schedule': true,
       'panel.weather': true,
       new_user_guide_showed: false,
-      new_user_approval_guide_showed: false
+      new_user_approval_guide_showed: false,
+      new_user_company_guide_showed: false
     }
   },
   plan: {
