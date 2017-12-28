@@ -181,7 +181,7 @@ export default class Activity extends AppBase {
             name: 1
           })
           .then(room => {
-            item.room.name = room.name;
+            item.room.name = room ? room.name : null;
             return item;
           });
         });

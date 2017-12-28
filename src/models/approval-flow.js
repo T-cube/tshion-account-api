@@ -46,7 +46,6 @@ export default class ApprovalFlow {
     return ApprovalFlow
       .getFlowByType(this.company_id, this.user_id, type)
       .then(flow => {
-        console.log('flow', flow);
         let { page, pagesize } = this.getPageInfo();
         if (!flow || !flow[type] || !flow[type].length) {
           return this.getEmptyData(pagesize);
@@ -120,7 +119,6 @@ export default class ApprovalFlow {
       'map.$': 1
     })
       .then(mapData => {
-        console.log(mapData);
         let flow_id = mapData && mapData.map[0].flow_id;
         if (!mapData || !flow_id) {
           return null;
