@@ -3,7 +3,7 @@ import moment from 'moment';
 
 import db from 'lib/database';
 import { ApiError } from 'lib/error';
-import { uniqObjectIdArray } from 'lib/utils';
+import { uniqObjectIdArray, fetchUserInfo } from 'lib/utils';
 import Structure from 'models/structure';
 import C from 'lib/constants';
 
@@ -293,6 +293,9 @@ export default class Attendance {
 
   getDepartmentRecord(company, department_id, query) {
     let tree = new Structure(company.structure);
+    if (department_id.equals(company.structure._id)) {
+      return this.getAllRecord(company, query);
+    }
     let members = tree.getMemberAll(department_id).map(member => member._id);
     let totalrows = members.length;
     let { year, month, page, pageSize } = query;
@@ -354,4 +357,45 @@ export default class Attendance {
       });
     });
   }
+
+  getAllRecord(company, query) {
+    let { year, month, page = 0, pageSize = 20 } = query;
+    let totalrows;
+    return Promise.all([
+      db.attendance.sign.find({
+        year: year,
+        month: month,
+        company: company._id,
+      })
+      .limit(pageSize)
+      .skip((page - 1) * pageSize),
+      db.attendance.sign.count({
+        year: year,
+        month: month,
+        company: company._id,
+      })
+    ])
+    .then(([list, total]) => {
+      totalrows = total;
+      let signRecord = [];
+      list.forEach(sign => {
+        signRecord.push(_.extend(this.parseUserRecord(sign.data, year, month), {
+          user: sign.user
+        }));
+      });
+      return signRecord;
+    })
+    .then(record => {
+      return fetchUserInfo(record, 'user')
+      .then(() => {
+        return ({
+          page,
+          pageSize,
+          totalrows,
+          list: record
+        });
+      });
+    });
+  }
+
 }
