@@ -640,7 +640,7 @@ route.on('/mail/user/list',(query)=>{
   let criteria = {
     email:{
       $exists:true,
-      $ne:null
+      $nin:[null,'']
     }
   };
   let {lastlogin,page,pagesize,keyword} = query;
@@ -718,7 +718,7 @@ route.on('/mail/task/create',(query)=>{
       throw new ApiError(500,err);
     });
   }else{
-    db.user.count({email:{$exists:true,$ne:null}}).then(userCount=>{
+    db.user.count({email:{$exists:true,$nin:[null,'']}}).then(userCount=>{
       let page = 0;
       let pagesize = 1000;
       let count = Math.floor(userCount/pagesize);
@@ -727,7 +727,7 @@ route.on('/mail/task/create',(query)=>{
         if(page>count){
           return;
         }
-        return db.user.find({email:{$exists:true,$ne:null}},{_id:1,email:1,name:1}).skip(page*pagesize).limit(pagesize).then(result=>{
+        return db.user.find({email:{$exists:true,$nin:[null,'']}},{_id:1,email:1,name:1}).skip(page*pagesize).limit(pagesize).then(result=>{
           if(result&&result.length){
             let results = result.map((value)=>{
               value = {
