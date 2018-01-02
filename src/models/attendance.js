@@ -179,7 +179,7 @@ export default class Attendance {
     let count = 0;
     let days = this._getMonthDays(year, month);
     days.forEach(day => {
-      if (this.isWorkDay(`${year}-${month}-${day}`)) {
+      if (this.isWorkDay(`${year}/${month}/${day}`)) {
         count += 1;
       }
     });
@@ -195,7 +195,7 @@ export default class Attendance {
     let count = 0;
     let days = this._getMonthDays(year, month);
     days.forEach(day => {
-      if (this.isWorkDay(`${year}-${month}-${day}`) && _.find(data, item => item.date == day)) {
+      if (this.isWorkDay(`${year}/${month}/${day}`) && _.find(data, item => item.date == day)) {
         count += 1;
       }
     });
@@ -207,7 +207,7 @@ export default class Attendance {
     let isCurrentMonth = now.getMonth() == (month - 1);
     let lastDateOfMonth = isCurrentMonth
       ? now.getDate()
-      : moment([year, month, 1]).subtract(1, 'day').toDate().getDate();
+      : moment(`${year}/${month}`).endOf('month').date();
     // let firstWeekday = moment([year, month - 1, 1]).toDate().getDay();
     return _.range(1, lastDateOfMonth + 1);
   }
