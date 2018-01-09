@@ -105,6 +105,14 @@ api.post('/outdoor/sign', (req, res, next) => {
   });
   db.attendance.outdoor.insert(sign_data)
   .then(doc => {
+    let info = {
+      action: C.ACTIVITY_ACTION.SIGN_IN,
+      target_type: C.OBJECT_TYPE.ATTENDANCE_OUTDOOR,
+      creator: req.user._id,
+      company: req.company._id,
+      location: sign_data.location
+    };
+    req.model('activity').insert(info);
     res.json(doc);
   })
   .catch(next);

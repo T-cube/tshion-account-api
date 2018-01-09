@@ -253,7 +253,7 @@ function initstructure() {
   });
 }
 
-function insertChildrenStructure(children) {
+function insertChildrenStructure(children, company_id) {
   if (!children || !children.length) {
     return [];
   }
@@ -264,11 +264,12 @@ function insertChildrenStructure(children) {
       positions: child.positions || [],
       members: child.members || [],
       admin: child.admin || null,
-      children: child.children ? _.pluck(child.children, '_id') : []
+      children: child.children ? _.pluck(child.children, '_id') : [],
+      company_id
     };
     return Promise.all([
       db.structure.insert(doc),
-      insertChildrenStructure(child.children)
+      insertChildrenStructure(child.children, company_id)
     ]);
   });
 }
@@ -284,11 +285,12 @@ function transfer(options) {
         positions: company.structure.positions || [],
         members: company.structure.members || [],
         admin: company.structure.admin || company.owner,
-        children: company.structure.children ? _.pluck(company.structure.children, '_id') : []
+        children: company.structure.children ? _.pluck(company.structure.children, '_id') : [],
+        company_id: company._id
       };
       return Promise.all([
         db.structure.insert(root),
-        insertChildrenStructure(company.structure.children),
+        insertChildrenStructure(company.structure.children, company._id),
         db.company.update({
           _id: company._id
         }, {
