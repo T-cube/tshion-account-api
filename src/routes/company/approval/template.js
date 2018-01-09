@@ -427,6 +427,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
           returnOriginal: false,
           returnNewDocument: true
         }).then(doc => {
+          Approval.cancelItemsUseTemplate(req, tpl.template_id, C.ACTIVITY_ACTION.DELETE);
           return db.approval.template.master.update({
             _id: doc.value.master_id
           }, {
