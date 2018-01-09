@@ -301,6 +301,37 @@ function transfer(options) {
   });
 }
 
+function changeMember(options) {
+  return db.project.find({}, {
+    members: 1
+  })
+  .then(list => {
+    return Promise.map(list, item => {
+      item.members.forEach(m => {
+        m.user = m._id;
+        delete m._id;
+      });
+      return db.project.update({
+        _id: item._id
+      }, {
+        $set: {
+          members: item.members
+        }
+      });
+    });
+  });
+}
+
+program
+  .command('aaaa')
+  .description('change program member field use user instead of _id')
+  .action(options => {
+    changeMember(options)
+    .then(() => {
+      process.exit();
+    });
+  });
+
 program
   .command('transfer')
   .description('transfer company structure to a new collection')

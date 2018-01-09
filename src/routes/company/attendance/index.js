@@ -110,7 +110,7 @@ api.post('/outdoor/sign', (req, res, next) => {
       target_type: C.OBJECT_TYPE.ATTENDANCE_OUTDOOR,
       creator: req.user._id,
       company: req.company._id,
-      location: sign_data.location
+      location: sign_data.location.address
     };
     req.model('activity').insert(info);
     res.json(doc);
