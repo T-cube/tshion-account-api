@@ -196,7 +196,9 @@ api.post('/outdoor/upload',
 api.get('/outdoor', (req, res, next) => {
   const limit = config.get('view.userLoginListNum');
   validate('outdoorList', req.query);
-  let query = {};
+  let query = {
+    company: req.company._id
+  };
   if (req.query.type == 'mine') {
     _.extend(query, {user: req.user._id});
   }
