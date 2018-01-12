@@ -347,6 +347,7 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
       });
     } else {
       return Promise.map(doc.templates, tpl => {
+        Approval.cancelItemsUseTemplate(req, tpl.template_id, C.ACTIVITY_ACTION.CANCEL);
         return db.approval.template.update({
           _id: tpl.template_id
         }, {
@@ -363,6 +364,9 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
           returnNewDocument: true
         })
         .then(auto => {
+          addActivity(req, C.ACTIVITY_ACTION.DISABLE_APPROVAL_TPL, {
+            approval_auto_template: template_id
+          });
           res.json(auto.value);
         });
       });
@@ -427,6 +431,7 @@ api.delete('/:template_id', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req, re
           returnOriginal: false,
           returnNewDocument: true
         }).then(doc => {
+          Approval.cancelItemsUseTemplate(req, tpl.template_id, C.ACTIVITY_ACTION.DELETE);
           return db.approval.template.master.update({
             _id: doc.value.master_id
           }, {

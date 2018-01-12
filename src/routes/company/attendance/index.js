@@ -105,6 +105,14 @@ api.post('/outdoor/sign', (req, res, next) => {
   });
   db.attendance.outdoor.insert(sign_data)
   .then(doc => {
+    let info = {
+      action: C.ACTIVITY_ACTION.SIGN_IN,
+      target_type: C.OBJECT_TYPE.ATTENDANCE_OUTDOOR,
+      creator: req.user._id,
+      company: req.company._id,
+      location: sign_data.location.address
+    };
+    req.model('activity').insert(info);
     res.json(doc);
   })
   .catch(next);
@@ -188,7 +196,9 @@ api.post('/outdoor/upload',
 api.get('/outdoor', (req, res, next) => {
   const limit = config.get('view.userLoginListNum');
   validate('outdoorList', req.query);
-  let query = {};
+  let query = {
+    company: req.company._id
+  };
   if (req.query.type == 'mine') {
     _.extend(query, {user: req.user._id});
   }

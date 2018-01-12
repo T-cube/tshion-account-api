@@ -32,5 +32,6 @@ export let validation = {
   date_create: { type: 'date' },
   sign_record: { type: 'object', optional: true },
   position: { type: 'object', optional: true },
-  attachment_list: {type: 'array', optional: true}
+  attachment_list: {type: 'array', optional: true},
+  location: { type: 'string', optional: true }
 };

@@ -253,6 +253,97 @@ function initstructure() {
   });
 }
 
+function insertChildrenStructure(children, company_id) {
+  if (!children || !children.length) {
+    return [];
+  }
+  return Promise.map(children, child => {
+    var doc = {
+      _id: child._id || ObjectId(),
+      name: child.name || '新部门',
+      positions: child.positions || [],
+      members: child.members || [],
+      admin: child.admin || null,
+      children: child.children ? _.pluck(child.children, '_id') : [],
+      company_id
+    };
+    return Promise.all([
+      db.structure.insert(doc),
+      insertChildrenStructure(child.children, company_id)
+    ]);
+  });
+}
+
+function transfer(options) {
+  return db.company.find({}, {structure: 1, name: 1, owner: 1})
+  .then(companies => {
+    return Promise.map(companies, company => {
+      let root_id = company.structure._id ? company.structure._id : ObjectId();
+      var root = {
+        _id: root_id,
+        name: company.structure.name || company.name,
+        positions: company.structure.positions || [],
+        members: company.structure.members || [],
+        admin: company.structure.admin || company.owner,
+        children: company.structure.children ? _.pluck(company.structure.children, '_id') : [],
+        company_id: company._id
+      };
+      return Promise.all([
+        db.structure.insert(root),
+        insertChildrenStructure(company.structure.children, company._id),
+        db.company.update({
+          _id: company._id
+        }, {
+          $set:{ structure: root_id }
+        })
+      ]);
+    });
+  });
+}
+
+function changeMember(options) {
+  return db.project.find({}, {
+    members: 1
+  })
+  .then(list => {
+    return Promise.map(list, item => {
+      item.members.forEach(m => {
+        m.user = m._id;
+        delete m._id;
+      });
+      return db.project.update({
+        _id: item._id
+      }, {
+        $set: {
+          members: item.members
+        }
+      });
+    });
+  });
+}
+
+program
+  .command('aaaa')
+  .description('change program member field use user instead of _id')
+  .action(options => {
+    changeMember(options)
+    .then(() => {
+      process.exit();
+    });
+  });
+
+program
+  .command('transfer')
+  .description('transfer company structure to a new collection')
+  // .option()
+  .action(options => {
+    transfer(options)
+    .then(() => {
+      console.log('transfer complete');
+      process.exit();
+    });
+  });
+
 program
   .command('backup')
   .description('backup database using -m for comments which is required, -t -f -l is optional')

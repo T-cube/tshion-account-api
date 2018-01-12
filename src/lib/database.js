@@ -32,6 +32,7 @@ const collections = [
   'attendance.outdoor',
   'auth_check_token',
   'company',
+  'structure',
   'company.app',
   'company.app.config',
   'company.level',
