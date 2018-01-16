@@ -301,21 +301,27 @@ function transfer(options) {
   });
 }
 
-function changeMember(options) {
+function changeMemberStatus(options) {
   return db.project.find({}, {
-    members: 1
+    members: 1,
+    is_archived: 1
   })
   .then(list => {
     return Promise.map(list, item => {
+      let status = item.is_archived ? 'completed' : 'processing';
       item.members.forEach(m => {
-        m.user = m._id;
+        m.user = m.user ? m.user : m._id;
         delete m._id;
       });
       return db.project.update({
         _id: item._id
       }, {
         $set: {
-          members: item.members
+          members: item.members,
+          status,
+        },
+        $unset: {
+          is_archived: 1
         }
       });
     });
@@ -323,10 +329,10 @@ function changeMember(options) {
 }
 
 program
-  .command('aaaa')
+  .command('memberstatuschange')
   .description('change program member field use user instead of _id')
   .action(options => {
-    changeMember(options)
+    changeMemberStatus(options)
     .then(() => {
       process.exit();
     });
