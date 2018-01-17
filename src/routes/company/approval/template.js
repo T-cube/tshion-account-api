@@ -364,7 +364,7 @@ api.put('/:template_id/status', checkUserType(C.COMPANY_MEMBER_TYPE.ADMIN), (req
           returnNewDocument: true
         })
         .then(auto => {
-          addActivity(req, C.ACTIVITY_ACTION.DISABLE_APPROVAL_TPL, {
+          addActivity(req, data.status == 'normal' ? C.ACTIVITY_ACTION.ENABLE_APPROVAL_TPL : C.ACTIVITY_ACTION.DISABLE_APPROVAL_TPL, {
             approval_auto_template: template_id
           });
           res.json(auto.value);
