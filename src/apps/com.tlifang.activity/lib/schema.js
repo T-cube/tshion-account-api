@@ -97,6 +97,10 @@ const schema={
       icon: { type: 'string', rules: ['trim'], optional: true },
       place: { type: 'string', rules: ['trim'], optional: true },
       manager: { $objectId: 1, optional: true },
+      need_add: { type: 'array', items: { type: 'string' }, optional: true },
+      optional_add: { type: 'array', items: { type: 'string' }, optional: true },
+      need_reduce: { type: 'array', items: { $objectId: 1 }, optional: true },
+      optional_reduce: { type: 'array', items: { $objectId: 1 }, optional: true },
     },
     validation: {
       name: { type: 'string', minLength: 1, optional: true },
@@ -108,6 +112,10 @@ const schema={
       icon: { type: 'string', minLength: 1 },
       place: { type: 'string', optional: true },
       manager: { $objectId: 1, optional: true },
+      need_add: { type: 'array', items: { type: 'string' }, optional: true },
+      optional_add: { type: 'array', items: { type: 'string' }, optional: true },
+      need_reduce: { type: 'array', items: { $objectId: 1 }, optional: true },
+      optional_reduce: { type: 'array', items: { $objectId: 1 }, optional: true },
     }
   },
   equipment: {

@@ -910,12 +910,48 @@ export default class Activity extends AppBase {
       if (!doc.manager.equals(user_id) && !company.owner.equals(user_id) && !_.some(admins, admin => admin._id.equals(user_id))) {
         throw new ApiError(400, 'no_change_room_permission');
       }
+      let operation = {};
+      let need_add = [];
+      let need_reduce = [];
+      if (room.need_add) {
+        room.need_add.forEach(a => {
+          need_add.push({
+            _id: ObjectId(),
+            name: a,
+            optional: false
+          });
+        });
+        delete room.need_add;
+      }
+      if (room.optional_add) {
+        room.optional_add.forEach(a => {
+          need_add.push({
+            _id: ObjectId(),
+            name: a,
+            optional: true
+          });
+        });
+        delete room.optional_add;
+      }
+      if (room.need_reduce) {
+        need_reduce = need_reduce.concat(room.need_reduce);
+        delete room.need_reduce;
+      }
+      if (room.optional_reduce) {
+        need_reduce = need_reduce.concat(room.optional_reduce);
+        delete room.optional_reduce;
+      }
+      if (need_add.length) {
+        operation['$push'] = { equipments: {$each: need_add} };
+      }
+      if (need_reduce.length) {
+        operation['$pull'] = { equipments: { _id: {$in: need_reduce } } };
+      }
+      operation['$set'] = room;
       return this.collection('room')
       .update({
         _id: room_id
-      }, {
-        $set: room
-      });
+      }, operation);
     });
   }
 
