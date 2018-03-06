@@ -249,7 +249,6 @@ api.post('/send-sms', (req, res, next) => {
         throw new ApiError('401', 'sms_outof_day_limit');
       }
     });
-    req.model('account').sendSmsCode(mobile);
   })
   .then(() => res.json({}))
   .catch(next);
