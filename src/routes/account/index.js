@@ -3,6 +3,7 @@ import express from 'express';
 import config from 'config';
 import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
+import moment from 'moment';
 
 import db from 'lib/database';
 import {
@@ -234,7 +235,37 @@ api.post('/send-sms', (req, res, next) => {
     if (count) {
       throw new ApiError(400, 'user_exists');
     }
-    req.model('account').sendSmsCode(mobile);
+
+    let redis = req.model('redis');
+    let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    let sms_config = config.get('sms');
+    console.log('request sms code:',ip, mobile);
+    console.log('request sms limit:',sms_config.limit.ip, sms_config.limit.mobile);
+    return Promise.all([
+      redis.keys(`tlf_sms_cache_${mobile}*`),
+      redis.keys(`tlf_sms_cache_ip_${ip}*`)
+    ]).then(([mobile_keys, ip_keys]) => {
+      // ip 注册请求数一天最多50个
+      if(ip_keys.length > sms_config.limit.ip) {
+        throw new ApiError('401', 'sms_ip_outof_day_limit');
+      } else {
+        if(mobile_keys.length < sms_config.limit.mobile) {
+
+          var tomorrow = moment(moment().add(1, 'd').format('YYYY-MM-DD'));
+          var now = moment();
+          var distance = tomorrow - now;
+
+          return Promise.all(([
+            redis.setex(`sms_cache_${mobile}_${distance}`, distance, 1),
+            redis.setex(`sms_cache_ip_${ip}_${distance}`, distance, 1)
+          ])).then(() => {
+            return req.model('account').sendSmsCode(mobile);
+          });
+        } else {
+          throw new ApiError('401', 'sms_outof_day_limit');
+        }
+      }
+    });
   })
   .then(() => res.json({}))
   .catch(next);
