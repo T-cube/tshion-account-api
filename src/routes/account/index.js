@@ -238,16 +238,18 @@ api.post('/send-sms', (req, res, next) => {
 
     let redis = req.model('redis');
     let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    let sms_config = config.get('sms');
     console.log('request sms code:',ip, mobile);
+    console.log('request sms limit:',sms_config.limit.ip, sms_config.limit.mobile);
     return Promise.all([
       redis.keys(`tlf_sms_cache_${mobile}*`),
       redis.keys(`tlf_sms_cache_ip_${ip}*`)
     ]).then(([mobile_keys, ip_keys]) => {
       // ip 注册请求数一天最多50个
-      if(ip_keys.length > 50) {
+      if(ip_keys.length > sms_config.limit.ip) {
         throw new ApiError('401', 'sms_ip_outof_day_limit');
       } else {
-        if(mobile_keys.length < 3) {
+        if(mobile_keys.length < sms_config.limit.mobile) {
 
           var tomorrow = moment(moment().add(1, 'd').format('YYYY-MM-DD'));
           var now = moment();
