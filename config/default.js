@@ -25,7 +25,7 @@ module.exports = {
   },
   sms: {
     limit: {
-      ip: 10,
+      ip: 100,
       mobile: 3
     }
   },
