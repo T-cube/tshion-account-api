@@ -50,19 +50,19 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
   let invite_data = _.clone(req.body);
 
-  if(config.get('aes')&&data.encrypt) {
-    let aesConfig = config.get('aes'), { encrypt } = data;
-    delete data.encrypt;
-    let encryptString = Object.keys(data).sort().map(key=>`${key}=${data[key]}`).join('&');
-    let cipher = crypto.createCipheriv('aes-128-cbc', aesConfig.key, aesConfig.iv);
-    cipher.setAutoPadding(true);
-
-    let encrypted = Buffer.concat([cipher.update(encryptString), cipher.final()]).toString('base64');
-    console.log(encrypt == encrypted);
-    if(!(encrypt == encrypted)){
-      throw new ValidationError({[type]: 'user_not_confirmed'});
-    }
-  }
+  // if(config.get('aes')&&data.encrypt) {
+  //   let aesConfig = config.get('aes'), { encrypt } = data;
+  //   delete data.encrypt;
+  //   let encryptString = Object.keys(data).sort().map(key=>`${key}=${data[key]}`).join('&');
+  //   let cipher = crypto.createCipheriv('aes-128-cbc', aesConfig.key, aesConfig.iv);
+  //   cipher.setAutoPadding(true);
+  //
+  //   let encrypted = Buffer.concat([cipher.update(encryptString), cipher.final()]).toString('base64');
+  //   console.log(encrypt==encrypted);
+  //   if(!(encrypt == encrypted)){
+  //     throw new ValidationError({[type]: 'user_not_confirmed'});
+  //   }
+  // }
 
 
   let type = data.type || '__invalid_type__';
