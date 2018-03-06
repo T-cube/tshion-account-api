@@ -34,7 +34,9 @@ export default class BroadcastModel extends Model {
       .then(list => {
         list.forEach(item => {
           notification.to = item._id;
-          app.model('notification').send(notification, BROADCAST);
+          process.nextTick(()=>{
+            app.model('notification').send(notification, BROADCAST);
+          });
         });
       });
     });

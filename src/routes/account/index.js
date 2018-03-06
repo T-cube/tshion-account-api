@@ -3,6 +3,7 @@ import express from 'express';
 import config from 'config';
 import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
+import moment from 'moment';
 
 import db from 'lib/database';
 import {
@@ -57,7 +58,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
     cipher.setAutoPadding(true);
 
     let encrypted = Buffer.concat([cipher.update(encryptString), cipher.final()]).toString('base64');
-    console.log(encrypt==encrypted);
+    console.log(encrypt == encrypted);
     if(!(encrypt == encrypted)){
       throw new ValidationError({[type]: 'user_not_confirmed'});
     }
@@ -234,6 +235,20 @@ api.post('/send-sms', (req, res, next) => {
     if (count) {
       throw new ApiError(400, 'user_exists');
     }
+
+    var redis = req.model('redis');
+    return redis.keys(`sms_cache_${mobile}*`).then(keys => {
+      if(keys.length < 3) {
+        var tomorrow = moment(moment().add(1, 'd').format('YYYY-MM-DD'));
+        var now = moment();
+        var distance = tomorrow - now;
+        return redis.setex(`sms_cache_${mobile}_${distance}`, distance, 1).then(() => {
+          return req.model('account').sendSmsCode(mobile);
+        });
+      } else {
+        throw new ApiError('401', 'sms_outof_day_limit');
+      }
+    });
     req.model('account').sendSmsCode(mobile);
   })
   .then(() => res.json({}))
