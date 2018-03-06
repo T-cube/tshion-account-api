@@ -237,7 +237,7 @@ api.post('/send-sms', (req, res, next) => {
     }
 
     var redis = req.model('redis');
-    return redis.keys(`sms_cache_${mobile}*`).then(keys => {
+    return redis.keys(`tlf_sms_cache_${mobile}*`).then(keys => {
       if(keys.length < 3) {
         var tomorrow = moment(moment().add(1, 'd').format('YYYY-MM-DD'));
         var now = moment();
