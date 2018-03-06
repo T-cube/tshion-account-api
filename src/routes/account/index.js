@@ -256,8 +256,8 @@ api.post('/send-sms', (req, res, next) => {
           var distance = tomorrow - now;
 
           return Promise.all(([
-            redis.setex(`sms_cache_${mobile}_${distance}`, distance, 1),
-            redis.setex(`sms_cache_ip_${ip}_${distance}`, distance, 1)
+            redis.psetex(`sms_cache_${mobile}_${distance}`, distance, 1),
+            redis.psetex(`sms_cache_ip_${ip}_${distance}`, distance, 1)
           ])).then(() => {
             return req.model('account').sendSmsCode(mobile);
           });
