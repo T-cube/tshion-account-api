@@ -236,17 +236,32 @@ api.post('/send-sms', (req, res, next) => {
       throw new ApiError(400, 'user_exists');
     }
 
-    var redis = req.model('redis');
-    return redis.keys(`tlf_sms_cache_${mobile}*`).then(keys => {
-      if(keys.length < 3) {
-        var tomorrow = moment(moment().add(1, 'd').format('YYYY-MM-DD'));
-        var now = moment();
-        var distance = tomorrow - now;
-        return redis.setex(`sms_cache_${mobile}_${distance}`, distance, 1).then(() => {
-          return req.model('account').sendSmsCode(mobile);
-        });
+    let redis = req.model('redis');
+    let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    console.log('request sms code:',ip, mobile);
+    return Promise.all([
+      redis.keys(`tlf_sms_cache_${mobile}*`),
+      redis.keys(`tlf_sms_cache_ip_${ip}*`)
+    ]).then(([mobile_keys, ip_keys]) => {
+      // ip 注册请求数一天最多50个
+      if(ip_keys.length > 50) {
+        throw new ApiError('401', 'sms_ip_outof_day_limit');
       } else {
-        throw new ApiError('401', 'sms_outof_day_limit');
+        if(mobile_keys.length < 3) {
+
+          var tomorrow = moment(moment().add(1, 'd').format('YYYY-MM-DD'));
+          var now = moment();
+          var distance = tomorrow - now;
+
+          return Promise.all(([
+            redis.setex(`sms_cache_${mobile}_${distance}`, distance, 1),
+            redis.setex(`sms_cache_ip_${ip}_${distance}`, distance, 1)
+          ])).then(() => {
+            return req.model('account').sendSmsCode(mobile);
+          });
+        } else {
+          throw new ApiError('401', 'sms_outof_day_limit');
+        }
       }
     });
   })
