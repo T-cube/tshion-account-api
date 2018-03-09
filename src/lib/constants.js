@@ -380,6 +380,7 @@ let constants = {
   },
   CAPTCHA_TYPE: {
     LOGIN: 'login',
+    SMS: 'sms'
   },
 
   BROADCAST_STATUS: {

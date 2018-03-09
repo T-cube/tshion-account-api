@@ -52,22 +52,28 @@ api.get('/avatar-list/:type', (req, res, next) => {
 
 api.get('/captcha', (req, res, next) => {
   let { username, captchaType } = req.query;
-  let data = { username: req.query.username, captchaType: req.query.captchaType };
+  let data = { username, captchaType };
   validate('captcha', data);
   let captcha = req.model('captcha');
   let redis = req.model('redis');
   let userCaptcha = `captcha_${data.username}_${data.captchaType}`;
-  let userKey = `error_times_${data.username}`;
-  redis.get(userKey).then(times => {
-    if (times > attemptTimes.userCaptchaTimes - 1) {
-      captcha.request(userCaptcha, redis).then(canvasURL => {
-        res.send(canvasURL);
-      });
-    } else {
-      throw new ApiError(400, 'no_need_captcha');
-    }
-  })
-  .catch(next);
+  if (captchaType == C.CAPTCHA_TYPE.LOGIN) {
+    let userKey = `error_times_${data.username}`;
+    redis.get(userKey).then(times => {
+      if (times > attemptTimes.userCaptchaTimes - 1) {
+        captcha.request(userCaptcha, redis).then(canvasURL => {
+          res.send(canvasURL);
+        });
+      } else {
+        throw new ApiError(400, 'no_need_captcha');
+      }
+    })
+    .catch(next);
+  } else {
+    captcha.request(userCaptcha, redis).then(canvasURL => {
+      res.send(canvasURL);
+    });
+  }
 });
 
 api.get('/broadcast', (req, res, next) => {

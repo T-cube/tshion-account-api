@@ -222,7 +222,7 @@ api.post('/confirm', (req, res, next) => {
 });
 
 api.post('/send-sms', (req, res, next) => {
-  const { mobile } = req.body;
+  const { mobile, captcha } = req.body;
   if (!mobile || !isMobile(mobile)) {
     throw new ApiError(400, 'invalid_mobile');
   }
@@ -235,16 +235,33 @@ api.post('/send-sms', (req, res, next) => {
     if (count) {
       throw new ApiError(400, 'user_exists');
     }
+    let promise = Promise.resolve();
+    if (!/ios|iphone|ipad|android|ucweb/.test(req['headers']['user-agent'].toLowerCase())) {
+      promise = req
+      .model('redis')
+      .get(`captcha_${mobile}_${C.CAPTCHA_TYPE.SMS}`)
+      .then(result => {
+        if (!result) {
+          throw new ApiError(400, 'wrong_mobile');
+        }
+        if (result.toLowerCase() != captcha.toLowerCase()) {
+          throw new ApiError(400, 'wrong_captcha');
+        }
+      });
+    }
 
     let redis = req.model('redis');
     let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     let sms_config = config.get('sms');
     console.log('request sms code:',ip, mobile);
     console.log('request sms limit:',sms_config.limit.ip, sms_config.limit.mobile);
-    return Promise.all([
-      redis.keys(`tlf_sms_cache_${mobile}*`),
-      redis.keys(`tlf_sms_cache_ip_${ip}*`)
-    ]).then(([mobile_keys, ip_keys]) => {
+    promise.then(() => {
+      return Promise.all([
+        redis.keys(`tlf_sms_cache_${mobile}*`),
+        redis.keys(`tlf_sms_cache_ip_${ip}*`)
+      ]);
+    })
+    .then(([mobile_keys, ip_keys]) => {
       // ip 注册请求数一天最多50个
       if(ip_keys.length > sms_config.limit.ip) {
         throw new ApiError('401', 'sms_ip_outof_day_limit');
