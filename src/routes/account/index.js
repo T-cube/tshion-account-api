@@ -247,6 +247,7 @@ api.post('/send-sms', (req, res, next) => {
         if (result.toLowerCase() != captcha.toLowerCase()) {
           throw new ApiError(400, 'wrong_captcha');
         }
+        return;
       });
     }
 
@@ -255,7 +256,7 @@ api.post('/send-sms', (req, res, next) => {
     let sms_config = config.get('sms');
     console.log('request sms code:',ip, mobile);
     console.log('request sms limit:',sms_config.limit.ip, sms_config.limit.mobile);
-    promise.then(() => {
+    return promise.then(() => {
       return Promise.all([
         redis.keys(`tlf_sms_cache_${mobile}*`),
         redis.keys(`tlf_sms_cache_ip_${ip}*`)
