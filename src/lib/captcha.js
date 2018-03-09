@@ -41,7 +41,7 @@ export default class Captcha {
 
   save(code, userCaptcha, redis) {
     return redis.set(userCaptcha, code).then(() => {
-      redis.expire(userCaptcha, 60 * 60);
+      redis.expire(userCaptcha, 60 * 5);
     });
   }
 
