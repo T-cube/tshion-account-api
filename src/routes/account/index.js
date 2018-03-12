@@ -236,7 +236,7 @@ api.post('/send-sms', (req, res, next) => {
       throw new ApiError(400, 'user_exists');
     }
     let promise = Promise.resolve();
-    if (!/micromessenger|ios|iphone|ipad|android|ucweb/.test(req['headers']['user-agent'].toLowerCase())) {
+    if (!/micromessenger|ios|iphone|ipad|android|ucweb|tlfapp/.test(req['headers']['user-agent'].toLowerCase())) {
       promise = req
       .model('redis')
       .get(`captcha_${mobile}_${C.CAPTCHA_TYPE.SMS}`)
