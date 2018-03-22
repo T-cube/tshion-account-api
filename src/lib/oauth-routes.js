@@ -39,16 +39,16 @@ export function revokeToken(req, res, next) {
     .then(() => {
       res.json({code: 200});
       // account logout log
-      if (req.body.token_type_hint == 'access_token') {
-        req.model('user-activity').create({
-          user,
-          action: C.USER_ACTIVITY.LOGOUT,
-          client_id,
-          user_agent: req.get('user-agent'),
-          ip: getClientIp(req),
-          time: new Date(),
-        });
-      }
+      // if (req.body.token_type_hint == 'access_token') {
+      //   req.model('user-activity').create({
+      //     user,
+      //     action: C.USER_ACTIVITY.LOGOUT,
+      //     client_id,
+      //     user_agent: req.get('user-agent'),
+      //     ip: getClientIp(req),
+      //     time: new Date(),
+      //   });
+      // }
     });
   })
   .catch(next);
@@ -218,7 +218,7 @@ export function logError() {
       oauthModel._getUser(req.body.username)
       .then(user => {
         req.user = user;
-        return req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN_FAIL);
+        // return req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN_FAIL);
       });
     }
     next(err);
@@ -232,7 +232,7 @@ export function tokenSuccess() {
     let userCaptcha = `captcha_${req.body.username}_login`;
     redis.delete(userKey);
     redis.delete(userCaptcha);
-    req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
+    // req.model('user-activity').createFromReq(req, C.USER_ACTIVITY.LOGIN);
     db.user.update({
       _id: req.user._id
     }, {

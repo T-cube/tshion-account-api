@@ -1,6 +1,5 @@
 import { ENUMS } from 'lib/constants';
 import { buildValidator } from 'lib/inspector';
-
 const schema = {
   qrcode: {
     sanitization: {
@@ -16,20 +15,11 @@ const schema = {
       status: { $enum: ['deleted', 'normal'], optional: true },
     }
   },
-  plan_audit: {
-    sanitization: {
-      auth_id: { $objectId: 1 },
-      status: { type: 'string' },
-      comment: { type: 'string' },
-      operator_id: { $objectId: 1 },
-    },
-    validation: {
-      auth_id: { $objectId: 1 },
-      status: { $enum: ['rejected', 'accepted'] },
-      comment: { type: 'string', minLength: 3 },
-      operator_id: { $objectId: 1 },
-    },
-  }
+  validation: {
+    auth_id: { $objectId: 1 },
+    status: { $enum: ['rejected', 'accepted'] },
+    comment: { type: 'string', minLength: 3 },
+    operator_id: { $objectId: 1 },
+  },
 };
-
 export const validate = buildValidator(schema);

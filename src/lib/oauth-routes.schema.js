@@ -1,10 +1,5 @@
 import { ENUMS } from 'lib/constants';
 import { buildValidator } from 'lib/inspector';
-import NotificationSetting from 'models/notification-setting';
-
-const notificationSetting = new NotificationSetting();
-const notificationTypes = notificationSetting.getSettingTypes();
-const notificationMethods = notificationSetting.getSettingMethods();
 
 const schema = {
   params: {

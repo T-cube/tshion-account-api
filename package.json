@@ -17,7 +17,7 @@
     "start": "babel-watch src/index.js",
     "build": "babel src --out-dir app",
     "nodemon": "nodemon --delay 1000ms -i src ./app/index.js",
-    "watch": "babel src --out-dir app --watch",
+    "watch": "babel src --out-dir app --watch --source-maps inline",
     "tcli": "node ./app/cli/tcli \"$@\"",
     "cp": "babel node_modules/@ym/payment --out-dir pc"
   },

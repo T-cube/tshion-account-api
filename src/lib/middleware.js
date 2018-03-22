@@ -3,7 +3,6 @@ import db from 'lib/database';
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 import { time } from 'lib/utils';
-import Plan from 'models/plan/plan';
 
 export function oauthCheck() {
   return (req, res, next) => {
@@ -44,8 +43,8 @@ export function fetchRegUserinfoOfOpen(allowOpenType) {
       return next();
     }
     switch(from_open) {
-      case 'wechat':
-        req.model('wechat-util').findWechatByRandomToken(random_token)
+    case 'wechat':
+      req.model('wechat-util').findWechatByRandomToken(random_token)
         .then(wechat => {
           if (!wechat) {
             return next();
@@ -66,24 +65,9 @@ export function fetchRegUserinfoOfOpen(allowOpenType) {
         .catch(e => {
           throw e;
         });
-        break;
-      default:
-        next();
-    }
-  };
-}
-
-export function checkPlan(...plans) {
-  return (req, res, next) => {
-    let company_id = req.company._id;
-    new Plan(company_id).getCurrent(true).then(current => {
-      if (!_.contains(plans, current.plan)) {
-        return next(new ApiError(400, 'team_plan_unsupport'));
-      }
-      if (current.status == C.PLAN_STATUS.EXPIRED) {
-        return next(new ApiError(400, 'plan_status_unexpected'));
-      }
+      break;
+    default:
       next();
-    });
+    }
   };
 }

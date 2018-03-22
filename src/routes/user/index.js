@@ -12,7 +12,6 @@ import { oauthCheck } from 'lib/middleware';
 import { upload, saveCdn, cropAvatar } from 'lib/upload';
 import { maskEmail, maskMobile, mapObjectIdToData } from 'lib/utils';
 import UserLevel from 'models/user-level';
-import Realname from 'models/plan/realname';
 
 import { validate } from './schema';
 
@@ -46,63 +45,33 @@ export default api;
 api.use(oauthCheck());
 
 api.get('/info', (req, res, next) => {
-  db.user.findOne({
-    _id: req.user._id
-  }, BASIC_FIELDS)
-  .then(data => {
-    return Promise.all([
-      new UserLevel(data).getLevelInfo(),
-      req.model('preference').get(req.user._id)
-    ])
-    .then(([levelInfo, preference]) => {
-      data.level_info = levelInfo;
-      data.preference = preference;
-      if (data.email) {
-        data.email = maskEmail(data.email);
-      }
-      if (data.mobile) {
-        data.mobile = maskMobile(data.mobile);
-      }
-      res.json(data);
-    });
-  })
-  .catch(next);
-});
-
-api.get('/recent/projects', (req, res, next) => {
-  let { company_id } = req.query;
-  let criteria = {
-    user_id: req.user._id,
-  };
-  if (company_id) {
-    _.extend(criteria, { company_id: ObjectId(company_id) });
-  }
-  db.frequent.project
-  .find(criteria)
-  .then(list => {
-    let projects = [];
-    list.forEach(item => {
-      projects = projects.concat(item.projects);
-    });
-    projects = projects.sort((a, b) => b.counts - a.counts).map(item => item.project_id);
-    return mapObjectIdToData(projects, 'project')
-    .then(() => {
-      projects = _.compact(projects).filter(item => item.is_archived != true);
-      res.json(projects);
-    });
-  }).catch(next);
+  db.user.findOne({ _id: req.user._id }, BASIC_FIELDS)
+    .then(data => {
+      new UserLevel(data).getLevelInfo()
+        .then(levelInfo => {
+          data.level_info = levelInfo;
+          if (data.email) {
+            data.email = maskEmail(data.email);
+          }
+          if (data.mobile) {
+            data.mobile = maskMobile(data.mobile);
+          }
+          res.json(data);
+        });
+    })
+    .catch(next);
 });
 
 api.put('/info', (req, res, next) => {
   let data = req.body;
   validate('info', data);
   db.user.update({
-    _id: req.user._id
-  }, {
-    $set: data
-  })
-  .then(result => res.json(result))
-  .catch(next);
+      _id: req.user._id
+    }, {
+      $set: data
+    })
+    .then(result => res.json(result))
+    .catch(next);
 });
 
 api.put('/settings', (req, res, next) => {
@@ -112,40 +81,12 @@ api.put('/settings', (req, res, next) => {
     throw new ApiError(400, null, 'no setting provided!');
   }
   db.user.update({
-    _id: req.user._id
-  }, {
-    $set: data,
-  })
-  .then(() => res.json(data))
-  .catch(next);
-});
-
-api.get('/options/notification', (req, res, next) => {
-  req.model('notification-setting').getAll(req.user._id)
-  .then(data => {
-    let parsed = {};
-    _.each(data, (item, type) => {
-      parsed[type] = {};
-      _.each(item, (v, method) => {
-        if (v.editable) {
-          parsed[type][method] = v.on;
-        } else {
-          parsed[type][method] = v.on ? 1 : 0;
-        }
-      });
-    });
-    res.json(parsed);
-  })
-  .catch(next);
-});
-
-api.put('/options/notification', (req, res, next) => {
-  let data = req.body;
-  validate('options-notification', data);
-  let { type, method, on } = data;
-  req.model('notification-setting').set(req.user._id, type, method, on)
-  .then(() => res.json(data))
-  .catch(next);
+      _id: req.user._id
+    }, {
+      $set: data,
+    })
+    .then(() => res.json(data))
+    .catch(next);
 });
 
 api.put('/avatar', (req, res, next) => {
@@ -153,300 +94,186 @@ api.put('/avatar', (req, res, next) => {
     avatar: cropAvatar(req),
   };
   db.user.update({
-    _id: req.user._id
-  }, {
-    $set: data,
-  })
-  .then(() => res.json(data))
-  .catch(next);
+      _id: req.user._id
+    }, {
+      $set: data,
+    })
+    .then(() => res.json(data))
+    .catch(next);
 });
 
 api.put('/avatar/upload',
-upload({type: 'avatar'}).single('avatar'),
-saveCdn('cdn-public'),
-(req, res, next) => {
-  if (!req.file) {
-    throw new ApiError(400, 'file_type_error');
-  }
-  const data = {
-    avatar: cropAvatar(req),
-  };
-  db.user.update({
-    _id: req.user._id
-  }, {
-    $set: data
-  })
-  .then(() => res.json(data))
-  .catch(next);
-});
-
-api.get('/project', (req, res, next) =>  {
-  db.user.findOne({
-    _id: req.user._id
-  }, {
-    projects: 1
-  })
-  .then(userInfo => {
-    if (!userInfo || !userInfo.projects || !userInfo.projects.length) {
-      return res.json([]);
+  upload({ type: 'avatar' }).single('avatar'),
+  saveCdn('cdn-public'),
+  (req, res, next) => {
+    if (!req.file) {
+      throw new ApiError(400, 'file_type_error');
     }
-    let { company, type, search } = req.query;
-    let condition = {
-      _id: {$in: userInfo.projects}
+    const data = {
+      avatar: cropAvatar(req),
     };
-    if (search) {
-      condition['$text'] = {
-        $search: search
-      };
-    }
-    if (company) {
-      if (ObjectId.isValid(company)) {
-        condition['company_id'] = ObjectId(company);
-      } else {
-        return res.json([]);
-      }
-    }
-    condition['members._id'] = req.user._id;
-    switch (type) {
-      case 'archived':
-        condition.is_archived = true;
-        break;
-      case 'mine':
-        condition.owner = req.user._id;
-        break;
-    }
-    if (!search && !condition.is_archived) {
-      condition.is_archived = false;
-    }
-    return db.project.find(condition)
-    .sort({date_create: -1})
-    .then(data => res.json(data));
-  })
-  .catch(next);
-});
-
-api.get('/activity', (req, res, next) => {
-  let { last_id } = req.query;
-  db.user.findOne({
-    _id: req.user._id
-  }, {
-    companies: 1
-  })
-  .then(userInfo => {
-    let condition = null;
-    if (!userInfo.companies || !userInfo.companies.length) {
-      condition = {
-        creator: req.user._id,
-      };
-    } else {
-      condition = {
-        $or: [{
-          company: {
-            $in: userInfo.companies
-          }
-        }, {
-          creator: req.user._id,
-        }]
-      };
-    }
-    return req.model('activity').fetch(condition, last_id);
-  })
-  .then(list => res.json(list))
-  .catch(next);
-});
+    db.user.update({
+        _id: req.user._id
+      }, {
+        $set: data
+      })
+      .then(() => res.json(data))
+      .catch(next);
+  });
 
 api.get('/guide', (req, res, next) => {
   db.user.guide.findOne({
-    _id: req.user._id
-  })
-  .then(user_guide => {
-    let new_user, guide;
-    if (!guide) {
-      new_user = 1;
-      guide = 1;
-    } else {
-      new_user = 0;
-      guide = compare(version, user_guide.version);
-    }
-    return res.json({
-      version,
-      new_user,
-      guide,
-    });
-  })
-  .catch(next);
+      _id: req.user._id
+    })
+    .then(user_guide => {
+      let new_user, guide;
+      if (!guide) {
+        new_user = 1;
+        guide = 1;
+      } else {
+        new_user = 0;
+        guide = compare(version, user_guide.version);
+      }
+      return res.json({
+        version,
+        new_user,
+        guide,
+      });
+    })
+    .catch(next);
 });
 
 api.put('/guide', (req, res, next) => {
   db.user.guide.update({
-    _id: req.user._id,
-  }, {
-    $set: {version}
-  }, {
-    upsert: true
-  })
-  .then(() => res.json({}))
-  .catch(next);
+      _id: req.user._id,
+    }, {
+      $set: { version }
+    }, {
+      upsert: true
+    })
+    .then(() => res.json({}))
+    .catch(next);
 });
 
 api.get('/guide/new', (req, res, next) => {
   db.guide.get({
-    version: 0
-  })
-  .then(doc => res.json(doc))
-  .catch(next);
+      version: 0
+    })
+    .then(doc => res.json(doc))
+    .catch(next);
 });
 
 api.get('/guide/version/:version', (req, res, next) => {
   db.guide.get({
-    version: req.params.version
-  })
-  .then(doc => res.json(doc))
-  .catch(next);
+      version: req.params.version
+    })
+    .then(doc => res.json(doc))
+    .catch(next);
 });
 
 api.post('/guide', (req, res, next) => {
   let data = req.body;
   db.guide.insert(data)
-  .then(() => res.json({}))
-  .catch(next);
-});
-
-api.post('/preference', (req, res, next) => {
-  let data = req.body;
-  validate('preference', data);
-  if (_.isEmpty(data)) {
-    throw new ApiError(400, 'invalid_preference_data');
-  }
-  req.model('preference').set(req.user._id, data)
-  .then(() => res.json({}))
-  .catch(next);
-});
-
-api.post('/preference/reset', (req, res, next) => {
-  let data = req.body;
-  validate('preference_reset', data);
-  req.model('preference').reset(req.user._id, data.type)
-  .then(() => res.json({}))
-  .catch(next);
-});
-
-api.get('/realname', (req, res, next) => {
-  new Realname(req.user._id).get()
-  .then(doc => {
-    if (!doc) {
-      return res.json(null);
-    }
-    const qiniu = req.model('qiniu').bucket('cdn-private');
-    return Promise.all(doc.realname_ext.idcard_photo.map(file => {
-      return qiniu.makeLink(file);
-    }))
-    .then(pics => {
-      doc.realname_ext.idcard_photo = pics;
-      return res.json(doc);
-    });
-  })
-  .catch(next);
+    .then(() => res.json({}))
+    .catch(next);
 });
 
 api.get('/invite', (req, res, next) => {
   let redis = req.model('redis');
   let timetemp = new Date().getTime();
   db.user.findOne({
-    _id: req.user._id
-  })
-  .then(doc => {
-    let user_id = req.user._id.toString();
-    let company_id = doc.current_company.toString();
+      _id: req.user._id
+    })
+    .then(doc => {
+      let user_id = req.user._id.toString();
+      let company_id = doc.current_company.toString();
 
-  })
-  .catch(next);
+    })
+    .catch(next);
 });
 
 api.post('/invitation', (req, res, next) => {
   let company_id = ObjectId(req.body.company_id);
   db.company.findOne({
-    _id: company_id
-  })
-  .then(doc => {
-    if (!doc) {
-      res.json(...req.body);
-    }
-    if (_.some(doc.members, m => m._id.equals(req.user._id)&&m.status=='normal')) {
-      res.json({_id: doc._id, name: doc.name});
-    } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
-      return Promise.all([
-        db.user.update({
-          _id: req.user._id
-        }, {
-          $addToSet:{
-            companies: company_id
-          }
-        }),
-        db.company.update({
-          _id: doc._id,
-          'members._id': req.user._id
-        }, {
-          $set:{
-            'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
-          },
-          $addToSet: {
-            'structure.members': {
+      _id: company_id
+    })
+    .then(doc => {
+      if (!doc) {
+        res.json(...req.body);
+      }
+      if (_.some(doc.members, m => m._id.equals(req.user._id) && m.status == 'normal')) {
+        res.json({ _id: doc._id, name: doc.name });
+      } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
+        return Promise.all([
+            db.user.update({
               _id: req.user._id
-            }
-          }
-        }),
-        req.model('activity').insert({
-          creator: req.user._id,
-          company: company_id,
-          action: C.ACTIVITY_ACTION.JOIN,
-          target_type: C.OBJECT_TYPE.COMPANY,
-        })
-      ])
-      .then(() => {
-        res.json({_id: doc._id, name: doc.name});
-      });
-    } else {
-      return Promise.all([
-        db.user.update({
-          _id: req.user._id
-        }, {
-          $addToSet:{
-            companies: company_id
-          }
-        }),
-        db.company.update({
-          _id: company_id,
-        }, {
-          $addToSet: {
-            members: {
-              _id: req.user._id,
-              name: req.user.name,
-              email: req.user.email,
-              mobile: req.user.mobile,
-              sex: null,
-              status: C.COMPANY_MEMBER_STATUS.NORMAL,
-              type: C.COMPANY_MEMBER_TYPE.NORMAL,
-              address: ''
-            },
-            'structure.members': {
+            }, {
+              $addToSet: {
+                companies: company_id
+              }
+            }),
+            db.company.update({
+              _id: doc._id,
+              'members._id': req.user._id
+            }, {
+              $set: {
+                'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
+              },
+              $addToSet: {
+                'structure.members': {
+                  _id: req.user._id
+                }
+              }
+            }),
+            req.model('activity').insert({
+              creator: req.user._id,
+              company: company_id,
+              action: C.ACTIVITY_ACTION.JOIN,
+              target_type: C.OBJECT_TYPE.COMPANY,
+            })
+          ])
+          .then(() => {
+            res.json({ _id: doc._id, name: doc.name });
+          });
+      } else {
+        return Promise.all([
+            db.user.update({
               _id: req.user._id
-            }
-          }
-        }),
-        req.model('activity').insert({
-          creator: req.user._id,
-          company: company_id,
-          action: C.ACTIVITY_ACTION.JOIN,
-          target_type: C.OBJECT_TYPE.COMPANY,
-        })
-      ])
-      .then(() => {
-        res.json({_id: doc._id, name: doc.name});
-      });
-    }
-  })
-  .catch(next);
+            }, {
+              $addToSet: {
+                companies: company_id
+              }
+            }),
+            db.company.update({
+              _id: company_id,
+            }, {
+              $addToSet: {
+                members: {
+                  _id: req.user._id,
+                  name: req.user.name,
+                  email: req.user.email,
+                  mobile: req.user.mobile,
+                  sex: null,
+                  status: C.COMPANY_MEMBER_STATUS.NORMAL,
+                  type: C.COMPANY_MEMBER_TYPE.NORMAL,
+                  address: ''
+                },
+                'structure.members': {
+                  _id: req.user._id
+                }
+              }
+            }),
+            req.model('activity').insert({
+              creator: req.user._id,
+              company: company_id,
+              action: C.ACTIVITY_ACTION.JOIN,
+              target_type: C.OBJECT_TYPE.COMPANY,
+            })
+          ])
+          .then(() => {
+            res.json({ _id: doc._id, name: doc.name });
+          });
+      }
+    })
+    .catch(next);
 });
-
-api.use('/schedule', require('./schedule').default);

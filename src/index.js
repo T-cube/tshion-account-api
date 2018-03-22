@@ -10,49 +10,27 @@ import './bootstrap';
 
 import Promise from 'bluebird';
 import http from 'http';
-import fs from 'fs';
 import express from 'express';
-import socketio from 'socket.io';
 import oauthServer from 'oauth2-server';
 import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
-import git from 'git-rev-sync';
 import session from 'express-session';
 const sessionRedis = require('connect-redis')(session);
-import morgan from 'morgan';
 
-import 'lib/i18n';
 import bindLoader from 'lib/loader';
 import apiRouter from './routes';
 import oauthModel from 'lib/oauth-model';
 import * as oauthRoute from 'lib/oauth-routes';
 import { apiErrorHandler, apiRouteError } from 'lib/error';
 import corsHandler from 'lib/cors';
-import SocketServer from 'service/socket';
-import ScheduleServer from 'service/schedule';
-import { SocketClient } from 'service/socket';
 import { initRPC } from 'service/rpc';
-import Notification from 'models/notification';
 import Account from 'models/account';
-import Document from 'models/document';
-import HtmlHelper from 'models/html-helper';
-import { OfficeWeb365 } from 'vendor/officeweb365';
 import { QiniuTools } from 'vendor/qiniu';
-import { Weather } from 'vendor/showapi';
 import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
-import NotificationSetting from 'models/notification-setting';
-import Activity from 'models/activity';
-import WechatUtil from 'lib/wechat-util';
-import UserActivity from 'models/user-activity';
-import Preference from 'models/preference';
-import TempFile from 'models/temp-file';
-import Payment from 'models/plan/payment';
-import C from 'lib/constants';
 import Security from 'models/security';
 import Captcha from 'lib/captcha';
-import Broadcast from 'models/broadcast';
 import rpc from '@ym/rpc';
 
 // welcome messages and output corre config
@@ -61,23 +39,15 @@ console.log();
 console.log('--------------------------------------------------------------------------------');
 console.log('Tlifang API Service v%s', API_VERSION);
 console.log('--------------------------------------------------------------------------------');
-console.log(`GIT_SHA1=${git.short()}`);
 const NODE_ENV = process.env.NODE_ENV || 'default';
 console.log(`NODE_ENV=${NODE_ENV}`);
 console.log('loaded config:');
-const selectedConfigItems = ['apiUrl', 'webUrl', 'server', 'database'];
-console.log(JSON.stringify(_.pick(config, selectedConfigItems), (key, value) => {
-  return _.isArray(value) ? value.join(';') : value;
-}, 2));
 console.log('initializing service...');
 
 const app = express();
 const server = http.Server(app);
-const io = socketio(server, { path: '/api/socket' });
 
 app.enable('trust proxy');
-
-// let rpc = require('@ym/rpc');
 
 require('./trpc')(rpc);
 rpc.install(server, config.get('rpc.trpc'));
@@ -89,28 +59,11 @@ bindLoader(app);
 // app.loadModel('redis', Redis, config.get('vendor.redis'));
 app.bindModel('redis', require('@ym/redis').promiseRedis(config.get('vendor.redis')));
 app.loadModel('qiniu', QiniuTools, config.get('vendor.qiniu'));
-app.loadModel('ow365', OfficeWeb365, config.get('vendor.officeweb365'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
-app.loadModel('weather', Weather, config.get('vendor.showapi.weather'));
 app.loadModel('captcha', Captcha, config.get('userVerifyCode.captcha'));
 app.loadModel('security', Security, config.get('security'));
-app.loadModel('html-helper', HtmlHelper);
-app.loadModel('notification', Notification);
-app.loadModel('activity', Activity);
 app.loadModel('account', Account);
-app.loadModel('document', Document);
-app.loadModel('wechat-util', WechatUtil);
-app.loadModel('notification-setting', NotificationSetting);
-app.loadModel('broadcast', Broadcast);
-
-// load services;
-app.loadModel('schedule', ScheduleServer);
-app.loadModel('socket', SocketServer, io);
-app.loadModel('user-activity', UserActivity);
-app.loadModel('preference', Preference);
-app.loadModel('temp-file', TempFile);
-app.loadModel('payment', Payment);
 
 let _loader = {};
 app.bindLoader(_loader);
@@ -123,15 +76,6 @@ initRPC(config.get('rpc'), _loader).then(rpc => {
   console.error('rpc:', e);
 });
 
-if (config.get('debug.httpInfo')) {
-  // debug http info
-  console.log('debug.httpInfo enabled');
-  app.use(morgan(config.get('debug.format'), {
-    skip: (req, res) => {
-      return req.method == 'OPTIONS';
-    }
-  }));
-}
 if (config.get('debug.apiError')) {
   // debug http info
   console.log('debug.apiError enabled');
