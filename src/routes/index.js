@@ -19,6 +19,7 @@ let routes = [
   'account',
   'public',
   's',
+  'tools',
   'user',
 ];
 

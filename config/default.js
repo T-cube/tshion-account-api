@@ -26,7 +26,7 @@ module.exports = {
   sms: {
     limit: {
       ip: 100,
-      mobile: 3
+      mobile: 300
     }
   },
   rpc: {
@@ -92,7 +92,7 @@ module.exports = {
       expires: 2 * 24 * 60 * 60, // 2 days in seconds
     },
     sms: {
-      codeLength: 6,
+      codeLength: 4,
       expires: 15 * 60, // 15 minutes in seconds
     },
     captcha: {
@@ -221,6 +221,10 @@ module.exports = {
         }
       }
     },
+    yunpian: {
+      apikey: process.env.YUNPIAN_APIKEY,
+      sms_signature: process.env.YUNPIAN_SMS_SIGNATURE
+    },
     sendcloud: {
       email: {
         apiUser: process.env.SENDCLOUD_EMAIL_APIUSER,
@@ -321,8 +325,8 @@ module.exports = {
     expire_minutes: 30, // order expire
   },
   invoice: {
-    min_tax_free_amount: 100000,  // free ship limit
-    tax_rate: 2000,               // ship charge under limit
+    min_tax_free_amount: 100000, // free ship limit
+    tax_rate: 2000, // ship charge under limit
   },
   recharge: {
     amount: {
@@ -330,17 +334,17 @@ module.exports = {
       max: 500000,
     }
   },
-  sendTask:{
-    sms:{
-      listName:'smsTask',
-      timeout:0,
-      pageSize:1000 //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
+  sendTask: {
+    sms: {
+      listName: 'smsTask',
+      timeout: 0,
+      pageSize: 1000 //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
     },
-    email:{
-      listName:'emailTask',
-      timeout:0,
-      pageSize:1000, //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
-      defaultModel:'tlifang_email_advert'
+    email: {
+      listName: 'emailTask',
+      timeout: 0,
+      pageSize: 1000, //节流，防止内存泄露,并且insertMany方法最多一次能插入1000条数据
+      defaultModel: 'tlifang_email_advert'
     }
   }
 };

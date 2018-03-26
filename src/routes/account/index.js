@@ -210,10 +210,11 @@ api.post('/confirm', (req, res, next) => {
 });
 
 api.post('/send-sms', (req, res, next) => {
-  const { mobile, captcha } = req.body;
+  const { mobile, nation_code, captcha } = req.body;
   if (!mobile || !isMobile(mobile)) {
     throw new ApiError(400, 'invalid_mobile');
   }
+
   const frequency = config.get('security.frequency.userVerifyCode');
   req.model('security').limitRequestFrequency('verifycode', mobile, frequency)
   .then(() => {
@@ -265,7 +266,7 @@ api.post('/send-sms', (req, res, next) => {
             redis.psetex(`sms_cache_${mobile}_${distance}`, distance, 1),
             redis.psetex(`sms_cache_ip_${ip}_${distance}`, distance, 1)
           ])).then(() => {
-            return req.model('account').sendSmsCode(mobile);
+            return req.model('account').sendSmsCode(mobile, nation_code);
           });
         } else {
           throw new ApiError('401', 'sms_outof_day_limit');

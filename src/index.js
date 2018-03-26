@@ -29,6 +29,7 @@ import Account from 'models/account';
 import { QiniuTools } from 'vendor/qiniu';
 import Redis from '@ym/redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
+import YunPian from 'vendor/yunpian';
 import Security from 'models/security';
 import Captcha from 'lib/captcha';
 import rpc from '@ym/rpc';
@@ -61,6 +62,7 @@ app.bindModel('redis', require('@ym/redis').promiseRedis(config.get('vendor.redi
 app.loadModel('qiniu', QiniuTools, config.get('vendor.qiniu'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
+app.loadModel('yunpian',YunPian,config.get('vendor.yunpian'));
 app.loadModel('captcha', Captcha, config.get('userVerifyCode.captcha'));
 app.loadModel('security', Security, config.get('security'));
 app.loadModel('account', Account);
