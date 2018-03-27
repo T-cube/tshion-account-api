@@ -56,13 +56,26 @@ api.post('/wechat-jsapi-signture', (req, res, next) => {
     ],
     url: req.body.url
   }, (err, result) => {
-    console.log('js api error',err);
+    console.log('js api error', err);
     if (err) return next(err);
     res.json(result);
   });
 });
 
 if (!(process.env.NODE_ENV === 'production')) {
+  api.get('/api-doc/:dir/:doc', (req, res, next) => {
+    console.log(req.params);
+    const doc = require('fs').readFileSync(__dirname + `/../../../docs/${req.params.dir}/${req.params.doc}.md`);
+    res.setHeader('Content-Type', 'text/html');
+
+    const showdown = require('showdown');
+    const converter = new showdown.Converter();
+    res.send(converter.makeHtml(doc.toString('utf-8')));
+
+    // res.send(require('node-markdown').Markdown(changelogs.toString('utf-8')));
+  });
+
+
   api.get('/changelogs/:worker', (req, res, next) => {
     const changelogs = require('fs').readFileSync(__dirname + `/../../../changelogs/${req.params.worker}.md`);
     res.setHeader('Content-Type', 'text/html');

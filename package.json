@@ -87,6 +87,7 @@
     "babel-watch": "^2.0.3",
     "eslint": "^2.11.1",
     "node-markdown": "^0.1.1",
-    "nodemon": "^1.9.2"
+    "nodemon": "^1.9.2",
+    "showdown": "^1.8.6"
   }
 }

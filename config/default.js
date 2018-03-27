@@ -49,7 +49,8 @@ module.exports = {
     'key': '6evT6DnWlbNG5711',
     'iv': '6evT6DnWlbNG5711'
   },
-  database: '127.0.0.1/tlf_core', // process.env.DATABASE
+  // database: '127.0.0.1/tlf_core', // process.env.DATABASE
+  database: process.env.DATABASE,
   locale: 'zh-CN',
   // list view config
   view: {
