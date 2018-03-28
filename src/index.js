@@ -93,6 +93,7 @@ app.use((req, res, next) => {
     'X-Content-Type-Options': 'nosniff',
     'Vary': 'Accept-Encoding',
   });
+  console.log(req.url);
   next();
 });
 

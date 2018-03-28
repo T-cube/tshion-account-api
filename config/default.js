@@ -29,6 +29,9 @@ module.exports = {
       mobile: 300
     }
   },
+  account: {
+    private_key: process.env.ACCOUNT_PRIVATE_KEY_PEM
+  },
   rpc: {
     protocol: 'http', // process.env.RPC_PROTOCOL
     hostname: '127.0.0.1', // process.env.RPC_HOSTNAME

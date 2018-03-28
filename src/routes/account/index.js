@@ -23,6 +23,7 @@ import { oauthCheck, fetchRegUserinfoOfOpen } from 'lib/middleware';
 import { validate } from './schema';
 import { randomAvatar, cropAvatar } from 'lib/upload';
 import { ValidationError } from 'lib/inspector';
+import { decryptFromHex } from 'lib/rsa';
 
 const api = express.Router();
 export default api;
@@ -210,7 +211,7 @@ api.post('/confirm', (req, res, next) => {
 });
 
 api.post('/send-sms', (req, res, next) => {
-  const { mobile, nation_code, captcha } = req.body;
+  const { mobile, nation_code, captcha,hex } = req.body;
   if (!mobile || !isMobile(mobile)) {
     throw new ApiError(400, 'invalid_mobile');
   }
@@ -225,7 +226,7 @@ api.post('/send-sms', (req, res, next) => {
       throw new ApiError(400, 'user_exists');
     }
     let promise = Promise.resolve();
-    if (!/micromessenger|ios|iphone|ipad|android|ucweb|tlfapp/.test(req['headers']['user-agent'].toLowerCase())) {
+    if (!/micromessenger|ios|iphone|ipad|android|ucweb|tlfapp|okhttp/.test(req['headers']['user-agent'].toLowerCase())) {
       promise = req
       .model('redis')
       .get(`captcha_${mobile}_${C.CAPTCHA_TYPE.SMS}`)
@@ -238,6 +239,16 @@ api.post('/send-sms', (req, res, next) => {
         }
         return;
       });
+    } else {
+      if(hex instanceof String) {
+        // 如果是app注册，需要提交加密过后的手机号进行校验获取验证码
+        let hex_decrypt = decryptFromHex(hex);
+        if(mobile != hex_decrypt) {
+          throw new ApiError(400,'wrong_hex');
+        }
+      } else {
+        throw new ApiError(400,'need_hex_param');
+      }
     }
 
     let redis = req.model('redis');

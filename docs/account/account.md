@@ -1,5 +1,6 @@
 # 账号系统
 api-root:  http://192.168.1.18:3333
+
 ## 注册流程
 1. 填写手机号
 2. 提交手机号换取获取图片验证码
@@ -7,7 +8,7 @@ api-root:  http://192.168.1.18:3333
 4. 提交手机号、密码、短信验证码完成注册
 
 ### api-获取图形验证码
-GET /api/tools/captcha?username=18705928626&captchaType=sms
+GET /api/tools/captcha
 
 参数名      |参数类型      |数据类型
 -|:-: | -:
@@ -42,6 +43,7 @@ type|body|Enum[String], 'mobile','email'
 ## 登陆流程
 ### api-登陆
 POST /oauth/token
+
 ```
 headers
 Content-Type: application/x-www-form-urlencoded
@@ -67,6 +69,7 @@ password|body|String
 ## 用户数据
 ### api-获取用户信息
 GET /api/user/info
+
 ```
 headers
 Authorization: Bearer $access_token
@@ -89,6 +92,7 @@ Authorization: Bearer $access_token
 
 ### api-修改用户信息
 PUT /api/user/info
+
 ```
 headers
 Authorization: Bearer $access_token
@@ -105,5 +109,23 @@ sex|body|Enum[String], 'M', 'F'
   n:1
   nModified:1
   ok:1
+}
+```
+
+### api-上传头像
+PUT /api/user/avatar/upload
+
+```
+headers
+Authorization: Bearer $access_token
+```
+参数名      |参数类型      |数据类型
+-|:-: | -:
+avatar|FormData|File
+
+返回
+```
+{
+  avatar: URL
 }
 ```
