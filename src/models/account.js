@@ -182,7 +182,6 @@ export default class Account {
   }
 
   sendSmsCode(mobile, nation_code = '86') {
-    console.log(mobile,nation_code)
     const { expires } = config.get('userVerifyCode.sms');
     return this.genSmsCode()
       .then(code => {

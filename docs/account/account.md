@@ -7,7 +7,7 @@ api-root:  http://192.168.1.18:3333
 3. 提交图片验证码和手机号获取短信验证码
 4. 提交手机号、密码、短信验证码完成注册
 
-### api-获取图形验证码
+### api-获取图形验证码(废弃)
 GET /api/tools/captcha
 
 参数名      |参数类型      |数据类型
@@ -25,10 +25,12 @@ captchaType|query        |Enum[String], 'sms'
 ### api-获取短信验证码
 POST /api/account/send-sms
 
-参数名      |参数类型      |数据类型
--|:-: | -:
+参数名      |参数类型      |数据类型|备注
+-|:-: |:-: | -:
 mobile|body|Number
-captcha|body|String
+nation_code|body|Number
+captcha|body|String|废弃
+hex|body|String
 
 ### api-注册
 POST /api/account/register
