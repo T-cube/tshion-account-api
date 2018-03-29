@@ -41,6 +41,10 @@ class YunPian {
     return test_phone;
   }
 
+  /**
+   * send single voice code
+   * @param {{}} param0 { url, mobile, text }
+   */
   _sendSingleVoiceCode({ url, mobile, text }) {
     return new Promise((resolve, reject) => {
       request.post(url, {
