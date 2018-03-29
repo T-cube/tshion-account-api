@@ -62,7 +62,7 @@ app.bindModel('redis', require('@ym/redis').promiseRedis(config.get('vendor.redi
 app.loadModel('qiniu', QiniuTools, config.get('vendor.qiniu'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
-app.loadModel('yunpian',YunPian,config.get('vendor.yunpian'));
+app.loadModel('yunpian', YunPian, config.get('vendor.yunpian'));
 app.loadModel('captcha', Captcha, config.get('userVerifyCode.captcha'));
 app.loadModel('security', Security, config.get('security'));
 app.loadModel('account', Account);
@@ -118,7 +118,7 @@ app.use('/oauth', session({
   resave: false,
   saveUninitialized: false,
 }));
-
+app.use(bodyParser.urlencoded({ extended: true }));
 // use form to submit Oauth params
 app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 // auth code grant type (for third party sites)

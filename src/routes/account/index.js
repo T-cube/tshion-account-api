@@ -212,6 +212,7 @@ api.post('/confirm', (req, res, next) => {
 
 api.post('/send-sms', (req, res, next) => {
   const { mobile, nation_code, captcha,hex } = req.body;
+  console.log(req.body,req.query);
   if (!mobile || !isMobile(mobile)) {
     throw new ApiError(400, 'invalid_mobile');
   }
@@ -240,7 +241,7 @@ api.post('/send-sms', (req, res, next) => {
         return;
       });
     } else {
-      if(hex instanceof String) {
+      if(hex) {
         // 如果是app注册，需要提交加密过后的手机号进行校验获取验证码
         let hex_decrypt = decryptFromHex(hex);
         if(mobile != hex_decrypt) {
