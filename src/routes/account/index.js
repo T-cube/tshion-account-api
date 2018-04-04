@@ -34,8 +34,8 @@ api.post('/check', (req, res, next) => {
   let { type } = req.body;
   validate('register', data, ['type', type]);
   db.user.findOne({
-    [type]: req.body[type]
-  }, { activiated: 1 })
+      [type]: req.body[type]
+    }, { activiated: 1 })
     .then(user => {
       if (!user) {
         return res.json({});
@@ -55,31 +55,19 @@ api.post('/check', (req, res, next) => {
 api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
   let data = req.body;
   let invite_data = _.clone(req.body);
-
-  // if(config.get('aes')&&data.encrypt) {
-  //   let aesConfig = config.get('aes'), { encrypt } = data;
-  //   delete data.encrypt;
-  //   let encryptString = Object.keys(data).sort().map(key=>`${key}=${data[key]}`).join('&');
-  //   let cipher = crypto.createCipheriv('aes-128-cbc', aesConfig.key, aesConfig.iv);
-  //   cipher.setAutoPadding(true);
-  //
-  //   let encrypted = Buffer.concat([cipher.update(encryptString), cipher.final()]).toString('base64');
-  //   console.log(encrypt==encrypted);
-  //   if(!(encrypt == encrypted)){
-  //     throw new ValidationError({[type]: 'user_not_confirmed'});
-  //   }
-  // }
-
-
+  console.log(data);
   let type = data.type || '__invalid_type__';
   validate('register', data, ['type', type, 'code', 'password']);
   let { password, code } = data;
+  console.log(1,data);
   let id = data[type];
   data = _.pick(data, 'type', type, 'password', 'code');
+  console.log(2,data);
   db.user.findOne({
-    [type]: id
-  }, { activiated: 1 })
+      [type]: id
+    }, { activiated: 1 })
     .then(user => {
+      console.log('user:',user);
       if (user) {
         if (type == 'email' && !user.activiated) {
           return req.model('account').sendRegisterEmail(id)
@@ -136,20 +124,20 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       });
       if (invite_data.user_id && ObjectId.isValid(invite_data.user_id)) {
         db.user.findOne({
-          _id: ObjectId(invite_data.user_id)
-        })
+            _id: ObjectId(invite_data.user_id)
+          })
           .then(inviter => {
             if (inviter) {
               db.user.findOneAndUpdate({
-                _id: user._id
-              }, {
-                $set: {
-                  recommend: inviter._id
-                }
-              }, {
-                returnOriginal: false,
-                returnNewDocument: true
-              })
+                  _id: user._id
+                }, {
+                  $set: {
+                    recommend: inviter._id
+                  }
+                }, {
+                  returnOriginal: false,
+                  returnNewDocument: true
+                })
                 .then(invitee => {
                   if (invitee.value) {
                     let { a } = invite_data;
@@ -179,8 +167,8 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       // 保存第三方账户的图片
       if (req.openUserinfo && req.openUserinfo.avatar) {
         return downloadFile(req.openUserinfo.avatar, 'avatar').then(downloadFile => {
-          return saveCdnInBucket(req.model('qiniu').bucket('cdn-public'), downloadFile);
-        })
+            return saveCdnInBucket(req.model('qiniu').bucket('cdn-public'), downloadFile);
+          })
           .then(cdnFile => {
             req.file = cdnFile;
             let avatar = cropAvatar(req);
@@ -196,6 +184,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       }
     })
     .catch(err => {
+      console.log(err);
       if (err.message == 'resend_code') {
         res.json({ resend: true });
       } else {
@@ -237,30 +226,30 @@ api.post('/send-sms', (req, res, next) => {
         throw new ApiError(400, 'user_exists');
       }
       let promise = Promise.resolve();
-      if (!/micromessenger|ios|iphone|ipad|android|ucweb|tlfapp|okhttp/.test(req['headers']['user-agent'].toLowerCase())) {
-        promise = req
-          .model('redis')
-          .get(`captcha_${mobile}_${C.CAPTCHA_TYPE.SMS}`)
-          .then(result => {
-            if (!result) {
-              throw new ApiError(400, 'wrong_mobile');
-            }
-            if (result.toLowerCase() != captcha.toLowerCase()) {
-              throw new ApiError(400, 'wrong_captcha');
-            }
-            return;
-          });
-      } else {
-        if (hex) {
-          // 如果是app注册，需要提交加密过后的手机号进行校验获取验证码
-          let hex_decrypt = decryptFromHex(hex);
-          if (mobile != hex_decrypt) {
-            throw new ApiError(400, 'wrong_hex');
-          }
-        } else {
-          throw new ApiError(400, 'need_hex_param');
+      // if (!/micromessenger|ios|iphone|ipad|android|ucweb|tlfapp|okhttp/.test(req['headers']['user-agent'].toLowerCase())) {
+      //   promise = req
+      //     .model('redis')
+      //     .get(`captcha_${mobile}_${C.CAPTCHA_TYPE.SMS}`)
+      //     .then(result => {
+      //       if (!result) {
+      //         throw new ApiError(400, 'wrong_mobile');
+      //       }
+      //       if (result.toLowerCase() != captcha.toLowerCase()) {
+      //         throw new ApiError(400, 'wrong_captcha');
+      //       }
+      //       return;
+      //     });
+      // } else {
+      if (hex) {
+        // 如果是app注册，需要提交加密过后的手机号进行校验获取验证码
+        let hex_decrypt = decryptFromHex(hex);
+        if (mobile != hex_decrypt) {
+          throw new ApiError(400, 'wrong_hex');
         }
+      } else {
+        throw new ApiError(400, 'need_hex_param');
       }
+      // }
 
       let redis = req.model('redis');
       let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -342,10 +331,10 @@ api.post('/change-pass', oauthCheck(), (req, res, next) => {
   validate('register', data, ['password as old_password', 'password as new_password']);
   let { old_password, new_password } = data;
   db.user.findOne({
-    _id: req.user._id,
-  }, {
-    password: 1,
-  })
+      _id: req.user._id,
+    }, {
+      password: 1,
+    })
     .then(user => {
       return comparePassword(old_password, user.password);
     })

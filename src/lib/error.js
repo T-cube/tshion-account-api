@@ -75,7 +75,8 @@ export function apiErrorHandler(err, req, res, next) {
         };
       }
       if (!_.isNull(val.code)) {
-        val.message = __(val.code);
+        console.log(val)
+        val.message = _(val.code);
       }
       return val;
     });

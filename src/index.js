@@ -148,8 +148,6 @@ app.all('/oauth/revoke', oauthRoute.revokeToken);
 app.use('/api', apiRouter);
 app.use(app.oauth.errorHandler());
 
-app.use('/chat/ddd', httpForwardServer.patch());
-
 // global error handler
 app.use(apiErrorHandler);
 app.use(apiRouteError);
