@@ -30,7 +30,7 @@ captchaType|query        |Enum[String], 'sms'
 mobile|body|Number
 nation_code|body|Number
 captcha|body|String|废弃
-hex|body|String
+hex|body|String|手机号经过rsa公钥加密过后的字节流转换成的hash字符串
 
 ### api-注册
 POST /api/account/register

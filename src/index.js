@@ -15,6 +15,11 @@ import oauthServer from 'oauth2-server';
 import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
+
+import { HttpForwardServer } from 'http-forwards';
+var httpForwardServer = new HttpForwardServer({ socketPort: 2222 });
+httpForwardServer.install({ chat: 123456 });
+
 import session from 'express-session';
 const sessionRedis = require('connect-redis')(session);
 
@@ -142,6 +147,8 @@ app.all('/oauth/revoke', oauthRoute.revokeToken);
 // api routes bind here
 app.use('/api', apiRouter);
 app.use(app.oauth.errorHandler());
+
+app.use('/chat/ddd', httpForwardServer.patch());
 
 // global error handler
 app.use(apiErrorHandler);
