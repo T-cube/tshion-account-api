@@ -75,7 +75,7 @@ export function apiErrorHandler(err, req, res, next) {
         };
       }
       if (!_.isNull(val.code)) {
-        console.log(val)
+        // console.log(val)
         val.message = _(val.code);
       }
       return val;
@@ -95,9 +95,10 @@ export function apiErrorHandler(err, req, res, next) {
   try {
     res.set(err.headers);
     delete err.headers;
+    console.log('handle error:', err);
     res.status(err.code);
     res.json(err);
-  } catch(e) {
+  } catch (e) {
     console.error('headers already sent');
   }
   if (debugApiErrorEnabled) {

@@ -3,53 +3,87 @@ import Promise from 'bluebird';
 import ServerError from 'oauth2-server';
 import Joi from 'joi';
 import _ from 'underscore';
+import {ObjectID} from 'mongodb';
+
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
 
 import db from 'lib/database';
 import { comparePassword, camelCaseObjectKey, isEmail, isMobile } from 'lib/utils';
 
+import config from 'config';
+const redis = require('@ym/redis').promiseRedis(config.get('vendor.redis'));
+
+
 export default {
+  /**
+   * get access token info
+   * @param {String} bearerToken
+   * @param {Function} callback
+   */
   getAccessToken(bearerToken, callback) {
     // console.log('# getAccessToken (bearerToken: ' + bearerToken + ')');
-    db.oauth.accesstoken.findOne({access_token: bearerToken})
-    .then(token => {
-      if (!token) {
-        return callback(null, null);
+    let key = `oauth.access_${bearerToken}`;
+    redis.hmget(key).then(info => {
+      if (info) {
+        let user_key = `user.accesskey_${info.user_id}`;
+        return redis.hmget(user_key).then(user => {
+          user._id=ObjectID(user._id);
+          info.user = user;
+          return callback(null, info);
+        });
+      } else {
+
+        // find access is exists
+        return db.oauth.accesstoken.findOne({ access_token: bearerToken })
+          .then(token => {
+            if (!token) {
+              return callback(null, null);
+            }
+
+            return db.user.findOne({
+                _id: token.user_id
+              }, {
+                _id: 1,
+                name: 1,
+                email: 1,
+                mobile: 1,
+                avatar: 1,
+                // 'wechat.openid': 1
+              })
+              .then(user => {
+                token.user = user;
+                let user_key = `user.accesskey_${user._id.toHexString()}`;
+                let user_token = `user.access_${user._id.toHexString()}`;
+                return redis.get(user_token).then(preKey => {
+                  return Promise.all([
+                    redis.del(preKey ? preKey : ''),
+                    redis.set(user_token, key),
+                    redis.hmset(key, token),
+                    redis.hmset(user_key, user)
+                  ]).then(() => callback(null, token));
+                });
+              });
+          });
       }
-      return db.user.findOne({
-        _id: token.user_id
-      }, {
-        _id: 1,
-        name: 1,
-        email: 1,
-        mobile: 1,
-        avatar: 1,
-        'wechat.openid': 1
-      })
-      .then(user => {
-        token.user = user;
-        callback(null, token);
-      });
-    })
-    .catch(e => callback(e));
+    }).catch(callback);
   },
 
   getClient(clientId, clientSecret, callback) {
     // console.log('# getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
     if (clientSecret === null) {
-      return db.oauth.clients.findOne({client_id: clientId})
-      .then(doc => {
-        callback(null, camelCaseObjectKey(doc));
-      }).catch(e => callback(e));
+      return db.oauth.clients.findOne({ client_id: clientId })
+        .then(doc => {
+          callback(null, camelCaseObjectKey(doc));
+        }).catch(e => callback(e));
     }
-    db.oauth.clients.findOne({client_id: clientId, client_secret: clientSecret})
-    .then(doc => {
-      doc ?
-      callback(null, camelCaseObjectKey(doc)) :
-      callback(null, null);
-    })
-    .catch(e => callback(e));
+    db.oauth.clients.findOne({ client_id: clientId, client_secret: clientSecret })
+      .then(doc => {
+        doc ?
+          callback(null, camelCaseObjectKey(doc)) :
+          callback(null, null);
+      })
+      .catch(e => callback(e));
   },
 
   grantTypeAllowed(clientId, grantType, callback) {
@@ -87,17 +121,17 @@ export default {
       username = username.trim();
     }
     this._getUser(username)
-    .then(doc => {
-      if (!doc) {
-        return callback(null, null);
-      }
-      doc.id = doc._id;
-      return comparePassword(password, doc.password)
-      .then(result => {
-        callback(null, result ? doc : null);
-      });
-    })
-    .catch(e => callback(e));
+      .then(doc => {
+        if (!doc) {
+          return callback(null, null);
+        }
+        doc.id = doc._id;
+        return comparePassword(password, doc.password)
+          .then(result => {
+            callback(null, result ? doc : null);
+          });
+      })
+      .catch(e => callback(e));
   },
 
   _getUser(username) {
@@ -134,40 +168,43 @@ export default {
 
   getRefreshToken(refreshToken, callback) {
     // console.log('# getRefreshToken (refreshToken: ' + refreshToken + ')');
-    db.oauth.refreshtoken.findOne({refresh_token: refreshToken})
-    .then(token => {
-      if (!token) {
-        return callback(null, null);
-      }
-      return db.user.findOne({
-        _id: token.user_id
-      }, {
-        _id: 1, name: 1, email: 1, mobile: 1
+    db.oauth.refreshtoken.findOne({ refresh_token: refreshToken })
+      .then(token => {
+        if (!token) {
+          return callback(null, null);
+        }
+        return db.user.findOne({
+            _id: token.user_id
+          }, {
+            _id: 1,
+            name: 1,
+            email: 1,
+            mobile: 1
+          })
+          .then(user => {
+            token.user = user;
+            callback(null, camelCaseObjectKey(token));
+          });
       })
-      .then(user => {
-        token.user = user;
-        callback(null, camelCaseObjectKey(token));
-      });
-    })
-    .catch(e => callback(e));
+      .catch(e => callback(e));
   },
 
   revokeRefreshToken(refreshToken, callback) {
-    db.oauth.refreshtoken.remove({refresh_token: refreshToken})
-    .then(doc => callback(null, doc))
-    .catch(e => callback(e));
+    db.oauth.refreshtoken.remove({ refresh_token: refreshToken })
+      .then(doc => callback(null, doc))
+      .catch(e => callback(e));
   },
 
   getAuthCode(code, callback) {
-    db.oauth.code.findOne({code: code})
-    .then(authCode => {
-      if (!authCode) {
-        return callback(null, null);
-      }
-      // console.log('# saveAuthCode: ', authCode);
-      callback(null, camelCaseObjectKey(authCode));
-    })
-    .catch(e => callback(e));
+    db.oauth.code.findOne({ code: code })
+      .then(authCode => {
+        if (!authCode) {
+          return callback(null, null);
+        }
+        // console.log('# saveAuthCode: ', authCode);
+        callback(null, camelCaseObjectKey(authCode));
+      })
+      .catch(e => callback(e));
   },
 
   saveAuthCode(code, clientId, expires, user, callback) {
@@ -179,10 +216,9 @@ export default {
       user_id: user._id,
     };
     db.oauth.code.insert(data)
-    .then(() => {
-      callback(null);
-    })
-    .catch(e => callback(e));
+      .then(() => {
+        callback(null);
+      })
+      .catch(e => callback(e));
   },
-
 };

@@ -26,6 +26,7 @@ const sessionRedis = require('connect-redis')(session);
 import bindLoader from 'lib/loader';
 import apiRouter from './routes';
 import oauthModel from 'lib/oauth-model';
+
 import * as oauthRoute from 'lib/oauth-routes';
 import { apiErrorHandler, apiRouteError } from 'lib/error';
 import corsHandler from 'lib/cors';
@@ -63,7 +64,9 @@ bindLoader(app);
 
 // load models
 // app.loadModel('redis', Redis, config.get('vendor.redis'));
-app.bindModel('redis', require('@ym/redis').promiseRedis(config.get('vendor.redis')));
+
+const redis = require('@ym/redis').promiseRedis(config.get('vendor.redis'));
+app.bindModel('redis', redis);
 app.loadModel('qiniu', QiniuTools, config.get('vendor.qiniu'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
 app.loadModel('sms', SmsSender, config.get('vendor.sendcloud.sms'));
