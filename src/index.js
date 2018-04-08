@@ -134,8 +134,8 @@ app.use('/oauth/login', oauthRoute.login);
 app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
 app.post('/oauth/token',
-  oauthRoute.ipCheck(),
-  oauthRoute.userCheck(),
+  // oauthRoute.ipCheck(),
+  // oauthRoute.userCheck(),
   app.oauth.grant(),
   oauthRoute.tokenSuccess(),
   // oauthRoute.captchaErrorResolve(),

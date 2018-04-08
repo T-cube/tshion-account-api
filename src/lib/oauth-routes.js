@@ -165,28 +165,28 @@ export function userCheck() {
         return next(err);
       });
     }
-    redis.get(userKey).then(times => {
-      if (times < attemptTimes.userCaptchaTimes) {
-        _checkUserActiviated(username, next);
-      } else if (times > attemptTimes.userCaptchaTimes - 1 && times < attemptTimes.userLockTimes) {
-        if (!req.body.captcha) {
-          redis.incr(userKey);
-          throw new ApiError(400, 'missing_captcha');
-        } else {
-          redis.get(userCaptcha).then(captcha => {
-            if (req.body.captcha.toLowerCase() == captcha.toLowerCase()) {
-              _checkUserActiviated(username, next);
-            } else {
-              redis.incr(userKey);
-              throw new ApiError(400, 'wrong_captcha');
-            }
-          }).catch(next);
-        }
-      } else {
-        throw new ApiError(400, 'account_locked');
-      }
-    })
-    .catch(next);
+    _checkUserActiviated(username, next);
+    // redis.get(userKey).then(times => {
+    //   if (times < attemptTimes.userCaptchaTimes) {
+    //   } else if (times > attemptTimes.userCaptchaTimes - 1 && times < attemptTimes.userLockTimes) {
+    //     if (!req.body.captcha) {
+    //       redis.incr(userKey);
+    //       throw new ApiError(400, 'missing_captcha');
+    //     } else {
+    //       redis.get(userCaptcha).then(captcha => {
+    //         if (req.body.captcha.toLowerCase() == captcha.toLowerCase()) {
+    //           _checkUserActiviated(username, next);
+    //         } else {
+    //           redis.incr(userKey);
+    //           throw new ApiError(400, 'wrong_captcha');
+    //         }
+    //       }).catch(next);
+    //     }
+    //   } else {
+    //     throw new ApiError(400, 'account_locked');
+    //   }
+    // })
+    // .catch(next);
   };
 }
 
