@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 import ServerError from 'oauth2-server';
 import Joi from 'joi';
 import _ from 'underscore';
-import {ObjectID} from 'mongodb';
+import { ObjectID } from 'mongodb';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
@@ -14,6 +14,8 @@ import { comparePassword, camelCaseObjectKey, isEmail, isMobile } from 'lib/util
 import config from 'config';
 const redis = require('@ym/redis').promiseRedis(config.get('vendor.redis'));
 
+import { getUserInfoCache, getAccessTokenCache, setUserAccessTokenRelation } from './cache';
+
 
 export default {
   /**
@@ -23,12 +25,10 @@ export default {
    */
   getAccessToken(bearerToken, callback) {
     // console.log('# getAccessToken (bearerToken: ' + bearerToken + ')');
-    let key = `oauth.access_${bearerToken}`;
-    redis.hmget(key).then(info => {
+    getAccessTokenCache(bearerToken).then(info => {
       if (info) {
-        let user_key = `user.accesskey_${info.user_id}`;
-        return redis.hmget(user_key).then(user => {
-          user._id=ObjectID(user._id);
+        return getUserInfoCache(info.user_id).then(user => {
+          user._id = ObjectID(user._id);
           info.user = user;
           return callback(null, info);
         });
@@ -53,16 +53,9 @@ export default {
               })
               .then(user => {
                 token.user = user;
-                let user_key = `user.accesskey_${user._id.toHexString()}`;
-                let user_token = `user.access_${user._id.toHexString()}`;
-                return redis.get(user_token).then(preKey => {
-                  return Promise.all([
-                    redis.del(preKey ? preKey : ''),
-                    redis.set(user_token, key),
-                    redis.hmset(key, token),
-                    redis.hmset(user_key, user)
-                  ]).then(() => callback(null, token));
-                });
+
+                return setUserAccessTokenRelation(user, token)
+                  .then(() => callback(null, token));
               });
           });
       }
