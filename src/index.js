@@ -138,7 +138,7 @@ app.post('/oauth/token',
   oauthRoute.userCheck(),
   app.oauth.grant(),
   oauthRoute.tokenSuccess(),
-  oauthRoute.captchaErrorResolve(),
+  // oauthRoute.captchaErrorResolve(),
   oauthRoute.logError()
 );
 app.all('/oauth/revoke', oauthRoute.revokeToken);
