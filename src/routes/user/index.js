@@ -15,6 +15,8 @@ import UserLevel from 'models/user-level';
 
 import { validate } from './schema';
 
+import { updateUserInfoCache } from 'lib/cache';
+
 const version = require('../../../package.json').version;
 
 const BASIC_FIELDS = {
@@ -69,9 +71,11 @@ api.put('/info', (req, res, next) => {
     _id: req.user._id
   }, {
     $set: data
-  })
-    .then(result => res.json(result))
-    .catch(next);
+  }).then(result => {
+    return updateUserInfoCache({ _id: req.user._id, data }).then(() => {
+      res.json(result);
+    });
+  }).catch(next);
 });
 
 api.put('/settings', (req, res, next) => {
@@ -84,9 +88,7 @@ api.put('/settings', (req, res, next) => {
     _id: req.user._id
   }, {
     $set: data,
-  })
-    .then(() => res.json(data))
-    .catch(next);
+  }).then(() => res.json(data)).catch(next);
 });
 
 api.put('/avatar', (req, res, next) => {
@@ -97,9 +99,11 @@ api.put('/avatar', (req, res, next) => {
     _id: req.user._id
   }, {
     $set: data,
-  })
-    .then(() => res.json(data))
-    .catch(next);
+  }).then(() => {
+    return updateUserInfoCache({ _id: req.user._id, data }).then(() => {
+      res.json(data);
+    });
+  }).catch(next);
 });
 
 api.put('/avatar/upload',
@@ -116,31 +120,31 @@ api.put('/avatar/upload',
       _id: req.user._id
     }, {
       $set: data
-    })
-      .then(() => res.json(data))
-      .catch(next);
+    }).then(() => {
+      return updateUserInfoCache({ _id: req.user._id, data }).then(() => {
+        res.json(data);
+      });
+    }).catch(next);
   });
 
 api.get('/guide', (req, res, next) => {
   db.user.guide.findOne({
     _id: req.user._id
-  })
-    .then(user_guide => {
-      let new_user, guide;
-      if (!guide) {
-        new_user = 1;
-        guide = 1;
-      } else {
-        new_user = 0;
-        guide = compare(version, user_guide.version);
-      }
-      return res.json({
-        version,
-        new_user,
-        guide,
-      });
-    })
-    .catch(next);
+  }).then(user_guide => {
+    let new_user, guide;
+    if (!guide) {
+      new_user = 1;
+      guide = 1;
+    } else {
+      new_user = 0;
+      guide = compare(version, user_guide.version);
+    }
+    return res.json({
+      version,
+      new_user,
+      guide,
+    });
+  }).catch(next);
 });
 
 api.put('/guide', (req, res, next) => {
@@ -150,32 +154,24 @@ api.put('/guide', (req, res, next) => {
     $set: { version }
   }, {
     upsert: true
-  })
-    .then(() => res.json({}))
-    .catch(next);
+  }).then(() => res.json({})).catch(next);
 });
 
 api.get('/guide/new', (req, res, next) => {
   db.guide.get({
     version: 0
-  })
-    .then(doc => res.json(doc))
-    .catch(next);
+  }).then(doc => res.json(doc)).catch(next);
 });
 
 api.get('/guide/version/:version', (req, res, next) => {
   db.guide.get({
     version: req.params.version
-  })
-    .then(doc => res.json(doc))
-    .catch(next);
+  }).then(doc => res.json(doc)).catch(next);
 });
 
 api.post('/guide', (req, res, next) => {
   let data = req.body;
-  db.guide.insert(data)
-    .then(() => res.json({}))
-    .catch(next);
+  db.guide.insert(data).then(() => res.json({})).catch(next);
 });
 
 api.get('/invite', (req, res, next) => {
@@ -183,97 +179,91 @@ api.get('/invite', (req, res, next) => {
   let timetemp = new Date().getTime();
   db.user.findOne({
     _id: req.user._id
-  })
-    .then(doc => {
-      let user_id = req.user._id.toString();
-      let company_id = doc.current_company.toString();
+  }).then(doc => {
+    let user_id = req.user._id.toString();
+    let company_id = doc.current_company.toString();
 
-    })
-    .catch(next);
+  }).catch(next);
 });
 
 api.post('/invitation', (req, res, next) => {
   let company_id = ObjectId(req.body.company_id);
   db.company.findOne({
     _id: company_id
-  })
-    .then(doc => {
-      if (!doc) {
-        res.json(...req.body);
-      }
-      if (_.some(doc.members, m => m._id.equals(req.user._id) && m.status == 'normal')) {
+  }).then(doc => {
+    if (!doc) {
+      res.json(...req.body);
+    }
+    if (_.some(doc.members, m => m._id.equals(req.user._id) && m.status == 'normal')) {
+      res.json({ _id: doc._id, name: doc.name });
+    } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
+      return Promise.all([
+        db.user.update({
+          _id: req.user._id
+        }, {
+          $addToSet: {
+            companies: company_id
+          }
+        }),
+        db.company.update({
+          _id: doc._id,
+          'members._id': req.user._id
+        }, {
+          $set: {
+            'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
+          },
+          $addToSet: {
+            'structure.members': {
+              _id: req.user._id
+            }
+          }
+        }),
+        req.model('activity').insert({
+          creator: req.user._id,
+          company: company_id,
+          action: C.ACTIVITY_ACTION.JOIN,
+          target_type: C.OBJECT_TYPE.COMPANY,
+        })
+      ]).then(() => {
         res.json({ _id: doc._id, name: doc.name });
-      } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
-        return Promise.all([
-          db.user.update({
-            _id: req.user._id
-          }, {
-            $addToSet: {
-              companies: company_id
-            }
-          }),
-          db.company.update({
-            _id: doc._id,
-            'members._id': req.user._id
-          }, {
-            $set: {
-              'members.$.status': C.COMPANY_MEMBER_STATUS.NORMAL
+      });
+    } else {
+      return Promise.all([
+        db.user.update({
+          _id: req.user._id
+        }, {
+          $addToSet: {
+            companies: company_id
+          }
+        }),
+        db.company.update({
+          _id: company_id,
+        }, {
+          $addToSet: {
+            members: {
+              _id: req.user._id,
+              name: req.user.name,
+              email: req.user.email,
+              mobile: req.user.mobile,
+              sex: null,
+              status: C.COMPANY_MEMBER_STATUS.NORMAL,
+              type: C.COMPANY_MEMBER_TYPE.NORMAL,
+              address: ''
             },
-            $addToSet: {
-              'structure.members': {
-                _id: req.user._id
-              }
+            'structure.members': {
+              _id: req.user._id
             }
-          }),
-          req.model('activity').insert({
-            creator: req.user._id,
-            company: company_id,
-            action: C.ACTIVITY_ACTION.JOIN,
-            target_type: C.OBJECT_TYPE.COMPANY,
-          })
-        ])
-          .then(() => {
-            res.json({ _id: doc._id, name: doc.name });
-          });
-      } else {
-        return Promise.all([
-          db.user.update({
-            _id: req.user._id
-          }, {
-            $addToSet: {
-              companies: company_id
-            }
-          }),
-          db.company.update({
-            _id: company_id,
-          }, {
-            $addToSet: {
-              members: {
-                _id: req.user._id,
-                name: req.user.name,
-                email: req.user.email,
-                mobile: req.user.mobile,
-                sex: null,
-                status: C.COMPANY_MEMBER_STATUS.NORMAL,
-                type: C.COMPANY_MEMBER_TYPE.NORMAL,
-                address: ''
-              },
-              'structure.members': {
-                _id: req.user._id
-              }
-            }
-          }),
-          req.model('activity').insert({
-            creator: req.user._id,
-            company: company_id,
-            action: C.ACTIVITY_ACTION.JOIN,
-            target_type: C.OBJECT_TYPE.COMPANY,
-          })
-        ])
-          .then(() => {
-            res.json({ _id: doc._id, name: doc.name });
-          });
-      }
-    })
-    .catch(next);
+          }
+        }),
+        req.model('activity').insert({
+          creator: req.user._id,
+          company: company_id,
+          action: C.ACTIVITY_ACTION.JOIN,
+          target_type: C.OBJECT_TYPE.COMPANY,
+        })
+      ]).then(() => {
+        res.json({ _id: doc._id, name: doc.name });
+      });
+    }
+  }).catch(next);
 });

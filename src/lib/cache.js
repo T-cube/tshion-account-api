@@ -30,8 +30,13 @@ export function updateUserInfoCache(info) {
   return redis.hmset(user_key, info);
 }
 
+/**
+ * get user info from redis cache
+ * @param {String|{}} user_id
+ * @returns {Promise}
+ */
 export function getUserInfoCache(user_id) {
-  let user_key = `${PREFIX.USER_INFO}${(typeof user_id =='string')? user_id:user_id.toHexString}`;
+  let user_key = `${PREFIX.USER_INFO}${(typeof user_id =='string')? user_id:user_id.toHexString()}`;
 
   return redis.hmget(user_key);
 }
