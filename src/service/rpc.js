@@ -1,4 +1,4 @@
-import RPC from '@ym/rpc';
+import RPC from 'ym-rpc';
 
 import initRoutes from '../rpc';
 

@@ -12,7 +12,7 @@ import db from 'lib/database';
 import { comparePassword, camelCaseObjectKey, isEmail, isMobile } from 'lib/utils';
 
 import config from 'config';
-const redis = require('@ym/redis').promiseRedis(config.get('vendor.redis'));
+const redis = require('ym-redis').promiseRedis(config.get('vendor.redis'));
 
 import { getUserInfoCache, getAccessTokenCache, setUserAccessTokenRelation } from './cache';
 

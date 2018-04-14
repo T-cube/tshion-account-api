@@ -22,9 +22,6 @@
     "cp": "babel node_modules/@ym/payment --out-dir pc"
   },
   "dependencies": {
-    "ym-payment": "^0.4.0",
-    "ym-redis": "^0.9.1",
-    "ym-rpc": "^0.7.1",
     "app-module-path": "^1.0.6",
     "babel-cli": "^6.8.0",
     "babel-plugin-resolver": "0.0.7",
@@ -33,8 +30,8 @@
     "bcrypt": "^0.8.5",
     "bluebird": "^3.1.1",
     "body-parser": "^1.14.2",
-    "bson": "^1.0.3",
-    "canvas": "^1.6.2",
+    "bson": "^1.0.6",
+    "canvas": "^1.6.10",
     "change-case": "^2.3.1",
     "config": "^1.20.1",
     "connect-redis": "^3.1.0",
@@ -42,13 +39,13 @@
     "cron-parser": "^2.0.3",
     "dotenv": "^2.0.0",
     "easyimage": "^2.1.0",
-    "ejs": "^2.4.2",
+    "ejs": "^2.5.8",
     "escape-regexp": "0.0.1",
     "exceljs": "^0.2.32",
-    "express": "^4.13.4",
+    "express": "^4.16.3",
     "express-session": "^1.14.0",
     "express-validation": "^0.4.5",
-    "git-rev-sync": "^1.8.0",
+    "git-rev-sync": "^1.11.1",
     "http-forward": "^0.1.3",
     "http-forwards": "^0.6.0",
     "i18n": "^0.8.3",
@@ -73,7 +70,7 @@
     "qr-image": "^3.1.0",
     "qs": "^6.2.0",
     "redis": "^2.6.2",
-    "request": "^2.72.0",
+    "request": "^2.85.0",
     "request-promise": "^3.0.0",
     "sanitize-html": "^1.13.0",
     "schema-inspector": "^1.6.4",
@@ -82,13 +79,16 @@
     "uuid": "^3.0.1",
     "wechat": "^2.0.3",
     "wechat-api": "^1.28.0",
-    "wechat-oauth": "^1.1.1"
+    "wechat-oauth": "^1.1.1",
+    "ym-payment": "^0.5.1",
+    "ym-redis": "^0.9.1",
+    "ym-rpc": "^0.7.1"
   },
   "devDependencies": {
     "babel-watch": "^2.0.3",
     "eslint": "^2.11.1",
     "node-markdown": "^0.1.1",
-    "nodemon": "^1.9.2",
+    "nodemon": "^1.17.3",
     "showdown": "^1.8.6"
   }
 }

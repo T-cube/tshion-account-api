@@ -1,5 +1,5 @@
 import config from 'config';
-const redis = require('@ym/redis').promiseRedis(config.get('vendor.redis'));
+const redis = require('ym-redis').promiseRedis(config.get('vendor.redis'));
 
 
 const PREFIX = {

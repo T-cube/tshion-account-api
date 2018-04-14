@@ -33,12 +33,12 @@ import corsHandler from 'lib/cors';
 import { initRPC } from 'service/rpc';
 import Account from 'models/account';
 import { QiniuTools } from 'vendor/qiniu';
-import Redis from '@ym/redis';
+import Redis from 'ym-redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import YunPian from 'vendor/yunpian';
 import Security from 'models/security';
 import Captcha from 'lib/captcha';
-import rpc from '@ym/rpc';
+import rpc from 'ym-rpc';
 
 // welcome messages and output corre config
 const API_VERSION = require('../package.json').version;
@@ -65,7 +65,7 @@ bindLoader(app);
 // load models
 // app.loadModel('redis', Redis, config.get('vendor.redis'));
 
-const redis = require('@ym/redis').promiseRedis(config.get('vendor.redis'));
+const redis = require('ym-redis').promiseRedis(config.get('vendor.redis'));
 app.bindModel('redis', redis);
 app.loadModel('qiniu', QiniuTools, config.get('vendor.qiniu'));
 app.loadModel('email', EmailSender, config.get('vendor.sendcloud.email'));
