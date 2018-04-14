@@ -1,7 +1,7 @@
 import _ from 'underscore';
 import { time } from 'lib/utils';
 import qs from 'qs';
-import { ObjectId } from 'mongodb';
+import { ObjectId } from 'lib/database';
 
 import C from 'lib/constants';
 import db from 'lib/database';

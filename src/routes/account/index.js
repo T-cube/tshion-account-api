@@ -97,7 +97,8 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
         mobile_verified: type == C.USER_ID_TYPE.MOBILE,
         name: type == C.USER_ID_TYPE.MOBILE ? data.mobile : getEmailName(data.email),
         description: '',
-        avatar: randomAvatar('user'),
+        avatar: '',
+        // avatar: randomAvatar('user'),
         password: hash,
         birthdate: null,
         address: {
@@ -160,10 +161,10 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
           });
       }
       // init notification setting when user activiated
-      if (type == C.USER_ID_TYPE.MOBILE) {
-        req.model('notification-setting').initUserDefaultSetting(user._id);
-        req.model('preference').init(user._id);
-      }
+      // if (type == C.USER_ID_TYPE.MOBILE) {
+      //   req.model('notification-setting').initUserDefaultSetting(user._id);
+      //   req.model('preference').init(user._id);
+      // }
       // 保存第三方账户的图片
       if (req.openUserinfo && req.openUserinfo.avatar) {
         return downloadFile(req.openUserinfo.avatar, 'avatar').then(downloadFile => {
@@ -203,8 +204,8 @@ api.post('/confirm', (req, res, next) => {
     .then(data => {
       res.json(data);
       // init notification setting when user activiated
-      req.model('notification-setting').initUserDefaultSetting(data.user_id);
-      req.model('preference').init(data.user_id);
+      // req.model('notification-setting').initUserDefaultSetting(data.user_id);
+      // req.model('preference').init(data.user_id);
     })
     .catch(next);
 });
@@ -212,7 +213,8 @@ api.post('/confirm', (req, res, next) => {
 api.post('/send-sms', (req, res, next) => {
   const { mobile, nation_code, captcha, hex } = req.body;
   console.log(req.body, req.query);
-  if (!mobile || !isMobile(mobile)) {
+  if (!mobile || !/^\d+$/g.test(mobile)) {
+    // if (!mobile || !isMobile(mobile)) {
     throw new ApiError(400, 'invalid_mobile');
   }
 

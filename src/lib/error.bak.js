@@ -29,9 +29,38 @@ export function ApiError(code, error, description, err) {
   if (this.constructor !== ApiError) {
     return new ApiError(code, error, description, err);
   }
+  Error.call(this);
 
-  if(!description) description = error;
-  Object.assign(this,{code,message:description});
+  this.name = this.constructor.name;
+  if (err instanceof Error) {
+    this.message = err.message;
+    this.stack = err.stack;
+  } else {
+    this.message = description;
+    //Error.captureStackTrace(this, this.constructor);
+  }
+
+  this.code = code;
+  this.headers = {
+    'Cache-Control': 'no-store',
+    'Pragma': 'no-cache'
+  };
+
+  if (error) {
+    this.error = error;
+  } else {
+    let known_errors = {
+      200: 'OK',
+      400: 'bad_request',
+      401: 'unauthorized',
+      403: 'forbidden',
+      404: 'not_found',
+      500: 'internel_server_error',
+      503: 'service_unavailable',
+    };
+    this.error = known_errors[code] || 'unknown_error';
+  }
+  this.error_description = description || _(this.error);
 }
 
 util.inherits(ApiError, Error);

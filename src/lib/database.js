@@ -1,7 +1,12 @@
 import pmongo from 'pmongo';
 import config from 'config';
 
-export { ObjectId } from 'mongodb';
+import { ObjectId as OId,ObjectID as OID } from 'mongodb';
+OId.toString = OId.toHexString;
+OID.toString = OID.toHexString;
+
+export const ObjectId = OId;
+export const ObjectID = OID;
 
 const collections = [
   'announcement',

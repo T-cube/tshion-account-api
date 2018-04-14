@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 import ServerError from 'oauth2-server';
 import Joi from 'joi';
 import _ from 'underscore';
-import { ObjectID } from 'mongodb';
+import { ObjectID } from 'lib/database';
 
 import { ApiError } from 'lib/error';
 import C from 'lib/constants';
