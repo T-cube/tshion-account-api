@@ -153,7 +153,7 @@ class YunPian {
    */
   sendSingleInternationalVerifyCode({ mobile, code }) {
     let text = NationalVerifySms(this.signature, code);
-
+    console.log('send sms code: ', mobile, code);
     return this.sendSingleInternationalSms({ mobile, text });
   }
 
