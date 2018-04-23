@@ -129,7 +129,8 @@ export default {
 
   _getUser(username) {
     let query = {};
-    if (isMobile(username)) {
+    // if (isMobile(username)) {
+    if (/^\d+$/.test(username)) {
       query.mobile = username;
     } else if (isEmail(username)) {
       query.email = username;
