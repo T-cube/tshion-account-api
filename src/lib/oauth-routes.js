@@ -37,7 +37,7 @@ export function revokeToken(req, res, next) {
     let client_id = doc.client_id;
     return db.oauth[collection].remove({[token_type_hint]: token})
     .then(() => {
-      res.json({code: 200});
+      res.sendJson(200);
       // account logout log
       // if (req.body.token_type_hint == 'access_token') {
       //   req.model('user-activity').create({

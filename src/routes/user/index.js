@@ -58,7 +58,7 @@ api.get('/info', (req, res, next) => {
           if (data.mobile) {
             data.mobile = maskMobile(data.mobile);
           }
-          res.json(data);
+          res.sendJson(data);
         });
     })
     .catch(next);
@@ -73,7 +73,7 @@ api.put('/info', (req, res, next) => {
     $set: data
   }).then(result => {
     return updateUserInfoCache({ _id: req.user._id, data }).then(() => {
-      res.json(result);
+      res.sendJson(result);
     });
   }).catch(next);
 });
@@ -88,7 +88,7 @@ api.put('/settings', (req, res, next) => {
     _id: req.user._id
   }, {
     $set: data,
-  }).then(() => res.json(data)).catch(next);
+  }).then(() => res.sendJson(data)).catch(next);
 });
 
 api.put('/avatar', (req, res, next) => {
@@ -101,7 +101,7 @@ api.put('/avatar', (req, res, next) => {
     $set: data,
   }).then(() => {
     return updateUserInfoCache({ _id: req.user._id, data }).then(() => {
-      res.json(data);
+      res.sendJson(data);
     });
   }).catch(next);
 });
@@ -122,7 +122,7 @@ api.put('/avatar/upload',
       $set: data
     }).then(() => {
       return updateUserInfoCache({ _id: req.user._id, data }).then(() => {
-        res.json(data);
+        res.sendJson(data);
       });
     }).catch(next);
   });
@@ -139,7 +139,7 @@ api.get('/guide', (req, res, next) => {
       new_user = 0;
       guide = compare(version, user_guide.version);
     }
-    return res.json({
+    return res.sendJson({
       version,
       new_user,
       guide,
@@ -154,24 +154,24 @@ api.put('/guide', (req, res, next) => {
     $set: { version }
   }, {
     upsert: true
-  }).then(() => res.json({})).catch(next);
+  }).then(() => res.sendJson(200)).catch(next);
 });
 
 api.get('/guide/new', (req, res, next) => {
   db.guide.get({
     version: 0
-  }).then(doc => res.json(doc)).catch(next);
+  }).then(doc => res.sendJson(doc)).catch(next);
 });
 
 api.get('/guide/version/:version', (req, res, next) => {
   db.guide.get({
     version: req.params.version
-  }).then(doc => res.json(doc)).catch(next);
+  }).then(doc => res.sendJson(doc)).catch(next);
 });
 
 api.post('/guide', (req, res, next) => {
   let data = req.body;
-  db.guide.insert(data).then(() => res.json({})).catch(next);
+  db.guide.insert(data).then(() => res.sendJson(200)).catch(next);
 });
 
 api.get('/invite', (req, res, next) => {
@@ -192,10 +192,10 @@ api.post('/invitation', (req, res, next) => {
     _id: company_id
   }).then(doc => {
     if (!doc) {
-      res.json(...req.body);
+      res.sendJson(...req.body);
     }
     if (_.some(doc.members, m => m._id.equals(req.user._id) && m.status == 'normal')) {
-      res.json({ _id: doc._id, name: doc.name });
+      res.sendJson({ _id: doc._id, name: doc.name });
     } else if (_.some(doc.members, m => m._id.equals(req.user._id))) {
       return Promise.all([
         db.user.update({
@@ -225,7 +225,7 @@ api.post('/invitation', (req, res, next) => {
           target_type: C.OBJECT_TYPE.COMPANY,
         })
       ]).then(() => {
-        res.json({ _id: doc._id, name: doc.name });
+        res.sendJson({ _id: doc._id, name: doc.name });
       });
     } else {
       return Promise.all([
@@ -262,7 +262,7 @@ api.post('/invitation', (req, res, next) => {
           target_type: C.OBJECT_TYPE.COMPANY,
         })
       ]).then(() => {
-        res.json({ _id: doc._id, name: doc.name });
+        res.sendJson({ _id: doc._id, name: doc.name });
       });
     }
   }).catch(next);

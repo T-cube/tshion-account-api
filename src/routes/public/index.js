@@ -22,7 +22,7 @@ api.get('/info', oauthCheck(), (req, res, next) => {
     email: user.email,
     name: user.name,
   };
-  res.json(data);
+  res.sendJson(data);
 });
 
 api.get('/user-avatar/:user_id', (req, res, next) => {
@@ -58,7 +58,7 @@ api.post('/wechat-jsapi-signture', (req, res, next) => {
   }, (err, result) => {
     console.log('js api error', err);
     if (err) return next(err);
-    res.json(result);
+    res.sendJson(result);
   });
 });
 

@@ -16,9 +16,7 @@ import bodyParser from 'body-parser';
 import config from 'config';
 import _ from 'underscore';
 
-import { HttpForwardServer } from 'http-forwards';
-var httpForwardServer = new HttpForwardServer({ socketPort: 2222 });
-httpForwardServer.install({ chat: 123456 });
+import Redis from 'ym-redis';
 
 import session from 'express-session';
 const sessionRedis = require('connect-redis')(session);
@@ -33,12 +31,13 @@ import corsHandler from 'lib/cors';
 import { initRPC } from 'service/rpc';
 import Account from 'models/account';
 import { QiniuTools } from 'vendor/qiniu';
-import Redis from 'ym-redis';
 import { EmailSender, SmsSender } from 'vendor/sendcloud';
 import YunPian from 'vendor/yunpian';
 import Security from 'models/security';
 import Captcha from 'lib/captcha';
 import rpc from 'ym-rpc';
+
+import sendJson from 'lib/send-json';
 
 // welcome messages and output corre config
 const API_VERSION = require('../package.json').version;
@@ -127,6 +126,7 @@ app.use('/oauth', session({
   saveUninitialized: false,
 }));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(sendJson);
 // use form to submit Oauth params
 app.use('/oauth', bodyParser.urlencoded({ extended: true }));
 // auth code grant type (for third party sites)

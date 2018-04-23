@@ -53,7 +53,6 @@ api.get('/:hash', (req, res, next) => {
     promise = redis.get(hash);
   }
 
-
   promise.then(url => {
     if (url) {
       res.redirect(301, url);
@@ -103,7 +102,7 @@ api.post('/', (req, res) => {
     promise = redis.setex(key, time, url);
   }
   promise.then(() => {
-    res.json({ short_url: `${short_host}${key}` });
+    res.sendJson({ short_url: `${short_host}${key}` });
   });
 });
 
@@ -118,7 +117,7 @@ api.post('/', (req, res) => {
 //     redis.get(hash).then(url => {
 //       console.log(url);
 //       if (!url) {
-//         res.json({ error: 404, string: 'url no found' });
+//         res.sendJson({ error: 404, string: 'url no found' });
 //         return;
 //       }
 //       res.redirect(301, url);
@@ -127,7 +126,7 @@ api.post('/', (req, res) => {
 //     shortURL.findOne({ key: hash }).then(doc => {
 //       console.log(doc.url);
 //       if (!doc) {
-//         res.json({ error: 404, string: 'url no found' });
+//         res.sendJson({ error: 404, string: 'url no found' });
 //         return;
 //       }
 //       if (!doc.always) {
@@ -161,12 +160,12 @@ api.post('/', (req, res) => {
 //     key = `r${key}`;
 //     redis.set(key, url).then(status => {
 //       redis.expire(key, body.time);
-//       res.json({ short_url: `${short_host}${key}` });
+//       res.sendJson({ short_url: `${short_host}${key}` });
 //     });
 //   } else {
 //     key = `m${key}`;
 //     shortURL.insert({ key: key, url: url, always: body.always && true || false }).then(doc => {
-//       res.json({ short_url: `${short_host}${key}` });
+//       res.sendJson({ short_url: `${short_host}${key}` });
 //     });
 //   }
 //
@@ -177,11 +176,11 @@ api.post('/', (req, res) => {
 //     if (key[0] == 'r') {
 //       redis.delete(hash, (err, result) => {
 //         if (err) next();
-//         else res.json({ result: result });
+//         else res.sendJson({ result: result });
 //       });
 //     } else {
 //       shortURL.remove({ key: hash }).then(() => {
-//         res.json({ result: 'ok' });
+//         res.sendJson({ result: 'ok' });
 //       }).catch(next);
 //     }
 //   });

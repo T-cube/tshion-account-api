@@ -38,7 +38,7 @@ api.post('/check', (req, res, next) => {
     }, { activiated: 1 })
     .then(user => {
       if (!user) {
-        return res.json({});
+        return res.sendJson(200);
       }
       if (type == 'email' && !user.activiated) {
         throw new ValidationError({
@@ -119,7 +119,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
       return db.user.insert(doc);
     })
     .then(user => {
-      res.json({
+      res.sendJson({
         type: type,
         [type]: id,
       });
@@ -187,7 +187,7 @@ api.post('/register', fetchRegUserinfoOfOpen(), (req, res, next) => {
     .catch(err => {
       console.log(err);
       if (err.message == 'resend_code') {
-        res.json({ resend: true });
+        res.sendJson({ resend: true });
       } else {
         next(err);
       }
@@ -202,7 +202,7 @@ api.post('/confirm', (req, res, next) => {
   }
   req.model('account').confirmRegisterEmailCode(code)
     .then(data => {
-      res.json(data);
+      res.sendJson(data);
       // init notification setting when user activiated
       // req.model('notification-setting').initUserDefaultSetting(data.user_id);
       // req.model('preference').init(data.user_id);
@@ -287,7 +287,7 @@ api.post('/send-sms', (req, res, next) => {
           });
       });
     })
-    .then(() => res.json({}))
+    .then(() => res.sendJson(200))
     .catch(next);
 });
 
@@ -321,7 +321,7 @@ api.post('/authorise', oauthCheck(), (req, res, next) => {
       });
     })
     .then(() => {
-      res.json({
+      res.sendJson({
         auth_check_token: _token,
       });
     })
@@ -359,7 +359,7 @@ api.post('/change-pass', oauthCheck(), (req, res, next) => {
         // TODO logout current user
       ]);
     })
-    .then(() => res.json({}))
+    .then(() => res.sendJson(200))
     .catch(next);
 });
 
@@ -376,7 +376,7 @@ api.post('/recover/send-code', (req, res, next) => {
     .then(() => {
       return req.model('account').sendCode(type, account, 'reset_pass');
     })
-    .then(() => res.json({}))
+    .then(() => res.sendJson(200))
     .catch(next);
 });
 
@@ -395,7 +395,7 @@ api.post('/recover/verify', (req, res, next) => {
     .then(() => {
       return req.model('account').getToken(type, account);
     })
-    .then(token => res.json({ token }))
+    .then(token => res.sendJson({ token }))
     .catch(next);
 });
 
@@ -416,7 +416,7 @@ api.post('/recover/change-pass', (req, res, next) => {
           });
         });
     })
-    .then(() => res.json({}))
+    .then(() => res.sendJson(200))
     .catch(next);
 });
 
@@ -427,7 +427,7 @@ api.post('/verify/current', oauthCheck(), (req, res, next) => {
   if (data[type] != req.user[type]) {
     throw new ApiError(400, 'verify_fail');
   }
-  res.json({});
+  res.sendJson(200);
 });
 
 api.post('/verify/new', oauthCheck(), (req, res, next) => {
@@ -453,7 +453,7 @@ api.post('/verify/new', oauthCheck(), (req, res, next) => {
     .then(() => {
       return req.model('account').sendCode(type, newAccount);
     })
-    .then(() => res.json({}))
+    .then(() => res.sendJson(200))
     .catch(next);
 });
 
@@ -491,12 +491,12 @@ api.post('/bind', oauthCheck(), (req, res, next) => {
         }
       });
     })
-    .then(() => res.json({}))
+    .then(() => res.sendJson(200))
     .catch(next);
 });
 
 api.get('/activity', oauthCheck(), (req, res, next) => {
   req.model('user-activity').getLatestLoginInfo(req.user._id)
-    .then(doc => res.json(doc))
+    .then(doc => res.sendJson(doc))
     .catch(next);
 });

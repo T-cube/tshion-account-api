@@ -28,7 +28,7 @@ api.get('/product-list', (req, res, next) => {
     plans.forEach(plan => {
       plan.products = _.filter(products, product => product.plan == plan.type);
     });
-    res.json(plans);
+    res.sendJson(plans);
   })
   .catch(next);
 });
@@ -47,7 +47,7 @@ api.get('/avatar-list/:type', (req, res, next) => {
     let url = getUploadUrl(dir, filename);
     list.push(url);
   }
-  res.json(list);
+  res.sendJson(list);
 });
 
 api.get('/captcha', (req, res, next) => {
@@ -79,7 +79,7 @@ api.get('/captcha', (req, res, next) => {
 api.get('/broadcast', (req, res, next) => {
   let broadcast = req.model('broadcast');
   broadcast.list().then(data => {
-    res.json(data);
+    res.sendJson(data);
   });
 });
 
@@ -88,6 +88,6 @@ api.get('/broadcast/:broadcast_id', (req, res, next) => {
   validate('broadcast_id', data);
   let broadcast = req.model('broadcast');
   broadcast.detail(data.broadcast_id).then(data => {
-    res.json(data);
+    res.sendJson(data);
   });
 });
