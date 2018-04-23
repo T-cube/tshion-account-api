@@ -61,6 +61,7 @@ export function apiErrorHandler(err, req, res, next) {
       return val;
     });
     err = new ApiError(400, 'validation_error', errors);
+    console.log(err);
   }
   if (!(err instanceof ApiError)) {
     console.error(err.stack);
