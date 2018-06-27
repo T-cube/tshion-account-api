@@ -141,7 +141,7 @@ let uploadFunc = (req, res, next) => {
     .catch(next);
 };
 
-api.post('/avatar/upload', upload({type: 'avatar'}).single('avatar'), saveCdn('cdn-public'), uploadFunc);
+api.post('/avatar/upload', upload({type: 'avatar'}).single('file'), saveCdn('cdn-public'), uploadFunc);
 
 api.put('/avatar/upload', upload({type: 'avatar'}).single('avatar'), saveCdn('cdn-public'), uploadFunc);
 
