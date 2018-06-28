@@ -113,7 +113,7 @@ export function maskEmail(email) {
 }
 
 export function maskMobile(mobile) {
-  let result = /^(\d{3})\d{4}(\d{4})$/.exec(mobile);
+  let result = /^(\d{3})\d+(\d{3})$/.exec(mobile);
   if (!result) {
     return '***';
   }

@@ -32,7 +32,7 @@ config/*
 
 # Application runtime
 /app
-runtime
+runtime/**/*.pem
 
 # User upload files
 public/cdn/upload
