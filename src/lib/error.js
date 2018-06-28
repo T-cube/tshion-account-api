@@ -75,7 +75,7 @@ export function apiErrorHandler(err, req, res, next) {
   }
   console.log('handle error:', err);
   delete err.name;
-  delete err.message;
+  // delete err.message;
   try {
     res.set(err.headers);
     delete err.headers;

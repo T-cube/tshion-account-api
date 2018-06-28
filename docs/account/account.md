@@ -105,6 +105,7 @@ birthdate|body|Date
 description|body|String
 name|body|String
 sex|body|Enum[String], 'M', 'F'
+address.address|body|String
 返回
 ```
 {
