@@ -57,12 +57,12 @@ api.get('/info', (req, res, next) => {
         .getLevelInfo()
         .then(levelInfo => {
           data.level_info = levelInfo;
-          if (data.email) {
-            data.email = maskEmail(data.email);
-          }
-          if (data.mobile) {
-            data.mobile = maskMobile(data.mobile);
-          }
+          // if (data.email) {
+          //   data.email = maskEmail(data.email);
+          // }
+          // if (data.mobile) {
+          //   data.mobile = maskMobile(data.mobile);
+          // }
           res.sendJson(data);
         });
     })
