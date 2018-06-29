@@ -29,9 +29,9 @@ const schema = {
         type: 'object',
         optional: true,
         properties: {
-          country: { type: 'string' },
-          province: { type: 'string' },
-          city: { type: 'string' },
+          country: { type: 'string', optional: true },
+          province: { type: 'string', optional: true },
+          city: { type: 'string', optional: true },
           district: { type: 'string', optional: true },
           address: { type: 'string', optional: true },
         },
