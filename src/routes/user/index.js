@@ -53,18 +53,13 @@ api.get('/info', (req, res, next) => {
       _id: req.user._id
     }, BASIC_FIELDS)
     .then(data => {
-      new UserLevel(data)
-        .getLevelInfo()
-        .then(levelInfo => {
-          data.level_info = levelInfo;
-          // if (data.email) {
-          //   data.email = maskEmail(data.email);
-          // }
-          // if (data.mobile) {
-          //   data.mobile = maskMobile(data.mobile);
-          // }
-          res.sendJson(data);
-        });
+      console.log(data);
+      // new UserLevel(data)   .getLevelInfo()   .then(levelInfo => {
+      // data.level_info = levelInfo; if (data.email) {   data.email =
+      // maskEmail(data.email); } if (data.mobile) {   data.mobile =
+      // maskMobile(data.mobile); }
+      res.sendJson(data);
+      // });
     })
     .catch(next);
 });

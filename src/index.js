@@ -1,11 +1,9 @@
-// TLifang API Services
-// including:
+// TLifang API Services including:
 //   * Oauth server
 //   * Oauth login pages
 //   * OA API server
-//   * User content redirecting for third party sites (e.g. avatars)
-
-// fix absolute path
+//   * User content redirecting for third party sites (e.g. avatars) fix
+// absolute path
 import './bootstrap';
 
 import Promise from 'bluebird';
@@ -26,12 +24,12 @@ import apiRouter from './routes';
 import oauthModel from 'lib/oauth-model';
 
 import * as oauthRoute from 'lib/oauth-routes';
-import { apiErrorHandler, apiRouteError } from 'lib/error';
+import {apiErrorHandler, apiRouteError} from 'lib/error';
 import corsHandler from 'lib/cors';
-import { initRPC } from 'service/rpc';
+import {initRPC} from 'service/rpc';
 import Account from 'models/account';
-import { QiniuTools } from 'vendor/qiniu';
-import { EmailSender, SmsSender } from 'vendor/sendcloud';
+import {QiniuTools} from 'vendor/qiniu';
+import {EmailSender, SmsSender} from 'vendor/sendcloud';
 import YunPian from 'vendor/yunpian';
 import Security from 'models/security';
 import Captcha from 'lib/captcha';
@@ -61,8 +59,7 @@ rpc.install(server, config.get('rpc.trpc'));
 // bind model loader
 bindLoader(app);
 
-// load models
-// app.loadModel('redis', Redis, config.get('vendor.redis'));
+// load models app.loadModel('redis', Redis, config.get('vendor.redis'));
 
 const redis = require('ym-redis').promiseRedis(config.get('vendor.redis'));
 app.bindModel('redis', redis);
@@ -95,11 +92,7 @@ app.use((req, res, next) => {
   app.bindLoader(req);
 
   // set application headers
-  res.set({
-    'X-Powered-By': `tlf-api/${API_VERSION}`,
-    'X-Content-Type-Options': 'nosniff',
-    'Vary': 'Accept-Encoding',
-  });
+  res.set({'X-Powered-By': `tlf-api/${API_VERSION}`, 'X-Content-Type-Options': 'nosniff', 'Vary': 'Accept-Encoding'});
   console.log(req.url);
   next();
 });
@@ -108,11 +101,13 @@ app.use((req, res, next) => {
 app.set('view engine', 'ejs');
 app.oauth = oauthServer({
   model: oauthModel,
-  grants: ['password', 'refresh_token', 'authorization_code'],
+  grants: [
+    'password', 'refresh_token', 'authorization_code'
+  ],
   debug: false,
-  accessTokenLifetime: 1800,
+  accessTokenLifetime: 3600 * 24 *15,
   refreshTokenLifetime: 3600 * 24 * 15,
-  continueAfterResponse: true,
+  continueAfterResponse: true
 });
 
 app.use('/oauth', corsHandler);
@@ -123,31 +118,25 @@ app.use('/oauth', session({
   // name: 'tlf.sid',
   secret: 'the quick blue fish jumps over the lazy cat',
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: false
 }));
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(sendJson);
 // use form to submit Oauth params
-app.use('/oauth', bodyParser.urlencoded({ extended: true }));
+app.use('/oauth', bodyParser.urlencoded({extended: true}));
 // auth code grant type (for third party sites)
 app.use('/oauth/login', oauthRoute.login);
 app.get('/oauth/authorise', app.oauth.authCodeGrant(oauthRoute.authCodeCheck));
 // grant token
 app.post('/oauth/token',
-  // oauthRoute.ipCheck(),
-  // oauthRoute.userCheck(),
-  app.oauth.grant(),
-  oauthRoute.tokenSuccess(),
-  // oauthRoute.captchaErrorResolve(),
-  oauthRoute.logError()
-);
+// oauthRoute.ipCheck(), oauthRoute.userCheck(),
+app.oauth.grant(), oauthRoute.tokenSuccess(),
+// oauthRoute.captchaErrorResolve(),
+oauthRoute.logError());
 app.all('/oauth/revoke', oauthRoute.revokeToken);
 
-
-// use nginx for static resource
-// app.use('/', express.static('./public'));
-
-// api routes bind here
+// use nginx for static resource app.use('/', express.static('./public')); api
+// routes bind here
 app.use('/api', apiRouter);
 app.use(app.oauth.errorHandler());
 
